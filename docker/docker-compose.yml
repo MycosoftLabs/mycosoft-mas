@@ -17,4 +17,6 @@ services:
 
   dev_agent:
     build: ../agents/dev_agent
+    ports:
+      - "8002:8002"
     restart: always
