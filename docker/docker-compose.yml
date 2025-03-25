@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   orchestrator-myca:
-    build: ./orchestrator-myca
+    build: ../orchestrator-myca
     ports:
       - "8000:8000"
     env_file:
@@ -10,9 +10,11 @@ services:
     restart: always
 
   lab_rnd_agent:
-    build: ./agents/lab_rnd_agent
+    build: ../agents/lab_rnd_agent
+    ports:
+      - "8001:8001"
     restart: always
 
   dev_agent:
-    build: ./agents/dev_agent
+    build: ../agents/dev_agent
     restart: always
