@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  orchestrator-myca:
+    build: ./orchestrator-myca
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env
+    restart: always
+
+  lab_rnd_agent:
+    build: ./agents/lab_rnd_agent
+    restart: always
+
+  dev_agent:
+    build: ./agents/dev_agent
+    restart: always
