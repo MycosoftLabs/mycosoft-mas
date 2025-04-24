@@ -1,0 +1,388 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20250415101624
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 11652
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Starting dashboard on port 8080...
+Dashboard is running at http://localhost:8080
+Press Ctrl+C to stop the dashboard
+**********************
+Windows PowerShell transcript start
+Start time: 20250415102619
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 6836
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Starting dashboard on port 8080...
+Dashboard is running at http://localhost:8080
+Press Ctrl+C to stop the dashboard
+**********************
+Windows PowerShell transcript start
+Start time: 20250417134759
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 19296
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Agent Manager is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Knowledge Graph is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Metrics Collector is not running. Some dashboard features may be limited.
+Starting dashboard on port 8080...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Error: Dashboard failed to start. Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Error: Unable to connect to the remote server
+Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log for details
+**********************
+Windows PowerShell transcript end
+End time: 20250417134821
+**********************
+**********************
+Windows PowerShell transcript start
+Start time: 20250417135956
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 19708
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Agent Manager is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Knowledge Graph is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Metrics Collector is not running. Some dashboard features may be limited.
+Starting dashboard on port 8080...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Error: Dashboard failed to start. Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Error: Unable to connect to the remote server
+Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log for details
+**********************
+Windows PowerShell transcript end
+End time: 20250417140018
+**********************
+**********************
+Windows PowerShell transcript start
+Start time: 20250417140031
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 19708
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Agent Manager is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Knowledge Graph is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Metrics Collector is not running. Some dashboard features may be limited.
+Starting dashboard on port 8080...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Error: Unable to connect to the remote server
+Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log for details
+**********************
+Windows PowerShell transcript end
+End time: 20250417140053
+**********************
+**********************
+Windows PowerShell transcript start
+Start time: 20250417140132
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 19708
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Installing package in development mode...
+Obtaining file:///C:/Users/MorganRockwell/Desktop/Mycosoft%20Github/mycosoft-mas/mycosoft_mas
+ERROR: file:///C:/Users/MorganRockwell/Desktop/Mycosoft%20Github/mycosoft-mas/mycosoft_mas does not appear t
+o be a Python project: neither 'setup.py' nor 'pyproject.toml' found.
+
+[notice] A new release of pip is available: 23.2.1 -> 25.0.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Agent Manager is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Knowledge Graph is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Metrics Collector is not running. Some dashboard features may be limited.
+Starting dashboard on port 8080...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Error: Unable to connect to the remote server
+Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log for details
+**********************
+Windows PowerShell transcript end
+End time: 20250417140156
+**********************
+**********************
+Windows PowerShell transcript start
+Start time: 20250417140229
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 19708
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Installing package in development mode...
+    mycosoft-mas 1.0.0 depends on cachetools<6.0.0 and >=5.3.0
+    solana 0.30.0 depends on cachetools<5.0.0 and >=4.2.2
+
+To fix this you could try to:
+1. loosen the range of package versions you've specified
+2. remove package versions to allow pip attempt to solve the dependency conflict
+
+ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#deal
+ing-with-dependency-conflicts
+
+[notice] A new release of pip is available: 23.2.1 -> 25.0.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Agent Manager is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Knowledge Graph is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Metrics Collector is not running. Some dashboard features may be limited.
+Starting dashboard on port 8080...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Error: Unable to connect to the remote server
+Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log for details
+**********************
+Windows PowerShell transcript end
+End time: 20250417140352
+**********************
+**********************
+Windows PowerShell transcript start
+Start time: 20250417140440
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 19708
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Installing package in development mode...
+
+To fix this you could try to:
+1. loosen the range of package versions you've specified
+2. remove package versions to allow pip attempt to solve the dependency conflict
+
+ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#deal
+ing-with-dependency-conflicts
+
+[notice] A new release of pip is available: 23.2.1 -> 25.0.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Agent Manager is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Knowledge Graph is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Metrics Collector is not running. Some dashboard features may be limited.
+Starting dashboard on port 8080...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Error: Unable to connect to the remote server
+Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log for details
+**********************
+Windows PowerShell transcript end
+End time: 20250417140616
+**********************
+**********************
+Windows PowerShell transcript start
+Start time: 20250417141109
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 7736
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Installing package in development mode...
+    mycosoft-mas 1.0.0 depends on cachetools<6.0.0 and >=5.3.0
+    solana 0.30.1 depends on cachetools<5.0.0 and >=4.2.2
+    mycosoft-mas 1.0.0 depends on cachetools<6.0.0 and >=5.3.0
+    solana 0.30.0 depends on cachetools<5.0.0 and >=4.2.2
+
+To fix this you could try to:
+1. loosen the range of package versions you've specified
+2. remove package versions to allow pip attempt to solve the dependency conflict
+
+ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#deal
+ing-with-dependency-conflicts
+
+[notice] A new release of pip is available: 23.2.1 -> 25.0.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Agent Manager is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Knowledge Graph is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Metrics Collector is not running. Some dashboard features may be limited.
+Starting dashboard on port 8080...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Error: Unable to connect to the remote server
+Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log for details
+**********************
+Windows PowerShell transcript end
+End time: 20250417141206
+**********************
+**********************
+Windows PowerShell transcript start
+Start time: 20250417141231
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 7736
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Installing package in development mode...
+ing-with-dependency-conflicts
+
+[notice] A new release of pip is available: 23.2.1 -> 25.0.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Agent Manager is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Knowledge Graph is not running. Some dashboard features may be limited.
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Warning: Metrics Collector is not running. Some dashboard features may be limited.
+Starting dashboard on port 8080...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+Error: Unable to connect to the remote server
+Check the log file at C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log for details
+**********************
+Windows PowerShell transcript end
+End time: 20250417141329
+**********************
+**********************
+Windows PowerShell transcript start
+Start time: 20250417141346
+Username: AzureAD\MorganRockwell
+RunAs User: AzureAD\MorganRockwell
+Configuration Name: 
+Machine: LABPC1 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\MorganRockwell\AppData\Local\Programs\cursor\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 7736
+PSVersion: 5.1.26100.3624
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.3624
+BuildVersion: 10.0.26100.3624
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\Users\MorganRockwell\Desktop\Mycosoft Github\mycosoft-mas\mycosoft_mas\dashboard.log
+Installing package in development mode...
+2. remove package versions to allow pip attempt to solve the dependency conflict
+
+ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#deal
+ing-with-dependency-conflicts
+
+[notice] A new release of pip is available: 23.2.1 -> 25.0.1
+[notice] To update, run: python.exe -m pip install --upgrade pip

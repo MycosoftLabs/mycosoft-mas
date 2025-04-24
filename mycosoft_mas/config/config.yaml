@@ -1,0 +1,323 @@
+# Global configuration
+global:
+  enable_global_desktop_automation: true
+  desktop_automation:
+    mouse_speed: 0.5
+    keyboard_delay: 0.1
+    browser_profiles:
+      default:
+        browser_type: chrome
+        user_data_dir: browser_profiles/default
+      mercury:
+        browser_type: chrome
+        user_data_dir: browser_profiles/mercury
+      clerky:
+        browser_type: chrome
+        user_data_dir: browser_profiles/clerky
+      quickbooks:
+        browser_type: chrome
+        user_data_dir: browser_profiles/quickbooks
+    applications:
+      mercury:
+        path: C:\Program Files\Mercury\mercury.exe
+        args: []
+      clerky:
+        path: C:\Program Files\Clerky\clerky.exe
+        args: []
+      quickbooks:
+        path: C:\Program Files\Intuit\QuickBooks\qbw32.exe
+        args: []
+
+# Agent configurations
+agents:
+  - type: research_agent
+    agent_id: research_agent_1
+    name: Research Agent
+    config:
+      enable_desktop_automation: true
+      desktop_automation:
+        mouse_speed: 0.5
+        keyboard_delay: 0.1
+        browser_profiles:
+          research:
+            browser_type: chrome
+            user_data_dir: browser_profiles/research
+
+  - type: finance_agent
+    agent_id: finance_agent_1
+    name: Finance Agent
+    config:
+      enable_desktop_automation: true
+      desktop_automation:
+        mouse_speed: 0.5
+        keyboard_delay: 0.1
+        browser_profiles:
+          finance:
+            browser_type: chrome
+            user_data_dir: browser_profiles/finance
+
+  - type: project_management_agent
+    agent_id: project_management_agent_1
+    name: Project Management Agent
+    config:
+      enable_desktop_automation: true
+      desktop_automation:
+        mouse_speed: 0.5
+        keyboard_delay: 0.1
+        browser_profiles:
+          project:
+            browser_type: chrome
+            user_data_dir: browser_profiles/project
+
+# ... existing configuration ... 
+
+messaging:
+  max_message_size: 1024 * 1024  # 1MB
+  rate_limit: 100  # messages per second
+  rate_limit_retry_after: 60  # seconds
+
+communication:
+  email:
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    username: "mycosoft@example.com"
+    password: "password"
+  telegram:
+    bot_token: "token"
+    chat_id: "chat_id"
+  slack:
+    bot_token: "token"
+    channel: "channel"
+
+error_logging:
+  error_retention_days: 30
+  correlation_threshold: 3
+  escalation_rules:
+    agent_initialization_error:
+      error_threshold: 3
+      time_window: 3600
+      escalation_level: 1
+    agent_shutdown_error:
+      error_threshold: 3
+      time_window: 3600
+      escalation_level: 1
+    mas_initialization_error:
+      error_threshold: 1
+      time_window: 3600
+      escalation_level: 2
+    mas_shutdown_error:
+      error_threshold: 1
+      time_window: 3600
+      escalation_level: 2
+
+mycology:
+  data_dir: "data/mycology"
+  max_bio_data_size: 1024 * 1024 * 10  # 10MB
+  agent_id: "mycology_bio"
+  name: "Mycology BioAgent"
+  data_directory: "data/mycology_bio"
+  output_directory: "output/mycology_bio"
+  knowledge_agent_id: "mycology_knowledge_agent"
+  dao_agent_id: "myco_dao_agent"
+  hackathon_mode: true
+  fungal_knowledge_config:
+    data_dir: "data/fungal_knowledge"
+    output_dir: "output/fungal_knowledge"
+
+financial:
+  stripe_api_key: "sk_test_..."
+  data_dir: "data/financial"  # Directory for SQLite database
+  max_transaction_size: 1000000  # $1M
+  agent_id: "financial"
+  name: "Financial Agent"
+
+corporate:
+  data_dir: "data/corporate"
+  agent_id: "corporate_ops"
+  name: "Corporate Operations Agent"
+
+marketing:
+  agent_id: "marketing"
+  name: "Marketing Agent"
+
+project:
+  agent_id: "project_mgr"
+  name: "Project Manager Agent"
+
+mycodao:
+  agent_id: "myco_dao"
+  name: "MycoDAO Agent"
+
+ip:
+  agent_id: "ip_token"
+  name: "IP Tokenization Agent"
+
+dashboard:
+  agent_id: "dashboard"
+  name: "Dashboard Agent"
+
+opportunity_scout:
+  agent_id: "opportunity_scout"
+  name: "Opportunity Scout Agent"
+  data_dir: "data/opportunities"
+  output_dir: "output/opportunities"
+  data_sources:
+    - name: "SAM.gov"
+      url: "https://sam.gov/api/prod/sgs/v1/search/"
+      refresh_rate: "1h"
+    - name: "beta.sam"
+      url: "https://beta.sam.gov/api/prod/sgs/v1/search/"
+      refresh_rate: "1h"
+    - name: "DIU"
+      url: "https://www.diu.mil/work-with-us/opportunities"
+      refresh_rate: "4h"
+  keywords:
+    primary:
+      - "installation resilience"
+      - "operational environment"
+      - "mesh sensor"
+      - "CBRN"
+      - "ISR"
+    secondary:
+      - "sensor network"
+      - "environmental monitoring"
+      - "force health"
+      - "mission assurance"
+  notifications:
+    slack:
+      channel: "#capture-opportunities"
+      threshold: "high_priority"
+    email:
+      recipients: ["capture@mycosoft.com"]
+      threshold: "critical"
+
+# Mycosoft MAS Configuration
+
+# System settings
+system:
+  name: "Mycosoft MAS"
+  version: "1.0.0"
+  environment: "development"
+  log_level: "INFO"
+  data_dir: "data"
+
+# Agent settings
+agents:
+  sales:
+    id: "sales_agent_1"
+    name: "Sales Agent"
+    type: "sales"
+    enabled: true
+    config:
+      max_concurrent_requests: 10
+      cache_ttl: 3600
+      
+  marketing:
+    id: "marketing_agent_1"
+    name: "Marketing Agent"
+    type: "marketing"
+    enabled: true
+    config:
+      max_concurrent_requests: 10
+      cache_ttl: 3600
+      
+  project_manager:
+    id: "project_manager_agent_1"
+    name: "Project Manager Agent"
+    type: "project_manager"
+    enabled: true
+    config:
+      max_concurrent_requests: 10
+      cache_ttl: 3600
+      
+  mycology_knowledge:
+    id: "mycology_knowledge_agent_1"
+    name: "Mycology Knowledge Agent"
+    type: "mycology_knowledge"
+    enabled: true
+    config:
+      max_concurrent_requests: 10
+      cache_ttl: 3600
+
+# Service settings
+services:
+  integration:
+    enabled: true
+    config:
+      max_connections: 100
+      connection_timeout: 30
+      
+  communication:
+    enabled: true
+    config:
+      email:
+        smtp_server: "smtp.example.com"
+        smtp_port: 587
+        username: "user@example.com"
+        password: "password"
+      sms:
+        provider: "twilio"
+        account_sid: "your_account_sid"
+        auth_token: "your_auth_token"
+        
+  error_logging:
+    enabled: true
+    config:
+      log_file: "logs/errors.log"
+      max_file_size: 10485760  # 10MB
+      backup_count: 5
+      
+  metrics:
+    enabled: true
+    config:
+      collection_interval: 60  # seconds
+      retention_period: 604800  # 7 days in seconds
+
+# API settings
+api:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8000
+  cors:
+    enabled: true
+    origins: ["*"]
+  auth:
+    enabled: true
+    jwt_secret: "your_jwt_secret"
+    token_expiry: 3600  # 1 hour in seconds
+
+# Database settings
+database:
+  type: "sqlite"
+  path: "data/mas.db"
+  pool_size: 5
+  timeout: 30
+
+# Integration Service Configuration
+integration_service:
+  websocket_host: "0.0.0.0"
+  websocket_port: 8765
+  metrics_interval: 1.0  # seconds
+
+# Agents Configuration
+agents:
+  desktop_automation:
+    agent_id: "desktop_automation_1"
+    name: "Desktop Automation Agent"
+    config:
+      mouse_speed: 0.5
+      keyboard_delay: 0.1
+      browser_profiles:
+        default:
+          browser_type: "chrome"
+          user_data_dir: "C:/Users/Default/AppData/Local/Google/Chrome/User Data"
+        mercury:
+          browser_type: "chrome"
+          user_data_dir: "C:/Users/Default/AppData/Local/Google/Chrome/User Data/Mercury"
+        clerky:
+          browser_type: "chrome"
+          user_data_dir: "C:/Users/Default/AppData/Local/Google/Chrome/User Data/Clerky"
+        quickbooks:
+          browser_type: "chrome"
+          user_data_dir: "C:/Users/Default/AppData/Local/Google/Chrome/User Data/QuickBooks"
+      application_paths: 

@@ -1,0 +1,95 @@
+# Browser automation tools
+browser_automation:
+  type: selenium
+  config:
+    headless: false
+    implicit_wait: 10
+    page_load_timeout: 30
+    window_size: "1920,1080"
+
+# Desktop control tools
+desktop_control:
+  type: pywinauto
+  config:
+    backend: "win32"
+    timeout: 10
+    retry_interval: 0.5
+
+# Input simulation tools
+input_simulation:
+  type: pyautogui
+  config:
+    fail_safe: true
+    pause: 0.1
+    confidence: 0.9
+
+# Data analysis tools
+data_analysis:
+  type: pandas
+  config:
+    memory_limit: "4GB"
+    chunk_size: 10000
+
+# Web scraping tools
+web_scraping:
+  type: beautifulsoup
+  config:
+    parser: "html.parser"
+    timeout: 30
+    retry_count: 3
+
+# Document processing tools
+document_processing:
+  type: pdfminer
+  config:
+    password: null
+    caching: true
+    check_extractable: true
+
+# Accounting tools
+accounting:
+  type: quickbooks
+  config:
+    company_file: "default"
+    auto_recovery: true
+    backup_interval: 3600
+
+# Transaction processing tools
+transaction_processing:
+  type: mercury
+  config:
+    api_key: null
+    sandbox: false
+    webhook_url: null
+
+# Report generation tools
+report_generation:
+  type: reportlab
+  config:
+    page_size: "A4"
+    font_size: 12
+    margin: 72
+
+# Task tracking tools
+task_tracking:
+  type: asana
+  config:
+    api_key: null
+    workspace: "default"
+    project: "default"
+
+# Resource management tools
+resource_management:
+  type: jira
+  config:
+    server_url: null
+    username: null
+    api_token: null
+
+# Timeline planning tools
+timeline_planning:
+  type: gantt
+  config:
+    timezone: "UTC"
+    working_hours: "9-17"
+    weekends: false 

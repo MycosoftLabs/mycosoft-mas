@@ -1,0 +1,41 @@
+{
+    "agent_id": "desktop_automation_agent",
+    "name": "Desktop Automation Agent",
+    "description": "Agent responsible for browser automation and desktop interaction",
+    "config": {
+        "mouse_speed": 0.5,
+        "keyboard_delay": 0.1,
+        "browser_profiles": {
+            "default": {
+                "browser_type": "chrome",
+                "user_data_dir": "browser_profiles/default"
+            },
+            "mercury": {
+                "browser_type": "chrome",
+                "user_data_dir": "browser_profiles/mercury"
+            },
+            "clerky": {
+                "browser_type": "chrome",
+                "user_data_dir": "browser_profiles/clerky"
+            },
+            "quickbooks": {
+                "browser_type": "chrome",
+                "user_data_dir": "browser_profiles/quickbooks"
+            }
+        },
+        "applications": {
+            "mercury": {
+                "path": "C:\\Program Files\\Mercury\\mercury.exe",
+                "args": []
+            },
+            "clerky": {
+                "path": "C:\\Program Files\\Clerky\\clerky.exe",
+                "args": []
+            },
+            "quickbooks": {
+                "path": "C:\\Program Files\\Intuit\\QuickBooks\\qbw32.exe",
+                "args": []
+            }
+        }
+    }
+} 

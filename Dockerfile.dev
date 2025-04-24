@@ -1,0 +1,64 @@
+FROM python:3.11-slim as base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    POETRY_VERSION=1.7.1 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    vim \
+    netcat-openbsd \
+    iputils-ping \
+    procps \
+    htop \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install poetry
+RUN curl -sSL https://install.python-poetry.org | python3 - && \
+    cd /usr/local/bin && \
+    ln -s /opt/poetry/bin/poetry && \
+    poetry config virtualenvs.create true
+
+WORKDIR /app
+
+# Copy dependency files
+COPY pyproject.toml poetry.lock ./
+
+# Development stage
+FROM base as development
+
+# Install development dependencies
+RUN poetry install --no-root --with dev
+
+# Copy application code
+COPY . .
+
+# Install the project in development mode
+RUN poetry install --only-root
+
+# Development tools and debugging setup
+ENV PYTHONBREAKPOINT=ipdb.set_trace \
+    DEBUGPY_ENABLE=1 \
+    FLASK_ENV=development \
+    FLASK_DEBUG=1
+
+# Expose ports (API, Debugger)
+EXPOSE 8000 5678
+
+# Add wait-for-it script for service orchestration
+COPY docker/wait-for-it.sh /usr/local/bin/wait-for-it
+RUN chmod +x /usr/local/bin/wait-for-it
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Development command with hot reload
+CMD ["poetry", "run", "uvicorn", "mycosoft_mas.core.myca_main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app/mycosoft_mas"] 

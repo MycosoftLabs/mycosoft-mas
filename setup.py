@@ -1,0 +1,31 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="mycosoft-mas",
+    version="1.0.0",
+    packages=find_packages(),
+    install_requires=[
+        "fastapi>=0.100.1",
+        "uvicorn>=0.23.2",
+        "pydantic>=2.1.1",
+        "aiohttp>=3.9.1",
+        "aioredis>=2.0.1",
+        "prometheus-client>=0.17.1",
+        "pyyaml>=6.0.1",
+        "selenium>=4.15.2",
+        "redis>=5.0.1",
+        "sqlalchemy>=2.0.23",
+        "alembic>=1.11.1",
+        "celery>=5.2.7",
+        "flower>=2.0.1",
+        "aiosqlite>=0.19.0",
+        "aiosmtplib>=2.0.1",
+        "python-jose[cryptography]>=3.3.0",
+        "passlib[bcrypt]>=1.7.4",
+        "python-multipart>=0.0.6",
+        "httpx>=0.28.1",
+        "jinja2>=3.1.2",
+        "python-dotenv>=1.0.0",
+    ],
+    python_requires=">=3.11",
+) 

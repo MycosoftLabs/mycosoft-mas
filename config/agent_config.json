@@ -1,0 +1,45 @@
+{
+    "agent": {
+        "health_check_interval": 60,
+        "retry_interval": 300,
+        "max_retries": 3,
+        "debug_mode": false,
+        "log_level": "INFO"
+    },
+    "llm_providers": {
+        "openai": {
+            "api_key": "${OPENAI_API_KEY}",
+            "model": "gpt-4",
+            "temperature": 0.7,
+            "max_tokens": 2000
+        },
+        "anthropic": {
+            "api_key": "${ANTHROPIC_API_KEY}",
+            "model": "claude-2",
+            "temperature": 0.7,
+            "max_tokens": 2000
+        }
+    },
+    "message_broker": {
+        "redis_host": "${REDIS_HOST}",
+        "redis_port": "${REDIS_PORT}",
+        "redis_db": "${REDIS_DB}",
+        "message_ttl": 3600,
+        "max_queue_size": 10000
+    },
+    "database": {
+        "url": "${DATABASE_URL}",
+        "pool_size": "${DB_POOL_SIZE}",
+        "max_overflow": "${DB_MAX_OVERFLOW}"
+    },
+    "monitoring": {
+        "prometheus_port": "${PROMETHEUS_PORT}",
+        "enable_tracing": "${ENABLE_TRACING}",
+        "metrics_interval": 60
+    },
+    "security": {
+        "secret_key": "${SECRET_KEY}",
+        "jwt_algorithm": "${JWT_ALGORITHM}",
+        "access_token_expire_minutes": "${ACCESS_TOKEN_EXPIRE_MINUTES}"
+    }
+} 

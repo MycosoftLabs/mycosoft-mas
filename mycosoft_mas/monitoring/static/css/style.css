@@ -1,0 +1,106 @@
+/* Dashboard Styles */
+body {
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.metric-card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.metric-label {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.dashboard-tab {
+    display: none;
+}
+
+.dashboard-tab.active {
+    display: block;
+}
+
+.card {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid #eee;
+}
+
+.card-header h5 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.event-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#knowledgeGraph {
+    height: 600px;
+    background-color: white;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    color: #7f8c8d;
+}
+
+.progress {
+    height: 8px;
+    margin-bottom: 0;
+}
+
+/* Status indicators */
+.status-active {
+    color: #2ecc71;
+}
+
+.status-inactive {
+    color: #e74c3c;
+}
+
+.status-warning {
+    color: #f1c40f;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .metric-value {
+        font-size: 2rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    #knowledgeGraph {
+        height: 400px;
+    }
+} 

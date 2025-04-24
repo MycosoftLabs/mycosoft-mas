@@ -1,0 +1,161 @@
+/* Dashboard Styles */
+
+:root {
+    --primary-color: #007bff;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --secondary-color: #6c757d;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+}
+
+body {
+    background-color: var(--light-color);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand i {
+    margin-right: 0.5rem;
+    font-size: 1.25rem;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Stats Cards */
+.stat-card {
+    background: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.stat-card .card-body {
+    padding: 1.5rem;
+}
+
+.stat-card .card-subtitle {
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card .card-title {
+    color: var(--dark-color);
+    margin: 0.5rem 0;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.stat-card .progress {
+    height: 0.5rem;
+    border-radius: 0.25rem;
+    background-color: rgba(0,0,0,0.05);
+}
+
+.stat-card .progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* List Items */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 1rem;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.list-group-item i {
+    font-size: 1.25rem;
+    vertical-align: middle;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+}
+
+/* Charts */
+#system-metrics-chart,
+#activity-chart {
+    height: 300px !important;
+}
+
+/* Buttons */
+.btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.bx-pulse {
+    animation: pulse 2s infinite;
+}
+
+/* Status Colors */
+.text-success { color: var(--success-color) !important; }
+.text-warning { color: var(--warning-color) !important; }
+.text-danger { color: var(--danger-color) !important; }
+.text-secondary { color: var(--secondary-color) !important; }
+
+.bg-success { background-color: var(--success-color) !important; }
+.bg-warning { background-color: var(--warning-color) !important; }
+.bg-danger { background-color: var(--danger-color) !important; }
+.bg-secondary { background-color: var(--secondary-color) !important; }
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .stat-card .card-title {
+        font-size: 1.5rem;
+    }
+    
+    .card-header {
+        padding: 0.75rem;
+    }
+    
+    .list-group-item {
+        padding: 0.75rem;
+    }
+} 
