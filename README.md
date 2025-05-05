@@ -110,122 +110,70 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - TensorFlow
 - PyTorch
 
-# Mycosoft MAS (Multi-Agent System) - Version 0.1
+# Mycosoft Multi-Agent System (MAS)
 
-A sophisticated multi-agent system designed for managing and coordinating various aspects of mycological research and operations.
+A distributed multi-agent system for intelligent task processing and orchestration.
 
-## Overview
+## Features
 
-Mycosoft MAS is a comprehensive platform that integrates multiple intelligent agents to handle various tasks related to mycological research, data management, and operational coordination. The system is built with modern technologies and follows best practices in software development.
+- Distributed agent architecture
+- Redis-based message queue
+- PostgreSQL database
+- Qdrant vector database
+- Prometheus monitoring
+- Grafana dashboards
 
-## Key Features
+## Getting Started
 
-- 🤖 Multi-agent coordination system
-- 📊 Real-time monitoring and metrics
-- 🔄 Automated task management
-- 🔐 Secure communication protocols
-- 📈 Data analytics and visualization
-- 🌐 Web-based user interface
-- 🔌 Extensible plugin architecture
+### Prerequisites
 
-## Quick Start
+- Docker
+- Docker Compose
+- Python 3.11+
+- Poetry
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/mycosoft-mas.git
-   cd mycosoft-mas
-   ```
+### Installation
 
-2. **Set up environment**
-   ```bash
-   # Copy environment file
-   cp .env.example .env
-
-   # Install Python dependencies
-   poetry install
-
-   # Install Node.js dependencies
-   npm install
-   ```
-
-3. **Start services**
-   ```bash
-   # Start all services
-   docker-compose up -d
-   ```
-
-4. **Access the application**
-   - Web Interface: http://localhost:3000
-   - Grafana Dashboard: http://localhost:3002
-   - Prometheus: http://localhost:9090
-
-## Technology Stack
-
-- **Backend**
-  - Python 3.11
-  - FastAPI
-  - PostgreSQL
-  - Redis
-  - Celery
-
-- **Frontend**
-  - Next.js 14
-  - React
-  - TypeScript
-  - Tailwind CSS
-  - Shadcn UI
-
-- **Monitoring**
-  - Prometheus
-  - Grafana
-  - Custom metrics
-
-- **Infrastructure**
-  - Docker
-  - Docker Compose
-  - Poetry
-  - Node.js
-
-## Documentation
-
-- [Development Guide](docs/development.md)
-- [API Documentation](docs/api.md)
-- [Agent Documentation](docs/agents/README.md)
-- [Service Documentation](docs/services/README.md)
-
-## Project Structure
-
-```
-mycosoft-mas/
-├── agents/           # Agent implementations
-├── app/             # Next.js frontend
-├── components/      # React components
-├── config/          # Configuration files
-├── data/           # Data storage
-├── docker/         # Docker configurations
-├── docs/           # Documentation
-├── grafana/        # Monitoring dashboards
-├── mycosoft_mas/   # Core backend
-├── prometheus/     # Metrics configuration
-└── tests/          # Test suites
+1. Clone the repository:
+```bash
+git clone https://github.com/mycosoft/mas.git
+cd mas
 ```
 
-## Contributing
+2. Install dependencies:
+```bash
+poetry install
+```
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Start the services:
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+### Accessing Services
+
+- Orchestrator API: http://localhost:8001
+- Grafana: http://localhost:3000
+- Prometheus: http://localhost:9090
+- Qdrant: http://localhost:6333
+
+## Development
+
+### Running Tests
+
+```bash
+poetry run pytest
+```
+
+### Code Style
+
+```bash
+poetry run black .
+poetry run isort .
+poetry run mypy .
+poetry run pylint .
+```
 
 ## License
 
-Proprietary - All rights reserved. © Morgan Rockwell
-
-## Support
-
-For support and inquiries, please contact the development team or refer to the documentation.
-
-## Acknowledgments
-
-Special thanks to all contributors and stakeholders who have made this project possible.
+MIT

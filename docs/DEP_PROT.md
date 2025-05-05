@@ -1,110 +1,153 @@
-# Dependency Management Protocol
+# Mycosoft MAS Dependency Management Protocol
 
 ## Overview
-This document outlines the dependency management strategy for the Mycosoft MAS project, ensuring reproducible builds, conflict-free dependencies, and automated updates.
+
+This document outlines the dependency management protocol for the Mycosoft Multi-Agent System (MAS). The protocol ensures consistent, secure, and maintainable dependency management across all components of the system.
 
 ## Core Principles
 
 1. **Immutable, Isolated Builds**
-   - All dependencies are pinned to specific versions
-   - Build environments are reproducible
-   - Rollbacks are possible at any time
+   - All dependencies are locked to specific versions
+   - Each service runs in its own Docker container
+   - Builds are reproducible byte-for-byte
 
 2. **Semantic Versioning**
-   - Direct dependencies are pinned
+   - Direct dependencies are pinned to exact versions
    - Minor version updates are allowed after passing tests
    - Major version updates require explicit approval
 
 3. **Automated Conflict Detection**
    - CI pipeline checks for dependency conflicts
-   - Security vulnerabilities are automatically detected
+   - Security vulnerabilities are automatically scanned
    - SBOM (Software Bill of Materials) is maintained
 
 4. **Zero-Downtime Updates**
-   - Blue/green deployment strategy
    - Rolling updates for containerized services
-   - Automated testing before deployment
+   - Blue/green deployment capability
+   - Automated rollback on failure
 
-## Workflow
+## Dependency Management Tools
 
-### Development
-1. Add new dependencies to `requirements.in` or `pyproject.toml`
-2. Run `pip-compile` to generate `requirements.txt`
-3. Run `poetry lock` to update Poetry lock file
-4. Test changes locally with `tox`
+### Poetry
+- Primary dependency management tool
+- Manages Python package dependencies
+- Generates lock files and requirements.txt
+- Handles virtual environments
 
-### CI/CD
-1. GitHub Actions automatically:
-   - Runs tests across Python versions
-   - Checks for dependency conflicts
-   - Performs security audits
-   - Updates SBOM
-   - Commits dependency updates
+### Docker
+- Containerizes services
+- Provides isolation between components
+- Enables reproducible builds
+- Supports multi-stage builds
 
-### Deployment
-1. Container images are built from pinned dependencies
-2. Rolling updates are performed in Kubernetes
-3. Health checks ensure service availability
+### GitHub Actions
+- Automates dependency updates
+- Runs security scans
+- Manages CI/CD pipelines
+- Handles automated PR creation
 
-## Version Control
+## Update Process
 
-### Python Version Support
-- Currently supported: 3.9, 3.10, 3.11
-- EOL (End of Life) versions are dropped after 6 months of EOL date
+1. **Weekly Automated Updates**
+   - GitHub Actions runs weekly dependency updates
+   - Creates PR with updated dependencies
+   - Runs test suite and security scans
+   - Requires approval before merging
 
-### Dependency Updates
-- Minor version updates: Automated through Dependabot
-- Major version updates: Require PR review and approval
-- Security updates: Automatically applied if tests pass
+2. **Manual Updates**
+   - Run `scripts/update_deps.sh`
+   - Follow PR process for review
+   - Update documentation if needed
 
-## Tools
+3. **Emergency Updates**
+   - For critical security fixes
+   - Can bypass normal PR process
+   - Requires post-update review
 
-### Primary Tools
-- Poetry: Primary dependency management
-- pip-tools: For pip-based requirements
-- tox: Multi-environment testing
-- pip-audit: Security scanning
-- pipdeptree: Conflict detection
+## Security Considerations
 
-### CI/CD Tools
-- GitHub Actions: CI/CD pipeline
-- Dependabot: Automated updates
-- CodeQL: Security scanning
-- cyclonedx-py: SBOM generation
+1. **Vulnerability Scanning**
+   - Weekly automated scans
+   - Immediate alerts for critical issues
+   - Regular dependency audits
 
-## Governance
+2. **Access Control**
+   - Limited access to dependency updates
+   - Required approvals for major changes
+   - Audit trail of all updates
 
-### Approval Process
-1. Minor updates: Automated if tests pass
-2. Major updates: Requires team review
-3. Security updates: Automated with rollback capability
+3. **Supply Chain Security**
+   - SBOM generation and tracking
+   - Dependency provenance verification
+   - Regular security updates
 
-### Documentation
-- All dependency decisions are documented in this file
-- Changelog is automatically generated from commit messages
-- SBOM is maintained and updated automatically
+## Monitoring and Alerts
 
-## Emergency Procedures
+1. **Dependency Health**
+   - Automated monitoring of dependency status
+   - Alerts for outdated packages
+   - Security vulnerability notifications
 
-### Rollback Process
-1. Revert dependency changes in version control
-2. Rebuild and redeploy affected services
-3. Verify system health
+2. **Build Status**
+   - CI pipeline status monitoring
+   - Build failure notifications
+   - Test coverage tracking
 
-### Security Incidents
-1. Immediate security updates are applied
-2. Affected services are redeployed
-3. Incident is documented and reviewed
+3. **Runtime Monitoring**
+   - Service health checks
+   - Performance metrics
+   - Error rate tracking
 
-## Maintenance
+## Rollback Procedures
 
-### Regular Tasks
-- Weekly dependency updates
-- Monthly security audits
-- Quarterly major version reviews
-- Annual Python version review
+1. **Automated Rollback**
+   - Triggered by health check failures
+   - Reverts to last known good state
+   - Notifies team of rollback
 
-### Monitoring
-- Dependency conflicts are monitored
-- Security vulnerabilities are tracked
-- Update success rates are measured 
+2. **Manual Rollback**
+   - Documentation of rollback steps
+   - Required approvals
+   - Post-mortem analysis
+
+## Documentation Requirements
+
+1. **Dependency Updates**
+   - Changelog entries
+   - Update rationale
+   - Impact assessment
+
+2. **Configuration Changes**
+   - Environment variable updates
+   - Build configuration changes
+   - Runtime configuration updates
+
+3. **Security Updates**
+   - Vulnerability details
+   - Mitigation steps
+   - Post-update verification
+
+## Approval Process
+
+1. **Minor Updates**
+   - Automated PR creation
+   - Required test passing
+   - One team member approval
+
+2. **Major Updates**
+   - Manual PR creation
+   - Impact assessment
+   - Team lead approval
+   - Security team review
+
+3. **Security Updates**
+   - Immediate review
+   - Security team approval
+   - Post-update verification
+
+## Contact Information
+
+For questions or concerns about dependency management:
+- Team Lead: [Name]
+- Security Team: [Contact]
+- DevOps Team: [Contact] 

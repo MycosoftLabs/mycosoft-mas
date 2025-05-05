@@ -1,0 +1,20 @@
+{
+  "mcp": {
+    "servers": [
+      "vault",
+      "upstash",
+      "supabase",
+      "neon",
+      "qdrant",
+      "fetch",
+      "python",
+      "run",
+      "openrouter",
+      "github",
+      "slack",
+      "mailtrap",
+      "bucket",
+      "cron"
+    ]
+  }
+} 

@@ -1,4 +1,5 @@
-FROM python:3.11-slim as builder
+# === build stage ===
+FROM python:3.11-slim AS build
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -15,6 +16,8 @@ RUN apt-get update \
         build-essential \
         curl \
         git \
+        libpq-dev \
+        python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
@@ -35,7 +38,8 @@ COPY . .
 # Install the application
 RUN poetry install --no-dev
 
-FROM python:3.11-slim as runtime
+# === runtime stage ===
+FROM python:3.11-slim AS runtime
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -47,6 +51,7 @@ RUN apt-get update \
         netcat-openbsd \
         postgresql-client \
         curl \
+        libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy wait-for-it script
@@ -57,8 +62,11 @@ RUN chmod +x /usr/local/bin/wait-for-it
 WORKDIR /app
 
 # Copy from builder
-COPY --from=builder /app /app
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=build /app /app
+COPY --from=build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/data
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \

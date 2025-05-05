@@ -1,12 +1,65 @@
-name: CI/CD Pipeline
+name: mas-ci
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main]
 
 jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: example
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('pyproject.toml') }}
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies (prod + dev)
+        run: poetry install --with dev
+
+      - name: Run pre-commit checks
+        run: poetry run pre-commit run --all-files --show-diff-on-failure
+
+      - name: Run tests
+        run: poetry run pytest -q
+
+      - name: MCP lint
+        run: |
+          if command -v mcp >/dev/null 2>&1; then mcp lint mcp/**/*.json || true ; fi
+
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+
+      - name: Upload CycloneDX SBOM
+        uses: anchore/sbom-action@v0.15.10
+        with:
+          path: "."
+          upload-artifact: true
+
   test:
     runs-on: ubuntu-latest
     strategy:

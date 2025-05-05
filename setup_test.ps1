@@ -1,31 +1,48 @@
-# Setup script for Mycosoft MAS test environment
-Write-Host "Setting up Mycosoft MAS test environment..."
+# Test environment setup script for Mycosoft MAS
+Write-Host "Setting up test environment..."
 
-# Check if Python is installed
-try {
-    $pythonVersion = python --version
-    Write-Host "Python is installed: $pythonVersion"
-} catch {
-    Write-Host "Error: Python is not installed. Please install Python 3.11 or later."
-    exit 1
-}
+# Create virtual environment
+Write-Host "Creating Python virtual environment..."
+python -m venv venv
+.\venv\Scripts\Activate.ps1
 
-# Check if Poetry is installed
-try {
-    $poetryVersion = poetry --version
-    Write-Host "Poetry is installed: $poetryVersion"
-} catch {
-    Write-Host "Installing Poetry..."
-    (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-    $env:Path += ";$env:APPDATA\Python\Scripts"
-}
+# Install Python dependencies
+Write-Host "Installing Python dependencies..."
+pip install -r requirements.txt
+poetry install
 
-# Install dependencies
-Write-Host "Installing project dependencies..."
-poetry install --with dev
+# Install Node.js dependencies
+Write-Host "Installing Node.js dependencies..."
+npm install
+
+# Initialize PostgreSQL
+Write-Host "Initializing PostgreSQL..."
+$pgPath = "C:\Program Files\PostgreSQL\15\bin"
+$env:Path += ";$pgPath"
+initdb -D "C:\Program Files\PostgreSQL\15\data"
+pg_ctl -D "C:\Program Files\PostgreSQL\15\data" start
+
+# Initialize Redis
+Write-Host "Starting Redis server..."
+Start-Service Redis
+
+# Create necessary directories
+Write-Host "Creating required directories..."
+New-Item -ItemType Directory -Force -Path "logs"
+New-Item -ItemType Directory -Force -Path "data"
+New-Item -ItemType Directory -Force -Path "migrations"
+
+# Copy configuration files
+Write-Host "Setting up configuration files..."
+Copy-Item "config.yaml.example" "config.yaml" -Force
+Copy-Item ".env.example" ".env" -Force
+
+# Run database migrations
+Write-Host "Running database migrations..."
+python -m alembic upgrade head
 
 # Run tests
-Write-Host "Running tests..."
-poetry run pytest
+Write-Host "Running initial test suite..."
+python -m pytest
 
-Write-Host "Test setup complete!" 
+Write-Host "Test environment setup completed!" 
