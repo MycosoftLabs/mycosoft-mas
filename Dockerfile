@@ -1,5 +1,5 @@
 # === build stage ===
-FROM python:3.11-slim AS build
+FROM python:3.13-slim AS build
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -39,7 +39,7 @@ COPY . .
 RUN poetry install --no-dev
 
 # === runtime stage ===
-FROM python:3.11-slim AS runtime
+FROM python:3.13-slim AS runtime
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
