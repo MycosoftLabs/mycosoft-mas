@@ -1,0 +1,100 @@
+app:
+  name: mycosoft_mas
+  host: 0.0.0.0
+  port: 8000
+  log_level: INFO
+
+database:
+  url: ${DATABASE_URL}
+
+redis:
+  url: ${REDIS_URL}
+
+llm_providers:
+  openai:
+    api_key: ${OPENAI_API_KEY}
+    model: gpt-4o-mini
+  anthropic:
+    api_key: ${ANTHROPIC_API_KEY}
+    model: claude-3-sonnet-20240229
+
+agents:
+  dir: "./config/agent_configs"
+  mycology:
+    agent_id: "mycology-bio-1"
+    name: "Mycology Bio Agent"
+    type: "research"
+    model: "claude-3-sonnet"
+    knowledge_base: "mycology_bio"
+    
+  financial:
+    agent_id: "financial-1"
+    name: "Financial Agent"
+    type: "financial"
+    model: "claude-3-sonnet"
+    permissions: ["trading", "analysis"]
+    
+  corporate:
+    agent_id: "corporate-ops-1"
+    name: "Corporate Operations Agent"
+    type: "operations"
+    model: "claude-3-sonnet"
+    
+  marketing:
+    agent_id: "marketing-1"
+    name: "Marketing Agent"
+    type: "marketing"
+    model: "claude-3-sonnet"
+    
+  project:
+    agent_id: "project-mgr-1"
+    name: "Project Manager Agent"
+    type: "project_management"
+    model: "claude-3-sonnet"
+    
+  mycodao:
+    agent_id: "mycodao-1"
+    name: "MycoDAO Agent"
+    type: "dao"
+    model: "claude-3-sonnet"
+    
+  ip:
+    agent_id: "ip-token-1"
+    name: "IP Tokenization Agent"
+    type: "tokenization"
+    model: "claude-3-sonnet"
+    
+  dashboard:
+    agent_id: "dashboard-1"
+    name: "Dashboard Agent"
+    type: "monitoring"
+    
+  opportunity_scout:
+    agent_id: "opp-scout-1"
+    name: "Opportunity Scout"
+    type: "research"
+    model: "claude-3-sonnet"
+
+monitoring:
+  prometheus:
+    host: localhost
+    port: 9090
+  grafana:
+    host: localhost
+    port: 3000
+  loki:
+    host: localhost
+    port: 3100
+
+messaging:
+  broker_url: ${MESSAGE_BROKER_URL}
+  exchange: "mycosoft_mas"
+  queue_prefix: "mas"
+
+error_logging:
+  service_name: "error_logger"
+  log_file: "logs/error.log"
+
+communication:
+  service_name: "communication"
+  protocols: ["http", "websocket"] 

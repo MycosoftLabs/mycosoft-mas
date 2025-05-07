@@ -1,0 +1,38 @@
+{
+    "agent_id": "mycology_bio_agent",
+    "name": "Mycology Bio Agent",
+    "oxigraph_url": "http://localhost:7878",
+    "data_dir": "data/fungal_knowledge",
+    "output_dir": "output/fungal_knowledge",
+    "hackathon_mode": true,
+    "log_level": "INFO",
+    "sync_interval": 60,
+    "update_interval": 300,
+    "retry_delay": 300,
+    "max_retries": 3,
+    "namespaces": {
+        "fungi": "http://mycosoft.org/fungi/",
+        "plants": "http://mycosoft.org/plants/",
+        "animals": "http://mycosoft.org/animals/",
+        "bacteria": "http://mycosoft.org/bacteria/",
+        "viruses": "http://mycosoft.org/viruses/",
+        "relations": "http://mycosoft.org/relations/"
+    },
+    "initial_data": {
+        "fungal_species": [
+            {
+                "id": "psilocybe_cubensis",
+                "name": "Psilocybe cubensis",
+                "scientific_name": "Psilocybe cubensis",
+                "taxonomy": "Fungi > Basidiomycota > Agaricomycetes > Agaricales > Hymenogastraceae > Psilocybe",
+                "relationships": [
+                    {
+                        "type": "symbiotic_with",
+                        "target_type": "plants",
+                        "target_id": "grasses"
+                    }
+                ]
+            }
+        ]
+    }
+} 

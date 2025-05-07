@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mycosoft MAS Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/lucide-static@0.263.1/font/lucide.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #50e3c2;
+            --background-color: #f5f5f5;
+            --text-color: #333;
+            --card-background: #fff;
+            --border-color: #ddd;
+            --muted-background: #f0f0f0;
+            --muted-foreground: #666;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #64b5f6;
+            --secondary-color: #4db6ac;
+            --background-color: #1a1a1a;
+            --text-color: #fff;
+            --card-background: #2d2d2d;
+            --border-color: #404040;
+            --muted-background: #2d2d2d;
+            --muted-foreground: #999;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: var(--muted-background);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            color: var(--muted-foreground);
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .nav-item:hover {
+            background-color: var(--card-background);
+            color: var(--primary-color);
+        }
+
+        .nav-item.active {
+            background-color: var(--card-background);
+            color: var(--primary-color);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .user-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .user-button:hover {
+            background-color: var(--muted-background);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .agent-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .status-dot.active {
+            background-color: #4caf50;
+        }
+
+        .status-dot.inactive {
+            background-color: #f44336;
+        }
+
+        .status-dot.warning {
+            background-color: #ff9800;
+        }
+
+        @media (max-width: 768px) {
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i data-lucide="dna" class="icon"></i>
+                <h2>Mycosoft MAS</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item active">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    Overview
+                </a>
+                <a href="/dashboard/orchestrator" class="nav-item">
+                    <i data-lucide="workflow" class="icon"></i>
+                    Orchestrator
+                </a>
+                <a href="/dashboard/myca" class="nav-item">
+                    <i data-lucide="microscope" class="icon"></i>
+                    MYCA
+                </a>
+                <a href="/dashboard/knowledge" class="nav-item">
+                    <i data-lucide="database" class="icon"></i>
+                    Knowledge Base
+                </a>
+                <a href="/dashboard/experiments" class="nav-item">
+                    <i data-lucide="flask-conical" class="icon"></i>
+                    Experiments
+                </a>
+                <a href="/dashboard/agents" class="nav-item">
+                    <i data-lucide="brain" class="icon"></i>
+                    AI Agents
+                </a>
+                <a href="/dashboard/network" class="nav-item">
+                    <i data-lucide="network" class="icon"></i>
+                    Network
+                </a>
+                <a href="/dashboard/analytics" class="nav-item">
+                    <i data-lucide="bar-chart-2" class="icon"></i>
+                    Analytics
+                </a>
+                <a href="/dashboard/api-keys" class="nav-item">
+                    <i data-lucide="key" class="icon"></i>
+                    API Keys
+                </a>
+                <a href="/dashboard/settings" class="nav-item">
+                    <i data-lucide="settings" class="icon"></i>
+                    Settings
+                </a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="header">
+                <h1>Dashboard Overview</h1>
+                <div class="user-nav">
+                    <button class="user-button" onclick="toggleTheme()">
+                        <i data-lucide="sun" class="icon"></i>
+                    </button>
+                    <button class="user-button">
+                        <i data-lucide="user" class="icon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="dashboard">
+                <!-- System Metrics -->
+                <div class="card">
+                    <h2>System Metrics</h2>
+                    <div class="chart-container">
+                        <canvas id="systemMetricsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Agent Status -->
+                <div class="card">
+                    <h2>Agent Status</h2>
+                    <div class="agent-status" id="agentStatus">
+                        <!-- Agent status will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Resource Utilization -->
+                <div class="card">
+                    <h2>Resource Utilization</h2>
+                    <div class="chart-container">
+                        <canvas id="resourceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="card">
+                    <h2>Performance Metrics</h2>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Theme management
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update theme icon
+            const themeIcon = document.querySelector('.user-button i[data-lucide="sun"]');
+            themeIcon.setAttribute('data-lucide', newTheme === 'dark' ? 'moon' : 'sun');
+            lucide.createIcons();
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.body.setAttribute('data-theme', savedTheme);
+        const themeIcon = document.querySelector('.user-button i[data-lucide="sun"]');
+        themeIcon.setAttribute('data-lucide', savedTheme === 'dark' ? 'moon' : 'sun');
+        lucide.createIcons();
+
+        // WebSocket connection
+        const ws = new WebSocket(`ws://${window.location.host}/ws/metrics`);
+        
+        // Charts
+        const systemMetricsChart = new Chart(
+            document.getElementById('systemMetricsChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'CPU Usage',
+                        data: [],
+                        borderColor: '#4a90e2',
+                        tension: 0.1
+                    }, {
+                        label: 'Memory Usage',
+                        data: [],
+                        borderColor: '#50e3c2',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            }
+        );
+
+        const resourceChart = new Chart(
+            document.getElementById('resourceChart'),
+            {
+                type: 'bar',
+                data: {
+                    labels: ['CPU', 'Memory', 'Disk', 'Network'],
+                    datasets: [{
+                        label: 'Utilization',
+                        data: [0, 0, 0, 0],
+                        backgroundColor: [
+                            '#4a90e2',
+                            '#50e3c2',
+                            '#f5a623',
+                            '#d0021b'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            }
+        );
+
+        const performanceChart = new Chart(
+            document.getElementById('performanceChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Response Time',
+                        data: [],
+                        borderColor: '#4a90e2',
+                        tension: 0.1
+                    }, {
+                        label: 'Throughput',
+                        data: [],
+                        borderColor: '#50e3c2',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            }
+        );
+
+        // Handle WebSocket messages
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            // Update charts
+            if (data.systemMetrics) {
+                systemMetricsChart.data.labels.push(new Date().toLocaleTimeString());
+                systemMetricsChart.data.datasets[0].data.push(data.systemMetrics.cpu);
+                systemMetricsChart.data.datasets[1].data.push(data.systemMetrics.memory);
+                if (systemMetricsChart.data.labels.length > 10) {
+                    systemMetricsChart.data.labels.shift();
+                    systemMetricsChart.data.datasets[0].data.shift();
+                    systemMetricsChart.data.datasets[1].data.shift();
+                }
+                systemMetricsChart.update();
+            }
+
+            if (data.resourceUtilization) {
+                resourceChart.data.datasets[0].data = [
+                    data.resourceUtilization.cpu,
+                    data.resourceUtilization.memory,
+                    data.resourceUtilization.disk,
+                    data.resourceUtilization.network
+                ];
+                resourceChart.update();
+            }
+
+            if (data.performance) {
+                performanceChart.data.labels.push(new Date().toLocaleTimeString());
+                performanceChart.data.datasets[0].data.push(data.performance.responseTime);
+                performanceChart.data.datasets[1].data.push(data.performance.throughput);
+                if (performanceChart.data.labels.length > 10) {
+                    performanceChart.data.labels.shift();
+                    performanceChart.data.datasets[0].data.shift();
+                    performanceChart.data.datasets[1].data.shift();
+                }
+                performanceChart.update();
+            }
+
+            // Update agent status
+            if (data.agents) {
+                const agentStatus = document.getElementById('agentStatus');
+                agentStatus.innerHTML = '';
+                data.agents.forEach(agent => {
+                    const statusIndicator = document.createElement('div');
+                    statusIndicator.className = 'status-indicator';
+                    statusIndicator.innerHTML = `
+                        <div class="status-dot ${agent.status}"></div>
+                        <span>${agent.name}</span>
+                    `;
+                    agentStatus.appendChild(statusIndicator);
+                });
+            }
+        };
+    </script>
+</body>
+</html> 

@@ -1,0 +1,155 @@
+groups:
+  - name: mas_alerts
+    rules:
+      # Service Health Alerts
+      - alert: ServiceUnhealthy
+        expr: service_health == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.service }} is unhealthy"
+          description: "Service {{ $labels.service }} has been unhealthy for more than 1 minute"
+
+      # Resource Usage Alerts
+      - alert: HighMemoryUsage
+        expr: (process_resident_memory_bytes / (1024 * 1024 * 1024)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High memory usage detected
+          description: Memory usage is above 2GB for 5 minutes
+
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High CPU usage detected
+          description: CPU usage is above 80% for 5 minutes
+
+      # Dependency Health Alerts
+      - alert: DependencyUnhealthy
+        expr: service_dependencies_health == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Dependency {{ $labels.dependency }} is unhealthy for {{ $labels.service }}"
+          description: "Dependency {{ $labels.dependency }} has been unhealthy for more than 1 minute"
+
+      # Response Time Alerts
+      - alert: HighResponseTime
+        expr: rate(service_response_time_seconds_sum[5m]) / rate(service_response_time_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time in {{ $labels.service }}"
+          description: "Service {{ $labels.service }} endpoint {{ $labels.endpoint }} has high response time"
+
+      # Security Alerts
+      - alert: HighSecurityAlerts
+        expr: security_alerts_total > 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High number of security alerts"
+          description: "More than 10 security alerts in the last 5 minutes"
+
+      - alert: CriticalVulnerability
+        expr: security_vulnerability_severity == 4  # Critical severity
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical vulnerability detected"
+          description: "A critical severity vulnerability has been detected"
+
+      # Integration Alerts
+      - alert: IntegrationFailure
+        expr: integration_failures_total > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Integration failure detected"
+          description: "Integration failures have been detected"
+
+      # Dependency Conflict Alerts
+      - alert: DependencyConflict
+        expr: dependency_conflicts_total > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dependency conflict detected"
+          description: "Dependency conflicts have been detected"
+
+      # Task Execution Alerts
+      - alert: LongRunningTask
+        expr: task_execution_time_seconds > 300  # 5 minutes
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Long running task detected"
+          description: "Task has been running for more than 5 minutes"
+
+      # Technology Update Alerts
+      - alert: TechnologyUpdateImpact
+        expr: technology_update_impact_score > 0.8  # High impact
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High impact technology update"
+          description: "A technology update with high impact has been detected"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Service is down
+          description: "{{ $labels.job }} service is down"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High error rate detected
+          description: Error rate is above 5% for 5 minutes
+
+      - alert: SlowResponseTime
+        expr: rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Slow response time detected
+          description: Average response time is above 1 second for 5 minutes
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Redis is down
+          description: Redis instance is not responding
+
+      - alert: HighRedisMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High Redis memory usage
+          description: Redis memory usage is above 80% 

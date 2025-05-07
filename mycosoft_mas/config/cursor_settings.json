@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "fastapi-mas": { "type": "http", "url": "http://localhost:8000/mcp" },
+    "qdrant-mcp":  { "command": "npx", "args": ["-y", "mcp-server-qdrant"] },
+    "firecrawl-mcp": {
+      "command": "npx",
+      "args": ["-y", "firecrawl-mcp"],
+      "env": { "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}" }
+    },
+    "browserbase-mcp": { "command": "npx", "args": ["-y", "mcp-server-browserbase"] },
+    "elevenlabs-mcp":  { "command": "npx", "args": ["-y", "elevenlabs-mcp"] },
+    "supabase-mcp":    { "command": "npx", "args": ["-y", "supabase-mcp"] },
+    "graphlit-mcp":    { "command": "npx", "args": ["-y", "graphlit-mcp"] },
+    "figma-mcp":       { "command": "npx", "args": ["-y", "figma-mcp"] },
+    "n8n-mcp":         { "command": "npx", "args": ["-y", "n8n-mcp"] }
+  }
+} 

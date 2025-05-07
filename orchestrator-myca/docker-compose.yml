@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  orchestrator:
+    build: .
+    container_name: mycosoft-orchestrator
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_DEBUG=${API_DEBUG:-False}
+      - API_RELOAD=${API_RELOAD:-False}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL:-60}
+      - RETRY_INTERVAL=${RETRY_INTERVAL:-300}
+      - MAX_RETRIES=${MAX_RETRIES:-3}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+      - ./logs:/app/logs
+    networks:
+      - mycosoft-network
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: mycosoft-orchestrator-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mycosoft-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: mycosoft-orchestrator-postgres
+    environment:
+      - POSTGRES_USER=${DB_USER:-mycosoft}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-mycosoft}
+      - POSTGRES_DB=${DB_NAME:-mycosoft}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mycosoft-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-mycosoft}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  mycosoft-network:
+    driver: bridge 

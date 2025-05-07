@@ -1,0 +1,31 @@
+# Core Dependencies - Minimal set for container initialization
+fastapi==0.109.2
+uvicorn==0.27.1
+pydantic==2.6.1
+python-dotenv==1.0.1
+httpx~=0.23.3  # Compatible with python-telegram-bot
+aiohttp==3.9.3
+
+# Database & Caching
+redis==5.0.1
+sqlalchemy==2.0.23
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Monitoring
+prometheus-client==0.19.0
+
+# Keep only essential dependencies here - use poetry.lock for full dependency management
+langgraph==0.0.10
+langgraph-mcp-adapters==0.1.0
+fastapi-mcp==0.1.0
+qdrant-client==1.7.0
+firecrawl-mcp==0.1.0
+browserbase-mcp==0.1.0
+elevenlabs-mcp==0.1.0
+supabase-mcp==0.1.0
+graphlit-mcp-server==0.1.0
+figma-mcp==0.1.0
+n8n-mcp==0.1.0 

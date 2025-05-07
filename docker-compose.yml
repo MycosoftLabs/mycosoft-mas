@@ -1,0 +1,169 @@
+version: "3.9"
+
+services:
+  mas-orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    ports: ["8001:8000"]
+    command: >
+      sh -c "wait-for-it redis:6379 -t 60 &&
+             wait-for-it postgres:5432 -t 60 &&
+             python -m mycosoft_mas.orchestrator"
+    environment:
+      - MAS_ENV=development
+      - DEBUG_MODE=true
+      - LOG_LEVEL=DEBUG
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://mas:mas@postgres:5432/mas
+      - PYTHONPATH=/app
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on: [redis, postgres]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  mas-agent-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    command: >
+      sh -c "wait-for-it redis:6379 -t 60 &&
+             wait-for-it postgres:5432 -t 60 &&
+             python -m mycosoft_mas.agents.management.agent_manager"
+    environment:
+      - MAS_ENV=development
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://mas:mas@postgres:5432/mas
+      - PYTHONPATH=/app
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on: [redis, postgres, mas-orchestrator]
+
+  mas-task-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    command: >
+      sh -c "wait-for-it redis:6379 -t 60 &&
+             wait-for-it postgres:5432 -t 60 &&
+             python -m mycosoft_mas.agents.management.task_manager"
+    environment:
+      - MAS_ENV=development
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://mas:mas@postgres:5432/mas
+      - PYTHONPATH=/app
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on: [redis, postgres, mas-orchestrator]
+
+  mas-integration-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    command: >
+      sh -c "wait-for-it redis:6379 -t 60 &&
+             wait-for-it postgres:5432 -t 60 &&
+             python -m mycosoft_mas.agents.integrations.integration_manager"
+    environment:
+      - MAS_ENV=development
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://mas:mas@postgres:5432/mas
+      - PYTHONPATH=/app
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    depends_on: [redis, postgres, mas-orchestrator]
+
+  postgres:
+    image: postgres:16
+    container_name: mas-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-maspassword}
+      POSTGRES_DB: ${POSTGRES_DB:-mas}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U mas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  qdrant:
+    image: qdrant/qdrant:v1.7.3
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:10.3.3
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  myca-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.next
+      target: runner
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    volumes:
+      - ./app:/app/app
+      - ./components:/app/components
+      - ./lib:/app/lib
+      - ./public:/app/public
+      - ./styles:/app/styles
+    depends_on:
+      - mas-orchestrator
+
+volumes:
+  redis-data:
+  postgres_data:
+  prometheus-data:
+  grafana_data:
+  qdrant_data:
+
+networks:
+  mas-network:
+    driver: bridge 

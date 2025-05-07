@@ -1,0 +1,86 @@
+{
+    "messaging": {
+        "broker_type": "memory",
+        "queue_prefix": "mycosoft_mas"
+    },
+    "communication": {
+        "email": {
+            "smtp_server": "smtp.gmail.com",
+            "smtp_port": 587,
+            "smtp_username": "your-email@gmail.com",
+            "smtp_password": "your-app-password"
+        },
+        "sms": {
+            "provider": "twilio",
+            "account_sid": "your-account-sid",
+            "auth_token": "your-auth-token",
+            "from_number": "+1234567890"
+        },
+        "voice": {
+            "provider": "twilio",
+            "account_sid": "your-account-sid",
+            "auth_token": "your-auth-token",
+            "from_number": "+1234567890"
+        }
+    },
+    "error_logging": {
+        "log_level": "INFO",
+        "log_file": "logs/mas.log",
+        "max_file_size": 10485760,
+        "backup_count": 5
+    },
+    "agents": {
+        "mycology_bio": {
+            "data_directory": "data/mycology_bio",
+            "output_directory": "output/mycology_bio",
+            "health_check_interval": 60,
+            "retry_interval": 5,
+            "max_retries": 3
+        },
+        "financial": {
+            "mercury_api_key": "your-mercury-api-key",
+            "mercury_account_id": "your-account-id",
+            "stripe_api_key": "your-stripe-api-key",
+            "health_check_interval": 60,
+            "retry_interval": 5,
+            "max_retries": 3
+        },
+        "corporate": {
+            "clerky_api_key": "your-clerky-api-key",
+            "data_directory": "data/corporate",
+            "health_check_interval": 60,
+            "retry_interval": 5,
+            "max_retries": 3
+        },
+        "marketing": {
+            "data_directory": "data/marketing",
+            "health_check_interval": 60,
+            "retry_interval": 5,
+            "max_retries": 3
+        },
+        "project": {
+            "data_directory": "data/project",
+            "health_check_interval": 60,
+            "retry_interval": 5,
+            "max_retries": 3
+        },
+        "myco_dao": {
+            "data_directory": "data/mycodao",
+            "health_check_interval": 60,
+            "retry_interval": 5,
+            "max_retries": 3
+        },
+        "ip_tokenization": {
+            "data_directory": "data/ip",
+            "health_check_interval": 60,
+            "retry_interval": 5,
+            "max_retries": 3
+        },
+        "dashboard": {
+            "data_directory": "data/dashboard",
+            "health_check_interval": 60,
+            "retry_interval": 5,
+            "max_retries": 3
+        }
+    }
+} 

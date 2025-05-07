@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mycosoft MAS Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+    <link href="/static/css/dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bx bx-network-chart"></i>
+                Mycosoft MAS
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-item nav-link" id="system-status">
+                    <i class="bx bx-pulse"></i>
+                    System Status
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Active Agents</h6>
+                        <h2 class="card-title" id="active-agents-count">0</h2>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" id="agents-health-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">System Load</h6>
+                        <h2 class="card-title" id="system-load">0%</h2>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" id="system-load-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Memory Usage</h6>
+                        <h2 class="card-title" id="memory-usage">0%</h2>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" id="memory-usage-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2">Active Tasks</h6>
+                        <h2 class="card-title" id="active-tasks">0</h2>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" id="tasks-progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Agent Status -->
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Agent Status</h5>
+                        <button class="btn btn-sm btn-outline-primary" id="refresh-agents">
+                            <i class="bx bx-refresh"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="agent-list" class="list-group list-group-flush">
+                            <!-- Agents will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Health -->
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Service Health</h5>
+                        <button class="btn btn-sm btn-outline-primary" id="refresh-services">
+                            <i class="bx bx-refresh"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="service-list" class="list-group list-group-flush">
+                            <!-- Services will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Metrics -->
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">System Metrics</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="system-metrics-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Activity -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Real-time Activity</h5>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary active" data-time="1h">1h</button>
+                            <button class="btn btn-sm btn-outline-primary" data-time="6h">6h</button>
+                            <button class="btn btn-sm btn-outline-primary" data-time="24h">24h</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="activity-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html> 

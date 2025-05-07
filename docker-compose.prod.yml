@@ -1,0 +1,9 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+
+networks:
+  mas-network:
+    driver: bridge 

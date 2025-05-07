@@ -1,0 +1,74 @@
+name: Dependencies
+
+on:
+  push:
+    paths:
+      - 'requirements.in'
+      - 'pyproject.toml'
+      - '.github/workflows/dependencies.yml'
+  pull_request:
+    paths:
+      - 'requirements.in'
+      - 'pyproject.toml'
+      - '.github/workflows/dependencies.yml'
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight
+
+jobs:
+  dependency-management:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10, 3.11]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pip-tools poetry tox pip-audit pipdeptree
+
+    - name: Generate requirements.txt
+      run: |
+        pip-compile --upgrade --output-file=requirements.txt requirements.in
+
+    - name: Update Poetry lock file
+      run: |
+        poetry lock --no-update
+
+    - name: Run tox tests
+      run: |
+        tox
+
+    - name: Check for dependency conflicts
+      run: |
+        pipdeptree --warn fail
+
+    - name: Security audit
+      run: |
+        pip-audit
+
+    - name: Create SBOM
+      run: |
+        pip install cyclonedx-py
+        cyclonedx-py -o bom.xml
+
+    - name: Upload SBOM
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: bom.xml
+
+    - name: Commit changes
+      if: github.event_name == 'push'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add requirements.txt poetry.lock
+        git commit -m "Update dependencies" || exit 0
+        git push 

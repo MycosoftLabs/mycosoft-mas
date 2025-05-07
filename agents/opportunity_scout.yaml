@@ -1,0 +1,49 @@
+agent:
+  name: OpportunityScout
+  description: >
+    Continuously scans SAM.gov, beta.sam, DIU, BAAs, and FEDSIM notices
+    for solicitations containing keywords: "installation resilience",
+    "operational environment", "mesh sensor", "CBRN", "ISR".
+  tools:
+    - "sam_api.search"
+    - "regex_filter"
+    - "slack_notify"
+  memory_namespace: "DoD_Opportunities"
+  schedule: "cron: '0 * * * *'"  # hourly
+  success_metric: "≥2 qualified opportunities / day"
+  guardrails:
+    classification: "UNCLASSIFIED"
+    policy: "export_control_check"
+  data_sources:
+    - name: "SAM.gov"
+      url: "https://sam.gov/api/prod/sgs/v1/search/"
+      refresh_rate: "1h"
+    - name: "beta.sam"
+      url: "https://beta.sam.gov/api/prod/sgs/v1/search/"
+      refresh_rate: "1h"
+    - name: "DIU"
+      url: "https://www.diu.mil/work-with-us/opportunities"
+      refresh_rate: "4h"
+  keywords:
+    primary:
+      - "installation resilience"
+      - "operational environment"
+      - "mesh sensor"
+      - "CBRN"
+      - "ISR"
+    secondary:
+      - "sensor network"
+      - "environmental monitoring"
+      - "force health"
+      - "mission assurance"
+  output:
+    format: "json"
+    location: "data/opportunities/"
+    retention: "30d"
+  notifications:
+    slack:
+      channel: "#capture-opportunities"
+      threshold: "high_priority"
+    email:
+      recipients: ["capture@mycosoft.com"]
+      threshold: "critical" 

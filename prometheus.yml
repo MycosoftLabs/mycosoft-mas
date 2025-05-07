@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+rule_files:
+  - "prometheus/alerts.yml"
+
+scrape_configs:
+  - job_name: 'mas-orchestrator'
+    static_configs:
+      - targets: ['mas-orchestrator:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'mas-agent-manager'
+    static_configs:
+      - targets: ['mas-agent-manager:8000']
+    metrics_path: '/metrics'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s
+    scrape_timeout: 10s 

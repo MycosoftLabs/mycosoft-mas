@@ -1,0 +1,55 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "mycosoft-mas"
+version = "0.1.0"
+description = "Mycosoft Multi-Agent System"
+authors = ["Mycosoft Team"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.109.0"
+uvicorn = "^0.27.0"
+redis = "^5.0.1"
+psycopg2-binary = "^2.9.9"
+qdrant-client = "^1.7.0"
+prometheus-client = "^0.19.0"
+python-dotenv = "^1.0.0"
+pydantic = "^2.6.0"
+pydantic-settings = "^2.1.0"
+langgraph = "^0.0.10"
+langgraph-mcp-adapters = "^0.1.0"
+fastapi-mcp = "^0.1.0"
+firecrawl-mcp = "^0.1.0"
+browserbase-mcp = "^0.1.0"
+elevenlabs-mcp = "^0.1.0"
+supabase-mcp = "^0.1.0"
+graphlit-mcp-server = "^0.1.0"
+figma-mcp = "^0.1.0"
+n8n-mcp = "^0.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+black = "^24.1.1"
+isort = "^5.13.2"
+mypy = "^1.8.0"
+pylint = "^3.0.3"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 100
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true 

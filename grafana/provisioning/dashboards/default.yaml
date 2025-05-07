@@ -1,0 +1,15 @@
+apiVersion: 1
+
+providers:
+  - name: 'Mycosoft MAS'
+    orgId: 1
+    folder: 'MAS'
+    folderUid: ''
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true 
