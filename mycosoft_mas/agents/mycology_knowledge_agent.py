@@ -19,8 +19,12 @@ import aiofiles
 import spacy
 from rdflib import Graph, Literal, RDF, URIRef, Namespace
 from rdflib.namespace import RDFS, XSD, OWL, DCTERMS, SKOS
-from sentence_transformers import SentenceTransformer
-from sentence_transformers import util
+
+try:
+    from sentence_transformers import SentenceTransformer, util
+except ImportError:  # pragma: no cover - optional dependency
+    SentenceTransformer = None  # type: ignore
+    util = None  # type: ignore
 
 class KnowledgeType(Enum):
     SPECIES = "species"
@@ -106,8 +110,14 @@ class MycologyKnowledgeAgent(BaseAgent):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
         
-        # Initialize semantic model
-        self.semantic_model = SentenceTransformer('all-MiniLM-L6-v2')
+        # Initialize semantic model lazily in case sentence-transformers is not installed
+        if SentenceTransformer:
+            self.semantic_model = SentenceTransformer('all-MiniLM-L6-v2')
+        else:
+            self.semantic_model = None
+            self.logger.warning(
+                "sentence-transformers not available; semantic features are disabled"
+            )
         
     async def initialize(self, integration_service):
         """Initialize the Mycology Knowledge agent."""
@@ -781,6 +791,10 @@ class MycologyKnowledgeAgent(BaseAgent):
     async def _semantic_search(self, query: str, node_type: str = None, threshold: float = 0.5) -> List[Dict]:
         """Perform semantic search over the knowledge graph."""
         try:
+            if not self.semantic_model:
+                self.logger.warning("Semantic search requested but sentence-transformers is not installed")
+                return []
+
             # Encode the query
             query_embedding = self.semantic_model.encode(query, convert_to_tensor=True)
             
@@ -817,6 +831,12 @@ class MycologyKnowledgeAgent(BaseAgent):
     def _calculate_semantic_similarity(self, text1: str, text2: str) -> float:
         """Calculate semantic similarity between two texts using sentence transformers."""
         try:
+            if not self.semantic_model:
+                self.logger.warning(
+                    "Semantic similarity requested but sentence-transformers is not installed"
+                )
+                return 0.0
+
             # Encode both texts
             embeddings = self.semantic_model.encode([text1, text2], convert_to_tensor=True)
             

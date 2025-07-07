@@ -5,31 +5,29 @@ This package contains all agent implementations and related components for the M
 """
 
 from .base_agent import BaseAgent
-from .mycology_bio_agent import MycologyBioAgent
-from .mycology_knowledge_agent import MycologyKnowledgeAgent
-from .ip_tokenization_agent import IPTokenizationAgent
-from .myco_dao_agent import MycoDAOAgent
-from .token_economics_agent import TokenEconomicsAgent
-from .finance_admin_agent import FinanceAdminAgent
-from .project_management_agent import ProjectManagementAgent
-from .marketing_agent import MarketingAgent
-from .experiment_agent import ExperimentAgent
-from .ip_agent import IPAgent
-from .secretary_agent import SecretaryAgent
-from .dashboard_agent import DashboardAgent
-from .opportunity_scout import OpportunityScout
+import importlib
 
-# Corporate Agents
-from .corporate.corporate_operations_agent import CorporateOperationsAgent
-from .corporate.board_operations_agent import BoardOperationsAgent
-from .corporate.legal_compliance_agent import LegalComplianceAgent
-
-# Financial Agents
-from .financial.financial_agent import FinancialAgent
-
-# Integrations
-from .integrations.camera_integration import CameraIntegration
-from .integrations.speech_integration import SpeechIntegration
+_lazy_modules = {
+    'MycologyBioAgent': '.mycology_bio_agent',
+    'MycologyKnowledgeAgent': '.mycology_knowledge_agent',
+    'IPTokenizationAgent': '.ip_tokenization_agent',
+    'MycoDAOAgent': '.myco_dao_agent',
+    'TokenEconomicsAgent': '.token_economics_agent',
+    'FinanceAdminAgent': '.finance_admin_agent',
+    'ProjectManagementAgent': '.project_management_agent',
+    'MarketingAgent': '.marketing_agent',
+    'ExperimentAgent': '.experiment_agent',
+    'IPAgent': '.ip_agent',
+    'SecretaryAgent': '.secretary_agent',
+    'DashboardAgent': '.dashboard_agent',
+    'OpportunityScout': '.opportunity_scout',
+    'CorporateOperationsAgent': '.corporate.corporate_operations_agent',
+    'BoardOperationsAgent': '.corporate.board_operations_agent',
+    'LegalComplianceAgent': '.corporate.legal_compliance_agent',
+    'FinancialAgent': '.financial.financial_agent',
+    'CameraIntegration': '.integrations.camera_integration',
+    'SpeechIntegration': '.integrations.speech_integration',
+}
 
 # Initialize __all__ before dynamic stubs to avoid NameError
 __all__: list[str] = [
@@ -54,6 +52,16 @@ __all__: list[str] = [
     'CameraIntegration',
     'SpeechIntegration',
 ]
+
+
+def __getattr__(name: str):
+    """Lazily import agent modules when accessed."""
+    if name in _lazy_modules:
+        module = importlib.import_module(_lazy_modules[name], __name__)
+        obj = getattr(module, name)
+        globals()[name] = obj
+        return obj
+    raise AttributeError(f"module {__name__} has no attribute {name}")
 
 # Dynamically create stub agent modules/classes for testing compatibility
 import sys, types
