@@ -1,0 +1,17 @@
+agent:
+  name: LabAgent
+  description: |
+    Coordinates internal lab experiments and research scheduling.
+  tools:
+    - "lab_scheduler"
+    - "sample_tracker"
+  memory_namespace: "LabOps"
+  schedule: "cron: '30 6 * * *'"  # daily at 6:30am
+  success_metric: "All experiments logged"
+  guardrails:
+    classification: "SENSITIVE"
+    policy: "bio_compliance_check"
+  output:
+    format: "json"
+    location: "data/lab_runs/"
+    retention: "60d"

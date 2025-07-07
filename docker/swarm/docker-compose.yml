@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  orchestrator:
+    image: mycosoft/mas-orchestrator:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      - REDIS_URL=${REDIS_URL}
+      - DATABASE_URL=${DATABASE_URL}
+    ports:
+      - "8000:8000"
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+    ports:
+      - "6379:6379"
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER=mas
+      POSTGRES_PASSWORD=mas
+      POSTGRES_DB=mas
+    deploy:
+      replicas: 1
+    ports:
+      - "5432:5432"

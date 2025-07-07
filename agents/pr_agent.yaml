@@ -1,0 +1,17 @@
+agent:
+  name: PRAgent
+  description: |
+    Handles press releases and manages public communication channels.
+  tools:
+    - "press_release_generator"
+    - "social_scheduler"
+  memory_namespace: "PublicRelations"
+  schedule: "cron: '15 8 * * 1'"  # Monday mornings
+  success_metric: "All press releases sent on schedule"
+  guardrails:
+    classification: "PUBLIC"
+    policy: "branding_review"
+  output:
+    format: "markdown"
+    location: "data/pr/"
+    retention: "365d"

@@ -1,0 +1,5 @@
+{
+  "theme": "dark",
+  "python.formattingProvider": "black",
+  "python.linting.enabled": true
+}
