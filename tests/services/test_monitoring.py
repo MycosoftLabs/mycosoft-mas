@@ -83,7 +83,8 @@ def test_get_performance_stats(monitoring_service):
     stats = monitoring_service.get_performance_stats("test_operation")
     assert stats["min"] == 1.0
     assert stats["max"] == 3.0
-    assert stats["avg"] == 2.0
+    assert stats["mean"] == 2.0
+    assert stats["count"] == 3
 
 def test_monitor_agent(monitoring_service, mock_agent):
     mock_agent.get_status.return_value = {
@@ -92,16 +93,17 @@ def test_monitor_agent(monitoring_service, mock_agent):
         "task_count": 0
     }
     monitoring_service.monitor_agent(mock_agent)
-    assert mock_agent.agent_id in monitoring_service.metrics
-    assert monitoring_service.metrics[mock_agent.agent_id]["status"] == "running"
-    assert monitoring_service.metrics[mock_agent.agent_id]["task_count"] == 0
+    key_prefix = f"{mock_agent.__class__.__name__}"
+    assert f"{key_prefix}_status" in monitoring_service.metrics
+    assert monitoring_service.metrics[f"{key_prefix}_status"]["status"] == "running"
+    assert monitoring_service.metrics[f"{key_prefix}_status"]["task_count"] == 0
 
 def test_generate_insights(monitoring_service):
     monitoring_service.track_performance("test_operation", 1.0)
     monitoring_service.track_performance("test_operation", 2.0)
     monitoring_service.track_performance("test_operation", 3.0)
     insights = monitoring_service.generate_insights()
-    assert "test_operation" in insights
-    assert "min" in insights["test_operation"]
-    assert "max" in insights["test_operation"]
-    assert "avg" in insights["test_operation"] 
+    assert "test_operation" in insights["performance"]
+    assert "min" in insights["performance"]["test_operation"]
+    assert "max" in insights["performance"]["test_operation"]
+    assert "mean" in insights["performance"]["test_operation"]

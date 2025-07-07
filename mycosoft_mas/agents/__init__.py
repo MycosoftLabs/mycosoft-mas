@@ -5,55 +5,59 @@ This package contains all agent implementations and related components for the M
 """
 
 from .base_agent import BaseAgent
-from .mycology_bio_agent import MycologyBioAgent
-from .mycology_knowledge_agent import MycologyKnowledgeAgent
-from .ip_tokenization_agent import IPTokenizationAgent
-from .myco_dao_agent import MycoDAOAgent
-from .token_economics_agent import TokenEconomicsAgent
-from .finance_admin_agent import FinanceAdminAgent
-from .project_management_agent import ProjectManagementAgent
-from .marketing_agent import MarketingAgent
-from .experiment_agent import ExperimentAgent
-from .ip_agent import IPAgent
-from .secretary_agent import SecretaryAgent
-from .dashboard_agent import DashboardAgent
-from .opportunity_scout import OpportunityScout
+import os
 
-# Corporate Agents
-from .corporate.corporate_operations_agent import CorporateOperationsAgent
-from .corporate.board_operations_agent import BoardOperationsAgent
-from .corporate.legal_compliance_agent import LegalComplianceAgent
+if not os.environ.get("MAS_LIGHT_IMPORT"):
+    from .mycology_bio_agent import MycologyBioAgent
+    from .mycology_knowledge_agent import MycologyKnowledgeAgent
+    from .ip_tokenization_agent import IPTokenizationAgent
+    from .myco_dao_agent import MycoDAOAgent
+    from .token_economics_agent import TokenEconomicsAgent
+    from .finance_admin_agent import FinanceAdminAgent
+    from .project_management_agent import ProjectManagementAgent
+    from .marketing_agent import MarketingAgent
+    from .experiment_agent import ExperimentAgent
+    from .ip_agent import IPAgent
+    from .secretary_agent import SecretaryAgent
+    from .dashboard_agent import DashboardAgent
+    from .opportunity_scout import OpportunityScout
 
-# Financial Agents
-from .financial.financial_agent import FinancialAgent
+    # Corporate Agents
+    from .corporate.corporate_operations_agent import CorporateOperationsAgent
+    from .corporate.board_operations_agent import BoardOperationsAgent
+    from .corporate.legal_compliance_agent import LegalComplianceAgent
 
-# Integrations
-from .integrations.camera_integration import CameraIntegration
-from .integrations.speech_integration import SpeechIntegration
+    # Financial Agents
+    from .financial.financial_agent import FinancialAgent
+
+    # Integrations
+    from .integrations.camera_integration import CameraIntegration
+    from .integrations.speech_integration import SpeechIntegration
 
 # Initialize __all__ before dynamic stubs to avoid NameError
-__all__: list[str] = [
-    'BaseAgent',
-    'MycologyBioAgent',
-    'MycologyKnowledgeAgent',
-    'IPTokenizationAgent',
-    'MycoDAOAgent',
-    'TokenEconomicsAgent',
-    'FinanceAdminAgent',
-    'ProjectManagementAgent',
-    'MarketingAgent',
-    'ExperimentAgent',
-    'IPAgent',
-    'SecretaryAgent',
-    'DashboardAgent',
-    'OpportunityScout',
-    'CorporateOperationsAgent',
-    'BoardOperationsAgent',
-    'LegalComplianceAgent',
-    'FinancialAgent',
-    'CameraIntegration',
-    'SpeechIntegration',
-]
+__all__: list[str] = ['BaseAgent']
+if not os.environ.get("MAS_LIGHT_IMPORT"):
+    __all__.extend([
+        'MycologyBioAgent',
+        'MycologyKnowledgeAgent',
+        'IPTokenizationAgent',
+        'MycoDAOAgent',
+        'TokenEconomicsAgent',
+        'FinanceAdminAgent',
+        'ProjectManagementAgent',
+        'MarketingAgent',
+        'ExperimentAgent',
+        'IPAgent',
+        'SecretaryAgent',
+        'DashboardAgent',
+        'OpportunityScout',
+        'CorporateOperationsAgent',
+        'BoardOperationsAgent',
+        'LegalComplianceAgent',
+        'FinancialAgent',
+        'CameraIntegration',
+        'SpeechIntegration',
+    ])
 
 # Dynamically create stub agent modules/classes for testing compatibility
 import sys, types
