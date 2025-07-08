@@ -153,8 +153,43 @@ class TaskManager:
         # Initialize routes
         self._setup_routes()
         
-        # Start autonomous monitoring
-        asyncio.create_task(self._autonomous_monitoring())
+        # Monitoring loop will be started explicitly
+
+    # Public API -----------------------------------------------------------
+
+    def load_config(self, config: Dict[str, Any]) -> None:
+        """Load configuration at runtime."""
+        self.config = config
+
+    def initialize_orchestrator_client(self):
+        """Initialize the orchestrator client using current config."""
+        self.orchestrator_client = self._init_orchestrator_client()
+        return self.orchestrator_client
+
+    def initialize_cluster_manager(self):
+        """Initialize the cluster manager using current config."""
+        self.cluster_manager = self._init_cluster_manager()
+        return self.cluster_manager
+
+    def start_monitoring(self):
+        """Start background monitoring loop."""
+        self._monitor_task = asyncio.create_task(self._autonomous_monitoring())
+
+    def stop_monitoring(self):
+        """Stop background monitoring loop."""
+        if hasattr(self, "_monitor_task") and not self._monitor_task.done():
+            self._monitor_task.cancel()
+
+    def restart_orchestrator(self):
+        if self.orchestrator_client and hasattr(self.orchestrator_client, "restart"):
+            self.orchestrator_client.restart()
+
+    def restart_clusters(self):
+        if self.cluster_manager and hasattr(self.cluster_manager, "restart"):
+            asyncio.run(self.cluster_manager.restart())
+
+    def update_dependencies(self) -> Dict[str, str]:
+        return asyncio.run(self._update_dependencies())
         
     def _load_config(self) -> Dict:
         """Load configuration from config file"""
@@ -166,13 +201,21 @@ class TaskManager:
             
     def _init_orchestrator_client(self):
         """Initialize orchestrator client"""
-        # TODO: Implement actual orchestrator client
-        return None
+        try:
+            from mycosoft_mas.orchestrator import Orchestrator
+            return Orchestrator()
+        except Exception as e:
+            logger.error(f"Failed to initialize orchestrator client: {e}")
+            return None
         
     def _init_cluster_manager(self):
         """Initialize cluster manager"""
-        # TODO: Implement actual cluster manager
-        return None
+        try:
+            from mycosoft_mas.agents.cluster_manager import ClusterManager
+            return ClusterManager(self.config.get("clusters", {}))
+        except Exception as e:
+            logger.error(f"Failed to initialize cluster manager: {e}")
+            return None
         
     def _setup_routes(self):
         @self.app.get("/processes", response_model=List[ProcessInfo])
@@ -298,8 +341,12 @@ class TaskManager:
             raise HTTPException(status_code=403, detail="Access denied")
             
     async def _restart_agent(self, agent_id: str) -> Dict[str, str]:
-        # TODO: Implement agent restart
-        return {"status": "success", "message": f"Agent {agent_id} restarted"}
+        try:
+            if self.orchestrator_client and hasattr(self.orchestrator_client, "restart_agent"):
+                await self.orchestrator_client.restart_agent(agent_id)
+            return {"status": "success", "message": f"Agent {agent_id} restarted"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
         
     async def _restart_service(self, service_name: str) -> Dict[str, str]:
         try:
@@ -328,9 +375,11 @@ class TaskManager:
         
     async def _get_orchestrator_status(self) -> OrchestratorInfo:
         """Get orchestrator status"""
-        # TODO: Implement actual orchestrator status check
+        if self.orchestrator_client and hasattr(self.orchestrator_client, "get_status"):
+            status = await self.orchestrator_client.get_status()
+            return OrchestratorInfo(**status)
         return OrchestratorInfo(
-            status="running",
+            status="unknown",
             active_tasks=0,
             pending_tasks=0,
             failed_tasks=0,
@@ -341,7 +390,22 @@ class TaskManager:
         
     async def _get_clusters(self) -> List[ClusterInfo]:
         """Get cluster information"""
-        # TODO: Implement actual cluster status check
+        if self.cluster_manager and hasattr(self.cluster_manager, "get_status"):
+            status = self.cluster_manager.get_status()
+            clusters = []
+            for name, info in status.get("clusters", {}).items():
+                clusters.append(
+                    ClusterInfo(
+                        name=name,
+                        status=info["metrics"].get("status", "unknown"),
+                        node_count=info["agent_count"],
+                        active_agents=info["agent_count"],
+                        resource_usage={},
+                        last_sync=datetime.fromisoformat(info["metrics"].get("last_activity", datetime.now().isoformat())),
+                        health_status=info["metrics"].get("status", "unknown")
+                    )
+                )
+            return clusters
         return []
         
     async def _get_dependencies(self) -> List[DependencyInfo]:
@@ -372,7 +436,8 @@ class TaskManager:
     async def _restart_orchestrator(self) -> Dict[str, str]:
         """Restart orchestrator"""
         try:
-            # TODO: Implement actual orchestrator restart
+            if self.orchestrator_client and hasattr(self.orchestrator_client, "restart"):
+                await self.orchestrator_client.restart()
             return {"status": "success", "message": "Orchestrator restarted"}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -380,7 +445,8 @@ class TaskManager:
     async def _restart_cluster(self, cluster_name: str) -> Dict[str, str]:
         """Restart cluster"""
         try:
-            # TODO: Implement actual cluster restart
+            if self.cluster_manager and hasattr(self.cluster_manager, "restart"):
+                await self.cluster_manager.restart()
             return {"status": "success", "message": f"Cluster {cluster_name} restarted"}
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))

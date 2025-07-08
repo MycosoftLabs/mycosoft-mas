@@ -201,7 +201,11 @@ class IntegrationService:
             bool indicating success
         """
         try:
-            # TODO: Implement actual service connections
+            url = connection_params.get("url")
+            if url:
+                import httpx
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    await client.get(url)
             self.connections[service_name] = {
                 "params": connection_params,
                 "connected_at": datetime.now(),
@@ -303,4 +307,4 @@ class IntegrationService:
             })
         except Exception as e:
             self.logger.error(f"Error handling WebSocket connection: {str(e)}")
-            raise 
+            await websocket.close()

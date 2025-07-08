@@ -9,6 +9,7 @@ from datetime import datetime
 import logging
 import asyncio
 from pathlib import Path
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,11 @@ class TechnologyTracker:
     async def _check_new_technologies(self) -> List[Dict[str, Any]]:
         """Check for new technologies."""
         try:
-            # TODO: Implement actual technology discovery logic
+            file = Path("data/technology/new_technologies.json")
+            if file.exists():
+                with open(file, "r") as f:
+                    data = json.load(f)
+                return data
             return []
         except Exception as e:
             logger.error(f"Error checking for new technologies: {str(e)}")
@@ -60,7 +65,10 @@ class TechnologyTracker:
     async def _check_technology_alerts(self) -> List[Dict[str, Any]]:
         """Check for technology-related alerts."""
         try:
-            # TODO: Implement actual alert checking logic
+            file = Path("data/technology/alerts.json")
+            if file.exists():
+                with open(file, "r") as f:
+                    return json.load(f)
             return []
         except Exception as e:
             logger.error(f"Error checking technology alerts: {str(e)}")
@@ -69,7 +77,10 @@ class TechnologyTracker:
     async def _check_technology_updates(self) -> List[Dict[str, Any]]:
         """Check for technology updates."""
         try:
-            # TODO: Implement actual update checking logic
+            file = Path("data/technology/updates.json")
+            if file.exists():
+                with open(file, "r") as f:
+                    return json.load(f)
             return []
         except Exception as e:
             logger.error(f"Error checking technology updates: {str(e)}")

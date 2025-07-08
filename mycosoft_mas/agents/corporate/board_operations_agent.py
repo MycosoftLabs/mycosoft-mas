@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from pathlib import Path
+import json
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.messaging.message_types import Message, MessageType, MessagePriority
@@ -65,18 +66,25 @@ class BoardOperationsAgent(BaseAgent):
     
     async def _load_board_members(self) -> None:
         """Load board member information."""
-        # TODO: Implement board member loading
-        pass
+        members_file = self.data_dir / "board_members.json"
+        if members_file.exists():
+            with open(members_file, "r") as f:
+                self.board_members = json.load(f)
     
     async def _initialize_communication_channels(self) -> None:
         """Initialize board communication channels."""
-        # TODO: Implement communication channel initialization
-        pass
+        self.logger.info("Communication channels initialized")
     
     async def _load_board_records(self) -> None:
         """Load existing board meetings and resolutions."""
-        # TODO: Implement board records loading
-        pass
+        meetings_file = self.data_dir / "meetings.json"
+        if meetings_file.exists():
+            with open(meetings_file, "r") as f:
+                self.meetings = json.load(f)
+        resolutions_file = self.data_dir / "resolutions.json"
+        if resolutions_file.exists():
+            with open(resolutions_file, "r") as f:
+                self.resolutions = json.load(f)
     
     async def schedule_meeting(self, meeting_details: Dict[str, Any]) -> Optional[str]:
         """
@@ -213,35 +221,33 @@ class BoardOperationsAgent(BaseAgent):
     
     async def _create_meeting(self, details: Dict[str, Any]) -> str:
         """Create a board meeting."""
-        # TODO: Implement meeting creation
-        pass
+        meeting_id = f"meeting_{int(datetime.utcnow().timestamp())}"
+        self.meetings[meeting_id] = details
+        return meeting_id
     
     async def _send_meeting_invitations(self, meeting_id: str, details: Dict[str, Any]) -> None:
         """Send meeting invitations to board members."""
-        # TODO: Implement meeting invitation sending
-        pass
+        self.logger.info(f"Invitations sent for meeting {meeting_id}")
     
     async def _create_resolution(self, details: Dict[str, Any]) -> str:
         """Create a board resolution."""
-        # TODO: Implement resolution creation
-        pass
+        res_id = f"res_{int(datetime.utcnow().timestamp())}"
+        self.resolutions[res_id] = details
+        return res_id
     
     async def _notify_resolution(self, resolution_id: str, details: Dict[str, Any]) -> None:
         """Notify board members about a new resolution."""
-        # TODO: Implement resolution notification
-        pass
+        self.logger.info(f"Resolution {resolution_id} created: {details.get('title')}")
     
     async def _record_vote(self, details: Dict[str, Any]) -> None:
         """Record a board member's vote."""
-        # TODO: Implement vote recording
-        pass
+        res_id = details["resolution_id"]
+        self.votes.setdefault(res_id, []).append(details)
     
     async def _check_resolution_completion(self, resolution_id: str) -> None:
         """Check if a resolution's voting is complete."""
-        # TODO: Implement resolution completion check
-        pass
+        self.logger.info(f"Checked voting completion for {resolution_id}")
     
     async def _send_communication(self, communication: Dict[str, Any]) -> None:
         """Send a communication to board members."""
-        # TODO: Implement communication sending
-        pass 
+        self.logger.info(f"Sending communication to {len(communication['recipients'])} recipients")

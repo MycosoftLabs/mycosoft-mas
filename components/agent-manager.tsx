@@ -41,7 +41,10 @@ export function AgentManager() {
   const handleStartAll = async () => {
     setIsLoading(true)
     try {
-      // TODO: Implement start all agents functionality
+      await fetch("/api/agents/start_all", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      })
       setAgents(agents.map(agent => ({ ...agent, status: "active" })))
     } catch (error) {
       console.error("Failed to start agents:", error)
@@ -53,7 +56,10 @@ export function AgentManager() {
   const handleStopAll = async () => {
     setIsLoading(true)
     try {
-      // TODO: Implement stop all agents functionality
+      await fetch("/api/agents/stop_all", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      })
       setAgents(agents.map(agent => ({ ...agent, status: "inactive" })))
     } catch (error) {
       console.error("Failed to stop agents:", error)
