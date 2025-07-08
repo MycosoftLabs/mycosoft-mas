@@ -1,0 +1,17 @@
+agent:
+  name: BizDevAgent
+  description: |
+    Tracks partnership leads and new business opportunities.
+  tools:
+    - "crm_lookup"
+    - "email_outreach"
+  memory_namespace: "BizDev"
+  schedule: "cron: '0 9 * * 1-5'"  # weekdays at 9am
+  success_metric: ">=5 follow-ups per week"
+  guardrails:
+    classification: "CONFIDENTIAL"
+    policy: "export_control_check"
+  output:
+    format: "csv"
+    location: "data/bizdev/"
+    retention: "90d"

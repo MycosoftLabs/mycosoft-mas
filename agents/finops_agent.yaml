@@ -1,0 +1,17 @@
+agent:
+  name: FinOpsAgent
+  description: |
+    Monitors cloud spending and optimizes resource allocation.
+  tools:
+    - "cloud_cost_analyzer"
+    - "billing_alerts"
+  memory_namespace: "FinOps"
+  schedule: "cron: '0 */6 * * *'"  # every 6 hours
+  success_metric: "Monthly spend under budget"
+  guardrails:
+    classification: "INTERNAL"
+    policy: "finance_compliance"
+  output:
+    format: "json"
+    location: "data/finops/"
+    retention: "30d"

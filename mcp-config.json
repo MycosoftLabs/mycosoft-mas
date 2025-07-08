@@ -1,0 +1,10 @@
+{
+  "clusters": {
+    "protocol_management": ["protocol_management", "data_flow"],
+    "research": ["lab_rd", "software_dev"],
+    "financial": ["financial"],
+    "ui": ["dashboard"],
+    "security": ["immune_system"],
+    "evolution": ["agent_evolution"]
+  }
+}
