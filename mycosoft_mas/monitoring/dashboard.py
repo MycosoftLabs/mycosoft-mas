@@ -53,7 +53,7 @@ PROMETHEUS_URL = "http://localhost:9090"
 agent_manager = AgentManager()
 knowledge_graph = KnowledgeGraph()
 metrics_collector = MetricsCollector()
-task_manager = TaskManager()
+task_manager = TaskManager(start_background_tasks=False)
 
 # API Key security
 API_KEY_HEADER = APIKeyHeader(name="X-API-Key")

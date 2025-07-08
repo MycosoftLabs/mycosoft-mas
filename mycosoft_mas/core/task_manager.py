@@ -12,7 +12,12 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import docker
+try:
+    import docker  # type: ignore
+    if not hasattr(docker, "from_env"):
+        raise ImportError
+except Exception:  # pragma: no cover - optional dependency
+    docker = None
 from prometheus_client import Counter, Gauge, Histogram
 import numpy as np
 from sklearn.ensemble import IsolationForest
@@ -114,9 +119,9 @@ class DependencyInfo(BaseModel):
     vulnerabilities: List[str]
 
 class TaskManager:
-    def __init__(self):
+    def __init__(self, start_background_tasks: bool = True):
         self.app = FastAPI(title="MAS Task Manager")
-        self.docker_client = docker.from_env()
+        self.docker_client = docker.from_env() if docker else None
         
         # Load configuration
         self.config = self._load_config()
@@ -152,9 +157,14 @@ class TaskManager:
         
         # Initialize routes
         self._setup_routes()
-        
-        # Start autonomous monitoring
-        asyncio.create_task(self._autonomous_monitoring())
+
+        if start_background_tasks:
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self._autonomous_monitoring())
+            except RuntimeError:
+                # No running loop; background monitoring will need to be started manually
+                pass
         
     def _load_config(self) -> Dict:
         """Load configuration from config file"""
@@ -272,6 +282,9 @@ class TaskManager:
         
     async def _get_services(self) -> List[ServiceInfo]:
         services = []
+        if not self.docker_client:
+            return services
+
         for container in self.docker_client.containers.list(all=True):
             stats = container.stats(stream=False)
             services.append(ServiceInfo(
@@ -303,6 +316,8 @@ class TaskManager:
         
     async def _restart_service(self, service_name: str) -> Dict[str, str]:
         try:
+            if not self.docker_client:
+                raise RuntimeError("Docker client not available")
             container = self.docker_client.containers.get(service_name)
             container.restart()
             return {"status": "success", "message": f"Service {service_name} restarted"}

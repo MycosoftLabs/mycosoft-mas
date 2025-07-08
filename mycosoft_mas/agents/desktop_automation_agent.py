@@ -11,15 +11,34 @@ import json
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from pathlib import Path
-import pyautogui
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-import undetected_chromedriver as uc
-from pywinauto.application import Application
-import pygetwindow as gw
+try:
+    import pyautogui
+except Exception:  # pragma: no cover - optional for headless environments
+    pyautogui = None
+
+try:
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.common.exceptions import TimeoutException, NoSuchElementException
+except Exception:  # pragma: no cover - optional dependency
+    webdriver = By = WebDriverWait = EC = TimeoutException = NoSuchElementException = None
+
+try:
+    import undetected_chromedriver as uc
+except Exception:  # pragma: no cover - optional dependency
+    uc = None
+
+try:
+    from pywinauto.application import Application
+except Exception:  # pragma: no cover - optional dependency
+    Application = None
+
+try:
+    import pygetwindow as gw
+except Exception:  # pragma: no cover - optional dependency
+    gw = None
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.messaging.message_types import Message, MessageType, MessagePriority
@@ -56,8 +75,13 @@ class DesktopAutomationAgent(BaseAgent):
         # Initialize desktop automation settings
         self.mouse_speed = config.get("mouse_speed", 0.5)
         self.keyboard_delay = config.get("keyboard_delay", 0.1)
-        pyautogui.PAUSE = self.keyboard_delay
-        pyautogui.FAILSAFE = True
+        if pyautogui:
+            pyautogui.PAUSE = self.keyboard_delay
+            pyautogui.FAILSAFE = True
+        else:
+            self.logger.warning(
+                "pyautogui not available; desktop automation features disabled"
+            )
         
         # Initialize metrics
         self.metrics = {
@@ -216,10 +240,13 @@ class DesktopAutomationAgent(BaseAgent):
         try:
             profile_name = message.data.get("profile_name", "default")
             credentials = message.data.get("credentials", {})
-            
+
             if profile_name not in self.active_browsers:
                 raise ValueError(f"No active browser for profile: {profile_name}")
-            
+
+            if not webdriver or not WebDriverWait or not EC:
+                raise RuntimeError("selenium is required for browser automation")
+
             driver = self.active_browsers[profile_name]
             
             # Wait for login form
@@ -438,6 +465,9 @@ class DesktopAutomationAgent(BaseAgent):
             x = message.data.get("x")
             y = message.data.get("y")
             
+            if not pyautogui:
+                raise RuntimeError("pyautogui is required for desktop automation")
+
             pyautogui.moveTo(x, y, duration=self.mouse_speed)
             pyautogui.click()
             
@@ -466,6 +496,9 @@ class DesktopAutomationAgent(BaseAgent):
         try:
             text = message.data.get("text", "")
             
+            if not pyautogui:
+                raise RuntimeError("pyautogui is required for desktop automation")
+
             pyautogui.write(text, interval=self.keyboard_delay)
             
             await self.send_message(

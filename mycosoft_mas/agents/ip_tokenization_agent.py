@@ -15,10 +15,18 @@ import aiofiles
 import hashlib
 import base64
 import requests
-from web3 import Web3
-from eth_account import Account
-import bitcoin
-from bitcoin import *
+try:
+    from web3 import Web3
+    from eth_account import Account
+except Exception:  # pragma: no cover - optional dependency
+    Web3 = None
+    Account = None
+
+try:
+    import bitcoin
+    from bitcoin import *  # noqa: F401,F403
+except Exception:  # pragma: no cover - optional dependency
+    bitcoin = None
 # Temporarily disabled Solana imports
 # from solders.pubkey import Pubkey
 # from solders.keypair import Keypair
@@ -130,11 +138,15 @@ class IPTokenizationAgent(BaseAgent):
         try:
             # Initialize Ethereum client
             if self.ethereum_config:
+                if not Web3:
+                    raise RuntimeError("web3 library is required for Ethereum tokenization")
                 self.ethereum_client = Web3(Web3.HTTPProvider(self.ethereum_config.get('rpc_url')))
                 self.logger.info("Ethereum client initialized")
             
             # Initialize Bitcoin client
             if self.bitcoin_config:
+                if not bitcoin:
+                    raise RuntimeError("bitcoin library is required for Bitcoin tokenization")
                 self.bitcoin_client = bitcoin
                 self.logger.info("Bitcoin client initialized")
             
