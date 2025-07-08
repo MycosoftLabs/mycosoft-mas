@@ -326,4 +326,4 @@ class CorporateOperationsAgent(BaseAgent):
             'success': True,
             'action': 'logged',
             'timestamp': datetime.now().isoformat()
-        } 
+        }

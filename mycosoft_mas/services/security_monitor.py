@@ -98,4 +98,4 @@ class SecurityMonitor:
         """Clear all stored alerts and updates."""
         self.security_alerts.clear()
         self.vulnerabilities.clear()
-        self.security_updates.clear() 
+        self.security_updates.clear()

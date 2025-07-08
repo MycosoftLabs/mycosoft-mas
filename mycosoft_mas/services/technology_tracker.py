@@ -133,4 +133,4 @@ class TechnologyTracker:
     def clear_updates(self) -> None:
         """Clear all stored updates and alerts."""
         self.technology_alerts.clear()
-        self.technology_updates.clear() 
+        self.technology_updates.clear()

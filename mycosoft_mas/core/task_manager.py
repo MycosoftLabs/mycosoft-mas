@@ -655,4 +655,4 @@ class TaskManager:
         outdated = [d for d in dependencies if d.status == "outdated"]
         if outdated:
             logger.info(f"Found {len(outdated)} outdated dependencies")
-            await self._update_dependencies() 
+            await self._update_dependencies()
