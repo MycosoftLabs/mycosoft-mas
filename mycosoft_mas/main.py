@@ -20,7 +20,7 @@ from .services.technology_tracker import TechnologyTracker
 from .services.system_updates import SystemUpdates
 from .integrations.integration_manager import IntegrationManager
 from .dependencies.dependency_manager import DependencyManager
-from .tasks.task_manager import TaskManager
+from .core.task_manager import TaskManager
 from .monitoring.metrics import MetricsCollector
 from .web.dashboard import DashboardServer
 
