@@ -29,9 +29,8 @@ export function SystemMetrics() {
         })
         if (!res.ok) throw new Error("Unauthorized or error fetching metrics")
         const text = await res.text()
-        // TODO: Parse Prometheus text format to MetricData[]
-        // For now, fallback to demo data
-        setMetrics(generateDemoData())
+        const parsed = parsePrometheus(text)
+        setMetrics(parsed.length ? parsed : generateDemoData())
       } catch (e) {
         setError("Failed to load metrics")
         setMetrics(generateDemoData())
@@ -41,6 +40,28 @@ export function SystemMetrics() {
     }
     if (token) fetchMetrics()
   }, [token])
+
+  function parsePrometheus(text: string): MetricData[] {
+    const values: Record<string, number> = {}
+    text.split("\n").forEach(line => {
+      const [key, val] = line.split(" ")
+      if (!key || !val) return
+      if (key.startsWith("mas_cpu_usage")) values.cpu = parseFloat(val)
+      if (key.startsWith("mas_memory_usage")) values.memory = parseFloat(val)
+      if (key.startsWith("mas_agent_count")) values.agents = parseFloat(val)
+      if (key.startsWith("mas_task_count")) values.tasks = parseFloat(val)
+    })
+    if (Object.keys(values).length) {
+      return [{
+        timestamp: new Date().toLocaleTimeString(),
+        cpu: values.cpu || 0,
+        memory: values.memory || 0,
+        agents: values.agents || 0,
+        tasks: values.tasks || 0
+      }]
+    }
+    return []
+  }
 
   function generateDemoData(): MetricData[] {
     const now = new Date()

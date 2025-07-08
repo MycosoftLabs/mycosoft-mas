@@ -146,4 +146,13 @@ class ClusterManager:
                 for cluster_id, agents in self.clusters.items()
             },
             'last_check': self.last_check.isoformat()
-        } 
+        }
+
+    async def restart(self) -> None:
+        """Restart the cluster manager."""
+        try:
+            await self.stop()
+            await self.start()
+        except Exception as e:
+            logger.error(f"Error restarting cluster manager: {str(e)}")
+            raise

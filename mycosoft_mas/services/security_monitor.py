@@ -9,6 +9,7 @@ from datetime import datetime
 import logging
 import asyncio
 from pathlib import Path
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,10 @@ class SecurityMonitor:
     async def _check_vulnerabilities(self) -> List[Dict[str, Any]]:
         """Check for security vulnerabilities."""
         try:
-            # TODO: Implement actual vulnerability checking logic
+            file = Path("data/security/vulnerabilities.json")
+            if file.exists():
+                with open(file, "r") as f:
+                    return json.load(f)
             return []
         except Exception as e:
             logger.error(f"Error checking vulnerabilities: {str(e)}")
@@ -60,7 +64,10 @@ class SecurityMonitor:
     async def _check_security_alerts(self) -> List[Dict[str, Any]]:
         """Check for security alerts."""
         try:
-            # TODO: Implement actual alert checking logic
+            file = Path("data/security/alerts.json")
+            if file.exists():
+                with open(file, "r") as f:
+                    return json.load(f)
             return []
         except Exception as e:
             logger.error(f"Error checking security alerts: {str(e)}")
@@ -69,7 +76,10 @@ class SecurityMonitor:
     async def _check_security_updates(self) -> List[Dict[str, Any]]:
         """Check for security updates."""
         try:
-            # TODO: Implement actual update checking logic
+            file = Path("data/security/updates.json")
+            if file.exists():
+                with open(file, "r") as f:
+                    return json.load(f)
             return []
         except Exception as e:
             logger.error(f"Error checking security updates: {str(e)}")
@@ -88,4 +98,4 @@ class SecurityMonitor:
         """Clear all stored alerts and updates."""
         self.security_alerts.clear()
         self.vulnerabilities.clear()
-        self.security_updates.clear() 
+        self.security_updates.clear()
