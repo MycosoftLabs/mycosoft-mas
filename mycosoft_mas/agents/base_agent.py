@@ -18,7 +18,9 @@ from mycosoft_mas.dependencies.dependency_manager import DependencyManager
 from mycosoft_mas.integrations.integration_manager import IntegrationManager
 from mycosoft_mas.core.task_manager import TaskManager
 from mycosoft_mas.services.monitoring_interface import AgentMonitorable
+from mycosoft_mas.services.monitoring import MonitoringService
 from mycosoft_mas.services.security_interface import AgentSecurable
+from mycosoft_mas.services.security import SecurityService
 
 logger = logging.getLogger(__name__)
 
@@ -135,9 +137,20 @@ class BaseAgent(AgentMonitorable, AgentSecurable):
             logger.error(f"Health check failed for agent {self.name}: {str(e)}")
             return False
 
-    async def initialize(self) -> None:
-        """Initialize the agent and its components."""
+    async def initialize(
+        self, integration_service: Optional[IntegrationService] | None = None
+    ) -> None:
+        """Initialize the agent and its components.
+
+        Args:
+            integration_service: Optional external integration service to use.
+        """
         try:
+            # Integration service is required for initialization
+            if integration_service is None and self.integration_service is None:
+                raise ValueError("integration_service is required for initialization")
+            if integration_service is not None:
+                self.integration_service = integration_service
             # Register dependencies
             if hasattr(self, "dependencies"):
                 result = self.dependency_manager.register_agent_dependencies(
@@ -153,7 +166,9 @@ class BaseAgent(AgentMonitorable, AgentSecurable):
             # Register integrations
             if hasattr(self, "integrations"):
                 for integration_id, config in self.integrations.items():
-                    self.integration_manager.register_integration(integration_id, config)
+                    self.integration_manager.register_integration(
+                        integration_id, config
+                    )
                     
             # Initialize security
             self.security_token = self.security_service.authenticate_agent(self)
