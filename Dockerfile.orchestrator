@@ -1,5 +1,5 @@
 # Builder stage
-FROM python:3.11-slim as builder
+FROM python:3.14-slim as builder
 
 WORKDIR /app
 
@@ -40,7 +40,7 @@ COPY config.yaml /app/config.yaml
 RUN poetry install --no-interaction --no-ansi
 
 # Runtime stage
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
