@@ -55,7 +55,7 @@ jobs:
           docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
 
       - name: Upload CycloneDX SBOM
-        uses: anchore/sbom-action@v0.15.10
+        uses: anchore/sbom-action@v0.20.8
         with:
           path: "."
           upload-artifact: true
