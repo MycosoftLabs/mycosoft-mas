@@ -25,6 +25,7 @@ class DeviceType(Enum):
     CONTROLLER = "controller"
     DISPLAY = "display"
     GATEWAY = "gateway"
+    MYCOBRAIN = "mycobrain"
 
 class DeviceStatus(Enum):
     """Enumeration of device statuses."""
