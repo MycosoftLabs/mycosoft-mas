@@ -1,0 +1,275 @@
+# =============================================================================
+# MYCOSOFT MAS - LLM Model Configuration
+# =============================================================================
+# This file configures model selection, routing, and budget policies.
+# Environment variables take precedence over values in this file.
+#
+# Model Assignment:
+#   - planning: Complex reasoning, multi-step planning
+#   - execution: General task execution
+#   - fast: Quick responses, low latency tasks
+#   - embedding: Vector embeddings for RAG/search
+#   - fallback: Used when primary models are unavailable
+# =============================================================================
+
+# Default provider (can be overridden by LLM_DEFAULT_PROVIDER env var)
+default_provider: litellm  # Use LiteLLM proxy for unified access
+
+# =============================================================================
+# MODEL ASSIGNMENTS BY TASK TYPE
+# =============================================================================
+models:
+  # Complex reasoning and planning tasks
+  planning: gpt-4o
+  
+  # General task execution
+  execution: gpt-4o-mini
+  
+  # Quick responses, low latency
+  fast: gpt-4o-mini
+  
+  # Text embeddings for RAG/search
+  embedding: text-embedding-3-small
+  
+  # Fallback when primary is unavailable
+  fallback: gpt-4o-mini
+
+# =============================================================================
+# MODEL REGISTRY
+# =============================================================================
+# Detailed configuration for each model. Used for capability checking
+# and cost estimation.
+
+model_registry:
+  # OpenAI Models
+  gpt-4o:
+    provider: openai
+    max_tokens: 128000
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: true
+    cost_per_1k_input: 0.005
+    cost_per_1k_output: 0.015
+    
+  gpt-4o-mini:
+    provider: openai
+    max_tokens: 128000
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: true
+    cost_per_1k_input: 0.00015
+    cost_per_1k_output: 0.0006
+    
+  gpt-4-turbo:
+    provider: openai
+    max_tokens: 128000
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: true
+    cost_per_1k_input: 0.01
+    cost_per_1k_output: 0.03
+    
+  text-embedding-3-small:
+    provider: openai
+    max_tokens: 8191
+    supports_tools: false
+    supports_vision: false
+    cost_per_1k_input: 0.00002
+    cost_per_1k_output: 0
+    
+  text-embedding-3-large:
+    provider: openai
+    max_tokens: 8191
+    supports_tools: false
+    supports_vision: false
+    cost_per_1k_input: 0.00013
+    cost_per_1k_output: 0
+    
+  # Azure OpenAI Models
+  azure-gpt-4o:
+    provider: azure
+    max_tokens: 128000
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: true
+    cost_per_1k_input: 0.005
+    cost_per_1k_output: 0.015
+    
+  # Google Gemini Models
+  gemini-1.5-pro:
+    provider: gemini
+    max_tokens: 2097152
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: true
+    cost_per_1k_input: 0.00125
+    cost_per_1k_output: 0.005
+    
+  gemini-1.5-flash:
+    provider: gemini
+    max_tokens: 1048576
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: true
+    cost_per_1k_input: 0.000075
+    cost_per_1k_output: 0.0003
+    
+  # Anthropic Claude Models
+  claude-3-5-sonnet:
+    provider: anthropic
+    max_tokens: 200000
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: true
+    cost_per_1k_input: 0.003
+    cost_per_1k_output: 0.015
+    
+  claude-3-opus:
+    provider: anthropic
+    max_tokens: 200000
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: true
+    cost_per_1k_input: 0.015
+    cost_per_1k_output: 0.075
+    
+  # Local Models (Ollama)
+  llama3.2:
+    provider: ollama
+    max_tokens: 128000
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: false
+    cost_per_1k_input: 0  # Local, no cost
+    cost_per_1k_output: 0
+    
+  mistral:
+    provider: ollama
+    max_tokens: 32768
+    temperature: 0.7
+    supports_tools: true
+    supports_vision: false
+    cost_per_1k_input: 0
+    cost_per_1k_output: 0
+    
+  codellama:
+    provider: ollama
+    max_tokens: 16384
+    temperature: 0.7
+    supports_tools: false
+    supports_vision: false
+    cost_per_1k_input: 0
+    cost_per_1k_output: 0
+    
+  nomic-embed-text:
+    provider: ollama
+    max_tokens: 8192
+    supports_tools: false
+    supports_vision: false
+    cost_per_1k_input: 0
+    cost_per_1k_output: 0
+
+# =============================================================================
+# ROUTER SETTINGS
+# =============================================================================
+router:
+  # Enable automatic fallback to other providers
+  enable_fallback: true
+  
+  # Order of providers to try for fallback
+  fallback_providers:
+    - openai
+    - azure
+    - anthropic
+    - gemini
+    - ollama
+  
+  # Retry settings
+  max_retries: 3
+  retry_delay: 1.0  # seconds
+  
+  # Timeout settings
+  default_timeout: 120  # seconds
+  streaming_timeout: 300  # seconds for streaming requests
+  
+  # Rate limiting (requests per minute)
+  rate_limit: 60
+
+# =============================================================================
+# BUDGET SETTINGS
+# =============================================================================
+budget:
+  # Maximum cost per single request (USD)
+  max_cost_per_request: 1.0
+  
+  # Daily budget limit (USD)
+  daily_budget: 100.0
+  
+  # Alert threshold (percentage of daily budget)
+  alert_threshold: 0.8
+  
+  # Enable cost tracking
+  track_costs: true
+
+# =============================================================================
+# TASK TYPE TO MODEL MAPPING RULES
+# =============================================================================
+# These rules determine which model to use based on task characteristics.
+
+routing_rules:
+  # Use planning model for complex multi-step tasks
+  - match:
+      task_types: [planning, reasoning, analysis]
+    model: gpt-4o
+    
+  # Use fast model for simple, quick tasks
+  - match:
+      task_types: [fast, simple, validation]
+    model: gpt-4o-mini
+    
+  # Use execution model for general tasks
+  - match:
+      task_types: [execution, default]
+    model: gpt-4o-mini
+    
+  # Use specific model for tool-heavy tasks
+  - match:
+      requires_tools: true
+      task_types: [agent, automation]
+    model: gpt-4o
+    
+  # Use vision model when images are involved
+  - match:
+      requires_vision: true
+    model: gpt-4o
+
+# =============================================================================
+# PROVIDER-SPECIFIC SETTINGS
+# =============================================================================
+providers:
+  openai:
+    enabled: true
+    # api_key from env: OPENAI_API_KEY
+    # base_url from env: OPENAI_BASE_URL
+    
+  azure:
+    enabled: false  # Enable if you have Azure credentials
+    # api_key from env: AZURE_API_KEY
+    # base_url from env: AZURE_API_BASE
+    # api_version from env: AZURE_API_VERSION
+    
+  gemini:
+    enabled: false  # Enable if you have Gemini credentials
+    # api_key from env: GEMINI_API_KEY
+    
+  anthropic:
+    enabled: false  # Enable if you have Anthropic credentials
+    # api_key from env: ANTHROPIC_API_KEY
+    
+  ollama:
+    enabled: true  # Local models via Ollama
+    base_url: http://ollama:11434  # In Docker network
+    
+  litellm:
+    enabled: true  # Unified proxy
+    base_url: http://litellm:4000  # In Docker network

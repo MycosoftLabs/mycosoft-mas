@@ -6,6 +6,7 @@ This module serves as the main entry point for the Mycosoft Multi-Agent System (
 
 import asyncio
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Dict, Any, List
@@ -36,6 +37,7 @@ from mycosoft_mas.agents.base_agent import AgentStatus
 from mycosoft_mas.services.integration_service import IntegrationService
 from mycosoft_mas.core.knowledge_graph import KnowledgeGraph
 from mycosoft_mas.monitoring.dashboard import app as dashboard_app
+from mycosoft_mas.llm import LLMRouter
 from .security import get_current_user
 from .routers import agents, tasks, dashboard
 
@@ -82,6 +84,9 @@ class MycosoftMAS:
         self.message_broker = MessageBroker(config.get("messaging", {}))
         self.communication_service = CommunicationService(config.get("communication", {}))
         self.error_logging_service = ErrorLoggingService(config.get("error_logging", {}))
+        
+        # Initialize LLM Router
+        self.llm_router = LLMRouter()
         
         # Initialize agents
         self.agents: List[BaseAgent] = []
@@ -174,11 +179,79 @@ class MycosoftMAS:
                 raise HTTPException(status_code=500, detail=str(e))
             finally:
                 REQUEST_LATENCY.labels(method='GET', endpoint='/health').observe(time.time() - start_time)
-        
-        @self.app.get("/metrics")
-        async def metrics():
-            """Metrics endpoint."""
-            return generate_latest()
+
+        @self.app.get("/ready")
+        async def ready():
+            """
+            Readiness check endpoint.
+            
+            Returns OK only when all dependencies (DB, Redis, Qdrant) are reachable.
+            This is used by Kubernetes/Docker for readiness probes.
+            """
+            start_time = time.time()
+            REQUEST_COUNT.labels(method='GET', endpoint='/ready', status='200').inc()
+            
+            checks = {
+                "postgres": False,
+                "redis": False,
+                "qdrant": False,
+            }
+            errors = []
+            
+            # Check PostgreSQL
+            try:
+                import psycopg2
+                db_url = os.getenv("DATABASE_URL", "postgresql://mas:maspassword@localhost:5432/mas")
+                conn = psycopg2.connect(db_url, connect_timeout=5)
+                conn.close()
+                checks["postgres"] = True
+            except Exception as e:
+                errors.append(f"postgres: {str(e)}")
+            
+            # Check Redis
+            try:
+                import redis as redis_client
+                redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+                r = redis_client.from_url(redis_url, socket_connect_timeout=5)
+                r.ping()
+                r.close()
+                checks["redis"] = True
+            except Exception as e:
+                errors.append(f"redis: {str(e)}")
+            
+            # Check Qdrant
+            try:
+                import aiohttp
+                qdrant_host = os.getenv("QDRANT_HOST", "localhost")
+                qdrant_port = os.getenv("QDRANT_PORT", "6333")
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(
+                        f"http://{qdrant_host}:{qdrant_port}/readyz",
+                        timeout=aiohttp.ClientTimeout(total=5)
+                    ) as response:
+                        checks["qdrant"] = response.status == 200
+            except Exception as e:
+                errors.append(f"qdrant: {str(e)}")
+            
+            all_ready = all(checks.values())
+            status_code = 200 if all_ready else 503
+            
+            ready_data = {
+                "status": "ok" if all_ready else "not_ready",
+                "timestamp": datetime.now().isoformat(),
+                "checks": checks,
+            }
+            
+            if errors:
+                ready_data["errors"] = errors
+            
+            REQUEST_LATENCY.labels(method='GET', endpoint='/ready').observe(time.time() - start_time)
+            
+            if not all_ready:
+                REQUEST_COUNT.labels(method='GET', endpoint='/ready', status='503').inc()
+                raise HTTPException(status_code=503, detail=ready_data)
+            
+            return ready_data
     
     async def initialize(self) -> None:
         """Initialize the MAS."""
