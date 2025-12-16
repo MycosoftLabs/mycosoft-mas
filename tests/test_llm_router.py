@@ -1,29 +1,50 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from mycosoft_mas.llm.router import LLMRouter
-from mycosoft_mas.llm.config import LLMConfig
 
-@pytest.fixture
-def mock_config():
-    config = LLMConfig()
-    config.default_provider = "openai"
-    config.api_key = "test-key"
-    return config
+from mycosoft_mas.config.runtime_settings import ModelRegistry, ProviderConfig, RuntimeSettings
+from mycosoft_mas.llm.providers import BaseLLMProvider, LLMError, LLMResult, LLMRouter
+
+
+class FailingProvider(BaseLLMProvider):
+    name = "primary"
+
+    async def chat(self, messages, *, model=None, **kwargs):
+        raise LLMError("fail")
+
+    async def embed(self, inputs, *, model=None, **kwargs):
+        raise NotImplementedError
+
+
+class DummyProvider(BaseLLMProvider):
+    name = "fallback"
+
+    async def chat(self, messages, *, model=None, **kwargs):
+        return LLMResult(content="ok", provider=self.name, model=model or "dummy")
+
+    async def embed(self, inputs, *, model=None, **kwargs):
+        return {"embeddings": []}
+
 
 @pytest.mark.asyncio
-async def test_router_initialization(mock_config):
-    with patch("mycosoft_mas.llm.router.OpenAIProvider") as MockProvider:
-        router = LLMRouter(mock_config)
-        assert "openai" in router.providers
-        MockProvider.assert_called_once()
+async def test_router_falls_back_on_error(monkeypatch):
+    registry = ModelRegistry(
+        providers={
+            "primary": ProviderConfig(provider="openai", model="primary-model"),
+            "fallback": ProviderConfig(provider="openai", model="fallback-model"),
+        },
+        roles={
+            "planning_model": "primary:primary-model",
+            "fallback_model": "fallback:fallback-model",
+        },
+    )
+    settings = RuntimeSettings(
+        database_url="postgresql://user:pass@localhost/db",
+        redis_url="redis://localhost:6379/0",
+        qdrant_url="http://localhost:6333",
+        model_registry=registry,
+    )
+    router = LLMRouter(settings)
+    router.providers = {"primary": FailingProvider(), "fallback": DummyProvider()}
 
-@pytest.mark.asyncio
-async def test_router_chat_delegation(mock_config):
-    with patch("mycosoft_mas.llm.router.OpenAIProvider") as MockProvider:
-        mock_instance = MockProvider.return_value
-        mock_instance.chat = AsyncMock(return_value={"choices": []})
-        
-        router = LLMRouter(mock_config)
-        await router.chat([{"role": "user", "content": "hi"}], usage="execution")
-        
-        mock_instance.chat.assert_called_once()
+    result = await router.chat("planning_model", [{"role": "user", "content": "hi"}])
+    assert result.content == "ok"
+    assert result.provider == "fallback"

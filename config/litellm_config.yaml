@@ -131,11 +131,10 @@ model_list:
 # =========================================================================
 router_settings:
   # Fallback models when primary is unavailable
+  # Format: {"primary_model": ["fallback1", "fallback2"]}
   fallbacks:
-    - model_name: gpt-4o
-      fallback_models: ["azure-gpt-4o", "claude-3-5-sonnet", "gemini-1.5-pro"]
-    - model_name: gpt-4o-mini
-      fallback_models: ["gemini-1.5-flash", "llama3.2"]
+    - gpt-4o: ["azure-gpt-4o", "claude-3-5-sonnet", "gemini-1.5-pro"]
+    - gpt-4o-mini: ["gemini-1.5-flash", "llama3.2"]
   
   # Retry settings
   num_retries: 3
