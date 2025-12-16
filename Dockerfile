@@ -43,7 +43,8 @@ FROM python:3.11-slim AS runtime
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/lib/python3.11/site-packages:$PATH"
 
 # Install runtime system dependencies
 RUN apt-get update \
@@ -54,16 +55,23 @@ RUN apt-get update \
         libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy wait-for-it script
-COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it
-RUN chmod +x /usr/local/bin/wait-for-it
-
 # Set working directory
 WORKDIR /app
 
-# Copy from builder
+# Copy from builder (includes Python packages and scripts)
 COPY --from=build /app /app
 COPY --from=build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=build /usr/local/bin /usr/local/bin
+
+# Convert CRLF to LF and UTF-16 to UTF-8 in Python files
+RUN apt-get update && apt-get install -y --no-install-recommends dos2unix && \
+    find /app -name "*.py" -type f -exec sh -c 'file "$1" | grep -q "UTF-16" && iconv -f UTF-16LE -t UTF-8 "$1" > "$1.tmp" && mv "$1.tmp" "$1"' _ {} \; && \
+    find /app -name "*.py" -type f -exec dos2unix {} \; && \
+    apt-get purge -y dos2unix && rm -rf /var/lib/apt/lists/*
+
+# Copy wait-for-it script (after bin copy to ensure it's present)
+COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it
+RUN chmod +x /usr/local/bin/wait-for-it
 
 # Create necessary directories
 RUN mkdir -p /app/logs /app/data

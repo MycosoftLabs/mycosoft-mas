@@ -1,0 +1,11 @@
+model_list:
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: ${LLM_MODEL_LOCAL:-gpt-4o-mini}
+      api_key: ${OPENAI_API_KEY:-sk-placeholder}
+      api_base: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      stream: false
+
+general_settings:
+  telemetry: false
+  timeout: 60

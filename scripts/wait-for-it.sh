@@ -14,4 +14,4 @@ until nc -z "$host" "$port"; do
 done
 
 >&2 echo "$host:$port is available - executing command"
-exec $cmd 
+exec $cmd
