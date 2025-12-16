@@ -1,0 +1,167 @@
+# LiteLLM Proxy Configuration
+# ============================
+# This configures the LiteLLM proxy to route requests to various LLM providers.
+# Docs: https://docs.litellm.ai/docs/proxy/configs
+
+model_list:
+  # =========================================================================
+  # OpenAI Models
+  # =========================================================================
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      description: "OpenAI GPT-4o - Best for complex reasoning and planning"
+      
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      description: "OpenAI GPT-4o Mini - Fast and cost-effective"
+      
+  - model_name: gpt-4-turbo
+    litellm_params:
+      model: openai/gpt-4-turbo
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      description: "OpenAI GPT-4 Turbo - High capability model"
+
+  - model_name: text-embedding-3-small
+    litellm_params:
+      model: openai/text-embedding-3-small
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      description: "OpenAI text-embedding-3-small - Efficient embeddings"
+
+  - model_name: text-embedding-3-large
+    litellm_params:
+      model: openai/text-embedding-3-large
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      description: "OpenAI text-embedding-3-large - High quality embeddings"
+
+  # =========================================================================
+  # Azure OpenAI Models (optional, requires Azure keys)
+  # =========================================================================
+  - model_name: azure-gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+    model_info:
+      description: "Azure OpenAI GPT-4o deployment"
+
+  # =========================================================================
+  # Google Gemini Models (optional)
+  # =========================================================================
+  - model_name: gemini-pro
+    litellm_params:
+      model: gemini/gemini-pro
+      api_key: os.environ/GEMINI_API_KEY
+    model_info:
+      description: "Google Gemini Pro"
+
+  - model_name: gemini-1.5-pro
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: os.environ/GEMINI_API_KEY
+    model_info:
+      description: "Google Gemini 1.5 Pro - Long context"
+
+  - model_name: gemini-1.5-flash
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+    model_info:
+      description: "Google Gemini 1.5 Flash - Fast responses"
+
+  # =========================================================================
+  # Anthropic Claude Models (optional)
+  # =========================================================================
+  - model_name: claude-3-5-sonnet
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+    model_info:
+      description: "Anthropic Claude 3.5 Sonnet"
+
+  - model_name: claude-3-opus
+    litellm_params:
+      model: anthropic/claude-3-opus-20240229
+      api_key: os.environ/ANTHROPIC_API_KEY
+    model_info:
+      description: "Anthropic Claude 3 Opus - Most capable"
+
+  # =========================================================================
+  # Local Models (Ollama - requires local-llm profile)
+  # =========================================================================
+  - model_name: llama3.2
+    litellm_params:
+      model: ollama/llama3.2
+      api_base: http://ollama:11434
+    model_info:
+      description: "Llama 3.2 via Ollama (local)"
+
+  - model_name: mistral
+    litellm_params:
+      model: ollama/mistral
+      api_base: http://ollama:11434
+    model_info:
+      description: "Mistral 7B via Ollama (local)"
+
+  - model_name: codellama
+    litellm_params:
+      model: ollama/codellama
+      api_base: http://ollama:11434
+    model_info:
+      description: "CodeLlama via Ollama (local)"
+
+  - model_name: nomic-embed-text
+    litellm_params:
+      model: ollama/nomic-embed-text
+      api_base: http://ollama:11434
+    model_info:
+      description: "Nomic Embed Text via Ollama (local embeddings)"
+
+# =========================================================================
+# Router Settings
+# =========================================================================
+router_settings:
+  # Fallback models when primary is unavailable
+  fallbacks:
+    - model_name: gpt-4o
+      fallback_models: ["azure-gpt-4o", "claude-3-5-sonnet", "gemini-1.5-pro"]
+    - model_name: gpt-4o-mini
+      fallback_models: ["gemini-1.5-flash", "llama3.2"]
+  
+  # Retry settings
+  num_retries: 3
+  retry_after: 5
+  
+  # Timeout settings (seconds)
+  timeout: 120
+  
+  # Enable model cost tracking
+  enable_cost_tracking: true
+
+# =========================================================================
+# General Settings
+# =========================================================================
+general_settings:
+  # Enable key management
+  master_key: os.environ/LITELLM_MASTER_KEY
+  
+  # Database for key/usage tracking (optional)
+  # database_url: os.environ/LITELLM_DATABASE_URL
+  
+  # CORS
+  allow_requests_from_any_ip: true
+  
+  # Logging
+  log_level: INFO
+  
+  # Health check
+  health_check_path: /health

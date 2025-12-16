@@ -1,11 +1,17 @@
 version: "3.9"
 
 # =============================================================================
-# MYCOSOFT MAS - Docker Compose Configuration
+# MYCOSOFT MAS - Local Development Docker Compose
 # =============================================================================
-# This file extends docker-compose.local.yml with additional services.
-# For local development, use: docker compose up -d
-# For production, use: docker compose -f docker-compose.prod.yml up -d
+# Usage:
+#   make up              # Start core services
+#   make up-local        # Start with local LLM (Ollama)
+#   make up-observability # Start with full monitoring stack
+#
+# Profiles:
+#   - (default): Core MAS services + dependencies
+#   - local-llm: Adds Ollama for local model inference
+#   - observability: Adds Loki, Promtail for log aggregation
 # =============================================================================
 
 services:
@@ -84,6 +90,7 @@ services:
     environment:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-mas-local-dev}
       - LITELLM_LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Provider API Keys (loaded from env)
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - AZURE_API_KEY=${AZURE_API_KEY:-}
       - AZURE_API_BASE=${AZURE_API_BASE:-}
@@ -104,11 +111,11 @@ services:
     restart: unless-stopped
 
   # ===========================================================================
-  # INFRASTRUCTURE
+  # INFRASTRUCTURE SERVICES
   # ===========================================================================
-
+  
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: mas-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-mas}
@@ -117,10 +124,12 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./docker/postgres/audit.sql:/docker-entrypoint-initdb.d/02-audit.sql:ro
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h localhost -U mas"]
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${POSTGRES_USER:-mas}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -164,6 +173,10 @@ services:
       - mas-network
     restart: unless-stopped
 
+  # ===========================================================================
+  # MONITORING
+  # ===========================================================================
+  
   prometheus:
     image: prom/prometheus:v2.52.0
     container_name: mas-prometheus
@@ -212,37 +225,91 @@ services:
       - mas-network
     restart: unless-stopped
 
-  myca-app:
-    build:
-      context: .
-      dockerfile: Dockerfile.next
-      target: runner
+  # ===========================================================================
+  # OPTIONAL: LOCAL LLM (Ollama)
+  # ===========================================================================
+  
+  ollama:
+    image: ollama/ollama:latest
+    container_name: mas-ollama
+    profiles:
+      - local-llm
     ports:
-      - "3001:3000"
-    environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - "${OLLAMA_PORT:-11434}:11434"
     volumes:
-      - ./app:/app/app
-      - ./components:/app/components
-      - ./lib:/app/lib
-      - ./public:/app/public
-      - ./styles:/app/styles
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # OPTIONAL: OBSERVABILITY (Log aggregation)
+  # ===========================================================================
+  
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: mas-loki
+    profiles:
+      - observability
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: mas-promtail
+    profiles:
+      - observability
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yml:ro
+      - ./logs:/var/log/mas:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
     depends_on:
-      - mas-orchestrator
+      - loki
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
 
 volumes:
-  redis_data:
-    name: mas-redis-data
   postgres_data:
     name: mas-postgres-data
+  redis_data:
+    name: mas-redis-data
+  qdrant_data:
+    name: mas-qdrant-data
   prometheus_data:
     name: mas-prometheus-data
   grafana_data:
     name: mas-grafana-data
-  qdrant_data:
-    name: mas-qdrant-data
+  ollama_data:
+    name: mas-ollama-data
+  loki_data:
+    name: mas-loki-data
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
 
 networks:
   mas-network:
-    driver: bridge 
+    name: mas-network
+    driver: bridge
