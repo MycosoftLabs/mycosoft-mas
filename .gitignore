@@ -24,6 +24,7 @@ yarn-error.log*
 
 # Local env files
 .env*.local
+env.local
 
 # Vercel
 .vercel
@@ -69,3 +70,9 @@ ENV/
 
 # Logs
 *.log
+
+# Cursor worktree metadata
+.cursor/worktrees.json
+
+# Local diagnostics (often contains machine-specific details)
+SYSTEM_DIAGNOSTIC_REPORT.txt

@@ -215,10 +215,43 @@ api:
 
 # Database settings
 database:
-  type: "sqlite"
-  path: "data/mas.db"
+  type: "postgresql"  # Using MINDEX PostgreSQL database
+  path: "data/mas.db"  # Fallback SQLite for local development
   pool_size: 5
   timeout: 30
+  # MINDEX database connection (primary)
+  mindex_url: ${MINDEX_DATABASE_URL:-postgresql://mindex:mindex@localhost:5432/mindex}
+  
+# Integration settings
+integrations:
+  mindex:
+    database_url: ${MINDEX_DATABASE_URL:-postgresql://mindex:mindex@localhost:5432/mindex}
+    api_url: ${MINDEX_API_URL:-http://localhost:8000}
+    api_key: ${MINDEX_API_KEY:-}
+    timeout: 30
+    max_retries: 3
+  
+  natureos:
+    api_url: ${NATUREOS_API_URL:-http://localhost:8002}
+    api_key: ${NATUREOS_API_KEY:-}
+    tenant_id: ${NATUREOS_TENANT_ID:-}
+    timeout: 30
+  
+  website:
+    api_url: ${WEBSITE_API_URL:-https://mycosoft.vercel.app/api}
+    api_key: ${WEBSITE_API_KEY:-}
+    timeout: 30
+  
+  notion:
+    api_key: ${NOTION_API_KEY:-}
+    database_id: ${NOTION_DATABASE_ID:-}
+    timeout: 30
+  
+  n8n:
+    webhook_url: ${N8N_WEBHOOK_URL:-http://localhost:5678}
+    api_url: ${N8N_API_URL:-http://localhost:5678}
+    api_key: ${N8N_API_KEY:-}
+    timeout: 30
 
 # Integration Service Configuration
 integration_service:
