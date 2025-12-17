@@ -21,16 +21,15 @@ ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "").strip()
 FALLBACK_TTS_URL = os.getenv("FALLBACK_TTS_URL", "http://openedai-speech:8000")
 
 # Voice mapping: OpenAI voice names -> ElevenLabs voice IDs
-# Popular voices (replace with your preferred voice IDs from ElevenLabs)
+# Custom voice configured by user
 VOICE_MAP = {
-    "alloy": "EXAVITQu4vr4xnSDxMaL",  # ElevenLabs Sarah (clear, conversational)
-    "echo": "21m00Tcm4TlvDq8ikWAM",  # ElevenLabs Rachel (calm, professional)
-    "fable": "pNInz6obpgDQGcFmaJgB",  # ElevenLabs Adam (deep, narrative)
-    "onyx": "VR6AewLTigWG4xSOukaG",  # ElevenLabs Arnold (authoritative)
-    "nova": "EXAVITQu4vr4xnSDxMaL",  # ElevenLabs Sarah (default)
-    "shimmer": "ThT5KcBeYPX3keUQqHPh",  # ElevenLabs Dorothy (warm, friendly)
-    # Add custom mapping for "scarlett" style voice
-    "scarlett": "EXAVITQu4vr4xnSDxMaL",  # Use Sarah as default; replace with preferred ID
+    "alloy": "aEO01A4wXwd1O8GPgGlF",  # User's custom voice (default)
+    "echo": "aEO01A4wXwd1O8GPgGlF",   # User's custom voice
+    "fable": "aEO01A4wXwd1O8GPgGlF",  # User's custom voice
+    "onyx": "aEO01A4wXwd1O8GPgGlF",   # User's custom voice
+    "nova": "aEO01A4wXwd1O8GPgGlF",   # User's custom voice
+    "shimmer": "aEO01A4wXwd1O8GPgGlF",# User's custom voice
+    "scarlett": "aEO01A4wXwd1O8GPgGlF",  # User's custom voice (Scarlett-style)
 }
 
 
@@ -109,20 +108,24 @@ async def _fallback_tts(request: TTSRequest) -> Response:
     url = f"{FALLBACK_TTS_URL}/v1/audio/speech"
     payload = {
         "model": request.model,
-        "voice": request.voice,
+        "voice": request.voice if request.voice in ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] else "alloy",
         "input": request.input,
-        "response_format": request.response_format,
     }
 
-    async with httpx.AsyncClient(timeout=60) as client:
-        resp = await client.post(url, json=payload)
-        resp.raise_for_status()
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(url, json=payload)
+            resp.raise_for_status()
 
-        return Response(
-            content=resp.content,
-            media_type="audio/mpeg",
-            headers={"X-TTS-Provider": "openedai-speech"},
-        )
+            return Response(
+                content=resp.content,
+                media_type="audio/mpeg",
+                headers={"X-TTS-Provider": "openedai-speech"},
+            )
+    except Exception as e:
+        logger.error(f"Fallback TTS also failed: {e}")
+        # Return a minimal error response
+        raise HTTPException(status_code=502, detail=f"Both ElevenLabs and fallback TTS failed: {e}")
 
 
 @app.get("/health")

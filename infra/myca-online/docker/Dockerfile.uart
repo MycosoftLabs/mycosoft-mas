@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install serial communication dependencies
+RUN pip install --no-cache-dir \
+    pyserial==3.5 \
+    python-json-logger==2.0.7
+
+# Copy UART agent
+COPY uart_agent.py /app/
+
+# Create logs directory
+RUN mkdir -p /logs
+
+# Set environment
+ENV PYTHONUNBUFFERED=1
+ENV UART_DEVICE=/dev/ttyUSB0
+ENV UART_BAUD=115200
+ENV LOG_DIR=/logs
+
+CMD ["python", "-u", "uart_agent.py"]

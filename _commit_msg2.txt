@@ -1,0 +1,33 @@
+feat(voice): add ElevenLabs premium TTS, feedback UI, and comprehensive n8n workflow
+
+MYCA-requested improvements implemented:
+
+1. Error Handling:
+- Added global exception handler with structured JSON error responses
+- Implemented request ID tracking (X-Request-Id header on all responses)
+- Added retry logic and timeout handling for all external service calls
+- Improved error context in logs with request IDs
+
+2. Agent Feedback Loop:
+- Created persistent feedback store (SQLite) at data/voice_feedback.db
+- Added feedback API: POST /voice/feedback, GET /voice/feedback/recent, GET /voice/feedback/summary
+- Orchestrator system prompt now includes feedback stats for continuous learning
+- Voice UI includes thumbs up/down buttons + notes textarea for every response
+- Automatic feedback injection into orchestrator context
+
+3. Multi-threading / Concurrency:
+- Added semaphore-based concurrency limits for STT/LLM/TTS operations
+- Implemented background worker pool (configurable via MAS_WORKER_COUNT)
+- Switched to shared httpx.AsyncClient for connection pooling
+- Database operations run in thread pool to avoid blocking event loop
+- Supports parallel voice requests without race conditions
+
+Additional Features:
+- ElevenLabs TTS proxy with OpenAI-compatible API and automatic fallback to local TTS
+- Voice mapping system for premium voices (including "scarlett" style)
+- Comprehensive n8n workflow template with MAS orchestrator + Zapier MCP integration
+- Updated voice UI to use MAS orchestrator endpoints directly (STT+LLM+TTS in one call)
+- Added conversation context tracking across multiple turns
+- Created detailed documentation (VOICE_SYSTEM_SETUP.md, N8N_INTEGRATION_GUIDE.md)
+
+All improvements tested and verified working in containerized environment.
