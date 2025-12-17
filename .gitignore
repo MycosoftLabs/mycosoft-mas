@@ -77,12 +77,29 @@ ENV/
 # Local diagnostics (often contains machine-specific details)
 SYSTEM_DIAGNOSTIC_REPORT.txt
 
-# Infrastructure bootstrap secrets and outputs
-infra/bootstrap/out/secrets/
-infra/bootstrap/out/templates/
+# Infrastructure bootstrap secrets and outputs - NEVER COMMIT
+infra/bootstrap/out/
+infra/bootstrap/network_config.json
+infra/bootstrap/*.secret
+infra/bootstrap/*.token
+infra/bootstrap/*.key
+infra/bootstrap/vault-*
 *.mycosoft-vault-role-id
 *.mycosoft-vault-secret-id
 .mycosoft-vault-role-id
 .mycosoft-vault-secret-id
 .smb-credentials
 docker-compose.sync.yml
+
+# Vault data (NEVER commit)
+.vault/
+vault-data/
+*.unseal
+*.root-token
+
+# Credential files (NEVER commit)
+*credentials*
+*password*
+*.pem
+*.key
+!*.md

@@ -1,129 +1,131 @@
-# Quick Start Guide
+# Mycosoft Bootstrap - Quick Start
 
-## Commands to Run
+## ⚠️ First: Rotate Any Exposed Passwords
 
-### 1. Dry Run (Validation Only)
+If passwords were shared in chat, logs, or exposed anywhere:
+
+```bash
+# 1. SSH to each Proxmox node and change root password
+ssh root@192.168.0.202  # then: passwd
+ssh root@192.168.0.2    # then: passwd
+ssh root@192.168.0.131  # then: passwd
+
+# 2. Change WiFi password for SSID "Myca" in UniFi UI
+#    https://192.168.0.1 → Settings → WiFi → Myca → Edit
+```
+
+---
+
+## Quick Setup (5 minutes)
+
+### 1. Dry Run (Check Connectivity)
+
 ```bash
 cd /path/to/mycosoft-mas
 ./infra/bootstrap/bootstrap_mycosoft.sh --dry-run
 ```
 
-This validates:
-- OS compatibility
-- Required binaries
-- Network connectivity to Proxmox and UniFi
+This checks:
+- ✓ OS and prerequisites (curl, jq, docker, ssh)
+- ✓ Proxmox nodes reachable (192.168.0.202, 192.168.0.2, 192.168.0.131)
+- ✓ UniFi UDM reachable (192.168.0.1)
 
-**No secrets are prompted in dry-run mode.**
+### 2. Full Setup
 
-### 2. Apply Mode (Full Setup)
 ```bash
-cd /path/to/mycosoft-mas
 ./infra/bootstrap/bootstrap_mycosoft.sh --apply
 ```
 
-This will:
-- Install Vault (if not present)
-- Configure Vault as a system service
-- Initialize Vault (you'll receive root token and unseal keys)
-- Prompt for Proxmox API token (CLI or UI guided)
-- Prompt for UniFi API token (UI guided)
-- Mount NAS storage
-- Generate all configuration files
+Interactive prompts will guide you through:
+1. Installing Vault
+2. Creating Vault secrets engine and AppRole
+3. Creating Proxmox API token (SSH or UI guided)
+4. Creating UniFi API key
+5. Mounting NAS storage
 
-### 3. Verify Setup
+### 3. Verify
+
 ```bash
 ./infra/bootstrap/out/verify.sh
 ```
 
-## What You'll Need
+### 4. Start Services
 
-Before running `--apply`, prepare:
-
-1. **Vault Credentials Storage**: Have a secure place to save:
-   - Root token (displayed once)
-   - 5 unseal keys (displayed once)
-
-2. **Proxmox Access**: Either:
-   - SSH access to Proxmox host (for CLI token creation), OR
-   - Web UI access to create token manually
-
-3. **UniFi Access**: 
-   - Web UI access to UniFi UDM
-   - Admin account credentials (myca@mycosoft.org)
-
-4. **NAS Information**:
-   - NAS IP address
-   - Share path
-   - Protocol (NFS or SMB)
-   - Credentials (if SMB)
-
-## Expected Output
-
-After successful `--apply`, you'll see:
-
-```
-==========================================
-  Mycosoft Infrastructure Bootstrap
-  Final Status Report
-==========================================
-
-[✓] OS and binaries checked
-[✓] Network connectivity verified
-[✓] Vault installed
-[✓] Vault configured
-[✓] Vault initialized and AppRole created
-[✓] Proxmox API token configured
-[✓] UniFi API token configured
-[✓] NAS mounted
-
-==========================================
-
-All critical components are configured!
-
-Next steps:
-1. Review configuration files in: infra/bootstrap/out/
-2. Verify setup: infra/bootstrap/out/verify.sh
-3. Start infrastructure sync services:
-   docker-compose -f docker-compose.sync.yml --profile infra-sync up -d
+```bash
+docker-compose -f docker-compose.sync.yml --profile myca up -d
 ```
 
-## Troubleshooting
+---
 
-### Script Fails at Network Check
-- Verify Proxmox hosts are reachable: `curl -k https://192.168.0.202:8006`
-- Verify UniFi is reachable: `curl -k https://192.168.0.1`
-- Check firewall rules
+## Infrastructure IPs
 
-### Vault Installation Fails
-- Ensure you have sudo/root access
-- Check internet connectivity
-- Verify architecture compatibility (amd64/arm64)
+| Service | IP | Port | URL |
+|---------|-----|------|-----|
+| Proxmox Build | 192.168.0.202 | 8006 | https://192.168.0.202:8006 |
+| Proxmox DC1 | 192.168.0.2 | 8006 | https://192.168.0.2:8006 |
+| Proxmox DC2 | 192.168.0.131 | 8006 | https://192.168.0.131:8006 |
+| UniFi UDM | 192.168.0.1 | 443 | https://192.168.0.1 |
+| Vault | 127.0.0.1 | 8200 | http://127.0.0.1:8200 |
 
-### Token Validation Fails
-- Double-check token format
-- Verify token hasn't expired
-- Check API access is enabled (UniFi)
+---
 
-### NAS Mount Fails
-- Verify NAS IP is pingable
-- Check NFS/SMB service is running
-- Verify share path is correct
-- Check user permissions
+## Key Files
 
-## Next Steps After Bootstrap
+```
+~/.mycosoft-vault-role-id    # Vault AppRole ID (safe to store)
+~/.mycosoft-vault-secret-id  # Vault Secret ID (regenerate as needed)
 
-1. **Test Vault Access**:
+infra/bootstrap/out/
+├── connections.json         # Non-secret connection info
+├── vault_paths.md           # Where secrets are stored
+├── verify.sh                # Verification script
+└── vault-agent.hcl          # Vault Agent config
+```
+
+---
+
+## Using Python Clients
+
+```python
+# With Vault integration
+from proxmox_client import ProxmoxClient
+from unifi_client import UniFiClient
+
+# Load credentials from Vault
+proxmox = ProxmoxClient.from_vault("192.168.0.202")
+unifi = UniFiClient.from_vault()
+
+# List VMs
+for vm in proxmox.get_vms():
+    print(f"{vm['name']}: {vm['status']}")
+
+# List network clients
+for client in unifi.get_clients():
+    print(f"{client['hostname']}: {client['ip']}")
+```
+
+---
+
+## Common Commands
+
    ```bash
+# Unseal Vault after reboot
    export VAULT_ADDR=http://127.0.0.1:8200
-   export VAULT_ROLE_ID=$(cat ~/.mycosoft-vault-role-id)
-   export VAULT_SECRET_ID=$(cat ~/.mycosoft-vault-secret-id)
-   vault write auth/approle/login role_id=$VAULT_ROLE_ID secret_id=$VAULT_SECRET_ID
+vault operator unseal <key1>
+vault operator unseal <key2>
+vault operator unseal <key3>
+
+# Generate new Secret ID
+vault write -f -field=secret_id auth/approle/role/myca/secret-id
+
+# Read Proxmox token from Vault
    vault kv get mycosoft/proxmox
-   ```
 
-2. **Start Sync Services**:
-   ```bash
-   docker-compose -f docker-compose.sync.yml --profile infra-sync up -d
-   ```
+# Test Proxmox API
+curl -k -H "Authorization: PVEAPIToken=myca@pve!mas=<secret>" \
+  https://192.168.0.202:8006/api2/json/nodes
 
-3. **Integrate with MYCA**: Use the generated `docker-compose.sync.yml` as a template for your MYCA services.
+# Test UniFi API
+curl -k -H "X-API-Key: <key>" \
+  https://192.168.0.1/proxy/network/api/self
+```
