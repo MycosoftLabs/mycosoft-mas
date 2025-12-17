@@ -1,0 +1,32 @@
+feat(voice): add fully containerized voice interaction system with orchestrator integration
+
+Added comprehensive voice interaction capabilities with local-first architecture:
+
+Voice System:
+- Integrated faster-whisper-server (STT), Ollama (LLM), and openedai-speech (TTS) in docker-compose
+- Created voice UI with Nginx reverse proxy to resolve CORS issues
+- Added /voice/orchestrator/chat and /voice/orchestrator/speech endpoints to MAS orchestrator
+- Implemented conversation memory and multi-turn dialogue support
+
+Infrastructure Integration:
+- Added Proxmox VE and UniFi Network integrations with client libraries
+- Created bootstrap scripts for automated infrastructure provisioning
+- Added network management tools for UniFi/Proxmox API access
+
+Agent Improvements (MYCA requested):
+- Added persistent feedback loop with SQLite store for agent/orchestrator learning
+- Implemented robust error handling with request IDs and global exception handler
+- Added concurrency controls and worker pools for multi-threaded voice processing
+- Created feedback API endpoints (POST /voice/feedback, GET /voice/feedback/recent, GET /voice/feedback/summary)
+
+n8n Integration:
+- Added n8n service with voice and text chat workflows
+- Created workflow templates for STT->LLM->TTS pipeline
+- Configured n8n with proper auth and encryption keys
+
+Dependencies:
+- Added python-multipart, jinja2, packaging, asyncpg to support voice/web features
+- Updated poetry.lock with all new dependencies
+- Set MAS_LIGHT_IMPORT mode to avoid loading heavyweight agent deps until needed
+
+All voice services run in containers on mas-network for secure, local-first operation.

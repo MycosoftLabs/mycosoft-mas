@@ -1,0 +1,26 @@
+FROM nvidia/cuda:12.3.0-runtime-ubuntu22.04
+
+WORKDIR /app
+
+# Install Python
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip3 install --no-cache-dir \
+    numpy==1.24.3 \
+    python-json-logger==2.0.7
+
+# Copy GPU runner
+COPY gpu_runner.py /app/
+
+# Create logs directory
+RUN mkdir -p /logs
+
+# Set environment
+ENV PYTHONUNBUFFERED=1
+ENV LOG_DIR=/logs
+
+CMD ["python3", "-u", "gpu_runner.py"]

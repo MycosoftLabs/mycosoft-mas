@@ -364,8 +364,9 @@ services:
       dockerfile: Dockerfile.elevenlabs
     ports:
       - "5501:8000"
+    env_file:
+      - .env.local
     environment:
-      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
       - FALLBACK_TTS_URL=http://openedai-speech:8000
     depends_on:
       - openedai-speech

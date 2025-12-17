@@ -153,6 +153,72 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.action || $json.query.action }}",
+              "operation": "equals",
+              "value2": "sms"
+            }
+          ]
+        }
+      },
+      "id": "check-sms-action",
+      "name": "Check SMS Action",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1050, 600]
+    },
+    {
+      "parameters": {
+        "url": "http://mas-orchestrator:8000/twilio/sms/send",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"to\": $json.body.phone_number || $json.query.phone_number, \"message\": $json.response || $json.response_text } }}",
+        "options": {}
+      },
+      "id": "send-sms",
+      "name": "Send SMS via Twilio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 550]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.action || $json.query.action }}",
+              "operation": "equals",
+              "value2": "voice"
+            }
+          ]
+        }
+      },
+      "id": "check-voice-action",
+      "name": "Check Voice Action",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1050, 750]
+    },
+    {
+      "parameters": {
+        "url": "http://mas-orchestrator:8000/twilio/voice/message",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"to\": $json.body.phone_number || $json.query.phone_number, \"message\": $json.response || $json.response_text, \"voice\": \"alice\" } }}",
+        "options": {}
+      },
+      "id": "send-voice",
+      "name": "Send Voice Message via Twilio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 700]
+    },
+    {
+      "parameters": {
         "content": "=Zapier MCP integration available at:\nhttps://mcp.zapier.com/api/mcp/s/MmM5MmJkNDgtMDI5MC00ZGZhLWFlOGItYzM1MDQ4YTNkOWU0OmY5OWI4ZGYxLTAxNTgtNGZmOC05MDRkLTZlMmQzMzNlM2ViOQ==/mcp\n\nUse HTTP Request node to call Zapier actions.\nExample: POST with proper auth headers to trigger Zaps.",
         "height": 80,
         "width": 400,
@@ -166,7 +232,7 @@
     },
     {
       "parameters": {
-        "content": "=This workflow demonstrates:\n- Webhook trigger for external/UI calls\n- MAS agent listing\n- Orchestrator chat with context\n- n8n Data Table logging\n- Feedback loop to MAS\n- Ready for Zapier MCP integration\n\nTo extend:\n1. Add HTTP Request nodes for Zapier MCP actions\n2. Add Proxmox/UniFi integration calls\n3. Add conditional routing to specific agents\n4. Add voice transcription branch",
+        "content": "=This workflow demonstrates:\n- Webhook trigger for external/UI calls\n- MAS agent listing\n- Orchestrator chat with context\n- n8n Data Table logging\n- Feedback loop to MAS\n- Twilio SMS/voice integration\n- Ready for Zapier MCP integration\n\nTo extend:\n1. Add HTTP Request nodes for Zapier MCP actions\n2. Add Proxmox/UniFi integration calls\n3. Add conditional routing to specific agents\n4. Add voice transcription branch\n5. Use action=sms or action=voice in webhook body to trigger Twilio",
         "height": 200,
         "width": 400,
         "color": 4
@@ -201,9 +267,29 @@
       "main": [
         [
           { "node": "log-to-n8n-table", "type": "main", "index": 0 },
-          { "node": "store-feedback", "type": "main", "index": 0 }
+          { "node": "store-feedback", "type": "main", "index": 0 },
+          { "node": "check-sms-action", "type": "main", "index": 0 },
+          { "node": "check-voice-action", "type": "main", "index": 0 }
         ]
       ]
+    },
+    "check-sms-action": {
+      "main": [
+        [{ "node": "send-sms", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "check-voice-action": {
+      "main": [
+        [{ "node": "send-voice", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "send-sms": {
+      "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]
+    },
+    "send-voice": {
+      "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]
     },
     "log-to-n8n-table": {
       "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]

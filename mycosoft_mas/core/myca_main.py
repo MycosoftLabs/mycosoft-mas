@@ -29,6 +29,7 @@ from mycosoft_mas.agents.messaging.communication_service import CommunicationSer
 from mycosoft_mas.agents.messaging.error_logging_service import ErrorLoggingService
 from mycosoft_mas.agents.base_agent import BaseAgent, AgentStatus
 from mycosoft_mas.core.voice_feedback_store import VoiceFeedbackStore
+from mycosoft_mas.integrations.twilio_integration import TwilioIntegration
 
 # Avoid importing heavyweight agent modules (and their optional deps) in light mode.
 if not os.environ.get("MAS_LIGHT_IMPORT"):
@@ -167,6 +168,7 @@ class MycosoftMAS:
 
         self._feedback_store = VoiceFeedbackStore(self.data_dir / "voice_feedback.db")
         self._voice_conversations: Dict[str, List[Dict[str, str]]] = {}
+        self._twilio = TwilioIntegration()
 
         self._http: httpx.AsyncClient | None = None
         self._stt_sem = asyncio.Semaphore(int(os.getenv("VOICE_STT_CONCURRENCY", "2")))
@@ -398,6 +400,109 @@ class MycosoftMAS:
                 notes=notes,
             )
             return {"status": "ok", "feedback": fb.__dict__}
+
+        # ----------------------------
+        # Twilio Integration Endpoints
+        # ----------------------------
+
+        @self.app.post("/twilio/sms/send")
+        async def twilio_send_sms(payload: Dict[str, Any]):
+            """
+            Send SMS via Twilio.
+            
+            Body:
+            {
+                "to": "+12025551234",  # E.164 format
+                "message": "Hello from MYCA"
+            }
+            """
+            if not self._twilio.is_configured():
+                raise HTTPException(status_code=503, detail="Twilio not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER")
+            
+            to = payload.get("to", "").strip()
+            message = payload.get("message", "").strip()
+            
+            if not to or not message:
+                raise HTTPException(status_code=400, detail="Missing 'to' or 'message'")
+            
+            result = await self._twilio.send_sms(to, message)
+            if result.get("status") == "error":
+                raise HTTPException(status_code=500, detail=result.get("error", "Failed to send SMS"))
+            
+            return result
+
+        @self.app.post("/twilio/voice/call")
+        async def twilio_make_call(payload: Dict[str, Any]):
+            """
+            Initiate outbound call via Twilio.
+            
+            Body:
+            {
+                "to": "+12025551234",
+                "twiml_url": "https://your-server.com/twiml/voice.xml"
+            }
+            """
+            if not self._twilio.is_configured():
+                raise HTTPException(status_code=503, detail="Twilio not configured")
+            
+            to = payload.get("to", "").strip()
+            twiml_url = payload.get("twiml_url", "").strip()
+            
+            if not to or not twiml_url:
+                raise HTTPException(status_code=400, detail="Missing 'to' or 'twiml_url'")
+            
+            result = await self._twilio.make_call(to, twiml_url)
+            if result.get("status") == "error":
+                raise HTTPException(status_code=500, detail=result.get("error", "Failed to initiate call"))
+            
+            return result
+
+        @self.app.post("/twilio/voice/message")
+        async def twilio_voice_message(payload: Dict[str, Any]):
+            """
+            Send voice message (text-to-speech call) via Twilio.
+            
+            Body:
+            {
+                "to": "+12025551234",
+                "message": "Hello, this is MYCA speaking",
+                "voice": "alice"  # Optional: alice, man, woman
+            }
+            """
+            if not self._twilio.is_configured():
+                raise HTTPException(status_code=503, detail="Twilio not configured")
+            
+            to = payload.get("to", "").strip()
+            message = payload.get("message", "").strip()
+            voice = payload.get("voice", "alice").strip()
+            
+            if not to or not message:
+                raise HTTPException(status_code=400, detail="Missing 'to' or 'message'")
+            
+            result = await self._twilio.send_voice_message(to, message, voice)
+            if result.get("status") == "error":
+                raise HTTPException(status_code=500, detail=result.get("error", "Failed to send voice message"))
+            
+            return result
+
+        @self.app.get("/twilio/status/{message_sid}")
+        async def twilio_get_status(message_sid: str):
+            """Get status of a Twilio message or call."""
+            if not self._twilio.is_configured():
+                raise HTTPException(status_code=503, detail="Twilio not configured")
+            
+            result = await self._twilio.get_message_status(message_sid)
+            return result
+
+        @self.app.get("/twilio/config")
+        async def twilio_config():
+            """Check Twilio configuration status."""
+            return {
+                "configured": self._twilio.is_configured(),
+                "has_account_sid": bool(self._twilio.account_sid),
+                "has_auth_token": bool(self._twilio.auth_token),
+                "has_phone_number": bool(self._twilio.phone_number),
+            }
 
         @self.app.post("/voice/orchestrator/chat")
         async def voice_orchestrator_chat(payload: Dict[str, Any]):
