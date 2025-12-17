@@ -76,3 +76,13 @@ ENV/
 
 # Local diagnostics (often contains machine-specific details)
 SYSTEM_DIAGNOSTIC_REPORT.txt
+
+# Infrastructure bootstrap secrets and outputs
+infra/bootstrap/out/secrets/
+infra/bootstrap/out/templates/
+*.mycosoft-vault-role-id
+*.mycosoft-vault-secret-id
+.mycosoft-vault-role-id
+.mycosoft-vault-secret-id
+.smb-credentials
+docker-compose.sync.yml
