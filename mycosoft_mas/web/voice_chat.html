@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MYCA Voice Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e0e0e0;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 2rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.recording {
+            background: #ef4444;
+        }
+
+        .status-dot.processing {
+            background: #fbbf24;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .voice-button {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #7c3aed 0%, #00d4ff 100%);
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(124, 58, 237, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+        }
+
+        .voice-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 50px rgba(124, 58, 237, 0.5);
+        }
+
+        .voice-button:active,
+        .voice-button.recording {
+            transform: scale(0.95);
+            background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+        }
+
+        .voice-button.processing {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .message {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 1rem;
+            max-width: 85%;
+        }
+
+        .message.user {
+            background: #7c3aed;
+            margin-left: auto;
+        }
+
+        .message.assistant {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .text-input-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .text-input {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+        }
+
+        .send-button {
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            background: #7c3aed;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-button:hover {
+            background: #6d28d9;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .mode-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: #7c3aed;
+            color: white;
+            border-color: #7c3aed;
+        }
+
+        .settings {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .settings a {
+            color: #7c3aed;
+            text-decoration: none;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🍄</div>
+        <h1>MYCA</h1>
+        <p class="subtitle">Voice-Enabled AI Assistant</p>
+
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Ready</span>
+        </div>
+
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="voiceMode">🎤 Voice</button>
+            <button class="mode-btn" id="textMode">⌨️ Text</button>
+        </div>
+
+        <div id="voiceInterface">
+            <button class="voice-button" id="voiceBtn">🎤</button>
+            <p style="color: #666; font-size: 0.9rem;">Hold to speak</p>
+        </div>
+
+        <div id="textInterface" style="display: none;">
+            <div class="text-input-container">
+                <input type="text" class="text-input" id="textInput" placeholder="Type your message...">
+                <button class="send-button" id="sendBtn">Send</button>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message assistant">
+                Hello! I'm MYCA. How can I help you today?
+            </div>
+        </div>
+
+        <audio id="audioPlayer" controls style="display: none;"></audio>
+
+        <div class="settings">
+            <a href="http://localhost:5678" target="_blank">n8n Workflows</a> |
+            <a href="http://localhost:3001" target="_blank">MYCA Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        const voiceBtn = document.getElementById('voiceBtn');
+        const textInput = document.getElementById('textInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const chatContainer = document.getElementById('chatContainer');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const voiceMode = document.getElementById('voiceMode');
+        const textMode = document.getElementById('textMode');
+        const voiceInterface = document.getElementById('voiceInterface');
+        const textInterface = document.getElementById('textInterface');
+
+        // API endpoints (all same-origin via nginx reverse proxy to avoid CORS)
+        // Single orchestrator endpoints (STT -> Orchestrator -> TTS)
+        const MAS_SPEECH_URL = '/api/mas/voice/orchestrator/speech';
+        const MAS_CHAT_URL = '/api/mas/voice/orchestrator/chat';
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let selectedMimeType = '';
+
+        function base64ToBlob(base64, mimeType) {
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+            return new Blob([bytes], { type: mimeType });
+        }
+
+        // Mode toggle
+        voiceMode.addEventListener('click', () => {
+            voiceMode.classList.add('active');
+            textMode.classList.remove('active');
+            voiceInterface.style.display = 'block';
+            textInterface.style.display = 'none';
+        });
+
+        textMode.addEventListener('click', () => {
+            textMode.classList.add('active');
+            voiceMode.classList.remove('active');
+            textInterface.style.display = 'block';
+            voiceInterface.style.display = 'none';
+        });
+
+        // Voice recording
+        voiceBtn.addEventListener('mousedown', startRecording);
+        voiceBtn.addEventListener('mouseup', stopRecording);
+        voiceBtn.addEventListener('mouseleave', stopRecording);
+        voiceBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
+        voiceBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
+
+        async function startRecording() {
+            if (isRecording) return;
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const preferredTypes = [
+                    'audio/webm;codecs=opus',
+                    'audio/ogg;codecs=opus',
+                    'audio/webm',
+                    'audio/ogg'
+                ];
+                selectedMimeType = preferredTypes.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+                const recorderOptions = selectedMimeType ? { mimeType: selectedMimeType } : undefined;
+                mediaRecorder = new MediaRecorder(stream, recorderOptions);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (e) => {
+                    audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const blobType = selectedMimeType || mediaRecorder.mimeType || 'audio/webm';
+                    const audioBlob = new Blob(audioChunks, { type: blobType });
+                    await processAudio(audioBlob);
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                voiceBtn.classList.add('recording');
+                voiceBtn.textContent = '🔴';
+                setStatus('Recording...', 'recording');
+            } catch (err) {
+                console.error('Mic error:', err);
+                setStatus('Microphone access denied', 'error');
+            }
+        }
+
+        function stopRecording() {
+            if (!isRecording || !mediaRecorder) return;
+            
+            mediaRecorder.stop();
+            isRecording = false;
+            voiceBtn.classList.remove('recording');
+            voiceBtn.textContent = '🎤';
+        }
+
+        async function processAudio(audioBlob) {
+            setStatus('Sending to MYCA...', 'processing');
+            voiceBtn.classList.add('processing');
+
+            try {
+                const formData = new FormData();
+                const typeToExt = {
+                    'audio/webm': 'webm',
+                    'audio/webm;codecs=opus': 'webm',
+                    'audio/ogg': 'ogg',
+                    'audio/ogg;codecs=opus': 'ogg',
+                };
+                const ext = typeToExt[audioBlob.type] || 'webm';
+                formData.append('file', audioBlob, `audio.${ext}`);
+
+                const res = await fetch(MAS_SPEECH_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text().catch(() => '');
+                    throw new Error(`MYCA voice endpoint failed (${res.status}) ${errText}`);
+                }
+                
+                const data = await res.json();
+                const transcript = data?.transcript ?? '';
+                const responseText = data?.response_text ?? '';
+
+                if (transcript) addMessage(transcript, 'user');
+                if (responseText) addMessage(responseText, 'assistant');
+
+                const audioBase64 = data?.audio_base64;
+                if (audioBase64) {
+                    const blob = base64ToBlob(audioBase64, data?.audio_mime || 'audio/mpeg');
+                    const url = URL.createObjectURL(blob);
+                    audioPlayer.src = url;
+                    audioPlayer.style.display = 'block';
+                    await audioPlayer.play();
+                } else if (data?.audio_error) {
+                    addMessage(`(TTS error) ${data.audio_error}`, 'assistant');
+                }
+
+                setStatus('Ready', 'ready');
+
+            } catch (err) {
+                console.error('Processing error:', err);
+                setStatus('Error: ' + err.message, 'error');
+                addMessage('Sorry, there was an error processing your voice.', 'assistant');
+            } finally {
+                voiceBtn.classList.remove('processing');
+            }
+        }
+
+        // Text chat
+        sendBtn.addEventListener('click', () => sendText());
+        textInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendText();
+        });
+
+        async function sendText() {
+            const message = textInput.value.trim();
+            if (!message) return;
+
+            textInput.value = '';
+            addMessage(message, 'user');
+            await sendTextMessage(message, false);
+        }
+
+        async function sendTextMessage(message, withAudio = false) {
+            setStatus('Thinking...', 'processing');
+
+            try {
+                const res = await fetch(MAS_CHAT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message,
+                        want_audio: withAudio
+                    })
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text().catch(() => '');
+                    throw new Error(`MYCA chat failed (${res.status}) ${errText}`);
+                }
+
+                const data = await res.json();
+                const assistantText = data?.response_text ?? '(no response)';
+                addMessage(assistantText, 'assistant');
+
+                // If voice mode, also generate TTS
+                if (withAudio) {
+                    const audioBase64 = data?.audio_base64;
+                    if (audioBase64) {
+                        const blob = base64ToBlob(audioBase64, data?.audio_mime || 'audio/mpeg');
+                        const url = URL.createObjectURL(blob);
+                        audioPlayer.src = url;
+                        audioPlayer.style.display = 'block';
+                        await audioPlayer.play();
+                    } else if (data?.audio_error) {
+                        addMessage(`(TTS error) ${data.audio_error}`, 'assistant');
+                    }
+                }
+
+                setStatus('Ready', 'ready');
+
+            } catch (err) {
+                console.error('Chat error:', err);
+                setStatus('Error: ' + err.message, 'error');
+                addMessage('Sorry, I had trouble connecting. Make sure services are running.', 'assistant');
+            }
+        }
+
+        function addMessage(text, role) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            div.textContent = text;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function setStatus(text, state) {
+            statusText.textContent = text;
+            statusDot.className = 'status-dot ' + state;
+        }
+
+        // Check service status on load
+        async function checkServices() {
+            try {
+                // Quick health check: MAS
+                await fetch('/api/mas/health');
+                setStatus('Connected', 'ready');
+            } catch {
+                setStatus('Waiting for services...', 'processing');
+            }
+        }
+
+        checkServices();
+    </script>
+</body>
+</html>

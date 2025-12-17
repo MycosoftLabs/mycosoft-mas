@@ -7,16 +7,14 @@ services:
       dockerfile: Dockerfile
       target: runtime
     command: >
-      sh -c "/usr/local/bin/wait-for-it redis:6379 &&
-             /usr/local/bin/wait-for-it postgres:5432 &&
-             /usr/local/bin/wait-for-it qdrant:6333 &&
-             uvicorn mycosoft_mas.core.main:app --host 0.0.0.0 --port 8000"
+      sh -c "uvicorn mycosoft_mas.core.main:app --host 0.0.0.0 --port 8000"
     ports:
       - "8001:8000"
     environment:
       MAS_ENV: development
       DEBUG_MODE: "true"
       LOG_LEVEL: DEBUG
+      MAS_LIGHT_IMPORT: "1"
       REDIS_URL: redis://redis:6379/0
       DATABASE_URL: postgresql://mas:mas@postgres:5432/mas
       QDRANT_URL: http://qdrant:6333
@@ -55,9 +53,7 @@ services:
       dockerfile: Dockerfile
       target: runtime
     command: >
-      sh -c "/usr/local/bin/wait-for-it redis:6379 &&
-             /usr/local/bin/wait-for-it postgres:5432 &&
-             python -m mycosoft_mas.agents.management.agent_manager"
+      sh -c "python -m mycosoft_mas.agents.management.agent_manager"
     environment:
       MAS_ENV: development
       REDIS_URL: redis://redis:6379/0
@@ -88,9 +84,7 @@ services:
       dockerfile: Dockerfile
       target: runtime
     command: >
-      sh -c "/usr/local/bin/wait-for-it redis:6379 &&
-             /usr/local/bin/wait-for-it postgres:5432 &&
-             python -m mycosoft_mas.agents.management.task_manager"
+      sh -c "python -m mycosoft_mas.agents.management.task_manager"
     environment:
       MAS_ENV: development
       REDIS_URL: redis://redis:6379/0
@@ -121,9 +115,7 @@ services:
       dockerfile: Dockerfile
       target: runtime
     command: >
-      sh -c "/usr/local/bin/wait-for-it redis:6379 &&
-             /usr/local/bin/wait-for-it postgres:5432 &&
-             python -m mycosoft_mas.agents.integrations.integration_manager"
+      sh -c "python -m mycosoft_mas.agents.integrations.integration_manager"
     environment:
       MAS_ENV: development
       REDIS_URL: redis://redis:6379/0
@@ -268,7 +260,7 @@ services:
       - mas-network
 
   ollama:
-    image: ollama/ollama:0.6.9
+    image: ollama/ollama:latest
     volumes:
       - ollama_data:/root/.ollama
     ports:
@@ -282,6 +274,114 @@ services:
     networks:
       - mas-network
 
+  # ============================================
+  # VOICE INTERACTION SERVICES
+  # ============================================
+
+  # n8n - Workflow Automation for Voice Pipelines
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      # Keep local dev simple: no auth so webhooks/UI work without extra headers.
+      # If you need auth later, re-enable and put n8n behind a reverse proxy.
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=America/New_York
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-myca-encryption-key-change-me}
+      # AI/LLM Integration
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # Whisper/TTS endpoints
+      - WHISPER_URL=http://whisper:8000
+      - TTS_URL=http://tts:5500
+      - OLLAMA_URL=http://ollama:11434
+      - LITELLM_URL=http://litellm:4000
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/workflows
+    depends_on:
+      - redis
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  # Whisper - Speech-to-Text (Local, Fast)
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    ports:
+      - "8765:8000"
+    environment:
+      - WHISPER__MODEL=Systran/faster-whisper-base.en
+      - WHISPER__INFERENCE_DEVICE=cpu
+    volumes:
+      - whisper_models:/root/.cache/huggingface
+    networks:
+      - mas-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Piper TTS - Text-to-Speech (Local, Fast)
+  tts:
+    image: rhasspy/wyoming-piper:latest
+    ports:
+      - "10200:10200"
+    command: --voice en_US-lessac-medium
+    volumes:
+      - piper_data:/data
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  # OpenedAI Speech - OpenAI-compatible TTS API
+  openedai-speech:
+    image: ghcr.io/matatonic/openedai-speech:latest
+    ports:
+      - "5500:8000"
+    environment:
+      - TTS_HOME=/data
+      - HF_HOME=/data
+    volumes:
+      - openedai_speech_data:/data
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  # Voice Gateway - WebRTC/WebSocket for real-time voice
+  livekit:
+    image: livekit/livekit-server:latest
+    ports:
+      - "7880:7880"   # HTTP
+      - "7881:7881"   # WebRTC TCP
+      - "7882:7882/udp" # WebRTC UDP
+    environment:
+      - LIVEKIT_KEYS=devkey:${LIVEKIT_SECRET:-secret123456789012345678901234}
+    command: --dev --bind 0.0.0.0
+    networks:
+      - mas-network
+    profiles: ["voice-realtime"]
+    restart: unless-stopped
+
+  # Voice UI (mic-enabled) with same-origin proxies to avoid CORS
+  voice-ui:
+    image: nginx:alpine
+    ports:
+      - "8090:80"
+    volumes:
+      - ./mycosoft_mas/web/voice_chat.html:/usr/share/nginx/html/index.html:ro
+      - ./mycosoft_mas/web/voice_ui.nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - mas-network
+    restart: unless-stopped
+
 volumes:
   redis-data:
   postgres_data:
@@ -289,6 +389,10 @@ volumes:
   grafana_data:
   qdrant_data:
   ollama_data:
+  n8n_data:
+  whisper_models:
+  piper_data:
+  openedai_speech_data:
 
 networks:
   mas-network:

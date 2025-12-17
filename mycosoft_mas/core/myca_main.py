@@ -8,36 +8,41 @@ import asyncio
 import logging
 import os
 import sys
+import base64
+import json
+import uuid
 from pathlib import Path
-from typing import Dict, Any, List
-from fastapi import FastAPI, HTTPException, Depends
+from typing import Dict, Any, List, Callable, Awaitable
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from prometheus_client import Counter, Histogram, Gauge, make_asgi_app, generate_latest
 import time
 from datetime import datetime
 import yaml
 import argparse
 from prometheus_fastapi_instrumentator import Instrumentator
+import httpx
 
 from mycosoft_mas.agents.messaging.message_broker import MessageBroker
 from mycosoft_mas.agents.messaging.communication_service import CommunicationService
 from mycosoft_mas.agents.messaging.error_logging_service import ErrorLoggingService
-from mycosoft_mas.agents.base_agent import BaseAgent
-from mycosoft_mas.agents.mycology_bio_agent import MycologyBioAgent
-from mycosoft_mas.agents.financial.financial_agent import FinancialAgent
-from mycosoft_mas.agents.corporate.corporate_operations_agent import CorporateOperationsAgent
-from mycosoft_mas.agents.marketing_agent import MarketingAgent
-from mycosoft_mas.agents.project_manager_agent import ProjectManagerAgent
-from mycosoft_mas.agents.myco_dao_agent import MycoDAOAgent
-from mycosoft_mas.agents.ip_tokenization_agent import IPTokenizationAgent
-from mycosoft_mas.agents.dashboard_agent import DashboardAgent
-from mycosoft_mas.agents.opportunity_scout import OpportunityScout
-from mycosoft_mas.orchestrator import Orchestrator
-from mycosoft_mas.agents.base_agent import AgentStatus
+from mycosoft_mas.agents.base_agent import BaseAgent, AgentStatus
+from mycosoft_mas.core.voice_feedback_store import VoiceFeedbackStore
+
+# Avoid importing heavyweight agent modules (and their optional deps) in light mode.
+if not os.environ.get("MAS_LIGHT_IMPORT"):
+    from mycosoft_mas.agents.mycology_bio_agent import MycologyBioAgent
+    from mycosoft_mas.agents.financial.financial_agent import FinancialAgent
+    from mycosoft_mas.agents.corporate.corporate_operations_agent import CorporateOperationsAgent
+    from mycosoft_mas.agents.marketing_agent import MarketingAgent
+    from mycosoft_mas.agents.project_manager_agent import ProjectManagerAgent
+    from mycosoft_mas.agents.myco_dao_agent import MycoDAOAgent
+    from mycosoft_mas.agents.ip_tokenization_agent import IPTokenizationAgent
+    from mycosoft_mas.agents.dashboard_agent import DashboardAgent
+    from mycosoft_mas.agents.opportunity_scout import OpportunityScout
 from mycosoft_mas.services.integration_service import IntegrationService
 from mycosoft_mas.core.knowledge_graph import KnowledgeGraph
-from mycosoft_mas.monitoring.dashboard import app as dashboard_app
-from mycosoft_mas.llm import LLMRouter
 from .security import get_current_user
 from .routers import agents, tasks, dashboard
 
@@ -85,8 +90,8 @@ class MycosoftMAS:
         self.communication_service = CommunicationService(config.get("communication", {}))
         self.error_logging_service = ErrorLoggingService(config.get("error_logging", {}))
         
-        # Initialize LLM Router
-        self.llm_router = LLMRouter()
+        # LLM Router (optional). Voice endpoints use local Ollama directly.
+        self.llm_router = None
         
         # Initialize agents
         self.agents: List[BaseAgent] = []
@@ -111,9 +116,65 @@ class MycosoftMAS:
         self.metrics_app = make_asgi_app()
         self.app.mount("/metrics", self.metrics_app)
         
-        # Mount dashboard at /dashboard with prefix
-        dashboard_app.root_path = "/dashboard"
-        self.app.mount("/dashboard", dashboard_app)
+        # Mount dashboard at /dashboard (optional; depends on jinja2)
+        try:
+            from mycosoft_mas.monitoring.dashboard import app as dashboard_app  # type: ignore
+            dashboard_app.root_path = "/dashboard"
+            self.app.mount("/dashboard", dashboard_app)
+        except Exception as e:
+            self.logger.warning(f"Dashboard not mounted: {e}")
+
+        # ----------------------------
+        # Robust error handling + tracing
+        # ----------------------------
+
+        @self.app.middleware("http")
+        async def add_request_id(request: Request, call_next: Callable[[Request], Awaitable[Any]]):
+            request_id = request.headers.get("X-Request-Id") or str(uuid.uuid4())
+            request.state.request_id = request_id
+            try:
+                response = await call_next(request)
+            except HTTPException:
+                raise
+            except Exception as e:
+                self.logger.exception(f"[{request_id}] Unhandled error: {e}")
+                return JSONResponse(
+                    status_code=500,
+                    content={
+                        "error": "internal_error",
+                        "message": "Internal server error",
+                        "request_id": request_id,
+                    },
+                )
+            response.headers["X-Request-Id"] = request_id
+            return response
+
+        @self.app.exception_handler(HTTPException)
+        async def http_exception_handler(request: Request, exc: HTTPException):
+            request_id = getattr(request.state, "request_id", None)
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={
+                    "error": "http_error",
+                    "message": exc.detail,
+                    "request_id": request_id,
+                },
+            )
+
+        # ----------------------------
+        # Feedback + concurrency primitives
+        # ----------------------------
+
+        self._feedback_store = VoiceFeedbackStore(self.data_dir / "voice_feedback.db")
+        self._voice_conversations: Dict[str, List[Dict[str, str]]] = {}
+
+        self._http: httpx.AsyncClient | None = None
+        self._stt_sem = asyncio.Semaphore(int(os.getenv("VOICE_STT_CONCURRENCY", "2")))
+        self._llm_sem = asyncio.Semaphore(int(os.getenv("VOICE_LLM_CONCURRENCY", "2")))
+        self._tts_sem = asyncio.Semaphore(int(os.getenv("VOICE_TTS_CONCURRENCY", "2")))
+
+        self._job_queue: asyncio.Queue[Callable[[], Awaitable[None]]] = asyncio.Queue()
+        self._job_workers: list[asyncio.Task] = []
         
         # Setup routes
         self._setup_routes()
@@ -252,11 +313,236 @@ class MycosoftMAS:
                 raise HTTPException(status_code=503, detail=ready_data)
             
             return ready_data
+
+        # ----------------------------
+        # Voice endpoints (local-first)
+        # ----------------------------
+
+        def _ollama_base_url() -> str:
+            # Prefer docker-network URL inside compose; fall back to host mapping.
+            return os.getenv("OLLAMA_URL", "http://ollama:11434").rstrip("/")
+
+        def _ollama_model() -> str:
+            return os.getenv("VOICE_OLLAMA_MODEL", "llama3.2:3b")
+
+        def _whisper_base_url() -> str:
+            return os.getenv("WHISPER_URL", "http://whisper:8000").rstrip("/")
+
+        def _tts_base_url() -> str:
+            return os.getenv("TTS_URL", "http://openedai-speech:8000").rstrip("/")
+
+        async def _ensure_ollama_model(model: str) -> None:
+            # If tags endpoint fails or model missing, attempt a pull.
+            try:
+                async with httpx.AsyncClient(timeout=20) as client:
+                    tags = (await client.get(f"{_ollama_base_url()}/api/tags")).json()
+                names = {m.get("name") for m in tags.get("models", []) if isinstance(m, dict)}
+                if model in names:
+                    return
+            except Exception:
+                # If ollama isn't ready yet, try pulling anyway.
+                pass
+
+            # Pull model (best-effort).
+            try:
+                async with httpx.AsyncClient(timeout=600) as client:
+                    await client.post(
+                        f"{_ollama_base_url()}/api/pull",
+                        json={"name": model, "stream": False},
+                    )
+            except Exception:
+                # We'll let the subsequent chat attempt return the real error.
+                return
+
+        @self.app.get("/voice/agents")
+        async def voice_list_agents():
+            """List initialized agent classes (for voice routing UI)."""
+            return {
+                "agents": [
+                    {
+                        "name": agent.__class__.__name__,
+                        "agent_id": getattr(agent, "agent_id", None),
+                        "status": getattr(getattr(agent, "status", None), "value", str(getattr(agent, "status", "unknown"))),
+                    }
+                    for agent in self.agents
+                ]
+            }
+
+        @self.app.get("/voice/feedback/summary")
+        async def voice_feedback_summary():
+            return self._feedback_store.summary()
+
+        @self.app.get("/voice/feedback/recent")
+        async def voice_feedback_recent(limit: int = 25):
+            items = await asyncio.to_thread(self._feedback_store.list_recent, limit=limit)
+            return {"items": [i.__dict__ for i in items]}
+
+        @self.app.post("/voice/feedback")
+        async def voice_feedback(payload: Dict[str, Any]):
+            conversation_id = (payload.get("conversation_id") or "").strip() or None
+            agent_name = (payload.get("agent_name") or "").strip() or None
+            transcript = (payload.get("transcript") or None)
+            response_text = (payload.get("response_text") or None)
+            rating = payload.get("rating", None)
+            success = payload.get("success", None)
+            notes = (payload.get("notes") or "").strip() or None
+
+            fb = await asyncio.to_thread(
+                self._feedback_store.add_feedback,
+                conversation_id=conversation_id,
+                agent_name=agent_name,
+                transcript=transcript,
+                response_text=response_text,
+                rating=rating,
+                success=success,
+                notes=notes,
+            )
+            return {"status": "ok", "feedback": fb.__dict__}
+
+        @self.app.post("/voice/orchestrator/chat")
+        async def voice_orchestrator_chat(payload: Dict[str, Any]):
+            """
+            Orchestrator-level chat (independent from agents).
+            Uses local Ollama to respond.
+            """
+            message = (payload.get("message") or "").strip()
+            if not message:
+                raise HTTPException(status_code=400, detail="Missing 'message'")
+
+            conversation_id = (payload.get("conversation_id") or "").strip() or os.urandom(8).hex()
+            want_audio = bool(payload.get("want_audio", False))
+
+            feedback_hint = await asyncio.to_thread(self._feedback_store.prompt_hint, limit=10)
+            system_prompt = (
+                "You are MYCA Orchestrator for Mycosoft MAS. "
+                "You coordinate work and can suggest which agent to use, but you may respond directly. "
+                "Be concise. When user intent maps to an agent, say: 'ROUTE: <AgentName>' on its own line, "
+                "then a short explanation.\n\n"
+                f"Available agents: {', '.join([a.__class__.__name__ for a in self.agents]) or 'none'}\n"
+                "Only use ROUTE if the agent exists in the Available agents list.\n"
+                f"{feedback_hint}"
+            )
+
+            history = self._voice_conversations.setdefault(conversation_id, [])
+            history.append({"role": "user", "content": message})
+
+            model = _ollama_model()
+            await _ensure_ollama_model(model)
+
+            req = {
+                "model": model,
+                "messages": [{"role": "system", "content": system_prompt}, *history],
+                "stream": False,
+            }
+
+            try:
+                async with self._llm_sem:
+                    if not self._http:
+                        raise RuntimeError("HTTP client not initialized")
+                    r = await self._http.post(f"{_ollama_base_url()}/api/chat", json=req, timeout=120)
+                    r.raise_for_status()
+                    assistant_text = (r.json() or {}).get("message", {}).get("content") or ""
+            except Exception as e:
+                raise HTTPException(status_code=502, detail=f"Ollama chat failed: {e}")
+
+            history.append({"role": "assistant", "content": assistant_text})
+            # Guardrail: if no agents are loaded, never emit ROUTE lines.
+            if not self.agents and "ROUTE:" in assistant_text:
+                assistant_text = assistant_text.replace("ROUTE:", "NOTE:")
+                history[-1]["content"] = assistant_text
+
+            result: Dict[str, Any] = {
+                "conversation_id": conversation_id,
+                "response_text": assistant_text,
+            }
+
+            if want_audio:
+                try:
+                    async with self._tts_sem:
+                        if not self._http:
+                            raise RuntimeError("HTTP client not initialized")
+                        tts_resp = await self._http.post(
+                            f"{_tts_base_url()}/v1/audio/speech",
+                            json={"model": "tts-1", "voice": "alloy", "input": assistant_text},
+                            timeout=120,
+                        )
+                        tts_resp.raise_for_status()
+                        result["audio_mime"] = "audio/mpeg"
+                        result["audio_base64"] = base64.b64encode(tts_resp.content).decode("ascii")
+                except Exception as e:
+                    result["audio_error"] = f"TTS failed: {e}"
+
+            return JSONResponse(result)
+
+        @self.app.post("/voice/orchestrator/speech")
+        async def voice_orchestrator_speech(
+            file: UploadFile = File(...),
+            conversation_id: str | None = Form(default=None),
+        ):
+            """
+            Speech-to-speech pipeline inside MAS:
+            STT (Whisper) -> Orchestrator chat (Ollama) -> TTS.
+            Returns JSON with transcript + response_text + audio_base64.
+            """
+            raw = await file.read()
+            if not raw:
+                raise HTTPException(status_code=400, detail="Empty audio upload")
+
+            # STT
+            try:
+                async with self._stt_sem:
+                    if not self._http:
+                        raise RuntimeError("HTTP client not initialized")
+                    stt_resp = await self._http.post(
+                        f"{_whisper_base_url()}/v1/audio/transcriptions",
+                        files={"file": (file.filename or "audio.bin", raw, file.content_type or "application/octet-stream")},
+                        data={"model": "Systran/faster-whisper-base.en", "response_format": "json"},
+                        timeout=180,
+                    )
+                    stt_resp.raise_for_status()
+                    transcript = (stt_resp.json() or {}).get("text") or ""
+            except Exception as e:
+                raise HTTPException(status_code=502, detail=f"Whisper STT failed: {e}")
+
+            if not transcript.strip():
+                raise HTTPException(status_code=422, detail="Empty transcript (STT returned no text)")
+
+            # Chat (reuse orchestrator endpoint logic)
+            chat_payload = {
+                "message": transcript,
+                "conversation_id": conversation_id,
+                "want_audio": True,
+            }
+            chat_response = await voice_orchestrator_chat(chat_payload)
+            try:
+                chat_data = json.loads((chat_response.body or b"{}").decode("utf-8"))
+            except Exception:
+                chat_data = {"response_text": "", "audio_error": "Failed to parse chat response"}
+
+            chat_data["transcript"] = transcript
+            return JSONResponse(chat_data)
     
     async def initialize(self) -> None:
         """Initialize the MAS."""
         try:
             self.logger.info("Initializing Mycosoft MAS")
+
+            # Shared HTTP client for internal service calls
+            if self._http is None:
+                self._http = httpx.AsyncClient()
+
+            # Background workers (multi-task / concurrency)
+            worker_count = max(1, min(8, int(os.getenv("MAS_WORKER_COUNT", "2"))))
+            if not self._job_workers:
+                for i in range(worker_count):
+                    self._job_workers.append(asyncio.create_task(self._job_worker(f"mas_worker_{i}")))
+
+            # Light mode: only bring up the HTTP API (used by the voice gateway).
+            # This avoids optional deps + external integrations required by the full agent fleet.
+            if os.environ.get("MAS_LIGHT_IMPORT"):
+                self.logger.warning("MAS_LIGHT_IMPORT enabled: skipping full MAS initialization")
+                self.agents = []
+                return
             
             # Start services
             await self.message_broker.start()
@@ -286,56 +572,61 @@ class MycosoftMAS:
                     "knowledge_graph": self.knowledge_graph
                 }
             )
+
+            if os.environ.get("MAS_LIGHT_IMPORT"):
+                # Light mode: don't initialize full agent fleet (optional deps, external API keys, etc.)
+                self.agents = []
+                self.logger.warning("MAS_LIGHT_IMPORT enabled: skipping agent initialization")
+            else:
+                self.agents = [
+                    MycologyBioAgent(
+                        agent_id=mycology_config["agent_id"],
+                        name=mycology_config["name"],
+                        config=mycology_config
+                    ),
+                    FinancialAgent(
+                        agent_id=financial_config["agent_id"],
+                        name=financial_config["name"],
+                        config=financial_config
+                    ),
+                    CorporateOperationsAgent(
+                        agent_id=corporate_config["agent_id"],
+                        name=corporate_config["name"],
+                        config=corporate_config
+                    ),
+                    MarketingAgent(
+                        agent_id=marketing_config["agent_id"],
+                        name=marketing_config["name"],
+                        config=marketing_config
+                    ),
+                    ProjectManagerAgent(
+                        agent_id=project_config["agent_id"],
+                        name=project_config["name"],
+                        config=project_config
+                    ),
+                    MycoDAOAgent(
+                        agent_id=mycodao_config["agent_id"],
+                        name=mycodao_config["name"],
+                        config=mycodao_config
+                    ),
+                    IPTokenizationAgent(
+                        agent_id=ip_config["agent_id"],
+                        name=ip_config["name"],
+                        config=ip_config
+                    ),
+                    DashboardAgent(
+                        agent_id=dashboard_config["agent_id"],
+                        name=dashboard_config["name"],
+                        config=dashboard_config
+                    ),
+                    OpportunityScout(
+                        agent_id=opportunity_scout_config["agent_id"],
+                        name=opportunity_scout_config["name"],
+                        config=opportunity_scout_config
+                    )
+                ]
             
-            self.agents = [
-                MycologyBioAgent(
-                    agent_id=mycology_config["agent_id"],
-                    name=mycology_config["name"],
-                    config=mycology_config
-                ),
-                FinancialAgent(
-                    agent_id=financial_config["agent_id"],
-                    name=financial_config["name"],
-                    config=financial_config
-                ),
-                CorporateOperationsAgent(
-                    agent_id=corporate_config["agent_id"],
-                    name=corporate_config["name"],
-                    config=corporate_config
-                ),
-                MarketingAgent(
-                    agent_id=marketing_config["agent_id"],
-                    name=marketing_config["name"],
-                    config=marketing_config
-                ),
-                ProjectManagerAgent(
-                    agent_id=project_config["agent_id"],
-                    name=project_config["name"],
-                    config=project_config
-                ),
-                MycoDAOAgent(
-                    agent_id=mycodao_config["agent_id"],
-                    name=mycodao_config["name"],
-                    config=mycodao_config
-                ),
-                IPTokenizationAgent(
-                    agent_id=ip_config["agent_id"],
-                    name=ip_config["name"],
-                    config=ip_config
-                ),
-                DashboardAgent(
-                    agent_id=dashboard_config["agent_id"],
-                    name=dashboard_config["name"],
-                    config=dashboard_config
-                ),
-                OpportunityScout(
-                    agent_id=opportunity_scout_config["agent_id"],
-                    name=opportunity_scout_config["name"],
-                    config=opportunity_scout_config
-                )
-            ]
-            
-            # Start agents
+            # Start agents (if any)
             for agent in self.agents:
                 try:
                     await agent.initialize(self.integration_service)
@@ -363,6 +654,14 @@ class MycosoftMAS:
         """Shutdown the MAS."""
         try:
             self.logger.info("Shutting down Mycosoft MAS")
+
+            # Stop background workers
+            for t in self._job_workers:
+                t.cancel()
+            self._job_workers = []
+            if self._http is not None:
+                await self._http.aclose()
+                self._http = None
             
             # Stop agents
             for agent in self.agents:
@@ -395,6 +694,16 @@ class MycosoftMAS:
                 }
             )
             raise
+
+    async def _job_worker(self, name: str) -> None:
+        while True:
+            job = await self._job_queue.get()
+            try:
+                await job()
+            except Exception as e:
+                self.logger.exception(f"Job worker {name} failed: {e}")
+            finally:
+                self._job_queue.task_done()
 
 def load_config():
     """Load configuration from file."""

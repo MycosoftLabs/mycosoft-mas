@@ -87,6 +87,26 @@ MONITORING_CONFIG = {
     "enable_tracing": os.getenv("ENABLE_TRACING", "False").lower() == "true",
 }
 
+# Proxmox Infrastructure Settings
+PROXMOX_CONFIG = {
+    "hosts": [
+        {"name": "build", "ip": "192.168.0.202", "port": 8006},
+        {"name": "dc1", "ip": "192.168.0.2", "port": 8006},
+        {"name": "dc2", "ip": "192.168.0.131", "port": 8006},
+    ],
+    "token_id": os.getenv("PROXMOX_TOKEN_ID", "myca@pve!mas"),
+    "token_secret": os.getenv("PROXMOX_TOKEN_SECRET", ""),
+    "verify_ssl": os.getenv("PROXMOX_VERIFY_SSL", "False").lower() == "true",
+}
+
+# UniFi Network Settings
+UNIFI_CONFIG = {
+    "host": os.getenv("UNIFI_HOST", "192.168.0.1"),
+    "port": int(os.getenv("UNIFI_PORT", "443")),
+    "api_key": os.getenv("UNIFI_API_KEY", ""),
+    "verify_ssl": os.getenv("UNIFI_VERIFY_SSL", "False").lower() == "true",
+}
+
 def get_settings() -> Dict[str, Any]:
     """Get all settings as a dictionary."""
     return {
@@ -99,4 +119,6 @@ def get_settings() -> Dict[str, Any]:
         "security": SECURITY_CONFIG,
         "ml": ML_CONFIG,
         "monitoring": MONITORING_CONFIG,
+        "proxmox": PROXMOX_CONFIG,
+        "unifi": UNIFI_CONFIG,
     } 
