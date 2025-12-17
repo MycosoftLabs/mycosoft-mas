@@ -70,7 +70,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends dos2unix && \
     apt-get purge -y dos2unix && rm -rf /var/lib/apt/lists/*
 
 # Copy wait-for-it script (after bin copy to ensure it's present)
-COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it
+COPY docker/wait-for-it.sh /usr/local/bin/wait-for-it
 RUN chmod +x /usr/local/bin/wait-for-it
 
 # Create necessary directories

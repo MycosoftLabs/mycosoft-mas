@@ -7,9 +7,9 @@ services:
       dockerfile: Dockerfile
       target: runtime
     command: >
-      sh -c "/usr/local/bin/wait-for-it redis 6379 &&
-             /usr/local/bin/wait-for-it postgres 5432 &&
-             /usr/local/bin/wait-for-it qdrant 6333 &&
+      sh -c "/usr/local/bin/wait-for-it redis:6379 &&
+             /usr/local/bin/wait-for-it postgres:5432 &&
+             /usr/local/bin/wait-for-it qdrant:6333 &&
              uvicorn mycosoft_mas.core.main:app --host 0.0.0.0 --port 8000"
     ports:
       - "8001:8000"
@@ -55,8 +55,8 @@ services:
       dockerfile: Dockerfile
       target: runtime
     command: >
-      sh -c "/usr/local/bin/wait-for-it redis 6379 &&
-             /usr/local/bin/wait-for-it postgres 5432 &&
+      sh -c "/usr/local/bin/wait-for-it redis:6379 &&
+             /usr/local/bin/wait-for-it postgres:5432 &&
              python -m mycosoft_mas.agents.management.agent_manager"
     environment:
       MAS_ENV: development
@@ -88,8 +88,8 @@ services:
       dockerfile: Dockerfile
       target: runtime
     command: >
-      sh -c "/usr/local/bin/wait-for-it redis 6379 &&
-             /usr/local/bin/wait-for-it postgres 5432 &&
+      sh -c "/usr/local/bin/wait-for-it redis:6379 &&
+             /usr/local/bin/wait-for-it postgres:5432 &&
              python -m mycosoft_mas.agents.management.task_manager"
     environment:
       MAS_ENV: development
@@ -121,8 +121,8 @@ services:
       dockerfile: Dockerfile
       target: runtime
     command: >
-      sh -c "/usr/local/bin/wait-for-it redis 6379 &&
-             /usr/local/bin/wait-for-it postgres 5432 &&
+      sh -c "/usr/local/bin/wait-for-it redis:6379 &&
+             /usr/local/bin/wait-for-it postgres:5432 &&
              python -m mycosoft_mas.agents.integrations.integration_manager"
     environment:
       MAS_ENV: development
