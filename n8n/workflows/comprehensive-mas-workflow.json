@@ -1,0 +1,221 @@
+{
+  "name": "MYCA Comprehensive Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca-command",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "content": "={{ $json.body.command || $json.query.command }}",
+        "options": {}
+      },
+      "id": "extract-command",
+      "name": "Extract Command",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.content }}",
+              "operation": "contains",
+              "value2": "agent"
+            }
+          ]
+        }
+      },
+      "id": "route-decision",
+      "name": "Route Decision",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://mas-orchestrator:8000/agents",
+        "authentication": "none",
+        "options": {}
+      },
+      "id": "list-agents",
+      "name": "List MAS Agents",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://mas-orchestrator:8000/voice/orchestrator/chat",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"message\": $json.content, \"want_audio\": false } }}",
+        "options": {}
+      },
+      "id": "orchestrator-chat",
+      "name": "MYCA Orchestrator Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "feedback-id",
+              "name": "conversation_id",
+              "value": "={{ $json.conversation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "response",
+              "name": "response",
+              "value": "={{ $json.response_text }}",
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataId": "myca-interactions",
+        "rows": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "conversation_id": "={{ $json.conversation_id }}",
+            "user_message": "={{ $json.content }}",
+            "assistant_response": "={{ $json.response }}",
+            "timestamp": "={{ $json.timestamp }}",
+            "source": "n8n-webhook"
+          }
+        },
+        "options": {}
+      },
+      "id": "log-to-n8n-table",
+      "name": "Log to n8n Data Table",
+      "type": "@n8n/n8n-nodes-langchain.storageN8nDataStore",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://mas-orchestrator:8000/voice/feedback",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"conversation_id\": $json.conversation_id, \"agent_name\": \"Orchestrator\", \"transcript\": $json.content, \"response_text\": $json.response, \"rating\": 4, \"success\": true, \"notes\": \"Auto-logged by n8n\" } }}",
+        "options": {}
+      },
+      "id": "store-feedback",
+      "name": "Store Feedback in MAS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1250, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"conversation_id\": $json.conversation_id, \"response\": $json.response, \"logged\": true } }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "content": "=Zapier MCP integration available at:\nhttps://mcp.zapier.com/api/mcp/s/MmM5MmJkNDgtMDI5MC00ZGZhLWFlOGItYzM1MDQ4YTNkOWU0OmY5OWI4ZGYxLTAxNTgtNGZmOC05MDRkLTZlMmQzMzNlM2ViOQ==/mcp\n\nUse HTTP Request node to call Zapier actions.\nExample: POST with proper auth headers to trigger Zaps.",
+        "height": 80,
+        "width": 400,
+        "color": 7
+      },
+      "id": "zapier-note",
+      "name": "Zapier MCP Info",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [250, 600]
+    },
+    {
+      "parameters": {
+        "content": "=This workflow demonstrates:\n- Webhook trigger for external/UI calls\n- MAS agent listing\n- Orchestrator chat with context\n- n8n Data Table logging\n- Feedback loop to MAS\n- Ready for Zapier MCP integration\n\nTo extend:\n1. Add HTTP Request nodes for Zapier MCP actions\n2. Add Proxmox/UniFi integration calls\n3. Add conditional routing to specific agents\n4. Add voice transcription branch",
+        "height": 200,
+        "width": 400,
+        "color": 4
+      },
+      "id": "workflow-docs",
+      "name": "Workflow Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [650, 600]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [[{ "node": "extract-command", "type": "main", "index": 0 }]]
+    },
+    "extract-command": {
+      "main": [[{ "node": "route-decision", "type": "main", "index": 0 }]]
+    },
+    "route-decision": {
+      "main": [
+        [{ "node": "list-agents", "type": "main", "index": 0 }],
+        [{ "node": "orchestrator-chat", "type": "main", "index": 0 }]
+      ]
+    },
+    "list-agents": {
+      "main": [[{ "node": "format-response", "type": "main", "index": 0 }]]
+    },
+    "orchestrator-chat": {
+      "main": [[{ "node": "format-response", "type": "main", "index": 0 }]]
+    },
+    "format-response": {
+      "main": [
+        [
+          { "node": "log-to-n8n-table", "type": "main", "index": 0 },
+          { "node": "store-feedback", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "log-to-n8n-table": {
+      "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-12-17T05:30:00.000Z",
+  "versionId": "00000000-0000-0000-0000-000000000103"
+}

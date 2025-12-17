@@ -341,7 +341,7 @@ services:
       - mas-network
     restart: unless-stopped
 
-  # OpenedAI Speech - OpenAI-compatible TTS API
+  # OpenedAI Speech - OpenAI-compatible TTS API (local fallback)
   openedai-speech:
     image: ghcr.io/matatonic/openedai-speech:latest
     ports:
@@ -354,6 +354,25 @@ services:
     networks:
       - mas-network
     restart: unless-stopped
+
+  # ElevenLabs TTS Proxy - Premium voice synthesis
+  # This service proxies requests to ElevenLabs API when ELEVENLABS_API_KEY is set
+  # Falls back to openedai-speech if key is not configured
+  elevenlabs-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.elevenlabs
+    ports:
+      - "5501:8000"
+    environment:
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
+      - FALLBACK_TTS_URL=http://openedai-speech:8000
+    depends_on:
+      - openedai-speech
+    networks:
+      - mas-network
+    restart: unless-stopped
+    profiles: ["voice-premium"]
 
   # Voice Gateway - WebRTC/WebSocket for real-time voice
   livekit:
