@@ -3,18 +3,12 @@ const path = require('path')
 
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   output: 'standalone',
-  experimental: {
-    // Add any experimental features here
-  },
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
+  turbopack: {
+    resolveAlias: {
       '@': path.resolve(__dirname),
-    }
-    return config
-  }
+    },
+  },
 }
 
 module.exports = nextConfig 
