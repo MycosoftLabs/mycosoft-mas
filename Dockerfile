@@ -1,11 +1,11 @@
 # === build stage ===
-FROM python:3.11-slim AS build
+FROM python:3.13-slim AS build
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=off \
-    POETRY_VERSION=1.7.1 \
+    POETRY_VERSION=1.8.4 \
     POETRY_VIRTUALENVS_CREATE=false \
     POETRY_NO_INTERACTION=1 \
     PATH="/root/.local/bin:$PATH"
@@ -39,12 +39,12 @@ COPY . .
 RUN poetry install --no-dev
 
 # === runtime stage ===
-FROM python:3.11-slim AS runtime
+FROM python:3.13-slim AS runtime
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/lib/python3.11/site-packages:$PATH"
+    PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/lib/python3.13/site-packages:$PATH"
 
 # Install runtime system dependencies
 RUN apt-get update \
@@ -60,7 +60,7 @@ WORKDIR /app
 
 # Copy from builder (includes Python packages and scripts)
 COPY --from=build /app /app
-COPY --from=build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=build /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=build /usr/local/bin /usr/local/bin
 
 # Convert CRLF to LF and UTF-16 to UTF-8 in Python files
