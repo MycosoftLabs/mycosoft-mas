@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  speech-gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      - N8N_BASE_URL=http://n8n:5678
+      - N8N_WEBHOOK_PATH=/webhook/myca-command
+      - VAULT_ADDR=${VAULT_ADDR:-http://vault:8200}
+      - VAULT_TOKEN=${VAULT_TOKEN:-}
+      - VAULT_SECRET_PATH=secret/data/myca/speech
+      - AUDIT_LOG_PATH=/app/data/speech_audit.jsonl
+      - STORE_RAW_AUDIO=${STORE_RAW_AUDIO:-false}
+      - RAW_AUDIO_PATH=/app/data/speech_audio
+      # Fallback to env vars if Vault not available
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./data:/app/data
+    networks:
+      - mas-network
+    depends_on:
+      - n8n
+    restart: unless-stopped
+
+networks:
+  mas-network:
+    external: true

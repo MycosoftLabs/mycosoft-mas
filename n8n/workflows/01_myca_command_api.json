@@ -1,0 +1,150 @@
+{
+  "name": "MYCA Command API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/command",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-command-entrypoint",
+      "name": "Webhook: POST /myca/command",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "myca-command-api"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate and normalize incoming command\nconst requiredFields = ['request_id', 'actor', 'action'];\nconst body = $input.item.json.body;\n\n// Validate required fields\nfor (const field of requiredFields) {\n  if (!body[field]) {\n    return [{\n      json: {\n        error: true,\n        status: 400,\n        message: `Missing required field: ${field}`,\n        request_id: body.request_id || 'unknown'\n      }\n    }];\n  }\n}\n\n// Normalize and enrich payload\nconst command = {\n  request_id: body.request_id,\n  actor: body.actor,\n  intent: body.intent || null,\n  integration: body.integration || null,\n  action: body.action,\n  params: body.params || {},\n  confirm: body.confirm === true,\n  correlation_id: body.correlation_id || body.request_id,\n  received_at: new Date().toISOString(),\n  execution_id: $execution.id,\n  workflow_name: $workflow.name\n};\n\nreturn [{ json: { error: false, command } }];"
+      },
+      "id": "validate-schema",
+      "name": "Validate & Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "check-valid",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": "={{ $json.status || 400 }}",
+        "responseBody": "={{ { error: $json.message, request_id: $json.request_id, timestamp: $now } }}"
+      },
+      "id": "error-response",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [880, 420]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "workflowId": "={{ '02_router_integration_dispatch' }}"
+      },
+      "id": "call-router",
+      "name": "Call Integration Router",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [880, 180]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ $json }}"
+      },
+      "id": "success-response",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1100, 180]
+    }
+  ],
+  "connections": {
+    "Webhook: POST /myca/command": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Normalize": {
+      "main": [
+        [
+          {
+            "node": "Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid?": {
+      "main": [
+        [
+          {
+            "node": "Call Integration Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Integration Router": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-12-17T00:00:00.000Z",
+      "updatedAt": "2025-12-17T00:00:00.000Z",
+      "id": "myca-entrypoint",
+      "name": "MYCA Entrypoint"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "versionId": "1"
+}

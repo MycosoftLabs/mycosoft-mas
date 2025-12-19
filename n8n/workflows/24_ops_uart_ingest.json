@@ -1,0 +1,78 @@
+{
+  "name": "Ops: UART Ingest Reader",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "uart-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse UART command\nconst input = $input.item.json;\nconst command = input.command || {};\nconst params = command.params || {};\n\nconst lines = params.lines || 100;\nconst filter = params.filter || null;\n\nreturn [{\n  json: {\n    action: command.action,\n    request_id: command.request_id,\n    lines: lines,\n    filter: filter,\n    uart_endpoint: input.integration.base_url || 'http://localhost:8080/uart'\n  }\n}];"
+      },
+      "id": "parse-uart",
+      "name": "Parse UART Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.uart_endpoint }}/tail?lines={{ $json.lines }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "read-uart",
+      "name": "Read UART Stream",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format UART response\nconst request = $('Parse UART Command').item.json;\nconst response = $input.item.json;\n\n// Apply filter if specified\nlet lines = response.lines || [];\nif (request.filter) {\n  lines = lines.filter(line => line.includes(request.filter));\n}\n\nreturn [{\n  json: {\n    success: true,\n    request_id: request.request_id,\n    integration: 'myca_uart',\n    action: request.action,\n    data: {\n      lines: lines,\n      count: lines.length,\n      filter_applied: request.filter || null\n    },\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "format-uart-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{"node": "Parse UART Command", "type": "main", "index": 0}]]
+    },
+    "Parse UART Command": {
+      "main": [[{"node": "Read UART Stream", "type": "main", "index": 0}]]
+    },
+    "Read UART Stream": {
+      "main": [[{"node": "Format Response", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [{
+    "id": "myca-ops",
+    "name": "MYCA Ops"
+  }],
+  "triggerCount": 0,
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "versionId": "1"
+}

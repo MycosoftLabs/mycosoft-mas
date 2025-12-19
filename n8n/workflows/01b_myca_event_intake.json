@@ -1,0 +1,252 @@
+{
+  "name": "MYCA Event Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/event",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-event-entrypoint",
+      "name": "Webhook: POST /myca/event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "myca-event-intake"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate and normalize incoming event\nconst requiredFields = ['source', 'event_type'];\nconst body = $input.item.json.body;\n\n// Validate required fields\nfor (const field of requiredFields) {\n  if (!body[field]) {\n    return [{\n      json: {\n        error: true,\n        status: 400,\n        message: `Missing required field: ${field}`\n      }\n    }];\n  }\n}\n\n// Normalize and enrich event\nconst event = {\n  source: body.source,\n  event_type: body.event_type,\n  severity: body.severity || 'info',\n  data: body.data || {},\n  correlation_id: body.correlation_id || $execution.id,\n  received_at: new Date().toISOString(),\n  execution_id: $execution.id\n};\n\nreturn [{ json: { error: false, event } }];"
+      },
+      "id": "validate-event",
+      "name": "Validate Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "check-valid-event",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": "={{ $json.status || 400 }}",
+        "responseBody": "={{ { error: $json.message, timestamp: $now } }}"
+      },
+      "id": "error-response-event",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [880, 420]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "myca_events",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.event.received_at }}",
+            "source": "={{ $json.event.source }}",
+            "event_type": "={{ $json.event.event_type }}",
+            "severity": "={{ $json.event.severity }}",
+            "correlation_id": "={{ $json.event.correlation_id }}",
+            "data": "={{ $json.event.data }}",
+            "handled": false
+          }
+        },
+        "options": {}
+      },
+      "id": "write-event-db",
+      "name": "Write to Events DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [880, 180],
+      "credentials": {
+        "postgres": {
+          "name": "MYCA Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route event to appropriate responders based on severity and type\nconst event = $input.item.json.event || $input.item.json;\n\nconst routing = {\n  event: event,\n  should_alert: event.severity === 'critical' || event.severity === 'warn',\n  should_ticket: event.severity === 'critical',\n  should_log: true\n};\n\nreturn [{ json: routing }];"
+      },
+      "id": "route-event",
+      "name": "Route Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 180]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.should_alert }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-alert",
+      "name": "Should Alert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1280, 180]
+    },
+    {
+      "parameters": {
+        "text": "🔔 MYCA Event Alert\\n\\nSource: {{ $json.event.source }}\\nType: {{ $json.event.event_type }}\\nSeverity: {{ $json.event.severity }}\\nData: {{ JSON.stringify($json.event.data, null, 2) }}",
+        "additionalFields": {}
+      },
+      "id": "send-alert",
+      "name": "Send Alert (Telegram)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [1480, 100],
+      "credentials": {
+        "telegramApi": {
+          "name": "MYCA Alerts"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 202,
+        "responseBody": "={{ { success: true, event_id: $json.event.correlation_id, message: 'Event received and queued for processing' } }}"
+      },
+      "id": "success-response-event",
+      "name": "Return Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1480, 260]
+    }
+  ],
+  "connections": {
+    "Webhook: POST /myca/event": {
+      "main": [
+        [
+          {
+            "node": "Validate Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Event": {
+      "main": [
+        [
+          {
+            "node": "Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid?": {
+      "main": [
+        [
+          {
+            "node": "Write to Events DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write to Events DB": {
+      "main": [
+        [
+          {
+            "node": "Route Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Event": {
+      "main": [
+        [
+          {
+            "node": "Should Alert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Alert?": {
+      "main": [
+        [
+          {
+            "node": "Send Alert (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Alert (Telegram)": {
+      "main": [
+        [
+          {
+            "node": "Return Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-12-17T00:00:00.000Z",
+      "updatedAt": "2025-12-17T00:00:00.000Z",
+      "id": "myca-entrypoint",
+      "name": "MYCA Entrypoint"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "versionId": "1"
+}
