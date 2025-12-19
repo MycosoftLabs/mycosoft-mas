@@ -58,13 +58,19 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "workflowId": "={{ '02_router_integration_dispatch' }}"
+        "source": "parameter",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.WORKFLOW_ID_ROUTER || '' }}"
+        }
       },
       "id": "call-router",
       "name": "Call Integration Router",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
-      "position": [880, 180]
+      "position": [880, 180],
+      "notes": "Set WORKFLOW_ID_ROUTER environment variable to the numeric ID of 02_router_integration_dispatch workflow."
     },
     {
       "parameters": {

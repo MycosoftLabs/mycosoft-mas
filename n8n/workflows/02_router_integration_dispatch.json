@@ -109,7 +109,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Route to category-specific native workflow\nconst routing = $input.item.json;\nconst categoryMap = {\n  'ai': '03_native_ai',\n  'comms': '04_native_comms',\n  'data_storage': '05_native_data_storage',\n  'devtools': '06_native_devtools',\n  'productivity': '07_native_productivity',\n  'crm': '08_native_crm',\n  'finance': '09_native_finance',\n  'ops': '10_native_ops',\n  'web': '11_native_web',\n  'utility': '12_native_utility'\n};\n\nconst workflowName = categoryMap[routing.category] || '13_generic_connector';\n\nreturn [{\n  json: {\n    ...routing,\n    target_workflow: workflowName\n  }\n}];"
+        "jsCode": "// Route to category-specific native workflow\n// IMPORTANT: These IDs must be set to the actual n8n workflow IDs after import\n// Get workflow IDs from environment variables (set these in n8n settings)\nconst routing = $input.item.json;\n\n// Workflow ID map - must be configured with actual n8n workflow IDs\n// Set these as n8n environment variables: WORKFLOW_ID_NATIVE_AI, etc.\nconst categoryIdMap = {\n  'ai': $env.WORKFLOW_ID_NATIVE_AI || null,\n  'comms': $env.WORKFLOW_ID_NATIVE_COMMS || null,\n  'data_storage': $env.WORKFLOW_ID_NATIVE_DATA || null,\n  'devtools': $env.WORKFLOW_ID_NATIVE_DEVTOOLS || null,\n  'productivity': $env.WORKFLOW_ID_NATIVE_PRODUCTIVITY || null,\n  'crm': $env.WORKFLOW_ID_NATIVE_CRM || null,\n  'finance': $env.WORKFLOW_ID_NATIVE_FINANCE || null,\n  'ops': $env.WORKFLOW_ID_NATIVE_OPS || null,\n  'web': $env.WORKFLOW_ID_NATIVE_WEB || null,\n  'utility': $env.WORKFLOW_ID_NATIVE_UTILITY || null\n};\n\nconst workflowId = categoryIdMap[routing.category] || $env.WORKFLOW_ID_GENERIC_CONNECTOR;\n\nif (!workflowId) {\n  return [{\n    json: {\n      error: true,\n      status: 500,\n      message: `Workflow ID not configured for category: ${routing.category}. Set WORKFLOW_ID_NATIVE_* environment variables.`,\n      request_id: routing.request_id\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...routing,\n    target_workflow: routing.category,\n    target_workflow_id: workflowId\n  }\n}];"
       },
       "id": "route-native",
       "name": "Route to Native",
@@ -119,7 +119,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Route to generic connector\nconst routing = $input.item.json;\nreturn [{\n  json: {\n    ...routing,\n    target_workflow: '13_generic_connector'\n  }\n}];"
+        "jsCode": "// Route to generic connector\nconst routing = $input.item.json;\nconst workflowId = $env.WORKFLOW_ID_GENERIC_CONNECTOR;\n\nif (!workflowId) {\n  return [{\n    json: {\n      error: true,\n      status: 500,\n      message: 'WORKFLOW_ID_GENERIC_CONNECTOR environment variable not set',\n      request_id: routing.request_id\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...routing,\n    target_workflow: 'generic_connector',\n    target_workflow_id: workflowId\n  }\n}];"
       },
       "id": "route-generic",
       "name": "Route to Generic",
@@ -130,24 +130,37 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "workflowId": "={{ $json.target_workflow }}"
+        "source": "parameter",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.target_workflow_id }}"
+        }
       },
       "id": "execute-target",
       "name": "Execute Target Workflow",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
-      "position": [1700, 80]
+      "position": [1700, 80],
+      "notes": "IMPORTANT: target_workflow_id must be the numeric n8n workflow ID, not the workflow name. The routing code must look up IDs from a workflow registry."
     },
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "workflowId": "14_audit_logger"
+        "source": "parameter",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.AUDIT_LOGGER_WORKFLOW_ID || '' }}"
+        }
       },
       "id": "write-audit-log",
       "name": "Write Audit Log",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
-      "position": [1900, 80]
+      "position": [1900, 80],
+      "onError": "continueRegularOutput",
+      "notes": "Set AUDIT_LOGGER_WORKFLOW_ID environment variable in n8n to the numeric ID of the audit logger workflow."
     },
     {
       "parameters": {
