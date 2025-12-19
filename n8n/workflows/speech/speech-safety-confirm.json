@@ -42,21 +42,30 @@
     },
     {
       "parameters": {
+        "jsCode": "// Flexible confirmation validation for voice input\nconst phrase = ($json.confirmation_phrase || '').toLowerCase().trim();\nconst requestId = $json.request_id || '';\n\n// Normalize: remove extra spaces, punctuation\nconst normalized = phrase.replace(/[^a-z0-9\\s]/g, '').replace(/\\s+/g, ' ');\n\n// Accept multiple confirmation formats for natural voice input\nconst validPhrases = [\n  'confirm',\n  'yes confirm',\n  'confirmed',\n  'proceed',\n  'yes proceed',\n  'confirm and proceed',\n  'confirm action',\n  'yes',\n  'do it',\n  'go ahead',\n  'execute',\n  'approve',\n  'approved',\n  `confirm ${requestId}`,\n  `confirm action ${requestId}`,\n  `confirm request ${requestId}`\n];\n\n// Check if any valid phrase is contained in the input\nconst isValid = validPhrases.some(valid => {\n  const normalizedValid = valid.toLowerCase().replace(/[^a-z0-9\\s]/g, '').replace(/\\s+/g, ' ');\n  return normalized.includes(normalizedValid) || normalizedValid.includes(normalized);\n});\n\nreturn {\n  ...($json),\n  is_confirmed: isValid,\n  normalized_phrase: normalized,\n  validation_method: 'flexible_voice'\n};"
+      },
+      "id": "validate-confirm",
+      "name": "Validate Confirmation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
         "conditions": {
-          "string": [
+          "boolean": [
             {
-              "value1": "={{ $json.confirmation_phrase.toLowerCase() }}",
-              "operation": "equals",
-              "value2": "={{ 'confirm action request_id ' + $json.request_id }}"
+              "value1": "={{ $json.is_confirmed }}",
+              "value2": true
             }
           ]
         }
       },
-      "id": "validate-confirm",
-      "name": "Validate Confirmation",
+      "id": "check-confirmed",
+      "name": "Is Confirmed?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [650, 300]
+      "position": [850, 300]
     },
     {
       "parameters": {
@@ -71,7 +80,7 @@
       "name": "Execute Confirmed Action",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [850, 200]
+      "position": [1050, 200]
     },
     {
       "parameters": {
@@ -97,7 +106,7 @@
       "name": "Format Success Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1050, 200]
+      "position": [1250, 200]
     },
     {
       "parameters": {
@@ -106,7 +115,7 @@
             {
               "id": "error-msg",
               "name": "response_text",
-              "value": "={{ '❌ Invalid confirmation phrase. Expected: Confirm action request_id ' + $json.request_id }}",
+              "value": "={{ '❌ Confirmation not recognized. You said: \"' + $json.normalized_phrase + '\". Please say \"Confirm\" or \"Yes, proceed\" to continue.' }}",
               "type": "string"
             },
             {
@@ -123,7 +132,7 @@
       "name": "Format Error Response",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [850, 400]
+      "position": [1050, 400]
     },
     {
       "parameters": {
@@ -136,7 +145,8 @@
             "action": "confirmation",
             "status": "={{ $json.status }}",
             "timestamp": "={{ $now }}",
-            "source": "speech-gateway"
+            "source": "speech-gateway",
+            "validation_method": "={{ $json.validation_method || 'flexible_voice' }}"
           }
         },
         "options": {}
@@ -145,19 +155,19 @@
       "name": "Audit Log",
       "type": "@n8n/n8n-nodes-langchain.storageN8nDataStore",
       "typeVersion": 1,
-      "position": [1250, 300]
+      "position": [1450, 300]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ { \"request_id\": $json.request_id, \"response_text\": $json.response_text, \"status\": $json.status } }}",
+        "responseBody": "={{ { \"request_id\": $json.request_id, \"response_text\": $json.response_text, \"status\": $json.status, \"validation_method\": $json.validation_method || 'flexible_voice' } }}",
         "options": {}
       },
       "id": "webhook-response",
       "name": "Webhook Response",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [1450, 300]
+      "position": [1650, 300]
     }
   ],
   "connections": {
@@ -168,6 +178,9 @@
       "main": [[{ "node": "validate-confirm", "type": "main", "index": 0 }]]
     },
     "validate-confirm": {
+      "main": [[{ "node": "check-confirmed", "type": "main", "index": 0 }]]
+    },
+    "check-confirmed": {
       "main": [
         [{ "node": "execute-confirmed", "type": "main", "index": 0 }],
         [{ "node": "format-error", "type": "main", "index": 0 }]
