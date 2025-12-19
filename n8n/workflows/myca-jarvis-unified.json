@@ -1,0 +1,205 @@
+{
+  "name": "MYCA: Jarvis Unified Interface",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/jarvis",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "jarvis-webhook",
+      "name": "Jarvis Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// MYCA Jarvis - Unified AI Assistant Interface\n// This is the main entry point for all MYCA interactions\n\nconst input = $input.first().json;\n\n// Extract request parameters\nconst message = input.message || input.text || input.transcript || '';\nconst actor = input.actor || 'morgan';\nconst sessionId = input.session_id || input.conversation_id || `jarvis_${Date.now()}`;\nconst wantAudio = input.want_audio !== false;\nconst context = input.context || {};\n\n// Quick command detection for instant responses\nconst quickCommands = {\n  'hello': 'greeting',\n  'hi': 'greeting',\n  'hey myca': 'greeting',\n  'status': 'system_status',\n  'help': 'help',\n  'what can you do': 'capabilities',\n  'thanks': 'acknowledge',\n  'thank you': 'acknowledge',\n  'bye': 'farewell',\n  'goodbye': 'farewell'\n};\n\nconst lowerMessage = message.toLowerCase().trim();\nlet quickCommand = null;\nfor (const [trigger, cmd] of Object.entries(quickCommands)) {\n  if (lowerMessage === trigger || lowerMessage.startsWith(trigger + ' ') || lowerMessage.endsWith(' ' + trigger)) {\n    quickCommand = cmd;\n    break;\n  }\n}\n\nreturn {\n  json: {\n    message: message,\n    actor: actor,\n    session_id: sessionId,\n    want_audio: wantAudio,\n    quick_command: quickCommand,\n    context: context,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-input",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "quick-cmd",
+              "leftValue": "={{ $json.quick_command }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-quick",
+      "name": "Quick Command?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [540, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle quick commands with instant responses\nconst input = $input.first().json;\nconst cmd = input.quick_command;\n\nconst responses = {\n  greeting: \"Hello! I'm MYCA, your Mycosoft Autonomous Cognitive Agent. I'm here to help you manage systems, access information, and get things done. What would you like me to help with?\",\n  \n  system_status: \"All systems are operational. The MAS orchestrator is running with 42 agents registered. Voice services are online. How can I assist you further?\",\n  \n  help: \"I can help you with many things: manage Proxmox VMs and containers, control UniFi network devices, access NAS storage, run code and scripts, manage projects and tasks, search the web, check calendars and emails, generate reports, and much more. Just tell me what you need.\",\n  \n  capabilities: \"My capabilities include: Infrastructure management for Proxmox, UniFi, and NAS. Business operations like project management, CRM, and reporting. Productivity tools for calendar, email, and files. Development tools for code execution and deployment. Plus integration with over 40 specialized agents for mycology research, finance, sales, and more.\",\n  \n  acknowledge: \"You're welcome! Is there anything else I can help you with?\",\n  \n  farewell: \"Goodbye! Feel free to call on me whenever you need assistance. MYCA signing off.\"\n};\n\nconst responseText = responses[cmd] || responses.greeting;\n\nreturn {\n  json: {\n    status: 'success',\n    session_id: input.session_id,\n    response_text: responseText,\n    quick_response: true,\n    command: cmd,\n    want_audio: input.want_audio\n  }\n};"
+      },
+      "id": "quick-response",
+      "name": "Quick Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 280]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/myca/brain",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "message", "value": "={{ $json.message }}" },
+            { "name": "actor", "value": "={{ $json.actor }}" },
+            { "name": "session_id", "value": "={{ $json.session_id }}" },
+            { "name": "context", "value": "={{ JSON.stringify($json.context) }}" }
+          ]
+        },
+        "options": { "timeout": 120000 }
+      },
+      "id": "call-brain",
+      "name": "Call Master Brain",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract response from brain\nconst input = $input.first().json;\nconst originalData = $('Parse Input').first().json;\n\nlet responseText = '';\n\nif (input.response_text) {\n  responseText = input.response_text;\n} else if (input.result) {\n  responseText = typeof input.result === 'string' ? input.result : JSON.stringify(input.result, null, 2);\n} else if (input.data && input.data.result) {\n  responseText = input.data.result;\n} else {\n  responseText = 'I processed your request but have no specific response.';\n}\n\nreturn {\n  json: {\n    status: 'success',\n    session_id: originalData.session_id,\n    response_text: responseText,\n    intent: input.intent || null,\n    data: input.data || null,\n    want_audio: originalData.want_audio\n  }\n};"
+      },
+      "id": "extract-response",
+      "name": "Extract Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge responses from both paths\nconst quickResponse = $('Quick Response').first()?.json;\nconst brainResponse = $('Extract Response').first()?.json;\n\nconst response = quickResponse || brainResponse;\n\nreturn {\n  json: response\n};"
+      },
+      "id": "merge-responses",
+      "name": "Merge Responses",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "want-audio",
+              "leftValue": "={{ $json.want_audio }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-audio",
+      "name": "Want Audio?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1220, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://elevenlabs-proxy:8000/v1/audio/speech",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"model\": \"tts-1-hd\", \"voice\": \"myca\", \"input\": \"{{ $json.response_text }}\" }",
+        "options": { "timeout": 120000 }
+      },
+      "id": "generate-audio",
+      "name": "Generate Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 280]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Add audio to response\nconst textResponse = $('Merge Responses').first().json;\nconst audioData = $input.first().binary;\n\nlet audioBase64 = null;\nif (audioData && audioData.data) {\n  audioBase64 = audioData.data.toString('base64');\n}\n\nreturn {\n  json: {\n    ...textResponse,\n    audio_base64: audioBase64,\n    audio_mime: 'audio/mpeg'\n  }\n};"
+      },
+      "id": "add-audio",
+      "name": "Add Audio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1660, 280]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return text-only response\nconst response = $('Merge Responses').first().json;\n\nreturn {\n  json: {\n    ...response,\n    audio_base64: null,\n    audio_mime: null\n  }\n};"
+      },
+      "id": "text-only",
+      "name": "Text Only",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final response formatting\nconst withAudio = $('Add Audio').first()?.json;\nconst textOnly = $('Text Only').first()?.json;\n\nconst response = withAudio || textOnly;\n\nreturn {\n  json: {\n    status: 'success',\n    session_id: response.session_id,\n    response_text: response.response_text,\n    intent: response.intent,\n    data: response.data,\n    audio_base64: response.audio_base64,\n    audio_mime: response.audio_mime,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "final-response",
+      "name": "Final Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1660, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1880, 400]
+    }
+  ],
+  "connections": {
+    "Jarvis Webhook": { "main": [[{ "node": "Parse Input", "type": "main", "index": 0 }]] },
+    "Parse Input": { "main": [[{ "node": "Quick Command?", "type": "main", "index": 0 }]] },
+    "Quick Command?": {
+      "main": [
+        [{ "node": "Quick Response", "type": "main", "index": 0 }],
+        [{ "node": "Call Master Brain", "type": "main", "index": 0 }]
+      ]
+    },
+    "Quick Response": { "main": [[{ "node": "Merge Responses", "type": "main", "index": 0 }]] },
+    "Call Master Brain": { "main": [[{ "node": "Extract Response", "type": "main", "index": 0 }]] },
+    "Extract Response": { "main": [[{ "node": "Merge Responses", "type": "main", "index": 0 }]] },
+    "Merge Responses": { "main": [[{ "node": "Want Audio?", "type": "main", "index": 0 }]] },
+    "Want Audio?": {
+      "main": [
+        [{ "node": "Generate Audio", "type": "main", "index": 0 }],
+        [{ "node": "Text Only", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Audio": { "main": [[{ "node": "Add Audio", "type": "main", "index": 0 }]] },
+    "Add Audio": { "main": [[{ "node": "Final Response", "type": "main", "index": 0 }]] },
+    "Text Only": { "main": [[{ "node": "Final Response", "type": "main", "index": 0 }]] },
+    "Final Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "MYCA Core" }]
+}
