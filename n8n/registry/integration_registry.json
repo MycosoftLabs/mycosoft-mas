@@ -1,0 +1,77 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2025-12-17",
+  "description": "MYCA Integration Registry - Minimal Version",
+  "integrations": [
+    {
+      "integration": "httpbin",
+      "display_name": "HTTPBin (Test)",
+      "category": "utility",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://httpbin.org",
+      "default_actions": ["read"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "openai",
+      "display_name": "OpenAI",
+      "category": "ai",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.openai.com/v1",
+      "default_actions": ["chat", "completion"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "telegram",
+      "display_name": "Telegram",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.telegram.org",
+      "default_actions": ["send", "notify"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "postgres",
+      "display_name": "PostgreSQL",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "basic",
+      "base_url": null,
+      "connection_string": "postgresql://user:pass@host:5432/dbname",
+      "default_actions": ["query", "insert", "update"],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true,
+      "notes": "Native n8n node - no HTTP base_url needed. Uses n8n credential for connection."
+    },
+    {
+      "integration": "proxmox",
+      "display_name": "Proxmox VE",
+      "category": "ops",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://proxmox.local:8006/api2/json",
+      "default_actions": ["inventory", "snapshot", "vm_list"],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true,
+      "metadata": {"myca_ops": true}
+    }
+  ],
+  "categories": {
+    "ai": {"name": "AI & Machine Learning"},
+    "comms": {"name": "Communication"},
+    "data_storage": {"name": "Data & Storage"},
+    "ops": {"name": "Operations & Infrastructure"},
+    "utility": {"name": "Utility"}
+  }
+}

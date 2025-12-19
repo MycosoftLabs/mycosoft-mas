@@ -1,0 +1,324 @@
+{
+  "name": "Router: Integration Dispatch",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "subworkflow-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileName": "/registry/integration_registry.json",
+        "options": {}
+      },
+      "id": "load-registry",
+      "name": "Load Integration Registry",
+      "type": "n8n-nodes-base.fs",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse registry and find integration\nconst command = $('Execute Workflow Trigger').item.json.command;\nconst registryFile = $input.item.json.data;\nconst registry = JSON.parse(registryFile.toString());\n\nconst integrationName = command.integration;\nlet integration = null;\n\n// If integration specified, find it\nif (integrationName) {\n  integration = registry.integrations.find(i => i.integration === integrationName);\n  \n  if (!integration) {\n    return [{\n      json: {\n        error: true,\n        status: 404,\n        message: `Integration '${integrationName}' not found in registry`,\n        request_id: command.request_id\n      }\n    }];\n  }\n} else {\n  // Try to infer integration from intent using basic pattern matching\n  // This is a simple implementation - could be enhanced with ML/embeddings\n  const intent = (command.intent || '').toLowerCase();\n  \n  // Basic keyword matching for common integrations\n  const keywords = {\n    'sheet': 'google_sheets',\n    'gmail': 'gmail',\n    'email': 'gmail',\n    'drive': 'google_drive',\n    'calendar': 'google_calendar',\n    'github': 'github',\n    'jira': 'jira',\n    'slack': 'slack',\n    'telegram': 'telegram',\n    'openai': 'openai',\n    'proxmox': 'proxmox',\n    'unifi': 'unifi'\n  };\n  \n  for (const [keyword, intName] of Object.entries(keywords)) {\n    if (intent.includes(keyword)) {\n      integration = registry.integrations.find(i => i.integration === intName);\n      break;\n    }\n  }\n  \n  if (!integration) {\n    return [{\n      json: {\n        error: true,\n        status: 400,\n        message: 'Could not determine integration. Please specify integration name.',\n        request_id: command.request_id\n      }\n    }];\n  }\n}\n\n// Check if integration is enabled\nif (!integration.enabled) {\n  return [{\n    json: {\n      error: true,\n      status: 403,\n      message: `Integration '${integration.integration}' is disabled`,\n      request_id: command.request_id\n    }\n  }];\n}\n\n// Determine routing\nconst routing = {\n  error: false,\n  command: command,\n  integration: integration,\n  category: integration.category,\n  use_native: integration.native_node === true,\n  confirm_required: integration.confirm_required === true,\n  risk_level: integration.risk,\n  request_id: command.request_id\n};\n\nreturn [{ json: routing }];"
+      },
+      "id": "determine-routing",
+      "name": "Determine Routing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "check-routing",
+      "name": "Routing Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return error\nconst error = $input.item.json;\nreturn [{ json: error }];"
+      },
+      "id": "return-error",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 420]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.confirm_required }}",
+              "value2": true
+            },
+            {
+              "value1": "={{ $json.command.confirm }}",
+              "value2": false
+            }
+          ],
+          "combineOperation": "all"
+        }
+      },
+      "id": "check-confirmation",
+      "name": "Needs Confirmation?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Require confirmation\nconst routing = $input.item.json;\nreturn [{\n  json: {\n    error: true,\n    status: 403,\n    message: 'This action requires confirmation. Set confirm=true and resubmit.',\n    request_id: routing.request_id,\n    integration: routing.integration.integration,\n    risk_level: routing.risk_level\n  }\n}];"
+      },
+      "id": "require-confirmation",
+      "name": "Require Confirmation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 280]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.use_native }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-native",
+      "name": "Use Native Node?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1300, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to category-specific native workflow\n// IMPORTANT: These IDs must be set to the actual n8n workflow IDs after import\n// Get workflow IDs from environment variables (set these in n8n settings)\nconst routing = $input.item.json;\n\n// Workflow ID map - must be configured with actual n8n workflow IDs\n// Set these as n8n environment variables: WORKFLOW_ID_NATIVE_AI, etc.\nconst categoryIdMap = {\n  'ai': $env.WORKFLOW_ID_NATIVE_AI || null,\n  'comms': $env.WORKFLOW_ID_NATIVE_COMMS || null,\n  'data_storage': $env.WORKFLOW_ID_NATIVE_DATA || null,\n  'devtools': $env.WORKFLOW_ID_NATIVE_DEVTOOLS || null,\n  'productivity': $env.WORKFLOW_ID_NATIVE_PRODUCTIVITY || null,\n  'crm': $env.WORKFLOW_ID_NATIVE_CRM || null,\n  'finance': $env.WORKFLOW_ID_NATIVE_FINANCE || null,\n  'ops': $env.WORKFLOW_ID_NATIVE_OPS || null,\n  'web': $env.WORKFLOW_ID_NATIVE_WEB || null,\n  'utility': $env.WORKFLOW_ID_NATIVE_UTILITY || null\n};\n\nconst workflowId = categoryIdMap[routing.category] || $env.WORKFLOW_ID_GENERIC_CONNECTOR;\n\nif (!workflowId) {\n  return [{\n    json: {\n      error: true,\n      status: 500,\n      message: `Workflow ID not configured for category: ${routing.category}. Set WORKFLOW_ID_NATIVE_* environment variables.`,\n      request_id: routing.request_id\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...routing,\n    target_workflow: routing.category,\n    target_workflow_id: workflowId\n  }\n}];"
+      },
+      "id": "route-native",
+      "name": "Route to Native",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to generic connector\nconst routing = $input.item.json;\nconst workflowId = $env.WORKFLOW_ID_GENERIC_CONNECTOR;\n\nif (!workflowId) {\n  return [{\n    json: {\n      error: true,\n      status: 500,\n      message: 'WORKFLOW_ID_GENERIC_CONNECTOR environment variable not set',\n      request_id: routing.request_id\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...routing,\n    target_workflow: 'generic_connector',\n    target_workflow_id: workflowId\n  }\n}];"
+      },
+      "id": "route-generic",
+      "name": "Route to Generic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 160]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "source": "parameter",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.target_workflow_id }}"
+        }
+      },
+      "id": "execute-target",
+      "name": "Execute Target Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [1700, 80],
+      "notes": "IMPORTANT: target_workflow_id must be the numeric n8n workflow ID, not the workflow name. The routing code must look up IDs from a workflow registry."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "source": "parameter",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $env.AUDIT_LOGGER_WORKFLOW_ID || '' }}"
+        }
+      },
+      "id": "write-audit-log",
+      "name": "Write Audit Log",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [1900, 80],
+      "onError": "continueRegularOutput",
+      "notes": "Set AUDIT_LOGGER_WORKFLOW_ID environment variable in n8n to the numeric ID of the audit logger workflow."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return final result\nconst result = $input.item.json;\nreturn [{ json: result }];"
+      },
+      "id": "return-result",
+      "name": "Return Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2100, 80]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Load Integration Registry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Integration Registry": {
+      "main": [
+        [
+          {
+            "node": "Determine Routing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Routing": {
+      "main": [
+        [
+          {
+            "node": "Routing Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Routing Valid?": {
+      "main": [
+        [
+          {
+            "node": "Needs Confirmation?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Confirmation?": {
+      "main": [
+        [
+          {
+            "node": "Require Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Use Native Node?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Native Node?": {
+      "main": [
+        [
+          {
+            "node": "Route to Native",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route to Generic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route to Native": {
+      "main": [
+        [
+          {
+            "node": "Execute Target Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route to Generic": {
+      "main": [
+        [
+          {
+            "node": "Execute Target Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Target Workflow": {
+      "main": [
+        [
+          {
+            "node": "Write Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Audit Log": {
+      "main": [
+        [
+          {
+            "node": "Return Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-12-17T00:00:00.000Z",
+      "updatedAt": "2025-12-17T00:00:00.000Z",
+      "id": "myca-core",
+      "name": "MYCA Core"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "versionId": "1"
+}
