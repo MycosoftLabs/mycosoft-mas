@@ -1,0 +1,80 @@
+{
+  "name": "Speech: Transcribe Only",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/speech/transcribe",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook: Transcribe Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "speech-transcribe"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.WHISPER_URL || 'http://whisper:8000' }}/v1/audio/transcriptions",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "parameterType": "formBinaryData",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "model",
+              "value": "Systran/faster-whisper-base.en"
+            },
+            {
+              "name": "response_format",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "whisper-stt",
+      "name": "Whisper: Speech to Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  status: 'success',\n  transcript: $json.text || $json.transcript || '',\n  language: $json.language || 'en',\n  timestamp: $now.toISO()\n} }}",
+        "options": {}
+      },
+      "id": "respond-json",
+      "name": "Respond with Transcript",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [[{ "node": "whisper-stt", "type": "main", "index": 0 }]]
+    },
+    "whisper-stt": {
+      "main": [[{ "node": "respond-json", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["speech", "stt", "myca"],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

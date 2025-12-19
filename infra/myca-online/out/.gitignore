@@ -1,0 +1,8 @@
+# NEVER COMMIT ANYTHING IN THIS DIRECTORY
+# All generated files contain secrets or machine-specific paths
+
+*
+!.gitignore
+!n8n/
+n8n/*.secret
+n8n/*.key

@@ -1,0 +1,99 @@
+{
+  "name": "Speech: Text to Speech Only",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/speech/tts",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook: TTS Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "speech-tts"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract text input\nconst body = $input.item.json.body || $input.item.json;\nconst text = body.text || body.input || '';\n\nif (!text.trim()) {\n  throw new Error('No text provided for TTS');\n}\n\nreturn {\n  text: text.trim(),\n  voice: body.voice || 'alloy',\n  model: body.model || 'tts-1'\n};"
+      },
+      "id": "extract-text",
+      "name": "Extract Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.TTS_URL || 'http://openedai-speech:8000' }}/v1/audio/speech",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"model\": $json.model,\n  \"voice\": $json.voice,\n  \"input\": $json.text,\n  \"response_format\": \"mp3\"\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "tts-generate",
+      "name": "TTS: Generate Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "audio/mpeg"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-audio",
+      "name": "Respond with Audio",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [[{ "node": "extract-text", "type": "main", "index": 0 }]]
+    },
+    "extract-text": {
+      "main": [[{ "node": "tts-generate", "type": "main", "index": 0 }]]
+    },
+    "tts-generate": {
+      "main": [[{ "node": "respond-audio", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["speech", "tts", "myca"],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

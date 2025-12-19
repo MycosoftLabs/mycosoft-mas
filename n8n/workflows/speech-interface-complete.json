@@ -1,0 +1,247 @@
+{
+  "name": "Speech Interface: Complete Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/speech/complete",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook: Speech Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "speech-complete"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract audio and context from request\nconst body = $input.item.json.body || $input.item.json;\nconst binaryData = $input.item.binary;\n\nconst conversationId = body.conversation_id || `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;\n\nreturn {\n  has_audio: !!binaryData?.data,\n  conversation_id: conversationId,\n  user_id: body.user_id || 'anonymous',\n  language: body.language || 'en',\n  want_audio: body.want_audio !== false,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "extract-input",
+      "name": "Extract Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.WHISPER_URL || 'http://whisper:8000' }}/v1/audio/transcriptions",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "parameterType": "formBinaryData",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "model",
+              "value": "Systran/faster-whisper-base.en"
+            },
+            {
+              "name": "response_format",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "whisper-stt",
+      "name": "Whisper: Speech to Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract transcript from Whisper response\nconst whisperResponse = $input.item.json;\nconst prevData = $input.first().json;\nconst transcript = whisperResponse.text || whisperResponse.transcript || '';\n\nreturn {\n  ...prevData,\n  transcript: transcript.trim(),\n  stt_success: !!transcript.trim()\n};"
+      },
+      "id": "extract-transcript",
+      "name": "Extract Transcript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.LITELLM_URL || 'http://litellm:4000' }}/v1/chat/completions",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"model\": $env.LLM_MODEL || 'gpt-4o-mini',\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are MYCA, a helpful AI assistant for Mycosoft. Be concise and conversational. Keep responses under 100 words for voice.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": $json.transcript\n    }\n  ],\n  \"max_tokens\": 300,\n  \"temperature\": 0.7\n} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "llm-process",
+      "name": "LLM: Process Query",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract LLM response\nconst llmResponse = $input.item.json;\nconst prevData = $input.first().json;\nconst responseText = llmResponse.choices?.[0]?.message?.content || 'I understand.';\n\nreturn {\n  ...prevData,\n  response_text: responseText.trim(),\n  model_used: llmResponse.model || 'unknown'\n};"
+      },
+      "id": "extract-llm-response",
+      "name": "Extract LLM Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.want_audio }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-tts",
+      "name": "Check TTS Needed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.TTS_URL || 'http://openedai-speech:8000' }}/v1/audio/speech",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"model\": \"tts-1\",\n  \"voice\": $env.TTS_VOICE || 'alloy',\n  \"input\": $json.response_text,\n  \"response_format\": \"mp3\"\n} }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "tts-generate",
+      "name": "TTS: Generate Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1650, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Encode audio to base64\nconst prevData = $input.first().json;\nconst audioBinary = $input.item.binary?.data;\n\nlet audio_base64 = null;\nlet audio_error = null;\n\nif (audioBinary && audioBinary.data) {\n  audio_base64 = Buffer.from(audioBinary.data).toString('base64');\n} else {\n  audio_error = 'TTS generation failed';\n}\n\nreturn {\n  ...prevData,\n  audio_base64,\n  audio_mime: 'audio/mpeg',\n  audio_error\n};"
+      },
+      "id": "encode-audio",
+      "name": "Encode Audio to Base64",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1850, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "no-audio",
+              "name": "audio_base64",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "no-audio-error",
+              "name": "audio_error",
+              "value": "TTS skipped",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "skip-tts",
+      "name": "Skip TTS",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1650, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  status: 'success',\n  conversation_id: $json.conversation_id,\n  transcript: $json.transcript,\n  response_text: $json.response_text,\n  audio_base64: $json.audio_base64 || null,\n  audio_mime: $json.audio_mime || 'audio/mpeg',\n  audio_error: $json.audio_error || null,\n  model_used: $json.model_used,\n  timestamp: $json.timestamp\n} }}",
+        "options": {}
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2050, 300]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [[{ "node": "extract-input", "type": "main", "index": 0 }]]
+    },
+    "extract-input": {
+      "main": [[{ "node": "whisper-stt", "type": "main", "index": 0 }]]
+    },
+    "whisper-stt": {
+      "main": [[{ "node": "extract-transcript", "type": "main", "index": 0 }]]
+    },
+    "extract-transcript": {
+      "main": [[{ "node": "llm-process", "type": "main", "index": 0 }]]
+    },
+    "llm-process": {
+      "main": [[{ "node": "extract-llm-response", "type": "main", "index": 0 }]]
+    },
+    "extract-llm-response": {
+      "main": [[{ "node": "check-tts", "type": "main", "index": 0 }]]
+    },
+    "check-tts": {
+      "main": [
+        [{ "node": "tts-generate", "type": "main", "index": 0 }],
+        [{ "node": "skip-tts", "type": "main", "index": 0 }]
+      ]
+    },
+    "tts-generate": {
+      "main": [[{ "node": "encode-audio", "type": "main", "index": 0 }]]
+    },
+    "encode-audio": {
+      "main": [[{ "node": "success-response", "type": "main", "index": 0 }]]
+    },
+    "skip-tts": {
+      "main": [[{ "node": "success-response", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["speech", "voice", "myca"],
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

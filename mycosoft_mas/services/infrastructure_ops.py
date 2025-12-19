@@ -12,11 +12,34 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Import existing clients
-import sys
-sys.path.append(str(Path(__file__).parent.parent.parent / "infra" / "bootstrap"))
-from infra.bootstrap.proxmox_client import ProxmoxClient
-from infra.bootstrap.unifi_client import UniFiClient
+# Import existing clients - make them optional for now
+try:
+    import sys
+    import importlib.util
+    
+    # Try to import Proxmox client
+    proxmox_path = Path(__file__).parent.parent.parent / "infra" / "bootstrap" / "proxmox_client.py"
+    if proxmox_path.exists():
+        spec = importlib.util.spec_from_file_location("proxmox_client", proxmox_path)
+        proxmox_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(proxmox_module)
+        ProxmoxClient = proxmox_module.ProxmoxClient
+    else:
+        ProxmoxClient = None
+    
+    # Try to import UniFi client
+    unifi_path = Path(__file__).parent.parent.parent / "infra" / "bootstrap" / "unifi_client.py"
+    if unifi_path.exists():
+        spec = importlib.util.spec_from_file_location("unifi_client", unifi_path)
+        unifi_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(unifi_module)
+        UniFiClient = unifi_module.UniFiClient
+    else:
+        UniFiClient = None
+except Exception as e:
+    logger.warning(f"Could not import infrastructure clients: {e}")
+    ProxmoxClient = None
+    UniFiClient = None
 
 
 class InfrastructureOpsService:

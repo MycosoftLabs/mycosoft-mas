@@ -1,0 +1,94 @@
+{
+  "name": "MYCA Speech Complete",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/speech",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "wh",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [150, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// MYCA Speech Interface - Parse input\nconst body = $input.item.json.body || $input.item.json;\nconst binary = $input.item.binary;\n\n// Health check\nif (body.health_check || body.test) {\n  return { mode: 'health', status: 'ok', message: 'MYCA Speech is operational', timestamp: new Date().toISOString() };\n}\n\n// Text input (no transcription needed)\nconst text = body.text || body.message || body.query;\nif (text) {\n  return { mode: 'text', text, request_id: body.request_id || `req_${Date.now()}`, timestamp: new Date().toISOString() };\n}\n\n// Audio input\nif (binary && binary.data) {\n  return { mode: 'audio', has_audio: true, request_id: body.request_id || `req_${Date.now()}`, timestamp: new Date().toISOString() };\n}\n\n// No valid input - return error info for fallback\nreturn { mode: 'error', error: 'No text or audio provided', timestamp: new Date().toISOString() };"
+      },
+      "id": "parse",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [350, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://whisper:8000/v1/audio/transcriptions",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {"name": "file", "parameterType": "formBinaryData", "inputDataFieldName": "data"},
+            {"name": "model", "value": "Systran/faster-whisper-base.en"}
+          ]
+        },
+        "options": {"timeout": 30000}
+      },
+      "id": "whisper",
+      "name": "Whisper STT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [550, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge transcript with context\nconst whisperResp = $input.item.json;\nconst prevData = $('Parse Input').first().json;\nconst transcript = whisperResp.text || '';\nreturn { ...prevData, mode: 'text', text: transcript.trim() };"
+      },
+      "id": "merge-transcript",
+      "name": "Merge Transcript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://litellm:4000/v1/chat/completions",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: 'gpt-4o-mini', messages: [{role: 'system', content: 'You are MYCA, the Mycosoft AI assistant. You help manage systems, agents, and infrastructure. Be concise for voice responses. You can help with: system status, agent management, network info, task execution, and general questions.'}, {role: 'user', content: $json.text}], max_tokens: 300, temperature: 0.7 } }}",
+        "options": {"timeout": 30000}
+      },
+      "id": "llm",
+      "name": "LLM Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format final response\nconst llmResp = $input.item.json;\nconst prevData = $('Parse Input').first().json;\nconst responseText = llmResp.choices?.[0]?.message?.content || 'I understand.';\n\nreturn {\n  status: 'success',\n  request_id: prevData.request_id,\n  transcript: prevData.text,\n  response_text: responseText.trim(),\n  model: llmResp.model || 'gpt-4o-mini',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "format",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1150, 300]
+    }
+  ],
+  "connections": {
+    "wh": {"main": [[{"node": "parse", "type": "main", "index": 0}]]},
+    "parse": {"main": [[{"node": "llm", "type": "main", "index": 0}]]},
+    "whisper": {"main": [[{"node": "merge-transcript", "type": "main", "index": 0}]]},
+    "merge-transcript": {"main": [[{"node": "llm", "type": "main", "index": 0}]]},
+    "llm": {"main": [[{"node": "format", "type": "main", "index": 0}]]}
+  },
+  "active": true,
+  "settings": {"executionOrder": "v1"}
+}

@@ -1,3 +1,4 @@
+aiofiles==24.1.0 ; python_version >= "3.11" and python_version < "3.14"
 aiohappyeyeballs==2.6.1 ; python_version >= "3.11" and python_version < "3.14"
 aiohttp==3.13.2 ; python_version >= "3.11" and python_version < "3.14"
 aiosignal==1.4.0 ; python_version >= "3.11" and python_version < "3.14"
@@ -64,3 +65,5 @@ uvloop==0.22.1 ; (sys_platform != "win32" and sys_platform != "cygwin") and plat
 watchfiles==1.1.1 ; python_version >= "3.11" and python_version < "3.14"
 websockets==15.0.1 ; python_version >= "3.11" and python_version < "3.14"
 yarl==1.22.0 ; python_version >= "3.11" and python_version < "3.14"
+requests==2.31.0
+requests==2.31.0

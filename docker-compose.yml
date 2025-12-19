@@ -293,12 +293,16 @@ services:
       - WEBHOOK_URL=http://localhost:5678/
       - GENERIC_TIMEZONE=America/New_York
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-myca-encryption-key-change-me}
+      # Public API for workflow management (no auth required for local dev)
+      - N8N_PUBLIC_API_DISABLED=false
+      # Force production webhook mode to register webhooks
+      - EXECUTIONS_MODE=regular
       # AI/LLM Integration
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       # Whisper/TTS endpoints
       - WHISPER_URL=http://whisper:8000
-      - TTS_URL=http://tts:5500
+      - TTS_URL=http://openedai-speech:8000
       - OLLAMA_URL=http://ollama:11434
       - LITELLM_URL=http://litellm:4000
     volumes:
