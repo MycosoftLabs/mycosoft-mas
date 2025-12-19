@@ -104,28 +104,6 @@
     },
     {
       "parameters": {
-        "operation": "insert",
-        "dataId": "myca-interactions",
-        "rows": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "conversation_id": "={{ $json.conversation_id }}",
-            "user_message": "={{ $json.content }}",
-            "assistant_response": "={{ $json.response }}",
-            "timestamp": "={{ $json.timestamp }}",
-            "source": "n8n-webhook"
-          }
-        },
-        "options": {}
-      },
-      "id": "log-to-n8n-table",
-      "name": "Log to n8n Data Table",
-      "type": "@n8n/n8n-nodes-langchain.storageN8nDataStore",
-      "typeVersion": 1,
-      "position": [1250, 300]
-    },
-    {
-      "parameters": {
         "url": "http://mas-orchestrator:8000/voice/feedback",
         "authentication": "none",
         "sendBody": true,
@@ -266,7 +244,6 @@
     "format-response": {
       "main": [
         [
-          { "node": "log-to-n8n-table", "type": "main", "index": 0 },
           { "node": "store-feedback", "type": "main", "index": 0 },
           { "node": "check-sms-action", "type": "main", "index": 0 },
           { "node": "check-voice-action", "type": "main", "index": 0 }
@@ -291,7 +268,7 @@
     "send-voice": {
       "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]
     },
-    "log-to-n8n-table": {
+    "store-feedback": {
       "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]
     }
   },

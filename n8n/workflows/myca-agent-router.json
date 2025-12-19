@@ -1,0 +1,199 @@
+{
+  "name": "MYCA: Agent Router (Enhanced)",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "myca/route",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-route",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 400],
+      "webhookId": "myca-route"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse incoming request\nconst body = $json.body ?? $json;\nconst transcript = String(body.transcript || body.message || '').trim();\nconst actor = String(body.actor || 'morgan');\nconst session_id = body.session_id || `route_${Date.now()}`;\nconst request_id = body.request_id || `req_${Date.now()}`;\n\nif (!transcript) {\n  return { ok: false, error: 'No transcript provided' };\n}\n\nreturn {\n  ok: true,\n  transcript,\n  actor,\n  session_id,\n  request_id,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "code-parse",
+      "name": "Parse Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            { "value1": "={{$json.ok}}", "operation": "isTrue" }
+          ]
+        }
+      },
+      "id": "if-valid",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [640, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mas-orchestrator:8000/agents/registry/route/voice",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ transcript: $json.transcript, actor: $json.actor, session_id: $json.session_id }) }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "http-route",
+      "name": "Route via Registry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process routing result\nconst inputData = $('Parse Request').first().json;\nconst routeResult = $json;\n\nconst primaryAgent = routeResult.primary_agent;\nconst requiresConfirmation = routeResult.requires_confirmation;\nconst matchedAgents = routeResult.matched_agents || [];\n\nlet action = 'direct_response';\nlet targetAgent = null;\nlet routingMessage = routeResult.routing_prompt || 'I\\'ll handle this directly.';\n\nif (primaryAgent) {\n  targetAgent = primaryAgent;\n  action = requiresConfirmation ? 'confirm_required' : 'route_to_agent';\n}\n\nreturn {\n  ok: true,\n  request_id: inputData.request_id,\n  transcript: inputData.transcript,\n  action,\n  target_agent: targetAgent,\n  matched_agents: matchedAgents.map(a => a.agent_id),\n  requires_confirmation: requiresConfirmation,\n  routing_message: routingMessage,\n  session_id: inputData.session_id,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "code-process",
+      "name": "Process Route",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { 
+              "conditions": { 
+                "conditions": [
+                  { "leftValue": "={{ $json.action }}", "rightValue": "route_to_agent", "operator": { "type": "string", "operation": "equals" } }
+                ] 
+              }, 
+              "renameOutput": true, 
+              "outputLabel": "Route" 
+            },
+            { 
+              "conditions": { 
+                "conditions": [
+                  { "leftValue": "={{ $json.action }}", "rightValue": "confirm_required", "operator": { "type": "string", "operation": "equals" } }
+                ] 
+              }, 
+              "renameOutput": true, 
+              "outputLabel": "Confirm" 
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "switch-action",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mas-orchestrator:8000/voice/orchestrator/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: $json.transcript + ' [Route to: ' + ($json.target_agent?.display_name || 'orchestrator') + ']', conversation_id: $json.session_id }) }}",
+        "options": { "timeout": 120000 }
+      },
+      "id": "http-chat-agent",
+      "name": "Execute via Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 180]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate confirmation request\nconst data = $('Process Route').first().json;\n\nreturn {\n  ok: true,\n  request_id: data.request_id,\n  action: 'pending_confirmation',\n  target_agent: data.target_agent,\n  confirmation_prompt: `This command will be routed to ${data.target_agent?.display_name || 'an agent'}. ${data.target_agent?.requires_confirmation ? 'This action requires confirmation. Say \"Confirm and proceed\" to continue.' : ''}`,\n  transcript: data.transcript,\n  session_id: data.session_id,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "code-confirm",
+      "name": "Request Confirm",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 340]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mas-orchestrator:8000/voice/orchestrator/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ message: $json.transcript, conversation_id: $json.session_id }) }}",
+        "options": { "timeout": 120000 }
+      },
+      "id": "http-chat-direct",
+      "name": "Direct Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format final response\nconst inputData = $('Process Route').first().json;\nconst result = $json;\n\nreturn {\n  ok: true,\n  request_id: inputData.request_id,\n  transcript: inputData.transcript,\n  response_text: result.response_text || result.confirmation_prompt || 'Command processed.',\n  action: inputData.action,\n  target_agent: inputData.target_agent?.display_name || 'orchestrator',\n  conversation_id: result.conversation_id || inputData.session_id,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "code-format",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 340]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-success",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2000, 340]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: $json.error || 'Invalid request' }) }}",
+        "options": { "responseCode": 400 }
+      },
+      "id": "respond-error",
+      "name": "Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [860, 500]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Parse Request", "type": "main", "index": 0 }]] },
+    "Parse Request": { "main": [[{ "node": "Valid?", "type": "main", "index": 0 }]] },
+    "Valid?": {
+      "main": [
+        [{ "node": "Route via Registry", "type": "main", "index": 0 }],
+        [{ "node": "Error", "type": "main", "index": 0 }]
+      ]
+    },
+    "Route via Registry": { "main": [[{ "node": "Process Route", "type": "main", "index": 0 }]] },
+    "Process Route": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Route Action": {
+      "main": [
+        [{ "node": "Execute via Agent", "type": "main", "index": 0 }],
+        [{ "node": "Request Confirm", "type": "main", "index": 0 }],
+        [{ "node": "Direct Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Execute via Agent": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Request Confirm": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Direct Response": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": ["myca", "agent", "router", "registry"]
+}

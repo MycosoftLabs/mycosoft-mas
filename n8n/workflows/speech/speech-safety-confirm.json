@@ -1,0 +1,198 @@
+{
+  "name": "Speech: Safety & Confirm",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/speech_confirm",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "req-id",
+              "name": "request_id",
+              "value": "={{ $json.body.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "confirm-phrase",
+              "name": "confirmation_phrase",
+              "value": "={{ $json.body.confirmation_phrase }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-inputs",
+      "name": "Extract Inputs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.confirmation_phrase.toLowerCase() }}",
+              "operation": "equals",
+              "value2": "={{ 'confirm action request_id ' + $json.request_id }}"
+            }
+          ]
+        }
+      },
+      "id": "validate-confirm",
+      "name": "Validate Confirmation",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://mas-orchestrator:8000/voice/orchestrator/chat",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"message\": 'Execute confirmed action for request ' + $json.request_id, \"want_audio\": false, \"conversation_id\": $json.request_id } }}",
+        "options": {}
+      },
+      "id": "execute-confirmed",
+      "name": "Execute Confirmed Action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-text",
+              "name": "response_text",
+              "value": "={{ '✅ Action confirmed and executed: ' + ($json.response_text || 'Done') }}",
+              "type": "string"
+            },
+            {
+              "id": "status",
+              "name": "status",
+              "value": "={{ 'confirmed' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-success",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error-msg",
+              "name": "response_text",
+              "value": "={{ '❌ Invalid confirmation phrase. Expected: Confirm action request_id ' + $json.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "status",
+              "name": "status",
+              "value": "={{ 'rejected' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-error",
+      "name": "Format Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataId": "myca-speech-audit",
+        "rows": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_id": "={{ $json.request_id }}",
+            "action": "confirmation",
+            "status": "={{ $json.status }}",
+            "timestamp": "={{ $now }}",
+            "source": "speech-gateway"
+          }
+        },
+        "options": {}
+      },
+      "id": "audit-log",
+      "name": "Audit Log",
+      "type": "@n8n/n8n-nodes-langchain.storageN8nDataStore",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"request_id\": $json.request_id, \"response_text\": $json.response_text, \"status\": $json.status } }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [[{ "node": "extract-inputs", "type": "main", "index": 0 }]]
+    },
+    "extract-inputs": {
+      "main": [[{ "node": "validate-confirm", "type": "main", "index": 0 }]]
+    },
+    "validate-confirm": {
+      "main": [
+        [{ "node": "execute-confirmed", "type": "main", "index": 0 }],
+        [{ "node": "format-error", "type": "main", "index": 0 }]
+      ]
+    },
+    "execute-confirmed": {
+      "main": [[{ "node": "format-success", "type": "main", "index": 0 }]]
+    },
+    "format-success": {
+      "main": [[{ "node": "audit-log", "type": "main", "index": 0 }]]
+    },
+    "format-error": {
+      "main": [[{ "node": "audit-log", "type": "main", "index": 0 }]]
+    },
+    "audit-log": {
+      "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-12-17T10:00:00.000Z",
+  "versionId": "00000000-0000-0000-0000-000000000002"
+}

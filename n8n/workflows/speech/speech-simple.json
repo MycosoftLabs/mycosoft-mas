@@ -1,0 +1,90 @@
+{
+  "name": "Speech: Simple Command",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/speech_turn",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "req-id",
+              "name": "request_id",
+              "value": "={{ $json.body.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "transcript",
+              "name": "transcript",
+              "value": "={{ $json.body.transcript }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-inputs",
+      "name": "Extract Inputs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://mas-orchestrator:8000/voice/orchestrator/chat",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"message\": $json.transcript, \"want_audio\": false, \"conversation_id\": $json.request_id } }}",
+        "options": {}
+      },
+      "id": "call-mas-orchestrator",
+      "name": "Call MAS Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"request_id\": $json.body?.request_id || $json.request_id, \"response_text\": $json.response_text || $json.response || 'No response', \"require_confirm\": false } }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [[{ "node": "extract-inputs", "type": "main", "index": 0 }]]
+    },
+    "extract-inputs": {
+      "main": [[{ "node": "call-mas-orchestrator", "type": "main", "index": 0 }]]
+    },
+    "call-mas-orchestrator": {
+      "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "active": true
+}
