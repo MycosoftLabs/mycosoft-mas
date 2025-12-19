@@ -57,20 +57,30 @@
     },
     {
       "parameters": {
+        "jsCode": "// Validate environment variable before workflow execution\nconst workflowId = $env.WORKFLOW_ID_ROUTER;\n\nif (!workflowId || workflowId === '' || workflowId === 'undefined') {\n  return [{\n    json: {\n      error: true,\n      status: 500,\n      message: 'WORKFLOW_ID_ROUTER environment variable not configured. Set this to the numeric workflow ID of 02_router_integration_dispatch.',\n      request_id: $json.command?.request_id || 'unknown',\n      config_required: 'WORKFLOW_ID_ROUTER'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...$json,\n    _workflow_id: workflowId\n  }\n}];"
+      },
+      "id": "validate-router-id",
+      "name": "Validate Router Workflow ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 180]
+    },
+    {
+      "parameters": {
         "mode": "runOnceForEachItem",
         "source": "parameter",
         "workflowId": {
           "__rl": true,
           "mode": "id",
-          "value": "={{ $env.WORKFLOW_ID_ROUTER || '' }}"
+          "value": "={{ $json._workflow_id }}"
         }
       },
       "id": "call-router",
       "name": "Call Integration Router",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.1,
-      "position": [880, 180],
-      "notes": "Set WORKFLOW_ID_ROUTER environment variable to the numeric ID of 02_router_integration_dispatch workflow."
+      "position": [980, 180],
+      "notes": "Workflow ID validated by previous node. Set WORKFLOW_ID_ROUTER environment variable."
     },
     {
       "parameters": {
@@ -112,7 +122,7 @@
       "main": [
         [
           {
-            "node": "Call Integration Router",
+            "node": "Validate Router Workflow ID",
             "type": "main",
             "index": 0
           }
@@ -120,6 +130,17 @@
         [
           {
             "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Router Workflow ID": {
+      "main": [
+        [
+          {
+            "node": "Call Integration Router",
             "type": "main",
             "index": 0
           }
