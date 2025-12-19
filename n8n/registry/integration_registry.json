@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "1.0.0",
   "last_updated": "2025-12-17",
   "description": "MYCA Integration Registry - Minimal Version",
@@ -45,9 +45,13 @@
       "category": "data_storage",
       "native_node": true,
       "auth_type": "basic",
+      "base_url": null,
+      "connection_string": "postgresql://user:pass@host:5432/dbname",
+      "default_actions": ["query", "insert", "update"],
       "risk": "admin",
       "confirm_required": true,
-      "enabled": true
+      "enabled": true,
+      "notes": "Native n8n node - no HTTP base_url needed. Uses n8n credential for connection."
     },
     {
       "integration": "proxmox",

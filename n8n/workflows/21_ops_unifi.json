@@ -68,7 +68,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Format UniFi response\nconst request = $('Parse UniFi Command').item.json;\nconst response = $input.item.json;\n\nreturn [{\n  json: {\n    success: true,\n    request_id: request.request_id,\n    integration: 'unifi',\n    action: request.action,\n    data: response.data || response,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// Format UniFi response with proper status code checking (Bug 7 fix)\nconst request = $('Parse UniFi Command').item.json;\nconst response = $input.item.json;\n\n// Check for HTTP errors\nconst statusCode = $input.item.statusCode || response.statusCode || 200;\nconst isError = statusCode >= 400;\n\n// Check for UniFi-specific error indicators\nconst hasUnifiError = response.meta?.rc === 'error' || response.errors;\n\nconst success = !isError && !hasUnifiError;\n\nif (!success) {\n  return [{\n    json: {\n      success: false,\n      error: true,\n      request_id: request.request_id,\n      integration: 'unifi',\n      action: request.action,\n      status_code: statusCode,\n      message: response.meta?.msg || response.errors || response.message || `HTTP ${statusCode} error`,\n      data: response,\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n    error: false,\n    request_id: request.request_id,\n    integration: 'unifi',\n    action: request.action,\n    status_code: statusCode,\n    data: response.data || response,\n    timestamp: new Date().toISOString()\n  }\n}];"
       },
       "id": "format-unifi-response",
       "name": "Format Response",
