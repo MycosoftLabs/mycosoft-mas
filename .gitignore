@@ -91,6 +91,14 @@ infra/bootstrap/vault-*
 .smb-credentials
 docker-compose.sync.yml
 
+# MYCA Online infrastructure - NEVER COMMIT SECRETS
+infra/myca-online/out/secrets/
+infra/myca-online/out/vault/
+infra/myca-online/out/logs/
+infra/myca-online/out/*.pid
+infra/myca-online/out/.vault-*
+docker-compose.myca.yml
+
 # Vault data (NEVER commit)
 .vault/
 vault-data/

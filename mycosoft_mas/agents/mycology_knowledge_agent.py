@@ -16,7 +16,12 @@ import re
 from collections import defaultdict
 import aiohttp
 import aiofiles
-import spacy
+
+try:
+    import spacy
+except ImportError:  # pragma: no cover - optional dependency
+    spacy = None  # type: ignore
+
 from rdflib import Graph, Literal, RDF, URIRef, Namespace
 from rdflib.namespace import RDFS, XSD, OWL, DCTERMS, SKOS
 
@@ -1828,6 +1833,10 @@ class MycologyKnowledgeAgent(BaseAgent):
 
     async def _extract_species_mentions(self, text: str) -> List[str]:
         """Extract fungal species mentions from text using NLP."""
+        if spacy is None:
+            self.logger.warning("spaCy not available, skipping species extraction")
+            return []
+        
         try:
             # Load spaCy model
             nlp = spacy.load("en_core_web_sm")

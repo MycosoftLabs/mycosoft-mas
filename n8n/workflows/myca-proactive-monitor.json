@@ -1,0 +1,168 @@
+{
+  "name": "MYCA: Proactive Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 5 }] }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/monitor/check",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "manual-trigger",
+      "name": "Manual Check Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// System Health Check - Check all critical services\nconst checks = [];\nconst alerts = [];\nconst timestamp = new Date().toISOString();\n\n// Define services to monitor\nconst services = [\n  { name: 'MAS Orchestrator', url: 'http://mas-orchestrator:8000/health', critical: true },\n  { name: 'n8n', url: 'http://localhost:5678/healthz', critical: true },\n  { name: 'ElevenLabs TTS', url: 'http://elevenlabs-proxy:8000/health', critical: false },\n  { name: 'Redis', url: null, check: 'redis', critical: true },\n  { name: 'Postgres', url: null, check: 'postgres', critical: true }\n];\n\n// Placeholder results (actual checks would use HTTP Request nodes)\nservices.forEach(svc => {\n  checks.push({\n    service: svc.name,\n    status: 'pending',\n    critical: svc.critical,\n    url: svc.url\n  });\n});\n\nreturn {\n  json: {\n    check_type: 'health',\n    timestamp: timestamp,\n    services: checks,\n    note: 'Add HTTP Request nodes to perform actual health checks'\n  }\n};"
+      },
+      "id": "health-check",
+      "name": "Health Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://mas-orchestrator:8000/health",
+        "options": { "timeout": 10000 }
+      },
+      "id": "check-mas",
+      "name": "Check MAS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://elevenlabs-proxy:8000/health",
+        "options": { "timeout": 10000 }
+      },
+      "id": "check-tts",
+      "name": "Check TTS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 340]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://mas-orchestrator:8000/agents/registry/",
+        "options": { "timeout": 10000 }
+      },
+      "id": "check-agents",
+      "name": "Check Agents",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 480]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate health check results and generate alerts\nconst masResult = $('Check MAS').first().json;\nconst ttsResult = $('Check TTS').first().json;\nconst agentsResult = $('Check Agents').first().json;\n\nconst timestamp = new Date().toISOString();\nconst alerts = [];\nconst status = {\n  overall: 'healthy',\n  services: []\n};\n\n// Check MAS\nif (masResult && masResult.status === 'ok') {\n  status.services.push({ name: 'MAS Orchestrator', status: 'healthy' });\n} else {\n  status.services.push({ name: 'MAS Orchestrator', status: 'unhealthy' });\n  alerts.push({ level: 'critical', service: 'MAS Orchestrator', message: 'Service not responding' });\n  status.overall = 'degraded';\n}\n\n// Check TTS\nif (ttsResult && ttsResult.status === 'ok') {\n  status.services.push({ name: 'ElevenLabs TTS', status: 'healthy', voice: ttsResult.voice_name });\n} else {\n  status.services.push({ name: 'ElevenLabs TTS', status: 'unhealthy' });\n  alerts.push({ level: 'warning', service: 'ElevenLabs TTS', message: 'TTS service not responding' });\n}\n\n// Check Agents\nif (agentsResult && agentsResult.total_agents) {\n  status.services.push({ name: 'Agent Registry', status: 'healthy', agent_count: agentsResult.total_agents });\n} else {\n  status.services.push({ name: 'Agent Registry', status: 'unhealthy' });\n  alerts.push({ level: 'warning', service: 'Agent Registry', message: 'Could not fetch agents' });\n}\n\nreturn {\n  json: {\n    timestamp: timestamp,\n    status: status,\n    alerts: alerts,\n    alert_count: alerts.length,\n    requires_notification: alerts.some(a => a.level === 'critical')\n  }\n};"
+      },
+      "id": "aggregate-results",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "has-alerts",
+              "leftValue": "={{ $json.alert_count }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-alerts",
+      "name": "Has Alerts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Send alert notification (placeholder - connect to Slack, Email, etc.)\nconst input = $input.first().json;\n\nconst alertMessage = `🚨 MYCA Alert: ${input.alerts.map(a => `[${a.level.toUpperCase()}] ${a.service}: ${a.message}`).join('; ')}`;\n\nreturn {\n  json: {\n    notification_sent: false,\n    message: alertMessage,\n    alerts: input.alerts,\n    note: 'Connect Slack, Email, or SMS node to send actual notifications'\n  }\n};"
+      },
+      "id": "send-alert",
+      "name": "Send Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log healthy status\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    message: 'All systems healthy',\n    status: input.status,\n    timestamp: input.timestamp\n  }\n};"
+      },
+      "id": "log-healthy",
+      "name": "Log Healthy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Save monitoring history (placeholder - connect to database)\nconst alertData = $('Send Alert').first()?.json;\nconst healthyData = $('Log Healthy').first()?.json;\n\nconst result = alertData || healthyData;\n\nreturn {\n  json: {\n    action: 'monitor_complete',\n    result: result,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "save-history",
+      "name": "Save History",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1420, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1420, 500]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": { "main": [[{ "node": "Health Check", "type": "main", "index": 0 }]] },
+    "Manual Check Webhook": { "main": [[{ "node": "Health Check", "type": "main", "index": 0 }]] },
+    "Health Check": { "main": [[{ "node": "Check MAS", "type": "main", "index": 0 }, { "node": "Check TTS", "type": "main", "index": 0 }, { "node": "Check Agents", "type": "main", "index": 0 }]] },
+    "Check MAS": { "main": [[{ "node": "Aggregate Results", "type": "main", "index": 0 }]] },
+    "Check TTS": { "main": [[{ "node": "Aggregate Results", "type": "main", "index": 0 }]] },
+    "Check Agents": { "main": [[{ "node": "Aggregate Results", "type": "main", "index": 0 }]] },
+    "Aggregate Results": { "main": [[{ "node": "Has Alerts?", "type": "main", "index": 0 }]] },
+    "Has Alerts?": {
+      "main": [
+        [{ "node": "Send Alert", "type": "main", "index": 0 }],
+        [{ "node": "Log Healthy", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Alert": { "main": [[{ "node": "Save History", "type": "main", "index": 0 }]] },
+    "Log Healthy": { "main": [[{ "node": "Save History", "type": "main", "index": 0 }]] },
+    "Save History": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "MYCA Monitoring" }]
+}

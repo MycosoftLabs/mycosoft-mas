@@ -1,0 +1,62 @@
+{
+  "name": "MYCA Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/orchestrator",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "wh",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// MYCA Orchestrator - Parse and route commands\nconst body = $input.item.json.body || $input.item.json;\n\n// Extract command info\nconst text = body.text || body.message || body.query || body.command || '';\nconst audio = $input.item.binary?.data;\nconst action = body.action || 'chat';\n\n// Determine intent from action or keywords\nlet intent = action;\nif (text) {\n  const lowerText = text.toLowerCase();\n  if (lowerText.includes('agent') || lowerText.includes('worker')) intent = 'agent_management';\n  else if (lowerText.includes('system') || lowerText.includes('health') || lowerText.includes('status')) intent = 'system_status';\n  else if (lowerText.includes('network') || lowerText.includes('server') || lowerText.includes('proxmox') || lowerText.includes('unifi')) intent = 'infrastructure';\n  else if (lowerText.includes('task') || lowerText.includes('job') || lowerText.includes('execute')) intent = 'task_execution';\n  else intent = 'chat';\n}\n\nreturn {\n  intent,\n  text,\n  has_audio: !!audio,\n  request_id: body.request_id || `req_${Date.now()}`,\n  user_id: body.user_id || 'anonymous',\n  timestamp: new Date().toISOString(),\n  raw_body: body\n};"
+      },
+      "id": "parse",
+      "name": "Parse Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://mas-orchestrator:8000/api/v1/chat",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { message: $json.text, user_id: $json.user_id, context: { intent: $json.intent, request_id: $json.request_id } } }}",
+        "options": {"timeout": 60000}
+      },
+      "id": "mas-chat",
+      "name": "MAS Chat API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format response from MAS\nconst masResponse = $input.item.json;\nconst prevData = $('Parse Request').first().json;\n\nlet response_text = '';\nlet data = null;\n\nif (masResponse.response) {\n  response_text = masResponse.response;\n} else if (masResponse.message) {\n  response_text = masResponse.message;\n} else if (masResponse.error) {\n  response_text = `Error: ${masResponse.error}`;\n} else {\n  response_text = JSON.stringify(masResponse);\n}\n\nreturn {\n  status: 'success',\n  request_id: prevData.request_id,\n  intent: prevData.intent,\n  transcript: prevData.text,\n  response_text,\n  data: masResponse.data || null,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "format-resp",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 300]
+    }
+  ],
+  "connections": {
+    "wh": {"main": [[{"node": "parse", "type": "main", "index": 0}]]},
+    "parse": {"main": [[{"node": "mas-chat", "type": "main", "index": 0}]]},
+    "mas-chat": {"main": [[{"node": "format-resp", "type": "main", "index": 0}]]}
+  },
+  "active": true,
+  "settings": {"executionOrder": "v1"}
+}

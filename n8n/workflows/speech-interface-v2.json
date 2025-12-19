@@ -1,0 +1,187 @@
+{
+  "name": "MYCA Speech Interface v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/speech/v2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse input and determine request type\nconst body = $input.item.json.body || $input.item.json;\nconst binary = $input.item.binary;\n\n// Check if this is a health check\nif (body.health_check || body.test) {\n  return {\n    mode: 'health_check',\n    message: 'MYCA Speech Interface is operational',\n    timestamp: new Date().toISOString()\n  };\n}\n\n// Check for text-only request\nconst textInput = body.text || body.message || body.query;\nif (textInput) {\n  return {\n    mode: 'text_chat',\n    text: textInput,\n    want_audio: body.want_audio !== false,\n    conversation_id: body.conversation_id || `conv_${Date.now()}`,\n    timestamp: new Date().toISOString()\n  };\n}\n\n// Check for audio input\nif (binary && binary.data) {\n  return {\n    mode: 'speech',\n    has_audio: true,\n    want_audio: body.want_audio !== false,\n    conversation_id: body.conversation_id || `conv_${Date.now()}`,\n    timestamp: new Date().toISOString()\n  };\n}\n\n// No valid input\nreturn {\n  mode: 'error',\n  error: 'No audio file or text provided. Send audio via multipart/form-data or JSON with text field.',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "parse-input",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {"conditions": {"options": {"version": 2}, "combinator": "and", "conditions": [{"id": "1", "leftValue": "={{ $json.mode }}", "rightValue": "health_check", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "Health Check"},
+            {"conditions": {"options": {"version": 2}, "combinator": "and", "conditions": [{"id": "2", "leftValue": "={{ $json.mode }}", "rightValue": "text_chat", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "Text Chat"},
+            {"conditions": {"options": {"version": 2}, "combinator": "and", "conditions": [{"id": "3", "leftValue": "={{ $json.mode }}", "rightValue": "speech", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "Speech"},
+            {"conditions": {"options": {"version": 2}, "combinator": "and", "conditions": [{"id": "4", "leftValue": "={{ $json.mode }}", "rightValue": "error", "operator": {"type": "string", "operation": "equals"}}]}, "renameOutput": true, "outputKey": "Error"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "router",
+      "name": "Route by Mode",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'ok', message: $json.message, timestamp: $json.timestamp, services: { whisper: 'http://whisper:8000', litellm: 'http://litellm:4000', tts: 'http://openedai-speech:8000' } } }}",
+        "options": {}
+      },
+      "id": "health-response",
+      "name": "Health Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 100]
+    },
+    {
+      "parameters": {
+        "url": "http://litellm:4000/v1/chat/completions",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"system\", \"content\": \"You are MYCA, the Mycosoft AI assistant. Be helpful, concise, and conversational. Keep responses under 100 words for voice.\"}, {\"role\": \"user\", \"content\": $json.text}], \"max_tokens\": 300, \"temperature\": 0.7 } }}",
+        "options": {"timeout": 30000}
+      },
+      "id": "llm-text",
+      "name": "LLM Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 250]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract LLM response\nconst llmResponse = $input.item.json;\nconst prevData = $('Parse Input').first().json;\nconst responseText = llmResponse.choices?.[0]?.message?.content || 'I understand. How can I help you?';\n\nreturn {\n  status: 'success',\n  mode: prevData.mode,\n  transcript: prevData.text,\n  response_text: responseText.trim(),\n  model_used: llmResponse.model || 'gpt-4o-mini',\n  want_audio: prevData.want_audio,\n  conversation_id: prevData.conversation_id,\n  timestamp: prevData.timestamp\n};"
+      },
+      "id": "extract-llm",
+      "name": "Extract LLM Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 250]
+    },
+    {
+      "parameters": {
+        "url": "http://whisper:8000/v1/audio/transcriptions",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {"name": "file", "parameterType": "formBinaryData", "inputDataFieldName": "data"},
+            {"name": "model", "value": "Systran/faster-whisper-base.en"},
+            {"name": "response_format", "value": "json"}
+          ]
+        },
+        "options": {"timeout": 30000}
+      },
+      "id": "whisper-stt",
+      "name": "Whisper STT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract transcript and prepare for LLM\nconst whisperResponse = $input.item.json;\nconst prevData = $('Parse Input').first().json;\nconst transcript = whisperResponse.text || '';\n\nreturn {\n  text: transcript.trim(),\n  want_audio: prevData.want_audio,\n  conversation_id: prevData.conversation_id,\n  timestamp: prevData.timestamp,\n  mode: 'speech'\n};"
+      },
+      "id": "extract-transcript",
+      "name": "Extract Transcript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://litellm:4000/v1/chat/completions",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"system\", \"content\": \"You are MYCA, the Mycosoft AI assistant. Be helpful, concise, and conversational. Keep responses under 100 words for voice.\"}, {\"role\": \"user\", \"content\": $json.text}], \"max_tokens\": 300, \"temperature\": 0.7 } }}",
+        "options": {"timeout": 30000}
+      },
+      "id": "llm-speech",
+      "name": "LLM Process Speech",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1300, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract LLM response for speech mode\nconst llmResponse = $input.item.json;\nconst prevData = $('Extract Transcript').first().json;\nconst responseText = llmResponse.choices?.[0]?.message?.content || 'I understand. How can I help you?';\n\nreturn {\n  status: 'success',\n  mode: 'speech',\n  transcript: prevData.text,\n  response_text: responseText.trim(),\n  model_used: llmResponse.model || 'gpt-4o-mini',\n  want_audio: prevData.want_audio,\n  conversation_id: prevData.conversation_id,\n  timestamp: prevData.timestamp\n};"
+      },
+      "id": "extract-speech-llm",
+      "name": "Extract Speech LLM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'error', error: $json.error, timestamp: $json.timestamp, hint: 'Send audio via multipart/form-data or include text field in JSON body' } }}",
+        "options": {"responseCode": "400"}
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 550]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: $json.status, mode: $json.mode, conversation_id: $json.conversation_id, transcript: $json.transcript, response_text: $json.response_text, model_used: $json.model_used, timestamp: $json.timestamp } }}",
+        "options": {}
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1700, 325]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {"main": [[{"node": "parse-input", "type": "main", "index": 0}]]},
+    "parse-input": {"main": [[{"node": "router", "type": "main", "index": 0}]]},
+    "router": {"main": [
+      [{"node": "health-response", "type": "main", "index": 0}],
+      [{"node": "llm-text", "type": "main", "index": 0}],
+      [{"node": "whisper-stt", "type": "main", "index": 0}],
+      [{"node": "error-response", "type": "main", "index": 0}]
+    ]},
+    "llm-text": {"main": [[{"node": "extract-llm", "type": "main", "index": 0}]]},
+    "extract-llm": {"main": [[{"node": "success-response", "type": "main", "index": 0}]]},
+    "whisper-stt": {"main": [[{"node": "extract-transcript", "type": "main", "index": 0}]]},
+    "extract-transcript": {"main": [[{"node": "llm-speech", "type": "main", "index": 0}]]},
+    "llm-speech": {"main": [[{"node": "extract-speech-llm", "type": "main", "index": 0}]]},
+    "extract-speech-llm": {"main": [[{"node": "success-response", "type": "main", "index": 0}]]}
+  },
+  "active": true,
+  "settings": {"executionOrder": "v1"},
+  "tags": ["speech", "voice", "myca", "v2"],
+  "meta": {"templateCredsSetupCompleted": true}
+}

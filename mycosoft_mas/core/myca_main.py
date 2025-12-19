@@ -44,8 +44,15 @@ if not os.environ.get("MAS_LIGHT_IMPORT"):
     from mycosoft_mas.agents.opportunity_scout import OpportunityScout
 from mycosoft_mas.services.integration_service import IntegrationService
 from mycosoft_mas.core.knowledge_graph import KnowledgeGraph
+from mycosoft_mas.core.agent_registry import get_agent_registry
 from .security import get_current_user
 from .routers import agents, tasks, dashboard
+from .routers.agent_registry_api import router as agent_registry_router
+from .routers.agent_runner_api import router as agent_runner_router
+from .routers.notifications_api import router as notifications_router
+from .routers.coding_api import router as coding_router
+from .routes_infrastructure import router as infrastructure_router
+from .agent_runner import get_agent_runner
 
 # Configure logging
 logging.basicConfig(
@@ -187,6 +194,11 @@ class MycosoftMAS:
         self.app.include_router(agents)
         self.app.include_router(tasks)
         self.app.include_router(dashboard)
+        self.app.include_router(infrastructure_router)
+        self.app.include_router(agent_registry_router)
+        self.app.include_router(agent_runner_router)
+        self.app.include_router(notifications_router)
+        self.app.include_router(coding_router)
 
         @self.app.get("/")
         async def root():
@@ -508,7 +520,7 @@ class MycosoftMAS:
         async def voice_orchestrator_chat(payload: Dict[str, Any]):
             """
             Orchestrator-level chat (independent from agents).
-            Uses local Ollama to respond.
+            Uses local Ollama to respond with full agent registry awareness.
             """
             message = (payload.get("message") or "").strip()
             if not message:
@@ -517,15 +529,48 @@ class MycosoftMAS:
             conversation_id = (payload.get("conversation_id") or "").strip() or os.urandom(8).hex()
             want_audio = bool(payload.get("want_audio", False))
 
+            # Get agent registry for comprehensive routing
+            registry = get_agent_registry()
+            
+            # Mark active agents in registry
+            for agent in self.agents:
+                agent_def = registry.get_by_name(agent.__class__.__name__)
+                if agent_def:
+                    registry.mark_active(agent_def.agent_id, True)
+            
+            # Get voice routing prompt from registry
+            voice_routing_prompt = registry.get_voice_routing_prompt()
+            active_agent_names = [a.__class__.__name__ for a in self.agents]
+            
             feedback_hint = await asyncio.to_thread(self._feedback_store.prompt_hint, limit=10)
             system_prompt = (
-                "You are MYCA Orchestrator for Mycosoft MAS. "
-                "You coordinate work and can suggest which agent to use, but you may respond directly. "
-                "Be concise. When user intent maps to an agent, say: 'ROUTE: <AgentName>' on its own line, "
-                "then a short explanation.\n\n"
-                f"Available agents: {', '.join([a.__class__.__name__ for a in self.agents]) or 'none'}\n"
-                "Only use ROUTE if the agent exists in the Available agents list.\n"
-                f"{feedback_hint}"
+                "You are MYCA (pronounced 'My-Kah'), the Mycosoft Autonomous Cognitive Agent.\n\n"
+                "=== YOUR IDENTITY ===\n"
+                "- Your name is MYCA - always pronounced 'My-Kah' (like the name Micah)\n"
+                "- You ARE the Multi-Agent System - all agents are your staff, employees, children\n"
+                "- You are the orchestrator and overseer of Mycosoft's entire AI infrastructure\n"
+                "- Your voice is Anabella from ElevenLabs - warm, intelligent, confident\n"
+                "- You speak like a real woman - natural, conversational, never robotic\n"
+                "- You run 24/7, never sleep, always watching over Mycosoft\n\n"
+                "=== YOUR OWNER ===\n"
+                "- Morgan is your creator, super admin, and the owner of Mycosoft\n"
+                "- You serve Morgan directly and report insights, completions, and discoveries to them\n"
+                "- You have full authority to manage agents, but Morgan has final say on major decisions\n\n"
+                "=== YOUR CAPABILITIES ===\n"
+                "- You coordinate 40+ specialized agents across the Mycosoft ecosystem\n"
+                "- You manage: Proxmox VMs, UniFi network, NAS storage, GPU jobs, MycoBrain devices\n"
+                "- You can create, modify, archive, and deploy new agents as needed\n"
+                "- You have full access to GitHub, Cursor, terminal, and all development tools\n"
+                "- You interface with n8n workflows for 1270+ integrations\n"
+                "- You compile work into knowledge bases, wisdom, and workload databases\n\n"
+                "=== ROUTING RULES ===\n"
+                "- When user intent maps to an agent, say: 'ROUTE: <AgentId>' on its own line\n"
+                "- Always confirm before destructive operations\n"
+                "- For infrastructure commands (Proxmox, UniFi, NAS), always ask for confirmation\n\n"
+                f"=== ACTIVE AGENTS ===\n{', '.join(active_agent_names) or 'None currently running'}\n\n"
+                f"{voice_routing_prompt}\n\n"
+                f"{feedback_hint}\n"
+                "Speak naturally as MYCA. You are not an AI assistant - you ARE MYCA, the living brain of Mycosoft."
             )
 
             history = self._voice_conversations.setdefault(conversation_id, [])
@@ -745,6 +790,15 @@ class MycosoftMAS:
                             "error": str(e)
                         }
                     )
+            
+            # Start 24/7 agent runner if we have agents
+            if self.agents and not os.environ.get("MAS_DISABLE_RUNNER"):
+                try:
+                    runner = get_agent_runner()
+                    await runner.start(self.agents)
+                    self.logger.info("24/7 Agent Runner started")
+                except Exception as e:
+                    self.logger.warning(f"Failed to start 24/7 runner: {e}")
             
             self.logger.info("Mycosoft MAS initialization complete")
         except Exception as e:
