@@ -1,0 +1,90 @@
+{
+  "name": "Audit Logger Template",
+  "description": "Write immutable audit trail to Postgres and/or JSONL file",
+  "nodes": [
+    {
+      "name": "Prepare Audit Record",
+      "parameters": {
+        "jsCode": "// Prepare audit record from workflow data\nconst crypto = require('crypto');\n\nconst input = $input.item.json;\n\n// Hash sensitive data\nconst paramsHash = crypto.createHash('sha256')\n  .update(JSON.stringify(input.params || {}))\n  .digest('hex');\n\nconst responseHash = crypto.createHash('sha256')\n  .update(JSON.stringify(input.response || {}))\n  .digest('hex');\n\nconst auditRecord = {\n  timestamp: new Date().toISOString(),\n  request_id: input.request_id || $execution.id,\n  actor: input.actor || 'system',\n  integration: input.integration || 'unknown',\n  action: input.action || 'unknown',\n  category: input.category || null,\n  params_hash: paramsHash,\n  response_hash: responseHash,\n  status: input.status || 'unknown',\n  duration_ms: input.duration_ms || null,\n  error_message: input.error_message || null,\n  risk_level: input.risk_level || 'read_only',\n  confirmed: input.confirmed || false,\n  correlation_id: input.correlation_id || null,\n  metadata: {\n    execution_id: $execution.id,\n    workflow_name: $workflow.name,\n    n8n_version: $workflow.version\n  }\n};\n\nreturn [{ json: auditRecord }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 200]
+    },
+    {
+      "name": "Write to Postgres",
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "myca_audit",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.timestamp }}",
+            "request_id": "={{ $json.request_id }}",
+            "actor": "={{ $json.actor }}",
+            "integration": "={{ $json.integration }}",
+            "action": "={{ $json.action }}",
+            "category": "={{ $json.category }}",
+            "params_hash": "={{ $json.params_hash }}",
+            "response_hash": "={{ $json.response_hash }}",
+            "status": "={{ $json.status }}",
+            "duration_ms": "={{ $json.duration_ms }}",
+            "error_message": "={{ $json.error_message }}",
+            "risk_level": "={{ $json.risk_level }}",
+            "confirmed": "={{ $json.confirmed }}",
+            "correlation_id": "={{ $json.correlation_id }}",
+            "metadata": "={{ $json.metadata }}"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [300, 150],
+      "credentials": {
+        "postgres": {
+          "id": "{{ postgres_credential_id }}",
+          "name": "MYCA Postgres"
+        }
+      }
+    },
+    {
+      "name": "Write to JSONL File",
+      "parameters": {
+        "operation": "append",
+        "fileName": "/nas-logs/myca_audit.jsonl",
+        "data": "={{ JSON.stringify($json) + '\\n' }}",
+        "options": {
+          "createIntermediateDirectories": true
+        }
+      },
+      "type": "n8n-nodes-base.fs",
+      "typeVersion": 1,
+      "position": [300, 250]
+    },
+    {
+      "name": "Merge Results",
+      "parameters": {
+        "mode": "append"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [500, 200]
+    }
+  ],
+  "usage": {
+    "description": "Call this as a sub-workflow from any integration workflow to write audit logs",
+    "input_format": {
+      "request_id": "uuid",
+      "actor": "morgan|myca|system",
+      "integration": "integration_name",
+      "action": "read|create|update|delete|etc",
+      "params": {},
+      "response": {},
+      "status": "success|error|timeout",
+      "duration_ms": 123,
+      "error_message": "optional error message"
+    }
+  }
+}

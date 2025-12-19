@@ -1,0 +1,70 @@
+{
+  "name": "Generic API Key HTTP Request Template",
+  "description": "Reusable template for calling any API key-protected API using HTTP Request node",
+  "node": {
+    "parameters": {
+      "authentication": "genericCredentialType",
+      "genericAuthType": "httpHeaderAuth",
+      "method": "={{ $json.method || 'GET' }}",
+      "url": "={{ $json.base_url }}{{ $json.endpoint }}",
+      "sendQuery": true,
+      "queryParameters": {
+        "parameters": "={{ $json.query_params || [] }}"
+      },
+      "sendHeaders": true,
+      "headerParameters": {
+        "parameters": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Authorization",
+            "value": "={{ 'Bearer ' + $credentials.apiKey }}"
+          },
+          {
+            "name": "User-Agent",
+            "value": "MYCA-n8n/1.0"
+          }
+        ]
+      },
+      "sendBody": true,
+      "bodyParameters": {
+        "parameters": "={{ $json.body_params || [] }}"
+      },
+      "options": {
+        "redirect": {
+          "redirect": {
+            "followRedirects": true,
+            "maxRedirects": 5
+          }
+        },
+        "timeout": 30000,
+        "retry": {
+          "retry": {
+            "maxRetries": 3,
+            "retryInterval": 1000,
+            "retryOnStatusCodes": "429,500,502,503,504"
+          }
+        }
+      }
+    },
+    "type": "n8n-nodes-base.httpRequest",
+    "typeVersion": 4.1,
+    "position": [0, 0]
+  },
+  "usage": {
+    "description": "Use this template for any API key integration not covered by native nodes",
+    "input_format": {
+      "method": "GET|POST|PUT|PATCH|DELETE",
+      "base_url": "https://api.example.com",
+      "endpoint": "/v1/resource",
+      "query_params": [{"name": "key", "value": "val"}],
+      "body_params": [{"name": "key", "value": "val"}]
+    },
+    "auth_variations": {
+      "header_key": "Change Authorization header name if API uses X-API-Key, etc.",
+      "query_param": "Some APIs require API key as query param instead of header"
+    }
+  }
+}

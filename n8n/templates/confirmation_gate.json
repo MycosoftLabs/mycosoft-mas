@@ -1,0 +1,112 @@
+{
+  "name": "Two-Man Rule Confirmation Gate Template",
+  "description": "Require explicit confirmation before executing write/destructive actions",
+  "nodes": [
+    {
+      "name": "Check Confirmation Required",
+      "parameters": {
+        "jsCode": "// Check if action requires confirmation\nconst input = $input.item.json;\nconst confirmed = input.confirm === true;\nconst requiresConfirm = input.confirm_required === true || input.risk_level === 'admin';\n\nreturn [\n  {\n    json: {\n      ...input,\n      needs_confirmation: requiresConfirm && !confirmed,\n      can_proceed: !requiresConfirm || confirmed\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 200]
+    },
+    {
+      "name": "Can Proceed?",
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.can_proceed }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [300, 200]
+    },
+    {
+      "name": "Request Confirmation",
+      "parameters": {
+        "message": "⚠️ MYCA Confirmation Required\\n\\nAction: {{ $json.action }}\\nIntegration: {{ $json.integration }}\\nRisk: {{ $json.risk_level }}\\nParams: {{ JSON.stringify($json.params, null, 2) }}\\n\\nReply with confirmation token to proceed.",
+        "additionalFields": {
+          "reply_markup": {
+            "inline_keyboard": [
+              [
+                {
+                  "text": "✅ Confirm",
+                  "callback_data": "confirm_{{ $json.request_id }}"
+                },
+                {
+                  "text": "❌ Cancel",
+                  "callback_data": "cancel_{{ $json.request_id }}"
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [500, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "{{ telegram_credential_id }}",
+          "name": "MYCA Alerts"
+        }
+      }
+    },
+    {
+      "name": "Wait for Confirmation",
+      "parameters": {
+        "resume": "webhook",
+        "limit": 300,
+        "limitUnit": "seconds",
+        "options": {
+          "webhookSuffix": "={{ $json.request_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [700, 300]
+    },
+    {
+      "name": "Validate Confirmation",
+      "parameters": {
+        "jsCode": "const response = $input.item.json;\n\nif (response.callback_data?.startsWith('confirm_')) {\n  return [\n    {\n      json: {\n        confirmed: true,\n        confirmed_by: response.from?.username || 'unknown',\n        confirmed_at: new Date().toISOString()\n      }\n    }\n  ];\n} else {\n  return [\n    {\n      json: {\n        confirmed: false,\n        cancelled_by: response.from?.username || 'unknown',\n        cancelled_at: new Date().toISOString()\n      }\n    }\n  ];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "name": "Proceed with Action",
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [500, 100],
+      "notes": "Action confirmed - continue workflow"
+    },
+    {
+      "name": "Action Denied",
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 403,
+        "responseBody": "={{ { error: 'Action requires confirmation', request_id: $json.request_id } }}"
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1100, 400]
+    }
+  ],
+  "usage": {
+    "description": "Use this gate before any write/admin operation to enforce two-man rule",
+    "customization": [
+      "Change confirmation method (Telegram, Slack, email, etc.)",
+      "Adjust timeout duration",
+      "Add multi-user approval requirements"
+    ]
+  }
+}

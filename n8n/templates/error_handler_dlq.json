@@ -1,0 +1,102 @@
+{
+  "name": "Error Handler with Dead Letter Queue Template",
+  "description": "Catch errors, retry with exponential backoff, send to DLQ if all retries fail",
+  "nodes": [
+    {
+      "name": "Try Operation",
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [100, 200],
+      "notes": "Replace with actual operation node"
+    },
+    {
+      "name": "On Error",
+      "parameters": {
+        "jsCode": "// Error handler with retry logic\nconst MAX_RETRIES = 3;\nconst BACKOFF_BASE = 1000; // 1 second\n\nconst executionData = $execution.customData || {};\nconst attemptNumber = (executionData.retry_attempt || 0) + 1;\n\nconst error = $input.item.json.error || $input.item.json;\n\nif (attemptNumber <= MAX_RETRIES) {\n  // Calculate exponential backoff\n  const backoffMs = BACKOFF_BASE * Math.pow(2, attemptNumber - 1);\n  \n  return [\n    {\n      json: {\n        retry: true,\n        attempt: attemptNumber,\n        backoff_ms: backoffMs,\n        error: error.message || JSON.stringify(error)\n      }\n    }\n  ];\n} else {\n  // Max retries exceeded, send to DLQ\n  return [\n    {\n      json: {\n        retry: false,\n        dlq: true,\n        attempt: attemptNumber,\n        error: error.message || JSON.stringify(error),\n        execution_id: $execution.id,\n        workflow_name: $workflow.name,\n        failed_at: new Date().toISOString()\n      }\n    }\n  ];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "name": "Should Retry?",
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.retry }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "name": "Wait and Retry",
+      "parameters": {
+        "amount": "={{ $json.backoff_ms }}",
+        "unit": "milliseconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [700, 250]
+    },
+    {
+      "name": "Send to Dead Letter Queue",
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "myca_dead_letter_queue",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "workflow_name": "={{ $json.workflow_name }}",
+            "error_message": "={{ $json.error }}",
+            "attempts": "={{ $json.attempt }}",
+            "payload": "={{ $json }}"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [700, 350],
+      "credentials": {
+        "postgres": {
+          "id": "{{ postgres_credential_id }}",
+          "name": "MYCA Postgres"
+        }
+      }
+    },
+    {
+      "name": "Alert on DLQ",
+      "parameters": {
+        "text": "🚨 MYCA Dead Letter Queue Alert\\n\\nWorkflow: {{ $json.workflow_name }}\\nExecution: {{ $json.execution_id }}\\nError: {{ $json.error }}\\nAttempts: {{ $json.attempt }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [900, 350],
+      "credentials": {
+        "telegramApi": {
+          "id": "{{ telegram_credential_id }}",
+          "name": "MYCA Alerts"
+        }
+      }
+    }
+  ],
+  "usage": {
+    "description": "Wrap critical operations with this error handler to ensure resilience",
+    "setup": [
+      "Create DLQ table in Postgres",
+      "Configure Telegram bot for alerts",
+      "Adjust MAX_RETRIES and BACKOFF_BASE as needed"
+    ]
+  }
+}

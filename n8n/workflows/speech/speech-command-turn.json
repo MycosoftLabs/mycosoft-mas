@@ -1,0 +1,253 @@
+{
+  "name": "Speech: Command Turn",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/speech_turn",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "req-id",
+              "name": "request_id",
+              "value": "={{ $json.body.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "transcript",
+              "name": "transcript",
+              "value": "={{ $json.body.transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "actor",
+              "name": "actor",
+              "value": "={{ $json.body.actor || 'user' }}",
+              "type": "string"
+            },
+            {
+              "id": "require-confirm",
+              "name": "require_confirm",
+              "value": "={{ $json.body.require_confirm || false }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-inputs",
+      "name": "Extract Inputs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.require_confirm }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-confirm",
+      "name": "Check Confirmation Required",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://mas-orchestrator:8000/voice/orchestrator/chat",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"message\": $json.transcript, \"want_audio\": false, \"conversation_id\": $json.request_id } }}",
+        "options": {}
+      },
+      "id": "call-mas-orchestrator",
+      "name": "Call MAS Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-text",
+              "name": "response_text",
+              "value": "={{ $json.response_text || $json.response || 'I understand your request.' }}",
+              "type": "string"
+            },
+            {
+              "id": "req-confirm",
+              "name": "require_confirm",
+              "value": "={{ $json.require_confirm || false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "confirm-id",
+              "name": "confirmation_request_id",
+              "value": "={{ $json.request_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "myca_conversation",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_id": "={{ $json.request_id }}",
+            "transcript": "={{ $json.transcript }}",
+            "response_text": "={{ $json.response_text }}",
+            "actor": "={{ $json.actor }}",
+            "timestamp": "={{ $now }}",
+            "require_confirm": "={{ $json.require_confirm }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "store-conversation",
+      "name": "Store Conversation Memory",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [1250, 200],
+      "credentials": {
+        "postgres": {
+          "id": "postgres-credentials",
+          "name": "Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "dataId": "myca-speech-audit",
+        "rows": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request_id": "={{ $json.request_id }}",
+            "transcript": "={{ $json.transcript }}",
+            "response_text": "={{ $json.response_text }}",
+            "timestamp": "={{ $now }}",
+            "source": "speech-gateway"
+          }
+        },
+        "options": {}
+      },
+      "id": "audit-log",
+      "name": "Audit Log",
+      "type": "@n8n/n8n-nodes-langchain.storageN8nDataStore",
+      "typeVersion": 1,
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "confirm-msg",
+              "name": "response_text",
+              "value": "={{ '⚠️ This is a destructive action. Please confirm by saying: Confirm action request_id ' + $json.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "req-confirm-flag",
+              "name": "require_confirm",
+              "value": "={{ true }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-confirm-response",
+      "name": "Format Confirmation Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"request_id\": $json.request_id, \"response_text\": $json.response_text, \"require_confirm\": $json.require_confirm, \"confirmation_request_id\": $json.confirmation_request_id || $json.request_id } }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "webhook-trigger": {
+      "main": [[{ "node": "extract-inputs", "type": "main", "index": 0 }]]
+    },
+    "extract-inputs": {
+      "main": [[{ "node": "check-confirm", "type": "main", "index": 0 }]]
+    },
+    "check-confirm": {
+      "main": [
+        [{ "node": "call-mas-orchestrator", "type": "main", "index": 0 }],
+        [{ "node": "format-confirm-response", "type": "main", "index": 0 }]
+      ]
+    },
+    "call-mas-orchestrator": {
+      "main": [[{ "node": "format-response", "type": "main", "index": 0 }]]
+    },
+    "format-response": {
+      "main": [
+        [{ "node": "store-conversation", "type": "main", "index": 0 }],
+        [{ "node": "audit-log", "type": "main", "index": 0 }]
+      ]
+    },
+    "format-confirm-response": {
+      "main": [
+        [{ "node": "store-conversation", "type": "main", "index": 0 }],
+        [{ "node": "audit-log", "type": "main", "index": 0 }]
+      ]
+    },
+    "store-conversation": {
+      "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]
+    },
+    "audit-log": {
+      "main": [[{ "node": "webhook-response", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-12-17T10:00:00.000Z",
+  "versionId": "00000000-0000-0000-0000-000000000001"
+}

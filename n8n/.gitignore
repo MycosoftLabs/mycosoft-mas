@@ -1,0 +1,47 @@
+# Environment files - NEVER commit secrets!
+.env
+.env.local
+.env.*.local
+
+# Backups may contain sensitive data
+backups/
+
+# n8n data volume (if mounted locally)
+.n8n/
+n8n_data/
+
+# Vault secrets
+vault/secrets/
+vault/role-id
+vault/secret-id
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node modules (if using n8n CLI)
+node_modules/
+package-lock.json
+
+# Python virtual environments (if any)
+venv/
+.venv/
+*.pyc
+__pycache__/

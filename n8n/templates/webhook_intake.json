@@ -1,0 +1,74 @@
+{
+  "name": "Webhook Intake with Validation Template",
+  "description": "Secure webhook entrypoint with schema validation and authentication",
+  "nodes": [
+    {
+      "name": "Webhook Trigger",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/endpoint",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false,
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [100, 200],
+      "webhookId": "{{ generate_uuid }}"
+    },
+    {
+      "name": "Validate Schema",
+      "parameters": {
+        "jsCode": "// Validate incoming payload\nconst requiredFields = ['request_id', 'actor'];\nconst payload = $input.item.json.body;\n\nfor (const field of requiredFields) {\n  if (!payload[field]) {\n    return [\n      {\n        json: {\n          error: true,\n          message: `Missing required field: ${field}`,\n          status: 400\n        }\n      }\n    ];\n  }\n}\n\n// Add metadata\npayload.received_at = new Date().toISOString();\npayload.webhook_id = $execution.id;\n\nreturn [\n  {\n    json: {\n      error: false,\n      payload: payload,\n      status: 200\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 200]
+    },
+    {
+      "name": "Route Valid",
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [500, 200]
+    },
+    {
+      "name": "Error Response",
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": "={{ $json.status || 400 }}",
+        "responseBody": "={{ { error: $json.message, request_id: $json.payload?.request_id } }}"
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [700, 300]
+    },
+    {
+      "name": "Success - Continue Workflow",
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [700, 100]
+    }
+  ],
+  "usage": {
+    "description": "Use this template for secure webhook entrypoints that require validation",
+    "customization": [
+      "Modify requiredFields array in Validate Schema node",
+      "Add additional validation logic (format checks, rate limiting)",
+      "Configure authentication header in Webhook Trigger"
+    ]
+  }
+}
