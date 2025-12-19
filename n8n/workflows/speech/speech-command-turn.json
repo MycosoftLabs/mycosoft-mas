@@ -140,10 +140,11 @@
       "position": [1250, 200],
       "credentials": {
         "postgres": {
-          "id": "postgres-credentials",
-          "name": "Postgres"
+          "name": "MYCA Postgres"
         }
-      }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Credential resolved by name at runtime. Create credential named 'MYCA Postgres' in n8n."
     },
     {
       "parameters": {
@@ -174,7 +175,7 @@
             {
               "id": "confirm-msg",
               "name": "response_text",
-              "value": "={{ '⚠️ This is a destructive action. Please confirm by saying: Confirm action request_id ' + $json.request_id }}",
+              "value": "={{ '⚠️ This action requires confirmation. Please say \"Confirm\" or \"Yes, proceed\" to continue.' }}",
               "type": "string"
             },
             {
@@ -182,6 +183,12 @@
               "name": "require_confirm",
               "value": "={{ true }}",
               "type": "boolean"
+            },
+            {
+              "id": "confirm-req-id",
+              "name": "confirmation_request_id",
+              "value": "={{ $json.request_id }}",
+              "type": "string"
             }
           ]
         },
