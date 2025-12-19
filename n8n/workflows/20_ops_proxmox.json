@@ -1,0 +1,131 @@
+{
+  "name": "Ops: Proxmox Control",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "proxmox-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Proxmox command with parameter validation\nconst input = $input.item.json;\nconst command = input.command || {};\nconst action = command.action;\n\n// Map actions to Proxmox API endpoints with required parameters\nconst actionMap = {\n  'inventory': { method: 'GET', endpoint: '/cluster/resources', risk: 'read', required: [] },\n  'snapshot': { method: 'POST', endpoint: '/nodes/{node}/qemu/{vmid}/snapshot', risk: 'write', required: ['vmid'] },\n  'restore': { method: 'POST', endpoint: '/nodes/{node}/qemu/{vmid}/snapshot/{snapname}/rollback', risk: 'admin', required: ['vmid', 'snapname'] },\n  'status': { method: 'GET', endpoint: '/cluster/status', risk: 'read', required: [] },\n  'vm_list': { method: 'GET', endpoint: '/nodes/{node}/qemu', risk: 'read', required: [] },\n  'vm_start': { method: 'POST', endpoint: '/nodes/{node}/qemu/{vmid}/status/start', risk: 'write', required: ['vmid'] },\n  'vm_stop': { method: 'POST', endpoint: '/nodes/{node}/qemu/{vmid}/status/stop', risk: 'write', required: ['vmid'] },\n  'vm_shutdown': { method: 'POST', endpoint: '/nodes/{node}/qemu/{vmid}/status/shutdown', risk: 'write', required: ['vmid'] }\n};\n\nconst actionConfig = actionMap[action];\n\nif (!actionConfig) {\n  return [{\n    json: {\n      error: true,\n      message: `Unknown Proxmox action: ${action}. Available: ${Object.keys(actionMap).join(', ')}`,\n      request_id: command.request_id\n    }\n  }];\n}\n\nconst params = command.params || {};\n\n// Validate required parameters (Bug 8 fix)\nconst missingParams = actionConfig.required.filter(p => !params[p]);\nif (missingParams.length > 0) {\n  return [{\n    json: {\n      error: true,\n      message: `Missing required parameters for ${action}: ${missingParams.join(', ')}`,\n      request_id: command.request_id,\n      required_params: actionConfig.required\n    }\n  }];\n}\n\n// Build endpoint with parameters\nlet endpoint = actionConfig.endpoint;\n\n// Replace placeholders (only if they exist in endpoint)\nendpoint = endpoint.replace('{node}', params.node || 'pve');\nif (params.vmid) endpoint = endpoint.replace('{vmid}', params.vmid);\nif (params.snapname) endpoint = endpoint.replace('{snapname}', params.snapname);\n\n// Final validation: ensure no unreplaced placeholders remain\nif (endpoint.includes('{')) {\n  return [{\n    json: {\n      error: true,\n      message: `Endpoint still contains placeholders: ${endpoint}`,\n      request_id: command.request_id\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    method: actionConfig.method,\n    endpoint: endpoint,\n    body: params.body || {},\n    risk: actionConfig.risk,\n    action: action,\n    request_id: command.request_id,\n    base_url: input.integration.base_url || 'https://proxmox.mycosoft.local:8006/api2/json'\n  }\n}];"
+      },
+      "id": "parse-proxmox",
+      "name": "Parse Proxmox Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "check-valid-proxmox",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "={{ $json.method }}",
+        "url": "={{ $json.base_url }}{{ $json.endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ 'PVEAPIToken=' + $credentials.apiToken }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 30000,
+          "retry": {
+            "retry": {
+              "maxRetries": 2,
+              "retryInterval": 2000
+            }
+          }
+        }
+      },
+      "id": "proxmox-api-call",
+      "name": "Call Proxmox API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Proxmox API Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format Proxmox response with proper status code checking (Bug 7 fix)\nconst request = $('Parse Proxmox Command').item.json;\nconst response = $input.item.json;\n\n// Check for HTTP errors - the httpRequest node includes statusCode in response\nconst statusCode = $input.item.statusCode || response.statusCode || 200;\nconst isError = statusCode >= 400;\n\n// Also check for Proxmox-specific error indicators\nconst hasProxmoxError = response.errors || response.error || (response.data === null && statusCode !== 204);\n\nconst success = !isError && !hasProxmoxError;\n\nif (!success) {\n  return [{\n    json: {\n      success: false,\n      error: true,\n      request_id: request.request_id,\n      integration: 'proxmox',\n      action: request.action,\n      status_code: statusCode,\n      message: response.errors || response.message || response.error || `HTTP ${statusCode} error`,\n      data: response,\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n    error: false,\n    request_id: request.request_id,\n    integration: 'proxmox',\n    action: request.action,\n    status_code: statusCode,\n    data: response.data || response,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "format-proxmox-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return error\nconst error = $input.item.json;\nreturn [{ json: error }];"
+      },
+      "id": "return-proxmox-error",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{"node": "Parse Proxmox Command", "type": "main", "index": 0}]]
+    },
+    "Parse Proxmox Command": {
+      "main": [[{"node": "Valid?", "type": "main", "index": 0}]]
+    },
+    "Valid?": {
+      "main": [
+        [{"node": "Call Proxmox API", "type": "main", "index": 0}],
+        [{"node": "Return Error", "type": "main", "index": 0}]
+      ]
+    },
+    "Call Proxmox API": {
+      "main": [[{"node": "Format Response", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [{
+    "id": "myca-ops",
+    "name": "MYCA Ops"
+  }],
+  "triggerCount": 0,
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "versionId": "1"
+}
