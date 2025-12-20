@@ -46,7 +46,7 @@ from mycosoft_mas.services.integration_service import IntegrationService
 from mycosoft_mas.core.knowledge_graph import KnowledgeGraph
 from mycosoft_mas.core.agent_registry import get_agent_registry
 from .security import get_current_user
-from .routers import agents, tasks, dashboard
+from .routers import agents, tasks, dashboard, integrations
 from .routers.agent_registry_api import router as agent_registry_router
 from .routers.agent_runner_api import router as agent_runner_router
 from .routers.notifications_api import router as notifications_router
@@ -194,6 +194,7 @@ class MycosoftMAS:
         self.app.include_router(agents)
         self.app.include_router(tasks)
         self.app.include_router(dashboard)
+        self.app.include_router(integrations)
         self.app.include_router(infrastructure_router)
         self.app.include_router(agent_registry_router)
         self.app.include_router(agent_runner_router)
@@ -866,8 +867,21 @@ class MycosoftMAS:
 
 def load_config():
     """Load configuration from file."""
-    with open("config/config.yaml", "r") as f:
-        return yaml.safe_load(f)
+    # Try multiple config paths
+    config_paths = [
+        Path("config.yaml"),
+        Path("config/config.yaml"),
+        Path(__file__).parent.parent.parent / "config.yaml",
+    ]
+    
+    for config_path in config_paths:
+        if config_path.exists():
+            with open(config_path, "r") as f:
+                return yaml.safe_load(f)
+    
+    # Return default config if none found
+    logger.warning("No config.yaml found, using default configuration")
+    return {}
 
 # Create MAS instance and expose app
 config = load_config()
