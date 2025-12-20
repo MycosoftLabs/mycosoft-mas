@@ -1,20 +1,37 @@
 {
-  "version": "1.0.0",
-  "last_updated": "2025-12-17",
-  "description": "MYCA Integration Registry - Minimal Version",
-  "integrations": [
-    {
-      "integration": "httpbin",
-      "display_name": "HTTPBin (Test)",
-      "category": "utility",
-      "native_node": false,
-      "auth_type": "none",
-      "base_url": "https://httpbin.org",
-      "default_actions": ["read"],
-      "risk": "read_only",
-      "confirm_required": false,
-      "enabled": true
+  "version": "2.0.0",
+  "last_updated": "2025-12-19",
+  "description": "MYCA Integration Registry - expanded coverage for native + HTTP fallback",
+  "categories": {
+    "ai": {
+      "name": "AI & ML"
     },
+    "comms": {
+      "name": "Communication"
+    },
+    "data_storage": {
+      "name": "Data & Storage"
+    },
+    "devtools": {
+      "name": "Developer Tools"
+    },
+    "productivity": {
+      "name": "Productivity"
+    },
+    "finance": {
+      "name": "Finance & Accounting"
+    },
+    "ops": {
+      "name": "Operations & Infrastructure"
+    },
+    "security": {
+      "name": "Cybersecurity"
+    },
+    "utility": {
+      "name": "Utility & Glue"
+    }
+  },
+  "integrations": [
     {
       "integration": "openai",
       "display_name": "OpenAI",
@@ -22,7 +39,175 @@
       "native_node": true,
       "auth_type": "api_key",
       "base_url": "https://api.openai.com/v1",
-      "default_actions": ["chat", "completion"],
+      "default_actions": [
+        "chat",
+        "embeddings",
+        "moderation"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "anthropic",
+      "display_name": "Anthropic",
+      "category": "ai",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.anthropic.com/v1",
+      "default_actions": [
+        "chat",
+        "summarize"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "google_gemini",
+      "display_name": "Google Gemini",
+      "category": "ai",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://generativelanguage.googleapis.com",
+      "default_actions": [
+        "chat",
+        "vision"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "huggingface",
+      "display_name": "Hugging Face",
+      "category": "ai",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api-inference.huggingface.co",
+      "default_actions": [
+        "inference",
+        "embeddings"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "cohere",
+      "display_name": "Cohere",
+      "category": "ai",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.cohere.ai",
+      "default_actions": [
+        "chat",
+        "embeddings"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "stability_ai",
+      "display_name": "Stability AI",
+      "category": "ai",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.stability.ai",
+      "default_actions": [
+        "image_generate"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "replicate",
+      "display_name": "Replicate",
+      "category": "ai",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.replicate.com",
+      "default_actions": [
+        "run_model"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "azure_openai",
+      "display_name": "Azure OpenAI",
+      "category": "ai",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://{resource}.openai.azure.com",
+      "default_actions": [
+        "chat",
+        "embeddings"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "pinecone",
+      "display_name": "Pinecone",
+      "category": "ai",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://controller.{env}.pinecone.io",
+      "default_actions": [
+        "index",
+        "query"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "weaviate",
+      "display_name": "Weaviate",
+      "category": "ai",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://your-weaviate-endpoint",
+      "default_actions": [
+        "query",
+        "upsert"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "slack",
+      "display_name": "Slack",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://slack.com/api",
+      "default_actions": [
+        "notify",
+        "post",
+        "thread"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "discord",
+      "display_name": "Discord",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "webhook",
+      "base_url": "https://discord.com/api",
+      "default_actions": [
+        "notify",
+        "post"
+      ],
       "risk": "write",
       "confirm_required": false,
       "enabled": true
@@ -34,7 +219,283 @@
       "native_node": true,
       "auth_type": "api_key",
       "base_url": "https://api.telegram.org",
-      "default_actions": ["send", "notify"],
+      "default_actions": [
+        "notify",
+        "post"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "twilio",
+      "display_name": "Twilio",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "basic",
+      "base_url": "https://api.twilio.com",
+      "default_actions": [
+        "sms",
+        "voice",
+        "notify"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "sendgrid",
+      "display_name": "SendGrid",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.sendgrid.com",
+      "default_actions": [
+        "email"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "gmail",
+      "display_name": "Gmail",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://gmail.googleapis.com",
+      "default_actions": [
+        "read",
+        "send"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "outlook365",
+      "display_name": "Outlook 365",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://graph.microsoft.com",
+      "default_actions": [
+        "read",
+        "send"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "zoom",
+      "display_name": "Zoom",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://api.zoom.us/v2",
+      "default_actions": [
+        "meeting",
+        "webinar",
+        "user"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "microsoft_teams",
+      "display_name": "Microsoft Teams",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://graph.microsoft.com",
+      "default_actions": [
+        "notify",
+        "chat"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "mailgun",
+      "display_name": "Mailgun",
+      "category": "comms",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.mailgun.net",
+      "default_actions": [
+        "email"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "github",
+      "display_name": "GitHub",
+      "category": "devtools",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://api.github.com",
+      "default_actions": [
+        "issue",
+        "pull",
+        "repo"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "gitlab",
+      "display_name": "GitLab",
+      "category": "devtools",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://gitlab.com/api/v4",
+      "default_actions": [
+        "issue",
+        "pipeline",
+        "project"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "bitbucket",
+      "display_name": "Bitbucket",
+      "category": "devtools",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://api.bitbucket.org/2.0",
+      "default_actions": [
+        "repo",
+        "issue"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "jira",
+      "display_name": "Jira",
+      "category": "devtools",
+      "native_node": true,
+      "auth_type": "basic",
+      "base_url": "https://your-domain.atlassian.net",
+      "default_actions": [
+        "issue",
+        "search",
+        "update"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "asana",
+      "display_name": "Asana",
+      "category": "devtools",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://app.asana.com/api/1.0",
+      "default_actions": [
+        "task",
+        "project"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "trello",
+      "display_name": "Trello",
+      "category": "devtools",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.trello.com/1",
+      "default_actions": [
+        "card",
+        "board"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "linear",
+      "display_name": "Linear",
+      "category": "devtools",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.linear.app",
+      "default_actions": [
+        "issue",
+        "project"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "circleci",
+      "display_name": "CircleCI",
+      "category": "devtools",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://circleci.com/api/v2",
+      "default_actions": [
+        "pipeline",
+        "workflow"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "azure_devops",
+      "display_name": "Azure DevOps",
+      "category": "devtools",
+      "native_node": false,
+      "auth_type": "basic",
+      "base_url": "https://dev.azure.com",
+      "default_actions": [
+        "work_item",
+        "build"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "datadog",
+      "display_name": "Datadog",
+      "category": "ops",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.datadoghq.com",
+      "default_actions": [
+        "metrics",
+        "events"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "sentry",
+      "display_name": "Sentry",
+      "category": "security",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://sentry.io/api",
+      "default_actions": [
+        "issue",
+        "event"
+      ],
       "risk": "write",
       "confirm_required": false,
       "enabled": true
@@ -46,12 +507,678 @@
       "native_node": true,
       "auth_type": "basic",
       "base_url": null,
-      "connection_string": "postgresql://user:pass@host:5432/dbname",
-      "default_actions": ["query", "insert", "update"],
+      "default_actions": [
+        "query",
+        "insert",
+        "update"
+      ],
       "risk": "admin",
       "confirm_required": true,
       "enabled": true,
-      "notes": "Native n8n node - no HTTP base_url needed. Uses n8n credential for connection."
+      "notes": "Uses n8n credential for connection."
+    },
+    {
+      "integration": "mysql",
+      "display_name": "MySQL",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "basic",
+      "base_url": null,
+      "default_actions": [
+        "query",
+        "insert",
+        "update"
+      ],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "mongodb",
+      "display_name": "MongoDB",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "basic",
+      "base_url": null,
+      "default_actions": [
+        "find",
+        "insert",
+        "update"
+      ],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "redis",
+      "display_name": "Redis",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "basic",
+      "base_url": null,
+      "default_actions": [
+        "get",
+        "set",
+        "publish"
+      ],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "google_sheets",
+      "display_name": "Google Sheets",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://sheets.googleapis.com",
+      "default_actions": [
+        "read",
+        "write"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "airtable",
+      "display_name": "Airtable",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.airtable.com",
+      "default_actions": [
+        "read",
+        "write"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "google_drive",
+      "display_name": "Google Drive",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://www.googleapis.com/drive/v3",
+      "default_actions": [
+        "read",
+        "write"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "aws_s3",
+      "display_name": "AWS S3",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://s3.amazonaws.com",
+      "default_actions": [
+        "read",
+        "write",
+        "list"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "gcs",
+      "display_name": "Google Cloud Storage",
+      "category": "data_storage",
+      "native_node": false,
+      "auth_type": "oauth2",
+      "base_url": "https://storage.googleapis.com",
+      "default_actions": [
+        "read",
+        "write",
+        "list"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "bigquery",
+      "display_name": "BigQuery",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://bigquery.googleapis.com",
+      "default_actions": [
+        "query",
+        "load"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "snowflake",
+      "display_name": "Snowflake",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "basic",
+      "base_url": null,
+      "default_actions": [
+        "query",
+        "load"
+      ],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "supabase",
+      "display_name": "Supabase",
+      "category": "data_storage",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://your-project.supabase.co",
+      "default_actions": [
+        "query",
+        "rpc"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "elasticsearch",
+      "display_name": "Elasticsearch",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "basic",
+      "base_url": "https://es.local",
+      "default_actions": [
+        "search",
+        "index"
+      ],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "kafka",
+      "display_name": "Kafka",
+      "category": "data_storage",
+      "native_node": true,
+      "auth_type": "none",
+      "base_url": null,
+      "default_actions": [
+        "publish",
+        "consume"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "stripe",
+      "display_name": "Stripe",
+      "category": "finance",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.stripe.com",
+      "default_actions": [
+        "charge",
+        "customer",
+        "refund"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "quickbooks",
+      "display_name": "QuickBooks Online",
+      "category": "finance",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://quickbooks.api.intuit.com",
+      "default_actions": [
+        "invoice",
+        "customer"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "xero",
+      "display_name": "Xero",
+      "category": "finance",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://api.xero.com",
+      "default_actions": [
+        "invoice",
+        "contact"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "square",
+      "display_name": "Square",
+      "category": "finance",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://connect.squareup.com",
+      "default_actions": [
+        "payment",
+        "customer"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "paypal",
+      "display_name": "PayPal",
+      "category": "finance",
+      "native_node": false,
+      "auth_type": "oauth2",
+      "base_url": "https://api.paypal.com",
+      "default_actions": [
+        "payment",
+        "payout"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "coinbase",
+      "display_name": "Coinbase",
+      "category": "finance",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.coinbase.com",
+      "default_actions": [
+        "account",
+        "transfer"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "coingecko",
+      "display_name": "CoinGecko",
+      "category": "finance",
+      "native_node": true,
+      "auth_type": "none",
+      "base_url": "https://api.coingecko.com/api/v3",
+      "default_actions": [
+        "prices",
+        "market"
+      ],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "wise",
+      "display_name": "Wise",
+      "category": "finance",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.transferwise.com",
+      "default_actions": [
+        "transfer",
+        "quote"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "plaid",
+      "display_name": "Plaid",
+      "category": "finance",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://sandbox.plaid.com",
+      "default_actions": [
+        "account",
+        "transaction"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "notion",
+      "display_name": "Notion",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://api.notion.com/v1",
+      "default_actions": [
+        "page",
+        "database"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "confluence",
+      "display_name": "Confluence",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "basic",
+      "base_url": "https://your-domain.atlassian.net/wiki",
+      "default_actions": [
+        "page",
+        "space"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "clickup",
+      "display_name": "ClickUp",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.clickup.com/api/v2",
+      "default_actions": [
+        "task",
+        "list"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "monday",
+      "display_name": "Monday.com",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.monday.com/v2",
+      "default_actions": [
+        "item",
+        "board"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "todoist",
+      "display_name": "Todoist",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.todoist.com/rest/v2",
+      "default_actions": [
+        "task",
+        "project"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "google_calendar",
+      "display_name": "Google Calendar",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://www.googleapis.com/calendar/v3",
+      "default_actions": [
+        "event",
+        "calendar"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "google_docs",
+      "display_name": "Google Docs",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://docs.googleapis.com",
+      "default_actions": [
+        "document",
+        "comment"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "google_tasks",
+      "display_name": "Google Tasks",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://tasks.googleapis.com",
+      "default_actions": [
+        "task",
+        "list"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "dropbox",
+      "display_name": "Dropbox",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://api.dropboxapi.com/2",
+      "default_actions": [
+        "file",
+        "folder"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "box",
+      "display_name": "Box",
+      "category": "productivity",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://api.box.com/2.0",
+      "default_actions": [
+        "file",
+        "folder"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "httpbin",
+      "display_name": "HTTPBin (Test)",
+      "category": "utility",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://httpbin.org",
+      "default_actions": [
+        "read"
+      ],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "webhook_proxy",
+      "display_name": "Webhook Relay",
+      "category": "utility",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://webhook.site",
+      "default_actions": [
+        "notify",
+        "inspect"
+      ],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "cron",
+      "display_name": "Cron Trigger",
+      "category": "utility",
+      "native_node": true,
+      "auth_type": "none",
+      "base_url": null,
+      "default_actions": [
+        "trigger"
+      ],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "code_runner",
+      "display_name": "Code Runner",
+      "category": "utility",
+      "native_node": true,
+      "auth_type": "none",
+      "base_url": null,
+      "default_actions": [
+        "execute"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "ipinfo",
+      "display_name": "ipinfo.io",
+      "category": "utility",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://ipinfo.io",
+      "default_actions": [
+        "lookup"
+      ],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "splunk",
+      "display_name": "Splunk HEC",
+      "category": "security",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://splunk.local",
+      "default_actions": [
+        "log",
+        "search"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "okta",
+      "display_name": "Okta",
+      "category": "security",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://your-domain.okta.com",
+      "default_actions": [
+        "user",
+        "group",
+        "policy"
+      ],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "auth0",
+      "display_name": "Auth0",
+      "category": "security",
+      "native_node": true,
+      "auth_type": "oauth2",
+      "base_url": "https://your-tenant.auth0.com",
+      "default_actions": [
+        "user",
+        "client"
+      ],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "snyk",
+      "display_name": "Snyk",
+      "category": "security",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://api.snyk.io",
+      "default_actions": [
+        "scan",
+        "project"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "crowdstrike",
+      "display_name": "CrowdStrike Falcon",
+      "category": "security",
+      "native_node": false,
+      "auth_type": "oauth2",
+      "base_url": "https://api.crowdstrike.com",
+      "default_actions": [
+        "detect",
+        "response"
+      ],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "securityscorecard",
+      "display_name": "SecurityScorecard",
+      "category": "security",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.securityscorecard.io",
+      "default_actions": [
+        "score",
+        "monitor"
+      ],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "thehive",
+      "display_name": "TheHive",
+      "category": "security",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://thehive.local",
+      "default_actions": [
+        "case",
+        "alert"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
     },
     {
       "integration": "proxmox",
@@ -60,18 +1187,135 @@
       "native_node": false,
       "auth_type": "api_key",
       "base_url": "https://proxmox.local:8006/api2/json",
-      "default_actions": ["inventory", "snapshot", "vm_list"],
+      "default_actions": [
+        "inventory",
+        "snapshot",
+        "vm_list"
+      ],
       "risk": "admin",
       "confirm_required": true,
       "enabled": true,
-      "metadata": {"myca_ops": true}
+      "metadata": {
+        "myca_ops": true
+      }
+    },
+    {
+      "integration": "unifi",
+      "display_name": "UniFi Network",
+      "category": "ops",
+      "native_node": false,
+      "auth_type": "basic",
+      "base_url": "https://unifi.local",
+      "default_actions": [
+        "topology",
+        "vlan",
+        "clients"
+      ],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true,
+      "metadata": {
+        "myca_ops": true
+      }
+    },
+    {
+      "integration": "grafana",
+      "display_name": "Grafana",
+      "category": "ops",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://grafana.local/api",
+      "default_actions": [
+        "query",
+        "annotate"
+      ],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "prometheus",
+      "display_name": "Prometheus",
+      "category": "ops",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "http://prometheus:9090",
+      "default_actions": [
+        "query",
+        "alert"
+      ],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "rundeck",
+      "display_name": "Rundeck",
+      "category": "ops",
+      "native_node": true,
+      "auth_type": "api_key",
+      "base_url": "https://rundeck.local/api/35",
+      "default_actions": [
+        "job_run",
+        "job_status"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true
+    },
+    {
+      "integration": "nas_backup",
+      "display_name": "NAS Backup",
+      "category": "ops",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "http://nas.local",
+      "default_actions": [
+        "backup",
+        "verify"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true,
+      "metadata": {
+        "myca_ops": true
+      }
+    },
+    {
+      "integration": "gpu_runner",
+      "display_name": "GPU Runner",
+      "category": "ops",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "http://gpu-runner.local",
+      "default_actions": [
+        "job",
+        "status"
+      ],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true,
+      "metadata": {
+        "myca_ops": true
+      }
+    },
+    {
+      "integration": "uart_ingest",
+      "display_name": "UART Ingest",
+      "category": "ops",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "http://uart-ingest.local",
+      "default_actions": [
+        "read",
+        "alert"
+      ],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {
+        "myca_ops": true
+      }
     }
-  ],
-  "categories": {
-    "ai": {"name": "AI & Machine Learning"},
-    "comms": {"name": "Communication"},
-    "data_storage": {"name": "Data & Storage"},
-    "ops": {"name": "Operations & Infrastructure"},
-    "utility": {"name": "Utility"}
-  }
+  ]
 }
