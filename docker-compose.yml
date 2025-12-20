@@ -27,6 +27,9 @@ services:
       NOTION_API_KEY: ${NOTION_API_KEY:-}
       NOTION_DATABASE_ID: ${NOTION_DATABASE_ID:-}
       N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://host.docker.internal:5678}
+      TTS_URL: ${TTS_URL:-http://elevenlabs-proxy:8000}
+      WHISPER_URL: ${WHISPER_URL:-http://whisper:8000}
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       PYTHONPATH: /app
     volumes:
       - ./logs:/app/logs
