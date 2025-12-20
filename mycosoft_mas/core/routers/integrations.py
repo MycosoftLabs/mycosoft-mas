@@ -43,7 +43,8 @@ async def _check_url_health(name: str, url: str, timeout: float = 5.0) -> Dict[s
                 "url": url,
                 "timestamp": datetime.utcnow().isoformat()
             }
-    except asyncio.TimeoutError:
+    except httpx.TimeoutException:
+        # httpx raises TimeoutException, not asyncio.TimeoutError
         return {
             "name": name,
             "status": "unhealthy",
@@ -135,7 +136,7 @@ async def natureos_health():
 async def website_health():
     """Check Website integration health."""
     url = os.getenv("WEBSITE_API_URL")
-    return await _check_url_health("WEBSITE", url if url else None)
+    return await _check_url_health("WEBSITE", f"{url}/health" if url else None)
 
 
 @router.get("/notion/health")
