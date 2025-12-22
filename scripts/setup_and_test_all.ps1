@@ -98,5 +98,5 @@ Write-Host "     .\scripts\test_integrations.ps1" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  4. Start dashboard:" -ForegroundColor White
 Write-Host "     cd unifi-dashboard" -ForegroundColor Gray
-Write-Host "     npm run dev" -ForegroundColor Gray
+Write-Host '     npm run dev' -ForegroundColor Gray
 Write-Host ""
