@@ -1,0 +1,173 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.612Z",
+    "createdAt":  "2025-12-20T07:28:10.612Z",
+    "id":  "Qk7ixscBe8gfkmWi",
+    "name":  "Speech: Transcribe Only",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "myca/speech/transcribe",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "webhook-trigger",
+                      "name":  "Webhook: Transcribe Request",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       250,
+                                       300
+                                   ],
+                      "webhookId":  "speech-transcribe"
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "={{ $env.WHISPER_URL || \u0027http://whisper:8000\u0027 }}/v1/audio/transcriptions",
+                                         "authentication":  "none",
+                                         "sendBody":  true,
+                                         "contentType":  "multipart-form-data",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "file",
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "inputDataFieldName":  "data"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "model",
+                                                                                       "value":  "Systran/faster-whisper-base.en"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "response_format",
+                                                                                       "value":  "json"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "whisper-stt",
+                      "name":  "Whisper: Speech to Text",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       450,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ {\n  status: \u0027success\u0027,\n  transcript: $json.text || $json.transcript || \u0027\u0027,\n  language: $json.language || \u0027en\u0027,\n  timestamp: $now.toISO()\n} }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "respond-json",
+                      "name":  "Respond with Transcript",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       650,
+                                       300
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "webhook-trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "whisper-stt",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "whisper-stt":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "respond-json",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "5753707f-fbf6-4d4e-9768-32abac01ed27",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.613Z",
+                       "createdAt":  "2025-12-20T07:28:10.613Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "Qk7ixscBe8gfkmWi",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

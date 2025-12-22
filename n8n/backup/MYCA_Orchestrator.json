@@ -1,0 +1,313 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.402Z",
+    "createdAt":  "2025-12-20T07:28:10.402Z",
+    "id":  "hERA4gpJ2poI3tAE",
+    "name":  "MYCA Orchestrator",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "myca/orchestrator",
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "wh",
+                      "name":  "Webhook",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       200,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// MYCA Orchestrator - Parse and route commands\nconst body = $input.item.json.body || $input.item.json;\n\n// Extract command info\nconst text = body.text || body.message || body.query || body.command || \u0027\u0027;\nconst audio = $input.item.binary?.data;\nconst action = body.action || \u0027chat\u0027;\n\n// Determine intent from action or keywords\nlet intent = action;\nif (text) {\n  const lowerText = text.toLowerCase();\n  if (lowerText.includes(\u0027agent\u0027) || lowerText.includes(\u0027worker\u0027)) intent = \u0027agent_management\u0027;\n  else if (lowerText.includes(\u0027system\u0027) || lowerText.includes(\u0027health\u0027) || lowerText.includes(\u0027status\u0027)) intent = \u0027system_status\u0027;\n  else if (lowerText.includes(\u0027network\u0027) || lowerText.includes(\u0027server\u0027) || lowerText.includes(\u0027proxmox\u0027) || lowerText.includes(\u0027unifi\u0027)) intent = \u0027infrastructure\u0027;\n  else if (lowerText.includes(\u0027task\u0027) || lowerText.includes(\u0027job\u0027) || lowerText.includes(\u0027execute\u0027)) intent = \u0027task_execution\u0027;\n  else intent = \u0027chat\u0027;\n}\n\nreturn {\n  intent,\n  text,\n  has_audio: !!audio,\n  request_id: body.request_id || `req_${Date.now()}`,\n  user_id: body.user_id || \u0027anonymous\u0027,\n  timestamp: new Date().toISOString(),\n  raw_body: body\n};"
+                                     },
+                      "id":  "parse",
+                      "name":  "Parse Request",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       400,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "http://mas-orchestrator:8000/api/v1/chat",
+                                         "authentication":  "none",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { message: $json.text, user_id: $json.user_id, context: { intent: $json.intent, request_id: $json.request_id } } }}",
+                                         "options":  {
+                                                         "timeout":  60000
+                                                     }
+                                     },
+                      "id":  "mas-chat",
+                      "name":  "MAS Chat API",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       600,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Format response from MAS\nconst masResponse = $input.item.json;\nconst prevData = $(\u0027Parse Request\u0027).first().json;\n\nlet response_text = \u0027\u0027;\nlet data = null;\n\nif (masResponse.response) {\n  response_text = masResponse.response;\n} else if (masResponse.message) {\n  response_text = masResponse.message;\n} else if (masResponse.error) {\n  response_text = `Error: ${masResponse.error}`;\n} else {\n  response_text = JSON.stringify(masResponse);\n}\n\nreturn {\n  status: \u0027success\u0027,\n  request_id: prevData.request_id,\n  intent: prevData.intent,\n  transcript: prevData.text,\n  response_text,\n  data: masResponse.data || null,\n  timestamp: new Date().toISOString()\n};"
+                                     },
+                      "id":  "format-resp",
+                      "name":  "Format Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       800,
+                                       300
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "wh":  {
+                                   "main":  [
+                                                [
+                                                    {
+                                                        "node":  "parse",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ]
+                                            ]
+                               },
+                        "parse":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "mas-chat",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "mas-chat":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "format-resp",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "9004f94d-a0e3-452e-af64-9e5c5275238d",
+    "activeVersionId":  "9004f94d-a0e3-452e-af64-9e5c5275238d",
+    "versionCounter":  4,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.403Z",
+                       "createdAt":  "2025-12-20T07:28:10.403Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "hERA4gpJ2poI3tAE",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2025-12-20T07:28:10.408Z",
+                          "createdAt":  "2025-12-20T07:28:10.408Z",
+                          "versionId":  "9004f94d-a0e3-452e-af64-9e5c5275238d",
+                          "workflowId":  "hERA4gpJ2poI3tAE",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "myca/orchestrator",
+                                                               "responseMode":  "lastNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "wh",
+                                            "name":  "Webhook",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  1.1,
+                                            "position":  [
+                                                             200,
+                                                             300
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// MYCA Orchestrator - Parse and route commands\nconst body = $input.item.json.body || $input.item.json;\n\n// Extract command info\nconst text = body.text || body.message || body.query || body.command || \u0027\u0027;\nconst audio = $input.item.binary?.data;\nconst action = body.action || \u0027chat\u0027;\n\n// Determine intent from action or keywords\nlet intent = action;\nif (text) {\n  const lowerText = text.toLowerCase();\n  if (lowerText.includes(\u0027agent\u0027) || lowerText.includes(\u0027worker\u0027)) intent = \u0027agent_management\u0027;\n  else if (lowerText.includes(\u0027system\u0027) || lowerText.includes(\u0027health\u0027) || lowerText.includes(\u0027status\u0027)) intent = \u0027system_status\u0027;\n  else if (lowerText.includes(\u0027network\u0027) || lowerText.includes(\u0027server\u0027) || lowerText.includes(\u0027proxmox\u0027) || lowerText.includes(\u0027unifi\u0027)) intent = \u0027infrastructure\u0027;\n  else if (lowerText.includes(\u0027task\u0027) || lowerText.includes(\u0027job\u0027) || lowerText.includes(\u0027execute\u0027)) intent = \u0027task_execution\u0027;\n  else intent = \u0027chat\u0027;\n}\n\nreturn {\n  intent,\n  text,\n  has_audio: !!audio,\n  request_id: body.request_id || `req_${Date.now()}`,\n  user_id: body.user_id || \u0027anonymous\u0027,\n  timestamp: new Date().toISOString(),\n  raw_body: body\n};"
+                                                           },
+                                            "id":  "parse",
+                                            "name":  "Parse Request",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             400,
+                                                             300
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "url":  "http://mas-orchestrator:8000/api/v1/chat",
+                                                               "authentication":  "none",
+                                                               "sendHeaders":  true,
+                                                               "headerParameters":  {
+                                                                                        "parameters":  [
+                                                                                                           {
+                                                                                                               "name":  "Content-Type",
+                                                                                                               "value":  "application/json"
+                                                                                                           }
+                                                                                                       ]
+                                                                                    },
+                                                               "sendBody":  true,
+                                                               "specifyBody":  "json",
+                                                               "jsonBody":  "={{ { message: $json.text, user_id: $json.user_id, context: { intent: $json.intent, request_id: $json.request_id } } }}",
+                                                               "options":  {
+                                                                               "timeout":  60000
+                                                                           }
+                                                           },
+                                            "id":  "mas-chat",
+                                            "name":  "MAS Chat API",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.2,
+                                            "position":  [
+                                                             600,
+                                                             300
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Format response from MAS\nconst masResponse = $input.item.json;\nconst prevData = $(\u0027Parse Request\u0027).first().json;\n\nlet response_text = \u0027\u0027;\nlet data = null;\n\nif (masResponse.response) {\n  response_text = masResponse.response;\n} else if (masResponse.message) {\n  response_text = masResponse.message;\n} else if (masResponse.error) {\n  response_text = `Error: ${masResponse.error}`;\n} else {\n  response_text = JSON.stringify(masResponse);\n}\n\nreturn {\n  status: \u0027success\u0027,\n  request_id: prevData.request_id,\n  intent: prevData.intent,\n  transcript: prevData.text,\n  response_text,\n  data: masResponse.data || null,\n  timestamp: new Date().toISOString()\n};"
+                                                           },
+                                            "id":  "format-resp",
+                                            "name":  "Format Response",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             800,
+                                                             300
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "wh":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "parse",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                                              "parse":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "mas-chat",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                                              "mas-chat":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "format-resp",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           }
+                                          },
+                          "authors":  "Morgan Mycosoft",
+                          "name":  null,
+                          "description":  null,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2025-12-20T07:28:35.247Z",
+                                                             "id":  7,
+                                                             "workflowId":  "hERA4gpJ2poI3tAE",
+                                                             "versionId":  "9004f94d-a0e3-452e-af64-9e5c5275238d",
+                                                             "event":  "activated",
+                                                             "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34"
+                                                         }
+                                                     ]
+                      }
+}

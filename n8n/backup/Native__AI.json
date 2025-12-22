@@ -1,0 +1,338 @@
+{
+    "updatedAt":  "2025-12-20T07:28:09.401Z",
+    "createdAt":  "2025-12-20T07:28:09.401Z",
+    "id":  "PqNPzr19PjlelCZ9",
+    "name":  "Native: AI",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "ai-trigger",
+                      "name":  "Execute Workflow Trigger",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       240,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Route to specific AI integration\nconst input = $input.item.json;\nconst integrationName = input.integration.integration;\n\nreturn [{\n  json: {\n    ...input,\n    routing_node: integrationName\n  }\n}];"
+                                     },
+                      "id":  "ai-router",
+                      "name":  "AI Router",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       460,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "openai",
+                                                                                     "name":  "=openai",
+                                                                                     "value":  "={{ $json.routing_node === \u0027openai\u0027 }}",
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "anthropic",
+                                                                                     "name":  "=anthropic",
+                                                                                     "value":  "={{ $json.routing_node === \u0027anthropic\u0027 }}",
+                                                                                     "type":  "boolean"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "gemini",
+                                                                                     "name":  "=gemini",
+                                                                                     "value":  "={{ $json.routing_node === \u0027google_gemini\u0027 }}",
+                                                                                     "type":  "boolean"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "ai-switch-prep",
+                      "name":  "Prepare Switch",
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.3,
+                      "position":  [
+                                       680,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "dataType":  "boolean",
+                                         "value1":  "={{ $json.openai }}",
+                                         "rules":  {
+                                                       "rules":  [
+                                                                     {
+                                                                         "value2":  true,
+                                                                         "output":  0
+                                                                     }
+                                                                 ]
+                                                   },
+                                         "fallbackOutput":  3
+                                     },
+                      "id":  "ai-switch",
+                      "name":  "Switch: AI Provider",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3,
+                      "position":  [
+                                       900,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "text",
+                                         "operation":  "message",
+                                         "modelId":  "gpt-4",
+                                         "messages":  {
+                                                          "values":  [
+                                                                         {
+                                                                             "role":  "user",
+                                                                             "content":  "={{ $(\u0027Execute Workflow Trigger\u0027).item.json.command.params.prompt || \u0027Hello\u0027 }}"
+                                                                         }
+                                                                     ]
+                                                      },
+                                         "options":  {
+                                                         "temperature":  0.7,
+                                                         "maxTokens":  1000
+                                                     }
+                                     },
+                      "id":  "openai-node",
+                      "name":  "OpenAI",
+                      "type":  "n8n-nodes-base.openAi",
+                      "typeVersion":  1.3,
+                      "position":  [
+                                       1120,
+                                       100
+                                   ],
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "name":  "OpenAI"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "prompt":  "={{ $(\u0027Execute Workflow Trigger\u0027).item.json.command.params.prompt || \u0027Hello\u0027 }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "anthropic-node",
+                      "name":  "Anthropic",
+                      "type":  "n8n-nodes-base.anthropic",
+                      "typeVersion":  1,
+                      "position":  [
+                                       1120,
+                                       300
+                                   ],
+                      "credentials":  {
+                                          "anthropicApi":  {
+                                                               "name":  "Anthropic"
+                                                           }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Generic AI handler for other providers\nconst input = $input.item.json;\nreturn [{\n  json: {\n    error: true,\n    message: `AI provider ${input.routing_node} not yet implemented`,\n    request_id: input.request_id\n  }\n}];"
+                                     },
+                      "id":  "ai-fallback",
+                      "name":  "AI Fallback",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1120,
+                                       500
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Format AI response\nconst input = $(\u0027Execute Workflow Trigger\u0027).item.json;\nconst result = $input.item.json;\n\nreturn [{\n  json: {\n    success: !result.error,\n    request_id: input.request_id,\n    integration: input.integration.integration,\n    action: input.command.action,\n    result: result,\n    timestamp: new Date().toISOString()\n  }\n}];"
+                                     },
+                      "id":  "format-response",
+                      "name":  "Format Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1560,
+                                       300
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Execute Workflow Trigger":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "AI Router",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "AI Router":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Prepare Switch",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Prepare Switch":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Switch: AI Provider",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Switch: AI Provider":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "OpenAI",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ],
+                                                                 [
+                                                                     {
+                                                                         "node":  "Anthropic",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ],
+                                                                 [
+
+                                                                 ],
+                                                                 [
+                                                                     {
+                                                                         "node":  "AI Fallback",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "OpenAI":  {
+                                       "main":  [
+                                                    [
+                                                        {
+                                                            "node":  "Format Response",
+                                                            "type":  "main",
+                                                            "index":  0
+                                                        }
+                                                    ]
+                                                ]
+                                   },
+                        "Anthropic":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Format Response",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "AI Fallback":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Format Response",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "0f4e5b60-b099-464a-bd62-471ae498db90",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:09.403Z",
+                       "createdAt":  "2025-12-20T07:28:09.403Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "PqNPzr19PjlelCZ9",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

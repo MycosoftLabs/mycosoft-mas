@@ -94,6 +94,13 @@ Open your browser:
    - `01b_myca_event_intake.json` (entrypoint)
    - `02_router_integration_dispatch.json` (core router)
    - `03_native_ai.json` (AI category)
+   - `04_native_comms.json` (communications)
+   - `05_native_devtools.json` (developer tools)
+   - `06_native_data_storage.json` (data & storage)
+   - `07_native_finance.json` (finance)
+   - `08_native_productivity.json` (productivity)
+   - `09_native_utility.json` (utility/glue)
+   - `10_native_security.json` (cybersecurity)
    - `13_generic_connector.json` (generic HTTP)
    - `14_audit_logger.json` (audit logging)
    - `20_ops_proxmox.json` through `24_ops_uart_ingest.json` (Ops workflows)
@@ -146,17 +153,18 @@ curl -X POST http://localhost:5678/webhook/myca/event `
 
 ## Integration Registry
 
-The heart of the system is `/registry/integration_registry.json`, which defines 60+ integrations including:
+The heart of the system is `/registry/integration_registry.json`, which defines 80+ integrations including:
 
 **Categories:**
-- **AI**: OpenAI, Anthropic, Google Gemini
-- **Communication**: Slack, Telegram, Discord, Gmail, Twilio
-- **Data & Storage**: Postgres, MongoDB, Redis, Google Sheets, Airtable
-- **Developer Tools**: GitHub, GitLab, Jira, Linear, Asana
-- **Finance**: Stripe, QuickBooks, Wise, CoinGecko
-- **Operations**: Proxmox, UniFi, Grafana, PagerDuty, Splunk, Sentry
-- **Productivity**: Notion, Google Docs/Calendar, Trello
-- **Web & Social**: Shopify, LinkedIn, Medium, Webflow
+- **AI**: OpenAI, Anthropic, Google Gemini, Cohere, Hugging Face, Pinecone
+- **Communication**: Slack, Telegram, Discord, Gmail, Twilio, SendGrid
+- **Data & Storage**: Postgres, MongoDB, Redis, Google Sheets/Drive, Airtable, S3/GCS
+- **Developer Tools**: GitHub, GitLab, Jira, Asana, Trello, CircleCI
+- **Finance**: Stripe, QuickBooks, Xero, Square, Wise, CoinGecko
+- **Operations**: Proxmox, UniFi, Grafana, Prometheus, Rundeck, GPU/UART/NAS
+- **Cybersecurity**: Splunk, Okta, Snyk, Auth0, SecurityScorecard
+- **Productivity**: Notion, Google Docs/Calendar/Tasks, Airtable
+- **Utility/Glue**: HTTP Request, Code Runner, Cron, Webhook relay
 
 ### Adding a New Integration
 
