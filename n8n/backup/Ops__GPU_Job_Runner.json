@@ -1,0 +1,191 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.213Z",
+    "createdAt":  "2025-12-20T07:28:10.213Z",
+    "id":  "QSti3YpueJlLs45k",
+    "name":  "Ops: GPU Job Runner",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "gpu-trigger",
+                      "name":  "Execute Workflow Trigger",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       240,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Parse GPU job command\nconst input = $input.item.json;\nconst command = input.command || {};\nconst params = command.params || {};\n\nconst jobRequest = {\n  job_type: params.job_type || \u0027inference\u0027,\n  model: params.model || \u0027default\u0027,\n  input_data: params.input_data || {},\n  priority: params.priority || \u0027normal\u0027,\n  request_id: command.request_id,\n  submitted_by: command.actor,\n  submitted_at: new Date().toISOString()\n};\n\nreturn [{\n  json: {\n    job: jobRequest,\n    action: command.action,\n    request_id: command.request_id,\n    gpu_endpoint: input.integration.base_url || \u0027http://localhost:9000/api\u0027\n  }\n}];"
+                                     },
+                      "id":  "prepare-gpu-job",
+                      "name":  "Prepare GPU Job",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       460,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "method":  "POST",
+                                         "url":  "={{ $json.gpu_endpoint }}/jobs",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "X-Request-ID",
+                                                                                         "value":  "={{ $json.request_id }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ JSON.stringify($json.job) }}",
+                                         "options":  {
+                                                         "timeout":  5000
+                                                     }
+                                     },
+                      "id":  "submit-gpu-job",
+                      "name":  "Submit GPU Job",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.1,
+                      "position":  [
+                                       680,
+                                       300
+                                   ],
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "name":  "GPU Runner API Key"
+                                                             }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Format GPU job response\nconst request = $(\u0027Prepare GPU Job\u0027).item.json;\nconst response = $input.item.json;\n\nreturn [{\n  json: {\n    success: true,\n    request_id: request.request_id,\n    integration: \u0027myca_gpu_runner\u0027,\n    action: request.action,\n    data: {\n      job_id: response.job_id || response.id,\n      status: response.status || \u0027queued\u0027,\n      submitted_at: request.job.submitted_at\n    },\n    timestamp: new Date().toISOString()\n  }\n}];"
+                                     },
+                      "id":  "format-gpu-response",
+                      "name":  "Format Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       900,
+                                       300
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Execute Workflow Trigger":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Prepare GPU Job",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Prepare GPU Job":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Submit GPU Job",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Submit GPU Job":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Format Response",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "27126fad-02f7-4466-82ff-fcd6036ee4ef",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.214Z",
+                       "createdAt":  "2025-12-20T07:28:10.214Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "QSti3YpueJlLs45k",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

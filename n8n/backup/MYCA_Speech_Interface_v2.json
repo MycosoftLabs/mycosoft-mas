@@ -1,0 +1,517 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.568Z",
+    "createdAt":  "2025-12-20T07:28:10.568Z",
+    "id":  "qJawQUDE3Mr9KRUT",
+    "name":  "MYCA Speech Interface v2",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "myca/speech/v2",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "webhook-trigger",
+                      "name":  "Webhook Input",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       250,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Parse input and determine request type\nconst body = $input.item.json.body || $input.item.json;\nconst binary = $input.item.binary;\n\n// Check if this is a health check\nif (body.health_check || body.test) {\n  return {\n    mode: \u0027health_check\u0027,\n    message: \u0027MYCA Speech Interface is operational\u0027,\n    timestamp: new Date().toISOString()\n  };\n}\n\n// Check for text-only request\nconst textInput = body.text || body.message || body.query;\nif (textInput) {\n  return {\n    mode: \u0027text_chat\u0027,\n    text: textInput,\n    want_audio: body.want_audio !== false,\n    conversation_id: body.conversation_id || `conv_${Date.now()}`,\n    timestamp: new Date().toISOString()\n  };\n}\n\n// Check for audio input\nif (binary \u0026\u0026 binary.data) {\n  return {\n    mode: \u0027speech\u0027,\n    has_audio: true,\n    want_audio: body.want_audio !== false,\n    conversation_id: body.conversation_id || `conv_${Date.now()}`,\n    timestamp: new Date().toISOString()\n  };\n}\n\n// No valid input\nreturn {\n  mode: \u0027error\u0027,\n  error: \u0027No audio file or text provided. Send audio via multipart/form-data or JSON with text field.\u0027,\n  timestamp: new Date().toISOString()\n};"
+                                     },
+                      "id":  "parse-input",
+                      "name":  "Parse Input",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       450,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "combinator":  "and",
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "1",
+                                                                                                                    "leftValue":  "={{ $json.mode }}",
+                                                                                                                    "rightValue":  "health_check",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Health Check"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "combinator":  "and",
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "2",
+                                                                                                                    "leftValue":  "={{ $json.mode }}",
+                                                                                                                    "rightValue":  "text_chat",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Text Chat"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "combinator":  "and",
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "3",
+                                                                                                                    "leftValue":  "={{ $json.mode }}",
+                                                                                                                    "rightValue":  "speech",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Speech"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "combinator":  "and",
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "4",
+                                                                                                                    "leftValue":  "={{ $json.mode }}",
+                                                                                                                    "rightValue":  "error",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ]
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Error"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "router",
+                      "name":  "Route by Mode",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       650,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ { status: \u0027ok\u0027, message: $json.message, timestamp: $json.timestamp, services: { whisper: \u0027http://whisper:8000\u0027, litellm: \u0027http://litellm:4000\u0027, tts: \u0027http://openedai-speech:8000\u0027 } } }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "health-response",
+                      "name":  "Health Response",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       900,
+                                       100
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "http://litellm:4000/v1/chat/completions",
+                                         "authentication":  "none",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { \"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"system\", \"content\": \"You are MYCA, the Mycosoft AI assistant. Be helpful, concise, and conversational. Keep responses under 100 words for voice.\"}, {\"role\": \"user\", \"content\": $json.text}], \"max_tokens\": 300, \"temperature\": 0.7 } }}",
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "llm-text",
+                      "name":  "LLM Chat",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       900,
+                                       250
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Extract LLM response\nconst llmResponse = $input.item.json;\nconst prevData = $(\u0027Parse Input\u0027).first().json;\nconst responseText = llmResponse.choices?.[0]?.message?.content || \u0027I understand. How can I help you?\u0027;\n\nreturn {\n  status: \u0027success\u0027,\n  mode: prevData.mode,\n  transcript: prevData.text,\n  response_text: responseText.trim(),\n  model_used: llmResponse.model || \u0027gpt-4o-mini\u0027,\n  want_audio: prevData.want_audio,\n  conversation_id: prevData.conversation_id,\n  timestamp: prevData.timestamp\n};"
+                                     },
+                      "id":  "extract-llm",
+                      "name":  "Extract LLM Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1100,
+                                       250
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "http://whisper:8000/v1/audio/transcriptions",
+                                         "authentication":  "none",
+                                         "sendBody":  true,
+                                         "contentType":  "multipart-form-data",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "file",
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "inputDataFieldName":  "data"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "model",
+                                                                                       "value":  "Systran/faster-whisper-base.en"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "response_format",
+                                                                                       "value":  "json"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "whisper-stt",
+                      "name":  "Whisper STT",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       900,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Extract transcript and prepare for LLM\nconst whisperResponse = $input.item.json;\nconst prevData = $(\u0027Parse Input\u0027).first().json;\nconst transcript = whisperResponse.text || \u0027\u0027;\n\nreturn {\n  text: transcript.trim(),\n  want_audio: prevData.want_audio,\n  conversation_id: prevData.conversation_id,\n  timestamp: prevData.timestamp,\n  mode: \u0027speech\u0027\n};"
+                                     },
+                      "id":  "extract-transcript",
+                      "name":  "Extract Transcript",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1100,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "http://litellm:4000/v1/chat/completions",
+                                         "authentication":  "none",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { \"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"system\", \"content\": \"You are MYCA, the Mycosoft AI assistant. Be helpful, concise, and conversational. Keep responses under 100 words for voice.\"}, {\"role\": \"user\", \"content\": $json.text}], \"max_tokens\": 300, \"temperature\": 0.7 } }}",
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "llm-speech",
+                      "name":  "LLM Process Speech",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1300,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Extract LLM response for speech mode\nconst llmResponse = $input.item.json;\nconst prevData = $(\u0027Extract Transcript\u0027).first().json;\nconst responseText = llmResponse.choices?.[0]?.message?.content || \u0027I understand. How can I help you?\u0027;\n\nreturn {\n  status: \u0027success\u0027,\n  mode: \u0027speech\u0027,\n  transcript: prevData.text,\n  response_text: responseText.trim(),\n  model_used: llmResponse.model || \u0027gpt-4o-mini\u0027,\n  want_audio: prevData.want_audio,\n  conversation_id: prevData.conversation_id,\n  timestamp: prevData.timestamp\n};"
+                                     },
+                      "id":  "extract-speech-llm",
+                      "name":  "Extract Speech LLM",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1500,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ { status: \u0027error\u0027, error: $json.error, timestamp: $json.timestamp, hint: \u0027Send audio via multipart/form-data or include text field in JSON body\u0027 } }}",
+                                         "options":  {
+                                                         "responseCode":  "400"
+                                                     }
+                                     },
+                      "id":  "error-response",
+                      "name":  "Error Response",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       900,
+                                       550
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ { status: $json.status, mode: $json.mode, conversation_id: $json.conversation_id, transcript: $json.transcript, response_text: $json.response_text, model_used: $json.model_used, timestamp: $json.timestamp } }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "success-response",
+                      "name":  "Success Response",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       1700,
+                                       325
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "webhook-trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "parse-input",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "parse-input":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "router",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "router":  {
+                                       "main":  [
+                                                    [
+                                                        {
+                                                            "node":  "health-response",
+                                                            "type":  "main",
+                                                            "index":  0
+                                                        }
+                                                    ],
+                                                    [
+                                                        {
+                                                            "node":  "llm-text",
+                                                            "type":  "main",
+                                                            "index":  0
+                                                        }
+                                                    ],
+                                                    [
+                                                        {
+                                                            "node":  "whisper-stt",
+                                                            "type":  "main",
+                                                            "index":  0
+                                                        }
+                                                    ],
+                                                    [
+                                                        {
+                                                            "node":  "error-response",
+                                                            "type":  "main",
+                                                            "index":  0
+                                                        }
+                                                    ]
+                                                ]
+                                   },
+                        "llm-text":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "extract-llm",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "extract-llm":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "success-response",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "whisper-stt":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "extract-transcript",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "extract-transcript":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "llm-speech",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "llm-speech":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "extract-speech-llm",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "extract-speech-llm":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "success-response",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "3f600c51-5c77-4658-9a87-02c8d76b002d",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.569Z",
+                       "createdAt":  "2025-12-20T07:28:10.569Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "qJawQUDE3Mr9KRUT",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

@@ -1,0 +1,235 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.154Z",
+    "createdAt":  "2025-12-20T07:28:10.154Z",
+    "id":  "g73BMs86koqgvO0x",
+    "name":  "Ops: UniFi Control",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "unifi-trigger",
+                      "name":  "Execute Workflow Trigger",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       240,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Parse UniFi command\nconst input = $input.item.json;\nconst command = input.command || {};\nconst action = command.action;\n\n// Map actions to UniFi API endpoints\nconst actionMap = {\n  \u0027topology\u0027: { method: \u0027GET\u0027, endpoint: \u0027/stat/device\u0027, risk: \u0027read\u0027 },\n  \u0027clients\u0027: { method: \u0027GET\u0027, endpoint: \u0027/stat/sta\u0027, risk: \u0027read\u0027 },\n  \u0027networks\u0027: { method: \u0027GET\u0027, endpoint: \u0027/list/networkconf\u0027, risk: \u0027read\u0027 },\n  \u0027traffic\u0027: { method: \u0027GET\u0027, endpoint: \u0027/stat/report/daily.site\u0027, risk: \u0027read\u0027 },\n  \u0027device_list\u0027: { method: \u0027GET\u0027, endpoint: \u0027/stat/device-basic\u0027, risk: \u0027read\u0027 },\n  \u0027health\u0027: { method: \u0027GET\u0027, endpoint: \u0027/stat/health\u0027, risk: \u0027read\u0027 }\n};\n\nconst actionConfig = actionMap[action];\n\nif (!actionConfig) {\n  return [{\n    json: {\n      error: true,\n      message: `Unknown UniFi action: ${action}`,\n      request_id: command.request_id\n    }\n  }];\n}\n\nconst params = command.params || {};\nconst site = params.site || \u0027default\u0027;\nconst baseUrl = input.integration.base_url || \u0027https://unifi.mycosoft.local:8443\u0027;\n\nreturn [{\n  json: {\n    error: false,\n    method: actionConfig.method,\n    endpoint: `/api/s/${site}${actionConfig.endpoint}`,\n    risk: actionConfig.risk,\n    action: action,\n    request_id: command.request_id,\n    base_url: baseUrl\n  }\n}];"
+                                     },
+                      "id":  "parse-unifi",
+                      "name":  "Parse UniFi Command",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       460,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "boolean":  [
+                                                                            {
+                                                                                "value1":  "={{ $json.error }}",
+                                                                                "value2":  false
+                                                                            }
+                                                                        ]
+                                                        }
+                                     },
+                      "id":  "check-valid-unifi",
+                      "name":  "Valid?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       680,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpBasicAuth",
+                                         "method":  "={{ $json.method }}",
+                                         "url":  "={{ $json.base_url }}{{ $json.endpoint }}",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "unifi-api-call",
+                      "name":  "Call UniFi API",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.1,
+                      "position":  [
+                                       900,
+                                       200
+                                   ],
+                      "credentials":  {
+                                          "httpBasicAuth":  {
+                                                                "name":  "UniFi Controller"
+                                                            }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Format UniFi response with proper status code checking (Bug 7 fix)\nconst request = $(\u0027Parse UniFi Command\u0027).item.json;\nconst response = $input.item.json;\n\n// Check for HTTP errors\nconst statusCode = $input.item.statusCode || response.statusCode || 200;\nconst isError = statusCode \u003e= 400;\n\n// Check for UniFi-specific error indicators\nconst hasUnifiError = response.meta?.rc === \u0027error\u0027 || response.errors;\n\nconst success = !isError \u0026\u0026 !hasUnifiError;\n\nif (!success) {\n  return [{\n    json: {\n      success: false,\n      error: true,\n      request_id: request.request_id,\n      integration: \u0027unifi\u0027,\n      action: request.action,\n      status_code: statusCode,\n      message: response.meta?.msg || response.errors || response.message || `HTTP ${statusCode} error`,\n      data: response,\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n    error: false,\n    request_id: request.request_id,\n    integration: \u0027unifi\u0027,\n    action: request.action,\n    status_code: statusCode,\n    data: response.data || response,\n    timestamp: new Date().toISOString()\n  }\n}];"
+                                     },
+                      "id":  "format-unifi-response",
+                      "name":  "Format Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1120,
+                                       200
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Return error\nconst error = $input.item.json;\nreturn [{ json: error }];"
+                                     },
+                      "id":  "return-unifi-error",
+                      "name":  "Return Error",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       900,
+                                       400
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Execute Workflow Trigger":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Parse UniFi Command",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Parse UniFi Command":  {
+                                                    "main":  [
+                                                                 [
+                                                                     {
+                                                                         "node":  "Valid?",
+                                                                         "type":  "main",
+                                                                         "index":  0
+                                                                     }
+                                                                 ]
+                                                             ]
+                                                },
+                        "Valid?":  {
+                                       "main":  [
+                                                    [
+                                                        {
+                                                            "node":  "Call UniFi API",
+                                                            "type":  "main",
+                                                            "index":  0
+                                                        }
+                                                    ],
+                                                    [
+                                                        {
+                                                            "node":  "Return Error",
+                                                            "type":  "main",
+                                                            "index":  0
+                                                        }
+                                                    ]
+                                                ]
+                                   },
+                        "Call UniFi API":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Format Response",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "f8b64ac8-7e67-4633-a64d-8ed1c4f4ba09",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.156Z",
+                       "createdAt":  "2025-12-20T07:28:10.156Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "g73BMs86koqgvO0x",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}
