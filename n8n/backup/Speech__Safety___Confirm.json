@@ -1,0 +1,383 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.741Z",
+    "createdAt":  "2025-12-20T07:28:10.741Z",
+    "id":  "J0QezHsoQXlIRlU6",
+    "name":  "Speech: Safety \u0026 Confirm",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "myca/speech_confirm",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "webhook-trigger",
+                      "name":  "Webhook Trigger",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       250,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "req-id",
+                                                                                     "name":  "request_id",
+                                                                                     "value":  "={{ $json.body.request_id }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "confirm-phrase",
+                                                                                     "name":  "confirmation_phrase",
+                                                                                     "value":  "={{ $json.body.confirmation_phrase }}",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "extract-inputs",
+                      "name":  "Extract Inputs",
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       450,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Flexible confirmation validation for voice input\nconst phrase = ($json.confirmation_phrase || \u0027\u0027).toLowerCase().trim();\nconst requestId = $json.request_id || \u0027\u0027;\n\n// Normalize: remove extra spaces, punctuation\nconst normalized = phrase.replace(/[^a-z0-9\\s]/g, \u0027\u0027).replace(/\\s+/g, \u0027 \u0027);\n\n// Accept multiple confirmation formats for natural voice input\nconst validPhrases = [\n  \u0027confirm\u0027,\n  \u0027yes confirm\u0027,\n  \u0027confirmed\u0027,\n  \u0027proceed\u0027,\n  \u0027yes proceed\u0027,\n  \u0027confirm and proceed\u0027,\n  \u0027confirm action\u0027,\n  \u0027yes\u0027,\n  \u0027do it\u0027,\n  \u0027go ahead\u0027,\n  \u0027execute\u0027,\n  \u0027approve\u0027,\n  \u0027approved\u0027,\n  `confirm ${requestId}`,\n  `confirm action ${requestId}`,\n  `confirm request ${requestId}`\n];\n\n// Check if any valid phrase is contained in the input\nconst isValid = validPhrases.some(valid =\u003e {\n  const normalizedValid = valid.toLowerCase().replace(/[^a-z0-9\\s]/g, \u0027\u0027).replace(/\\s+/g, \u0027 \u0027);\n  return normalized.includes(normalizedValid) || normalizedValid.includes(normalized);\n});\n\nreturn {\n  ...($json),\n  is_confirmed: isValid,\n  normalized_phrase: normalized,\n  validation_method: \u0027flexible_voice\u0027\n};"
+                                     },
+                      "id":  "validate-confirm",
+                      "name":  "Validate Confirmation",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       650,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "boolean":  [
+                                                                            {
+                                                                                "value1":  "={{ $json.is_confirmed }}",
+                                                                                "value2":  true
+                                                                            }
+                                                                        ]
+                                                        }
+                                     },
+                      "id":  "check-confirmed",
+                      "name":  "Is Confirmed?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       850,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "http://mas-orchestrator:8000/voice/orchestrator/chat",
+                                         "authentication":  "none",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { \"message\": \u0027Execute confirmed action for request \u0027 + $json.request_id, \"want_audio\": false, \"conversation_id\": $json.request_id } }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "execute-confirmed",
+                      "name":  "Execute Confirmed Action",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1050,
+                                       200
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "response-text",
+                                                                                     "name":  "response_text",
+                                                                                     "value":  "={{ \u0027?o. Action confirmed and executed: \u0027 + ($json.response_text || \u0027Done\u0027) }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "status",
+                                                                                     "name":  "status",
+                                                                                     "value":  "={{ \u0027confirmed\u0027 }}",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "format-success",
+                      "name":  "Format Success Response",
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       1250,
+                                       200
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "error-msg",
+                                                                                     "name":  "response_text",
+                                                                                     "value":  "={{ \u0027?O Confirmation not recognized. You said: \"\u0027 + $json.normalized_phrase + \u0027\". Please say \"Confirm\" or \"Yes, proceed\" to continue.\u0027 }}",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "status",
+                                                                                     "name":  "status",
+                                                                                     "value":  "={{ \u0027rejected\u0027 }}",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "format-error",
+                      "name":  "Format Error Response",
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       1050,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "insert",
+                                         "dataId":  "myca-speech-audit",
+                                         "rows":  {
+                                                      "mappingMode":  "defineBelow",
+                                                      "value":  {
+                                                                    "request_id":  "={{ $json.request_id }}",
+                                                                    "action":  "confirmation",
+                                                                    "status":  "={{ $json.status }}",
+                                                                    "timestamp":  "={{ $now }}",
+                                                                    "source":  "speech-gateway",
+                                                                    "validation_method":  "={{ $json.validation_method || \u0027flexible_voice\u0027 }}"
+                                                                }
+                                                  },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "audit-log",
+                      "name":  "Audit Log",
+                      "type":  "@n8n/n8n-nodes-langchain.storageN8nDataStore",
+                      "typeVersion":  1,
+                      "position":  [
+                                       1450,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ { \"request_id\": $json.request_id, \"response_text\": $json.response_text, \"status\": $json.status, \"validation_method\": $json.validation_method || \u0027flexible_voice\u0027 } }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "webhook-response",
+                      "name":  "Webhook Response",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       1650,
+                                       300
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "webhook-trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "extract-inputs",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "extract-inputs":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "validate-confirm",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "validate-confirm":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "check-confirmed",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "check-confirmed":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "execute-confirmed",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ],
+                                                             [
+                                                                 {
+                                                                     "node":  "format-error",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "execute-confirmed":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "format-success",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "format-success":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "audit-log",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "format-error":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "audit-log",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "audit-log":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "webhook-response",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "c0fa0385-adaf-467e-8326-01c391eb119c",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.743Z",
+                       "createdAt":  "2025-12-20T07:28:10.743Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "J0QezHsoQXlIRlU6",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

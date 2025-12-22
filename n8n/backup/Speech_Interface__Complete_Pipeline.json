@@ -1,0 +1,434 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.543Z",
+    "createdAt":  "2025-12-20T07:28:10.543Z",
+    "id":  "jv209zE7O2QfemuZ",
+    "name":  "Speech Interface: Complete Pipeline",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "myca/speech/complete",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "webhook-trigger",
+                      "name":  "Webhook: Speech Input",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       250,
+                                       300
+                                   ],
+                      "webhookId":  "speech-complete"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Extract audio and context from request\nconst body = $input.item.json.body || $input.item.json;\nconst binaryData = $input.item.binary;\n\nconst conversationId = body.conversation_id || `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;\n\nreturn {\n  has_audio: !!binaryData?.data,\n  conversation_id: conversationId,\n  user_id: body.user_id || \u0027anonymous\u0027,\n  language: body.language || \u0027en\u0027,\n  want_audio: body.want_audio !== false,\n  timestamp: new Date().toISOString()\n};"
+                                     },
+                      "id":  "extract-input",
+                      "name":  "Extract Input",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       450,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "={{ $env.WHISPER_URL || \u0027http://whisper:8000\u0027 }}/v1/audio/transcriptions",
+                                         "authentication":  "none",
+                                         "sendBody":  true,
+                                         "contentType":  "multipart-form-data",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "file",
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "inputDataFieldName":  "data"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "model",
+                                                                                       "value":  "Systran/faster-whisper-base.en"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "response_format",
+                                                                                       "value":  "json"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "whisper-stt",
+                      "name":  "Whisper: Speech to Text",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       650,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Extract transcript from Whisper response\nconst whisperResponse = $input.item.json;\nconst prevData = $input.first().json;\nconst transcript = whisperResponse.text || whisperResponse.transcript || \u0027\u0027;\n\nreturn {\n  ...prevData,\n  transcript: transcript.trim(),\n  stt_success: !!transcript.trim()\n};"
+                                     },
+                      "id":  "extract-transcript",
+                      "name":  "Extract Transcript",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       850,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "={{ $env.LITELLM_URL || \u0027http://litellm:4000\u0027 }}/v1/chat/completions",
+                                         "authentication":  "none",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ {\n  \"model\": $env.LLM_MODEL || \u0027gpt-4o-mini\u0027,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are MYCA, a helpful AI assistant for Mycosoft. Be concise and conversational. Keep responses under 100 words for voice.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": $json.transcript\n    }\n  ],\n  \"max_tokens\": 300,\n  \"temperature\": 0.7\n} }}",
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "llm-process",
+                      "name":  "LLM: Process Query",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1050,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Extract LLM response\nconst llmResponse = $input.item.json;\nconst prevData = $input.first().json;\nconst responseText = llmResponse.choices?.[0]?.message?.content || \u0027I understand.\u0027;\n\nreturn {\n  ...prevData,\n  response_text: responseText.trim(),\n  model_used: llmResponse.model || \u0027unknown\u0027\n};"
+                                     },
+                      "id":  "extract-llm-response",
+                      "name":  "Extract LLM Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1250,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "boolean":  [
+                                                                            {
+                                                                                "value1":  "={{ $json.want_audio }}",
+                                                                                "value2":  true
+                                                                            }
+                                                                        ]
+                                                        }
+                                     },
+                      "id":  "check-tts",
+                      "name":  "Check TTS Needed",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1450,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "={{ $env.TTS_URL || \u0027http://openedai-speech:8000\u0027 }}/v1/audio/speech",
+                                         "authentication":  "none",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ {\n  \"model\": \"tts-1\",\n  \"voice\": $env.TTS_VOICE || \u0027alloy\u0027,\n  \"input\": $json.response_text,\n  \"response_format\": \"mp3\"\n} }}",
+                                         "options":  {
+                                                         "response":  {
+                                                                          "response":  {
+                                                                                           "responseFormat":  "file"
+                                                                                       }
+                                                                      },
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "tts-generate",
+                      "name":  "TTS: Generate Audio",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1650,
+                                       200
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Encode audio to base64\nconst prevData = $input.first().json;\nconst audioBinary = $input.item.binary?.data;\n\nlet audio_base64 = null;\nlet audio_error = null;\n\nif (audioBinary \u0026\u0026 audioBinary.data) {\n  audio_base64 = Buffer.from(audioBinary.data).toString(\u0027base64\u0027);\n} else {\n  audio_error = \u0027TTS generation failed\u0027;\n}\n\nreturn {\n  ...prevData,\n  audio_base64,\n  audio_mime: \u0027audio/mpeg\u0027,\n  audio_error\n};"
+                                     },
+                      "id":  "encode-audio",
+                      "name":  "Encode Audio to Base64",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1850,
+                                       200
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "assignments":  {
+                                                             "assignments":  [
+                                                                                 {
+                                                                                     "id":  "no-audio",
+                                                                                     "name":  "audio_base64",
+                                                                                     "value":  "",
+                                                                                     "type":  "string"
+                                                                                 },
+                                                                                 {
+                                                                                     "id":  "no-audio-error",
+                                                                                     "name":  "audio_error",
+                                                                                     "value":  "TTS skipped",
+                                                                                     "type":  "string"
+                                                                                 }
+                                                                             ]
+                                                         },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "skip-tts",
+                      "name":  "Skip TTS",
+                      "type":  "n8n-nodes-base.set",
+                      "typeVersion":  3.4,
+                      "position":  [
+                                       1650,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ {\n  status: \u0027success\u0027,\n  conversation_id: $json.conversation_id,\n  transcript: $json.transcript,\n  response_text: $json.response_text,\n  audio_base64: $json.audio_base64 || null,\n  audio_mime: $json.audio_mime || \u0027audio/mpeg\u0027,\n  audio_error: $json.audio_error || null,\n  model_used: $json.model_used,\n  timestamp: $json.timestamp\n} }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "success-response",
+                      "name":  "Success Response",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       2050,
+                                       300
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "webhook-trigger":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "extract-input",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "extract-input":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "whisper-stt",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "whisper-stt":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "extract-transcript",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "extract-transcript":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "llm-process",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "llm-process":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "extract-llm-response",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "extract-llm-response":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "check-tts",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "check-tts":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "tts-generate",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ],
+                                                       [
+                                                           {
+                                                               "node":  "skip-tts",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "tts-generate":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "encode-audio",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "encode-audio":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "success-response",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "skip-tts":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "success-response",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "52372201-f922-4cc9-8497-ba705a9401a7",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.545Z",
+                       "createdAt":  "2025-12-20T07:28:10.545Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "jv209zE7O2QfemuZ",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

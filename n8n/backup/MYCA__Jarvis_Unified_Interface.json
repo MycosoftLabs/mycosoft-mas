@@ -1,0 +1,885 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.351Z",
+    "createdAt":  "2025-12-20T07:28:10.351Z",
+    "id":  "dK7cIL6u53dKs4Ne",
+    "name":  "MYCA: Jarvis Unified Interface",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "myca/jarvis",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "jarvis-webhook",
+                      "name":  "Jarvis Webhook",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       100,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// MYCA Jarvis - Unified AI Assistant Interface\n// This is the main entry point for all MYCA interactions\n\nconst input = $input.first().json;\n\n// Extract request parameters\nconst message = input.message || input.text || input.transcript || \u0027\u0027;\nconst actor = input.actor || \u0027morgan\u0027;\nconst sessionId = input.session_id || input.conversation_id || `jarvis_${Date.now()}`;\nconst wantAudio = input.want_audio !== false;\nconst context = input.context || {};\n\n// Quick command detection for instant responses\nconst quickCommands = {\n  \u0027hello\u0027: \u0027greeting\u0027,\n  \u0027hi\u0027: \u0027greeting\u0027,\n  \u0027hey myca\u0027: \u0027greeting\u0027,\n  \u0027status\u0027: \u0027system_status\u0027,\n  \u0027help\u0027: \u0027help\u0027,\n  \u0027what can you do\u0027: \u0027capabilities\u0027,\n  \u0027thanks\u0027: \u0027acknowledge\u0027,\n  \u0027thank you\u0027: \u0027acknowledge\u0027,\n  \u0027bye\u0027: \u0027farewell\u0027,\n  \u0027goodbye\u0027: \u0027farewell\u0027\n};\n\nconst lowerMessage = message.toLowerCase().trim();\nlet quickCommand = null;\nfor (const [trigger, cmd] of Object.entries(quickCommands)) {\n  if (lowerMessage === trigger || lowerMessage.startsWith(trigger + \u0027 \u0027) || lowerMessage.endsWith(\u0027 \u0027 + trigger)) {\n    quickCommand = cmd;\n    break;\n  }\n}\n\nreturn {\n  json: {\n    message: message,\n    actor: actor,\n    session_id: sessionId,\n    want_audio: wantAudio,\n    quick_command: quickCommand,\n    context: context,\n    timestamp: new Date().toISOString()\n  }\n};"
+                                     },
+                      "id":  "parse-input",
+                      "name":  "Parse Input",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       320,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "quick-cmd",
+                                                                                   "leftValue":  "={{ $json.quick_command }}",
+                                                                                   "rightValue":  "",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "notEmpty"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "check-quick",
+                      "name":  "Quick Command?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       540,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Handle quick commands with instant responses\nconst input = $input.first().json;\nconst cmd = input.quick_command;\n\nconst responses = {\n  greeting: \"Hello! I\u0027m MYCA, pronounced \u0027my-kah\u0027. I\u0027m your Mycosoft Autonomous Cognitive Agent, here to help you manage systems, access information, and get things done. What would you like me to help with?\",\n  \n  system_status: \"All systems are operational. The MAS orchestrator is running with 42 agents registered. Voice services are online. How can I assist you further?\",\n  \n  help: \"I can help you with many things: manage Proxmox VMs and containers, control UniFi network devices, access NAS storage, run code and scripts, manage projects and tasks, search the web, check calendars and emails, generate reports, and much more. Just tell me what you need.\",\n  \n  capabilities: \"My capabilities include: Infrastructure management for Proxmox, UniFi, and NAS. Business operations like project management, CRM, and reporting. Productivity tools for calendar, email, and files. Development tools for code execution and deployment. Plus integration with over 40 specialized agents for mycology research, finance, sales, and more.\",\n  \n  acknowledge: \"You\u0027re welcome! Is there anything else I can help you with?\",\n  \n  farewell: \"Goodbye! Feel free to call on me whenever you need assistance. This is MYCA, signing off.\"\n};\n\nconst responseText = responses[cmd] || responses.greeting;\n\nreturn {\n  json: {\n    status: \u0027success\u0027,\n    session_id: input.session_id,\n    response_text: responseText,\n    quick_response: true,\n    command: cmd,\n    want_audio: input.want_audio\n  }\n};"
+                                     },
+                      "id":  "quick-response",
+                      "name":  "Quick Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       760,
+                                       280
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "http://localhost:5678/webhook/myca/brain",
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "message",
+                                                                                       "value":  "={{ $json.message }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "actor",
+                                                                                       "value":  "={{ $json.actor }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "session_id",
+                                                                                       "value":  "={{ $json.session_id }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "context",
+                                                                                       "value":  "={{ JSON.stringify($json.context) }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+                                                         "timeout":  120000
+                                                     }
+                                     },
+                      "id":  "call-brain",
+                      "name":  "Call Master Brain",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       760,
+                                       520
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Extract response from brain\nconst input = $input.first().json;\nconst originalData = $(\u0027Parse Input\u0027).first().json;\n\nlet responseText = \u0027\u0027;\n\nif (input.response_text) {\n  responseText = input.response_text;\n} else if (input.result) {\n  responseText = typeof input.result === \u0027string\u0027 ? input.result : JSON.stringify(input.result, null, 2);\n} else if (input.data \u0026\u0026 input.data.result) {\n  responseText = input.data.result;\n} else {\n  responseText = \u0027I processed your request but have no specific response.\u0027;\n}\n\nreturn {\n  json: {\n    status: \u0027success\u0027,\n    session_id: originalData.session_id,\n    response_text: responseText,\n    intent: input.intent || null,\n    data: input.data || null,\n    want_audio: originalData.want_audio\n  }\n};"
+                                     },
+                      "id":  "extract-response",
+                      "name":  "Extract Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       980,
+                                       520
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Merge responses from both paths\nconst quickResponse = $(\u0027Quick Response\u0027).first()?.json;\nconst brainResponse = $(\u0027Extract Response\u0027).first()?.json;\n\nconst response = quickResponse || brainResponse;\n\nreturn {\n  json: response\n};"
+                                     },
+                      "id":  "merge-responses",
+                      "name":  "Merge Responses",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1000,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "want-audio",
+                                                                                   "leftValue":  "={{ $json.want_audio }}",
+                                                                                   "rightValue":  true,
+                                                                                   "operator":  {
+                                                                                                    "type":  "boolean",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "check-audio",
+                      "name":  "Want Audio?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1220,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "http://elevenlabs-proxy:8000/v1/audio/speech",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={ \"model\": \"tts-1-hd\", \"voice\": \"myca\", \"input\": \"{{ $json.response_text }}\" }",
+                                         "options":  {
+                                                         "timeout":  120000
+                                                     }
+                                     },
+                      "id":  "generate-audio",
+                      "name":  "Generate Audio",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       1440,
+                                       280
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Add audio to response\nconst textResponse = $(\u0027Merge Responses\u0027).first().json;\nconst audioData = $input.first().binary;\n\nlet audioBase64 = null;\nif (audioData \u0026\u0026 audioData.data) {\n  audioBase64 = audioData.data.toString(\u0027base64\u0027);\n}\n\nreturn {\n  json: {\n    ...textResponse,\n    audio_base64: audioBase64,\n    audio_mime: \u0027audio/mpeg\u0027\n  }\n};"
+                                     },
+                      "id":  "add-audio",
+                      "name":  "Add Audio",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1660,
+                                       280
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Return text-only response\nconst response = $(\u0027Merge Responses\u0027).first().json;\n\nreturn {\n  json: {\n    ...response,\n    audio_base64: null,\n    audio_mime: null\n  }\n};"
+                                     },
+                      "id":  "text-only",
+                      "name":  "Text Only",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1440,
+                                       520
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Final response formatting\nconst withAudio = $(\u0027Add Audio\u0027).first()?.json;\nconst textOnly = $(\u0027Text Only\u0027).first()?.json;\n\nconst response = withAudio || textOnly;\n\nreturn {\n  json: {\n    status: \u0027success\u0027,\n    session_id: response.session_id,\n    response_text: response.response_text,\n    intent: response.intent,\n    data: response.data,\n    audio_base64: response.audio_base64,\n    audio_mime: response.audio_mime,\n    timestamp: new Date().toISOString()\n  }\n};"
+                                     },
+                      "id":  "final-response",
+                      "name":  "Final Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1660,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $json }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "respond",
+                      "name":  "Respond",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       1880,
+                                       400
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Jarvis Webhook":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Parse Input",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Parse Input":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Quick Command?",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Quick Command?":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Quick Response",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ],
+                                                            [
+                                                                {
+                                                                    "node":  "Call Master Brain",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Quick Response":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Merge Responses",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Call Master Brain":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Extract Response",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Extract Response":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Merge Responses",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "Merge Responses":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Want Audio?",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Want Audio?":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Generate Audio",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Text Only",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Generate Audio":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Add Audio",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           },
+                        "Add Audio":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Final Response",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Text Only":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Final Response",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Final Response":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Respond",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "72c9ddeb-1c9c-47ec-92a5-a70c20950db7",
+    "activeVersionId":  "72c9ddeb-1c9c-47ec-92a5-a70c20950db7",
+    "versionCounter":  4,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.352Z",
+                       "createdAt":  "2025-12-20T07:28:10.352Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "dK7cIL6u53dKs4Ne",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2025-12-20T07:28:10.357Z",
+                          "createdAt":  "2025-12-20T07:28:10.357Z",
+                          "versionId":  "72c9ddeb-1c9c-47ec-92a5-a70c20950db7",
+                          "workflowId":  "dK7cIL6u53dKs4Ne",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "myca/jarvis",
+                                                               "responseMode":  "responseNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "jarvis-webhook",
+                                            "name":  "Jarvis Webhook",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             100,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// MYCA Jarvis - Unified AI Assistant Interface\n// This is the main entry point for all MYCA interactions\n\nconst input = $input.first().json;\n\n// Extract request parameters\nconst message = input.message || input.text || input.transcript || \u0027\u0027;\nconst actor = input.actor || \u0027morgan\u0027;\nconst sessionId = input.session_id || input.conversation_id || `jarvis_${Date.now()}`;\nconst wantAudio = input.want_audio !== false;\nconst context = input.context || {};\n\n// Quick command detection for instant responses\nconst quickCommands = {\n  \u0027hello\u0027: \u0027greeting\u0027,\n  \u0027hi\u0027: \u0027greeting\u0027,\n  \u0027hey myca\u0027: \u0027greeting\u0027,\n  \u0027status\u0027: \u0027system_status\u0027,\n  \u0027help\u0027: \u0027help\u0027,\n  \u0027what can you do\u0027: \u0027capabilities\u0027,\n  \u0027thanks\u0027: \u0027acknowledge\u0027,\n  \u0027thank you\u0027: \u0027acknowledge\u0027,\n  \u0027bye\u0027: \u0027farewell\u0027,\n  \u0027goodbye\u0027: \u0027farewell\u0027\n};\n\nconst lowerMessage = message.toLowerCase().trim();\nlet quickCommand = null;\nfor (const [trigger, cmd] of Object.entries(quickCommands)) {\n  if (lowerMessage === trigger || lowerMessage.startsWith(trigger + \u0027 \u0027) || lowerMessage.endsWith(\u0027 \u0027 + trigger)) {\n    quickCommand = cmd;\n    break;\n  }\n}\n\nreturn {\n  json: {\n    message: message,\n    actor: actor,\n    session_id: sessionId,\n    want_audio: wantAudio,\n    quick_command: quickCommand,\n    context: context,\n    timestamp: new Date().toISOString()\n  }\n};"
+                                                           },
+                                            "id":  "parse-input",
+                                            "name":  "Parse Input",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             320,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  false,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "loose"
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "quick-cmd",
+                                                                                                         "leftValue":  "={{ $json.quick_command }}",
+                                                                                                         "rightValue":  "",
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "string",
+                                                                                                                          "operation":  "notEmpty"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              }
+                                                           },
+                                            "id":  "check-quick",
+                                            "name":  "Quick Command?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             540,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Handle quick commands with instant responses\nconst input = $input.first().json;\nconst cmd = input.quick_command;\n\nconst responses = {\n  greeting: \"Hello! I\u0027m MYCA, pronounced \u0027my-kah\u0027. I\u0027m your Mycosoft Autonomous Cognitive Agent, here to help you manage systems, access information, and get things done. What would you like me to help with?\",\n  \n  system_status: \"All systems are operational. The MAS orchestrator is running with 42 agents registered. Voice services are online. How can I assist you further?\",\n  \n  help: \"I can help you with many things: manage Proxmox VMs and containers, control UniFi network devices, access NAS storage, run code and scripts, manage projects and tasks, search the web, check calendars and emails, generate reports, and much more. Just tell me what you need.\",\n  \n  capabilities: \"My capabilities include: Infrastructure management for Proxmox, UniFi, and NAS. Business operations like project management, CRM, and reporting. Productivity tools for calendar, email, and files. Development tools for code execution and deployment. Plus integration with over 40 specialized agents for mycology research, finance, sales, and more.\",\n  \n  acknowledge: \"You\u0027re welcome! Is there anything else I can help you with?\",\n  \n  farewell: \"Goodbye! Feel free to call on me whenever you need assistance. This is MYCA, signing off.\"\n};\n\nconst responseText = responses[cmd] || responses.greeting;\n\nreturn {\n  json: {\n    status: \u0027success\u0027,\n    session_id: input.session_id,\n    response_text: responseText,\n    quick_response: true,\n    command: cmd,\n    want_audio: input.want_audio\n  }\n};"
+                                                           },
+                                            "id":  "quick-response",
+                                            "name":  "Quick Response",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             760,
+                                                             280
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "http://localhost:5678/webhook/myca/brain",
+                                                               "sendBody":  true,
+                                                               "bodyParameters":  {
+                                                                                      "parameters":  [
+                                                                                                         {
+                                                                                                             "name":  "message",
+                                                                                                             "value":  "={{ $json.message }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "actor",
+                                                                                                             "value":  "={{ $json.actor }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "session_id",
+                                                                                                             "value":  "={{ $json.session_id }}"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "context",
+                                                                                                             "value":  "={{ JSON.stringify($json.context) }}"
+                                                                                                         }
+                                                                                                     ]
+                                                                                  },
+                                                               "options":  {
+                                                                               "timeout":  120000
+                                                                           }
+                                                           },
+                                            "id":  "call-brain",
+                                            "name":  "Call Master Brain",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.2,
+                                            "position":  [
+                                                             760,
+                                                             520
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Extract response from brain\nconst input = $input.first().json;\nconst originalData = $(\u0027Parse Input\u0027).first().json;\n\nlet responseText = \u0027\u0027;\n\nif (input.response_text) {\n  responseText = input.response_text;\n} else if (input.result) {\n  responseText = typeof input.result === \u0027string\u0027 ? input.result : JSON.stringify(input.result, null, 2);\n} else if (input.data \u0026\u0026 input.data.result) {\n  responseText = input.data.result;\n} else {\n  responseText = \u0027I processed your request but have no specific response.\u0027;\n}\n\nreturn {\n  json: {\n    status: \u0027success\u0027,\n    session_id: originalData.session_id,\n    response_text: responseText,\n    intent: input.intent || null,\n    data: input.data || null,\n    want_audio: originalData.want_audio\n  }\n};"
+                                                           },
+                                            "id":  "extract-response",
+                                            "name":  "Extract Response",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             980,
+                                                             520
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Merge responses from both paths\nconst quickResponse = $(\u0027Quick Response\u0027).first()?.json;\nconst brainResponse = $(\u0027Extract Response\u0027).first()?.json;\n\nconst response = quickResponse || brainResponse;\n\nreturn {\n  json: response\n};"
+                                                           },
+                                            "id":  "merge-responses",
+                                            "name":  "Merge Responses",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1000,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "conditions":  {
+                                                                                  "options":  {
+                                                                                                  "caseSensitive":  false,
+                                                                                                  "leftValue":  "",
+                                                                                                  "typeValidation":  "loose"
+                                                                                              },
+                                                                                  "conditions":  [
+                                                                                                     {
+                                                                                                         "id":  "want-audio",
+                                                                                                         "leftValue":  "={{ $json.want_audio }}",
+                                                                                                         "rightValue":  true,
+                                                                                                         "operator":  {
+                                                                                                                          "type":  "boolean",
+                                                                                                                          "operation":  "equals"
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                  "combinator":  "and"
+                                                                              }
+                                                           },
+                                            "id":  "check-audio",
+                                            "name":  "Want Audio?",
+                                            "type":  "n8n-nodes-base.if",
+                                            "typeVersion":  2.2,
+                                            "position":  [
+                                                             1220,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "method":  "POST",
+                                                               "url":  "http://elevenlabs-proxy:8000/v1/audio/speech",
+                                                               "sendBody":  true,
+                                                               "specifyBody":  "json",
+                                                               "jsonBody":  "={ \"model\": \"tts-1-hd\", \"voice\": \"myca\", \"input\": \"{{ $json.response_text }}\" }",
+                                                               "options":  {
+                                                                               "timeout":  120000
+                                                                           }
+                                                           },
+                                            "id":  "generate-audio",
+                                            "name":  "Generate Audio",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.2,
+                                            "position":  [
+                                                             1440,
+                                                             280
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Add audio to response\nconst textResponse = $(\u0027Merge Responses\u0027).first().json;\nconst audioData = $input.first().binary;\n\nlet audioBase64 = null;\nif (audioData \u0026\u0026 audioData.data) {\n  audioBase64 = audioData.data.toString(\u0027base64\u0027);\n}\n\nreturn {\n  json: {\n    ...textResponse,\n    audio_base64: audioBase64,\n    audio_mime: \u0027audio/mpeg\u0027\n  }\n};"
+                                                           },
+                                            "id":  "add-audio",
+                                            "name":  "Add Audio",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1660,
+                                                             280
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Return text-only response\nconst response = $(\u0027Merge Responses\u0027).first().json;\n\nreturn {\n  json: {\n    ...response,\n    audio_base64: null,\n    audio_mime: null\n  }\n};"
+                                                           },
+                                            "id":  "text-only",
+                                            "name":  "Text Only",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1440,
+                                                             520
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Final response formatting\nconst withAudio = $(\u0027Add Audio\u0027).first()?.json;\nconst textOnly = $(\u0027Text Only\u0027).first()?.json;\n\nconst response = withAudio || textOnly;\n\nreturn {\n  json: {\n    status: \u0027success\u0027,\n    session_id: response.session_id,\n    response_text: response.response_text,\n    intent: response.intent,\n    data: response.data,\n    audio_base64: response.audio_base64,\n    audio_mime: response.audio_mime,\n    timestamp: new Date().toISOString()\n  }\n};"
+                                                           },
+                                            "id":  "final-response",
+                                            "name":  "Final Response",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1660,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "respondWith":  "json",
+                                                               "responseBody":  "={{ $json }}",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "respond",
+                                            "name":  "Respond",
+                                            "type":  "n8n-nodes-base.respondToWebhook",
+                                            "typeVersion":  1.1,
+                                            "position":  [
+                                                             1880,
+                                                             400
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "Jarvis Webhook":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Parse Input",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "Parse Input":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "Quick Command?",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              },
+                                              "Quick Command?":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Quick Response",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ],
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Call Master Brain",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "Quick Response":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Merge Responses",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "Call Master Brain":  {
+                                                                        "main":  [
+                                                                                     [
+                                                                                         {
+                                                                                             "node":  "Extract Response",
+                                                                                             "type":  "main",
+                                                                                             "index":  0
+                                                                                         }
+                                                                                     ]
+                                                                                 ]
+                                                                    },
+                                              "Extract Response":  {
+                                                                       "main":  [
+                                                                                    [
+                                                                                        {
+                                                                                            "node":  "Merge Responses",
+                                                                                            "type":  "main",
+                                                                                            "index":  0
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                   },
+                                              "Merge Responses":  {
+                                                                      "main":  [
+                                                                                   [
+                                                                                       {
+                                                                                           "node":  "Want Audio?",
+                                                                                           "type":  "main",
+                                                                                           "index":  0
+                                                                                       }
+                                                                                   ]
+                                                                               ]
+                                                                  },
+                                              "Want Audio?":  {
+                                                                  "main":  [
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "Generate Audio",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ],
+                                                                               [
+                                                                                   {
+                                                                                       "node":  "Text Only",
+                                                                                       "type":  "main",
+                                                                                       "index":  0
+                                                                                   }
+                                                                               ]
+                                                                           ]
+                                                              },
+                                              "Generate Audio":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Add Audio",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 },
+                                              "Add Audio":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Final Response",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                                              "Text Only":  {
+                                                                "main":  [
+                                                                             [
+                                                                                 {
+                                                                                     "node":  "Final Response",
+                                                                                     "type":  "main",
+                                                                                     "index":  0
+                                                                                 }
+                                                                             ]
+                                                                         ]
+                                                            },
+                                              "Final Response":  {
+                                                                     "main":  [
+                                                                                  [
+                                                                                      {
+                                                                                          "node":  "Respond",
+                                                                                          "type":  "main",
+                                                                                          "index":  0
+                                                                                      }
+                                                                                  ]
+                                                                              ]
+                                                                 }
+                                          },
+                          "authors":  "Morgan Mycosoft",
+                          "name":  null,
+                          "description":  null,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2025-12-20T07:28:34.967Z",
+                                                             "id":  1,
+                                                             "workflowId":  "dK7cIL6u53dKs4Ne",
+                                                             "versionId":  "72c9ddeb-1c9c-47ec-92a5-a70c20950db7",
+                                                             "event":  "activated",
+                                                             "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34"
+                                                         }
+                                                     ]
+                      }
+}

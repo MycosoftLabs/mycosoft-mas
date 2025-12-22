@@ -1,0 +1,248 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.126Z",
+    "createdAt":  "2025-12-20T07:28:10.126Z",
+    "id":  "6KRWpYkhbO6c3BW0",
+    "name":  "Ops: Proxmox Control",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+
+                                     },
+                      "id":  "proxmox-trigger",
+                      "name":  "Execute Workflow Trigger",
+                      "type":  "n8n-nodes-base.executeWorkflowTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       240,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Parse Proxmox command with parameter validation\nconst input = $input.item.json;\nconst command = input.command || {};\nconst action = command.action;\n\n// Map actions to Proxmox API endpoints with required parameters\nconst actionMap = {\n  \u0027inventory\u0027: { method: \u0027GET\u0027, endpoint: \u0027/cluster/resources\u0027, risk: \u0027read\u0027, required: [] },\n  \u0027snapshot\u0027: { method: \u0027POST\u0027, endpoint: \u0027/nodes/{node}/qemu/{vmid}/snapshot\u0027, risk: \u0027write\u0027, required: [\u0027vmid\u0027] },\n  \u0027restore\u0027: { method: \u0027POST\u0027, endpoint: \u0027/nodes/{node}/qemu/{vmid}/snapshot/{snapname}/rollback\u0027, risk: \u0027admin\u0027, required: [\u0027vmid\u0027, \u0027snapname\u0027] },\n  \u0027status\u0027: { method: \u0027GET\u0027, endpoint: \u0027/cluster/status\u0027, risk: \u0027read\u0027, required: [] },\n  \u0027vm_list\u0027: { method: \u0027GET\u0027, endpoint: \u0027/nodes/{node}/qemu\u0027, risk: \u0027read\u0027, required: [] },\n  \u0027vm_start\u0027: { method: \u0027POST\u0027, endpoint: \u0027/nodes/{node}/qemu/{vmid}/status/start\u0027, risk: \u0027write\u0027, required: [\u0027vmid\u0027] },\n  \u0027vm_stop\u0027: { method: \u0027POST\u0027, endpoint: \u0027/nodes/{node}/qemu/{vmid}/status/stop\u0027, risk: \u0027write\u0027, required: [\u0027vmid\u0027] },\n  \u0027vm_shutdown\u0027: { method: \u0027POST\u0027, endpoint: \u0027/nodes/{node}/qemu/{vmid}/status/shutdown\u0027, risk: \u0027write\u0027, required: [\u0027vmid\u0027] }\n};\n\nconst actionConfig = actionMap[action];\n\nif (!actionConfig) {\n  return [{\n    json: {\n      error: true,\n      message: `Unknown Proxmox action: ${action}. Available: ${Object.keys(actionMap).join(\u0027, \u0027)}`,\n      request_id: command.request_id\n    }\n  }];\n}\n\nconst params = command.params || {};\n\n// Validate required parameters (Bug 2 fix)\n// Use explicit undefined/null checks to allow falsy values like 0, false, or empty string\nconst missingParams = actionConfig.required.filter(p =\u003e params[p] === undefined || params[p] === null);\nif (missingParams.length \u003e 0) {\n  return [{\n    json: {\n      error: true,\n      message: `Missing required parameters for ${action}: ${missingParams.join(\u0027, \u0027)}`,\n      request_id: command.request_id,\n      required_params: actionConfig.required\n    }\n  }];\n}\n\n// Build endpoint with parameters\nlet endpoint = actionConfig.endpoint;\n\n// Replace placeholders (only if they exist in endpoint)\n// Use explicit checks to allow falsy values like 0\nendpoint = endpoint.replace(\u0027{node}\u0027, params.node || \u0027pve\u0027);\nif (params.vmid !== undefined \u0026\u0026 params.vmid !== null) {\n  endpoint = endpoint.replace(\u0027{vmid}\u0027, String(params.vmid));\n}\nif (params.snapname !== undefined \u0026\u0026 params.snapname !== null) {\n  endpoint = endpoint.replace(\u0027{snapname}\u0027, String(params.snapname));\n}\n\n// Final validation: ensure no unreplaced placeholders remain\nif (endpoint.includes(\u0027{\u0027)) {\n  return [{\n    json: {\n      error: true,\n      message: `Endpoint still contains placeholders: ${endpoint}`,\n      request_id: command.request_id\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    error: false,\n    method: actionConfig.method,\n    endpoint: endpoint,\n    body: params.body || {},\n    risk: actionConfig.risk,\n    action: action,\n    request_id: command.request_id,\n    base_url: input.integration.base_url || \u0027https://proxmox.mycosoft.local:8006/api2/json\u0027\n  }\n}];"
+                                     },
+                      "id":  "parse-proxmox",
+                      "name":  "Parse Proxmox Command",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       460,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "boolean":  [
+                                                                            {
+                                                                                "value1":  "={{ $json.error }}",
+                                                                                "value2":  false
+                                                                            }
+                                                                        ]
+                                                        }
+                                     },
+                      "id":  "check-valid-proxmox",
+                      "name":  "Valid?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2,
+                      "position":  [
+                                       680,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "method":  "={{ $json.method }}",
+                                         "url":  "={{ $json.base_url }}{{ $json.endpoint }}",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     },
+                                                                                     {
+                                                                                         "name":  "Authorization",
+                                                                                         "value":  "={{ \u0027PVEAPIToken=\u0027 + $credentials.apiToken }}"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ JSON.stringify($json.body) }}",
+                                         "options":  {
+                                                         "timeout":  30000,
+                                                         "retry":  {
+                                                                       "retry":  {
+                                                                                     "maxRetries":  2,
+                                                                                     "retryInterval":  2000
+                                                                                 }
+                                                                   }
+                                                     }
+                                     },
+                      "id":  "proxmox-api-call",
+                      "name":  "Call Proxmox API",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.1,
+                      "position":  [
+                                       900,
+                                       200
+                                   ],
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "name":  "Proxmox API Token"
+                                                             }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Format Proxmox response with proper status code checking (Bug 7 fix)\nconst request = $(\u0027Parse Proxmox Command\u0027).item.json;\nconst response = $input.item.json;\n\n// Check for HTTP errors - the httpRequest node includes statusCode in response\nconst statusCode = $input.item.statusCode || response.statusCode || 200;\nconst isError = statusCode \u003e= 400;\n\n// Also check for Proxmox-specific error indicators\nconst hasProxmoxError = response.errors || response.error || (response.data === null \u0026\u0026 statusCode !== 204);\n\nconst success = !isError \u0026\u0026 !hasProxmoxError;\n\nif (!success) {\n  return [{\n    json: {\n      success: false,\n      error: true,\n      request_id: request.request_id,\n      integration: \u0027proxmox\u0027,\n      action: request.action,\n      status_code: statusCode,\n      message: response.errors || response.message || response.error || `HTTP ${statusCode} error`,\n      data: response,\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n    error: false,\n    request_id: request.request_id,\n    integration: \u0027proxmox\u0027,\n    action: request.action,\n    status_code: statusCode,\n    data: response.data || response,\n    timestamp: new Date().toISOString()\n  }\n}];"
+                                     },
+                      "id":  "format-proxmox-response",
+                      "name":  "Format Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1120,
+                                       200
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Return error\nconst error = $input.item.json;\nreturn [{ json: error }];"
+                                     },
+                      "id":  "return-proxmox-error",
+                      "name":  "Return Error",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       900,
+                                       400
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Execute Workflow Trigger":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Parse Proxmox Command",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                        "Parse Proxmox Command":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Valid?",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Valid?":  {
+                                       "main":  [
+                                                    [
+                                                        {
+                                                            "node":  "Call Proxmox API",
+                                                            "type":  "main",
+                                                            "index":  0
+                                                        }
+                                                    ],
+                                                    [
+                                                        {
+                                                            "node":  "Return Error",
+                                                            "type":  "main",
+                                                            "index":  0
+                                                        }
+                                                    ]
+                                                ]
+                                   },
+                        "Call Proxmox API":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "Format Response",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "220719d9-4bb0-4be3-a0e4-0b05fbf1edc4",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.129Z",
+                       "createdAt":  "2025-12-20T07:28:10.129Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "6KRWpYkhbO6c3BW0",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}
