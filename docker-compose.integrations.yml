@@ -95,7 +95,7 @@ services:
     volumes:
       - natureos_postgres_data:/var/lib/postgresql/data
     ports:
-      - "5434:5432"  # Different port to avoid conflict with MINDEX
+      - "5435:5432"  # Different port to avoid conflict with MINDEX (5434 is used)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U ${NATUREOS_DB_USER:-natureos}"]
       interval: 5s

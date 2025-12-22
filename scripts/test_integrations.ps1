@@ -72,7 +72,7 @@ if (-not ($mindexApi -and $mindexDb)) { $allPassed = $false }
 Write-Host ""
 Write-Host "=== NATUREOS Tests ===" -ForegroundColor Cyan
 $natureosApi = Test-Service -Name "NATUREOS API" -Url "http://localhost:8002"
-$natureosDb = Test-Database -Name "NATUREOS" -Port 5434
+$natureosDb = Test-Database -Name "NATUREOS" -Port 5435
 if (-not ($natureosApi -and $natureosDb)) { $allPassed = $false }
 
 # Test Website
