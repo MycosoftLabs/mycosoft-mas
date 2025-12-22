@@ -98,7 +98,7 @@ if ($allPassed) {
     exit 0
 } else {
     Write-Host "✗ Some services failed. Check Docker containers:" -ForegroundColor Red
-    Write-Host "  docker-compose -f docker-compose.integrations.yml ps" -ForegroundColor Yellow
-    Write-Host "  docker-compose -f docker-compose.integrations.yml logs" -ForegroundColor Yellow
+    Write-Host '  docker-compose -f docker-compose.integrations.yml ps' -ForegroundColor Yellow
+    Write-Host '  docker-compose -f docker-compose.integrations.yml logs' -ForegroundColor Yellow
     exit 1
 }
