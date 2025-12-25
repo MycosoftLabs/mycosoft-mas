@@ -7,6 +7,11 @@ This module provides a unified interface for all external system integrations:
 - Website: Mycosoft website (Vercel)
 - Notion: Knowledge management and documentation
 - N8N: Workflow automation
+- Space Weather: NASA, NOAA, solar activity data
+- Environmental: Air quality, pollution, radiation sensors
+- Earth Science: Earthquakes, tides, buoys, water levels
+- Financial Markets: Crypto, stocks, forex data
+- Automation Hub: Zapier, IFTTT, Make webhooks
 
 The manager initializes all clients and provides a single interface for:
 - Health checks across all systems
@@ -17,6 +22,7 @@ The manager initializes all clients and provides a single interface for:
 
 Environment Variables:
     See individual client modules for their specific environment variables.
+    See docs/ENV_INTEGRATIONS.md for a complete list.
 
 Usage:
     from mycosoft_mas.integrations.unified_integration_manager import UnifiedIntegrationManager
@@ -39,6 +45,11 @@ from .website_client import WebsiteClient
 from .notion_client import NotionClient
 from .n8n_client import N8NClient
 from .azure_client import AzureClient
+from .space_weather_client import SpaceWeatherClient
+from .environmental_client import EnvironmentalClient
+from .earth_science_client import EarthScienceClient
+from .financial_markets_client import FinancialMarketsClient
+from .automation_hub_client import AutomationHubClient
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +65,11 @@ class UnifiedIntegrationManager:
     - Notion documentation and knowledge base
     - N8N workflow automation
     - Azure Resource Manager operations
+    - Space weather data (NASA, NOAA, solar activity)
+    - Environmental sensors (air quality, pollution, radiation)
+    - Earth science data (earthquakes, tides, buoys)
+    - Financial markets (crypto, stocks, forex)
+    - Automation platforms (Zapier, IFTTT, Make)
     
     Provides:
     - Single initialization point
@@ -76,7 +92,12 @@ class UnifiedIntegrationManager:
                        "website": {...},
                        "notion": {...},
                        "n8n": {...},
-                       "azure": {...}
+                       "azure": {...},
+                       "space_weather": {...},
+                       "environmental": {...},
+                       "earth_science": {...},
+                       "financial": {...},
+                       "automation": {...}
                    }
         
         Note:
@@ -93,6 +114,11 @@ class UnifiedIntegrationManager:
         self._notion_client = None
         self._n8n_client = None
         self._azure_client = None
+        self._space_weather_client = None
+        self._environmental_client = None
+        self._earth_science_client = None
+        self._financial_client = None
+        self._automation_client = None
         
         # Status tracking
         self.initialized = False
@@ -192,6 +218,102 @@ class UnifiedIntegrationManager:
             self._azure_client = AzureClient(config=azure_config)
         return self._azure_client
     
+    @property
+    def space_weather(self) -> SpaceWeatherClient:
+        """
+        Get Space Weather client instance (lazy initialization).
+        
+        Provides access to:
+        - NASA DONKI (solar events, CMEs, flares)
+        - NOAA Space Weather (Kp index, alerts)
+        - GOES/ACE/DSCOVR satellite data
+        - Weather forecasts and alerts
+        
+        Returns:
+            SpaceWeatherClient: Space weather data client
+        """
+        if self._space_weather_client is None:
+            sw_config = self.config.get("space_weather", {})
+            self._space_weather_client = SpaceWeatherClient(config=sw_config)
+        return self._space_weather_client
+    
+    @property
+    def environmental(self) -> EnvironmentalClient:
+        """
+        Get Environmental client instance (lazy initialization).
+        
+        Provides access to:
+        - Air quality data (OpenAQ, EPA AirNow, PurpleAir, IQAir)
+        - Radiation monitoring (Safecast, EPA RadNet)
+        - Multi-environmental data (BreezoMeter, Ambee)
+        
+        Returns:
+            EnvironmentalClient: Environmental sensor data client
+        """
+        if self._environmental_client is None:
+            env_config = self.config.get("environmental", {})
+            self._environmental_client = EnvironmentalClient(config=env_config)
+        return self._environmental_client
+    
+    @property
+    def earth_science(self) -> EarthScienceClient:
+        """
+        Get Earth Science client instance (lazy initialization).
+        
+        Provides access to:
+        - Earthquakes (USGS, IRIS)
+        - Tides and currents (NOAA)
+        - Buoy data (NDBC)
+        - Water levels and streamflow (USGS, USACE)
+        - Flood warnings (NWS)
+        
+        Returns:
+            EarthScienceClient: Earth science data client
+        """
+        if self._earth_science_client is None:
+            es_config = self.config.get("earth_science", {})
+            self._earth_science_client = EarthScienceClient(config=es_config)
+        return self._earth_science_client
+    
+    @property
+    def financial(self) -> FinancialMarketsClient:
+        """
+        Get Financial Markets client instance (lazy initialization).
+        
+        Provides access to:
+        - Cryptocurrency (CoinMarketCap, CoinGecko)
+        - Stocks (Alpha Vantage, Polygon, Finnhub)
+        - Forex rates
+        - Market news
+        
+        Returns:
+            FinancialMarketsClient: Financial markets data client
+        """
+        if self._financial_client is None:
+            fin_config = self.config.get("financial", {})
+            self._financial_client = FinancialMarketsClient(config=fin_config)
+        return self._financial_client
+    
+    @property
+    def automation(self) -> AutomationHubClient:
+        """
+        Get Automation Hub client instance (lazy initialization).
+        
+        Provides access to:
+        - Zapier webhooks
+        - IFTTT Maker webhooks
+        - Make (Integromat) scenarios
+        - Pipedream workflows
+        - Activepieces flows
+        
+        Returns:
+            AutomationHubClient: Automation platform client
+        """
+        if self._automation_client is None:
+            auto_config = self.config.get("automation", {})
+            self._automation_client = AutomationHubClient(config=auto_config)
+        return self._automation_client
+    
     async def initialize(self) -> None:
         """
         Initialize all integration clients.
@@ -212,6 +334,11 @@ class UnifiedIntegrationManager:
             "Notion": self.notion,
             "N8N": self.n8n,
             "Azure": self.azure,
+            "SpaceWeather": self.space_weather,
+            "Environmental": self.environmental,
+            "EarthScience": self.earth_science,
+            "Financial": self.financial,
+            "Automation": self.automation,
         }
         
         # Perform initial health checks
@@ -258,6 +385,11 @@ class UnifiedIntegrationManager:
             "Notion": self.notion.health_check(),
             "N8N": self.n8n.health_check(),
             "Azure": self.azure.health_check(),
+            "SpaceWeather": self.space_weather.health_check(),
+            "Environmental": self.environmental.health_check(),
+            "EarthScience": self.earth_science.health_check(),
+            "Financial": self.financial.health_check(),
+            "Automation": self.automation.health_check(),
         }
         
         results = {}
@@ -490,6 +622,16 @@ class UnifiedIntegrationManager:
             close_tasks.append(self._n8n_client.close())
         if self._azure_client:
             close_tasks.append(self._azure_client.close())
+        if self._space_weather_client:
+            close_tasks.append(self._space_weather_client.close())
+        if self._environmental_client:
+            close_tasks.append(self._environmental_client.close())
+        if self._earth_science_client:
+            close_tasks.append(self._earth_science_client.close())
+        if self._financial_client:
+            close_tasks.append(self._financial_client.close())
+        if self._automation_client:
+            close_tasks.append(self._automation_client.close())
         
         if close_tasks:
             await asyncio.gather(*close_tasks, return_exceptions=True)

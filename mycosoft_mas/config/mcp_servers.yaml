@@ -1,4 +1,5 @@
 # MCP Server configurations
+# Version: 3.0.0 - Global Integration Support
 servers:
   primary:
     name: "Primary MCP"
@@ -48,6 +49,192 @@ servers:
     health_check_interval: 30
     retry_count: 3
     timeout: 10
+
+  # Cursor IDE MCP Server
+  cursor_mcp:
+    name: "Cursor IDE MCP"
+    host: "localhost"
+    port: 3000
+    protocol: "http"
+    api_key: null
+    capabilities:
+      - code_edit
+      - file_operations
+      - terminal_execution
+      - search_codebase
+      - lsp_integration
+    local_only: true
+    health_check_interval: 10
+    retry_count: 2
+    timeout: 30
+
+  # ChatGPT/OpenAI MCP Server
+  chatgpt_mcp:
+    name: "ChatGPT MCP"
+    host: "api.openai.com"
+    port: 443
+    protocol: "https"
+    api_key: "${OPENAI_API_KEY}"
+    capabilities:
+      - conversation
+      - code_generation
+      - analysis
+      - embeddings
+      - vision
+    health_check_interval: 60
+    retry_count: 3
+    timeout: 120
+
+  # ElevenLabs Voice MCP
+  elevenlabs_mcp:
+    name: "ElevenLabs Voice MCP"
+    host: "api.elevenlabs.io"
+    port: 443
+    protocol: "https"
+    api_key: "${ELEVENLABS_API_KEY}"
+    capabilities:
+      - text_to_speech
+      - voice_cloning
+      - voice_design
+      - audio_isolation
+    health_check_interval: 60
+    retry_count: 3
+    timeout: 60
+
+  # Space Weather Data MCP
+  space_weather_mcp:
+    name: "Space Weather MCP"
+    host: "services.swpc.noaa.gov"
+    port: 443
+    protocol: "https"
+    api_key: null
+    capabilities:
+      - solar_events
+      - geomagnetic_data
+      - satellite_data
+      - space_weather_alerts
+      - aurora_forecast
+    data_sources:
+      - nasa_donki
+      - noaa_swpc
+      - goes_satellite
+      - ace_satellite
+      - dscovr
+    health_check_interval: 30
+    retry_count: 3
+    timeout: 30
+
+  # Environmental Sensors MCP
+  environmental_mcp:
+    name: "Environmental Data MCP"
+    host: "api.openaq.org"
+    port: 443
+    protocol: "https"
+    api_key: "${OPENAQ_API_KEY}"
+    capabilities:
+      - air_quality
+      - pollution_monitoring
+      - radiation_detection
+      - pollen_data
+      - fire_smoke_data
+    data_sources:
+      - openaq
+      - purpleair
+      - epa_airnow
+      - safecast
+      - breezometer
+      - ambee
+    health_check_interval: 60
+    retry_count: 3
+    timeout: 30
+
+  # Earth Science MCP
+  earth_science_mcp:
+    name: "Earth Science MCP"
+    host: "earthquake.usgs.gov"
+    port: 443
+    protocol: "https"
+    api_key: null
+    capabilities:
+      - earthquake_data
+      - tide_predictions
+      - buoy_observations
+      - flood_monitoring
+      - water_levels
+      - seismic_events
+    data_sources:
+      - usgs_earthquake
+      - noaa_tides
+      - ndbc_buoys
+      - usace_cwms
+      - nws_flood
+      - iris_seismic
+    health_check_interval: 30
+    retry_count: 3
+    timeout: 30
+
+  # Financial Markets MCP
+  financial_mcp:
+    name: "Financial Markets MCP"
+    host: "api.coingecko.com"
+    port: 443
+    protocol: "https"
+    api_key: null
+    capabilities:
+      - crypto_prices
+      - stock_quotes
+      - forex_rates
+      - market_news
+      - financial_analysis
+    data_sources:
+      - coingecko
+      - coinmarketcap
+      - alpha_vantage
+      - polygon
+      - finnhub
+    health_check_interval: 60
+    retry_count: 3
+    timeout: 30
+
+  # Automation Hub MCP
+  automation_mcp:
+    name: "Automation Hub MCP"
+    host: null
+    port: null
+    protocol: "https"
+    api_key: null
+    capabilities:
+      - webhook_triggers
+      - workflow_automation
+      - event_broadcasting
+    platforms:
+      - zapier
+      - ifttt
+      - make
+      - pipedream
+      - activepieces
+    health_check_interval: 120
+    retry_count: 2
+    timeout: 30
+
+  # Defense/Restricted MCP (Disabled by default)
+  defense_mcp:
+    name: "Defense Systems MCP"
+    host: null
+    port: null
+    protocol: "https"
+    api_key: null
+    enabled: false
+    restricted: true
+    clearance_required: true
+    capabilities:
+      - palantir_foundry
+      - anduril_sdk
+      - platform_one
+      - tactical_data_link
+    health_check_interval: 300
+    retry_count: 1
+    timeout: 60
 
 # MCP Server features
 features:

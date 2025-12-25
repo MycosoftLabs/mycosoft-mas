@@ -1,7 +1,7 @@
 {
-  "version": "2.0.0",
+  "version": "3.0.0",
   "last_updated": "2025-12-19",
-  "description": "MYCA Integration Registry - expanded coverage for native + HTTP fallback",
+  "description": "MYCA Integration Registry - Global coverage with space, environmental, earth science, analytics, automation, and defense integrations",
   "categories": {
     "ai": {
       "name": "AI & ML"
@@ -29,6 +29,24 @@
     },
     "utility": {
       "name": "Utility & Glue"
+    },
+    "space_weather": {
+      "name": "Space & Weather"
+    },
+    "environmental": {
+      "name": "Environmental Sensors"
+    },
+    "earth_science": {
+      "name": "Earth Science & Geophysics"
+    },
+    "analytics": {
+      "name": "Analytics & Data Science"
+    },
+    "automation": {
+      "name": "Automation Platforms"
+    },
+    "defense": {
+      "name": "Defense & Government"
     }
   },
   "integrations": [
@@ -1316,6 +1334,762 @@
       "metadata": {
         "myca_ops": true
       }
+    },
+
+    {
+      "integration": "nasa_donki",
+      "display_name": "NASA DONKI",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.nasa.gov/DONKI",
+      "default_actions": ["cme", "flare", "geostorm", "solar_energetic_particle"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"data_type": "space_weather", "update_freq": "realtime"}
+    },
+    {
+      "integration": "nasa_epic",
+      "display_name": "NASA EPIC",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.nasa.gov/EPIC",
+      "default_actions": ["natural", "enhanced", "metadata"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "nasa_apod",
+      "display_name": "NASA Astronomy POD",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.nasa.gov/planetary/apod",
+      "default_actions": ["get_image", "get_video"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "nasa_neo",
+      "display_name": "NASA Near Earth Objects",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.nasa.gov/neo/rest/v1",
+      "default_actions": ["feed", "lookup", "browse"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "noaa_swpc",
+      "display_name": "NOAA Space Weather",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://services.swpc.noaa.gov/json",
+      "default_actions": ["solar_wind", "geomagnetic", "alerts", "kp_index"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"data_type": "space_weather", "update_freq": "1min"}
+    },
+    {
+      "integration": "soho",
+      "display_name": "SOHO Solar Observatory",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://sohodata.nascom.nasa.gov/cgi-bin/data_query",
+      "default_actions": ["lasco", "eit", "mdi", "realtime"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "stereo",
+      "display_name": "STEREO A/B Satellites",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://stereo-ssc.nascom.nasa.gov/data",
+      "default_actions": ["secchi", "plastic", "impact", "beacon"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "sdo",
+      "display_name": "Solar Dynamics Observatory",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://sdo.gsfc.nasa.gov/data",
+      "default_actions": ["aia", "hmi", "eve", "browse"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "goes_satellite",
+      "display_name": "GOES Satellite Data",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://services.swpc.noaa.gov/json/goes",
+      "default_actions": ["xray", "proton", "electron", "magnetometer"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "noaa_weather",
+      "display_name": "NOAA Weather API",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://api.weather.gov",
+      "default_actions": ["forecast", "alerts", "stations", "radar"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "openweathermap",
+      "display_name": "OpenWeatherMap",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.openweathermap.org/data/2.5",
+      "default_actions": ["current", "forecast", "historical", "alerts"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "ace_satellite",
+      "display_name": "ACE Real-Time Solar Wind",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://services.swpc.noaa.gov/products/ace",
+      "default_actions": ["mag", "swepam", "epam", "sis"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "dscovr",
+      "display_name": "DSCOVR Satellite",
+      "category": "space_weather",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://services.swpc.noaa.gov/products/dscovr",
+      "default_actions": ["mag", "plasma", "faraday"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+
+    {
+      "integration": "openaq",
+      "display_name": "OpenAQ Air Quality",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.openaq.org/v2",
+      "default_actions": ["measurements", "locations", "latest", "countries"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "epa_airnow",
+      "display_name": "EPA AirNow",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://www.airnowapi.org",
+      "default_actions": ["current", "forecast", "historical", "contours"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "purpleair",
+      "display_name": "PurpleAir Sensors",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.purpleair.com/v1",
+      "default_actions": ["sensors", "sensor_data", "groups"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "iqair",
+      "display_name": "IQAir",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.airvisual.com/v2",
+      "default_actions": ["city", "nearest_city", "stations", "countries"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "epa_radnet",
+      "display_name": "EPA RadNet Radiation",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://www.epa.gov/radnet/radnet-csv-file-downloads",
+      "default_actions": ["gamma", "beta", "precipitation", "air_filter"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"data_type": "radiation", "coverage": "usa"}
+    },
+    {
+      "integration": "safecast",
+      "display_name": "Safecast Radiation",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.safecast.org",
+      "default_actions": ["measurements", "devices", "bgeigie"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"data_type": "radiation", "coverage": "global"}
+    },
+    {
+      "integration": "co2_signal",
+      "display_name": "CO2 Signal",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.co2signal.com/v1",
+      "default_actions": ["latest", "history"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "breezometer",
+      "display_name": "BreezoMeter",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.breezometer.com",
+      "default_actions": ["air_quality", "pollen", "fires", "forecast"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "ambee",
+      "display_name": "Ambee Environmental",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.ambeedata.com",
+      "default_actions": ["air_quality", "pollen", "fire", "soil", "water_vapor"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "ionosphere_noaa",
+      "display_name": "NOAA Ionosphere",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://services.swpc.noaa.gov/json/ionospheric",
+      "default_actions": ["tec", "foF2", "hmF2", "spread_f"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "magnetic_field",
+      "display_name": "Geomagnetic Field Data",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://services.swpc.noaa.gov/products/geospace",
+      "default_actions": ["kp", "dst", "aurora", "magnetometer"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "humidity_sensor",
+      "display_name": "Humidity Sensors",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": null,
+      "default_actions": ["read", "history", "alert"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"sensor_type": "mqtt_http", "configurable": true}
+    },
+    {
+      "integration": "voc_sensor",
+      "display_name": "VOC/VSC Sensors",
+      "category": "environmental",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": null,
+      "default_actions": ["read", "tvoc", "eco2", "history"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"sensor_type": "mqtt_http", "configurable": true}
+    },
+
+    {
+      "integration": "usgs_earthquake",
+      "display_name": "USGS Earthquake",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://earthquake.usgs.gov/fdsnws/event/1",
+      "default_actions": ["query", "count", "catalogs", "contributors"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "noaa_tides",
+      "display_name": "NOAA Tides & Currents",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter",
+      "default_actions": ["predictions", "water_level", "currents", "wind"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "ndbc_buoys",
+      "display_name": "NDBC Buoy Data",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://www.ndbc.noaa.gov/data/realtime2",
+      "default_actions": ["stdmet", "ocean", "spec", "adcp"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "usace_cwms",
+      "display_name": "USACE Water Management",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://water.usace.army.mil/cwms/api",
+      "default_actions": ["levels", "flow", "precipitation", "gates"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"data_type": "levees_dams", "coverage": "usa"}
+    },
+    {
+      "integration": "nws_flood",
+      "display_name": "NWS Flood Data",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://water.weather.gov/ahps2",
+      "default_actions": ["hydrograph", "forecast", "observations", "alerts"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "ais_marine",
+      "display_name": "AIS Marine Traffic",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://services.marinetraffic.com/api",
+      "default_actions": ["vessels", "ports", "routes", "positions"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"data_type": "maritime", "coverage": "global"}
+    },
+    {
+      "integration": "port_data",
+      "display_name": "Port & Harbor Data",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.portcall.net/v1",
+      "default_actions": ["ports", "arrivals", "departures", "berths"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "usgs_waterservices",
+      "display_name": "USGS Water Services",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://waterservices.usgs.gov/nwis",
+      "default_actions": ["iv", "dv", "gwlevels", "site"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "iris_seismic",
+      "display_name": "IRIS Seismic Data",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://service.iris.edu/fdsnws",
+      "default_actions": ["dataselect", "station", "event"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "emsc_earthquake",
+      "display_name": "EMSC Earthquake",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://www.seismicportal.eu/fdsnws/event/1",
+      "default_actions": ["query", "catalogs"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"coverage": "europe_global"}
+    },
+    {
+      "integration": "tsunami_noaa",
+      "display_name": "NOAA Tsunami Warning",
+      "category": "earth_science",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "https://www.tsunami.gov/events",
+      "default_actions": ["warnings", "advisories", "watch", "information"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+
+    {
+      "integration": "amplitude",
+      "display_name": "Amplitude Analytics",
+      "category": "analytics",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://amplitude.com/api/2",
+      "default_actions": ["events", "users", "cohorts", "charts"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "mixpanel",
+      "display_name": "Mixpanel",
+      "category": "analytics",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://mixpanel.com/api/2.0",
+      "default_actions": ["events", "funnels", "retention", "segmentation"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "segment",
+      "display_name": "Segment",
+      "category": "analytics",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.segment.io/v1",
+      "default_actions": ["track", "identify", "page", "group"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "posthog",
+      "display_name": "PostHog",
+      "category": "analytics",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://app.posthog.com/api",
+      "default_actions": ["events", "persons", "insights", "feature_flags"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "wolfram_alpha",
+      "display_name": "Wolfram Alpha",
+      "category": "analytics",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.wolframalpha.com/v2",
+      "default_actions": ["query", "short", "spoken", "simple"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "yahoo_finance",
+      "display_name": "Yahoo Finance",
+      "category": "analytics",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://query1.finance.yahoo.com/v8",
+      "default_actions": ["quote", "chart", "fundamentals", "options"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+
+    {
+      "integration": "coinmarketcap",
+      "display_name": "CoinMarketCap",
+      "category": "finance",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://pro-api.coinmarketcap.com/v1",
+      "default_actions": ["listings", "quotes", "info", "map"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "alpha_vantage",
+      "display_name": "Alpha Vantage",
+      "category": "finance",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://www.alphavantage.co/query",
+      "default_actions": ["time_series", "quote", "search", "forex", "crypto"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "polygon_io",
+      "display_name": "Polygon.io",
+      "category": "finance",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.polygon.io",
+      "default_actions": ["aggs", "trades", "quotes", "tickers"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "robinhood",
+      "display_name": "Robinhood",
+      "category": "finance",
+      "native_node": false,
+      "auth_type": "oauth2",
+      "base_url": "https://api.robinhood.com",
+      "default_actions": ["accounts", "positions", "orders", "quotes"],
+      "risk": "write",
+      "confirm_required": true,
+      "enabled": true,
+      "metadata": {"api_type": "unofficial", "requires_2fa": true}
+    },
+    {
+      "integration": "finnhub",
+      "display_name": "Finnhub",
+      "category": "finance",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://finnhub.io/api/v1",
+      "default_actions": ["quote", "candles", "news", "earnings"],
+      "risk": "read_only",
+      "confirm_required": false,
+      "enabled": true
+    },
+
+    {
+      "integration": "zapier",
+      "display_name": "Zapier",
+      "category": "automation",
+      "native_node": false,
+      "auth_type": "webhook",
+      "base_url": "https://hooks.zapier.com/hooks/catch",
+      "default_actions": ["trigger", "action", "search"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "ifttt",
+      "display_name": "IFTTT",
+      "category": "automation",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://maker.ifttt.com/trigger",
+      "default_actions": ["trigger_event"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "make",
+      "display_name": "Make (Integromat)",
+      "category": "automation",
+      "native_node": false,
+      "auth_type": "webhook",
+      "base_url": "https://hook.us1.make.com",
+      "default_actions": ["webhook", "scenario"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "pipedream",
+      "display_name": "Pipedream",
+      "category": "automation",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.pipedream.com/v1",
+      "default_actions": ["sources", "workflows", "events"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "tray_io",
+      "display_name": "Tray.io",
+      "category": "automation",
+      "native_node": false,
+      "auth_type": "oauth2",
+      "base_url": "https://api.tray.io/core/v1",
+      "default_actions": ["workflows", "triggers", "connectors"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "activepieces",
+      "display_name": "Activepieces",
+      "category": "automation",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://cloud.activepieces.com/api/v1",
+      "default_actions": ["flows", "runs", "pieces"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+
+    {
+      "integration": "elevenlabs",
+      "display_name": "ElevenLabs",
+      "category": "ai",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.elevenlabs.io/v1",
+      "default_actions": ["text_to_speech", "voices", "history", "models"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true
+    },
+    {
+      "integration": "chatgpt_plugins",
+      "display_name": "ChatGPT Plugins",
+      "category": "ai",
+      "native_node": false,
+      "auth_type": "oauth2",
+      "base_url": "https://chat.openai.com/backend-api",
+      "default_actions": ["conversation", "plugins", "browse"],
+      "risk": "write",
+      "confirm_required": false,
+      "enabled": true,
+      "metadata": {"mcp_compatible": true}
+    },
+    {
+      "integration": "cursor_mcp",
+      "display_name": "Cursor IDE MCP",
+      "category": "ai",
+      "native_node": false,
+      "auth_type": "none",
+      "base_url": "localhost",
+      "default_actions": ["code_edit", "file_ops", "terminal", "search"],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": true,
+      "metadata": {"mcp_server": true, "local_only": true}
+    },
+
+    {
+      "integration": "palantir_foundry",
+      "display_name": "Palantir Foundry",
+      "category": "defense",
+      "native_node": false,
+      "auth_type": "oauth2",
+      "base_url": "https://foundry.palantir.com/api",
+      "default_actions": ["datasets", "ontology", "actions", "queries"],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": false,
+      "metadata": {"clearance_required": true, "restricted": true}
+    },
+    {
+      "integration": "anduril_sdk",
+      "display_name": "Anduril SDK",
+      "category": "defense",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": "https://api.anduril.com/v1",
+      "default_actions": ["sensors", "assets", "tracks", "mesh"],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": false,
+      "metadata": {"clearance_required": true, "restricted": true}
+    },
+    {
+      "integration": "platform_one",
+      "display_name": "Platform One (DoD)",
+      "category": "defense",
+      "native_node": false,
+      "auth_type": "oauth2",
+      "base_url": "https://login.dso.mil/auth",
+      "default_actions": ["auth", "deploy", "pipeline", "registry"],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": false,
+      "metadata": {"clearance_required": true, "restricted": true, "hypergraph": true}
+    },
+    {
+      "integration": "tac_link",
+      "display_name": "Tactical Data Link",
+      "category": "defense",
+      "native_node": false,
+      "auth_type": "api_key",
+      "base_url": null,
+      "default_actions": ["receive", "transmit", "track"],
+      "risk": "admin",
+      "confirm_required": true,
+      "enabled": false,
+      "metadata": {"clearance_required": true, "restricted": true}
     }
   ]
 }

@@ -263,3 +263,6 @@ async def get_n8n_registry():
         ],
         "categories": [c.value for c in AgentCategory],
     }
+
+
+
