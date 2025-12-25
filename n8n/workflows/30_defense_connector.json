@@ -1,5 +1,8 @@
 {
+  "id": "defense-connector",
   "name": "Defense: Secure Connector",
+  "active": false,
+  "versionId": "1",
   "nodes": [
     {
       "parameters": {},

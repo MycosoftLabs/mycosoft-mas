@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MASTopologyView, MASEntity } from "./mas-topology-view";
+import { MASTopologyView, MASEntity, Connection } from "./mas-topology-view";
 import { Sidebar } from "./mas-sidebar";
 import { Navigation } from "./mas-navigation";
 import { SearchBar } from "./mas-search-bar";
@@ -9,13 +9,7 @@ import { DeviceModal } from "./mas-entity-modal";
 import { GlobalIntegrationsPanel } from "./dashboard/global-integrations";
 import { IntegrationStatusWidget } from "./dashboard/integration-status";
 import { IntegrationsView } from "./dashboard/integrations-view";
-
-interface Connection {
-  from: string;
-  to: string;
-  type: string;
-  status: string;
-}
+import { DefenseView } from "./dashboard/defense-view";
 
 export function MASDashboard() {
   const [currentView, setCurrentView] = useState("topology");
@@ -58,6 +52,8 @@ export function MASDashboard() {
         return <DashboardMainView entities={entities} onEntityClick={setSelectedEntity} />;
       case "integrations":
         return <IntegrationsView />;
+      case "defense":
+        return <DefenseView />;
       default:
         return (
           <MASTopologyView

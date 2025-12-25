@@ -1,5 +1,8 @@
 {
+  "id": "native-automation",
   "name": "Native: Automation Platforms",
+  "active": false,
+  "versionId": "1",
   "nodes": [
     {
       "parameters": {},

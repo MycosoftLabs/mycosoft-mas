@@ -26,7 +26,6 @@ from mycosoft_mas.core.routers.agent_runner_api import router as agent_runner_ro
 from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
-from mycosoft_mas.core.routers.orchestrator_api import router as orchestrator_router
 
 
 def load_config() -> dict[str, Any]:
@@ -55,7 +54,7 @@ def load_config() -> dict[str, Any]:
 
 
 class MycosoftMAS:
-    """Small faÃƒÂ§ade object to keep compatibility with older imports."""
+    """Small faÃ§ade object to keep compatibility with older imports."""
 
     def __init__(self) -> None:
         self.config = load_config()
@@ -96,7 +95,6 @@ app.include_router(coding_router)
 app.include_router(integrations_router)
 app.include_router(notifications_router)
 app.include_router(infrastructure_router)
-app.include_router(orchestrator_router)
 
 
 # ---------------------------------------------------------------------------
@@ -235,4 +233,3 @@ async def voice_feedback_recent(limit: int = 20) -> dict[str, Any]:
 @app.get("/voice/feedback/summary")
 async def voice_feedback_summary() -> dict[str, Any]:
     return {"status": "ok", "summary": _feedback_store.summary()}
-

@@ -270,14 +270,41 @@ services:
     image: ollama/ollama:latest
     volumes:
       - ollama_data:/root/.ollama
+      - ./models:/models
     ports:
       - "11434:11434"
-    profiles: ["local-llm"]
+    environment:
+      - OLLAMA_ORIGINS=*
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  # NLM Training Service - Nature Learning Model
+  nlm-trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile.orchestrator
+    command: python -m mycosoft_mas.nlm.trainer
+    environment:
+      - NLM_MODEL_PATH=/models/nlm
+      - NLM_TRAINING_DATA=/data/nlm_training
+      - OLLAMA_URL=http://ollama:11434
+      - DATABASE_URL=postgresql://mas:maspassword@postgres:5432/mas
+      - QDRANT_URL=http://qdrant:6333
+    volumes:
+      - ./models:/models
+      - ./data:/data
+      - ./mycosoft_mas:/app/mycosoft_mas
+    depends_on:
+      - ollama
+      - postgres
+      - qdrant
+    profiles: ["nlm-training"]
     networks:
       - mas-network
 
@@ -289,7 +316,7 @@ services:
   n8n:
     image: n8nio/n8n:latest
     ports:
-      - "5690:5678"
+      - "5678:5678"
     environment:
       # Keep local dev simple: no auth so webhooks/UI work without extra headers.
       # If you need auth later, re-enable and put n8n behind a reverse proxy.
@@ -297,7 +324,7 @@ services:
       - N8N_HOST=localhost
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5688/
+      - WEBHOOK_URL=http://localhost:5678/
       - GENERIC_TIMEZONE=America/New_York
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-myca-encryption-key-change-me}
       # Public API for workflow management (no auth required for local dev)
@@ -314,12 +341,36 @@ services:
       - LITELLM_URL=http://litellm:4000
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./n8n/workflows:/home/node/workflows
+      - ./n8n/workflows:/import/workflows
+      - ./n8n/scripts:/import/scripts:ro
     depends_on:
       - redis
     networks:
       - mas-network
     restart: unless-stopped
+
+  # One-shot importer: normalizes + imports workflows into the n8n DB volume so they appear in the UI.
+  # This runs quickly on `docker compose up -d` and then exits.
+  n8n-importer:
+    image: n8nio/n8n:latest
+    entrypoint: ["/bin/sh", "-lc"]
+    command: >
+      node /import/scripts/normalize-workflows.mjs /import/workflows &&
+      n8n import:workflow --separate --input=/import/workflows &&
+      echo 'n8n workflow import complete'
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_PUBLIC_API_DISABLED=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/import/workflows
+      - ./n8n/scripts:/import/scripts:ro
+    depends_on:
+      n8n:
+        condition: service_started
+    networks:
+      - mas-network
+    restart: "no"
 
   # Whisper - Speech-to-Text (Local, Fast)
   whisper:
@@ -422,6 +473,13 @@ services:
       - "3100:3000"
     environment:
       NODE_ENV: production
+      # Inside docker: call services by name, not localhost.
+      MAS_BACKEND_URL: http://mas-orchestrator:8000
+      N8N_JARVIS_URL: http://n8n:5678/webhook/myca/jarvis
+      N8N_WEBHOOK_URL: http://n8n:5678/webhook/myca/speech
+      N8N_TTS_URL: http://n8n:5678/webhook/myca/speech/tts
+      ELEVENLABS_PROXY_URL: http://elevenlabs-proxy:8000/v1/audio/speech
+      OPENEDAI_SPEECH_URL: http://openedai-speech:8000/v1/audio/speech
     networks:
       - mas-network
     restart: unless-stopped

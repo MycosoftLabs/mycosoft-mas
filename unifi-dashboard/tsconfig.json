@@ -12,7 +12,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "jsxImportSource": "same-runtime/dist",
     "incremental": true,
     "plugins": [
       {

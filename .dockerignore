@@ -3,6 +3,12 @@
 .gitignore
 .gitattributes
 
+# Separate projects (not part of MAS build)
+WEBSITE/
+MINDEX/
+platform-infra/
+unifi-dashboard/
+
 # Python
 __pycache__/
 *.py[cod]

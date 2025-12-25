@@ -1,5 +1,8 @@
 {
+  "id": "native-analytics",
   "name": "Native: Analytics & Data Science",
+  "active": false,
+  "versionId": "1",
   "nodes": [
     {
       "parameters": {},

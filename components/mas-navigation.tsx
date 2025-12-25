@@ -10,6 +10,7 @@ import {
   Globe,
   Satellite,
   Zap,
+  Shield,
 } from "lucide-react";
 
 interface NavigationProps {
@@ -22,6 +23,7 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
     { icon: LayoutDashboard, id: "dashboard", label: "Dashboard" },
     { icon: Network, id: "topology", label: "Topology" },
     { icon: Globe, id: "integrations", label: "Global Integrations" },
+    { icon: Shield, id: "defense", label: "Defense" },
     { icon: Users, id: "agents", label: "Agents" },
     { icon: HardDrive, id: "databases", label: "Databases" },
     { icon: Activity, id: "flows", label: "Flows" },

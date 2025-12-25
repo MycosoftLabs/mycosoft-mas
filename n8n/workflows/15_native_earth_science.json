@@ -1,5 +1,8 @@
 {
+  "id": "native-earth-science",
   "name": "Native: Earth Science & Geophysics",
+  "active": false,
+  "versionId": "1",
   "nodes": [
     {
       "parameters": {},

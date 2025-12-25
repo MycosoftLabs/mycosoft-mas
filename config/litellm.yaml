@@ -1,11 +1,95 @@
 model_list:
+  # OpenAI Models
+  - model_name: gpt-4
+    litellm_params:
+      model: gpt-4
+      api_key: ${OPENAI_API_KEY:-}
+      stream: false
+
+  - model_name: gpt-4o
+    litellm_params:
+      model: gpt-4o
+      api_key: ${OPENAI_API_KEY:-}
+      stream: false
+
   - model_name: gpt-4o-mini
     litellm_params:
-      model: ${LLM_MODEL_LOCAL:-gpt-4o-mini}
-      api_key: ${OPENAI_API_KEY:-sk-placeholder}
-      api_base: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      model: gpt-4o-mini
+      api_key: ${OPENAI_API_KEY:-}
+      stream: false
+
+  - model_name: gpt-3.5-turbo
+    litellm_params:
+      model: gpt-3.5-turbo
+      api_key: ${OPENAI_API_KEY:-}
+      stream: false
+
+  # Anthropic Models
+  - model_name: claude-3-opus
+    litellm_params:
+      model: claude-3-opus-20240229
+      api_key: ${ANTHROPIC_API_KEY:-}
+      stream: false
+
+  - model_name: claude-3-sonnet
+    litellm_params:
+      model: claude-3-5-sonnet-20241022
+      api_key: ${ANTHROPIC_API_KEY:-}
+      stream: false
+
+  - model_name: claude-3-haiku
+    litellm_params:
+      model: claude-3-haiku-20240307
+      api_key: ${ANTHROPIC_API_KEY:-}
+      stream: false
+
+  # Local Ollama Models
+  - model_name: llama3
+    litellm_params:
+      model: ollama/llama3
+      api_base: http://ollama:11434
+      stream: false
+
+  - model_name: llama3.2
+    litellm_params:
+      model: ollama/llama3.2
+      api_base: http://ollama:11434
+      stream: false
+
+  - model_name: mistral
+    litellm_params:
+      model: ollama/mistral
+      api_base: http://ollama:11434
+      stream: false
+
+  - model_name: codellama
+    litellm_params:
+      model: ollama/codellama
+      api_base: http://ollama:11434
+      stream: false
+
+  # NLM - Nature Learning Model (Custom)
+  - model_name: nlm
+    litellm_params:
+      model: ollama/nlm
+      api_base: http://ollama:11434
+      stream: false
+
+  - model_name: nlm-embed
+    litellm_params:
+      model: ollama/nomic-embed-text
+      api_base: http://ollama:11434
       stream: false
 
 general_settings:
   telemetry: false
-  timeout: 60
+  timeout: 120
+  drop_params: true
+
+# Fallback configuration
+litellm_settings:
+  fallbacks:
+    - model_name: gpt-4
+      fallback_models: ["claude-3-sonnet", "llama3"]
+    - model_name: gpt-3.5-turbo
+      fallback_models: ["claude-3-haiku", "mistral"]

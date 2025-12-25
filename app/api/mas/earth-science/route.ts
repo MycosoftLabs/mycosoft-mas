@@ -79,7 +79,11 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        data = await fetchTidePredictions(params);
+        data = await fetchTidePredictions({
+          station_id: params.station_id,
+          begin_date: params.begin_date,
+          end_date: params.end_date,
+        });
         break;
       case "water_levels":
         if (!params?.station_id) {
@@ -88,7 +92,11 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        data = await fetchWaterLevels(params);
+        data = await fetchWaterLevels({
+          station_id: params.station_id,
+          begin_date: params.begin_date,
+          end_date: params.end_date,
+        });
         break;
       case "streamflow":
         data = await fetchStreamflow(params);
