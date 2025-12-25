@@ -259,3 +259,6 @@ Example: "The snapshot failed due to insufficient storage. I recommend freeing s
 | 1.0 | 2024-12 | Initial knowledge base |
 | 1.1 | 2024-12 | Added agent registry with 40+ agents |
 | 1.2 | 2024-12 | ElevenLabs integration with Arabella voice |
+
+
+

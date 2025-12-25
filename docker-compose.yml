@@ -1,4 +1,4 @@
-version: "3.9"
+﻿version: "3.9"
 
 services:
   mas-orchestrator:
@@ -34,6 +34,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
+      - ./mycosoft_mas:/app/mycosoft_mas
     depends_on:
       redis:
         condition: service_healthy
@@ -42,7 +43,7 @@ services:
       qdrant:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\").read()"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -71,6 +72,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
+      - ./mycosoft_mas:/app/mycosoft_mas
     depends_on:
       mas-orchestrator:
         condition: service_started
@@ -102,6 +104,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
+      - ./mycosoft_mas:/app/mycosoft_mas
     depends_on:
       mas-orchestrator:
         condition: service_started
@@ -133,6 +136,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
+      - ./mycosoft_mas:/app/mycosoft_mas
     depends_on:
       mas-orchestrator:
         condition: service_started
@@ -169,7 +173,7 @@ services:
   redis:
     image: redis:8-alpine
     ports:
-      - "6379:6379"
+      - "6390:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -183,7 +187,7 @@ services:
   qdrant:
     image: qdrant/qdrant:v1.13.2
     ports:
-      - "6333:6333"
+      - "6345:6333"
     volumes:
       - qdrant_data:/qdrant/storage
     healthcheck:
@@ -285,7 +289,7 @@ services:
   n8n:
     image: n8nio/n8n:latest
     ports:
-      - "5678:5678"
+      - "5690:5678"
     environment:
       # Keep local dev simple: no auth so webhooks/UI work without extra headers.
       # If you need auth later, re-enable and put n8n behind a reverse proxy.
@@ -293,7 +297,7 @@ services:
       - N8N_HOST=localhost
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5678/
+      - WEBHOOK_URL=http://localhost:5688/
       - GENERIC_TIMEZONE=America/New_York
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-myca-encryption-key-change-me}
       # Public API for workflow management (no auth required for local dev)
@@ -331,7 +335,7 @@ services:
       - mas-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\").read()"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -409,6 +413,18 @@ services:
       - mas-network
     restart: unless-stopped
 
+  unifi-dashboard:
+    build:
+      context: ./unifi-dashboard
+      dockerfile: Dockerfile
+    container_name: myca-unifi-dashboard
+    ports:
+      - "3100:3000"
+    environment:
+      NODE_ENV: production
+    networks:
+      - mas-network
+    restart: unless-stopped
 volumes:
   redis-data:
   postgres_data:
@@ -424,3 +440,8 @@ volumes:
 networks:
   mas-network:
     driver: bridge
+
+
+
+
+

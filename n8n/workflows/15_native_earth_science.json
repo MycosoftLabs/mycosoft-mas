@@ -1,0 +1,45 @@
+{
+  "name": "Native: Earth Science & Geophysics",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "earth-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific earth science integration\nconst input = $input.item.json;\nconst integrationName = input.integration?.integration || 'unknown';\nconst action = input.command?.action || 'default';\nconst params = input.command?.params || {};\n\nreturn [{ \n  json: { \n    ...input, \n    routing_node: integrationName,\n    action: action,\n    params: params\n  } \n}];"
+      },
+      "id": "earth-router",
+      "name": "Earth Science Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle earth science requests\nconst input = $input.item.json;\nconst integration = input.routing_node;\nconst action = input.action;\nconst params = input.params || {};\n\nlet result = null;\nlet error = null;\n\ntry {\n  switch(integration) {\n    case 'usgs_earthquake':\n      result = { source: 'USGS Earthquake', url: 'https://earthquake.usgs.gov/fdsnws/event/1', action, note: 'Global earthquake data' };\n      break;\n    case 'noaa_tides':\n      result = { source: 'NOAA Tides & Currents', url: 'https://api.tidesandcurrents.noaa.gov/api/prod', action, note: 'Tide predictions and observations' };\n      break;\n    case 'ndbc_buoy':\n      result = { source: 'NDBC Buoys', url: 'https://www.ndbc.noaa.gov/data', action, note: 'Marine weather buoy data' };\n      break;\n    case 'usace_water':\n      result = { source: 'USACE Water Management', url: 'https://water.usace.army.mil/a2w', action, note: 'Dam and reservoir data' };\n      break;\n    case 'nws_flood':\n      result = { source: 'NWS Flood', url: 'https://water.weather.gov/ahps', action, note: 'Flood forecasting data' };\n      break;\n    case 'usgs_water':\n      result = { source: 'USGS Water Services', url: 'https://waterservices.usgs.gov/nwis', action, note: 'Streamflow and groundwater data' };\n      break;\n    case 'iris_seismic':\n      result = { source: 'IRIS Seismic', url: 'https://service.iris.edu', action, note: 'Seismic waveform data' };\n      break;\n    case 'noaa_tsunami':\n      result = { source: 'NOAA Tsunami Warning', url: 'https://www.tsunami.gov', action, note: 'Tsunami alerts and data' };\n      break;\n    default:\n      error = `Unknown earth science integration: ${integration}`;\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{\n  json: {\n    success: !error,\n    request_id: input.request_id,\n    integration: integration,\n    category: 'earth_science',\n    action: action,\n    data: result,\n    error: error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "earth-handler",
+      "name": "Handle Earth Science Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Earth Science Router", "type": "main", "index": 0 }]]
+    },
+    "Earth Science Router": {
+      "main": [[{ "node": "Handle Earth Science Request", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

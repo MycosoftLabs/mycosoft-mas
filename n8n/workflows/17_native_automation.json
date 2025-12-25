@@ -1,0 +1,45 @@
+{
+  "name": "Native: Automation Platforms",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "auto-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific automation platform\nconst input = $input.item.json;\nconst integrationName = input.integration?.integration || 'unknown';\nconst action = input.command?.action || 'default';\nconst params = input.command?.params || {};\n\nreturn [{ \n  json: { \n    ...input, \n    routing_node: integrationName,\n    action: action,\n    params: params\n  } \n}];"
+      },
+      "id": "auto-router",
+      "name": "Automation Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle automation platform webhook triggers\nconst input = $input.item.json;\nconst integration = input.routing_node;\nconst action = input.action;\nconst params = input.params || {};\n\nlet result = null;\nlet error = null;\n\ntry {\n  switch(integration) {\n    case 'zapier':\n      result = { source: 'Zapier', type: 'webhook', note: 'Trigger Zapier Zaps via webhook', webhook_url: params.webhook_url || 'Configure ZAPIER_WEBHOOK_URL' };\n      break;\n    case 'ifttt':\n      result = { source: 'IFTTT', type: 'webhook', note: 'Trigger IFTTT applets via Webhooks service', webhook_url: params.webhook_url || 'Configure IFTTT_WEBHOOK_URL' };\n      break;\n    case 'make':\n      result = { source: 'Make (Integromat)', type: 'webhook', note: 'Trigger Make scenarios via webhook', webhook_url: params.webhook_url || 'Configure MAKE_WEBHOOK_URL' };\n      break;\n    case 'pipedream':\n      result = { source: 'Pipedream', type: 'webhook', note: 'Trigger Pipedream workflows', webhook_url: params.webhook_url || 'Configure PIPEDREAM_WEBHOOK_URL' };\n      break;\n    case 'activepieces':\n      result = { source: 'Activepieces', type: 'webhook', note: 'Trigger Activepieces flows', webhook_url: params.webhook_url || 'Configure ACTIVEPIECES_WEBHOOK_URL' };\n      break;\n    default:\n      error = `Unknown automation integration: ${integration}`;\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{\n  json: {\n    success: !error,\n    request_id: input.request_id,\n    integration: integration,\n    category: 'automation',\n    action: action,\n    data: result,\n    error: error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "auto-handler",
+      "name": "Handle Automation Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Automation Router", "type": "main", "index": 0 }]]
+    },
+    "Automation Router": {
+      "main": [[{ "node": "Handle Automation Request", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
