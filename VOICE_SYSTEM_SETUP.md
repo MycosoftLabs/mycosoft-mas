@@ -148,9 +148,8 @@ curl http://localhost:8001/voice/feedback/summary
 
 ### Access n8n
 - **Web UI**: http://localhost:5678
-- **Username**: `admin`
-- **Password**: `myca2024`
-- **API Key**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZThjZmRmOS0xODYzLTQwOGUtYjBiNy0zYTI4NWFjNzRkZjgiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY1OTkyNTM4LCJleHAiOjE3Njg1Mzk2MDB9._54u_k8z-JRsSpU5CHoM9W2Sj1Pc6pi0SNhDE7VW2Qo`
+- **Auth**: Configure login via your `.env` / Docker environment variables (do not commit passwords)
+- **API Key**: Create/view in n8n UI at `Settings → n8n API` (do not commit keys)
 
 ### Import Workflows
 

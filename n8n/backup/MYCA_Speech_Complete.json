@@ -1,0 +1,447 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.461Z",
+    "createdAt":  "2025-12-20T07:28:10.461Z",
+    "id":  "ZUrL9VmogCeb3UgQ",
+    "name":  "MYCA Speech Complete",
+    "description":  null,
+    "active":  true,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "myca/speech",
+                                         "responseMode":  "lastNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "wh",
+                      "name":  "Webhook",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       150,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// MYCA Speech Interface - Parse input\nconst body = $input.item.json.body || $input.item.json;\nconst binary = $input.item.binary;\n\n// Health check\nif (body.health_check || body.test) {\n  return { mode: \u0027health\u0027, status: \u0027ok\u0027, message: \u0027MYCA Speech is operational\u0027, timestamp: new Date().toISOString() };\n}\n\n// Text input (no transcription needed)\nconst text = body.text || body.message || body.query;\nif (text) {\n  return { mode: \u0027text\u0027, text, request_id: body.request_id || `req_${Date.now()}`, timestamp: new Date().toISOString() };\n}\n\n// Audio input\nif (binary \u0026\u0026 binary.data) {\n  return { mode: \u0027audio\u0027, has_audio: true, request_id: body.request_id || `req_${Date.now()}`, timestamp: new Date().toISOString() };\n}\n\n// No valid input - return error info for fallback\nreturn { mode: \u0027error\u0027, error: \u0027No text or audio provided\u0027, timestamp: new Date().toISOString() };"
+                                     },
+                      "id":  "parse",
+                      "name":  "Parse Input",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       350,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "http://whisper:8000/v1/audio/transcriptions",
+                                         "authentication":  "none",
+                                         "sendBody":  true,
+                                         "contentType":  "multipart-form-data",
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "file",
+                                                                                       "parameterType":  "formBinaryData",
+                                                                                       "inputDataFieldName":  "data"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "model",
+                                                                                       "value":  "Systran/faster-whisper-base.en"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "whisper",
+                      "name":  "Whisper STT",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       550,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Merge transcript with context\nconst whisperResp = $input.item.json;\nconst prevData = $(\u0027Parse Input\u0027).first().json;\nconst transcript = whisperResp.text || \u0027\u0027;\nreturn { ...prevData, mode: \u0027text\u0027, text: transcript.trim() };"
+                                     },
+                      "id":  "merge-transcript",
+                      "name":  "Merge Transcript",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       750,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "url":  "http://litellm:4000/v1/chat/completions",
+                                         "authentication":  "none",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ { model: \u0027gpt-4o-mini\u0027, messages: [{role: \u0027system\u0027, content: \u0027You are MYCA (pronounced my-kah), the Mycosoft Autonomous Cognitive Agent. Always introduce yourself as MYCA when asked your name. You help manage systems, agents, and infrastructure. Be concise for voice responses. You can help with: system status, agent management, network info, task execution, and general questions.\u0027}, {role: \u0027user\u0027, content: $json.text}], max_tokens: 300, temperature: 0.7 } }}",
+                                         "options":  {
+                                                         "timeout":  30000
+                                                     }
+                                     },
+                      "id":  "llm",
+                      "name":  "LLM Chat",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       950,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Format final response\nconst llmResp = $input.item.json;\nconst prevData = $(\u0027Parse Input\u0027).first().json;\nconst responseText = llmResp.choices?.[0]?.message?.content || \u0027I understand.\u0027;\n\nreturn {\n  status: \u0027success\u0027,\n  request_id: prevData.request_id,\n  transcript: prevData.text,\n  response_text: responseText.trim(),\n  model: llmResp.model || \u0027gpt-4o-mini\u0027,\n  timestamp: new Date().toISOString()\n};"
+                                     },
+                      "id":  "format",
+                      "name":  "Format Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1150,
+                                       300
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "wh":  {
+                                   "main":  [
+                                                [
+                                                    {
+                                                        "node":  "parse",
+                                                        "type":  "main",
+                                                        "index":  0
+                                                    }
+                                                ]
+                                            ]
+                               },
+                        "parse":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "llm",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "whisper":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "merge-transcript",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "merge-transcript":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "llm",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "llm":  {
+                                    "main":  [
+                                                 [
+                                                     {
+                                                         "node":  "format",
+                                                         "type":  "main",
+                                                         "index":  0
+                                                     }
+                                                 ]
+                                             ]
+                                }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "4ce2c20a-fcfd-46da-b931-96d71e68d86d",
+    "activeVersionId":  "4ce2c20a-fcfd-46da-b931-96d71e68d86d",
+    "versionCounter":  4,
+    "triggerCount":  1,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.463Z",
+                       "createdAt":  "2025-12-20T07:28:10.463Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "ZUrL9VmogCeb3UgQ",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  {
+                          "updatedAt":  "2025-12-20T07:28:10.467Z",
+                          "createdAt":  "2025-12-20T07:28:10.467Z",
+                          "versionId":  "4ce2c20a-fcfd-46da-b931-96d71e68d86d",
+                          "workflowId":  "ZUrL9VmogCeb3UgQ",
+                          "nodes":  [
+                                        {
+                                            "parameters":  {
+                                                               "httpMethod":  "POST",
+                                                               "path":  "myca/speech",
+                                                               "responseMode":  "lastNode",
+                                                               "options":  {
+
+                                                                           }
+                                                           },
+                                            "id":  "wh",
+                                            "name":  "Webhook",
+                                            "type":  "n8n-nodes-base.webhook",
+                                            "typeVersion":  1.1,
+                                            "position":  [
+                                                             150,
+                                                             300
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// MYCA Speech Interface - Parse input\nconst body = $input.item.json.body || $input.item.json;\nconst binary = $input.item.binary;\n\n// Health check\nif (body.health_check || body.test) {\n  return { mode: \u0027health\u0027, status: \u0027ok\u0027, message: \u0027MYCA Speech is operational\u0027, timestamp: new Date().toISOString() };\n}\n\n// Text input (no transcription needed)\nconst text = body.text || body.message || body.query;\nif (text) {\n  return { mode: \u0027text\u0027, text, request_id: body.request_id || `req_${Date.now()}`, timestamp: new Date().toISOString() };\n}\n\n// Audio input\nif (binary \u0026\u0026 binary.data) {\n  return { mode: \u0027audio\u0027, has_audio: true, request_id: body.request_id || `req_${Date.now()}`, timestamp: new Date().toISOString() };\n}\n\n// No valid input - return error info for fallback\nreturn { mode: \u0027error\u0027, error: \u0027No text or audio provided\u0027, timestamp: new Date().toISOString() };"
+                                                           },
+                                            "id":  "parse",
+                                            "name":  "Parse Input",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             350,
+                                                             300
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "url":  "http://whisper:8000/v1/audio/transcriptions",
+                                                               "authentication":  "none",
+                                                               "sendBody":  true,
+                                                               "contentType":  "multipart-form-data",
+                                                               "bodyParameters":  {
+                                                                                      "parameters":  [
+                                                                                                         {
+                                                                                                             "name":  "file",
+                                                                                                             "parameterType":  "formBinaryData",
+                                                                                                             "inputDataFieldName":  "data"
+                                                                                                         },
+                                                                                                         {
+                                                                                                             "name":  "model",
+                                                                                                             "value":  "Systran/faster-whisper-base.en"
+                                                                                                         }
+                                                                                                     ]
+                                                                                  },
+                                                               "options":  {
+                                                                               "timeout":  30000
+                                                                           }
+                                                           },
+                                            "id":  "whisper",
+                                            "name":  "Whisper STT",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.2,
+                                            "position":  [
+                                                             550,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Merge transcript with context\nconst whisperResp = $input.item.json;\nconst prevData = $(\u0027Parse Input\u0027).first().json;\nconst transcript = whisperResp.text || \u0027\u0027;\nreturn { ...prevData, mode: \u0027text\u0027, text: transcript.trim() };"
+                                                           },
+                                            "id":  "merge-transcript",
+                                            "name":  "Merge Transcript",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             750,
+                                                             400
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "url":  "http://litellm:4000/v1/chat/completions",
+                                                               "authentication":  "none",
+                                                               "sendHeaders":  true,
+                                                               "headerParameters":  {
+                                                                                        "parameters":  [
+                                                                                                           {
+                                                                                                               "name":  "Content-Type",
+                                                                                                               "value":  "application/json"
+                                                                                                           }
+                                                                                                       ]
+                                                                                    },
+                                                               "sendBody":  true,
+                                                               "specifyBody":  "json",
+                                                               "jsonBody":  "={{ { model: \u0027gpt-4o-mini\u0027, messages: [{role: \u0027system\u0027, content: \u0027You are MYCA (pronounced my-kah), the Mycosoft Autonomous Cognitive Agent. Always introduce yourself as MYCA when asked your name. You help manage systems, agents, and infrastructure. Be concise for voice responses. You can help with: system status, agent management, network info, task execution, and general questions.\u0027}, {role: \u0027user\u0027, content: $json.text}], max_tokens: 300, temperature: 0.7 } }}",
+                                                               "options":  {
+                                                                               "timeout":  30000
+                                                                           }
+                                                           },
+                                            "id":  "llm",
+                                            "name":  "LLM Chat",
+                                            "type":  "n8n-nodes-base.httpRequest",
+                                            "typeVersion":  4.2,
+                                            "position":  [
+                                                             950,
+                                                             300
+                                                         ]
+                                        },
+                                        {
+                                            "parameters":  {
+                                                               "jsCode":  "// Format final response\nconst llmResp = $input.item.json;\nconst prevData = $(\u0027Parse Input\u0027).first().json;\nconst responseText = llmResp.choices?.[0]?.message?.content || \u0027I understand.\u0027;\n\nreturn {\n  status: \u0027success\u0027,\n  request_id: prevData.request_id,\n  transcript: prevData.text,\n  response_text: responseText.trim(),\n  model: llmResp.model || \u0027gpt-4o-mini\u0027,\n  timestamp: new Date().toISOString()\n};"
+                                                           },
+                                            "id":  "format",
+                                            "name":  "Format Response",
+                                            "type":  "n8n-nodes-base.code",
+                                            "typeVersion":  2,
+                                            "position":  [
+                                                             1150,
+                                                             300
+                                                         ]
+                                        }
+                                    ],
+                          "connections":  {
+                                              "wh":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "parse",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     },
+                                              "parse":  {
+                                                            "main":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "llm",
+                                                                                 "type":  "main",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                        },
+                                              "whisper":  {
+                                                              "main":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "merge-transcript",
+                                                                                   "type":  "main",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                          },
+                                              "merge-transcript":  {
+                                                                       "main":  [
+                                                                                    [
+                                                                                        {
+                                                                                            "node":  "llm",
+                                                                                            "type":  "main",
+                                                                                            "index":  0
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                   },
+                                              "llm":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "format",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      }
+                                          },
+                          "authors":  "Morgan Mycosoft",
+                          "name":  null,
+                          "description":  null,
+                          "workflowPublishHistory":  [
+                                                         {
+                                                             "createdAt":  "2025-12-20T07:28:35.025Z",
+                                                             "id":  2,
+                                                             "workflowId":  "ZUrL9VmogCeb3UgQ",
+                                                             "versionId":  "4ce2c20a-fcfd-46da-b931-96d71e68d86d",
+                                                             "event":  "activated",
+                                                             "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34"
+                                                         }
+                                                     ]
+                      }
+}

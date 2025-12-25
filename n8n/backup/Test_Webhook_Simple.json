@@ -1,0 +1,116 @@
+{
+    "updatedAt":  "2025-12-20T07:30:31.000Z",
+    "createdAt":  "2025-12-20T07:30:31.499Z",
+    "id":  "nJVU4pmoSJVJXcrN",
+    "name":  "Test Webhook Simple",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "id":  "test-webhook",
+                      "name":  "Test Webhook",
+                      "type":  "n8n-nodes-base.webhook",
+                      "position":  [
+                                       100,
+                                       200
+                                   ],
+                      "parameters":  {
+                                         "path":  "test/simple",
+                                         "responseMode":  "responseNode",
+                                         "httpMethod":  "POST"
+                                     },
+                      "typeVersion":  2
+                  },
+                  {
+                      "id":  "respond",
+                      "name":  "Respond",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "position":  [
+                                       300,
+                                       200
+                                   ],
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={\"status\":\"ok\",\"message\":\"Hello from n8n!\"}"
+                                     },
+                      "typeVersion":  1.1
+                  }
+              ],
+    "connections":  {
+                        "Test Webhook":  {
+                                             "main":  [
+                                                          {
+                                                              "node":  "Respond",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                         }
+                    },
+    "settings":  {
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "292abc69-b377-4e48-a8df-7ec75355815a",
+    "activeVersionId":  null,
+    "versionCounter":  3,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:30:31.502Z",
+                       "createdAt":  "2025-12-20T07:30:31.502Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "nJVU4pmoSJVJXcrN",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

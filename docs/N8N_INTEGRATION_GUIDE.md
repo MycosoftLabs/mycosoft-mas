@@ -12,14 +12,12 @@ This guide covers how to integrate n8n with the Mycosoft Multi-Agent System (MAS
 - **API Access**: Use the instance API key for programmatic access
 
 ### API Key
-```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZThjZmRmOS0xODYzLTQwOGUtYjBiNy0zYTI4NWFjNzRkZjgiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY1OTkyNTM4LCJleHAiOjE3Njg1Mzk2MDB9._54u_k8z-JRsSpU5CHoM9W2Sj1Pc6pi0SNhDE7VW2Qo
-```
+Create an API key in the n8n UI: `Settings → n8n API → Create an API Key`.
 
 **Usage in HTTP requests**:
 ```bash
 curl -X GET http://localhost:5678/api/v1/workflows \
-  -H "X-N8N-API-KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  -H "X-N8N-API-KEY: <your-api-key>"
 ```
 
 ## Available Workflows

@@ -1,0 +1,470 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.513Z",
+    "createdAt":  "2025-12-20T07:28:10.513Z",
+    "id":  "UqLYHszzVXUUICBZ",
+    "name":  "MYCA: Tools Hub",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "myca/tools",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "webhook-tools",
+                      "name":  "Tools Webhook",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       100,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Parse incoming request and prepare for routing\nconst input = $input.first().json;\n\nconst action = input.action || \u0027unknown\u0027;\nconst message = input.message || \u0027\u0027;\nconst sessionId = input.session_id || `tools_${Date.now()}`;\nlet entities = {};\n\ntry {\n  entities = typeof input.entities === \u0027string\u0027 ? JSON.parse(input.entities) : (input.entities || {});\n} catch (e) {\n  entities = {};\n}\n\n// Determine specific tool action\nconst toolActions = {\n  search: \u0027web_search\u0027,\n  weather: \u0027weather\u0027,\n  news: \u0027news\u0027,\n  calendar: \u0027calendar\u0027,\n  email: \u0027email\u0027,\n  notes: \u0027notes\u0027,\n  files: \u0027files\u0027,\n  code: \u0027code\u0027,\n  media: \u0027media\u0027,\n  api: \u0027api_call\u0027\n};\n\nconst toolAction = toolActions[action] || \u0027general\u0027;\n\nreturn {\n  json: {\n    action: action,\n    tool_action: toolAction,\n    message: message,\n    session_id: sessionId,\n    entities: entities,\n    timestamp: new Date().toISOString()\n  }\n};"
+                                     },
+                      "id":  "parse-request",
+                      "name":  "Parse Request",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       320,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "search",
+                                                                                   "leftValue":  "={{ $json.tool_action }}",
+                                                                                   "rightValue":  "web_search",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "weather",
+                                                                                   "leftValue":  "={{ $json.tool_action }}",
+                                                                                   "rightValue":  "weather",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "calendar",
+                                                                                   "leftValue":  "={{ $json.tool_action }}",
+                                                                                   "rightValue":  "calendar",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "email",
+                                                                                   "leftValue":  "={{ $json.tool_action }}",
+                                                                                   "rightValue":  "email",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "files",
+                                                                                   "leftValue":  "={{ $json.tool_action }}",
+                                                                                   "rightValue":  "files",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "code",
+                                                                                   "leftValue":  "={{ $json.tool_action }}",
+                                                                                   "rightValue":  "code",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "or"
+                                                        }
+                                     },
+                      "id":  "tool-router",
+                      "name":  "Tool Router",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3,
+                      "position":  [
+                                       540,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Web Search Simulation (replace with actual search API)\nconst input = $input.first().json;\nconst query = input.message;\n\n// Extract search terms from message\nconst searchTerms = query.replace(/\\b(search|find|look up|what is|who is|where is|google)\\b/gi, \u0027\u0027).trim();\n\n// Simulated search results - Replace with actual API (Google, Bing, SerpAPI)\nconst searchResults = {\n  query: searchTerms,\n  results: [\n    {\n      title: `Results for: ${searchTerms}`,\n      snippet: `This would contain actual search results for \"${searchTerms}\". Connect to a search API like SerpAPI, Brave Search, or Google Custom Search.`,\n      url: `https://www.google.com/search?q=${encodeURIComponent(searchTerms)}`\n    }\n  ],\n  suggestion: \u0027To enable real web search, add SerpAPI or Google Custom Search credentials in n8n.\u0027\n};\n\nreturn {\n  json: {\n    result: `I searched for \"${searchTerms}\". ${searchResults.suggestion}`,\n    data: searchResults,\n    action: \u0027web_search\u0027\n  }\n};"
+                                     },
+                      "id":  "web-search",
+                      "name":  "Web Search",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       780,
+                                       100
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Weather API Integration\nconst input = $input.first().json;\nconst message = input.message;\n\n// Extract location from message\nlet location = \u0027local\u0027;\nconst locationMatch = message.match(/(?:weather|temperature|forecast).*?(?:in|at|for)\\s+([\\w\\s,]+)/i);\nif (locationMatch) {\n  location = locationMatch[1].trim();\n}\n\n// Weather API placeholder - Replace with OpenWeatherMap, WeatherAPI, etc.\nconst weatherData = {\n  location: location,\n  note: \u0027Configure OpenWeatherMap API credentials in n8n to get real weather data.\u0027,\n  suggestion: \u0027Add HTTP Request node with OpenWeatherMap API: https://api.openweathermap.org/data/2.5/weather\u0027\n};\n\nreturn {\n  json: {\n    result: `Weather information for ${location}. ${weatherData.note}`,\n    data: weatherData,\n    action: \u0027weather\u0027\n  }\n};"
+                                     },
+                      "id":  "weather",
+                      "name":  "Weather",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       780,
+                                       240
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Calendar Integration (Google Calendar / Outlook)\nconst input = $input.first().json;\nconst message = input.message;\nconst entities = input.entities || {};\n\n// Parse calendar intent\nlet calendarAction = \u0027list\u0027;\nif (/create|add|schedule|book/i.test(message)) calendarAction = \u0027create\u0027;\nelse if (/delete|remove|cancel/i.test(message)) calendarAction = \u0027delete\u0027;\nelse if (/update|change|modify|reschedule/i.test(message)) calendarAction = \u0027update\u0027;\n\n// Extract date/time from entities\nconst dates = entities.dates || [];\nconst times = entities.times || [];\n\nconst calendarData = {\n  action: calendarAction,\n  dates: dates,\n  times: times,\n  note: \u0027Connect Google Calendar or Microsoft Outlook credentials in n8n to manage calendar.\u0027,\n  suggestion: \u0027Add Google Calendar node with OAuth2 credentials.\u0027\n};\n\nreturn {\n  json: {\n    result: `Calendar ${calendarAction} request processed. ${calendarData.note}`,\n    data: calendarData,\n    action: \u0027calendar\u0027\n  }\n};"
+                                     },
+                      "id":  "calendar",
+                      "name":  "Calendar",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       780,
+                                       380
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Email Integration (Gmail / Outlook / SMTP)\nconst input = $input.first().json;\nconst message = input.message;\nconst entities = input.entities || {};\n\n// Parse email intent\nlet emailAction = \u0027read\u0027;\nif (/send|compose|write|reply/i.test(message)) emailAction = \u0027send\u0027;\nelse if (/read|check|inbox|unread/i.test(message)) emailAction = \u0027read\u0027;\nelse if (/search|find.*email/i.test(message)) emailAction = \u0027search\u0027;\n\n// Extract email addresses from entities\nconst emailAddresses = entities.emails || [];\n\nconst emailData = {\n  action: emailAction,\n  recipients: emailAddresses,\n  note: \u0027Connect Gmail or Microsoft Outlook credentials in n8n to manage email.\u0027,\n  suggestion: \u0027Add Gmail node with OAuth2 credentials.\u0027\n};\n\nreturn {\n  json: {\n    result: `Email ${emailAction} request processed. ${emailData.note}`,\n    data: emailData,\n    action: \u0027email\u0027\n  }\n};"
+                                     },
+                      "id":  "email",
+                      "name":  "Email",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       780,
+                                       520
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// File Management\nconst input = $input.first().json;\nconst message = input.message;\n\n// Parse file intent\nlet fileAction = \u0027list\u0027;\nif (/create|new|make/i.test(message)) fileAction = \u0027create\u0027;\nelse if (/delete|remove/i.test(message)) fileAction = \u0027delete\u0027;\nelse if (/copy|duplicate/i.test(message)) fileAction = \u0027copy\u0027;\nelse if (/move|rename/i.test(message)) fileAction = \u0027move\u0027;\nelse if (/read|open|view|show/i.test(message)) fileAction = \u0027read\u0027;\nelse if (/list|find|search/i.test(message)) fileAction = \u0027list\u0027;\n\n// Extract path hints from message\nconst pathMatch = message.match(/[\\/\\\\][\\w\\-\\.\\/\\\\]+/g) || [];\n\nconst fileData = {\n  action: fileAction,\n  paths: pathMatch,\n  note: \u0027Configure file access through n8n local file nodes or NAS integration.\u0027,\n  suggestion: \u0027Add Read/Write File nodes or FTP/SFTP nodes for NAS access.\u0027\n};\n\nreturn {\n  json: {\n    result: `File ${fileAction} request processed. ${fileData.note}`,\n    data: fileData,\n    action: \u0027files\u0027\n  }\n};"
+                                     },
+                      "id":  "files",
+                      "name":  "Files",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       780,
+                                       660
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Code Execution / Development Tools\nconst input = $input.first().json;\nconst message = input.message;\n\n// Parse code intent\nlet codeAction = \u0027analyze\u0027;\nif (/run|execute|eval/i.test(message)) codeAction = \u0027execute\u0027;\nelse if (/debug|fix|error/i.test(message)) codeAction = \u0027debug\u0027;\nelse if (/deploy|push|release/i.test(message)) codeAction = \u0027deploy\u0027;\nelse if (/git|commit|branch/i.test(message)) codeAction = \u0027git\u0027;\nelse if (/generate|create.*code|write.*code/i.test(message)) codeAction = \u0027generate\u0027;\n\n// Extract code language hints\nlet language = \u0027python\u0027;\nif (/javascript|js|node/i.test(message)) language = \u0027javascript\u0027;\nelse if (/python|py/i.test(message)) language = \u0027python\u0027;\nelse if (/bash|shell|sh/i.test(message)) language = \u0027bash\u0027;\nelse if (/sql/i.test(message)) language = \u0027sql\u0027;\n\nconst codeData = {\n  action: codeAction,\n  language: language,\n  note: \u0027Code execution can be done through Execute Command node or remote API.\u0027,\n  suggestion: \u0027Add SSH node for remote execution or Execute Command for local scripts.\u0027\n};\n\nreturn {\n  json: {\n    result: `Code ${codeAction} (${language}) request processed. ${codeData.note}`,\n    data: codeData,\n    action: \u0027code\u0027\n  }\n};"
+                                     },
+                      "id":  "code",
+                      "name":  "Code",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       780,
+                                       800
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// General fallback for unrouted requests\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    result: `Tool request received: ${input.action}. The specific tool is not yet configured.`,\n    data: input,\n    action: input.action || \u0027unknown\u0027\n  }\n};"
+                                     },
+                      "id":  "fallback",
+                      "name":  "Fallback",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       780,
+                                       940
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Merge all tool responses\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    status: \u0027success\u0027,\n    tool: input.action,\n    result: input.result,\n    data: input.data,\n    timestamp: new Date().toISOString()\n  }\n};"
+                                     },
+                      "id":  "merge-response",
+                      "name":  "Merge Response",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1000,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $json }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "respond",
+                      "name":  "Respond",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       1220,
+                                       400
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Tools Webhook":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Parse Request",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Parse Request":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Tool Router",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Tool Router":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Web Search",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Weather",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Calendar",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Email",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Files",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Code",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Fallback",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Web Search":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Merge Response",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Weather":  {
+                                        "main":  [
+                                                     [
+                                                         {
+                                                             "node":  "Merge Response",
+                                                             "type":  "main",
+                                                             "index":  0
+                                                         }
+                                                     ]
+                                                 ]
+                                    },
+                        "Calendar":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "Merge Response",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "Email":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "Merge Response",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "Files":  {
+                                      "main":  [
+                                                   [
+                                                       {
+                                                           "node":  "Merge Response",
+                                                           "type":  "main",
+                                                           "index":  0
+                                                       }
+                                                   ]
+                                               ]
+                                  },
+                        "Code":  {
+                                     "main":  [
+                                                  [
+                                                      {
+                                                          "node":  "Merge Response",
+                                                          "type":  "main",
+                                                          "index":  0
+                                                      }
+                                                  ]
+                                              ]
+                                 },
+                        "Fallback":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "Merge Response",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "Merge Response":  {
+                                               "main":  [
+                                                            [
+                                                                {
+                                                                    "node":  "Respond",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
+                                                            ]
+                                                        ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "51916c9c-855a-47b6-9821-d2ca58429768",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.515Z",
+                       "createdAt":  "2025-12-20T07:28:10.515Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "UqLYHszzVXUUICBZ",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}
