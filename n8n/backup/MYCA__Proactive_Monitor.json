@@ -1,0 +1,419 @@
+{
+    "updatedAt":  "2025-12-20T07:28:10.426Z",
+    "createdAt":  "2025-12-20T07:28:10.426Z",
+    "id":  "0MrBzHPLh4Xpv2uF",
+    "name":  "MYCA: Proactive Monitor",
+    "description":  null,
+    "active":  false,
+    "isArchived":  false,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "minutes",
+                                                                           "minutesInterval":  5
+                                                                       }
+                                                                   ]
+                                                  }
+                                     },
+                      "id":  "schedule-trigger",
+                      "name":  "Every 5 Minutes",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       100,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "myca/monitor/check",
+                                         "responseMode":  "responseNode",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "manual-trigger",
+                      "name":  "Manual Check Webhook",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       100,
+                                       500
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// System Health Check - Check all critical services\nconst checks = [];\nconst alerts = [];\nconst timestamp = new Date().toISOString();\n\n// Define services to monitor\nconst services = [\n  { name: \u0027MAS Orchestrator\u0027, url: \u0027http://mas-orchestrator:8000/health\u0027, critical: true },\n  { name: \u0027n8n\u0027, url: \u0027http://localhost:5678/healthz\u0027, critical: true },\n  { name: \u0027ElevenLabs TTS\u0027, url: \u0027http://elevenlabs-proxy:8000/health\u0027, critical: false },\n  { name: \u0027Redis\u0027, url: null, check: \u0027redis\u0027, critical: true },\n  { name: \u0027Postgres\u0027, url: null, check: \u0027postgres\u0027, critical: true }\n];\n\n// Placeholder results (actual checks would use HTTP Request nodes)\nservices.forEach(svc =\u003e {\n  checks.push({\n    service: svc.name,\n    status: \u0027pending\u0027,\n    critical: svc.critical,\n    url: svc.url\n  });\n});\n\nreturn {\n  json: {\n    check_type: \u0027health\u0027,\n    timestamp: timestamp,\n    services: checks,\n    note: \u0027Add HTTP Request nodes to perform actual health checks\u0027\n  }\n};"
+                                     },
+                      "id":  "health-check",
+                      "name":  "Health Check",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       320,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "http://mas-orchestrator:8000/health",
+                                         "options":  {
+                                                         "timeout":  10000
+                                                     }
+                                     },
+                      "id":  "check-mas",
+                      "name":  "Check MAS",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       540,
+                                       200
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "http://elevenlabs-proxy:8000/health",
+                                         "options":  {
+                                                         "timeout":  10000
+                                                     }
+                                     },
+                      "id":  "check-tts",
+                      "name":  "Check TTS",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       540,
+                                       340
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "http://mas-orchestrator:8000/agents/registry/",
+                                         "options":  {
+                                                         "timeout":  10000
+                                                     }
+                                     },
+                      "id":  "check-agents",
+                      "name":  "Check Agents",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       540,
+                                       480
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Aggregate health check results and generate alerts\nconst masResult = $(\u0027Check MAS\u0027).first().json;\nconst ttsResult = $(\u0027Check TTS\u0027).first().json;\nconst agentsResult = $(\u0027Check Agents\u0027).first().json;\n\nconst timestamp = new Date().toISOString();\nconst alerts = [];\nconst status = {\n  overall: \u0027healthy\u0027,\n  services: []\n};\n\n// Check MAS\nif (masResult \u0026\u0026 masResult.status === \u0027ok\u0027) {\n  status.services.push({ name: \u0027MAS Orchestrator\u0027, status: \u0027healthy\u0027 });\n} else {\n  status.services.push({ name: \u0027MAS Orchestrator\u0027, status: \u0027unhealthy\u0027 });\n  alerts.push({ level: \u0027critical\u0027, service: \u0027MAS Orchestrator\u0027, message: \u0027Service not responding\u0027 });\n  status.overall = \u0027degraded\u0027;\n}\n\n// Check TTS\nif (ttsResult \u0026\u0026 ttsResult.status === \u0027ok\u0027) {\n  status.services.push({ name: \u0027ElevenLabs TTS\u0027, status: \u0027healthy\u0027, voice: ttsResult.voice_name });\n} else {\n  status.services.push({ name: \u0027ElevenLabs TTS\u0027, status: \u0027unhealthy\u0027 });\n  alerts.push({ level: \u0027warning\u0027, service: \u0027ElevenLabs TTS\u0027, message: \u0027TTS service not responding\u0027 });\n}\n\n// Check Agents\nif (agentsResult \u0026\u0026 agentsResult.total_agents) {\n  status.services.push({ name: \u0027Agent Registry\u0027, status: \u0027healthy\u0027, agent_count: agentsResult.total_agents });\n} else {\n  status.services.push({ name: \u0027Agent Registry\u0027, status: \u0027unhealthy\u0027 });\n  alerts.push({ level: \u0027warning\u0027, service: \u0027Agent Registry\u0027, message: \u0027Could not fetch agents\u0027 });\n}\n\nreturn {\n  json: {\n    timestamp: timestamp,\n    status: status,\n    alerts: alerts,\n    alert_count: alerts.length,\n    requires_notification: alerts.some(a =\u003e a.level === \u0027critical\u0027)\n  }\n};"
+                                     },
+                      "id":  "aggregate-results",
+                      "name":  "Aggregate Results",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       760,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  false,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "loose"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "has-alerts",
+                                                                                   "leftValue":  "={{ $json.alert_count }}",
+                                                                                   "rightValue":  0,
+                                                                                   "operator":  {
+                                                                                                    "type":  "number",
+                                                                                                    "operation":  "gt"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        }
+                                     },
+                      "id":  "check-alerts",
+                      "name":  "Has Alerts?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       980,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Send alert notification (placeholder - connect to Slack, Email, etc.)\nconst input = $input.first().json;\n\nconst alertMessage = `?Ys? MYCA Alert: ${input.alerts.map(a =\u003e `[${a.level.toUpperCase()}] ${a.service}: ${a.message}`).join(\u0027; \u0027)}`;\n\nreturn {\n  json: {\n    notification_sent: false,\n    message: alertMessage,\n    alerts: input.alerts,\n    note: \u0027Connect Slack, Email, or SMS node to send actual notifications\u0027\n  }\n};"
+                                     },
+                      "id":  "send-alert",
+                      "name":  "Send Alert",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1200,
+                                       200
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Log healthy status\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    message: \u0027All systems healthy\u0027,\n    status: input.status,\n    timestamp: input.timestamp\n  }\n};"
+                                     },
+                      "id":  "log-healthy",
+                      "name":  "Log Healthy",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1200,
+                                       400
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Save monitoring history (placeholder - connect to database)\nconst alertData = $(\u0027Send Alert\u0027).first()?.json;\nconst healthyData = $(\u0027Log Healthy\u0027).first()?.json;\n\nconst result = alertData || healthyData;\n\nreturn {\n  json: {\n    action: \u0027monitor_complete\u0027,\n    result: result,\n    timestamp: new Date().toISOString()\n  }\n};"
+                                     },
+                      "id":  "save-history",
+                      "name":  "Save History",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       1420,
+                                       300
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "respondWith":  "json",
+                                         "responseBody":  "={{ $json }}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "respond",
+                      "name":  "Respond",
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.1,
+                      "position":  [
+                                       1420,
+                                       500
+                                   ]
+                  }
+              ],
+    "connections":  {
+                        "Every 5 Minutes":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Health Check",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Manual Check Webhook":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Health Check",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Health Check":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Check MAS",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              },
+                                                              {
+                                                                  "node":  "Check TTS",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              },
+                                                              {
+                                                                  "node":  "Check Agents",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Check MAS":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Aggregate Results",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Check TTS":  {
+                                          "main":  [
+                                                       [
+                                                           {
+                                                               "node":  "Aggregate Results",
+                                                               "type":  "main",
+                                                               "index":  0
+                                                           }
+                                                       ]
+                                                   ]
+                                      },
+                        "Check Agents":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Aggregate Results",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         },
+                        "Aggregate Results":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Has Alerts?",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Has Alerts?":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Send Alert",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ],
+                                                         [
+                                                             {
+                                                                 "node":  "Log Healthy",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Send Alert":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Save History",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Log Healthy":  {
+                                            "main":  [
+                                                         [
+                                                             {
+                                                                 "node":  "Save History",
+                                                                 "type":  "main",
+                                                                 "index":  0
+                                                             }
+                                                         ]
+                                                     ]
+                                        },
+                        "Save History":  {
+                                             "main":  [
+                                                          [
+                                                              {
+                                                                  "node":  "Respond",
+                                                                  "type":  "main",
+                                                                  "index":  0
+                                                              }
+                                                          ]
+                                                      ]
+                                         }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  false
+                 },
+    "staticData":  null,
+    "meta":  null,
+    "pinData":  null,
+    "versionId":  "89cea6ea-17ac-4f32-bc07-d2a6876c9cac",
+    "activeVersionId":  null,
+    "versionCounter":  1,
+    "triggerCount":  0,
+    "shared":  [
+                   {
+                       "updatedAt":  "2025-12-20T07:28:10.427Z",
+                       "createdAt":  "2025-12-20T07:28:10.427Z",
+                       "role":  "workflow:owner",
+                       "workflowId":  "0MrBzHPLh4Xpv2uF",
+                       "projectId":  "2vYHfUSw9PyoLiDh",
+                       "project":  {
+                                       "updatedAt":  "2025-12-20T07:26:10.218Z",
+                                       "createdAt":  "2025-12-20T07:24:36.044Z",
+                                       "id":  "2vYHfUSw9PyoLiDh",
+                                       "name":  "Morgan Mycosoft \u003cmorgan@mycosoft.org\u003e",
+                                       "type":  "personal",
+                                       "icon":  null,
+                                       "description":  null,
+                                       "projectRelations":  [
+                                                                {
+                                                                    "updatedAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "createdAt":  "2025-12-20T07:24:36.044Z",
+                                                                    "userId":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                    "projectId":  "2vYHfUSw9PyoLiDh",
+                                                                    "user":  {
+                                                                                 "updatedAt":  "2025-12-20T07:30:13.000Z",
+                                                                                 "createdAt":  "2025-12-20T07:24:35.720Z",
+                                                                                 "id":  "22c64709-d230-4f0d-bd7a-db86b3d3cc34",
+                                                                                 "email":  "morgan@mycosoft.org",
+                                                                                 "firstName":  "Morgan",
+                                                                                 "lastName":  "Mycosoft",
+                                                                                 "personalizationAnswers":  {
+                                                                                                                "version":  "v4",
+                                                                                                                "personalization_survey_submitted_at":  "2025-12-20T07:26:31.298Z",
+                                                                                                                "personalization_survey_n8n_version":  "2.0.2",
+                                                                                                                "companySize":  "\u003c20",
+                                                                                                                "companyType":  "saas",
+                                                                                                                "role":  "business-owner",
+                                                                                                                "reportedSource":  "friend"
+                                                                                                            },
+                                                                                 "settings":  {
+                                                                                                  "userActivated":  false
+                                                                                              },
+                                                                                 "disabled":  false,
+                                                                                 "mfaEnabled":  false,
+                                                                                 "lastActiveAt":  "2025-12-20",
+                                                                                 "isPending":  false
+                                                                             }
+                                                                }
+                                                            ]
+                                   }
+                   }
+               ],
+    "tags":  [
+
+             ],
+    "activeVersion":  null
+}

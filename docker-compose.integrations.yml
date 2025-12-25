@@ -1,0 +1,142 @@
+version: "3.9"
+
+# Docker Compose for MINDEX, NATUREOS, and WEBSITE integrations
+# This file sets up local instances of these services for development and testing
+
+services:
+  # ============================================================================
+  # MINDEX (Mycological Index Database)
+  # ============================================================================
+  mindex-postgres:
+    image: postgis/postgis:17-3.4
+    container_name: mindex-postgres
+    environment:
+      POSTGRES_USER: ${MINDEX_DB_USER:-mindex}
+      POSTGRES_PASSWORD: ${MINDEX_DB_PASSWORD:-mindexpassword}
+      POSTGRES_DB: ${MINDEX_DB_NAME:-mindex}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - mindex_postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"  # MINDEX database port
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${MINDEX_DB_USER:-mindex}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - integrations-network
+    restart: unless-stopped
+
+  mindex-api:
+    # Note: Replace with actual MINDEX API image or build from repo
+    # For now, using a placeholder - you'll need to:
+    # 1. Clone https://github.com/MycosoftLabs/mindex
+    # 2. Build the API service
+    # 3. Update this service definition
+    build:
+      context: ./integrations/mindex  # Create this directory and add Dockerfile
+      dockerfile: Dockerfile
+    container_name: mindex-api
+    environment:
+      DATABASE_URL: postgresql://${MINDEX_DB_USER:-mindex}:${MINDEX_DB_PASSWORD:-mindexpassword}@mindex-postgres:5432/${MINDEX_DB_NAME:-mindex}
+      MINDEX_API_PORT: ${MINDEX_API_PORT:-8000}
+      MINDEX_API_KEY: ${MINDEX_API_KEY:-}
+    ports:
+      - "8000:8000"  # MINDEX API port
+    depends_on:
+      mindex-postgres:
+        condition: service_healthy
+    networks:
+      - integrations-network
+    restart: unless-stopped
+    # Uncomment and configure when MINDEX repo is available:
+    # volumes:
+    #   - ./integrations/mindex:/app
+    #   - ./integrations/mindex/logs:/app/logs
+
+  # ============================================================================
+  # NATUREOS (IoT Device Management Platform)
+  # ============================================================================
+  natureos-api:
+    # Note: Replace with actual NATUREOS API image or build from repo
+    # For now, using a placeholder - you'll need to:
+    # 1. Clone https://github.com/MycosoftLabs/NatureOS
+    # 2. Build the API service
+    # 3. Update this service definition
+    build:
+      context: ./integrations/natureos  # Create this directory and add Dockerfile
+      dockerfile: Dockerfile
+    container_name: natureos-api
+    environment:
+      NATUREOS_API_PORT: ${NATUREOS_API_PORT:-8002}
+      NATUREOS_API_KEY: ${NATUREOS_API_KEY:-}
+      NATUREOS_TENANT_ID: ${NATUREOS_TENANT_ID:-}
+      DATABASE_URL: ${NATUREOS_DATABASE_URL:-postgresql://natureos:natureos@natureos-postgres:5432/natureos}
+    ports:
+      - "8002:8002"  # NATUREOS API port
+    networks:
+      - integrations-network
+    restart: unless-stopped
+    # Uncomment and configure when NATUREOS repo is available:
+    # volumes:
+    #   - ./integrations/natureos:/app
+    #   - ./integrations/natureos/logs:/app/logs
+
+  natureos-postgres:
+    image: postgres:17-alpine
+    container_name: natureos-postgres
+    environment:
+      POSTGRES_USER: ${NATUREOS_DB_USER:-natureos}
+      POSTGRES_PASSWORD: ${NATUREOS_DB_PASSWORD:-natureospassword}
+      POSTGRES_DB: ${NATUREOS_DB_NAME:-natureos}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - natureos_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"  # Different port to avoid conflict with MINDEX (5434 is used)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${NATUREOS_DB_USER:-natureos}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - integrations-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # WEBSITE (Mycosoft Website - Local Development)
+  # ============================================================================
+  website-dev:
+    # Note: This assumes the website is a Next.js app
+    # If it's a different stack, adjust accordingly
+    build:
+      context: ./integrations/website  # Create this directory
+      dockerfile: Dockerfile
+    container_name: mycosoft-website-dev
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: ${WEBSITE_API_URL:-http://localhost:3001/api}
+      PORT: 3001
+    ports:
+      - "3001:3001"  # Website dev port (different from dashboard 3000)
+    networks:
+      - integrations-network
+    restart: unless-stopped
+    # Uncomment and configure when website repo is available:
+    # volumes:
+    #   - ./integrations/website:/app
+    #   - ./integrations/website/.next:/app/.next
+    #   - /app/node_modules
+
+volumes:
+  mindex_postgres_data:
+    driver: local
+  natureos_postgres_data:
+    driver: local
+
+networks:
+  integrations-network:
+    driver: bridge
+    name: mycosoft-integrations
