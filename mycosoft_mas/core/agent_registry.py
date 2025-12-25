@@ -748,3 +748,6 @@ def get_agent_registry() -> AgentRegistry:
     if _registry is None:
         _registry = AgentRegistry()
     return _registry
+
+
+

@@ -1,5 +1,5 @@
-import MycaDashboardUnifi from '@/components/myca-dashboard-unifi';
+import { MASDashboard } from '@/components/mas-dashboard';
 
 export default function DashboardPage() {
-  return <MycaDashboardUnifi />;
+  return <MASDashboard />;
 }
