@@ -1,0 +1,45 @@
+{
+  "name": "Defense: Secure Connector",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "defense-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Security verification for defense integrations\nconst input = $input.item.json;\nconst integrationName = input.integration?.integration || 'unknown';\nconst action = input.command?.action || 'default';\nconst params = input.command?.params || {};\nconst userContext = input.user_context || {};\n\n// Security checks\nconst securityPassed = true; // TODO: Implement proper auth checks\nconst clearanceLevel = userContext.clearance || 'public';\nconst requiredClearance = 'restricted';\n\nreturn [{ \n  json: { \n    ...input, \n    routing_node: integrationName,\n    action: action,\n    params: params,\n    security: {\n      passed: securityPassed,\n      clearance: clearanceLevel,\n      required: requiredClearance,\n      timestamp: new Date().toISOString()\n    }\n  } \n}];"
+      },
+      "id": "security-check",
+      "name": "Security Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle defense/government platform requests\nconst input = $input.item.json;\nconst integration = input.routing_node;\nconst action = input.action;\nconst params = input.params || {};\nconst security = input.security || {};\n\nif (!security.passed) {\n  return [{\n    json: {\n      success: false,\n      request_id: input.request_id,\n      error: 'Security verification failed',\n      required_clearance: security.required,\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\nlet result = null;\nlet error = null;\n\ntry {\n  switch(integration) {\n    case 'palantir':\n      result = { source: 'Palantir Foundry', status: 'restricted', note: 'Enterprise data integration platform - requires Palantir credentials' };\n      break;\n    case 'anduril':\n      result = { source: 'Anduril SDK', status: 'restricted', note: 'Defense technology platform - requires Anduril access' };\n      break;\n    case 'platform_one':\n      result = { source: 'Platform One', status: 'restricted', note: 'DoD DevSecOps platform - requires CAC authentication' };\n      break;\n    case 'tactical_data':\n      result = { source: 'Tactical Data Link', status: 'restricted', note: 'Military communication systems - classified access only' };\n      break;\n    default:\n      error = `Unknown defense integration: ${integration}`;\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{\n  json: {\n    success: !error,\n    request_id: input.request_id,\n    integration: integration,\n    category: 'defense',\n    action: action,\n    security_verified: security.passed,\n    data: result,\n    error: error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "defense-handler",
+      "name": "Handle Defense Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Security Check", "type": "main", "index": 0 }]]
+    },
+    "Security Check": {
+      "main": [[{ "node": "Handle Defense Request", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

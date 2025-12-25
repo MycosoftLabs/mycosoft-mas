@@ -1,0 +1,45 @@
+{
+  "name": "Native: Analytics & Data Science",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "analytics-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific analytics platform\nconst input = $input.item.json;\nconst integrationName = input.integration?.integration || 'unknown';\nconst action = input.command?.action || 'default';\nconst params = input.command?.params || {};\n\nreturn [{ \n  json: { \n    ...input, \n    routing_node: integrationName,\n    action: action,\n    params: params\n  } \n}];"
+      },
+      "id": "analytics-router",
+      "name": "Analytics Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle analytics platform requests\nconst input = $input.item.json;\nconst integration = input.routing_node;\nconst action = input.action;\nconst params = input.params || {};\n\nlet result = null;\nlet error = null;\n\ntry {\n  switch(integration) {\n    case 'amplitude':\n      result = { source: 'Amplitude', url: 'https://amplitude.com/api', action, note: 'Product analytics platform' };\n      break;\n    case 'mixpanel':\n      result = { source: 'Mixpanel', url: 'https://mixpanel.com/api', action, note: 'User analytics and engagement' };\n      break;\n    case 'segment':\n      result = { source: 'Segment', url: 'https://api.segment.io/v1', action, note: 'Customer data platform' };\n      break;\n    case 'posthog':\n      result = { source: 'PostHog', url: 'https://app.posthog.com/api', action, note: 'Open-source product analytics' };\n      break;\n    case 'wolfram_alpha':\n      result = { source: 'Wolfram Alpha', url: 'https://api.wolframalpha.com/v2', action, note: 'Computational intelligence' };\n      break;\n    default:\n      error = `Unknown analytics integration: ${integration}`;\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{\n  json: {\n    success: !error,\n    request_id: input.request_id,\n    integration: integration,\n    category: 'analytics',\n    action: action,\n    data: result,\n    error: error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "analytics-handler",
+      "name": "Handle Analytics Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{ "node": "Analytics Router", "type": "main", "index": 0 }]]
+    },
+    "Analytics Router": {
+      "main": [[{ "node": "Handle Analytics Request", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
