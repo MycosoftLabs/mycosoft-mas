@@ -27,8 +27,9 @@ import { SearchBar } from "./SearchBar";
 import { DeviceModal } from "./DeviceModal";
 import { NotificationPanel } from "./NotificationPanel";
 import { TalkToMYCA } from "./TalkToMYCA";
+import { AgentCreator } from "./AgentCreator";
 import { useTheme } from "@/lib/theme-provider";
-import { ChevronRight, Sun, Moon, Mic, Activity, Menu, X } from "lucide-react";
+import { ChevronRight, Sun, Moon, Mic, Activity, Menu, X, Plus } from "lucide-react";
 import { Toaster } from "sonner";
 
 export function Dashboard() {
@@ -42,6 +43,7 @@ export function Dashboard() {
     clients: 0,
   });
   const [isTalkToMYCAOpen, setIsTalkToMYCAOpen] = useState(false);
+  const [isAgentCreatorOpen, setIsAgentCreatorOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -196,6 +198,13 @@ export function Dashboard() {
               </button>
               
               <button
+                onClick={() => setIsAgentCreatorOpen(true)}
+                className="flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-all hover:scale-105 hover:shadow-lg hover:shadow-green-500/30"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Create Agent</span>
+              </button>
+              <button
                 onClick={() => setIsTalkToMYCAOpen(true)}
                 className="flex items-center gap-2 rounded-lg bg-purple-600 hover:bg-purple-700 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-all hover:scale-105 hover:shadow-lg hover:shadow-purple-500/30"
               >
@@ -221,6 +230,16 @@ export function Dashboard() {
 
       {/* Talk to MYCA Modal */}
       <TalkToMYCA isOpen={isTalkToMYCAOpen} onClose={() => setIsTalkToMYCAOpen(false)} />
+
+      {/* Agent Creator Modal */}
+      <AgentCreator 
+        isOpen={isAgentCreatorOpen} 
+        onClose={() => setIsAgentCreatorOpen(false)}
+        onAgentCreated={() => {
+          // Refresh agents list
+          dataService.publish("agents", agents);
+        }}
+      />
 
       {/* Floating Action Button for Mobile */}
       <button

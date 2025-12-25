@@ -24,7 +24,7 @@ export interface MASEntity {
   };
 }
 
-interface Connection {
+export interface Connection {
   from: string;
   to: string;
   type: 'agent-to-agent' | 'agent-to-orchestrator' | 'agent-to-operator' | 'agent-to-program' | 'agent-to-database' | 'user-to-orchestrator' | 'operator-to-database';
@@ -400,14 +400,14 @@ export function MASTopologyView({ entities = [], connections = [], onEntityClick
         <div className="absolute bottom-4 left-4 rounded-lg bg-[#1E293B] p-3 text-xs border border-gray-800">
           <div className="mb-2 font-medium text-gray-300">Entity Types</div>
           <div className="space-y-1">
-            {[
-              { type: 'orchestrator', label: 'Orchestrator' },
-              { type: 'agent', label: 'Agent' },
-              { type: 'operator', label: 'Operator' },
-              { type: 'database', label: 'Database' },
-              { type: 'program', label: 'Program' },
-              { type: 'user', label: 'User' },
-            ].map((item) => {
+            {([
+              { type: 'orchestrator' as const, label: 'Orchestrator' },
+              { type: 'agent' as const, label: 'Agent' },
+              { type: 'operator' as const, label: 'Operator' },
+              { type: 'database' as const, label: 'Database' },
+              { type: 'program' as const, label: 'Program' },
+              { type: 'user' as const, label: 'User' },
+            ]).map((item) => {
               // Use static class names that Tailwind can extract at build time
               const getLegendClasses = (type: MASEntity['type']) => {
                 switch (type) {
