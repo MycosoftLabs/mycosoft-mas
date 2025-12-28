@@ -221,7 +221,7 @@ export function TalkToMYCA({ isOpen, onClose }: TalkToMYCAProps) {
         setStatus("listening");
       };
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const last = event.results.length - 1;
         const text = event.results[last][0].transcript;
         setTranscript(text);
@@ -232,7 +232,7 @@ export function TalkToMYCA({ isOpen, onClose }: TalkToMYCAProps) {
         }
       };
 
-      recognition.onerror = (event) => {
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error("Speech recognition error:", event.error);
         if (event.error !== "aborted") {
           setError(`Recognition error: ${event.error}`);

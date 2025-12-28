@@ -120,24 +120,17 @@ export function AgentCreator({ isOpen, onClose, onAgentCreated }: AgentCreatorPr
     setError(null);
     
     try {
-      // Create agent in the registry
-      const response = await fetch("http://localhost:8001/agents/registry/create", {
+      // Create agent using local API endpoint (primary method)
+      const response = await fetch("/api/agents/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(agent)
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        // Fallback - add to local registry file
-        const localResponse = await fetch("/api/agents/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(agent)
-        });
-        
-        if (!localResponse.ok) {
-          throw new Error("Failed to create agent");
-        }
+        throw new Error(data.error || "Failed to create agent");
       }
       
       setSuccess(true);

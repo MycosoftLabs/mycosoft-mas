@@ -43,7 +43,6 @@ export function ElevenLabsWidget({
 
   return (
     <div ref={containerRef} className={className}>
-      {/* @ts-expect-error - ElevenLabs custom element */}
       <elevenlabs-convai agent-id={agentId}></elevenlabs-convai>
     </div>
   );
@@ -81,7 +80,6 @@ export function ElevenLabsFloatingWidget({
 
   return (
     <div className={`fixed ${positionClasses[position]} z-50`}>
-      {/* @ts-expect-error - ElevenLabs custom element */}
       <elevenlabs-convai agent-id={agentId}></elevenlabs-convai>
     </div>
   );

@@ -1,0 +1,59 @@
+# Docker Compose extension for Mycosoft.com Website
+# Use with: docker compose -f docker-compose.yml -f docker-compose.website.yml up -d
+
+version: "3.9"
+
+services:
+  # Main Mycosoft.com Website
+  # This is the primary frontend with NatureOS, MIndex, and MYCA integrations
+  mycosoft-website:
+    build:
+      context: ../WEBSITE/website
+      dockerfile: Dockerfile
+    container_name: mycosoft-website
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      # MAS Integration
+      MAS_API_URL: http://mas-orchestrator:8000
+      MAS_DASHBOARD_URL: http://unifi-dashboard:3000
+      # MycoBrain Service
+      MYCOBRAIN_SERVICE_URL: http://host.docker.internal:8765
+      # n8n Integration
+      N8N_WEBHOOK_URL: http://n8n:5678
+      # Voice Services
+      WHISPER_URL: http://whisper:8000
+      TTS_URL: http://openedai-speech:8000
+    depends_on:
+      - mas-orchestrator
+      - n8n
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  # MycoBrain Serial Service (Python FastAPI)
+  # Bridges USB-connected MycoBrain devices to the network
+  mycobrain-service:
+    build:
+      context: ../WEBSITE/website/services/mycobrain
+      dockerfile: Dockerfile.mycobrain
+    container_name: mycobrain-service
+    ports:
+      - "8765:8765"
+    volumes:
+      # Mount USB devices (Linux only - on Windows use host networking)
+      - /dev:/dev:ro
+    privileged: true
+    environment:
+      - DEFAULT_PORT=/dev/ttyACM0
+      - BAUD_RATE=115200
+    networks:
+      - mas-network
+    restart: unless-stopped
+    profiles: ["hardware"]
+
+networks:
+  mas-network:
+    external: true
+    name: mycosoft-mas_mas-network

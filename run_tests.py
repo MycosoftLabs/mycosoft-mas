@@ -1,7 +1,43 @@
 import subprocess
 import sys
 import os
+import shutil
 from pathlib import Path
+
+def find_python():
+    """Auto-detect Python executable."""
+    # Try common Python executable names
+    for python_cmd in ["python", "python3", "py"]:
+        python_path = shutil.which(python_cmd)
+        if python_path:
+            # Verify it's Python 3.x
+            try:
+                result = subprocess.run(
+                    [python_path, "--version"],
+                    capture_output=True,
+                    text=True
+                )
+                if "Python 3" in result.stdout:
+                    return python_path
+            except:
+                continue
+    
+    # Try common installation paths on Windows
+    common_paths = [
+        "C:\\Program Files\\Python313\\python.exe",
+        "C:\\Program Files\\Python312\\python.exe",
+        "C:\\Program Files\\Python311\\python.exe",
+        "C:\\Program Files\\Python310\\python.exe",
+        "C:\\Python313\\python.exe",
+        "C:\\Python312\\python.exe",
+        "C:\\Python311\\python.exe",
+    ]
+    
+    for path in common_paths:
+        if os.path.exists(path):
+            return path
+    
+    return None
 
 def main():
     # Get the project root directory
@@ -11,9 +47,18 @@ def main():
     os.chdir(project_root)
     
     try:
-        # First, ensure we're using Python 3.11
-        print("Setting up Poetry environment with Python 3.11...")
-        subprocess.run(["poetry", "env", "use", "C:\\Program Files\\Python311\\python.exe"], check=True)
+        # Auto-detect Python
+        python_exe = find_python()
+        
+        if python_exe:
+            print(f"Found Python at: {python_exe}")
+            # Try to set up Poetry environment with detected Python
+            try:
+                subprocess.run(["poetry", "env", "use", python_exe], check=False)
+            except:
+                print("Could not set Poetry Python version, using default...")
+        else:
+            print("Using default Poetry Python environment...")
         
         # Install dependencies using Poetry
         print("\nInstalling dependencies with Poetry...")

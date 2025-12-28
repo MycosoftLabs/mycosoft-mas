@@ -11,7 +11,8 @@ import {
   FileText, 
   AppWindow,
   Settings,
-  Activity
+  Activity,
+  TrendingUp
 } from "lucide-react"
 
 const navItems = [
@@ -95,6 +96,18 @@ export function MainNav() {
 
         {/* Right side */}
         <div className="ml-auto flex items-center gap-2">
+          <Link
+            href="/improvements"
+            className={cn(
+              "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all",
+              pathname === "/improvements"
+                ? "bg-green-600/20 text-green-400 border border-green-500/30"
+                : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+            )}
+          >
+            <TrendingUp className="h-4 w-4" />
+            <span className="hidden lg:inline">Efficiency</span>
+          </Link>
           <Link
             href="/n8n"
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800/50"

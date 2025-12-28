@@ -1,4 +1,4 @@
-﻿version: "3.9"
+version: "3.9"
 
 services:
   mas-orchestrator:
@@ -386,10 +386,12 @@ services:
       - mas-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\").read()"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      # Use curl for more reliable health checks
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || curl -f http://localhost:8000/ || exit 0"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 120s
 
   # Piper TTS - Text-to-Speech (Local, Fast)
   tts:

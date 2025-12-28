@@ -119,7 +119,7 @@ export function Dashboard() {
       {/* Left Sidebar - only show on dashboard view */}
       {currentView === "dashboard" && (
         <div className={`hidden lg:block ${isSidebarCollapsed ? "w-0 overflow-hidden" : ""} transition-all duration-300`}>
-          <MYCASidebar agents={agents} networkStats={networkStats} />
+          <MYCASidebar agents={agents} networkStats={networkStats} onViewChange={setCurrentView} />
         </div>
       )}
 
@@ -225,7 +225,11 @@ export function Dashboard() {
 
       {/* Agent Details Sidebar */}
       {selectedDevice && (
-        <AgentDetailsSidebar agent={selectedDevice} onClose={() => setSelectedDevice(null)} />
+        <AgentDetailsSidebar 
+          agent={selectedDevice} 
+          onClose={() => setSelectedDevice(null)}
+          onViewLogs={() => { setCurrentView("logs"); setSelectedDevice(null); }}
+        />
       )}
 
       {/* Talk to MYCA Modal */}
@@ -256,8 +260,41 @@ export function Dashboard() {
 }
 
 // MYCA-specific Sidebar
-function MYCASidebar({ agents, networkStats }: { agents: Agent[]; networkStats: NetworkStats }) {
+interface MYCASidebarProps {
+  agents: Agent[];
+  networkStats: NetworkStats;
+  onViewChange?: (view: string) => void;
+}
+
+function MYCASidebar({ agents, networkStats, onViewChange }: MYCASidebarProps) {
   const activeAgents = agents.filter((a) => a.status === "online" || a.status === "active").length;
+  const [showSystemInfo, setShowSystemInfo] = useState(false);
+  const [systemStats, setSystemStats] = useState<{
+    cpu?: { usage: number };
+    memory?: { usedPercent: number; used: number; total: number };
+    os?: { uptime: number; hostname: string };
+  } | null>(null);
+
+  useEffect(() => {
+    if (showSystemInfo) {
+      fetch("/api/system")
+        .then((r) => r.ok ? r.json() : null)
+        .then(setSystemStats)
+        .catch(() => null);
+    }
+  }, [showSystemInfo]);
+
+  const formatUptime = (seconds: number) => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${days}d ${hours}h ${minutes}m`;
+  };
+
+  const formatBytes = (bytes: number) => {
+    const gb = bytes / (1024 * 1024 * 1024);
+    return `${gb.toFixed(1)} GB`;
+  };
   
   return (
     <div className="flex w-72 flex-col border-r border-gray-800 bg-[#1E293B]">
@@ -291,11 +328,49 @@ function MYCASidebar({ agents, networkStats }: { agents: Agent[]; networkStats: 
           <div className="font-semibold">MYCA MAS v10.0.162</div>
           <div className="text-xs text-gray-400">Multi-Agent System</div>
           <div className="flex gap-2">
-            <button className="text-xs text-blue-500 hover:underline">View System Info</button>
+            <button 
+              onClick={() => setShowSystemInfo(!showSystemInfo)}
+              className="text-xs text-blue-500 hover:underline"
+            >
+              {showSystemInfo ? "Hide System Info" : "View System Info"}
+            </button>
             <span className="text-xs text-gray-400">|</span>
-            <button className="text-xs text-blue-500 hover:underline">Support</button>
+            <a 
+              href="https://mycosoft.io/support" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-blue-500 hover:underline"
+            >
+              Support
+            </a>
           </div>
         </div>
+
+        {/* System Info Panel */}
+        {showSystemInfo && systemStats && (
+          <div className="mt-4 p-3 bg-[#0F172A] rounded-lg text-xs space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Hostname</span>
+              <span>{systemStats.os?.hostname || "Unknown"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">CPU Usage</span>
+              <span className={systemStats.cpu?.usage && systemStats.cpu.usage > 80 ? "text-red-400" : "text-green-400"}>
+                {systemStats.cpu?.usage?.toFixed(1) || 0}%
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Memory</span>
+              <span>
+                {formatBytes(systemStats.memory?.used || 0)} / {formatBytes(systemStats.memory?.total || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Uptime</span>
+              <span>{formatUptime(systemStats.os?.uptime || 0)}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* System Info */}
@@ -311,7 +386,7 @@ function MYCASidebar({ agents, networkStats }: { agents: Agent[]; networkStats: 
 
           <div>
             <div className="text-xs text-gray-400">System Uptime</div>
-            <div className="text-sm">2w 4d 4h 0m</div>
+            <div className="text-sm">{systemStats ? formatUptime(systemStats.os?.uptime || 0) : "Loading..."}</div>
           </div>
 
           <div className="border-t border-gray-800 pt-4">
@@ -342,10 +417,15 @@ function MYCASidebar({ agents, networkStats }: { agents: Agent[]; networkStats: 
               <span className="text-gray-400">Now</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-gray-700">
-              <div className="h-full bg-green-500" style={{ width: `${(activeAgents / agents.length) * 100}%` }} />
+              <div className="h-full bg-green-500" style={{ width: `${agents.length > 0 ? (activeAgents / agents.length) * 100 : 0}%` }} />
             </div>
             <div className="mt-2 flex items-center justify-between">
-              <button className="text-xs text-blue-500 hover:underline">See All Agents</button>
+              <button 
+                onClick={() => onViewChange?.("clients")}
+                className="text-xs text-blue-500 hover:underline"
+              >
+                See All Agents
+              </button>
             </div>
           </div>
 
@@ -370,7 +450,38 @@ function MYCASidebar({ agents, networkStats }: { agents: Agent[]; networkStats: 
 }
 
 // Agent Details Sidebar
-function AgentDetailsSidebar({ agent, onClose }: { agent: Agent; onClose: () => void }) {
+function AgentDetailsSidebar({ agent, onClose, onViewLogs }: { agent: Agent; onClose: () => void; onViewLogs?: () => void }) {
+  const [command, setCommand] = useState("");
+  const [showCommandInput, setShowCommandInput] = useState(false);
+  const [commandResult, setCommandResult] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const sendCommand = async () => {
+    if (!command.trim()) return;
+    
+    setIsLoading(true);
+    setCommandResult(null);
+    
+    try {
+      const response = await fetch("/api/agents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agentId: agent.id,
+          message: command,
+        }),
+      });
+      
+      const result = await response.json();
+      setCommandResult(result.message || "Command sent successfully");
+      setCommand("");
+    } catch (error) {
+      setCommandResult("Failed to send command");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="w-80 border-l border-gray-800 bg-[#1E293B] p-4 overflow-auto">
       <div className="flex items-center justify-between mb-4">
@@ -447,10 +558,52 @@ function AgentDetailsSidebar({ agent, onClose }: { agent: Agent; onClose: () => 
       </div>
 
       <div className="mt-4 space-y-2">
-        <button className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium">
-          Send Command
-        </button>
-        <button className="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium">
+        {/* Command Input */}
+        {showCommandInput && (
+          <div className="p-3 bg-[#0F172A] rounded-lg space-y-2">
+            <textarea
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              placeholder="Enter command for agent..."
+              className="w-full p-2 bg-gray-800 border border-gray-700 rounded text-sm resize-none"
+              rows={3}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={sendCommand}
+                disabled={isLoading || !command.trim()}
+                className="flex-1 py-1.5 px-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded text-sm font-medium"
+              >
+                {isLoading ? "Sending..." : "Send"}
+              </button>
+              <button
+                onClick={() => { setShowCommandInput(false); setCommand(""); setCommandResult(null); }}
+                className="py-1.5 px-3 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+            {commandResult && (
+              <div className="text-xs text-gray-400 mt-2 p-2 bg-gray-800 rounded">
+                {commandResult}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {!showCommandInput && (
+          <button 
+            onClick={() => setShowCommandInput(true)}
+            className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium"
+          >
+            Send Command
+          </button>
+        )}
+        
+        <button 
+          onClick={onViewLogs}
+          className="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium"
+        >
           View Logs
         </button>
       </div>

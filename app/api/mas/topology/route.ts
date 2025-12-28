@@ -1,11 +1,74 @@
 import { NextResponse } from 'next/server';
 
-// Mock data - replace with actual API calls to MAS backend
+export const dynamic = 'force-dynamic';
+
+// Get MAS API URL from environment or default
+const MAS_API_URL = process.env.MAS_API_URL || 'http://localhost:8001';
+
 export async function GET() {
   try {
-    // TODO: Replace with actual API call to MAS backend
-    // const response = await fetch('http://localhost:8000/api/agents');
-    // const data = await response.json();
+    // Try to fetch real data from MAS backend
+    try {
+      const [healthRes, agentsRes] = await Promise.all([
+        fetch(`${MAS_API_URL}/health`, { signal: AbortSignal.timeout(3000) }),
+        fetch(`${MAS_API_URL}/agents/registry/`, { signal: AbortSignal.timeout(3000) }),
+      ]);
+
+      if (healthRes.ok && agentsRes.ok) {
+        const healthData = await healthRes.json();
+        const agentsData = await agentsRes.json();
+
+        // Transform real agent data into topology format
+        const agents = agentsData.agents || [];
+        const entities = [
+          {
+            id: 'orchestrator-1',
+            name: 'MYCA Orchestrator',
+            type: 'orchestrator',
+            status: healthData.status === 'ok' ? 'active' : 'error',
+            x: 400,
+            y: 100,
+            connections: agents.map((a: { id: string }) => a.id),
+            metadata: {
+              uptime: healthData.uptime || 'Unknown',
+              tasksCompleted: agentsData.total_agents || 0,
+              tasksInProgress: agents.filter((a: { status: string }) => a.status === 'active').length,
+              downloadSpeed: 0,
+              uploadSpeed: 0,
+              experience: 'Excellent' as const,
+            },
+          },
+          ...agents.map((agent: { id: string; name: string; status: string; category?: string; metadata?: Record<string, unknown> }, index: number) => ({
+            id: agent.id,
+            name: agent.name,
+            type: 'agent',
+            category: agent.category || 'core',
+            status: agent.status === 'active' ? 'active' : agent.status === 'idle' ? 'idle' : 'error',
+            x: 200 + (index % 4) * 150,
+            y: 250 + Math.floor(index / 4) * 100,
+            connections: ['orchestrator-1'],
+            metadata: agent.metadata || {},
+          })),
+        ];
+
+        const connections = agents.map((agent: { id: string }) => ({
+          from: 'orchestrator-1',
+          to: agent.id,
+          type: 'agent-to-orchestrator',
+          status: 'active',
+        }));
+
+        return NextResponse.json({
+          entities,
+          connections,
+          source: 'live',
+        });
+      }
+    } catch (e) {
+      console.log('MAS API not available, using mock data:', e instanceof Error ? e.message : 'Unknown');
+    }
+
+    // Fallback to mock data
 
     // Mock topology data
     const entities = [
@@ -157,6 +220,7 @@ export async function GET() {
     return NextResponse.json({
       entities,
       connections,
+      source: 'mock',
     });
   } catch (error) {
     console.error('Error fetching topology:', error);

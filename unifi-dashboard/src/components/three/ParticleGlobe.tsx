@@ -282,7 +282,7 @@ export function ParticleGlobe({
       {rings.map((r, i) => (
         <points key={i} geometry={r.geom}>
           <shaderMaterial
-            ref={(m) => {
+            ref={(m: any) => {
               if (m) ringMats.current[i] = m;
             }}
             transparent
