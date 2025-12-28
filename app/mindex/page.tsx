@@ -15,7 +15,7 @@ const SEARCH_CATEGORIES = [
 export default function MindexPage() {
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("all")
-  const [results, setResults] = useState<unknown[]>([])
+  const [results, setResults] = useState<Record<string, unknown>[]>([])
   const [loading, setLoading] = useState(false)
 
   const handleSearch = async () => {
@@ -128,9 +128,9 @@ export default function MindexPage() {
                     <p className="text-gray-400 mt-1">
                       {String(result.description || "")}
                     </p>
-                    {result.taxonomy && (
+                    {typeof result.taxonomy === "string" && result.taxonomy && (
                       <p className="text-xs text-gray-500 mt-2 font-mono">
-                        {String(result.taxonomy)}
+                        {result.taxonomy}
                       </p>
                     )}
                   </div>

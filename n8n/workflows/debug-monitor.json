@@ -1,0 +1,187 @@
+{
+  "name": "Debug: Auto-Fix Monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "debug/trigger"
+      },
+      "id": "manual-trigger",
+      "name": "Manual Debug Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 480]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:5678/rest/executions?filter={\"status\":\"error\"}&limit=20",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "get-failed-executions",
+      "name": "Get Failed Executions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 400],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process execution errors and create improvement table\nconst executions = $input.first()?.json?.data || [];\nconst now = new Date();\n\n// Error summary table\nconst errorSummary = {};\nconst improvements = [];\n\nfor (const exec of executions) {\n  const workflowName = exec.workflowData?.name || 'Unknown';\n  const errorMsg = exec.data?.resultData?.error?.message || 'Unknown error';\n  const nodeName = exec.data?.resultData?.error?.node || 'Unknown';\n  \n  const key = `${workflowName}:${nodeName}`;\n  if (!errorSummary[key]) {\n    errorSummary[key] = {\n      workflow: workflowName,\n      node: nodeName,\n      error: errorMsg,\n      count: 0,\n      firstSeen: exec.startedAt,\n      lastSeen: exec.startedAt,\n      autoFixable: false,\n      suggestedFix: ''\n    };\n  }\n  errorSummary[key].count++;\n  errorSummary[key].lastSeen = exec.startedAt;\n  \n  // Classify if auto-fixable\n  const errorLower = errorMsg.toLowerCase();\n  if (errorLower.includes('connection') || errorLower.includes('timeout')) {\n    errorSummary[key].autoFixable = true;\n    errorSummary[key].suggestedFix = 'Restart affected service';\n  } else if (errorLower.includes(\"hasn't been executed\")) {\n    errorSummary[key].autoFixable = true;\n    errorSummary[key].suggestedFix = 'Add error handling to aggregation node';\n  }\n}\n\n// Generate improvement suggestions\nfor (const [key, data] of Object.entries(errorSummary)) {\n  if (data.count >= 3) {\n    improvements.push({\n      id: `imp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,\n      category: 'workflow',\n      priority: data.count >= 10 ? 'critical' : data.count >= 5 ? 'high' : 'medium',\n      title: `Fix recurring error in ${data.workflow}`,\n      workflow: data.workflow,\n      node: data.node,\n      errorCount: data.count,\n      autoFixable: data.autoFixable,\n      suggestedFix: data.suggestedFix,\n      efficiency: Math.round((1 - data.count / 100) * 100),\n      estimatedImpact: data.autoFixable ? 'Can be auto-fixed' : 'Requires manual review'\n    });\n  }\n}\n\nreturn [\n  {\n    json: {\n      generatedAt: now.toISOString(),\n      totalErrors: executions.length,\n      uniquePatterns: Object.keys(errorSummary).length,\n      improvementCount: improvements.length,\n      errorSummary: Object.values(errorSummary),\n      improvements: improvements,\n      systemEfficiency: Math.round((1 - executions.length / 300) * 100)\n    }\n  }\n];"
+      },
+      "id": "analyze-errors",
+      "name": "Analyze Errors & Create Table",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.improvementCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-improvements",
+      "name": "Has Improvements?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [960, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process auto-fixable improvements and apply fixes\nconst data = $input.first().json;\nconst improvements = data.improvements || [];\nconst fixResults = [];\n\nfor (const imp of improvements) {\n  if (imp.autoFixable) {\n    fixResults.push({\n      improvementId: imp.id,\n      workflow: imp.workflow,\n      node: imp.node,\n      action: 'auto_fix_triggered',\n      suggestedFix: imp.suggestedFix,\n      status: 'pending',\n      triggeredAt: new Date().toISOString()\n    });\n  }\n}\n\nreturn [{ json: { ...data, fixResults, autoFixCount: fixResults.length } }];"
+      },
+      "id": "process-auto-fixes",
+      "name": "Process Auto-Fixes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mas-orchestrator:8000/tasks/submit",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"debug_improvement_report\",\n  \"priority\": \"high\",\n  \"data\": {{ JSON.stringify($json) }}\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "notify-orchestrator",
+      "name": "Notify MYCA Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1440, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log the report for debugging\nconst data = $input.first().json;\nconsole.log('Debug Report:', JSON.stringify(data, null, 2));\nreturn [{ json: { status: 'no_improvements_needed', checkedAt: new Date().toISOString() } }];"
+      },
+      "id": "log-clean",
+      "name": "Log Clean Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Return Report",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1680, 400]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [{ "node": "Get Failed Executions", "type": "main", "index": 0 }]
+      ]
+    },
+    "Manual Debug Trigger": {
+      "main": [
+        [{ "node": "Get Failed Executions", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Failed Executions": {
+      "main": [
+        [{ "node": "Analyze Errors & Create Table", "type": "main", "index": 0 }]
+      ]
+    },
+    "Analyze Errors & Create Table": {
+      "main": [
+        [{ "node": "Has Improvements?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Has Improvements?": {
+      "main": [
+        [{ "node": "Process Auto-Fixes", "type": "main", "index": 0 }],
+        [{ "node": "Log Clean Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "Process Auto-Fixes": {
+      "main": [
+        [{ "node": "Notify MYCA Orchestrator", "type": "main", "index": 0 }]
+      ]
+    },
+    "Notify MYCA Orchestrator": {
+      "main": [
+        [{ "node": "Return Report", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Clean Status": {
+      "main": [
+        [{ "node": "Return Report", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "debug-monitor-v1",
+  "active": true
+}
+

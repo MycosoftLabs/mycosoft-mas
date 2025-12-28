@@ -1,0 +1,34 @@
+{
+  "agents": [
+    {
+      "agent_id": "create_a_defense",
+      "name": "CreateADefenseAgentForOsintAndGatheringOfAllMilitaryAndIntelligenceAndDefenceNewsInformationAndUpdatesAgent",
+      "display_name": "create a defense agent Agent",
+      "description": "create a defense agent for OSINT and gathering of all military and intelligence and defence news information and updates",
+      "category": "core",
+      "capabilities": [
+        "read",
+        "analyze"
+      ],
+      "keywords": [
+        "create",
+        "defense",
+        "agent",
+        "osint",
+        "gathering",
+        "military",
+        "intelligence",
+        "defence",
+        "news",
+        "information",
+        "updates"
+      ],
+      "voice_triggers": [
+        "create a defense agent for osint and gathering of all military and intelligence and defence news information and updates"
+      ],
+      "requires_confirmation": false
+    }
+  ],
+  "version": "1.0.0",
+  "lastUpdated": "2024-12-25T00:00:00Z"
+}
