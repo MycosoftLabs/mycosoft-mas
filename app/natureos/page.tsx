@@ -16,6 +16,10 @@ import {
   Droplets,
   Gauge,
 } from "lucide-react";
+import { EarthSimulatorDashboard } from "@/components/natureos/earth-simulator-dashboard";
+import { LiveDataFeed } from "@/components/natureos/live-data-feed";
+import { MYCAInterface } from "@/components/natureos/myca-interface";
+import { MycoBrainWidget } from "@/components/natureos/mycobrain-widget";
 
 interface SystemStats {
   cpu?: { usage: number; cores: number; model: string };
@@ -202,6 +206,33 @@ export default function NatureOSPage() {
               <p className="text-sm text-gray-500 mt-1">{item.description}</p>
             </Link>
           ))}
+        </div>
+
+        {/* Earth Simulator Dashboard */}
+        <div className="mb-8">
+          <div className="bg-white rounded-xl p-6">
+            <EarthSimulatorDashboard />
+          </div>
+        </div>
+
+        {/* NatureOS Components Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Live Data Feed */}
+          <div className="bg-white rounded-xl p-6">
+            <LiveDataFeed />
+          </div>
+
+          {/* MYCA Interface */}
+          <div className="bg-white rounded-xl p-6">
+            <MYCAInterface maxHeight={600} />
+          </div>
+        </div>
+
+        {/* MycoBrain Widget */}
+        <div className="mb-8">
+          <div className="bg-white rounded-xl p-6">
+            <MycoBrainWidget />
+          </div>
         </div>
 
         {/* Live Status */}
