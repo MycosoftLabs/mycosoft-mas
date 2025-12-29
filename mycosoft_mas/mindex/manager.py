@@ -107,12 +107,15 @@ class MINDEXManager:
         limit: Optional[int] = None,
     ) -> dict[str, Any]:
         """Sync data from a specific source."""
+        from .scrapers import MushroomWorldScraper
+        
         scraper_map = {
             "iNaturalist": INaturalistScraper,
             "GBIF": GBIFScraper,
             "FungiDB": FungiDBScraper,
             "MycoBank": MycoBankScraper,
             "GenBank": GenBankScraper,
+            "MushroomWorld": MushroomWorldScraper,
         }
         
         if source not in scraper_map:
