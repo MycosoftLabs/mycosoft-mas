@@ -192,7 +192,8 @@ export function MycoBrainDeviceManager() {
           device_id: deviceId,
           command,
           parameters,
-          use_mdp: true,
+          // Default to JSON for broad firmware compatibility; the route auto-falls-back anyway.
+          use_mdp: false,
         }),
       });
 

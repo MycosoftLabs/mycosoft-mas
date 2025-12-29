@@ -104,3 +104,4 @@ If the above doesn't work:
 4. Type `status` to check sensors
 5. Type `led rgb 0 255 0` to test LED (green)
 
+
