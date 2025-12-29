@@ -40,3 +40,4 @@ if data:
 else:
     print("\nNo data received")
 
+

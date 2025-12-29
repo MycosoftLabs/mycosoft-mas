@@ -65,3 +65,4 @@ The LED not lighting is a separate hardware issue:
 - **Not critical** - board still works via serial
 - Can be fixed later if needed
 
+

@@ -61,3 +61,4 @@
 2. Check which COM port disappears
 3. That's Side-B's port
 
+

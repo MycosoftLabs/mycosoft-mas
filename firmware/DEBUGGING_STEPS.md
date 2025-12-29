@@ -91,3 +91,4 @@ Sometimes serial output is too fast. Try:
 2. **Report what you see in Serial Monitor**
 3. **Based on results, we'll fix the main firmware**
 
+

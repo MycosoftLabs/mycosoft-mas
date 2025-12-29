@@ -51,3 +51,4 @@ Garrett's bridge was to bypass a diode that was limiting power. But:
 If board runs without sensors → **Sensors are the problem**
 If board still crashes → **Hardware issue (bridge, power regulator, etc.)**
 
+

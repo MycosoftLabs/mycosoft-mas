@@ -49,3 +49,4 @@ except Exception as e:
     print("  - Device is powered")
     print("  - Boot mode procedure was followed exactly")
 
+

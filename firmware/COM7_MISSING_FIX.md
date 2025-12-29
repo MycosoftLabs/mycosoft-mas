@@ -88,3 +88,4 @@ Please tell me:
 3. **Did you try a different USB port?**
 4. **What does Device Manager show?** (any errors?)
 
+

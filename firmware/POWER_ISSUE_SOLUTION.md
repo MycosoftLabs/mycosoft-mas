@@ -48,3 +48,4 @@ The ESP32-S3 is drawing too much current or the power supply can't provide enoug
 
 The firmware is correct - the issue is power supply hardware.
 
+

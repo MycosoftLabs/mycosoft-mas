@@ -112,3 +112,4 @@ if __name__ == "__main__":
     port = sys.argv[1] if len(sys.argv) > 1 else "COM7"
     test_serial_commands(port)
 
+
