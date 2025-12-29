@@ -26,6 +26,7 @@ from mycosoft_mas.core.routers.agent_runner_api import router as agent_runner_ro
 from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
+from mycosoft_mas.core.routers.documents import router as documents_router
 
 
 def load_config() -> dict[str, Any]:
@@ -95,6 +96,7 @@ app.include_router(coding_router)
 app.include_router(integrations_router)
 app.include_router(notifications_router)
 app.include_router(infrastructure_router)
+app.include_router(documents_router)
 
 
 # ---------------------------------------------------------------------------

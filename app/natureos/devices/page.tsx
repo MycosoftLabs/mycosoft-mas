@@ -13,6 +13,7 @@ import {
   Cpu,
   ExternalLink,
 } from "lucide-react";
+import { MycoBrainDeviceManager } from "@/components/mycobrain-device-manager";
 
 interface NetworkDevice {
   name: string;
@@ -68,7 +69,7 @@ const getDeviceIcon = (type: string) => {
 export default function DevicesPage() {
   const [networkData, setNetworkData] = useState<NetworkData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"devices" | "clients">("devices");
+  const [activeTab, setActiveTab] = useState<"devices" | "clients" | "mycobrain">("devices");
 
   const fetchData = async () => {
     try {
@@ -176,7 +177,7 @@ export default function DevicesPage() {
                 : "bg-gray-800 text-gray-400 hover:text-white"
             }`}
           >
-            Devices ({networkData?.devices?.length || 0})
+            Network Devices ({networkData?.devices?.length || 0})
           </button>
           <button
             onClick={() => setActiveTab("clients")}
@@ -188,9 +189,22 @@ export default function DevicesPage() {
           >
             Clients ({networkData?.clients?.length || 0})
           </button>
+          <button
+            onClick={() => setActiveTab("mycobrain")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === "mycobrain"
+                ? "bg-purple-600 text-white"
+                : "bg-gray-800 text-gray-400 hover:text-white"
+            }`}
+          >
+            MycoBrain Devices
+          </button>
         </div>
 
         {/* Device/Client List */}
+        {activeTab === "mycobrain" ? (
+          <MycoBrainDeviceManager />
+        ) : (
         <div className="rounded-xl bg-gray-800/50 border border-gray-700/50 overflow-hidden">
           {activeTab === "devices" ? (
             <div className="divide-y divide-gray-700/50">
@@ -276,6 +290,7 @@ export default function DevicesPage() {
             </div>
           )}
         </div>
+        )}
       </main>
     </div>
   );

@@ -1,0 +1,65 @@
+{
+  "ports": [
+    {
+      "port": "COM1",
+      "description": "Communications Port (COM1)",
+      "manufacturer": "(Standard port types)",
+      "vid": null,
+      "pid": null,
+      "serial_number": null,
+      "location": null,
+      "hwid": "ACPI\\PNP0501\\0",
+      "is_esp32": false,
+      "is_mycobrain": false,
+      "available": true,
+      "error": null,
+      "can_open": true
+    },
+    {
+      "port": "COM2",
+      "description": "Communications Port (COM2)",
+      "manufacturer": "(Standard port types)",
+      "vid": null,
+      "pid": null,
+      "serial_number": null,
+      "location": null,
+      "hwid": "ACPI\\PNP0501\\1",
+      "is_esp32": false,
+      "is_mycobrain": false,
+      "available": true,
+      "error": null,
+      "can_open": true
+    },
+    {
+      "port": "COM3",
+      "description": "USB Serial Device (COM3)",
+      "manufacturer": "Microsoft",
+      "vid": "046B",
+      "pid": "FFB0",
+      "serial_number": null,
+      "location": "1-11.3",
+      "hwid": "USB VID:PID=046B:FFB0 SER= LOCATION=1-11.3",
+      "is_esp32": false,
+      "is_mycobrain": false,
+      "available": false,
+      "error": "Cannot configure port, something went wrong. Original message: PermissionError(13, 'A device attached to the system is not functioning.', None, 31)",
+      "can_open": false
+    }
+  ],
+  "recommendations": {
+    "side_a": null,
+    "side_b": null,
+    "other_ports": [
+      "COM1",
+      "COM2"
+    ],
+    "notes": [
+      "No ESP32-like devices detected. Make sure MycoBrain is connected via USB-C."
+    ]
+  },
+  "summary": {
+    "total_ports": 3,
+    "esp32_ports": 0,
+    "available_ports": 2
+  }
+}
