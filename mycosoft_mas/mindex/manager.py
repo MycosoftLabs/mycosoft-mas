@@ -18,6 +18,7 @@ from .scrapers import (
     INaturalistScraper,
     FungiDBScraper,
     MycoBankScraper,
+    GenBankScraper,
 )
 
 logger = logging.getLogger(__name__)
@@ -111,6 +112,7 @@ class MINDEXManager:
             "GBIF": GBIFScraper,
             "FungiDB": FungiDBScraper,
             "MycoBank": MycoBankScraper,
+            "GenBank": GenBankScraper,
         }
         
         if source not in scraper_map:
@@ -169,7 +171,7 @@ class MINDEXManager:
             "sources": {},
         }
         
-        sources = ["iNaturalist", "GBIF", "MycoBank"]
+        sources = ["iNaturalist", "GBIF", "MycoBank", "FungiDB", "GenBank"]
         
         for source in sources:
             logger.info(f"Starting sync for {source}")
