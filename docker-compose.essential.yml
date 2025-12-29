@@ -264,3 +264,7 @@ volumes:
 networks:
   mycosoft-network:
     driver: bridge
+
+
+
+
