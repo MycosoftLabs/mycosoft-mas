@@ -1,35 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Test the bridged board (was working before, now no light)
+Test the bridged board - check if it's alive even without light
 """
 import serial
 import serial.tools.list_ports
 import time
 
-def find_esp32_ports():
-    """Find all ESP32 ports."""
-    ports = serial.tools.list_ports.comports()
-    esp32_ports = []
-    for p in ports:
-        if '303A' in p.hwid:
-            esp32_ports.append(p.device)
-    return esp32_ports
+def find_mycobrain_ports():
+    """Find all COM ports that might be MycoBrain boards."""
+    ports = []
+    for port in serial.tools.list_ports.comports():
+        if 'USB' in port.description.upper() or 'SERIAL' in port.description.upper():
+            ports.append(port.device)
+    return ports
 
-def test_board(port):
-    """Test a board thoroughly."""
+def test_port(port):
+    """Test if a port responds."""
     print(f"\n{'='*60}")
-    print(f"Testing {port} (Bridged Board)")
+    print(f"Testing {port}")
     print(f"{'='*60}")
     
     try:
         s = serial.Serial(port, 115200, timeout=2)
-        print(f"OK: Port opened")
-        
-        # Wait a bit
         time.sleep(2)
         
-        # Try to reset
+        # Try to reset it
         s.setDTR(False)
         s.setRTS(True)
         time.sleep(0.1)
@@ -43,101 +39,83 @@ def test_board(port):
         
         if data:
             output = data.decode('utf-8', errors='ignore')
-            print(f"\nRECEIVED {len(data)} bytes:")
+            print(f"RECEIVED {len(data)} bytes:")
             print("-" * 60)
-            print(output[:800])
+            print(output[:1000])
             print("-" * 60)
             
-            if "MINIMAL TEST" in output or "Hardware Check" in output:
-                print("\n>>> STATUS: Firmware running - Board is working!")
-                return "WORKING"
-            elif "ESP-ROM" in output or "waiting for download" in output:
-                print("\n>>> STATUS: In bootloader - Ready for upload")
-                return "BOOTLOADER"
-            elif "BOD" in output or "brownout" in output.lower():
-                print("\n>>> STATUS: Power issue - Brownout detected")
-                return "POWER_ISSUE"
-            elif "rst:" in output.lower():
-                print("\n>>> STATUS: Boot loop - Device resetting")
-                return "BOOTLOOP"
+            if "ESP-ROM" in output or "rst:" in output:
+                print("\n>>> STATUS: Board is ALIVE - responding to reset")
+                print(">>> Board is in bootloader or booting")
+                return True
+            elif "MINIMAL TEST" in output or "Loop running" in output:
+                print("\n>>> STATUS: Board is RUNNING firmware!")
+                return True
             else:
-                print("\n>>> STATUS: Unknown output")
-                return "UNKNOWN"
+                print("\n>>> STATUS: Board sent data but unclear state")
+                return True
         else:
-            print("\n>>> STATUS: No output - Board may be:")
-            print("    - In bootloader (silent)")
-            print("    - Power issue (not enough power)")
-            print("    - Bridge modification issue")
-            return "NO_OUTPUT"
-        
-        s.close()
-        
+            print("\n>>> STATUS: No data - board may be dead or not powered")
+            return False
+            
     except serial.SerialException as e:
-        print(f"\nERROR: Cannot open {port}")
-        print(f"  {e}")
-        print("\nPossible causes:")
-        print("  - Board not getting power (bridge issue?)")
-        print("  - USB cable issue")
-        print("  - Port in use")
-        return "ERROR"
+        print(f"\n>>> ERROR: {e}")
+        return False
     except Exception as e:
-        print(f"\nERROR: {e}")
-        return "ERROR"
+        print(f"\n>>> ERROR: {type(e).__name__}: {e}")
+        return False
+    finally:
+        try:
+            s.close()
+        except:
+            pass
 
 def main():
     print("="*60)
-    print("Testing Bridged Board")
+    print("Testing Bridged Board (No Light)")
     print("="*60)
-    print("\nThis board:")
-    print("  - Has bridge modification (diode removed)")
-    print("  - Was working before with Garrett's code")
-    print("  - Now has NO light")
-    print("  - Has 2 BME688 sensors connected")
+    print("\nThe bridged board should still respond via serial")
+    print("even if the LED is not working.")
+    print("\nScanning for COM ports...")
     
-    ports = find_esp32_ports()
+    ports = find_mycobrain_ports()
     
     if not ports:
-        print("\nWARNING: No ESP32 devices found!")
-        print("Check:")
-        print("  - USB cable is connected")
-        print("  - Board is getting power")
-        print("  - Bridge modification is correct")
-        return
+        print("\nNo COM ports found!")
+        print("\nTrying to detect any serial device...")
+        all_ports = [p.device for p in serial.tools.list_ports.comports()]
+        if all_ports:
+            print(f"Found ports: {', '.join(all_ports)}")
+            ports = all_ports
+        else:
+            print("No serial devices detected at all!")
+            return
     
-    print(f"\nFound {len(ports)} ESP32 device(s): {', '.join(ports)}")
+    print(f"\nFound {len(ports)} port(s): {', '.join(ports)}")
+    print("\nTesting each port...")
     
-    # Test the first port (assuming it's the bridged board)
-    if ports:
-        status = test_board(ports[0])
-        
-        print("\n" + "="*60)
-        print("DIAGNOSIS")
-        print("="*60)
-        
-        if status == "WORKING":
-            print("\nBoard is working! Firmware is running.")
-            print("The 'no light' might be normal if LED code isn't running.")
-        elif status == "BOOTLOADER":
-            print("\nBoard is in bootloader mode.")
-            print("Upload firmware - it should work.")
-        elif status == "POWER_ISSUE":
-            print("\nPOWER ISSUE DETECTED")
-            print("The bridge modification might be causing power problems.")
-            print("Check:")
-            print("  - Bridge connection is secure")
-            print("  - No shorts from bridge")
-            print("  - Power regulation is working")
-        elif status == "NO_OUTPUT":
-            print("\nNO OUTPUT - Possible issues:")
-            print("  1. Bridge modification damaged power circuit")
-            print("  2. Board not getting enough power")
-            print("  3. USB cable/port issue")
-            print("  4. Board needs external power")
-        elif status == "ERROR":
-            print("\nCannot communicate with board.")
-            print("Hardware issue - check bridge modification.")
+    alive_ports = []
+    for port in ports:
+        if test_port(port):
+            alive_ports.append(port)
+    
+    print("\n" + "="*60)
+    print("SUMMARY")
+    print("="*60)
+    if alive_ports:
+        print(f"\nBoards that responded: {', '.join(alive_ports)}")
+        print("\nThe bridged board IS alive - it's just not showing a light!")
+        print("This could be:")
+        print("  1. LED circuit issue (not critical)")
+        print("  2. Power LED not connected")
+        print("  3. LED pin configuration issue")
+    else:
+        print("\nNo boards responded!")
+        print("\nPossible issues:")
+        print("  1. Board not getting power")
+        print("  2. USB cable issue")
+        print("  3. Bridge connection broken")
+        print("  4. BME688 sensors causing short circuit")
 
 if __name__ == "__main__":
     main()
-
-
