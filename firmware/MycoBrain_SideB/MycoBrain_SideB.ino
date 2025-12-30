@@ -32,7 +32,7 @@
 // Global Variables
 // ============================================================================
 String deviceMac = "";
-String firmwareVersion = "1.0.0";
+String firmwareVersion = "1.0.0-production";
 unsigned long uptimeSeconds = 0;
 unsigned long lastUptimeUpdate = 0;
 
