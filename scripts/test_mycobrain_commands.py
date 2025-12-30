@@ -1,98 +1,105 @@
 #!/usr/bin/env python3
-"""Test MycoBrain commands via API to verify device firmware support"""
+"""
+Test MycoBrain Side-A Dual Mode Firmware
+Tests both CLI and JSON command formats
+"""
 
-import requests
-import json
+import serial
 import time
+import json
+import sys
 
-BASE_URL = "http://localhost:8003"
-DEVICE_ID = "mycobrain-side-a-COM4"
-
-def test_command(cmd_name: str, parameters: dict = None):
-    """Test a command and return the response"""
-    url = f"{BASE_URL}/devices/{DEVICE_ID}/command"
-    payload = {
-        "command": {"cmd": cmd_name, **(parameters or {})},
-        "use_mdp": False
-    }
+def test_mycobrain(port="COM5", baud=115200, timeout=2):
+    """Test MycoBrain board with various commands"""
     
     print(f"\n{'='*60}")
-    print(f"Testing command: {cmd_name}")
-    print(f"Payload: {json.dumps(payload, indent=2)}")
+    print(f"MycoBrain Side-A Command Test")
     print(f"{'='*60}")
+    print(f"Port: {port}")
+    print(f"Baud: {baud}")
+    print()
     
     try:
-        response = requests.post(url, json=payload, timeout=5)
-        result = response.json()
-        print(f"Status Code: {response.status_code}")
-        print(f"Response: {json.dumps(result, indent=2)}")
-        return result
+        ser = serial.Serial(port, baud, timeout=timeout)
+        time.sleep(1)  # Wait for connection
+        
+        # Clear any initial output
+        ser.reset_input_buffer()
+        
+        # Test 1: CLI command - status
+        print("Test 1: CLI command 'status'")
+        print("-" * 60)
+        ser.write(b"status\n")
+        time.sleep(0.5)
+        response = ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
+        print(response)
+        print()
+        
+        # Test 2: JSON command - status
+        print("Test 2: JSON command {'cmd':'status'}")
+        print("-" * 60)
+        cmd = {"cmd": "status"}
+        ser.write((json.dumps(cmd) + "\n").encode())
+        time.sleep(0.5)
+        response = ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
+        print(response)
+        print()
+        
+        # Test 3: Workbook-style JSON command
+        print("Test 3: Workbook-style JSON {'type':'cmd','op':'status'}")
+        print("-" * 60)
+        cmd = {"type": "cmd", "op": "status"}
+        ser.write((json.dumps(cmd) + "\n").encode())
+        time.sleep(0.5)
+        response = ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
+        print(response)
+        print()
+        
+        # Test 4: CLI command - help
+        print("Test 4: CLI command 'help'")
+        print("-" * 60)
+        ser.write(b"help\n")
+        time.sleep(0.5)
+        response = ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
+        print(response)
+        print()
+        
+        # Test 5: JSON command - info
+        print("Test 5: JSON command {'cmd':'info'}")
+        print("-" * 60)
+        cmd = {"cmd": "info"}
+        ser.write((json.dumps(cmd) + "\n").encode())
+        time.sleep(0.5)
+        response = ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
+        print(response)
+        print()
+        
+        # Test 6: Wait for telemetry (should auto-send)
+        print("Test 6: Waiting for auto-telemetry (5 seconds)...")
+        print("-" * 60)
+        start_time = time.time()
+        while time.time() - start_time < 5:
+            if ser.in_waiting > 0:
+                response = ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
+                print(response, end='')
+            time.sleep(0.1)
+        print()
+        print()
+        
+        ser.close()
+        print(f"{'='*60}")
+        print("Test completed successfully!")
+        print(f"{'='*60}")
+        return True
+        
+    except serial.SerialException as e:
+        print(f"ERROR: Serial communication failed: {e}")
+        return False
     except Exception as e:
-        print(f"Error: {e}")
-        return None
-
-def main():
-    print("MycoBrain Command Testing")
-    print("=" * 60)
-    print(f"Device ID: {DEVICE_ID}")
-    print(f"Base URL: {BASE_URL}")
-    
-    # Test 1: Ping (simple connectivity test)
-    test_command("ping")
-    time.sleep(1)
-    
-    # Test 2: Status (device status)
-    test_command("status")
-    time.sleep(1)
-    
-    # Test 3: Get MAC address
-    test_command("get_mac")
-    time.sleep(1)
-    
-    # Test 4: Get version
-    test_command("get_version")
-    time.sleep(1)
-    
-    # Test 5: I2C scan (from MDP spec)
-    test_command("i2c_scan")
-    time.sleep(2)  # I2C scan may take longer
-    
-    # Test 6: Read sensor (from MDP spec)
-    test_command("read_sensor", {"sensor_id": 0})
-    time.sleep(1)
-    
-    # Test 7: Set telemetry interval (from MDP spec)
-    test_command("set_telemetry_interval", {"interval_seconds": 10})
-    time.sleep(1)
-    
-    # Test 8: Set MOSFET (from MDP spec)
-    test_command("set_mosfet", {"mosfet_index": 0, "state": True})
-    time.sleep(1)
-    
-    # Test 9: Try neopixel (might not be supported)
-    test_command("neopixel", {"r": 255, "g": 0, "b": 0, "brightness": 128})
-    time.sleep(1)
-    
-    # Test 10: Try buzzer (might not be supported)
-    test_command("buzzer", {"frequency": 1000, "duration": 500})
-    time.sleep(1)
-    
-    # Test 11: Try set_neopixel (alternative name)
-    test_command("set_neopixel", {"r": 255, "g": 0, "b": 0, "brightness": 128})
-    time.sleep(1)
-    
-    # Test 12: Try play_buzzer (alternative name)
-    test_command("play_buzzer", {"frequency": 1000, "duration": 500})
-    time.sleep(1)
-    
-    print("\n" + "=" * 60)
-    print("Testing complete!")
-    print("=" * 60)
-    print("\nSummary:")
-    print("- Commands from MDP spec: i2c_scan, read_sensor, set_telemetry_interval, set_mosfet")
-    print("- Simple commands: ping, status, get_mac, get_version")
-    print("- Peripheral commands: neopixel, buzzer (may not be supported)")
+        print(f"ERROR: {e}")
+        return False
 
 if __name__ == "__main__":
-    main()
-
+    port = sys.argv[1] if len(sys.argv) > 1 else "COM5"
+    success = test_mycobrain(port)
+    sys.exit(0 if success else 1)

@@ -1,0 +1,107 @@
+# Always-on Docker stack for Windows (independent of Cursor)
+# Start with:
+#   docker compose -f docker-compose.always-on.yml up -d --build
+#
+# Notes (Windows + MycoBoard on COM ports):
+# - Linux containers cannot directly open Windows COM ports.
+# - The `mycobrain` container will run and expose the API, but hardware access
+#   requires USB pass-through via WSL2 + usbipd-win (recommended) OR running
+#   MycoBrain on the host and pointing the website to host.docker.internal:8003.
+
+name: mycosoft-always-on
+
+services:
+  # ----------------------------
+  # MINDEX (FastAPI)
+  # ----------------------------
+  # Runs the MINDEX API in Docker (port 8000)
+  mindex:
+    build:
+      context: .
+      dockerfile: services/mindex/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - MINDEX_HOST=0.0.0.0
+      - MINDEX_PORT=8000
+      - MINDEX_AUTO_SYNC=true
+      - MINDEX_SYNC_INTERVAL=24
+      - MINDEX_MAX_RECORDS=100000
+      - LOG_LEVEL=INFO
+    volumes:
+      # Default: use local data folder unless MINDEX_HOST_PATH is set
+      - mindex_data:/mnt/nas/mindex
+      - ./data/mindex:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - mycosoft-always-on
+
+  # ----------------------------
+  # MycoBrain (FastAPI + pyserial)
+  # ----------------------------
+  mycobrain:
+    build:
+      context: ./services/mycobrain
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    environment:
+      - MYCOBRAIN_HOST=0.0.0.0
+      - MYCOBRAIN_PORT=8003
+      - DEFAULT_SERIAL_PORT=COM5
+      - BAUD_RATE=115200
+    # Hardware pass-through is NOT available on Windows without WSL2+usbipd.
+    # Keep this service running for API availability and logs.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - mycosoft-always-on
+
+  # ----------------------------
+  # Website (Next.js)
+  # ----------------------------
+  mycosoft-website:
+    build:
+      context: ../../WEBSITE/website
+      dockerfile: Dockerfile.container
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      MINDEX_API_BASE_URL: http://mindex:8000
+      MINDEX_API_URL: http://mindex:8000
+      MYCOBRAIN_SERVICE_URL: http://mycobrain:8003
+      MAS_API_URL: http://host.docker.internal:8001
+    depends_on:
+      mycobrain:
+        condition: service_healthy
+      mindex:
+        condition: service_healthy
+    networks:
+      - mycosoft-always-on
+
+volumes:
+  mindex_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${MINDEX_HOST_PATH:-./data/mindex}
+
+networks:
+  mycosoft-always-on:
+    external: true
+    name: mycosoft-always-on
+

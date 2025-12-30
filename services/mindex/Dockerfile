@@ -43,3 +43,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
 
 # Run the service
 CMD ["python", "-m", "services.mindex.api"]
+

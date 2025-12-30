@@ -32,7 +32,7 @@ except ImportError:
     logger.warning("MDP protocol not available, using basic JSON mode")
     MDP_AVAILABLE = False
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="MycoBrain Dual ESP32 Service", version="2.1.0")
@@ -139,6 +139,7 @@ def _read_device_telemetry(device_id: str, port: str, baudrate: int, side: str):
             if ser.in_waiting > 0:
                 data = ser.read(ser.in_waiting)
                 buffer.extend(data)
+                logger.info(f"Received {len(data)} bytes from {device_id}")
                 
                 # Try to parse MDP frames or JSON lines
                 if MDP_AVAILABLE and decoder:
@@ -166,10 +167,12 @@ def _read_device_telemetry(device_id: str, port: str, baudrate: int, side: str):
                 # Also try JSON lines (fallback)
                 while b'\n' in buffer:
                     line_end = buffer.index(b'\n')
-                    line = bytes(buffer[:line_end])
+                    line = bytes(buffer[:line_end]).strip()  # Strip \r
                     buffer = buffer[line_end + 1:]
                     
-                    if line:
+                    logger.debug(f"Processing line: {line[:80]}")
+                    
+                    if line and line.startswith(b'{'):
                         try:
                             data = json.loads(line.decode('utf-8'))
                             if isinstance(data, dict):
@@ -180,8 +183,9 @@ def _read_device_telemetry(device_id: str, port: str, baudrate: int, side: str):
                                     "telemetry": data,
                                     "raw": True
                                 }
-                        except:
-                            pass
+                                logger.info(f"TELEMETRY CACHED: {data.get('sensor', 'unknown')}")
+                        except Exception as e:
+                            logger.warning(f"JSON parse error: {e} - line: {line[:50]}")
             
             time.sleep(0.1)  # Small delay to avoid CPU spinning
             
@@ -203,46 +207,32 @@ def _query_device_info(ser, side: str) -> Dict[str, Any]:
     }
     
     try:
-        # Try to get device info via commands
-        commands = [
-            {"cmd": "get_mac"},
-            {"cmd": "get_version"},
-            {"cmd": "i2c_scan"},
-        ]
+        # Quick query - just get MAC
+        ser.timeout = 1  # Short timeout
+        ser.reset_input_buffer()
+        ser.write(b'{"cmd":"get_mac"}\n')
+        ser.flush()
+        time.sleep(0.5)
         
-        for cmd in commands:
-            try:
-                ser.reset_input_buffer()
-                cmd_str = json.dumps(cmd) + "\n"
-                ser.write(cmd_str.encode('utf-8'))
-                ser.flush()
-                time.sleep(0.3)
-                
-                if ser.in_waiting > 0:
-                    response = ser.read(ser.in_waiting).decode('utf-8', errors='replace').strip()
-                    if response:
-                        try:
-                            data = json.loads(response)
-                            if "mac" in data:
-                                info["mac_address"] = data["mac"]
-                            if "version" in data or "firmware" in data:
-                                info["firmware_version"] = data.get("version") or data.get("firmware")
-                            if "i2c" in data or "sensors" in data:
-                                sensors = data.get("i2c", data.get("sensors", []))
-                                if isinstance(sensors, list):
-                                    info["i2c_sensors"] = sensors
-                                elif isinstance(sensors, dict):
-                                    info["i2c_sensors"] = list(sensors.keys())
-                        except:
-                            # Try to extract MAC from raw response
-                            if "mac" in response.lower() or ":" in response:
-                                parts = response.split()
-                                for part in parts:
-                                    if ":" in part and len(part.split(":")) == 6:
-                                        info["mac_address"] = part.upper()
-                                        break
-            except:
-                continue
+        if ser.in_waiting > 0:
+            response = ser.read(ser.in_waiting).decode('utf-8', errors='replace').strip()
+            # Find JSON in response (skip boot messages)
+            for line in response.split('\n'):
+                line = line.strip()
+                if line.startswith('{'):
+                    try:
+                        data = json.loads(line)
+                        if "mac" in data:
+                            info["mac_address"] = data["mac"]
+                        if "node_id" in data:
+                            info["node_id"] = data["node_id"]
+                        if "version" in data:
+                            info["firmware_version"] = data["version"]
+                        break
+                    except:
+                        pass
+        
+        ser.timeout = 2  # Restore normal timeout
     except Exception as e:
         logger.warning(f"Could not query device info: {e}")
     
@@ -374,10 +364,20 @@ async def send_command(device_id: str, request: CommandRequest):
             ser.write(command_bytes)
             ser.flush()
         else:
-            # Fallback to JSON
+            # Send as plain text CLI command (Garrett's firmware expects plain text, not JSON)
+            cmd_payload = request.command.copy()
+            
+            # Extract the command string
+            if "cmd" in cmd_payload:
+                cmd_str = cmd_payload["cmd"]
+            elif "command_type" in cmd_payload:
+                cmd_str = cmd_payload["command_type"]
+            else:
+                cmd_str = str(cmd_payload)
+            
             ser.reset_input_buffer()
-            cmd_str = json.dumps(request.command) + "\n"
-            ser.write(cmd_str.encode('utf-8'))
+            logger.info(f"Sending CLI command: {cmd_str}")
+            ser.write((cmd_str + "\r\n").encode('utf-8'))
             ser.flush()
         
         time.sleep(0.5)

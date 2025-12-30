@@ -1,0 +1,165 @@
+# =============================================================================
+# MYCOSOFT Services - Unified Docker Compose
+# =============================================================================
+# This file runs all core Mycosoft services in Docker containers
+# Services will restart automatically and run independently of Cursor
+#
+# Usage:
+#   docker-compose -f docker-compose.services.yml up -d --build
+#
+# Services:
+#   - mycosoft-website (port 3000) - Next.js website
+#   - mindex-api (port 8000) - Mycological Index API
+#   - mycobrain-service (port 8003) - MycoBrain device service
+#   - n8n (port 5678) - Workflow automation
+#
+# =============================================================================
+
+version: "3.9"
+
+services:
+  # =========================================================================
+  # Mycosoft Website - Next.js Application
+  # =========================================================================
+  mycosoft-website:
+    build:
+      context: ../WEBSITE/website
+      dockerfile: Dockerfile
+    container_name: mycosoft-website
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Service URLs (internal Docker network)
+      MINDEX_API_URL: http://mindex-api:8000
+      MYCOBRAIN_SERVICE_URL: http://host.docker.internal:8003
+      N8N_WEBHOOK_URL: http://n8n:5678
+      # Public URLs
+      NEXT_PUBLIC_MINDEX_API_BASE_URL: /api/mindex
+      NEXT_PUBLIC_NATUREOS_API_BASE_URL: /api/natureos
+      NEXT_PUBLIC_MYCA_MAS_API_BASE_URL: /api/mas
+      NEXT_PUBLIC_USE_MOCK_DATA: "false"
+    networks:
+      - mycosoft-services
+    depends_on:
+      mindex-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    labels:
+      - "com.mycosoft.service=website"
+      - "com.mycosoft.description=Mycosoft.com Next.js Website"
+
+  # =========================================================================
+  # MINDEX API - Mycological Index Service
+  # =========================================================================
+  mindex-api:
+    build:
+      context: .
+      dockerfile: services/mindex/Dockerfile
+    container_name: mindex-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      MINDEX_PORT: 8000
+      MINDEX_HOST: 0.0.0.0
+      MINDEX_AUTO_SYNC: "true"
+      MINDEX_SYNC_INTERVAL: 24
+      MINDEX_MAX_RECORDS: 100000
+      LOG_LEVEL: INFO
+      PYTHONUNBUFFERED: 1
+    volumes:
+      - mindex-data:/app/data
+      - ./data/mindex:/app/data/local
+    networks:
+      - mycosoft-services
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    labels:
+      - "com.mycosoft.service=mindex"
+      - "com.mycosoft.description=Mycological Index API"
+
+  # =========================================================================
+  # n8n - Workflow Automation
+  # =========================================================================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=America/New_York
+    volumes:
+      - n8n-data:/home/node/.n8n
+      - ./n8n/workflows:/home/node/.n8n/workflows
+    networks:
+      - mycosoft-services
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    labels:
+      - "com.mycosoft.service=n8n"
+      - "com.mycosoft.description=Workflow Automation"
+
+  # =========================================================================
+  # Redis - Caching and Message Queue
+  # =========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: mycosoft-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - mycosoft-services
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "com.mycosoft.service=redis"
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  mycosoft-services:
+    driver: bridge
+    name: mycosoft-services
+
+# =============================================================================
+# Volumes - Persistent Data Storage
+# =============================================================================
+volumes:
+  mindex-data:
+    driver: local
+    name: mycosoft-mindex-data
+  n8n-data:
+    driver: local
+    name: mycosoft-n8n-data
+  redis-data:
+    driver: local
+    name: mycosoft-redis-data
