@@ -27,35 +27,23 @@ if (-not (Test-Path $LogDir)) {
 # Function to check if a port is in use
 function Test-Port {
     param([int]$Port)
-    $connection = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+    $connection = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
     return $null -ne $connection
 }
 
-# Function to start a process in background
-function Start-BackgroundProcess {
-    param(
-        [string]$Name,
-        [string]$WorkingDir,
-        [string]$Command,
-        [string]$Arguments,
-        [string]$LogFile
-    )
-    
-    Write-Host "Starting $Name..." -ForegroundColor Yellow
-    
-    $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = $Command
-    $psi.Arguments = $Arguments
-    $psi.WorkingDirectory = $WorkingDir
-    $psi.UseShellExecute = $false
-    $psi.CreateNoWindow = $true
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    
-    $process = [System.Diagnostics.Process]::Start($psi)
-    
-    Write-Host "$Name started (PID: $($process.Id))" -ForegroundColor Green
-    return $process
+# Function to kill processes on a port
+function Kill-PortProcess {
+    param([int]$Port)
+    $connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+    foreach ($conn in $connections) {
+        if ($conn.OwningProcess) {
+            try {
+                Stop-Process -Id $conn.OwningProcess -Force -ErrorAction SilentlyContinue
+            } catch {
+                # Ignore errors
+            }
+        }
+    }
 }
 
 # Stop all services
@@ -70,6 +58,11 @@ if ($StopAll) {
     
     # Stop Node processes
     Get-Process -Name "node" -ErrorAction SilentlyContinue | Stop-Process -Force
+    
+    # Stop MycoBrain service
+    Get-Process -Name "python" -ErrorAction SilentlyContinue | Where-Object {
+        $_.CommandLine -like "*mycobrain_service*"
+    } | Stop-Process -Force
     
     Write-Host "All services stopped." -ForegroundColor Green
     exit 0
@@ -93,6 +86,7 @@ if ($CheckOnly) {
         5678 = "n8n Workflows"
         8000 = "MINDEX API"
         8001 = "MAS Orchestrator"
+        8003 = "MycoBrain Service"
     }
     
     foreach ($port in $ports.Keys | Sort-Object) {
@@ -112,9 +106,21 @@ Write-Host "Starting all MYCOSOFT services..." -ForegroundColor Yellow
 Write-Host ""
 
 # ============================================
-# 1. Start Docker Containers
+# 1. Clean up stuck processes
 # ============================================
-Write-Host "[1/4] Starting Docker containers..." -ForegroundColor Cyan
+Write-Host "[1/5] Cleaning up stuck processes..." -ForegroundColor Cyan
+
+# Kill stuck processes on port 3000
+Kill-PortProcess -Port 3000
+Start-Sleep -Seconds 2
+
+Write-Host "  Cleanup complete." -ForegroundColor Green
+
+# ============================================
+# 2. Start Docker Containers
+# ============================================
+Write-Host ""
+Write-Host "[2/5] Starting Docker containers..." -ForegroundColor Cyan
 
 Set-Location $MASDir
 
@@ -148,29 +154,83 @@ docker ps -q | ForEach-Object { docker update --restart unless-stopped $_ 2>$nul
 Write-Host "  Docker containers started." -ForegroundColor Green
 
 # ============================================
-# 2. Start Website
+# 3. Start Website
 # ============================================
 Write-Host ""
-Write-Host "[2/4] Starting Website..." -ForegroundColor Cyan
+Write-Host "[3/5] Starting Website..." -ForegroundColor Cyan
 
 if (-not (Test-Port 3000)) {
     Set-Location $WebsiteDir
     
-    # Start website in background using Start-Process
+    # Kill any existing node processes for the website
+    Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object {
+        $_.Path -like "*website*" -or (Get-NetTCPConnection -OwningProcess $_.Id -LocalPort 3000 -ErrorAction SilentlyContinue)
+    } | Stop-Process -Force -ErrorAction SilentlyContinue
+    
+    Start-Sleep -Seconds 2
+    
+    # Start website in background using Start-Process with proper logging
     $websiteLog = "$LogDir\website.log"
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/c npm run dev > `"$websiteLog`" 2>&1" -WorkingDirectory $WebsiteDir -WindowStyle Hidden
+    $psCommand = "Set-Location '$WebsiteDir'; npm run dev 2>&1 | Tee-Object -FilePath '$websiteLog'"
+    
+    Start-Process powershell.exe -ArgumentList "-NoProfile", "-Command", $psCommand -WindowStyle Hidden
     
     Write-Host "  Website starting on port 3000..." -ForegroundColor Green
-    Start-Sleep -Seconds 5
+    Start-Sleep -Seconds 10
+    
+    # Verify it started
+    if (Test-Port 3000) {
+        Write-Host "  Website started successfully!" -ForegroundColor Green
+    } else {
+        Write-Host "  Warning: Website may not have started correctly. Check logs: $websiteLog" -ForegroundColor Yellow
+    }
 } else {
     Write-Host "  Website already running on port 3000" -ForegroundColor Green
 }
 
 # ============================================
-# 3. Verify All Services
+# 4. Start MycoBrain Service
 # ============================================
 Write-Host ""
-Write-Host "[3/4] Verifying services..." -ForegroundColor Cyan
+Write-Host "[4/5] Starting MycoBrain Service..." -ForegroundColor Cyan
+
+if (-not (Test-Port 8003)) {
+    Set-Location $MASDir
+    
+    # Kill any existing MycoBrain processes
+    Get-Process -Name "python" -ErrorAction SilentlyContinue | Where-Object {
+        try {
+            $_.CommandLine -like "*mycobrain_service*"
+        } catch {
+            $false
+        }
+    } | Stop-Process -Force -ErrorAction SilentlyContinue
+    
+    Start-Sleep -Seconds 2
+    
+    # Start MycoBrain service
+    $mycobrainLog = "$LogDir\mycobrain-service.log"
+    $psCommand = "Set-Location '$MASDir'; python services\mycobrain\mycobrain_service_standalone.py 2>&1 | Tee-Object -FilePath '$mycobrainLog'"
+    
+    Start-Process powershell.exe -ArgumentList "-NoProfile", "-Command", $psCommand -WindowStyle Hidden
+    
+    Write-Host "  MycoBrain service starting on port 8003..." -ForegroundColor Green
+    Start-Sleep -Seconds 5
+    
+    if (Test-Port 8003) {
+        Write-Host "  MycoBrain service started successfully!" -ForegroundColor Green
+    } else {
+        Write-Host "  Warning: MycoBrain service may not have started. Check logs: $mycobrainLog" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  MycoBrain service already running on port 8003" -ForegroundColor Green
+}
+
+# ============================================
+# 5. Verify All Services
+# ============================================
+Write-Host ""
+Write-Host "[5/5] Verifying services..." -ForegroundColor Cyan
 
 Start-Sleep -Seconds 5
 
@@ -180,7 +240,8 @@ $services = @(
     @{Name="UniFi Dashboard"; Port=3100; URL="http://localhost:3100"},
     @{Name="n8n Workflows"; Port=5678; URL="http://localhost:5678"},
     @{Name="MINDEX API"; Port=8000; URL="http://localhost:8000/health"},
-    @{Name="MAS Orchestrator"; Port=8001; URL="http://localhost:8001/health"}
+    @{Name="MAS Orchestrator"; Port=8001; URL="http://localhost:8001/health"},
+    @{Name="MycoBrain Service"; Port=8003; URL="http://localhost:8003/health"}
 )
 
 $allRunning = $true
@@ -197,10 +258,10 @@ foreach ($svc in $services) {
 }
 
 # ============================================
-# 4. Summary
+# Summary
 # ============================================
 Write-Host ""
-Write-Host "[4/4] Summary" -ForegroundColor Cyan
+Write-Host "Summary" -ForegroundColor Cyan
 
 if ($allRunning) {
     Write-Host ""
@@ -215,11 +276,15 @@ if ($allRunning) {
 
 Write-Host ""
 Write-Host "Services will persist after Cursor closes." -ForegroundColor Cyan
+Write-Host "Run the watchdog script to auto-restart services if they crash." -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Quick Links:" -ForegroundColor White
 Write-Host "  Website:       http://localhost:3000" -ForegroundColor Gray
 Write-Host "  NatureOS:      http://localhost:3000/natureos" -ForegroundColor Gray
 Write-Host "  MINDEX:        http://localhost:3000/natureos/mindex" -ForegroundColor Gray
+Write-Host "  Devices:       http://localhost:3000/natureos/devices" -ForegroundColor Gray
 Write-Host "  n8n:           http://localhost:5678" -ForegroundColor Gray
 Write-Host "  UniFi:         http://localhost:3100" -ForegroundColor Gray
 Write-Host ""
+
+

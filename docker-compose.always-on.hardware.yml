@@ -1,0 +1,17 @@
+# Optional override for real MycoBoard hardware access (Linux/WSL2 only)
+#
+# Usage (from MAS repo root):
+#   docker compose -f docker-compose.always-on.yml -f docker-compose.always-on.hardware.yml up -d --build
+#
+# Windows note:
+# - You must first attach the USB serial device into WSL2 (e.g. via usbipd-win),
+#   so it appears as /dev/ttyACM0 or /dev/ttyUSB0 inside the Linux environment.
+
+services:
+  mycobrain:
+    privileged: true
+    devices:
+      - "/dev/ttyACM0:/dev/ttyACM0"
+    environment:
+      - DEFAULT_SERIAL_PORT=/dev/ttyACM0
+

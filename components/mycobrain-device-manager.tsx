@@ -456,28 +456,64 @@ export function MycoBrainDeviceManager() {
             <div className="space-y-4">
               {/* NeoPixel LED Control */}
               <div>
-                <div className="text-sm text-gray-400 mb-2">NeoPixel LEDs</div>
-                <div className="flex gap-2">
-                  {[0, 1, 2, 3].map((led) => (
-                    <button
-                      key={led}
-                      onClick={() =>
-                        sendCommand(selectedDevice, "set_neopixel", {
-                          led_index: led,
-                          r: 255,
-                          g: 0,
-                          b: 255,
-                        })
-                      }
-                      className="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm"
-                    >
-                      LED {led}
-                    </button>
-                  ))}
+                <div className="text-sm text-gray-400 mb-2">RGB LED Control</div>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() =>
+                      sendCommand(selectedDevice, "set_neopixel", {
+                        led_index: 0,
+                        r: 255,
+                        g: 0,
+                        b: 0,
+                      })
+                    }
+                    className="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm"
+                  >
+                    Red
+                  </button>
+                  <button
+                    onClick={() =>
+                      sendCommand(selectedDevice, "set_neopixel", {
+                        led_index: 0,
+                        r: 0,
+                        g: 255,
+                        b: 0,
+                      })
+                    }
+                    className="px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm"
+                  >
+                    Green
+                  </button>
+                  <button
+                    onClick={() =>
+                      sendCommand(selectedDevice, "set_neopixel", {
+                        led_index: 0,
+                        r: 0,
+                        g: 0,
+                        b: 255,
+                      })
+                    }
+                    className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm"
+                  >
+                    Blue
+                  </button>
+                  <button
+                    onClick={() =>
+                      sendCommand(selectedDevice, "set_neopixel", {
+                        led_index: 0,
+                        r: 255,
+                        g: 0,
+                        b: 255,
+                      })
+                    }
+                    className="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm"
+                  >
+                    Purple
+                  </button>
                 </div>
                 <button
                   onClick={() => sendCommand(selectedDevice, "set_neopixel", { all_off: true })}
-                  className="mt-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"
+                  className="mt-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm w-full"
                 >
                   All Off
                 </button>

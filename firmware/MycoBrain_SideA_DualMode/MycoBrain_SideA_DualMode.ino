@@ -662,9 +662,59 @@ static void parseJsonCommand(const String& line) {
   else if (strcmp(cmd, "i2c_scan") == 0 || strcmp(cmd, "i2c.scan") == 0 || strcmp(cmd, "scan") == 0) { cmdI2cScan(id); }
   else if (strcmp(cmd, "config") == 0 || strcmp(cmd, "config.get") == 0) { cmdConfig(id); }
   else if (strcmp(cmd, "beep") == 0) { 
-    int freq = req["freq"] | 2000;
-    int ms = req["ms"] | 100;
+    int freq = req["freq"] | req["frequency"] | 2000;
+    int ms = req["ms"] | req["duration"] | 100;
     cmdBeep(freq, ms); 
+  }
+  // Device manager commands
+  else if (strcmp(cmd, "set_buzzer") == 0) {
+    if (req.containsKey("off") && req["off"] == true) {
+      noTone(BUZZER_PIN);
+      respondOk(id);
+    } else {
+      int freq = req["frequency"] | 2000;
+      int ms = req["duration"] | 100;
+      cmdBeep(freq, ms);
+    }
+  }
+  else if (strcmp(cmd, "set_neopixel") == 0) {
+    if (req.containsKey("all_off") && req["all_off"] == true) {
+      gLedMode = LED_OFF;
+      ledOff();
+      respondOk(id);
+    } else {
+      int ledIndex = req["led_index"] | 0;
+      if (ledIndex >= 0 && ledIndex < 4) {  // Support 4 LEDs (even if we only have 1 RGB)
+        uint8_t r = req["r"] | 0;
+        uint8_t g = req["g"] | 0;
+        uint8_t b = req["b"] | 0;
+        gLedR = r;
+        gLedG = g;
+        gLedB = b;
+        gLedMode = LED_MANUAL;
+        ledWriteRGB(r, g, b);
+        respondOk(id);
+      } else {
+        respondError("invalid led_index (0-3)", id);
+      }
+    }
+  }
+  else if (strcmp(cmd, "set_mosfet") == 0) {
+    // MOSFET control placeholder (no hardware yet)
+    int mosfetIndex = req["mosfet_index"] | -1;
+    bool state = req.containsKey("state") ? (bool)req["state"] : false;
+    if (mosfetIndex >= 0 && mosfetIndex < 4) {
+      // TODO: Implement MOSFET control when hardware is available
+      StaticJsonDocument<128> doc;
+      doc["ok"] = true;
+      if (id[0]) doc["id"] = id;
+      doc["mosfet_index"] = mosfetIndex;
+      doc["state"] = state;
+      doc["note"] = "MOSFET control not yet implemented";
+      writeJson(doc);
+    } else {
+      respondError("invalid mosfet_index (0-3)", id);
+    }
   }
   else if (strcmp(cmd, "reboot") == 0 || strcmp(cmd, "restart") == 0) { cmdReboot(); }
   else if (strcmp(cmd, "set_telemetry_interval") == 0 || strcmp(cmd, "telemetry.period") == 0) {
