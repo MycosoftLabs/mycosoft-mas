@@ -276,6 +276,20 @@ static void processCommand(char* line) {
         return;
     }
     
+    if (strcmp(cmdName, "fmt") == 0) {
+        if (argc < 2) {
+            CLI::sendError("fmt", "Usage: fmt <json>");
+            return;
+        }
+        if (strcmp(argv[1], "json") == 0) {
+            // Machine mode already outputs NDJSON, but acknowledge for compatibility
+            CLI::sendAck("fmt", "json");
+        } else {
+            CLI::sendError("fmt", "Unknown format (use 'json')");
+        }
+        return;
+    }
+    
     if (strcmp(cmdName, "status") == 0) {
         JsonDoc doc;
         JsonIO::createTelemetry(doc);
@@ -604,6 +618,37 @@ static void processCommand(char* line) {
         return;
     }
     
+    // Scan command (alias for periph scan - website compatibility)
+    if (strcmp(cmdName, "scan") == 0) {
+        int found = Peripherals::scan();
+        JsonDoc doc;
+        if (CLI::isMachineMode()) {
+            doc["type"] = "periph_list";
+            JsonIO::addTimestamp(doc);
+            JsonIO::addBoardId(doc);
+            
+            JsonArray peripherals = doc["peripherals"].to<JsonArray>();
+            for (int i = 0; i < Peripherals::getCount(); i++) {
+                PeripheralDescriptor* desc = Peripherals::getByIndex(i);
+                if (desc && desc->present) {
+                    JsonObject periph = peripherals.createNestedObject();
+                    periph["uid"] = desc->uid;
+                    periph["address"] = desc->address;
+                    periph["type"] = peripheralTypeName(desc->type);
+                    periph["vendor"] = desc->vendor;
+                    periph["product"] = desc->product;
+                    periph["present"] = desc->present;
+                }
+            }
+            doc["count"] = found;
+        } else {
+            doc["type"] = "periph_scan";
+            doc["found"] = found;
+        }
+        JsonIO::emit(doc);
+        return;
+    }
+    
     // Peripheral commands
     if (strcmp(cmdName, "periph") == 0) {
         if (argc < 2) {
@@ -614,8 +659,29 @@ static void processCommand(char* line) {
         if (strcmp(argv[1], "scan") == 0) {
             int found = Peripherals::scan();
             JsonDoc doc;
-            doc["type"] = "periph_scan";
-            doc["found"] = found;
+            if (CLI::isMachineMode()) {
+                doc["type"] = "periph_list";
+                JsonIO::addTimestamp(doc);
+                JsonIO::addBoardId(doc);
+                
+                JsonArray peripherals = doc["peripherals"].to<JsonArray>();
+                for (int i = 0; i < Peripherals::getCount(); i++) {
+                    PeripheralDescriptor* desc = Peripherals::getByIndex(i);
+                    if (desc && desc->present) {
+                        JsonObject periph = peripherals.createNestedObject();
+                        periph["uid"] = desc->uid;
+                        periph["address"] = desc->address;
+                        periph["type"] = peripheralTypeName(desc->type);
+                        periph["vendor"] = desc->vendor;
+                        periph["product"] = desc->product;
+                        periph["present"] = desc->present;
+                    }
+                }
+                doc["count"] = found;
+            } else {
+                doc["type"] = "periph_scan";
+                doc["found"] = found;
+            }
             JsonIO::emit(doc);
         } else if (strcmp(argv[1], "list") == 0) {
             char list[1024];

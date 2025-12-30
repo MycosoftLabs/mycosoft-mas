@@ -4,17 +4,27 @@
  * 
  * Features:
  * - BME688 environmental sensors (I2C)
- * - I2C sensor scanning
+ * - I2C sensor scanning with peripheral discovery
  * - Analog inputs (AI1-AI4)
  * - MOSFET control (GPIO12/13/14)
  * - NeoPixel LED control (GPIO15, SK6805)
  * - Buzzer control (GPIO16)
- * - Telemetry transmission (JSON format)
- * - Command handling
+ * - Telemetry transmission (JSON/NDJSON format)
+ * - Command handling (JSON and text commands)
+ * - Machine mode for website integration
  * - Brownout protection
  * 
- * Protocol: JSON mode (compatible with mycobrain_dual_service.py)
- * Future: MDP v1 protocol support can be added
+ * Protocol Support:
+ * - Legacy JSON mode (compatible with mycobrain_dual_service.py)
+ * - NDJSON machine mode (for website widget integration)
+ * - Text commands: mode machine, dbg off, fmt json, scan, status
+ * - JSON commands: All standard commands via JSON
+ * 
+ * Website Integration:
+ * - Initialize with: mode machine, dbg off, fmt json
+ * - Peripheral discovery: scan command returns periph_list
+ * - Telemetry: type="telemetry" with NDJSON format
+ * - Responses: type="ack", type="err" for machine mode
  */
 
 #include <Arduino.h>
@@ -70,6 +80,15 @@ unsigned long uptimeSeconds = 0;
 unsigned long lastUptimeUpdate = 0;
 unsigned long lastTelemetry = 0;
 unsigned long telemetryInterval = TELEMETRY_INTERVAL_MS;
+
+// Operating mode (for website compatibility)
+enum OperatingMode {
+  MODE_HUMAN = 0,
+  MODE_MACHINE = 1
+};
+OperatingMode currentMode = MODE_HUMAN;
+bool debugEnabled = false;
+bool jsonFormat = false;  // NDJSON format flag
 
 // MOSFET states
 bool mosfetStates[3] = {false, false, false};
@@ -210,31 +229,140 @@ void handleCommands() {
 }
 
 void processCommand(String cmd) {
+  cmd.trim();
+  
+  // Check if it's a text command (for website compatibility)
+  if (cmd.startsWith("mode ")) {
+    String mode = cmd.substring(5);
+    mode.trim();
+    if (mode == "machine") {
+      currentMode = MODE_MACHINE;
+      jsonFormat = true;
+      sendAck("mode", "machine");
+    } else if (mode == "human") {
+      currentMode = MODE_HUMAN;
+      sendAck("mode", "human");
+    }
+    return;
+  }
+  
+  if (cmd.startsWith("dbg ")) {
+    String state = cmd.substring(4);
+    state.trim();
+    if (state == "off") {
+      debugEnabled = false;
+      sendAck("dbg", "off");
+    } else if (state == "on") {
+      debugEnabled = true;
+      sendAck("dbg", "on");
+    }
+    return;
+  }
+  
+  if (cmd.startsWith("fmt ")) {
+    String format = cmd.substring(4);
+    format.trim();
+    if (format == "json") {
+      jsonFormat = true;
+      sendAck("fmt", "json");
+    }
+    return;
+  }
+  
+  if (cmd == "scan") {
+    scanI2C();
+    if (currentMode == MODE_MACHINE) {
+      sendPeriphList();
+    } else {
+      sendI2CScanResult();
+    }
+    return;
+  }
+  
+  // Try to parse as JSON
   DynamicJsonDocument doc(1024);
   DeserializationError error = deserializeJson(doc, cmd);
   
   if (error) {
-    sendError("Invalid JSON");
+    sendError("Invalid JSON or unknown command");
     return;
   }
   
   String command = doc["cmd"] | "";
   
-  if (command == "ping") {
-    sendResponse("ping", "{\"status\":\"ok\",\"side\":\"side-a\"}");
+  // Machine mode initialization commands (for website compatibility)
+  if (command == "mode") {
+    String mode = doc["mode"] | "";
+    if (mode == "machine") {
+      currentMode = MODE_MACHINE;
+      jsonFormat = true;
+      sendAck("mode", "machine");
+    } else if (mode == "human") {
+      currentMode = MODE_HUMAN;
+      sendResponse("mode", "{\"mode\":\"human\"}");
+    } else {
+      sendError("mode", "Invalid mode (use 'machine' or 'human')");
+    }
+  }
+  else if (command == "dbg") {
+    String state = doc["state"] | "";
+    if (state == "off" || state == "false") {
+      debugEnabled = false;
+      sendAck("dbg", "off");
+    } else if (state == "on" || state == "true") {
+      debugEnabled = true;
+      sendAck("dbg", "on");
+    } else {
+      sendError("dbg", "Invalid state (use 'on' or 'off')");
+    }
+  }
+  else if (command == "fmt") {
+    String format = doc["format"] | "";
+    if (format == "json") {
+      jsonFormat = true;
+      sendAck("fmt", "json");
+    } else {
+      jsonFormat = false;
+      sendAck("fmt", format);
+    }
+  }
+  else if (command == "ping") {
+    if (currentMode == MODE_MACHINE) {
+      sendAck("ping", "ok");
+    } else {
+      sendResponse("ping", "{\"status\":\"ok\",\"side\":\"side-a\"}");
+    }
   }
   else if (command == "status") {
     sendStatus();
   }
   else if (command == "get_mac") {
-    sendResponse("mac", "{\"mac\":\"" + deviceMac + "\"}");
+    if (currentMode == MODE_MACHINE) {
+      DynamicJsonDocument doc(256);
+      doc["type"] = "mac";
+      doc["mac"] = deviceMac;
+      sendNDJSON(doc);
+    } else {
+      sendResponse("mac", "{\"mac\":\"" + deviceMac + "\"}");
+    }
   }
   else if (command == "get_version") {
-    sendResponse("version", "{\"version\":\"" + String(FIRMWARE_VERSION) + "\"}");
+    if (currentMode == MODE_MACHINE) {
+      DynamicJsonDocument doc(256);
+      doc["type"] = "version";
+      doc["version"] = FIRMWARE_VERSION;
+      sendNDJSON(doc);
+    } else {
+      sendResponse("version", "{\"version\":\"" + String(FIRMWARE_VERSION) + "\"}");
+    }
   }
-  else if (command == "i2c_scan") {
+  else if (command == "i2c_scan" || command == "scan") {
     scanI2C();
-    sendI2CScanResult();
+    if (currentMode == MODE_MACHINE) {
+      sendPeriphList();
+    } else {
+      sendI2CScanResult();
+    }
   }
   else if (command == "set_telemetry_interval") {
     if (doc.containsKey("interval_seconds")) {
@@ -261,12 +389,85 @@ void processCommand(String cmd) {
     readBME688(sensor_id);
     sendSensorData(sensor_id);
   }
-  else if (command == "buzzer") {
+  else if (command == "buzzer" || command == "buzz") {
+    // Support both buzzer and buzz commands
     if (doc.containsKey("frequency") && doc.containsKey("duration")) {
       int freq = doc["frequency"].as<int>();
       int duration = doc["duration"].as<int>();
       tone(BUZZER_PIN, freq, duration);
-      sendResponse("buzzer", "{\"frequency\":" + String(freq) + ",\"duration\":" + String(duration) + "}");
+      sendAck("buzzer", "Tone playing");
+    } else if (doc.containsKey("pattern")) {
+      String pattern = doc["pattern"] | "";
+      // Pattern support (coin, bump, power, 1up, morgio, etc.)
+      if (pattern == "coin") {
+        tone(BUZZER_PIN, 800, 100);
+        delay(100);
+        tone(BUZZER_PIN, 1000, 100);
+        sendAck("buzzer", "Pattern: coin");
+      } else if (pattern == "bump") {
+        tone(BUZZER_PIN, 200, 50);
+        sendAck("buzzer", "Pattern: bump");
+      } else if (pattern == "power") {
+        tone(BUZZER_PIN, 600, 200);
+        sendAck("buzzer", "Pattern: power");
+      } else if (pattern == "1up") {
+        tone(BUZZER_PIN, 523, 150);
+        delay(150);
+        tone(BUZZER_PIN, 659, 150);
+        delay(150);
+        tone(BUZZER_PIN, 784, 150);
+        sendAck("buzzer", "Pattern: 1up");
+      } else if (pattern == "morgio") {
+        // Morgio pattern
+        tone(BUZZER_PIN, 440, 100);
+        delay(100);
+        tone(BUZZER_PIN, 554, 100);
+        delay(100);
+        tone(BUZZER_PIN, 659, 200);
+        sendAck("buzzer", "Pattern: morgio");
+      } else {
+        sendError("Unknown buzzer pattern: " + pattern);
+      }
+    } else if (doc.containsKey("stop")) {
+      noTone(BUZZER_PIN);
+      sendAck("buzzer", "Stopped");
+    } else {
+      sendError("buzzer command requires 'frequency' and 'duration', or 'pattern'");
+    }
+  }
+  else if (command == "led" || command == "pixel") {
+    // LED/NeoPixel control (basic support - full NeoPixelBus would require library)
+    if (doc.containsKey("r") && doc.containsKey("g") && doc.containsKey("b")) {
+      uint8_t r = doc["r"].as<uint8_t>();
+      uint8_t g = doc["g"].as<uint8_t>();
+      uint8_t b = doc["b"].as<uint8_t>();
+      // Basic digital control for now (GPIO15)
+      // Full NeoPixel control would require NeoPixelBus library
+      if (r > 0 || g > 0 || b > 0) {
+        digitalWrite(NEOPIXEL_PIN, HIGH);
+      } else {
+        digitalWrite(NEOPIXEL_PIN, LOW);
+      }
+      sendAck("led", "Color set (basic mode)");
+    } else if (doc.containsKey("off")) {
+      digitalWrite(NEOPIXEL_PIN, LOW);
+      sendAck("led", "LED off");
+    } else if (doc.containsKey("pattern")) {
+      String pattern = doc["pattern"] | "";
+      // Basic pattern support
+      if (pattern == "blink") {
+        for (int i = 0; i < 3; i++) {
+          digitalWrite(NEOPIXEL_PIN, HIGH);
+          delay(200);
+          digitalWrite(NEOPIXEL_PIN, LOW);
+          delay(200);
+        }
+        sendAck("led", "Pattern: blink");
+      } else {
+        sendError("Unknown LED pattern: " + pattern);
+      }
+    } else {
+      sendError("led command requires 'r', 'g', 'b' or 'off' or 'pattern'");
     }
   }
   else if (command == "reset") {
@@ -293,49 +494,91 @@ void sendTelemetry() {
   readBME688(0);
   readBME688(1);
   
-  // Build telemetry JSON
-  DynamicJsonDocument doc(2048);
-  doc["ai1_voltage"] = ai1;
-  doc["ai2_voltage"] = ai2;
-  doc["ai3_voltage"] = ai3;
-  doc["ai4_voltage"] = ai4;
-  
-  // Use first BME688 if available, otherwise use second
-  if (bme688_1.valid) {
-    doc["temperature"] = bme688_1.temperature;
-    doc["humidity"] = bme688_1.humidity;
-    doc["pressure"] = bme688_1.pressure;
-    doc["gas_resistance"] = bme688_1.gas_resistance;
-  } else if (bme688_2.valid) {
-    doc["temperature"] = bme688_2.temperature;
-    doc["humidity"] = bme688_2.humidity;
-    doc["pressure"] = bme688_2.pressure;
-    doc["gas_resistance"] = bme688_2.gas_resistance;
+  if (currentMode == MODE_MACHINE && jsonFormat) {
+    // NDJSON format for machine mode
+    DynamicJsonDocument doc(2048);
+    doc["type"] = "telemetry";
+    doc["ts"] = millis();
+    
+    // Board ID (MAC address)
+    doc["board_id"] = deviceMac;
+    
+    // Analog inputs
+    doc["ai1_voltage"] = ai1;
+    doc["ai2_voltage"] = ai2;
+    doc["ai3_voltage"] = ai3;
+    doc["ai4_voltage"] = ai4;
+    
+    // Sensor data
+    if (bme688_1.valid) {
+      doc["temperature"] = bme688_1.temperature;
+      doc["humidity"] = bme688_1.humidity;
+      doc["pressure"] = bme688_1.pressure;
+      doc["gas_resistance"] = bme688_1.gas_resistance;
+    } else if (bme688_2.valid) {
+      doc["temperature"] = bme688_2.temperature;
+      doc["humidity"] = bme688_2.humidity;
+      doc["pressure"] = bme688_2.pressure;
+      doc["gas_resistance"] = bme688_2.gas_resistance;
+    }
+    
+    // MOSFET states
+    JsonArray mosfetArray = doc.createNestedArray("mosfet_states");
+    for (int i = 0; i < 3; i++) {
+      mosfetArray.add(mosfetStates[i]);
+    }
+    
+    // I2C addresses
+    JsonArray i2cArray = doc.createNestedArray("i2c_addresses");
+    for (int i = 0; i < i2cAddressCount; i++) {
+      i2cArray.add(i2cAddresses[i]);
+    }
+    
+    doc["firmware_version"] = FIRMWARE_VERSION;
+    doc["uptime_seconds"] = uptimeSeconds;
+    
+    sendNDJSON(doc);
+  } else {
+    // Legacy format
+    DynamicJsonDocument doc(2048);
+    doc["ai1_voltage"] = ai1;
+    doc["ai2_voltage"] = ai2;
+    doc["ai3_voltage"] = ai3;
+    doc["ai4_voltage"] = ai4;
+    
+    if (bme688_1.valid) {
+      doc["temperature"] = bme688_1.temperature;
+      doc["humidity"] = bme688_1.humidity;
+      doc["pressure"] = bme688_1.pressure;
+      doc["gas_resistance"] = bme688_1.gas_resistance;
+    } else if (bme688_2.valid) {
+      doc["temperature"] = bme688_2.temperature;
+      doc["humidity"] = bme688_2.humidity;
+      doc["pressure"] = bme688_2.pressure;
+      doc["gas_resistance"] = bme688_2.gas_resistance;
+    }
+    
+    JsonArray mosfetArray = doc.createNestedArray("mosfet_states");
+    for (int i = 0; i < 3; i++) {
+      mosfetArray.add(mosfetStates[i]);
+    }
+    
+    JsonArray i2cArray = doc.createNestedArray("i2c_addresses");
+    for (int i = 0; i < i2cAddressCount; i++) {
+      i2cArray.add(i2cAddresses[i]);
+    }
+    
+    doc["firmware_version"] = FIRMWARE_VERSION;
+    doc["uptime_seconds"] = uptimeSeconds;
+    
+    DynamicJsonDocument response(2048);
+    response["type"] = "telemetry";
+    response["data"] = doc;
+    
+    serializeJson(response, Serial);
+    Serial.println();
+    Serial.flush();
   }
-  
-  // MOSFET states
-  JsonArray mosfetArray = doc.createNestedArray("mosfet_states");
-  for (int i = 0; i < 3; i++) {
-    mosfetArray.add(mosfetStates[i]);
-  }
-  
-  // I2C addresses
-  JsonArray i2cArray = doc.createNestedArray("i2c_addresses");
-  for (int i = 0; i < i2cAddressCount; i++) {
-    i2cArray.add(i2cAddresses[i]);
-  }
-  
-  doc["firmware_version"] = FIRMWARE_VERSION;
-  doc["uptime_seconds"] = uptimeSeconds;
-  
-  // Send as telemetry
-  DynamicJsonDocument response(2048);
-  response["type"] = "telemetry";
-  response["data"] = doc;
-  
-  serializeJson(response, Serial);
-  Serial.println();
-  Serial.flush();
 }
 
 // ============================================================================
@@ -364,6 +607,28 @@ void sendI2CScanResult() {
   doc["count"] = i2cAddressCount;
   
   sendResponse("i2c_scan", doc);
+}
+
+void sendPeriphList() {
+  // NDJSON format for peripheral list (website expects this)
+  DynamicJsonDocument doc(2048);
+  doc["type"] = "periph_list";
+  doc["ts"] = millis();
+  doc["board_id"] = deviceMac;
+  
+  JsonArray peripherals = doc.createNestedArray("peripherals");
+  for (int i = 0; i < i2cAddressCount; i++) {
+    JsonObject periph = peripherals.createNestedObject();
+    periph["uid"] = "i2c0-" + String(i2cAddresses[i], HEX);
+    periph["address"] = i2cAddresses[i];
+    periph["type"] = "unknown";  // Could be enhanced with device identification
+    periph["vendor"] = "unknown";
+    periph["product"] = "unknown";
+    periph["present"] = true;
+  }
+  
+  doc["count"] = i2cAddressCount;
+  sendNDJSON(doc);
 }
 
 void readBME688(int sensor_id) {
@@ -402,14 +667,41 @@ void sendSensorData(int sensor_id) {
 // Helper Functions
 // ============================================================================
 void sendStatus() {
-  DynamicJsonDocument doc(512);
-  doc["status"] = "ready";
-  doc["mac"] = deviceMac;
-  doc["firmware"] = FIRMWARE_VERSION;
-  doc["uptime"] = uptimeSeconds;
-  doc["telemetry_interval"] = telemetryInterval / 1000;
-  
-  sendResponse("status", doc);
+  if (currentMode == MODE_MACHINE && jsonFormat) {
+    DynamicJsonDocument doc(1024);
+    doc["type"] = "status";
+    doc["ts"] = millis();
+    doc["board_id"] = deviceMac;
+    doc["status"] = "ready";
+    doc["firmware"] = FIRMWARE_VERSION;
+    doc["version"] = FIRMWARE_VERSION;
+    doc["uptime"] = uptimeSeconds;
+    doc["uptime_ms"] = millis();
+    doc["telemetry_interval"] = telemetryInterval / 1000;
+    doc["mode"] = "machine";
+    doc["debug"] = debugEnabled;
+    doc["json_format"] = jsonFormat;
+    
+    // Add peripheral count
+    doc["peripherals"] = i2cAddressCount;
+    
+    // Add MOSFET states
+    JsonArray mosfetArray = doc.createNestedArray("mosfet_states");
+    for (int i = 0; i < 3; i++) {
+      mosfetArray.add(mosfetStates[i]);
+    }
+    
+    sendNDJSON(doc);
+  } else {
+    DynamicJsonDocument doc(512);
+    doc["status"] = "ready";
+    doc["mac"] = deviceMac;
+    doc["firmware"] = FIRMWARE_VERSION;
+    doc["uptime"] = uptimeSeconds;
+    doc["telemetry_interval"] = telemetryInterval / 1000;
+    
+    sendResponse("status", doc);
+  }
 }
 
 void sendResponse(String type, DynamicJsonDocument& doc) {
@@ -431,6 +723,36 @@ void sendResponse(String type, String data) {
 }
 
 void sendError(String error) {
-  sendResponse("error", "{\"error\":\"" + error + "\"}");
+  if (currentMode == MODE_MACHINE && jsonFormat) {
+    DynamicJsonDocument doc(256);
+    doc["type"] = "err";
+    doc["error"] = error;
+    doc["ts"] = millis();
+    sendNDJSON(doc);
+  } else {
+    sendResponse("error", "{\"error\":\"" + error + "\"}");
+  }
+}
+
+void sendAck(String cmd, String message) {
+  if (currentMode == MODE_MACHINE && jsonFormat) {
+    DynamicJsonDocument doc(256);
+    doc["type"] = "ack";
+    doc["cmd"] = cmd;
+    if (message.length() > 0) {
+      doc["message"] = message;
+    }
+    doc["ts"] = millis();
+    sendNDJSON(doc);
+  } else {
+    sendResponse("ack", "{\"cmd\":\"" + cmd + "\",\"message\":\"" + message + "\"}");
+  }
+}
+
+void sendNDJSON(DynamicJsonDocument& doc) {
+  // NDJSON: one JSON object per line, no extra formatting
+  serializeJson(doc, Serial);
+  Serial.println();
+  Serial.flush();
 }
 
