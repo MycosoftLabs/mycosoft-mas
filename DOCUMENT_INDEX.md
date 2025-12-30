@@ -1,12 +1,12 @@
 # Mycosoft MAS - Complete Document Index
 
-*Generated: 2025-12-28 20:02:56*
+*Generated: 2025-12-29 23:32:55*
 
 ## Summary
 
-- **Total Documents**: 271
-- **Tracked in Git**: 245
-- **Local Only**: 26
+- **Total Documents**: 420
+- **Tracked in Git**: 413
+- **Local Only**: 7
 
 ## Documents by Category
 
@@ -42,7 +42,7 @@
   - Category: deployment
   - Size: 6,972 bytes
 
-### Guides (36)
+### Guides (56)
 
 - [AZURE_DEPLOYMENT_GUIDE.md](AZURE_DEPLOYMENT_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/AZURE_DEPLOYMENT_GUIDE.md)
   - Path: `AZURE_DEPLOYMENT_GUIDE.md`
@@ -53,6 +53,16 @@
   - Path: `AZURE_DEPLOYMENT_GUIDE.md`
   - Category: guides
   - Size: 11,038 bytes
+
+- [DOCUMENT_SYNC_SETUP_COMPLETE.md](DOCUMENT_SYNC_SETUP_COMPLETE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCUMENT_SYNC_SETUP_COMPLETE.md)
+  - Path: `DOCUMENT_SYNC_SETUP_COMPLETE.md`
+  - Category: guides
+  - Size: 7,370 bytes
+
+- [DOCUMENT_SYNC_SETUP_COMPLETE.md](DOCUMENT_SYNC_SETUP_COMPLETE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCUMENT_SYNC_SETUP_COMPLETE.md)
+  - Path: `DOCUMENT_SYNC_SETUP_COMPLETE.md`
+  - Category: guides
+  - Size: 7,370 bytes
 
 - [ELEVENLABS_SETUP.md](ELEVENLABS_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/ELEVENLABS_SETUP.md)
   - Path: `ELEVENLABS_SETUP.md`
@@ -94,6 +104,26 @@
   - Category: guides
   - Size: 5,494 bytes
 
+- [MYCOBRAIN_COM5_SETUP.md](MYCOBRAIN_COM5_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_COM5_SETUP.md)
+  - Path: `MYCOBRAIN_COM5_SETUP.md`
+  - Category: guides
+  - Size: 1,789 bytes
+
+- [MYCOBRAIN_COM5_SETUP.md](MYCOBRAIN_COM5_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_COM5_SETUP.md)
+  - Path: `MYCOBRAIN_COM5_SETUP.md`
+  - Category: guides
+  - Size: 1,789 bytes
+
+- [MYCOBRAIN_QUICKSTART.md](MYCOBRAIN_QUICKSTART.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_QUICKSTART.md)
+  - Path: `MYCOBRAIN_QUICKSTART.md`
+  - Category: guides
+  - Size: 4,967 bytes
+
+- [MYCOBRAIN_QUICKSTART.md](MYCOBRAIN_QUICKSTART.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_QUICKSTART.md)
+  - Path: `MYCOBRAIN_QUICKSTART.md`
+  - Category: guides
+  - Size: 4,967 bytes
+
 - [QUICKSTART.md](QUICKSTART.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/QUICKSTART.md)
   - Path: `QUICKSTART.md`
   - Category: guides
@@ -114,15 +144,15 @@
   - Category: guides
   - Size: 12,652 bytes
 
-- [SYSTEM_DEPLOYMENT_GUIDE.md](SYSTEM_DEPLOYMENT_GUIDE.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/SYSTEM_DEPLOYMENT_GUIDE.md)
+- [SYSTEM_DEPLOYMENT_GUIDE.md](SYSTEM_DEPLOYMENT_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/SYSTEM_DEPLOYMENT_GUIDE.md)
   - Path: `SYSTEM_DEPLOYMENT_GUIDE.md`
   - Category: guides
-  - Size: 11,419 bytes
+  - Size: 11,433 bytes
 
-- [SYSTEM_DEPLOYMENT_GUIDE.md](SYSTEM_DEPLOYMENT_GUIDE.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/SYSTEM_DEPLOYMENT_GUIDE.md)
+- [SYSTEM_DEPLOYMENT_GUIDE.md](SYSTEM_DEPLOYMENT_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/SYSTEM_DEPLOYMENT_GUIDE.md)
   - Path: `SYSTEM_DEPLOYMENT_GUIDE.md`
   - Category: guides
-  - Size: 11,419 bytes
+  - Size: 11,433 bytes
 
 - [VOICE_SYSTEM_SETUP.md](VOICE_SYSTEM_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/VOICE_SYSTEM_SETUP.md)
   - Path: `VOICE_SYSTEM_SETUP.md`
@@ -134,25 +164,45 @@
   - Category: guides
   - Size: 9,760 bytes
 
-- [INTEGRATIONS_DOCKER_SETUP.md](docs/INTEGRATIONS_DOCKER_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/INTEGRATIONS_DOCKER_SETUP.md)
-  - Path: `docs/INTEGRATIONS_DOCKER_SETUP.md`
+- [AUTO_INDEXING_SETUP.md](docs/AUTO_INDEXING_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/AUTO_INDEXING_SETUP.md)
+  - Path: `docs/AUTO_INDEXING_SETUP.md`
   - Category: guides
-  - Size: 6,944 bytes
+  - Size: 5,388 bytes
+
+- [AUTO_INDEXING_SETUP.md](docs/AUTO_INDEXING_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/AUTO_INDEXING_SETUP.md)
+  - Path: `docs/AUTO_INDEXING_SETUP.md`
+  - Category: guides
+  - Size: 5,388 bytes
 
 - [INTEGRATIONS_DOCKER_SETUP.md](docs/INTEGRATIONS_DOCKER_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/INTEGRATIONS_DOCKER_SETUP.md)
   - Path: `docs/INTEGRATIONS_DOCKER_SETUP.md`
   - Category: guides
   - Size: 6,944 bytes
 
-- [INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) 🏠 *Local Only*
+- [INTEGRATIONS_DOCKER_SETUP.md](docs/INTEGRATIONS_DOCKER_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/INTEGRATIONS_DOCKER_SETUP.md)
+  - Path: `docs/INTEGRATIONS_DOCKER_SETUP.md`
+  - Category: guides
+  - Size: 6,944 bytes
+
+- [INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/INTEGRATION_GUIDE.md)
   - Path: `docs/INTEGRATION_GUIDE.md`
   - Category: guides
   - Size: 13,570 bytes
 
-- [INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) 🏠 *Local Only*
+- [INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/INTEGRATION_GUIDE.md)
   - Path: `docs/INTEGRATION_GUIDE.md`
   - Category: guides
   - Size: 13,570 bytes
+
+- [MINDEX_NAS_SETUP.md](docs/MINDEX_NAS_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MINDEX_NAS_SETUP.md)
+  - Path: `docs/MINDEX_NAS_SETUP.md`
+  - Category: guides
+  - Size: 29,344 bytes
+
+- [MINDEX_NAS_SETUP.md](docs/MINDEX_NAS_SETUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MINDEX_NAS_SETUP.md)
+  - Path: `docs/MINDEX_NAS_SETUP.md`
+  - Category: guides
+  - Size: 29,344 bytes
 
 - [N8N_INTEGRATION_GUIDE.md](docs/N8N_INTEGRATION_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/N8N_INTEGRATION_GUIDE.md)
   - Path: `docs/N8N_INTEGRATION_GUIDE.md`
@@ -163,6 +213,56 @@
   - Path: `docs/N8N_INTEGRATION_GUIDE.md`
   - Category: guides
   - Size: 9,251 bytes
+
+- [SYSTEM_INTEGRATION_GUIDE.md](docs/SYSTEM_INTEGRATION_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SYSTEM_INTEGRATION_GUIDE.md)
+  - Path: `docs/SYSTEM_INTEGRATION_GUIDE.md`
+  - Category: guides
+  - Size: 12,465 bytes
+
+- [SYSTEM_INTEGRATION_GUIDE.md](docs/SYSTEM_INTEGRATION_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SYSTEM_INTEGRATION_GUIDE.md)
+  - Path: `docs/SYSTEM_INTEGRATION_GUIDE.md`
+  - Category: guides
+  - Size: 12,465 bytes
+
+- [MYCOBOARD_COMPLETE_GUIDE.md](docs/notion/MYCOBOARD_COMPLETE_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/notion/MYCOBOARD_COMPLETE_GUIDE.md)
+  - Path: `docs/notion/MYCOBOARD_COMPLETE_GUIDE.md`
+  - Category: guides
+  - Size: 4,855 bytes
+
+- [MYCOBOARD_COMPLETE_GUIDE.md](docs/notion/MYCOBOARD_COMPLETE_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/notion/MYCOBOARD_COMPLETE_GUIDE.md)
+  - Path: `docs/notion/MYCOBOARD_COMPLETE_GUIDE.md`
+  - Category: guides
+  - Size: 4,855 bytes
+
+- [INSTALLATION_FIXES.md](firmware/INSTALLATION_FIXES.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/INSTALLATION_FIXES.md)
+  - Path: `firmware/INSTALLATION_FIXES.md`
+  - Category: guides
+  - Size: 4,226 bytes
+
+- [INSTALLATION_FIXES.md](firmware/INSTALLATION_FIXES.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/INSTALLATION_FIXES.md)
+  - Path: `firmware/INSTALLATION_FIXES.md`
+  - Category: guides
+  - Size: 4,226 bytes
+
+- [LIBRARY_INSTALLATION.md](firmware/LIBRARY_INSTALLATION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/LIBRARY_INSTALLATION.md)
+  - Path: `firmware/LIBRARY_INSTALLATION.md`
+  - Category: guides
+  - Size: 1,261 bytes
+
+- [LIBRARY_INSTALLATION.md](firmware/LIBRARY_INSTALLATION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/LIBRARY_INSTALLATION.md)
+  - Path: `firmware/LIBRARY_INSTALLATION.md`
+  - Category: guides
+  - Size: 1,261 bytes
+
+- [QUICK_UPLOAD_GUIDE.md](firmware/QUICK_UPLOAD_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/QUICK_UPLOAD_GUIDE.md)
+  - Path: `firmware/QUICK_UPLOAD_GUIDE.md`
+  - Category: guides
+  - Size: 1,457 bytes
+
+- [QUICK_UPLOAD_GUIDE.md](firmware/QUICK_UPLOAD_GUIDE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/QUICK_UPLOAD_GUIDE.md)
+  - Path: `firmware/QUICK_UPLOAD_GUIDE.md`
+  - Category: guides
+  - Size: 1,457 bytes
 
 - [QUICKSTART.md](infra/bootstrap/QUICKSTART.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/infra/bootstrap/QUICKSTART.md)
   - Path: `infra/bootstrap/QUICKSTART.md`
@@ -224,7 +324,47 @@
   - Category: guides
   - Size: 4,002 bytes
 
-### Integration (12)
+### Integration (22)
+
+- [MYCOBRAIN_WEBSITE_INTEGRATION.md](MYCOBRAIN_WEBSITE_INTEGRATION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_WEBSITE_INTEGRATION.md)
+  - Path: `MYCOBRAIN_WEBSITE_INTEGRATION.md`
+  - Category: integration
+  - Size: 7,652 bytes
+
+- [MYCOBRAIN_WEBSITE_INTEGRATION.md](MYCOBRAIN_WEBSITE_INTEGRATION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_WEBSITE_INTEGRATION.md)
+  - Path: `MYCOBRAIN_WEBSITE_INTEGRATION.md`
+  - Category: integration
+  - Size: 7,652 bytes
+
+- [NATUREOS_INTEGRATION_ANALYSIS.md](NATUREOS_INTEGRATION_ANALYSIS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/NATUREOS_INTEGRATION_ANALYSIS.md)
+  - Path: `NATUREOS_INTEGRATION_ANALYSIS.md`
+  - Category: integration
+  - Size: 6,394 bytes
+
+- [NATUREOS_INTEGRATION_ANALYSIS.md](NATUREOS_INTEGRATION_ANALYSIS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/NATUREOS_INTEGRATION_ANALYSIS.md)
+  - Path: `NATUREOS_INTEGRATION_ANALYSIS.md`
+  - Category: integration
+  - Size: 6,394 bytes
+
+- [NATUREOS_INTEGRATION_COMPLETE.md](NATUREOS_INTEGRATION_COMPLETE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/NATUREOS_INTEGRATION_COMPLETE.md)
+  - Path: `NATUREOS_INTEGRATION_COMPLETE.md`
+  - Category: integration
+  - Size: 8,106 bytes
+
+- [NATUREOS_INTEGRATION_COMPLETE.md](NATUREOS_INTEGRATION_COMPLETE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/NATUREOS_INTEGRATION_COMPLETE.md)
+  - Path: `NATUREOS_INTEGRATION_COMPLETE.md`
+  - Category: integration
+  - Size: 8,106 bytes
+
+- [DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md](docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md)
+  - Path: `docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md`
+  - Category: integration
+  - Size: 8,126 bytes
+
+- [DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md](docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md)
+  - Path: `docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md`
+  - Category: integration
+  - Size: 8,126 bytes
 
 - [ENV_INTEGRATIONS.md](docs/ENV_INTEGRATIONS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/ENV_INTEGRATIONS.md)
   - Path: `docs/ENV_INTEGRATIONS.md`
@@ -286,7 +426,17 @@
   - Category: integration
   - Size: 1 bytes
 
-### Other (82)
+- [DEVICE_MANAGER_INTEGRATION.md](firmware/DEVICE_MANAGER_INTEGRATION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/DEVICE_MANAGER_INTEGRATION.md)
+  - Path: `firmware/DEVICE_MANAGER_INTEGRATION.md`
+  - Category: integration
+  - Size: 2,367 bytes
+
+- [DEVICE_MANAGER_INTEGRATION.md](firmware/DEVICE_MANAGER_INTEGRATION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/DEVICE_MANAGER_INTEGRATION.md)
+  - Path: `firmware/DEVICE_MANAGER_INTEGRATION.md`
+  - Category: integration
+  - Size: 2,367 bytes
+
+### Other (164)
 
 - [DEP_PROT.md](docs/DEP_PROT.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/DEP_PROT.md)
   - Path: `docs/DEP_PROT.md`
@@ -298,25 +448,25 @@
   - Category: other
   - Size: 4,076 bytes
 
-- [DOCUMENT_MANAGEMENT_SYSTEM.md](docs/DOCUMENT_MANAGEMENT_SYSTEM.md) 🏠 *Local Only*
+- [DOCUMENT_MANAGEMENT_SYSTEM.md](docs/DOCUMENT_MANAGEMENT_SYSTEM.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/DOCUMENT_MANAGEMENT_SYSTEM.md)
   - Path: `docs/DOCUMENT_MANAGEMENT_SYSTEM.md`
   - Category: other
   - Size: 7,575 bytes
 
-- [DOCUMENT_MANAGEMENT_SYSTEM.md](docs/DOCUMENT_MANAGEMENT_SYSTEM.md) 🏠 *Local Only*
+- [DOCUMENT_MANAGEMENT_SYSTEM.md](docs/DOCUMENT_MANAGEMENT_SYSTEM.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/DOCUMENT_MANAGEMENT_SYSTEM.md)
   - Path: `docs/DOCUMENT_MANAGEMENT_SYSTEM.md`
   - Category: other
   - Size: 7,575 bytes
 
-- [ELEVENLABS_MYCA_TOOLS.md](docs/ELEVENLABS_MYCA_TOOLS.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/ELEVENLABS_MYCA_TOOLS.md)
+- [ELEVENLABS_MYCA_TOOLS.md](docs/ELEVENLABS_MYCA_TOOLS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/ELEVENLABS_MYCA_TOOLS.md)
   - Path: `docs/ELEVENLABS_MYCA_TOOLS.md`
   - Category: other
-  - Size: 9,107 bytes
+  - Size: 9,121 bytes
 
-- [ELEVENLABS_MYCA_TOOLS.md](docs/ELEVENLABS_MYCA_TOOLS.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/ELEVENLABS_MYCA_TOOLS.md)
+- [ELEVENLABS_MYCA_TOOLS.md](docs/ELEVENLABS_MYCA_TOOLS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/ELEVENLABS_MYCA_TOOLS.md)
   - Path: `docs/ELEVENLABS_MYCA_TOOLS.md`
   - Category: other
-  - Size: 9,107 bytes
+  - Size: 9,121 bytes
 
 - [LOCAL_DEV.md](docs/LOCAL_DEV.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/LOCAL_DEV.md)
   - Path: `docs/LOCAL_DEV.md`
@@ -328,65 +478,105 @@
   - Category: other
   - Size: 1,588 bytes
 
-- [MYCA_KNOWLEDGE_BASE.md](docs/MYCA_KNOWLEDGE_BASE.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MYCA_KNOWLEDGE_BASE.md)
+- [MYCA_KNOWLEDGE_BASE.md](docs/MYCA_KNOWLEDGE_BASE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MYCA_KNOWLEDGE_BASE.md)
   - Path: `docs/MYCA_KNOWLEDGE_BASE.md`
   - Category: other
-  - Size: 7,151 bytes
+  - Size: 7,165 bytes
 
-- [MYCA_KNOWLEDGE_BASE.md](docs/MYCA_KNOWLEDGE_BASE.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MYCA_KNOWLEDGE_BASE.md)
+- [MYCA_KNOWLEDGE_BASE.md](docs/MYCA_KNOWLEDGE_BASE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MYCA_KNOWLEDGE_BASE.md)
   - Path: `docs/MYCA_KNOWLEDGE_BASE.md`
   - Category: other
-  - Size: 7,151 bytes
+  - Size: 7,165 bytes
 
-- [NLM_DATABASE_SCHEMA.md](docs/NLM_DATABASE_SCHEMA.md) 🏠 *Local Only*
+- [MYCOBOARD_ROADMAP.md](docs/MYCOBOARD_ROADMAP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MYCOBOARD_ROADMAP.md)
+  - Path: `docs/MYCOBOARD_ROADMAP.md`
+  - Category: other
+  - Size: 6,607 bytes
+
+- [MYCOBOARD_ROADMAP.md](docs/MYCOBOARD_ROADMAP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MYCOBOARD_ROADMAP.md)
+  - Path: `docs/MYCOBOARD_ROADMAP.md`
+  - Category: other
+  - Size: 6,607 bytes
+
+- [MYCOBOARD_TECHNICAL_REFERENCE.md](docs/MYCOBOARD_TECHNICAL_REFERENCE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MYCOBOARD_TECHNICAL_REFERENCE.md)
+  - Path: `docs/MYCOBOARD_TECHNICAL_REFERENCE.md`
+  - Category: other
+  - Size: 8,913 bytes
+
+- [MYCOBOARD_TECHNICAL_REFERENCE.md](docs/MYCOBOARD_TECHNICAL_REFERENCE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/MYCOBOARD_TECHNICAL_REFERENCE.md)
+  - Path: `docs/MYCOBOARD_TECHNICAL_REFERENCE.md`
+  - Category: other
+  - Size: 8,913 bytes
+
+- [NLM_DATABASE_SCHEMA.md](docs/NLM_DATABASE_SCHEMA.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_DATABASE_SCHEMA.md)
   - Path: `docs/NLM_DATABASE_SCHEMA.md`
   - Category: other
   - Size: 11,763 bytes
 
-- [NLM_DATABASE_SCHEMA.md](docs/NLM_DATABASE_SCHEMA.md) 🏠 *Local Only*
+- [NLM_DATABASE_SCHEMA.md](docs/NLM_DATABASE_SCHEMA.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_DATABASE_SCHEMA.md)
   - Path: `docs/NLM_DATABASE_SCHEMA.md`
   - Category: other
   - Size: 11,763 bytes
 
-- [NLM_IMPLEMENTATION_PLAN.md](docs/NLM_IMPLEMENTATION_PLAN.md) 🏠 *Local Only*
+- [NLM_IMPLEMENTATION_PLAN.md](docs/NLM_IMPLEMENTATION_PLAN.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_IMPLEMENTATION_PLAN.md)
   - Path: `docs/NLM_IMPLEMENTATION_PLAN.md`
   - Category: other
   - Size: 7,005 bytes
 
-- [NLM_IMPLEMENTATION_PLAN.md](docs/NLM_IMPLEMENTATION_PLAN.md) 🏠 *Local Only*
+- [NLM_IMPLEMENTATION_PLAN.md](docs/NLM_IMPLEMENTATION_PLAN.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_IMPLEMENTATION_PLAN.md)
   - Path: `docs/NLM_IMPLEMENTATION_PLAN.md`
   - Category: other
   - Size: 7,005 bytes
 
-- [PLATFORM_STRUCTURE_PLAN.md](docs/PLATFORM_STRUCTURE_PLAN.md) 🏠 *Local Only*
+- [PLATFORM_STRUCTURE_PLAN.md](docs/PLATFORM_STRUCTURE_PLAN.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/PLATFORM_STRUCTURE_PLAN.md)
   - Path: `docs/PLATFORM_STRUCTURE_PLAN.md`
   - Category: other
   - Size: 14,214 bytes
 
-- [PLATFORM_STRUCTURE_PLAN.md](docs/PLATFORM_STRUCTURE_PLAN.md) 🏠 *Local Only*
+- [PLATFORM_STRUCTURE_PLAN.md](docs/PLATFORM_STRUCTURE_PLAN.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/PLATFORM_STRUCTURE_PLAN.md)
   - Path: `docs/PLATFORM_STRUCTURE_PLAN.md`
   - Category: other
   - Size: 14,214 bytes
 
-- [SDK_DATABASE_SCHEMA.md](docs/SDK_DATABASE_SCHEMA.md) 🏠 *Local Only*
+- [QUICK_START_DOCUMENT_SYNC.md](docs/QUICK_START_DOCUMENT_SYNC.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/QUICK_START_DOCUMENT_SYNC.md)
+  - Path: `docs/QUICK_START_DOCUMENT_SYNC.md`
+  - Category: other
+  - Size: 3,310 bytes
+
+- [QUICK_START_DOCUMENT_SYNC.md](docs/QUICK_START_DOCUMENT_SYNC.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/QUICK_START_DOCUMENT_SYNC.md)
+  - Path: `docs/QUICK_START_DOCUMENT_SYNC.md`
+  - Category: other
+  - Size: 3,310 bytes
+
+- [SDK_DATABASE_SCHEMA.md](docs/SDK_DATABASE_SCHEMA.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SDK_DATABASE_SCHEMA.md)
   - Path: `docs/SDK_DATABASE_SCHEMA.md`
   - Category: other
   - Size: 6,385 bytes
 
-- [SDK_DATABASE_SCHEMA.md](docs/SDK_DATABASE_SCHEMA.md) 🏠 *Local Only*
+- [SDK_DATABASE_SCHEMA.md](docs/SDK_DATABASE_SCHEMA.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SDK_DATABASE_SCHEMA.md)
   - Path: `docs/SDK_DATABASE_SCHEMA.md`
   - Category: other
   - Size: 6,385 bytes
 
-- [SDK_IMPLEMENTATION_PLAN.md](docs/SDK_IMPLEMENTATION_PLAN.md) 🏠 *Local Only*
+- [SDK_IMPLEMENTATION_PLAN.md](docs/SDK_IMPLEMENTATION_PLAN.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SDK_IMPLEMENTATION_PLAN.md)
   - Path: `docs/SDK_IMPLEMENTATION_PLAN.md`
   - Category: other
   - Size: 5,828 bytes
 
-- [SDK_IMPLEMENTATION_PLAN.md](docs/SDK_IMPLEMENTATION_PLAN.md) 🏠 *Local Only*
+- [SDK_IMPLEMENTATION_PLAN.md](docs/SDK_IMPLEMENTATION_PLAN.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SDK_IMPLEMENTATION_PLAN.md)
   - Path: `docs/SDK_IMPLEMENTATION_PLAN.md`
   - Category: other
   - Size: 5,828 bytes
+
+- [TESTING_DOCUMENT_KNOWLEDGE_BASE.md](docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md)
+  - Path: `docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md`
+  - Category: other
+  - Size: 8,018 bytes
+
+- [TESTING_DOCUMENT_KNOWLEDGE_BASE.md](docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md)
+  - Path: `docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md`
+  - Category: other
+  - Size: 8,018 bytes
 
 - [base_agent.md](docs/agents/base_agent.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/agents/base_agent.md)
   - Path: `docs/agents/base_agent.md`
@@ -658,6 +848,376 @@
   - Category: other
   - Size: 4,982 bytes
 
+- [ARDUINO_IDE_SETTINGS.md](firmware/ARDUINO_IDE_SETTINGS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/ARDUINO_IDE_SETTINGS.md)
+  - Path: `firmware/ARDUINO_IDE_SETTINGS.md`
+  - Category: other
+  - Size: 2,395 bytes
+
+- [ARDUINO_IDE_SETTINGS.md](firmware/ARDUINO_IDE_SETTINGS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/ARDUINO_IDE_SETTINGS.md)
+  - Path: `firmware/ARDUINO_IDE_SETTINGS.md`
+  - Category: other
+  - Size: 2,395 bytes
+
+- [BOOT_LOOP_DEBUG.md](firmware/BOOT_LOOP_DEBUG.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BOOT_LOOP_DEBUG.md)
+  - Path: `firmware/BOOT_LOOP_DEBUG.md`
+  - Category: other
+  - Size: 2,098 bytes
+
+- [BOOT_LOOP_DEBUG.md](firmware/BOOT_LOOP_DEBUG.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BOOT_LOOP_DEBUG.md)
+  - Path: `firmware/BOOT_LOOP_DEBUG.md`
+  - Category: other
+  - Size: 2,098 bytes
+
+- [BOOT_LOOP_FIX.md](firmware/BOOT_LOOP_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BOOT_LOOP_FIX.md)
+  - Path: `firmware/BOOT_LOOP_FIX.md`
+  - Category: other
+  - Size: 1,805 bytes
+
+- [BOOT_LOOP_FIX.md](firmware/BOOT_LOOP_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BOOT_LOOP_FIX.md)
+  - Path: `firmware/BOOT_LOOP_FIX.md`
+  - Category: other
+  - Size: 1,805 bytes
+
+- [BOOT_MODE_FIX.md](firmware/BOOT_MODE_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BOOT_MODE_FIX.md)
+  - Path: `firmware/BOOT_MODE_FIX.md`
+  - Category: other
+  - Size: 2,611 bytes
+
+- [BOOT_MODE_FIX.md](firmware/BOOT_MODE_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BOOT_MODE_FIX.md)
+  - Path: `firmware/BOOT_MODE_FIX.md`
+  - Category: other
+  - Size: 2,611 bytes
+
+- [BOTH_USBS_NEEDED.md](firmware/BOTH_USBS_NEEDED.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BOTH_USBS_NEEDED.md)
+  - Path: `firmware/BOTH_USBS_NEEDED.md`
+  - Category: other
+  - Size: 2,645 bytes
+
+- [BOTH_USBS_NEEDED.md](firmware/BOTH_USBS_NEEDED.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BOTH_USBS_NEEDED.md)
+  - Path: `firmware/BOTH_USBS_NEEDED.md`
+  - Category: other
+  - Size: 2,645 bytes
+
+- [BRIDGED_BOARD_FIX.md](firmware/BRIDGED_BOARD_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BRIDGED_BOARD_FIX.md)
+  - Path: `firmware/BRIDGED_BOARD_FIX.md`
+  - Category: other
+  - Size: 2,424 bytes
+
+- [BRIDGED_BOARD_FIX.md](firmware/BRIDGED_BOARD_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BRIDGED_BOARD_FIX.md)
+  - Path: `firmware/BRIDGED_BOARD_FIX.md`
+  - Category: other
+  - Size: 2,424 bytes
+
+- [BROWNOUT_POWER_FIX.md](firmware/BROWNOUT_POWER_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BROWNOUT_POWER_FIX.md)
+  - Path: `firmware/BROWNOUT_POWER_FIX.md`
+  - Category: other
+  - Size: 2,804 bytes
+
+- [BROWNOUT_POWER_FIX.md](firmware/BROWNOUT_POWER_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/BROWNOUT_POWER_FIX.md)
+  - Path: `firmware/BROWNOUT_POWER_FIX.md`
+  - Category: other
+  - Size: 2,804 bytes
+
+- [COM3_FIX.md](firmware/COM3_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM3_FIX.md)
+  - Path: `firmware/COM3_FIX.md`
+  - Category: other
+  - Size: 2,796 bytes
+
+- [COM3_FIX.md](firmware/COM3_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM3_FIX.md)
+  - Path: `firmware/COM3_FIX.md`
+  - Category: other
+  - Size: 2,796 bytes
+
+- [COM4_UPLOAD_FIX.md](firmware/COM4_UPLOAD_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM4_UPLOAD_FIX.md)
+  - Path: `firmware/COM4_UPLOAD_FIX.md`
+  - Category: other
+  - Size: 1,531 bytes
+
+- [COM4_UPLOAD_FIX.md](firmware/COM4_UPLOAD_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM4_UPLOAD_FIX.md)
+  - Path: `firmware/COM4_UPLOAD_FIX.md`
+  - Category: other
+  - Size: 1,531 bytes
+
+- [COM4_UPLOAD_TROUBLESHOOT.md](firmware/COM4_UPLOAD_TROUBLESHOOT.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM4_UPLOAD_TROUBLESHOOT.md)
+  - Path: `firmware/COM4_UPLOAD_TROUBLESHOOT.md`
+  - Category: other
+  - Size: 2,323 bytes
+
+- [COM4_UPLOAD_TROUBLESHOOT.md](firmware/COM4_UPLOAD_TROUBLESHOOT.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM4_UPLOAD_TROUBLESHOOT.md)
+  - Path: `firmware/COM4_UPLOAD_TROUBLESHOOT.md`
+  - Category: other
+  - Size: 2,323 bytes
+
+- [COM6_BUSY_FIX.md](firmware/COM6_BUSY_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM6_BUSY_FIX.md)
+  - Path: `firmware/COM6_BUSY_FIX.md`
+  - Category: other
+  - Size: 1,375 bytes
+
+- [COM6_BUSY_FIX.md](firmware/COM6_BUSY_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM6_BUSY_FIX.md)
+  - Path: `firmware/COM6_BUSY_FIX.md`
+  - Category: other
+  - Size: 1,375 bytes
+
+- [COM6_UPLOAD.md](firmware/COM6_UPLOAD.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM6_UPLOAD.md)
+  - Path: `firmware/COM6_UPLOAD.md`
+  - Category: other
+  - Size: 1,201 bytes
+
+- [COM6_UPLOAD.md](firmware/COM6_UPLOAD.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM6_UPLOAD.md)
+  - Path: `firmware/COM6_UPLOAD.md`
+  - Category: other
+  - Size: 1,201 bytes
+
+- [COM7_MISSING_FIX.md](firmware/COM7_MISSING_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM7_MISSING_FIX.md)
+  - Path: `firmware/COM7_MISSING_FIX.md`
+  - Category: other
+  - Size: 2,570 bytes
+
+- [COM7_MISSING_FIX.md](firmware/COM7_MISSING_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/COM7_MISSING_FIX.md)
+  - Path: `firmware/COM7_MISSING_FIX.md`
+  - Category: other
+  - Size: 2,570 bytes
+
+- [CRITICAL_FINDING.md](firmware/CRITICAL_FINDING.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/CRITICAL_FINDING.md)
+  - Path: `firmware/CRITICAL_FINDING.md`
+  - Category: other
+  - Size: 1,835 bytes
+
+- [CRITICAL_FINDING.md](firmware/CRITICAL_FINDING.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/CRITICAL_FINDING.md)
+  - Path: `firmware/CRITICAL_FINDING.md`
+  - Category: other
+  - Size: 1,835 bytes
+
+- [DEBUGGING_STEPS.md](firmware/DEBUGGING_STEPS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/DEBUGGING_STEPS.md)
+  - Path: `firmware/DEBUGGING_STEPS.md`
+  - Category: other
+  - Size: 2,656 bytes
+
+- [DEBUGGING_STEPS.md](firmware/DEBUGGING_STEPS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/DEBUGGING_STEPS.md)
+  - Path: `firmware/DEBUGGING_STEPS.md`
+  - Category: other
+  - Size: 2,656 bytes
+
+- [DEVICE_RESET_FIX.md](firmware/DEVICE_RESET_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/DEVICE_RESET_FIX.md)
+  - Path: `firmware/DEVICE_RESET_FIX.md`
+  - Category: other
+  - Size: 1,828 bytes
+
+- [DEVICE_RESET_FIX.md](firmware/DEVICE_RESET_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/DEVICE_RESET_FIX.md)
+  - Path: `firmware/DEVICE_RESET_FIX.md`
+  - Category: other
+  - Size: 1,828 bytes
+
+- [EMERGENCY_RESET.md](firmware/EMERGENCY_RESET.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/EMERGENCY_RESET.md)
+  - Path: `firmware/EMERGENCY_RESET.md`
+  - Category: other
+  - Size: 2,004 bytes
+
+- [EMERGENCY_RESET.md](firmware/EMERGENCY_RESET.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/EMERGENCY_RESET.md)
+  - Path: `firmware/EMERGENCY_RESET.md`
+  - Category: other
+  - Size: 2,004 bytes
+
+- [FULL_FIRMWARE_READY.md](firmware/FULL_FIRMWARE_READY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/FULL_FIRMWARE_READY.md)
+  - Path: `firmware/FULL_FIRMWARE_READY.md`
+  - Category: other
+  - Size: 3,107 bytes
+
+- [FULL_FIRMWARE_READY.md](firmware/FULL_FIRMWARE_READY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/FULL_FIRMWARE_READY.md)
+  - Path: `firmware/FULL_FIRMWARE_READY.md`
+  - Category: other
+  - Size: 3,107 bytes
+
+- [HARDWARE_RESET_FIX.md](firmware/HARDWARE_RESET_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/HARDWARE_RESET_FIX.md)
+  - Path: `firmware/HARDWARE_RESET_FIX.md`
+  - Category: other
+  - Size: 2,866 bytes
+
+- [HARDWARE_RESET_FIX.md](firmware/HARDWARE_RESET_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/HARDWARE_RESET_FIX.md)
+  - Path: `firmware/HARDWARE_RESET_FIX.md`
+  - Category: other
+  - Size: 2,866 bytes
+
+- [IDENTIFY_SIDE_B.md](firmware/IDENTIFY_SIDE_B.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/IDENTIFY_SIDE_B.md)
+  - Path: `firmware/IDENTIFY_SIDE_B.md`
+  - Category: other
+  - Size: 1,893 bytes
+
+- [IDENTIFY_SIDE_B.md](firmware/IDENTIFY_SIDE_B.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/IDENTIFY_SIDE_B.md)
+  - Path: `firmware/IDENTIFY_SIDE_B.md`
+  - Category: other
+  - Size: 1,893 bytes
+
+- [LIBRARY_CLEANUP.md](firmware/LIBRARY_CLEANUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/LIBRARY_CLEANUP.md)
+  - Path: `firmware/LIBRARY_CLEANUP.md`
+  - Category: other
+  - Size: 1,259 bytes
+
+- [LIBRARY_CLEANUP.md](firmware/LIBRARY_CLEANUP.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/LIBRARY_CLEANUP.md)
+  - Path: `firmware/LIBRARY_CLEANUP.md`
+  - Category: other
+  - Size: 1,259 bytes
+
+- [QUICK_FIX.md](firmware/MycoBrain_SideA/QUICK_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/MycoBrain_SideA/QUICK_FIX.md)
+  - Path: `firmware/MycoBrain_SideA/QUICK_FIX.md`
+  - Category: other
+  - Size: 1,320 bytes
+
+- [QUICK_FIX.md](firmware/MycoBrain_SideA/QUICK_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/MycoBrain_SideA/QUICK_FIX.md)
+  - Path: `firmware/MycoBrain_SideA/QUICK_FIX.md`
+  - Category: other
+  - Size: 1,320 bytes
+
+- [QUICK_FIX.md](firmware/MycoBrain_SideA/build/sketch/QUICK_FIX.md) 🏠 *Local Only*
+  - Path: `firmware/MycoBrain_SideA/build/sketch/QUICK_FIX.md`
+  - Category: other
+  - Size: 1,433 bytes
+
+- [QUICK_FIX.md](firmware/MycoBrain_SideA/build/sketch/QUICK_FIX.md) 🏠 *Local Only*
+  - Path: `firmware/MycoBrain_SideA/build/sketch/QUICK_FIX.md`
+  - Category: other
+  - Size: 1,433 bytes
+
+- [ARDUINO_SETTINGS.md](firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md)
+  - Path: `firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md`
+  - Category: other
+  - Size: 3,537 bytes
+
+- [ARDUINO_SETTINGS.md](firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md)
+  - Path: `firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md`
+  - Category: other
+  - Size: 3,537 bytes
+
+- [NOTHING_IN_SERIAL.md](firmware/NOTHING_IN_SERIAL.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/NOTHING_IN_SERIAL.md)
+  - Path: `firmware/NOTHING_IN_SERIAL.md`
+  - Category: other
+  - Size: 2,275 bytes
+
+- [NOTHING_IN_SERIAL.md](firmware/NOTHING_IN_SERIAL.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/NOTHING_IN_SERIAL.md)
+  - Path: `firmware/NOTHING_IN_SERIAL.md`
+  - Category: other
+  - Size: 2,275 bytes
+
+- [POWER_ISSUE_SOLUTION.md](firmware/POWER_ISSUE_SOLUTION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/POWER_ISSUE_SOLUTION.md)
+  - Path: `firmware/POWER_ISSUE_SOLUTION.md`
+  - Category: other
+  - Size: 1,596 bytes
+
+- [POWER_ISSUE_SOLUTION.md](firmware/POWER_ISSUE_SOLUTION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/POWER_ISSUE_SOLUTION.md)
+  - Path: `firmware/POWER_ISSUE_SOLUTION.md`
+  - Category: other
+  - Size: 1,596 bytes
+
+- [QUICK_DIAGNOSTIC.md](firmware/QUICK_DIAGNOSTIC.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/QUICK_DIAGNOSTIC.md)
+  - Path: `firmware/QUICK_DIAGNOSTIC.md`
+  - Category: other
+  - Size: 1,986 bytes
+
+- [QUICK_DIAGNOSTIC.md](firmware/QUICK_DIAGNOSTIC.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/QUICK_DIAGNOSTIC.md)
+  - Path: `firmware/QUICK_DIAGNOSTIC.md`
+  - Category: other
+  - Size: 1,986 bytes
+
+- [QUICK_START.md](firmware/QUICK_START.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/QUICK_START.md)
+  - Path: `firmware/QUICK_START.md`
+  - Category: other
+  - Size: 2,390 bytes
+
+- [QUICK_START.md](firmware/QUICK_START.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/QUICK_START.md)
+  - Path: `firmware/QUICK_START.md`
+  - Category: other
+  - Size: 2,390 bytes
+
+- [SIDE_A_SUCCESS.md](firmware/SIDE_A_SUCCESS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/SIDE_A_SUCCESS.md)
+  - Path: `firmware/SIDE_A_SUCCESS.md`
+  - Category: other
+  - Size: 2,054 bytes
+
+- [SIDE_A_SUCCESS.md](firmware/SIDE_A_SUCCESS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/SIDE_A_SUCCESS.md)
+  - Path: `firmware/SIDE_A_SUCCESS.md`
+  - Category: other
+  - Size: 2,054 bytes
+
+- [SIDE_A_TEST.md](firmware/SIDE_A_TEST.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/SIDE_A_TEST.md)
+  - Path: `firmware/SIDE_A_TEST.md`
+  - Category: other
+  - Size: 2,978 bytes
+
+- [SIDE_A_TEST.md](firmware/SIDE_A_TEST.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/SIDE_A_TEST.md)
+  - Path: `firmware/SIDE_A_TEST.md`
+  - Category: other
+  - Size: 2,978 bytes
+
+- [SIDE_B_NO_POWER.md](firmware/SIDE_B_NO_POWER.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/SIDE_B_NO_POWER.md)
+  - Path: `firmware/SIDE_B_NO_POWER.md`
+  - Category: other
+  - Size: 2,643 bytes
+
+- [SIDE_B_NO_POWER.md](firmware/SIDE_B_NO_POWER.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/SIDE_B_NO_POWER.md)
+  - Path: `firmware/SIDE_B_NO_POWER.md`
+  - Category: other
+  - Size: 2,643 bytes
+
+- [STEP_BY_STEP_UPLOAD.md](firmware/STEP_BY_STEP_UPLOAD.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/STEP_BY_STEP_UPLOAD.md)
+  - Path: `firmware/STEP_BY_STEP_UPLOAD.md`
+  - Category: other
+  - Size: 3,170 bytes
+
+- [STEP_BY_STEP_UPLOAD.md](firmware/STEP_BY_STEP_UPLOAD.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/STEP_BY_STEP_UPLOAD.md)
+  - Path: `firmware/STEP_BY_STEP_UPLOAD.md`
+  - Category: other
+  - Size: 3,170 bytes
+
+- [TESTING_INSTRUCTIONS.md](firmware/TESTING_INSTRUCTIONS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/TESTING_INSTRUCTIONS.md)
+  - Path: `firmware/TESTING_INSTRUCTIONS.md`
+  - Category: other
+  - Size: 1,086 bytes
+
+- [TESTING_INSTRUCTIONS.md](firmware/TESTING_INSTRUCTIONS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/TESTING_INSTRUCTIONS.md)
+  - Path: `firmware/TESTING_INSTRUCTIONS.md`
+  - Category: other
+  - Size: 1,086 bytes
+
+- [TEST_SIDE_A.md](firmware/TEST_SIDE_A.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/TEST_SIDE_A.md)
+  - Path: `firmware/TEST_SIDE_A.md`
+  - Category: other
+  - Size: 3,386 bytes
+
+- [TEST_SIDE_A.md](firmware/TEST_SIDE_A.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/TEST_SIDE_A.md)
+  - Path: `firmware/TEST_SIDE_A.md`
+  - Category: other
+  - Size: 3,386 bytes
+
+- [TEST_SIDE_A_STANDALONE.md](firmware/TEST_SIDE_A_STANDALONE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/TEST_SIDE_A_STANDALONE.md)
+  - Path: `firmware/TEST_SIDE_A_STANDALONE.md`
+  - Category: other
+  - Size: 2,276 bytes
+
+- [TEST_SIDE_A_STANDALONE.md](firmware/TEST_SIDE_A_STANDALONE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/TEST_SIDE_A_STANDALONE.md)
+  - Path: `firmware/TEST_SIDE_A_STANDALONE.md`
+  - Category: other
+  - Size: 2,276 bytes
+
+- [UPLOAD_TROUBLESHOOTING.md](firmware/UPLOAD_TROUBLESHOOTING.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/UPLOAD_TROUBLESHOOTING.md)
+  - Path: `firmware/UPLOAD_TROUBLESHOOTING.md`
+  - Category: other
+  - Size: 2,457 bytes
+
+- [UPLOAD_TROUBLESHOOTING.md](firmware/UPLOAD_TROUBLESHOOTING.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/UPLOAD_TROUBLESHOOTING.md)
+  - Path: `firmware/UPLOAD_TROUBLESHOOTING.md`
+  - Category: other
+  - Size: 2,457 bytes
+
+- [USE_WORKING_FIRMWARE.md](firmware/USE_WORKING_FIRMWARE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/USE_WORKING_FIRMWARE.md)
+  - Path: `firmware/USE_WORKING_FIRMWARE.md`
+  - Category: other
+  - Size: 2,067 bytes
+
+- [USE_WORKING_FIRMWARE.md](firmware/USE_WORKING_FIRMWARE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/USE_WORKING_FIRMWARE.md)
+  - Path: `firmware/USE_WORKING_FIRMWARE.md`
+  - Category: other
+  - Size: 2,067 bytes
+
 - [architecture.md](mycosoft_mas/docs/architecture.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/mycosoft_mas/docs/architecture.md)
   - Path: `mycosoft_mas/docs/architecture.md`
   - Category: other
@@ -698,7 +1258,17 @@
   - Category: other
   - Size: 1,541 bytes
 
-### Readme (83)
+### Readme (100)
+
+- [PERSISTENT_SERVICES_README.md](PERSISTENT_SERVICES_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/PERSISTENT_SERVICES_README.md)
+  - Path: `PERSISTENT_SERVICES_README.md`
+  - Category: readme
+  - Size: 4,641 bytes
+
+- [PERSISTENT_SERVICES_README.md](PERSISTENT_SERVICES_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/PERSISTENT_SERVICES_README.md)
+  - Path: `PERSISTENT_SERVICES_README.md`
+  - Category: readme
+  - Size: 4,641 bytes
 
 - [README.md](README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/README.md)
   - Path: `README.md`
@@ -730,46 +1300,91 @@
   - Category: readme
   - Size: 226 bytes
 
-- [NLM_README.md](docs/NLM_README.md) 🏠 *Local Only*
+- [NLM_README.md](docs/NLM_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_README.md)
   - Path: `docs/NLM_README.md`
   - Category: readme
   - Size: 12,797 bytes
 
-- [NLM_README.md](docs/NLM_README.md) 🏠 *Local Only*
+- [NLM_README.md](docs/NLM_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_README.md)
   - Path: `docs/NLM_README.md`
   - Category: readme
   - Size: 12,797 bytes
 
-- [NLM_REPOSITORY_README.md](docs/NLM_REPOSITORY_README.md) 🏠 *Local Only*
+- [NLM_REPOSITORY_README.md](docs/NLM_REPOSITORY_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_REPOSITORY_README.md)
   - Path: `docs/NLM_REPOSITORY_README.md`
   - Category: readme
   - Size: 6,677 bytes
 
-- [NLM_REPOSITORY_README.md](docs/NLM_REPOSITORY_README.md) 🏠 *Local Only*
+- [NLM_REPOSITORY_README.md](docs/NLM_REPOSITORY_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_REPOSITORY_README.md)
   - Path: `docs/NLM_REPOSITORY_README.md`
   - Category: readme
   - Size: 6,677 bytes
 
-- [SDK_README.md](docs/SDK_README.md) 🏠 *Local Only*
+- [SDK_README.md](docs/SDK_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SDK_README.md)
   - Path: `docs/SDK_README.md`
   - Category: readme
   - Size: 12,159 bytes
 
-- [SDK_README.md](docs/SDK_README.md) 🏠 *Local Only*
+- [SDK_README.md](docs/SDK_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SDK_README.md)
   - Path: `docs/SDK_README.md`
   - Category: readme
   - Size: 12,159 bytes
 
-- [SDK_REPOSITORY_README.md](docs/SDK_REPOSITORY_README.md) 🏠 *Local Only*
+- [SDK_REPOSITORY_README.md](docs/SDK_REPOSITORY_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SDK_REPOSITORY_README.md)
   - Path: `docs/SDK_REPOSITORY_README.md`
   - Category: readme
   - Size: 7,598 bytes
 
-- [SDK_REPOSITORY_README.md](docs/SDK_REPOSITORY_README.md) 🏠 *Local Only*
+- [SDK_REPOSITORY_README.md](docs/SDK_REPOSITORY_README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/SDK_REPOSITORY_README.md)
   - Path: `docs/SDK_REPOSITORY_README.md`
   - Category: readme
   - Size: 7,598 bytes
 
+- [README_FIX.md](firmware/MycoBrain_SideA/README_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/MycoBrain_SideA/README_FIX.md)
+  - Path: `firmware/MycoBrain_SideA/README_FIX.md`
+  - Category: readme
+  - Size: 1,685 bytes
+
+- [README_FIX.md](firmware/MycoBrain_SideA/README_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/MycoBrain_SideA/README_FIX.md)
+  - Path: `firmware/MycoBrain_SideA/README_FIX.md`
+  - Category: readme
+  - Size: 1,685 bytes
+
+- [README_FIX.md](firmware/MycoBrain_SideA/README_FIX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/MycoBrain_SideA/README_FIX.md)
+  - Path: `firmware/MycoBrain_SideA/README_FIX.md`
+  - Category: readme
+  - Size: 1,685 bytes
+
+- [README_FIX.md](firmware/MycoBrain_SideA/build/sketch/README_FIX.md) 🏠 *Local Only*
+  - Path: `firmware/MycoBrain_SideA/build/sketch/README_FIX.md`
+  - Category: readme
+  - Size: 1,799 bytes
+
+- [README_FIX.md](firmware/MycoBrain_SideA/build/sketch/README_FIX.md) 🏠 *Local Only*
+  - Path: `firmware/MycoBrain_SideA/build/sketch/README_FIX.md`
+  - Category: readme
+  - Size: 1,799 bytes
+
+- [README_FIX.md](firmware/MycoBrain_SideA/build/sketch/README_FIX.md) 🏠 *Local Only*
+  - Path: `firmware/MycoBrain_SideA/build/sketch/README_FIX.md`
+  - Category: readme
+  - Size: 1,799 bytes
+
+- [README.md](firmware/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/README.md)
+  - Path: `firmware/README.md`
+  - Category: readme
+  - Size: 5,795 bytes
+
+- [README.md](firmware/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/README.md)
+  - Path: `firmware/README.md`
+  - Category: readme
+  - Size: 5,795 bytes
+
+- [README.md](firmware/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/README.md)
+  - Path: `firmware/README.md`
+  - Category: readme
+  - Size: 5,795 bytes
+
 - [README.md](infra/bootstrap/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/infra/bootstrap/README.md)
   - Path: `infra/bootstrap/README.md`
   - Category: readme
@@ -1085,6 +1700,36 @@
   - Category: readme
   - Size: 2,748 bytes
 
+- [README.md](services/mindex/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/services/mindex/README.md)
+  - Path: `services/mindex/README.md`
+  - Category: readme
+  - Size: 19,192 bytes
+
+- [README.md](services/mindex/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/services/mindex/README.md)
+  - Path: `services/mindex/README.md`
+  - Category: readme
+  - Size: 19,192 bytes
+
+- [README.md](services/mindex/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/services/mindex/README.md)
+  - Path: `services/mindex/README.md`
+  - Category: readme
+  - Size: 19,192 bytes
+
+- [README.md](services/mycobrain/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/services/mycobrain/README.md)
+  - Path: `services/mycobrain/README.md`
+  - Category: readme
+  - Size: 7,072 bytes
+
+- [README.md](services/mycobrain/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/services/mycobrain/README.md)
+  - Path: `services/mycobrain/README.md`
+  - Category: readme
+  - Size: 7,072 bytes
+
+- [README.md](services/mycobrain/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/services/mycobrain/README.md)
+  - Path: `services/mycobrain/README.md`
+  - Category: readme
+  - Size: 7,072 bytes
+
 - [README.md](speech/README.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/speech/README.md)
   - Path: `speech/README.md`
   - Category: readme
@@ -1115,7 +1760,7 @@
   - Category: readme
   - Size: 5,347 bytes
 
-### Reports (36)
+### Reports (42)
 
 - [AUTOMATION_FINAL_REPORT.md](AUTOMATION_FINAL_REPORT.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/AUTOMATION_FINAL_REPORT.md)
   - Path: `AUTOMATION_FINAL_REPORT.md`
@@ -1147,15 +1792,15 @@
   - Category: reports
   - Size: 13,403 bytes
 
-- [DOCKER_STATUS.md](DOCKER_STATUS.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCKER_STATUS.md)
+- [DOCKER_STATUS.md](DOCKER_STATUS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCKER_STATUS.md)
   - Path: `DOCKER_STATUS.md`
   - Category: reports
-  - Size: 4,193 bytes
+  - Size: 16,812 bytes
 
-- [DOCKER_STATUS.md](DOCKER_STATUS.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCKER_STATUS.md)
+- [DOCKER_STATUS.md](DOCKER_STATUS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCKER_STATUS.md)
   - Path: `DOCKER_STATUS.md`
   - Category: reports
-  - Size: 4,193 bytes
+  - Size: 16,812 bytes
 
 - [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/IMPLEMENTATION_SUMMARY.md)
   - Path: `IMPLEMENTATION_SUMMARY.md`
@@ -1207,6 +1852,26 @@
   - Category: reports
   - Size: 16,298 bytes
 
+- [MYCOBRAIN_SYSTEM_STATUS.md](MYCOBRAIN_SYSTEM_STATUS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_SYSTEM_STATUS.md)
+  - Path: `MYCOBRAIN_SYSTEM_STATUS.md`
+  - Category: reports
+  - Size: 6,042 bytes
+
+- [MYCOBRAIN_SYSTEM_STATUS.md](MYCOBRAIN_SYSTEM_STATUS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_SYSTEM_STATUS.md)
+  - Path: `MYCOBRAIN_SYSTEM_STATUS.md`
+  - Category: reports
+  - Size: 6,042 bytes
+
+- [MYCOBRAIN_TESTING_REPORT.md](MYCOBRAIN_TESTING_REPORT.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_TESTING_REPORT.md)
+  - Path: `MYCOBRAIN_TESTING_REPORT.md`
+  - Category: reports
+  - Size: 4,524 bytes
+
+- [MYCOBRAIN_TESTING_REPORT.md](MYCOBRAIN_TESTING_REPORT.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_TESTING_REPORT.md)
+  - Path: `MYCOBRAIN_TESTING_REPORT.md`
+  - Category: reports
+  - Size: 4,524 bytes
+
 - [PHASE1_SUMMARY.md](PHASE1_SUMMARY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/PHASE1_SUMMARY.md)
   - Path: `PHASE1_SUMMARY.md`
   - Category: reports
@@ -1227,15 +1892,15 @@
   - Category: reports
   - Size: 7,538 bytes
 
-- [SYSTEM_ISSUES_REPORT.md](SYSTEM_ISSUES_REPORT.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/SYSTEM_ISSUES_REPORT.md)
+- [SYSTEM_ISSUES_REPORT.md](SYSTEM_ISSUES_REPORT.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/SYSTEM_ISSUES_REPORT.md)
   - Path: `SYSTEM_ISSUES_REPORT.md`
   - Category: reports
-  - Size: 8,839 bytes
+  - Size: 8,853 bytes
 
-- [SYSTEM_ISSUES_REPORT.md](SYSTEM_ISSUES_REPORT.md) ✏️ *Modified* | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/SYSTEM_ISSUES_REPORT.md)
+- [SYSTEM_ISSUES_REPORT.md](SYSTEM_ISSUES_REPORT.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/SYSTEM_ISSUES_REPORT.md)
   - Path: `SYSTEM_ISSUES_REPORT.md`
   - Category: reports
-  - Size: 8,839 bytes
+  - Size: 8,853 bytes
 
 - [TESTING_AND_IMPROVEMENT_SUMMARY.md](TESTING_AND_IMPROVEMENT_SUMMARY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/TESTING_AND_IMPROVEMENT_SUMMARY.md)
   - Path: `TESTING_AND_IMPROVEMENT_SUMMARY.md`
@@ -1257,15 +1922,25 @@
   - Category: reports
   - Size: 8,524 bytes
 
-- [NLM_SDK_DOCUMENTATION_SUMMARY.md](docs/NLM_SDK_DOCUMENTATION_SUMMARY.md) 🏠 *Local Only*
+- [NLM_SDK_DOCUMENTATION_SUMMARY.md](docs/NLM_SDK_DOCUMENTATION_SUMMARY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_SDK_DOCUMENTATION_SUMMARY.md)
   - Path: `docs/NLM_SDK_DOCUMENTATION_SUMMARY.md`
   - Category: reports
   - Size: 7,038 bytes
 
-- [NLM_SDK_DOCUMENTATION_SUMMARY.md](docs/NLM_SDK_DOCUMENTATION_SUMMARY.md) 🏠 *Local Only*
+- [NLM_SDK_DOCUMENTATION_SUMMARY.md](docs/NLM_SDK_DOCUMENTATION_SUMMARY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/docs/NLM_SDK_DOCUMENTATION_SUMMARY.md)
   - Path: `docs/NLM_SDK_DOCUMENTATION_SUMMARY.md`
   - Category: reports
   - Size: 7,038 bytes
+
+- [FIRMWARE_UPDATE_SUMMARY.md](firmware/FIRMWARE_UPDATE_SUMMARY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/FIRMWARE_UPDATE_SUMMARY.md)
+  - Path: `firmware/FIRMWARE_UPDATE_SUMMARY.md`
+  - Category: reports
+  - Size: 4,601 bytes
+
+- [FIRMWARE_UPDATE_SUMMARY.md](firmware/FIRMWARE_UPDATE_SUMMARY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/firmware/FIRMWARE_UPDATE_SUMMARY.md)
+  - Path: `firmware/FIRMWARE_UPDATE_SUMMARY.md`
+  - Category: reports
+  - Size: 4,601 bytes
 
 - [IMPLEMENTATION_SUMMARY.md](infra/myca-online/IMPLEMENTATION_SUMMARY.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/infra/myca-online/IMPLEMENTATION_SUMMARY.md)
   - Path: `infra/myca-online/IMPLEMENTATION_SUMMARY.md`
@@ -1297,7 +1972,7 @@
   - Category: reports
   - Size: 5,520 bytes
 
-### Root (16)
+### Root (30)
 
 - [AUTOMATION_COMPLETE.md](AUTOMATION_COMPLETE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/AUTOMATION_COMPLETE.md)
   - Path: `AUTOMATION_COMPLETE.md`
@@ -1309,6 +1984,16 @@
   - Category: root
   - Size: 5,099 bytes
 
+- [AUTO_INDEXING_COMPLETE.md](AUTO_INDEXING_COMPLETE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/AUTO_INDEXING_COMPLETE.md)
+  - Path: `AUTO_INDEXING_COMPLETE.md`
+  - Category: root
+  - Size: 7,059 bytes
+
+- [AUTO_INDEXING_COMPLETE.md](AUTO_INDEXING_COMPLETE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/AUTO_INDEXING_COMPLETE.md)
+  - Path: `AUTO_INDEXING_COMPLETE.md`
+  - Category: root
+  - Size: 7,059 bytes
+
 - [DEPENDENCY_TREE.md](DEPENDENCY_TREE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DEPENDENCY_TREE.md)
   - Path: `DEPENDENCY_TREE.md`
   - Category: root
@@ -1318,6 +2003,26 @@
   - Path: `DEPENDENCY_TREE.md`
   - Category: root
   - Size: 32,484 bytes
+
+- [DOCUMENT_INDEX.md](DOCUMENT_INDEX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCUMENT_INDEX.md)
+  - Path: `DOCUMENT_INDEX.md`
+  - Category: root
+  - Size: 82,808 bytes
+
+- [DOCUMENT_INDEX.md](DOCUMENT_INDEX.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCUMENT_INDEX.md)
+  - Path: `DOCUMENT_INDEX.md`
+  - Category: root
+  - Size: 82,808 bytes
+
+- [DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md](DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md)
+  - Path: `DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md`
+  - Category: root
+  - Size: 6,760 bytes
+
+- [DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md](DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md)
+  - Path: `DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md`
+  - Category: root
+  - Size: 6,760 bytes
 
 - [ENV_TEMPLATE.md](ENV_TEMPLATE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/ENV_TEMPLATE.md)
   - Path: `ENV_TEMPLATE.md`
@@ -1338,6 +2043,46 @@
   - Path: `MYCA_BOOTSTRAP_READY.md`
   - Category: root
   - Size: 13,808 bytes
+
+- [MYCOBRAIN_COMMAND_REFERENCE.md](MYCOBRAIN_COMMAND_REFERENCE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_COMMAND_REFERENCE.md)
+  - Path: `MYCOBRAIN_COMMAND_REFERENCE.md`
+  - Category: root
+  - Size: 5,623 bytes
+
+- [MYCOBRAIN_COMMAND_REFERENCE.md](MYCOBRAIN_COMMAND_REFERENCE.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_COMMAND_REFERENCE.md)
+  - Path: `MYCOBRAIN_COMMAND_REFERENCE.md`
+  - Category: root
+  - Size: 5,623 bytes
+
+- [MYCOBRAIN_COMPLETE_ANALYSIS.md](MYCOBRAIN_COMPLETE_ANALYSIS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_COMPLETE_ANALYSIS.md)
+  - Path: `MYCOBRAIN_COMPLETE_ANALYSIS.md`
+  - Category: root
+  - Size: 6,926 bytes
+
+- [MYCOBRAIN_COMPLETE_ANALYSIS.md](MYCOBRAIN_COMPLETE_ANALYSIS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_COMPLETE_ANALYSIS.md)
+  - Path: `MYCOBRAIN_COMPLETE_ANALYSIS.md`
+  - Category: root
+  - Size: 6,926 bytes
+
+- [MYCOBRAIN_CONNECTION_DIAGNOSTICS.md](MYCOBRAIN_CONNECTION_DIAGNOSTICS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_CONNECTION_DIAGNOSTICS.md)
+  - Path: `MYCOBRAIN_CONNECTION_DIAGNOSTICS.md`
+  - Category: root
+  - Size: 5,305 bytes
+
+- [MYCOBRAIN_CONNECTION_DIAGNOSTICS.md](MYCOBRAIN_CONNECTION_DIAGNOSTICS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_CONNECTION_DIAGNOSTICS.md)
+  - Path: `MYCOBRAIN_CONNECTION_DIAGNOSTICS.md`
+  - Category: root
+  - Size: 5,305 bytes
+
+- [MYCOBRAIN_TELEMETRY_ANALYSIS.md](MYCOBRAIN_TELEMETRY_ANALYSIS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_TELEMETRY_ANALYSIS.md)
+  - Path: `MYCOBRAIN_TELEMETRY_ANALYSIS.md`
+  - Category: root
+  - Size: 4,922 bytes
+
+- [MYCOBRAIN_TELEMETRY_ANALYSIS.md](MYCOBRAIN_TELEMETRY_ANALYSIS.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/MYCOBRAIN_TELEMETRY_ANALYSIS.md)
+  - Path: `MYCOBRAIN_TELEMETRY_ANALYSIS.md`
+  - Category: root
+  - Size: 4,922 bytes
 
 - [PORT_CONFLICT_RESOLUTION.md](PORT_CONFLICT_RESOLUTION.md) | [GitHub](https://github.com/mycosoft/mycosoft-mas/blob/main/PORT_CONFLICT_RESOLUTION.md)
   - Path: `PORT_CONFLICT_RESOLUTION.md`
@@ -1385,6 +2130,8 @@
 - [AUTOMATION_COMPLETE.md](AUTOMATION_COMPLETE.md) *(📦 GitHub)*
 - [AUTOMATION_FINAL_REPORT.md](AUTOMATION_FINAL_REPORT.md) *(📦 GitHub)*
 - [AUTOMATION_FINAL_REPORT.md](AUTOMATION_FINAL_REPORT.md) *(📦 GitHub)*
+- [AUTO_INDEXING_COMPLETE.md](AUTO_INDEXING_COMPLETE.md) *(📦 GitHub)*
+- [AUTO_INDEXING_COMPLETE.md](AUTO_INDEXING_COMPLETE.md) *(📦 GitHub)*
 - [AZURE_DEPLOYMENT_GUIDE.md](AZURE_DEPLOYMENT_GUIDE.md) *(📦 GitHub)*
 - [AZURE_DEPLOYMENT_GUIDE.md](AZURE_DEPLOYMENT_GUIDE.md) *(📦 GitHub)*
 - [CHANGELOG_MYCOBRAIN.md](CHANGELOG_MYCOBRAIN.md) *(📦 GitHub)*
@@ -1393,8 +2140,14 @@
 - [COMPREHENSIVE_TEST_REPORT.md](COMPREHENSIVE_TEST_REPORT.md) *(📦 GitHub)*
 - [DEPENDENCY_TREE.md](DEPENDENCY_TREE.md) *(📦 GitHub)*
 - [DEPENDENCY_TREE.md](DEPENDENCY_TREE.md) *(📦 GitHub)*
-- [DOCKER_STATUS.md](DOCKER_STATUS.md) *(✏️ Modified, 📦 GitHub)*
-- [DOCKER_STATUS.md](DOCKER_STATUS.md) *(✏️ Modified, 📦 GitHub)*
+- [DOCKER_STATUS.md](DOCKER_STATUS.md) *(📦 GitHub)*
+- [DOCKER_STATUS.md](DOCKER_STATUS.md) *(📦 GitHub)*
+- [DOCUMENT_INDEX.md](DOCUMENT_INDEX.md) *(📦 GitHub)*
+- [DOCUMENT_INDEX.md](DOCUMENT_INDEX.md) *(📦 GitHub)*
+- [DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md](DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md) *(📦 GitHub)*
+- [DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md](DOCUMENT_KNOWLEDGE_BASE_COMPLETE.md) *(📦 GitHub)*
+- [DOCUMENT_SYNC_SETUP_COMPLETE.md](DOCUMENT_SYNC_SETUP_COMPLETE.md) *(📦 GitHub)*
+- [DOCUMENT_SYNC_SETUP_COMPLETE.md](DOCUMENT_SYNC_SETUP_COMPLETE.md) *(📦 GitHub)*
 - [ELEVENLABS_SETUP.md](ELEVENLABS_SETUP.md) *(📦 GitHub)*
 - [ELEVENLABS_SETUP.md](ELEVENLABS_SETUP.md) *(📦 GitHub)*
 - [ENV_TEMPLATE.md](ENV_TEMPLATE.md) *(📦 GitHub)*
@@ -1415,8 +2168,32 @@
 - [MYCA_BOOTSTRAP_READY.md](MYCA_BOOTSTRAP_READY.md) *(📦 GitHub)*
 - [MYCA_IMPROVEMENTS_SUMMARY.md](MYCA_IMPROVEMENTS_SUMMARY.md) *(📦 GitHub)*
 - [MYCA_IMPROVEMENTS_SUMMARY.md](MYCA_IMPROVEMENTS_SUMMARY.md) *(📦 GitHub)*
+- [MYCOBRAIN_COM5_SETUP.md](MYCOBRAIN_COM5_SETUP.md) *(📦 GitHub)*
+- [MYCOBRAIN_COM5_SETUP.md](MYCOBRAIN_COM5_SETUP.md) *(📦 GitHub)*
+- [MYCOBRAIN_COMMAND_REFERENCE.md](MYCOBRAIN_COMMAND_REFERENCE.md) *(📦 GitHub)*
+- [MYCOBRAIN_COMMAND_REFERENCE.md](MYCOBRAIN_COMMAND_REFERENCE.md) *(📦 GitHub)*
+- [MYCOBRAIN_COMPLETE_ANALYSIS.md](MYCOBRAIN_COMPLETE_ANALYSIS.md) *(📦 GitHub)*
+- [MYCOBRAIN_COMPLETE_ANALYSIS.md](MYCOBRAIN_COMPLETE_ANALYSIS.md) *(📦 GitHub)*
+- [MYCOBRAIN_CONNECTION_DIAGNOSTICS.md](MYCOBRAIN_CONNECTION_DIAGNOSTICS.md) *(📦 GitHub)*
+- [MYCOBRAIN_CONNECTION_DIAGNOSTICS.md](MYCOBRAIN_CONNECTION_DIAGNOSTICS.md) *(📦 GitHub)*
 - [MYCOBRAIN_INTEGRATION_SUMMARY.md](MYCOBRAIN_INTEGRATION_SUMMARY.md) *(📦 GitHub)*
 - [MYCOBRAIN_INTEGRATION_SUMMARY.md](MYCOBRAIN_INTEGRATION_SUMMARY.md) *(📦 GitHub)*
+- [MYCOBRAIN_QUICKSTART.md](MYCOBRAIN_QUICKSTART.md) *(📦 GitHub)*
+- [MYCOBRAIN_QUICKSTART.md](MYCOBRAIN_QUICKSTART.md) *(📦 GitHub)*
+- [MYCOBRAIN_SYSTEM_STATUS.md](MYCOBRAIN_SYSTEM_STATUS.md) *(📦 GitHub)*
+- [MYCOBRAIN_SYSTEM_STATUS.md](MYCOBRAIN_SYSTEM_STATUS.md) *(📦 GitHub)*
+- [MYCOBRAIN_TELEMETRY_ANALYSIS.md](MYCOBRAIN_TELEMETRY_ANALYSIS.md) *(📦 GitHub)*
+- [MYCOBRAIN_TELEMETRY_ANALYSIS.md](MYCOBRAIN_TELEMETRY_ANALYSIS.md) *(📦 GitHub)*
+- [MYCOBRAIN_TESTING_REPORT.md](MYCOBRAIN_TESTING_REPORT.md) *(📦 GitHub)*
+- [MYCOBRAIN_TESTING_REPORT.md](MYCOBRAIN_TESTING_REPORT.md) *(📦 GitHub)*
+- [MYCOBRAIN_WEBSITE_INTEGRATION.md](MYCOBRAIN_WEBSITE_INTEGRATION.md) *(📦 GitHub)*
+- [MYCOBRAIN_WEBSITE_INTEGRATION.md](MYCOBRAIN_WEBSITE_INTEGRATION.md) *(📦 GitHub)*
+- [NATUREOS_INTEGRATION_ANALYSIS.md](NATUREOS_INTEGRATION_ANALYSIS.md) *(📦 GitHub)*
+- [NATUREOS_INTEGRATION_ANALYSIS.md](NATUREOS_INTEGRATION_ANALYSIS.md) *(📦 GitHub)*
+- [NATUREOS_INTEGRATION_COMPLETE.md](NATUREOS_INTEGRATION_COMPLETE.md) *(📦 GitHub)*
+- [NATUREOS_INTEGRATION_COMPLETE.md](NATUREOS_INTEGRATION_COMPLETE.md) *(📦 GitHub)*
+- [PERSISTENT_SERVICES_README.md](PERSISTENT_SERVICES_README.md) *(📦 GitHub)*
+- [PERSISTENT_SERVICES_README.md](PERSISTENT_SERVICES_README.md) *(📦 GitHub)*
 - [PHASE1_SUMMARY.md](PHASE1_SUMMARY.md) *(📦 GitHub)*
 - [PHASE1_SUMMARY.md](PHASE1_SUMMARY.md) *(📦 GitHub)*
 - [PORT_CONFLICT_RESOLUTION.md](PORT_CONFLICT_RESOLUTION.md) *(📦 GitHub)*
@@ -1434,10 +2211,10 @@
 - [README.md](README.md) *(📦 GitHub)*
 - [START_HERE.md](START_HERE.md) *(📦 GitHub)*
 - [START_HERE.md](START_HERE.md) *(📦 GitHub)*
-- [SYSTEM_DEPLOYMENT_GUIDE.md](SYSTEM_DEPLOYMENT_GUIDE.md) *(✏️ Modified, 📦 GitHub)*
-- [SYSTEM_DEPLOYMENT_GUIDE.md](SYSTEM_DEPLOYMENT_GUIDE.md) *(✏️ Modified, 📦 GitHub)*
-- [SYSTEM_ISSUES_REPORT.md](SYSTEM_ISSUES_REPORT.md) *(✏️ Modified, 📦 GitHub)*
-- [SYSTEM_ISSUES_REPORT.md](SYSTEM_ISSUES_REPORT.md) *(✏️ Modified, 📦 GitHub)*
+- [SYSTEM_DEPLOYMENT_GUIDE.md](SYSTEM_DEPLOYMENT_GUIDE.md) *(📦 GitHub)*
+- [SYSTEM_DEPLOYMENT_GUIDE.md](SYSTEM_DEPLOYMENT_GUIDE.md) *(📦 GitHub)*
+- [SYSTEM_ISSUES_REPORT.md](SYSTEM_ISSUES_REPORT.md) *(📦 GitHub)*
+- [SYSTEM_ISSUES_REPORT.md](SYSTEM_ISSUES_REPORT.md) *(📦 GitHub)*
 - [TESTING_AND_IMPROVEMENT_SUMMARY.md](TESTING_AND_IMPROVEMENT_SUMMARY.md) *(📦 GitHub)*
 - [TESTING_AND_IMPROVEMENT_SUMMARY.md](TESTING_AND_IMPROVEMENT_SUMMARY.md) *(📦 GitHub)*
 - [TEST_EXECUTION_PLAN.md](TEST_EXECUTION_PLAN.md) *(📦 GitHub)*
@@ -1451,48 +2228,64 @@
 - [contracts/README.md](contracts/README.md) *(📦 GitHub)*
 - [contracts/README.md](contracts/README.md) *(📦 GitHub)*
 - [contracts/README.md](contracts/README.md) *(📦 GitHub)*
+- [docs/AUTO_INDEXING_SETUP.md](docs/AUTO_INDEXING_SETUP.md) *(📦 GitHub)*
+- [docs/AUTO_INDEXING_SETUP.md](docs/AUTO_INDEXING_SETUP.md) *(📦 GitHub)*
 - [docs/DEP_PROT.md](docs/DEP_PROT.md) *(📦 GitHub)*
 - [docs/DEP_PROT.md](docs/DEP_PROT.md) *(📦 GitHub)*
-- [docs/DOCUMENT_MANAGEMENT_SYSTEM.md](docs/DOCUMENT_MANAGEMENT_SYSTEM.md) *(🏠 Local)*
-- [docs/DOCUMENT_MANAGEMENT_SYSTEM.md](docs/DOCUMENT_MANAGEMENT_SYSTEM.md) *(🏠 Local)*
-- [docs/ELEVENLABS_MYCA_TOOLS.md](docs/ELEVENLABS_MYCA_TOOLS.md) *(✏️ Modified, 📦 GitHub)*
-- [docs/ELEVENLABS_MYCA_TOOLS.md](docs/ELEVENLABS_MYCA_TOOLS.md) *(✏️ Modified, 📦 GitHub)*
+- [docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md](docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md) *(📦 GitHub)*
+- [docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md](docs/DOCUMENT_KNOWLEDGE_BASE_INTEGRATION.md) *(📦 GitHub)*
+- [docs/DOCUMENT_MANAGEMENT_SYSTEM.md](docs/DOCUMENT_MANAGEMENT_SYSTEM.md) *(📦 GitHub)*
+- [docs/DOCUMENT_MANAGEMENT_SYSTEM.md](docs/DOCUMENT_MANAGEMENT_SYSTEM.md) *(📦 GitHub)*
+- [docs/ELEVENLABS_MYCA_TOOLS.md](docs/ELEVENLABS_MYCA_TOOLS.md) *(📦 GitHub)*
+- [docs/ELEVENLABS_MYCA_TOOLS.md](docs/ELEVENLABS_MYCA_TOOLS.md) *(📦 GitHub)*
 - [docs/ENV_INTEGRATIONS.md](docs/ENV_INTEGRATIONS.md) *(📦 GitHub)*
 - [docs/ENV_INTEGRATIONS.md](docs/ENV_INTEGRATIONS.md) *(📦 GitHub)*
 - [docs/INTEGRATIONS_DOCKER_SETUP.md](docs/INTEGRATIONS_DOCKER_SETUP.md) *(📦 GitHub)*
 - [docs/INTEGRATIONS_DOCKER_SETUP.md](docs/INTEGRATIONS_DOCKER_SETUP.md) *(📦 GitHub)*
-- [docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) *(🏠 Local)*
-- [docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) *(🏠 Local)*
+- [docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) *(📦 GitHub)*
+- [docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) *(📦 GitHub)*
 - [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) *(📦 GitHub)*
 - [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) *(📦 GitHub)*
 - [docs/MAS_DASHBOARD_INTEGRATION.md](docs/MAS_DASHBOARD_INTEGRATION.md) *(📦 GitHub)*
 - [docs/MAS_DASHBOARD_INTEGRATION.md](docs/MAS_DASHBOARD_INTEGRATION.md) *(📦 GitHub)*
-- [docs/MYCA_KNOWLEDGE_BASE.md](docs/MYCA_KNOWLEDGE_BASE.md) *(✏️ Modified, 📦 GitHub)*
-- [docs/MYCA_KNOWLEDGE_BASE.md](docs/MYCA_KNOWLEDGE_BASE.md) *(✏️ Modified, 📦 GitHub)*
+- [docs/MINDEX_NAS_SETUP.md](docs/MINDEX_NAS_SETUP.md) *(📦 GitHub)*
+- [docs/MINDEX_NAS_SETUP.md](docs/MINDEX_NAS_SETUP.md) *(📦 GitHub)*
+- [docs/MYCA_KNOWLEDGE_BASE.md](docs/MYCA_KNOWLEDGE_BASE.md) *(📦 GitHub)*
+- [docs/MYCA_KNOWLEDGE_BASE.md](docs/MYCA_KNOWLEDGE_BASE.md) *(📦 GitHub)*
+- [docs/MYCOBOARD_ROADMAP.md](docs/MYCOBOARD_ROADMAP.md) *(📦 GitHub)*
+- [docs/MYCOBOARD_ROADMAP.md](docs/MYCOBOARD_ROADMAP.md) *(📦 GitHub)*
+- [docs/MYCOBOARD_TECHNICAL_REFERENCE.md](docs/MYCOBOARD_TECHNICAL_REFERENCE.md) *(📦 GitHub)*
+- [docs/MYCOBOARD_TECHNICAL_REFERENCE.md](docs/MYCOBOARD_TECHNICAL_REFERENCE.md) *(📦 GitHub)*
 - [docs/N8N_INTEGRATION_GUIDE.md](docs/N8N_INTEGRATION_GUIDE.md) *(📦 GitHub)*
 - [docs/N8N_INTEGRATION_GUIDE.md](docs/N8N_INTEGRATION_GUIDE.md) *(📦 GitHub)*
-- [docs/NLM_DATABASE_SCHEMA.md](docs/NLM_DATABASE_SCHEMA.md) *(🏠 Local)*
-- [docs/NLM_DATABASE_SCHEMA.md](docs/NLM_DATABASE_SCHEMA.md) *(🏠 Local)*
-- [docs/NLM_IMPLEMENTATION_PLAN.md](docs/NLM_IMPLEMENTATION_PLAN.md) *(🏠 Local)*
-- [docs/NLM_IMPLEMENTATION_PLAN.md](docs/NLM_IMPLEMENTATION_PLAN.md) *(🏠 Local)*
-- [docs/NLM_README.md](docs/NLM_README.md) *(🏠 Local)*
-- [docs/NLM_README.md](docs/NLM_README.md) *(🏠 Local)*
-- [docs/NLM_REPOSITORY_README.md](docs/NLM_REPOSITORY_README.md) *(🏠 Local)*
-- [docs/NLM_REPOSITORY_README.md](docs/NLM_REPOSITORY_README.md) *(🏠 Local)*
-- [docs/NLM_SDK_DOCUMENTATION_SUMMARY.md](docs/NLM_SDK_DOCUMENTATION_SUMMARY.md) *(🏠 Local)*
-- [docs/NLM_SDK_DOCUMENTATION_SUMMARY.md](docs/NLM_SDK_DOCUMENTATION_SUMMARY.md) *(🏠 Local)*
-- [docs/PLATFORM_STRUCTURE_PLAN.md](docs/PLATFORM_STRUCTURE_PLAN.md) *(🏠 Local)*
-- [docs/PLATFORM_STRUCTURE_PLAN.md](docs/PLATFORM_STRUCTURE_PLAN.md) *(🏠 Local)*
-- [docs/SDK_DATABASE_SCHEMA.md](docs/SDK_DATABASE_SCHEMA.md) *(🏠 Local)*
-- [docs/SDK_DATABASE_SCHEMA.md](docs/SDK_DATABASE_SCHEMA.md) *(🏠 Local)*
-- [docs/SDK_IMPLEMENTATION_PLAN.md](docs/SDK_IMPLEMENTATION_PLAN.md) *(🏠 Local)*
-- [docs/SDK_IMPLEMENTATION_PLAN.md](docs/SDK_IMPLEMENTATION_PLAN.md) *(🏠 Local)*
-- [docs/SDK_README.md](docs/SDK_README.md) *(🏠 Local)*
-- [docs/SDK_README.md](docs/SDK_README.md) *(🏠 Local)*
-- [docs/SDK_REPOSITORY_README.md](docs/SDK_REPOSITORY_README.md) *(🏠 Local)*
-- [docs/SDK_REPOSITORY_README.md](docs/SDK_REPOSITORY_README.md) *(🏠 Local)*
+- [docs/NLM_DATABASE_SCHEMA.md](docs/NLM_DATABASE_SCHEMA.md) *(📦 GitHub)*
+- [docs/NLM_DATABASE_SCHEMA.md](docs/NLM_DATABASE_SCHEMA.md) *(📦 GitHub)*
+- [docs/NLM_IMPLEMENTATION_PLAN.md](docs/NLM_IMPLEMENTATION_PLAN.md) *(📦 GitHub)*
+- [docs/NLM_IMPLEMENTATION_PLAN.md](docs/NLM_IMPLEMENTATION_PLAN.md) *(📦 GitHub)*
+- [docs/NLM_README.md](docs/NLM_README.md) *(📦 GitHub)*
+- [docs/NLM_README.md](docs/NLM_README.md) *(📦 GitHub)*
+- [docs/NLM_REPOSITORY_README.md](docs/NLM_REPOSITORY_README.md) *(📦 GitHub)*
+- [docs/NLM_REPOSITORY_README.md](docs/NLM_REPOSITORY_README.md) *(📦 GitHub)*
+- [docs/NLM_SDK_DOCUMENTATION_SUMMARY.md](docs/NLM_SDK_DOCUMENTATION_SUMMARY.md) *(📦 GitHub)*
+- [docs/NLM_SDK_DOCUMENTATION_SUMMARY.md](docs/NLM_SDK_DOCUMENTATION_SUMMARY.md) *(📦 GitHub)*
+- [docs/PLATFORM_STRUCTURE_PLAN.md](docs/PLATFORM_STRUCTURE_PLAN.md) *(📦 GitHub)*
+- [docs/PLATFORM_STRUCTURE_PLAN.md](docs/PLATFORM_STRUCTURE_PLAN.md) *(📦 GitHub)*
+- [docs/QUICK_START_DOCUMENT_SYNC.md](docs/QUICK_START_DOCUMENT_SYNC.md) *(📦 GitHub)*
+- [docs/QUICK_START_DOCUMENT_SYNC.md](docs/QUICK_START_DOCUMENT_SYNC.md) *(📦 GitHub)*
+- [docs/SDK_DATABASE_SCHEMA.md](docs/SDK_DATABASE_SCHEMA.md) *(📦 GitHub)*
+- [docs/SDK_DATABASE_SCHEMA.md](docs/SDK_DATABASE_SCHEMA.md) *(📦 GitHub)*
+- [docs/SDK_IMPLEMENTATION_PLAN.md](docs/SDK_IMPLEMENTATION_PLAN.md) *(📦 GitHub)*
+- [docs/SDK_IMPLEMENTATION_PLAN.md](docs/SDK_IMPLEMENTATION_PLAN.md) *(📦 GitHub)*
+- [docs/SDK_README.md](docs/SDK_README.md) *(📦 GitHub)*
+- [docs/SDK_README.md](docs/SDK_README.md) *(📦 GitHub)*
+- [docs/SDK_REPOSITORY_README.md](docs/SDK_REPOSITORY_README.md) *(📦 GitHub)*
+- [docs/SDK_REPOSITORY_README.md](docs/SDK_REPOSITORY_README.md) *(📦 GitHub)*
 - [docs/SYSTEM_INTEGRATIONS.md](docs/SYSTEM_INTEGRATIONS.md) *(📦 GitHub)*
 - [docs/SYSTEM_INTEGRATIONS.md](docs/SYSTEM_INTEGRATIONS.md) *(📦 GitHub)*
+- [docs/SYSTEM_INTEGRATION_GUIDE.md](docs/SYSTEM_INTEGRATION_GUIDE.md) *(📦 GitHub)*
+- [docs/SYSTEM_INTEGRATION_GUIDE.md](docs/SYSTEM_INTEGRATION_GUIDE.md) *(📦 GitHub)*
+- [docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md](docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md) *(📦 GitHub)*
+- [docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md](docs/TESTING_DOCUMENT_KNOWLEDGE_BASE.md) *(📦 GitHub)*
 - [docs/TWILIO_INTEGRATION.md](docs/TWILIO_INTEGRATION.md) *(📦 GitHub)*
 - [docs/TWILIO_INTEGRATION.md](docs/TWILIO_INTEGRATION.md) *(📦 GitHub)*
 - [docs/agents/base_agent.md](docs/agents/base_agent.md) *(📦 GitHub)*
@@ -1533,6 +2326,8 @@
 - [docs/modules/task_manager.md](docs/modules/task_manager.md) *(📦 GitHub)*
 - [docs/notes/MYCOBRAIN_WORK_NOTES.md](docs/notes/MYCOBRAIN_WORK_NOTES.md) *(📦 GitHub)*
 - [docs/notes/MYCOBRAIN_WORK_NOTES.md](docs/notes/MYCOBRAIN_WORK_NOTES.md) *(📦 GitHub)*
+- [docs/notion/MYCOBOARD_COMPLETE_GUIDE.md](docs/notion/MYCOBOARD_COMPLETE_GUIDE.md) *(📦 GitHub)*
+- [docs/notion/MYCOBOARD_COMPLETE_GUIDE.md](docs/notion/MYCOBOARD_COMPLETE_GUIDE.md) *(📦 GitHub)*
 - [docs/notion/MYCOBRAIN_KNOWLEDGE_BASE.md](docs/notion/MYCOBRAIN_KNOWLEDGE_BASE.md) *(📦 GitHub)*
 - [docs/notion/MYCOBRAIN_KNOWLEDGE_BASE.md](docs/notion/MYCOBRAIN_KNOWLEDGE_BASE.md) *(📦 GitHub)*
 - [docs/plugins/bio_data_translator.md](docs/plugins/bio_data_translator.md) *(📦 GitHub)*
@@ -1553,6 +2348,99 @@
 - [docs/system_map.md](docs/system_map.md) *(📦 GitHub)*
 - [docs/templates/dashboard.md](docs/templates/dashboard.md) *(📦 GitHub)*
 - [docs/templates/dashboard.md](docs/templates/dashboard.md) *(📦 GitHub)*
+- [firmware/ARDUINO_IDE_SETTINGS.md](firmware/ARDUINO_IDE_SETTINGS.md) *(📦 GitHub)*
+- [firmware/ARDUINO_IDE_SETTINGS.md](firmware/ARDUINO_IDE_SETTINGS.md) *(📦 GitHub)*
+- [firmware/BOOT_LOOP_DEBUG.md](firmware/BOOT_LOOP_DEBUG.md) *(📦 GitHub)*
+- [firmware/BOOT_LOOP_DEBUG.md](firmware/BOOT_LOOP_DEBUG.md) *(📦 GitHub)*
+- [firmware/BOOT_LOOP_FIX.md](firmware/BOOT_LOOP_FIX.md) *(📦 GitHub)*
+- [firmware/BOOT_LOOP_FIX.md](firmware/BOOT_LOOP_FIX.md) *(📦 GitHub)*
+- [firmware/BOOT_MODE_FIX.md](firmware/BOOT_MODE_FIX.md) *(📦 GitHub)*
+- [firmware/BOOT_MODE_FIX.md](firmware/BOOT_MODE_FIX.md) *(📦 GitHub)*
+- [firmware/BOTH_USBS_NEEDED.md](firmware/BOTH_USBS_NEEDED.md) *(📦 GitHub)*
+- [firmware/BOTH_USBS_NEEDED.md](firmware/BOTH_USBS_NEEDED.md) *(📦 GitHub)*
+- [firmware/BRIDGED_BOARD_FIX.md](firmware/BRIDGED_BOARD_FIX.md) *(📦 GitHub)*
+- [firmware/BRIDGED_BOARD_FIX.md](firmware/BRIDGED_BOARD_FIX.md) *(📦 GitHub)*
+- [firmware/BROWNOUT_POWER_FIX.md](firmware/BROWNOUT_POWER_FIX.md) *(📦 GitHub)*
+- [firmware/BROWNOUT_POWER_FIX.md](firmware/BROWNOUT_POWER_FIX.md) *(📦 GitHub)*
+- [firmware/COM3_FIX.md](firmware/COM3_FIX.md) *(📦 GitHub)*
+- [firmware/COM3_FIX.md](firmware/COM3_FIX.md) *(📦 GitHub)*
+- [firmware/COM4_UPLOAD_FIX.md](firmware/COM4_UPLOAD_FIX.md) *(📦 GitHub)*
+- [firmware/COM4_UPLOAD_FIX.md](firmware/COM4_UPLOAD_FIX.md) *(📦 GitHub)*
+- [firmware/COM4_UPLOAD_TROUBLESHOOT.md](firmware/COM4_UPLOAD_TROUBLESHOOT.md) *(📦 GitHub)*
+- [firmware/COM4_UPLOAD_TROUBLESHOOT.md](firmware/COM4_UPLOAD_TROUBLESHOOT.md) *(📦 GitHub)*
+- [firmware/COM6_BUSY_FIX.md](firmware/COM6_BUSY_FIX.md) *(📦 GitHub)*
+- [firmware/COM6_BUSY_FIX.md](firmware/COM6_BUSY_FIX.md) *(📦 GitHub)*
+- [firmware/COM6_UPLOAD.md](firmware/COM6_UPLOAD.md) *(📦 GitHub)*
+- [firmware/COM6_UPLOAD.md](firmware/COM6_UPLOAD.md) *(📦 GitHub)*
+- [firmware/COM7_MISSING_FIX.md](firmware/COM7_MISSING_FIX.md) *(📦 GitHub)*
+- [firmware/COM7_MISSING_FIX.md](firmware/COM7_MISSING_FIX.md) *(📦 GitHub)*
+- [firmware/CRITICAL_FINDING.md](firmware/CRITICAL_FINDING.md) *(📦 GitHub)*
+- [firmware/CRITICAL_FINDING.md](firmware/CRITICAL_FINDING.md) *(📦 GitHub)*
+- [firmware/DEBUGGING_STEPS.md](firmware/DEBUGGING_STEPS.md) *(📦 GitHub)*
+- [firmware/DEBUGGING_STEPS.md](firmware/DEBUGGING_STEPS.md) *(📦 GitHub)*
+- [firmware/DEVICE_MANAGER_INTEGRATION.md](firmware/DEVICE_MANAGER_INTEGRATION.md) *(📦 GitHub)*
+- [firmware/DEVICE_MANAGER_INTEGRATION.md](firmware/DEVICE_MANAGER_INTEGRATION.md) *(📦 GitHub)*
+- [firmware/DEVICE_RESET_FIX.md](firmware/DEVICE_RESET_FIX.md) *(📦 GitHub)*
+- [firmware/DEVICE_RESET_FIX.md](firmware/DEVICE_RESET_FIX.md) *(📦 GitHub)*
+- [firmware/EMERGENCY_RESET.md](firmware/EMERGENCY_RESET.md) *(📦 GitHub)*
+- [firmware/EMERGENCY_RESET.md](firmware/EMERGENCY_RESET.md) *(📦 GitHub)*
+- [firmware/FIRMWARE_UPDATE_SUMMARY.md](firmware/FIRMWARE_UPDATE_SUMMARY.md) *(📦 GitHub)*
+- [firmware/FIRMWARE_UPDATE_SUMMARY.md](firmware/FIRMWARE_UPDATE_SUMMARY.md) *(📦 GitHub)*
+- [firmware/FULL_FIRMWARE_READY.md](firmware/FULL_FIRMWARE_READY.md) *(📦 GitHub)*
+- [firmware/FULL_FIRMWARE_READY.md](firmware/FULL_FIRMWARE_READY.md) *(📦 GitHub)*
+- [firmware/HARDWARE_RESET_FIX.md](firmware/HARDWARE_RESET_FIX.md) *(📦 GitHub)*
+- [firmware/HARDWARE_RESET_FIX.md](firmware/HARDWARE_RESET_FIX.md) *(📦 GitHub)*
+- [firmware/IDENTIFY_SIDE_B.md](firmware/IDENTIFY_SIDE_B.md) *(📦 GitHub)*
+- [firmware/IDENTIFY_SIDE_B.md](firmware/IDENTIFY_SIDE_B.md) *(📦 GitHub)*
+- [firmware/INSTALLATION_FIXES.md](firmware/INSTALLATION_FIXES.md) *(📦 GitHub)*
+- [firmware/INSTALLATION_FIXES.md](firmware/INSTALLATION_FIXES.md) *(📦 GitHub)*
+- [firmware/LIBRARY_CLEANUP.md](firmware/LIBRARY_CLEANUP.md) *(📦 GitHub)*
+- [firmware/LIBRARY_CLEANUP.md](firmware/LIBRARY_CLEANUP.md) *(📦 GitHub)*
+- [firmware/LIBRARY_INSTALLATION.md](firmware/LIBRARY_INSTALLATION.md) *(📦 GitHub)*
+- [firmware/LIBRARY_INSTALLATION.md](firmware/LIBRARY_INSTALLATION.md) *(📦 GitHub)*
+- [firmware/MycoBrain_SideA/QUICK_FIX.md](firmware/MycoBrain_SideA/QUICK_FIX.md) *(📦 GitHub)*
+- [firmware/MycoBrain_SideA/QUICK_FIX.md](firmware/MycoBrain_SideA/QUICK_FIX.md) *(📦 GitHub)*
+- [firmware/MycoBrain_SideA/README_FIX.md](firmware/MycoBrain_SideA/README_FIX.md) *(📦 GitHub)*
+- [firmware/MycoBrain_SideA/README_FIX.md](firmware/MycoBrain_SideA/README_FIX.md) *(📦 GitHub)*
+- [firmware/MycoBrain_SideA/README_FIX.md](firmware/MycoBrain_SideA/README_FIX.md) *(📦 GitHub)*
+- [firmware/MycoBrain_SideA/build/sketch/QUICK_FIX.md](firmware/MycoBrain_SideA/build/sketch/QUICK_FIX.md) *(🏠 Local)*
+- [firmware/MycoBrain_SideA/build/sketch/QUICK_FIX.md](firmware/MycoBrain_SideA/build/sketch/QUICK_FIX.md) *(🏠 Local)*
+- [firmware/MycoBrain_SideA/build/sketch/README_FIX.md](firmware/MycoBrain_SideA/build/sketch/README_FIX.md) *(🏠 Local)*
+- [firmware/MycoBrain_SideA/build/sketch/README_FIX.md](firmware/MycoBrain_SideA/build/sketch/README_FIX.md) *(🏠 Local)*
+- [firmware/MycoBrain_SideA/build/sketch/README_FIX.md](firmware/MycoBrain_SideA/build/sketch/README_FIX.md) *(🏠 Local)*
+- [firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md](firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md) *(📦 GitHub)*
+- [firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md](firmware/MycoBrain_SideA_Complete/ARDUINO_SETTINGS.md) *(📦 GitHub)*
+- [firmware/NOTHING_IN_SERIAL.md](firmware/NOTHING_IN_SERIAL.md) *(📦 GitHub)*
+- [firmware/NOTHING_IN_SERIAL.md](firmware/NOTHING_IN_SERIAL.md) *(📦 GitHub)*
+- [firmware/POWER_ISSUE_SOLUTION.md](firmware/POWER_ISSUE_SOLUTION.md) *(📦 GitHub)*
+- [firmware/POWER_ISSUE_SOLUTION.md](firmware/POWER_ISSUE_SOLUTION.md) *(📦 GitHub)*
+- [firmware/QUICK_DIAGNOSTIC.md](firmware/QUICK_DIAGNOSTIC.md) *(📦 GitHub)*
+- [firmware/QUICK_DIAGNOSTIC.md](firmware/QUICK_DIAGNOSTIC.md) *(📦 GitHub)*
+- [firmware/QUICK_START.md](firmware/QUICK_START.md) *(📦 GitHub)*
+- [firmware/QUICK_START.md](firmware/QUICK_START.md) *(📦 GitHub)*
+- [firmware/QUICK_UPLOAD_GUIDE.md](firmware/QUICK_UPLOAD_GUIDE.md) *(📦 GitHub)*
+- [firmware/QUICK_UPLOAD_GUIDE.md](firmware/QUICK_UPLOAD_GUIDE.md) *(📦 GitHub)*
+- [firmware/README.md](firmware/README.md) *(📦 GitHub)*
+- [firmware/README.md](firmware/README.md) *(📦 GitHub)*
+- [firmware/README.md](firmware/README.md) *(📦 GitHub)*
+- [firmware/SIDE_A_SUCCESS.md](firmware/SIDE_A_SUCCESS.md) *(📦 GitHub)*
+- [firmware/SIDE_A_SUCCESS.md](firmware/SIDE_A_SUCCESS.md) *(📦 GitHub)*
+- [firmware/SIDE_A_TEST.md](firmware/SIDE_A_TEST.md) *(📦 GitHub)*
+- [firmware/SIDE_A_TEST.md](firmware/SIDE_A_TEST.md) *(📦 GitHub)*
+- [firmware/SIDE_B_NO_POWER.md](firmware/SIDE_B_NO_POWER.md) *(📦 GitHub)*
+- [firmware/SIDE_B_NO_POWER.md](firmware/SIDE_B_NO_POWER.md) *(📦 GitHub)*
+- [firmware/STEP_BY_STEP_UPLOAD.md](firmware/STEP_BY_STEP_UPLOAD.md) *(📦 GitHub)*
+- [firmware/STEP_BY_STEP_UPLOAD.md](firmware/STEP_BY_STEP_UPLOAD.md) *(📦 GitHub)*
+- [firmware/TESTING_INSTRUCTIONS.md](firmware/TESTING_INSTRUCTIONS.md) *(📦 GitHub)*
+- [firmware/TESTING_INSTRUCTIONS.md](firmware/TESTING_INSTRUCTIONS.md) *(📦 GitHub)*
+- [firmware/TEST_SIDE_A.md](firmware/TEST_SIDE_A.md) *(📦 GitHub)*
+- [firmware/TEST_SIDE_A.md](firmware/TEST_SIDE_A.md) *(📦 GitHub)*
+- [firmware/TEST_SIDE_A_STANDALONE.md](firmware/TEST_SIDE_A_STANDALONE.md) *(📦 GitHub)*
+- [firmware/TEST_SIDE_A_STANDALONE.md](firmware/TEST_SIDE_A_STANDALONE.md) *(📦 GitHub)*
+- [firmware/UPLOAD_TROUBLESHOOTING.md](firmware/UPLOAD_TROUBLESHOOTING.md) *(📦 GitHub)*
+- [firmware/UPLOAD_TROUBLESHOOTING.md](firmware/UPLOAD_TROUBLESHOOTING.md) *(📦 GitHub)*
+- [firmware/USE_WORKING_FIRMWARE.md](firmware/USE_WORKING_FIRMWARE.md) *(📦 GitHub)*
+- [firmware/USE_WORKING_FIRMWARE.md](firmware/USE_WORKING_FIRMWARE.md) *(📦 GitHub)*
 - [infra/bootstrap/QUICKSTART.md](infra/bootstrap/QUICKSTART.md) *(📦 GitHub)*
 - [infra/bootstrap/QUICKSTART.md](infra/bootstrap/QUICKSTART.md) *(📦 GitHub)*
 - [infra/bootstrap/README.md](infra/bootstrap/README.md) *(📦 GitHub)*
@@ -1638,6 +2526,12 @@
 - [scripts/comprehensive_improvement_plan.md](scripts/comprehensive_improvement_plan.md) *(📦 GitHub)*
 - [scripts/prod_readiness_test.md](scripts/prod_readiness_test.md) *(📦 GitHub)*
 - [scripts/prod_readiness_test.md](scripts/prod_readiness_test.md) *(📦 GitHub)*
+- [services/mindex/README.md](services/mindex/README.md) *(📦 GitHub)*
+- [services/mindex/README.md](services/mindex/README.md) *(📦 GitHub)*
+- [services/mindex/README.md](services/mindex/README.md) *(📦 GitHub)*
+- [services/mycobrain/README.md](services/mycobrain/README.md) *(📦 GitHub)*
+- [services/mycobrain/README.md](services/mycobrain/README.md) *(📦 GitHub)*
+- [services/mycobrain/README.md](services/mycobrain/README.md) *(📦 GitHub)*
 - [speech/DEPLOYMENT.md](speech/DEPLOYMENT.md) *(📦 GitHub)*
 - [speech/DEPLOYMENT.md](speech/DEPLOYMENT.md) *(📦 GitHub)*
 - [speech/QUICKSTART.md](speech/QUICKSTART.md) *(📦 GitHub)*
