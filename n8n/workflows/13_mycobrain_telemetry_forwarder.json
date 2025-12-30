@@ -1,0 +1,153 @@
+{
+  "name": "MycoBrain Telemetry Forwarder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://mycobrain:8003/devices",
+        "options": {}
+      },
+      "id": "get-devices",
+      "name": "Get MycoBrain Devices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const devices = $input.all();\nconst results = [];\n\nfor (const device of devices) {\n  if (device.json.devices) {\n    for (const d of device.json.devices) {\n      if (d.status === 'connected') {\n        results.push({\n          device_id: d.device_id,\n          port: d.port,\n          connected_at: d.connected_at\n        });\n      }\n    }\n  }\n}\n\nreturn results.map(item => ({ json: item }));"
+      },
+      "id": "filter-connected",
+      "name": "Filter Connected Devices",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://mycobrain:8003/devices/{{ $json.device_id }}/command",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "command",
+              "value": "={ \"cmd\": \"status\" }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-telemetry",
+      "name": "Get Telemetry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://mindex:8000/api/mindex/telemetry",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "mycobrain"
+            },
+            {
+              "name": "device_id",
+              "value": "={{ $('Filter Connected Devices').item.json.device_id }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "data",
+              "value": "={{ $json.response }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "forward-to-mindex",
+      "name": "Forward to MINDEX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get MycoBrain Devices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get MycoBrain Devices": {
+      "main": [
+        [
+          {
+            "node": "Filter Connected Devices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Connected Devices": {
+      "main": [
+        [
+          {
+            "node": "Get Telemetry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Telemetry": {
+      "main": [
+        [
+          {
+            "node": "Forward to MINDEX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-30T09:00:00.000Z",
+  "versionId": "1"
+}

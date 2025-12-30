@@ -1,0 +1,258 @@
+{
+  "name": "MINDEX Species Scraper - Automated Data Collection",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily Scrape Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mindex:8000/api/mindex/sync",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"sources\": [\"iNaturalist\", \"GBIF\", \"MycoBank\", \"FungiDB\", \"GenBank\"],\n  \"limit\": 10000\n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "sync-all-sources",
+      "name": "Trigger Full Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "status-check",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "started",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-status",
+      "name": "Sync Started?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "wait-for-sync",
+      "name": "Wait 30s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://mindex:8000/api/mindex/etl-status",
+        "options": {}
+      },
+      "id": "check-progress",
+      "name": "Check ETL Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://mindex:8000/api/mindex/stats",
+        "options": {}
+      },
+      "id": "get-final-stats",
+      "name": "Get Final Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1200, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mindex:8000/api/mindex/generate-master-list",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "100000"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "generate-master-list",
+      "name": "Generate Master Species List",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, 200]
+    },
+    {
+      "parameters": {
+        "channel": "#mindex-updates",
+        "text": "=🍄 **MINDEX Daily Sync Complete**\n\n📊 **Stats:**\n- Total Species: {{ $json.total_species }}\n- Total Observations: {{ $json.total_observations }}\n- Total Images: {{ $json.total_images }}\n- Total Genetic Records: {{ $json.total_genetic_records }}\n- Database Size: {{ $json.db_size_mb }} MB\n\n✅ Master species list updated!",
+        "otherOptions": {}
+      },
+      "id": "notify-complete",
+      "name": "Notify Completion",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1600, 200],
+      "disabled": true,
+      "notes": "Enable and configure Slack credentials"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=MINDEX Sync Failed: {{ $json.error || 'Unknown error' }}"
+      },
+      "id": "error-handler",
+      "name": "Handle Error",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [800, 400]
+    }
+  ],
+  "connections": {
+    "Daily Scrape Schedule": {
+      "main": [
+        [
+          {
+            "node": "Trigger Full Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Full Sync": {
+      "main": [
+        [
+          {
+            "node": "Sync Started?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync Started?": {
+      "main": [
+        [
+          {
+            "node": "Wait 30s",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 30s": {
+      "main": [
+        [
+          {
+            "node": "Check ETL Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check ETL Status": {
+      "main": [
+        [
+          {
+            "node": "Get Final Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Final Stats": {
+      "main": [
+        [
+          {
+            "node": "Generate Master Species List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Master Species List": {
+      "main": [
+        [
+          {
+            "node": "Notify Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles",
+    "errorWorkflow": ""
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "mycosoft-mindex"
+  },
+  "id": "mindex-species-scraper",
+  "tags": [
+    {
+      "name": "mindex"
+    },
+    {
+      "name": "scraper"
+    },
+    {
+      "name": "automation"
+    }
+  ]
+}
+

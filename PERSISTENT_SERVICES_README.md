@@ -154,3 +154,4 @@ docker-compose -f docker-compose.integrations.yml up -d
 All services will now stay running even if Cursor crashes or you close the IDE!
 
 
+

@@ -40,3 +40,4 @@ docker-compose -f docker-compose.integrations.yml down 2>$null | Out-Null
 Write-Host "All services stopped." -ForegroundColor Green
 
 
+

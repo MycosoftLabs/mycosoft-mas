@@ -43,3 +43,4 @@ Write-Host "To remove auto-start:" -ForegroundColor Yellow
 Write-Host "  Unregister-ScheduledTask -TaskName '$taskName' -Confirm:`$false" -ForegroundColor White
 
 
+
