@@ -1,12 +1,25 @@
 # MycoBrain Firmware Website Integration Updates
 
+## ⚠️ CRITICAL CORRECTIONS
+
+This document includes corrections to critical hardware pin mapping errors and protocol clarifications.
+
 ## Overview
 
 Updated both Side-A Production and ScienceComms firmware to fully support the website widget integration with NDJSON machine mode protocol.
 
+**Hardware Pin Corrections**:
+- ✅ Fixed analog pin mapping: GPIO6/7/10/11 (was incorrectly GPIO34/35/36/39)
+- ✅ Verified all pin definitions match ESP32-S3 MycoBrain schematic
+
 ## Changes Made
 
 ### Side-A Production Firmware (`MycoBrain_SideA_Production.ino`)
+
+#### 0. Hardware Pin Corrections (CRITICAL)
+- **Fixed Analog Pins**: Changed from GPIO34/35/36/39 (classic ESP32) to GPIO6/7/10/11 (ESP32-S3)
+- **Verified Configuration**: All pins now match verified schematic
+- **Impact**: Firmware will now read correct analog inputs
 
 #### 1. Machine Mode Support
 - Added `OperatingMode` enum (MODE_HUMAN, MODE_MACHINE)
@@ -14,8 +27,12 @@ Updated both Side-A Production and ScienceComms firmware to fully support the we
 - Added `jsonFormat` flag for NDJSON output
 - Added `debugEnabled` flag
 
-#### 2. Text Command Support
-Added support for text commands (not just JSON) for website compatibility:
+#### 2. Text Command Support (PRIMARY FORMAT)
+Added support for text commands (primary format) for website compatibility:
+
+**⚠️ PROTOCOL CLARIFICATION**: Firmware supports **both** plaintext and JSON commands:
+- **Plaintext commands** (primary, recommended): `mode machine`, `dbg off`, `scan`, etc.
+- **JSON commands** (optional): `{"cmd":"ping"}`, `{"cmd":"set_mosfet",...}`, etc.
 - `mode machine` - Switch to machine mode
 - `mode human` - Switch to human mode
 - `dbg off` / `dbg on` - Disable/enable debug output

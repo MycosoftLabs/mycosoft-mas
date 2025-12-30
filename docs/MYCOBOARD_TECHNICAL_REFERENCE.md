@@ -312,3 +312,4 @@ The diagnostics endpoint can identify board type:
 ---
 
 *This document is auto-generated from the working MycoBoard configuration as of December 2024.*
+

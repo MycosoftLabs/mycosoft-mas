@@ -40,11 +40,11 @@
 #define I2C_SCL 4
 #define I2C_FREQ 100000
 
-// Analog Inputs
-#define AI1_PIN 34
-#define AI2_PIN 35
-#define AI3_PIN 36
-#define AI4_PIN 39
+// Analog Inputs (ESP32-S3 MycoBrain pinout - VERIFIED)
+#define AI1_PIN 6
+#define AI2_PIN 7
+#define AI3_PIN 10
+#define AI4_PIN 11
 
 // MOSFET Outputs (digital)
 #define MOSFET_1_PIN 12

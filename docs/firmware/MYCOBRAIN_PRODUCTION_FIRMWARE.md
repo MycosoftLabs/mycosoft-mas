@@ -53,25 +53,36 @@ The MycoBrain Production Firmware is a comprehensive, production-ready firmware 
 - **Communication**: JSON protocol over Serial (USB CDC)
 - **Error Handling**: Brownout protection, watchdog feeding, graceful error recovery
 
-**Hardware Configuration**:
+**Hardware Configuration** (VERIFIED - ESP32-S3 MycoBrain):
 ```
 I2C:          SDA=GPIO5, SCL=GPIO4
-Analog:       AI1=GPIO34, AI2=GPIO35, AI3=GPIO36, AI4=GPIO39
-MOSFETs:      GPIO12, GPIO13, GPIO14 (digital outputs)
+Analog:       AIN1=GPIO6, AIN2=GPIO7, AIN3=GPIO10, AIN4=GPIO11
+MOSFETs:      OUT1=GPIO12, OUT2=GPIO13, OUT3=GPIO14 (digital outputs)
 NeoPixel:     GPIO15 (SK6805, single pixel)
-Buzzer:       GPIO16 (piezo buzzer)
+Buzzer:       GPIO16 (piezo buzzer, PWM-driven)
 ```
+
+**⚠️ CRITICAL**: Previous documentation incorrectly listed analog pins as GPIO34/35/36/39 (classic ESP32 pins). These are **WRONG** for ESP32-S3 and will cause firmware to read incorrect pins or fail.
 
 ### Side-B Router Firmware
 
-**Purpose**: Communication bridge between PC and Side-A
+**Purpose**: Communication bridge between PC and Side-A (⚠️ EXPERIMENTAL)
+
+**Status**: ⚠️ **Experimental** - May not be physically wired in current hardware revisions
 
 **Key Components**:
-- **UART Routing**: Bidirectional communication (RX=GPIO16, TX=GPIO17)
+- **UART Routing**: Bidirectional communication (Side-B: RX=GPIO16, TX=GPIO17)
 - **Command Forwarding**: Routes commands from PC to Side-A
 - **Telemetry Forwarding**: Routes telemetry from Side-A to PC
 - **Connection Monitoring**: Heartbeat tracking, status LED indication
 - **Health Management**: Automatic reconnection, timeout handling
+
+**⚠️ IMPORTANT NOTES**:
+- Side-B uses **Side-B's GPIO16/17** (NOT Side-A's GPIO16, which is the buzzer)
+- Side-A would need **separate UART pins** (NOT GPIO16) for inter-MCU communication
+- **Physical Wiring Required**: A_TX → B_RX, B_TX → A_RX (if implemented)
+- **Baud Rate**: 115200 8N1
+- **Current Reality**: Most deployments use Side-A USB CDC directly. Side-B router is optional/experimental.
 
 ### ScienceComms Firmware
 
@@ -323,6 +334,21 @@ POST /devices/mycobrain/register  # Register device
 - **Error Reporting**: Comprehensive error messages
 
 #### Commands Available
+
+**Format**: Plaintext CLI (primary) or JSON commands (optional)
+
+**Plaintext Commands**:
+```
+mode machine          // Switch to machine mode
+dbg off               // Disable debug output
+fmt json              // Set JSON format (NDJSON)
+scan                  // Scan I2C bus
+status                // Device status
+led rgb 255 0 0       // Set LED color
+buzzer pattern coin   // Play buzzer pattern
+```
+
+**JSON Commands** (also supported):
 ```json
 {"cmd":"ping"}                                    // Health check
 {"cmd":"status"}                                  // Device status
@@ -335,6 +361,8 @@ POST /devices/mycobrain/register  # Register device
 {"cmd":"buzzer","frequency":1000,"duration":500} // Sound buzzer
 {"cmd":"reset"}                                   // Restart device
 ```
+
+**⚠️ PROTOCOL NOTE**: Firmware supports **both** plaintext and JSON commands. Responses in machine mode are NDJSON (newline-delimited JSON).
 
 ### Side-B Router Features
 
@@ -483,11 +511,12 @@ Device → Service → MAS Agents → MINDEX → Dashboard → Notion
    - Multi-sensor management
    - Sensor health monitoring
 
-3. **NeoPixelBus Integration**
-   - Full NeoPixelBus library support
-   - Color animations
-   - Pattern library
-   - Brightness control
+3. **NeoPixelBus Integration** (NOT YET IMPLEMENTED)
+   - ⚠️ Current: Basic GPIO control only
+   - Future: Full NeoPixelBus library support
+   - Future: Color animations
+   - Future: Pattern library
+   - Future: Brightness control
 
 4. **Enhanced Error Recovery**
    - Automatic sensor reinitialization

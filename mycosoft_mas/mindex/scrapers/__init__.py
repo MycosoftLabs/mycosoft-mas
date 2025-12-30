@@ -1,29 +1,20 @@
 """
 MINDEX Scrapers
 
-Data scrapers for various fungal and mycological databases:
-- iNaturalist: Species observations and citizen science data
-- FungiDB: Genomic and molecular biology data
-- MycoBank: Taxonomic nomenclature and classification
-- GBIF: Global biodiversity occurrence data
-- GenBank: NCBI genomic data and sequences
-- MushroomWorld: Comprehensive mushroom database
+Data scrapers for the Mycological Index system.
+Fetches fungal data from various scientific databases.
 """
 
-from .inaturalist import INaturalistScraper
-from .fungidb import FungiDBScraper
-from .mycobank import MycoBankScraper
-from .gbif import GBIFScraper
-from .genbank import GenBankScraper
-from .mushroomworld import MushroomWorldScraper
-from .base import BaseScraper
+from .inaturalist_scraper import INaturalistScraper
+from .gbif_scraper import GBIFScraper
+from .mycobank_scraper import MycoBankScraper
+from .fungidb_scraper import FungiDBScraper
+from .genbank_scraper import GenBankScraper
 
 __all__ = [
-    "BaseScraper",
     "INaturalistScraper",
-    "FungiDBScraper",
-    "MycoBankScraper",
     "GBIFScraper",
+    "MycoBankScraper",
+    "FungiDBScraper",
     "GenBankScraper",
-    "MushroomWorldScraper",
 ]

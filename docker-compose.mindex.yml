@@ -383,3 +383,390 @@ networks:
 
 
 
+
+# MINDEX Docker Compose Configuration
+# Mycological Index Data System with NAS storage
+#
+# Usage:
+#   docker-compose -f docker-compose.mindex.yml up -d
+#
+# NAS Storage Paths:
+#   - Primary: /mnt/nas/mindex (16TB Synology NAS)
+#   - Secondary: /mnt/dream/mindex (26TB UniFi Dream Machine)
+
+version: '3.8'
+
+services:
+  mindex:
+    build:
+      context: .
+      dockerfile: services/mindex/Dockerfile
+    container_name: mindex
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # API Configuration
+      - MINDEX_PORT=8000
+      - MINDEX_HOST=0.0.0.0
+      
+      # Storage - NAS mounted paths
+      - MINDEX_NAS_PATH=/mnt/nas/mindex
+      - MINDEX_BACKUP_PATH=/mnt/dream/mindex
+      
+      # Sync Configuration
+      - MINDEX_AUTO_SYNC=true
+      - MINDEX_SYNC_INTERVAL=24
+      - MINDEX_MAX_RECORDS=100000
+      
+      # API Keys for external services (set in .env file)
+      - NCBI_API_KEY=${NCBI_API_KEY:-}
+      - INATURALIST_API_KEY=${INATURALIST_API_KEY:-}
+      
+      # Logging
+      - LOG_LEVEL=INFO
+    volumes:
+      # Primary NAS storage (16TB Synology)
+      # Mount your NAS share here - adjust path for your system
+      # Windows: //NAS_IP/mindex:/mnt/nas/mindex
+      # Linux: /mnt/synology/mindex:/mnt/nas/mindex
+      - mindex_data:/mnt/nas/mindex
+      
+      # Secondary storage on Dream Machine (26TB)
+      # Uncomment when configured:
+      # - //192.168.1.1/mindex:/mnt/dream/mindex
+      
+      # Local fallback data directory
+      - ./data/mindex:/app/data
+    networks:
+      - mycosoft-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mindex.rule=Host(`mindex.mycosoft.local`)"
+      - "traefik.http.services.mindex.loadbalancer.server.port=8000"
+
+  # MINDEX Scheduler - Runs periodic sync jobs
+  mindex-scheduler:
+    build:
+      context: .
+      dockerfile: services/mindex/Dockerfile
+    container_name: mindex-scheduler
+    restart: unless-stopped
+    environment:
+      - MINDEX_NAS_PATH=/mnt/nas/mindex
+      - MINDEX_AUTO_SYNC=false  # Manual control via cron
+    volumes:
+      - mindex_data:/mnt/nas/mindex
+      - ./data/mindex:/app/data
+    networks:
+      - mycosoft-network
+    entrypoint: ["python", "-c", """
+import asyncio
+import schedule
+import time
+import sys
+sys.path.insert(0, '/app')
+
+from mycosoft_mas.mindex import MINDEXManager
+from pathlib import Path
+
+async def run_sync():
+    manager = MINDEXManager(db_path=Path('/mnt/nas/mindex/mindex.db'))
+    await manager.sync_all(limit_per_source=50000)
+
+def sync_job():
+    print('Starting scheduled MINDEX sync...')
+    asyncio.run(run_sync())
+    print('Sync completed')
+
+# Schedule syncs
+schedule.every(6).hours.do(sync_job)  # Sync every 6 hours
+
+# Run initial sync
+sync_job()
+
+while True:
+    schedule.run_pending()
+    time.sleep(60)
+"""]
+    depends_on:
+      - mindex
+
+volumes:
+  mindex_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      # Change this to your actual NAS mount point
+      device: ${MINDEX_HOST_PATH:-./data/mindex}
+
+networks:
+  mycosoft-network:
+    external: true
+
+
+# MINDEX Docker Compose Configuration
+# Mycological Index Data System with NAS storage
+#
+# Usage:
+#   docker-compose -f docker-compose.mindex.yml up -d
+#
+# NAS Storage Paths:
+#   - Primary: /mnt/nas/mindex (16TB Synology NAS)
+#   - Secondary: /mnt/dream/mindex (26TB UniFi Dream Machine)
+
+version: '3.8'
+
+services:
+  mindex:
+    build:
+      context: .
+      dockerfile: services/mindex/Dockerfile
+    container_name: mindex
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # API Configuration
+      - MINDEX_PORT=8000
+      - MINDEX_HOST=0.0.0.0
+      
+      # Storage - NAS mounted paths
+      - MINDEX_NAS_PATH=/mnt/nas/mindex
+      - MINDEX_BACKUP_PATH=/mnt/dream/mindex
+      
+      # Sync Configuration
+      - MINDEX_AUTO_SYNC=true
+      - MINDEX_SYNC_INTERVAL=24
+      - MINDEX_MAX_RECORDS=100000
+      
+      # API Keys for external services (set in .env file)
+      - NCBI_API_KEY=${NCBI_API_KEY:-}
+      - INATURALIST_API_KEY=${INATURALIST_API_KEY:-}
+      
+      # Logging
+      - LOG_LEVEL=INFO
+    volumes:
+      # Primary NAS storage (16TB Synology)
+      # Mount your NAS share here - adjust path for your system
+      # Windows: //NAS_IP/mindex:/mnt/nas/mindex
+      # Linux: /mnt/synology/mindex:/mnt/nas/mindex
+      - mindex_data:/mnt/nas/mindex
+      
+      # Secondary storage on Dream Machine (26TB)
+      # Uncomment when configured:
+      # - //192.168.1.1/mindex:/mnt/dream/mindex
+      
+      # Local fallback data directory
+      - ./data/mindex:/app/data
+    networks:
+      - mycosoft-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mindex.rule=Host(`mindex.mycosoft.local`)"
+      - "traefik.http.services.mindex.loadbalancer.server.port=8000"
+
+  # MINDEX Scheduler - Runs periodic sync jobs
+  mindex-scheduler:
+    build:
+      context: .
+      dockerfile: services/mindex/Dockerfile
+    container_name: mindex-scheduler
+    restart: unless-stopped
+    environment:
+      - MINDEX_NAS_PATH=/mnt/nas/mindex
+      - MINDEX_AUTO_SYNC=false  # Manual control via cron
+    volumes:
+      - mindex_data:/mnt/nas/mindex
+      - ./data/mindex:/app/data
+    networks:
+      - mycosoft-network
+    entrypoint: ["python", "-c", """
+import asyncio
+import schedule
+import time
+import sys
+sys.path.insert(0, '/app')
+
+from mycosoft_mas.mindex import MINDEXManager
+from pathlib import Path
+
+async def run_sync():
+    manager = MINDEXManager(db_path=Path('/mnt/nas/mindex/mindex.db'))
+    await manager.sync_all(limit_per_source=50000)
+
+def sync_job():
+    print('Starting scheduled MINDEX sync...')
+    asyncio.run(run_sync())
+    print('Sync completed')
+
+# Schedule syncs
+schedule.every(6).hours.do(sync_job)  # Sync every 6 hours
+
+# Run initial sync
+sync_job()
+
+while True:
+    schedule.run_pending()
+    time.sleep(60)
+"""]
+    depends_on:
+      - mindex
+
+volumes:
+  mindex_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      # Change this to your actual NAS mount point
+      device: ${MINDEX_HOST_PATH:-./data/mindex}
+
+networks:
+  mycosoft-network:
+    external: true
+
+# MINDEX Docker Compose Configuration
+# Mycological Index Data System with NAS storage
+#
+# Usage:
+#   docker-compose -f docker-compose.mindex.yml up -d
+#
+# NAS Storage Paths:
+#   - Primary: /mnt/nas/mindex (16TB Synology NAS)
+#   - Secondary: /mnt/dream/mindex (26TB UniFi Dream Machine)
+
+version: '3.8'
+
+services:
+  mindex:
+    build:
+      context: .
+      dockerfile: services/mindex/Dockerfile
+    container_name: mindex
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # API Configuration
+      - MINDEX_PORT=8000
+      - MINDEX_HOST=0.0.0.0
+      
+      # Storage - NAS mounted paths
+      - MINDEX_NAS_PATH=/mnt/nas/mindex
+      - MINDEX_BACKUP_PATH=/mnt/dream/mindex
+      
+      # Sync Configuration
+      - MINDEX_AUTO_SYNC=true
+      - MINDEX_SYNC_INTERVAL=24
+      - MINDEX_MAX_RECORDS=100000
+      
+      # API Keys for external services (set in .env file)
+      - NCBI_API_KEY=${NCBI_API_KEY:-}
+      - INATURALIST_API_KEY=${INATURALIST_API_KEY:-}
+      
+      # Logging
+      - LOG_LEVEL=INFO
+    volumes:
+      # Primary NAS storage (16TB Synology)
+      # Mount your NAS share here - adjust path for your system
+      # Windows: //NAS_IP/mindex:/mnt/nas/mindex
+      # Linux: /mnt/synology/mindex:/mnt/nas/mindex
+      - mindex_data:/mnt/nas/mindex
+      
+      # Secondary storage on Dream Machine (26TB)
+      # Uncomment when configured:
+      # - //192.168.1.1/mindex:/mnt/dream/mindex
+      
+      # Local fallback data directory
+      - ./data/mindex:/app/data
+    networks:
+      - mycosoft-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mindex.rule=Host(`mindex.mycosoft.local`)"
+      - "traefik.http.services.mindex.loadbalancer.server.port=8000"
+
+  # MINDEX Scheduler - Runs periodic sync jobs
+  mindex-scheduler:
+    build:
+      context: .
+      dockerfile: services/mindex/Dockerfile
+    container_name: mindex-scheduler
+    restart: unless-stopped
+    environment:
+      - MINDEX_NAS_PATH=/mnt/nas/mindex
+      - MINDEX_AUTO_SYNC=false  # Manual control via cron
+    volumes:
+      - mindex_data:/mnt/nas/mindex
+      - ./data/mindex:/app/data
+    networks:
+      - mycosoft-network
+    entrypoint: ["python", "-c", """
+import asyncio
+import schedule
+import time
+import sys
+sys.path.insert(0, '/app')
+
+from mycosoft_mas.mindex import MINDEXManager
+from pathlib import Path
+
+async def run_sync():
+    manager = MINDEXManager(db_path=Path('/mnt/nas/mindex/mindex.db'))
+    await manager.sync_all(limit_per_source=50000)
+
+def sync_job():
+    print('Starting scheduled MINDEX sync...')
+    asyncio.run(run_sync())
+    print('Sync completed')
+
+# Schedule syncs
+schedule.every(6).hours.do(sync_job)  # Sync every 6 hours
+
+# Run initial sync
+sync_job()
+
+while True:
+    schedule.run_pending()
+    time.sleep(60)
+"""]
+    depends_on:
+      - mindex
+
+volumes:
+  mindex_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      # Change this to your actual NAS mount point
+      device: ${MINDEX_HOST_PATH:-./data/mindex}
+
+networks:
+  mycosoft-network:
+    external: true
+
+
+
+
+

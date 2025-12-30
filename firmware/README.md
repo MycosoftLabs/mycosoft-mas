@@ -103,15 +103,22 @@ lib_deps =
 
 If your board uses different pins, modify these in the sketch:
 
-**Side-A:**
+**Side-A (ESP32-S3 MycoBrain - VERIFIED):**
 ```cpp
-#define I2C_SDA 21
-#define I2C_SCL 22
-#define AI1_PIN 34
-#define MOSFET_1_PIN 25
-#define NEOPIXEL_PIN 4
-#define BUZZER_PIN 32
+#define I2C_SDA 5
+#define I2C_SCL 4
+#define AI1_PIN 6      // ⚠️ NOT GPIO34 (classic ESP32)!
+#define AI2_PIN 7
+#define AI3_PIN 10
+#define AI4_PIN 11
+#define MOSFET_1_PIN 12
+#define MOSFET_2_PIN 13
+#define MOSFET_3_PIN 14
+#define NEOPIXEL_PIN 15
+#define BUZZER_PIN 16
 ```
+
+**⚠️ CRITICAL**: Do NOT use GPIO34/35/36/39 for analog inputs on ESP32-S3. These are classic ESP32 pins and will cause incorrect readings or failures.
 
 **Side-B:**
 ```cpp
