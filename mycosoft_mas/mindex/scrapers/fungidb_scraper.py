@@ -207,3 +207,10 @@ class FungiDBScraper:
         
         return stats
 
+
+
+
+
+
+
+

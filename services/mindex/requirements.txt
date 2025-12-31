@@ -1,52 +1,9 @@
-# MINDEX Service Dependencies
-
-# FastAPI and ASGI server
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-pydantic>=2.0.0
-
-# HTTP clients for scrapers
-aiohttp>=3.9.0
-httpx>=0.25.0
-
-# HTML parsing (MushroomWorld scraper)
-beautifulsoup4>=4.12.3
-
-# Database
-aiosqlite>=0.19.0
-
-# Utilities
-python-dotenv>=1.0.0
-tenacity>=8.2.0
-orjson>=3.9.0
-
-# Optional: semantic search
-# chromadb>=0.4.0
-
-
-# MINDEX Service Dependencies
-
-# FastAPI and ASGI server
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-pydantic>=2.0.0
-
-# HTTP clients for scrapers
-aiohttp>=3.9.0
-httpx>=0.25.0
-
-# HTML parsing (MushroomWorld scraper)
-beautifulsoup4>=4.12.3
-
-# Database
-aiosqlite>=0.19.0
-
-# Utilities
-python-dotenv>=1.0.0
-tenacity>=8.2.0
-orjson>=3.9.0
-
-# Optional: semantic search
-# chromadb>=0.4.0
+﻿fastapi==0.115.12
+uvicorn[standard]==0.34.0
+psycopg2-binary==2.9.10
+sqlalchemy==2.0.36
+pydantic==2.10.6
+httpx==0.28.1
+python-dateutil==2.9.0
 
 

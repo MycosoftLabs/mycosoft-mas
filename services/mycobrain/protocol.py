@@ -517,3 +517,25 @@ class TelemetryStore:
         filtered = [e for e in self.buffer if e.board_id == board_id]
         return [e.to_dict() for e in filtered[-count:]]
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

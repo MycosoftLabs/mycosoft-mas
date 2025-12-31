@@ -17,10 +17,12 @@ Production-ready firmware for the MycoBrain Side-A (Sensor MCU) ESP32-S3 board.
 ## Hardware Configuration
 
 - **I2C**: SDA=GPIO5, SCL=GPIO4
-- **Analog Inputs**: AI1=GPIO34, AI2=GPIO35, AI3=GPIO36, AI4=GPIO39
+- **Analog Inputs**: AI1=GPIO6, AI2=GPIO7, AI3=GPIO10, AI4=GPIO11
 - **MOSFETs**: GPIO12, GPIO13, GPIO14
 - **NeoPixel**: GPIO15 (SK6805)
 - **Buzzer**: GPIO16
+
+**⚠️ CRITICAL**: Previous documentation incorrectly listed analog pins as GPIO34/35/36/39 (classic ESP32 pins). These are **WRONG** for ESP32-S3 and will cause firmware to read incorrect pins or fail.
 
 ## Building
 

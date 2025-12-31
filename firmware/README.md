@@ -22,10 +22,12 @@ Arduino sketches for MycoBrain V1 dual-ESP32-S3 board.
 **Hardware:**
 - ESP32-S3
 - BME688 sensors on I2C (0x76, 0x77)
-- Analog inputs on pins 34, 35, 36, 39
-- MOSFETs on pins 25, 26, 27, 14
-- NeoPixel on pin 4 (8 LEDs)
-- Buzzer on pin 32
+- Analog inputs on pins 6, 7, 10, 11 (ESP32-S3 MycoBrain - VERIFIED)
+- MOSFETs on pins 12, 13, 14
+- NeoPixel on pin 15 (SK6805, single pixel)
+- Buzzer on pin 16
+
+**⚠️ CRITICAL**: Previous documentation incorrectly listed analog pins as 34, 35, 36, 39 (classic ESP32 pins). These are **WRONG** for ESP32-S3 and will cause firmware to read incorrect pins or fail.
 
 ## Side-B (Router MCU)
 
@@ -118,7 +120,7 @@ If your board uses different pins, modify these in the sketch:
 #define BUZZER_PIN 16
 ```
 
-**⚠️ CRITICAL**: Do NOT use GPIO34/35/36/39 for analog inputs on ESP32-S3. These are classic ESP32 pins and will cause incorrect readings or failures.
+**⚠️ CRITICAL**: Do NOT use GPIO34/35/36/39 for analog inputs on ESP32-S3. These are classic ESP32 pins and will cause incorrect readings or failures. The correct pins for ESP32-S3 MycoBrain are GPIO6, 7, 10, 11.
 
 **Side-B:**
 ```cpp
