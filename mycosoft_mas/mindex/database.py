@@ -547,6 +547,175 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
 
                 ORDER BY count DESC 
                 LIMIT 20
@@ -560,6 +729,7897 @@ class MINDEXDatabase:
             stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
             
             return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+
+                ORDER BY count DESC 
+                LIMIT 20
+            """)
+            stats["top_genera"] = [
+                {"genus": row["genus"], "count": row["count"]}
+                for row in cursor.fetchall()
+            ]
+            
+            # Database size
+            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
+            
+            return stats
+    
+    def insert_species(self, species: Dict[str, Any]) -> int:
+        """Insert or update a species record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Generate MINDEX ID if not present
+            if not species.get("mindex_id"):
+                cursor.execute("SELECT MAX(id) FROM species")
+                max_id = cursor.fetchone()[0] or 0
+                species["mindex_id"] = f"MX-{max_id + 1:08d}"
+            
+            species["updated_at"] = datetime.now().isoformat()
+            if not species.get("created_at"):
+                species["created_at"] = species["updated_at"]
+            
+            cursor.execute("""
+                INSERT OR REPLACE INTO species (
+                    mindex_id, scientific_name, canonical_name, common_names,
+                    kingdom, phylum, class_name, order_name, family, genus,
+                    species_epithet, author, year_described, source, sources,
+                    external_ids, description, habitat, edibility,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                species.get("mindex_id"),
+                species.get("scientific_name"),
+                species.get("canonical_name"),
+                species.get("common_names"),
+                species.get("kingdom", "Fungi"),
+                species.get("phylum"),
+                species.get("class_name"),
+                species.get("order_name"),
+                species.get("family"),
+                species.get("genus"),
+                species.get("species_epithet"),
+                species.get("author"),
+                species.get("year_described"),
+                species.get("source"),
+                species.get("sources"),
+                str(species.get("external_ids")) if species.get("external_ids") else None,
+                species.get("description"),
+                species.get("habitat"),
+                species.get("edibility"),
+                species.get("created_at"),
+                species.get("updated_at"),
+            ))
+            conn.commit()
+            return cursor.lastrowid
+    
+    def insert_image(self, image: Dict[str, Any]) -> int:
+        """Insert an image record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            image["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO images (
+                    species_id, url, source, source_id, license, attribution,
+                    quality_score, is_training_data, tags, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                image.get("species_id"),
+                image.get("url"),
+                image.get("source"),
+                image.get("source_id"),
+                image.get("license"),
+                image.get("attribution"),
+                image.get("quality_score"),
+                1 if image.get("is_training_data") else 0,
+                image.get("tags"),
+                image.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species image count
+            if image.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET image_count = image_count + 1
+                    WHERE mindex_id = ?
+                """, (image.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_genetic_record(self, record: Dict[str, Any]) -> int:
+        """Insert a genetic record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            record["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO genetic_records (
+                    species_id, accession, sequence_type, gene_region,
+                    sequence, sequence_length, source, organism_name,
+                    strain, country, collection_date, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                record.get("species_id"),
+                record.get("accession"),
+                record.get("sequence_type"),
+                record.get("gene_region"),
+                record.get("sequence"),
+                record.get("sequence_length"),
+                record.get("source"),
+                record.get("organism_name"),
+                record.get("strain"),
+                record.get("country"),
+                record.get("collection_date"),
+                record.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species genetic count
+            if record.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET genetic_record_count = genetic_record_count + 1
+                    WHERE mindex_id = ?
+                """, (record.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
+    
+    def insert_observation(self, obs: Dict[str, Any]) -> int:
+        """Insert an observation record."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            obs["created_at"] = datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT OR IGNORE INTO observations (
+                    species_id, external_id, scientific_name, common_name,
+                    latitude, longitude, location_name, country, observed_on,
+                    quality_grade, research_grade, photo_count, photos,
+                    observer, source, source_url, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                obs.get("species_id"),
+                obs.get("external_id"),
+                obs.get("scientific_name"),
+                obs.get("common_name"),
+                obs.get("latitude"),
+                obs.get("longitude"),
+                obs.get("location_name"),
+                obs.get("country"),
+                obs.get("observed_on"),
+                obs.get("quality_grade"),
+                1 if obs.get("research_grade") else 0,
+                obs.get("photo_count", 0),
+                obs.get("photos"),
+                obs.get("observer"),
+                obs.get("source"),
+                obs.get("source_url"),
+                obs.get("created_at"),
+            ))
+            conn.commit()
+            
+            # Update species observation count
+            if obs.get("species_id"):
+                cursor.execute("""
+                    UPDATE species SET observation_count = observation_count + 1
+                    WHERE mindex_id = ?
+                """, (obs.get("species_id"),))
+                conn.commit()
+            
+            return cursor.lastrowid
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""

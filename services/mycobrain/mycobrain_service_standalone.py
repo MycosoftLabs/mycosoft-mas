@@ -1,2781 +1,303 @@
 #!/usr/bin/env python3
-"""
-MycoBrain Service - Standalone Version
-
-FastAPI service for managing MycoBrain ESP32 devices.
-Works without MAS dependencies for basic functionality.
-"""
-
+"""MycoBrain Service - Full Implementation with Proper Command Mapping"""
 import os
 import sys
+import json
+import time
 import logging
-from pathlib import Path, PurePath
-from typing import Optional, Dict, Any, List
+import threading
 from datetime import datetime
-
-from fastapi import FastAPI, HTTPException
+from typing import Optional, Dict, Any, List
+from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-app = FastAPI(
-    title="MycoBrain Service",
-    description="Service for managing MycoBrain ESP32 devices",
-    version="1.0.0"
-)
+app = FastAPI(title="MycoBrain Service", version="2.2.0")
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Global state
+devices: Dict[str, Dict] = {}
+serial_connections: Dict[str, Any] = {}
+telemetry_cache: Dict[str, Dict] = {}
 
-# Simple device storage - keep serial handles open
-devices: Dict[str, Dict[str, Any]] = {}
-default_port = os.getenv("MYCOBRAIN_PORT", "COM4")
-default_baudrate = int(os.getenv("MYCOBRAIN_BAUDRATE", "115200"))
-
-
-class DeviceConnectionRequest(BaseModel):
-    port: str = default_port
-    baudrate: int = default_baudrate
-    device_id: Optional[str] = None
-
-
-class CommandRequest(BaseModel):
-    command: Dict[str, Any]
-    device_id: Optional[str] = None
-
+def send_serial_command(device_id: str, command: str, timeout: float = 2.0) -> str:
+    """Send a command to the device and return response"""
+    if device_id not in serial_connections:
+        raise ValueError(f"Device {device_id} not connected")
+    
+    ser = serial_connections[device_id]
+    if not ser.is_open:
+        raise ValueError("Serial connection closed")
+    
+    ser.reset_input_buffer()
+    cmd_bytes = (command + "\r\n").encode('utf-8')
+    logger.info(f"Sending to {device_id}: {command}")
+    ser.write(cmd_bytes)
+    
+    time.sleep(0.5)
+    response = ""
+    end_time = time.time() + timeout
+    while time.time() < end_time:
+        if ser.in_waiting > 0:
+            response += ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
+            time.sleep(0.1)
+        else:
+            if response:
+                break
+            time.sleep(0.1)
+    
+    logger.info(f"Response from {device_id}: {response[:100]}...")
+    return response.strip()
 
 @app.get("/health")
-async def health() -> Dict[str, Any]:
-    """Health check endpoint"""
+async def health():
     return {
-        "status": "ok",
-        "service": "mycobrain",
-        "version": "1.0.0",
+        "status": "ok", 
+        "service": "mycobrain", 
+        "version": "2.2.0", 
         "devices_connected": len(devices),
         "timestamp": datetime.now().isoformat()
     }
 
-
 @app.get("/devices")
-async def list_devices() -> Dict[str, Any]:
-    """List all connected devices"""
-    device_list = []
-    for device_id, device in devices.items():
-        device_info = {
-            "device_id": device_id,
-            "port": device.get("port"),
-            "status": device.get("status"),
-            "connected_at": device.get("connected_at"),
-        }
-        device_list.append(device_info)
-    
-    return {
-        "devices": device_list,
-        "count": len(device_list),
-        "timestamp": datetime.now().isoformat()
-    }
-
+async def list_devices():
+    for device_id in list(devices.keys()):
+        if device_id in serial_connections:
+            try:
+                ser = serial_connections[device_id]
+                devices[device_id]["status"] = "connected" if ser.is_open else "disconnected"
+            except:
+                devices[device_id]["status"] = "error"
+    return {"devices": list(devices.values()), "count": len(devices), "timestamp": datetime.now().isoformat()}
 
 @app.get("/ports")
-async def list_serial_ports() -> Dict[str, Any]:
-    """List available serial ports.
-
-    - Windows: COM5, COM6, ...
-    - Linux/WSL2: /dev/ttyACM0, /dev/ttyUSB0, ...
-
-    Returns both the raw `path` and a URL-safe `id` (e.g. ttyACM0).
-    """
+async def scan_ports():
     try:
-        from serial.tools import list_ports as serial_list_ports
-    except Exception:
-        return {
-            "ports": [],
-            "count": 0,
-            "error": "pyserial not available",
-            "timestamp": datetime.now().isoformat(),
-        }
-
-    ports: List[Dict[str, Any]] = []
-    for p in serial_list_ports.comports():
-        device_path = getattr(p, "device", None) or ""
-        ports.append(
-            {
-                "id": str(PurePath(device_path).name) if device_path else "",
-                "path": device_path,
-                "description": getattr(p, "description", None),
-                "hwid": getattr(p, "hwid", None),
-            }
-        )
-
-    return {
-        "ports": ports,
-        "count": len(ports),
-        "timestamp": datetime.now().isoformat(),
-    }
-
-
-@app.post("/devices/connect/{port}")
-async def connect_device(port: str, request: Optional[DeviceConnectionRequest] = None) -> Dict[str, Any]:
-    """Connect to a MycoBrain device on the specified port"""
-    try:
-        # Allow Linux/WSL2 ports to be passed without slashes:
-        # /devices/connect/ttyACM0 -> /dev/ttyACM0
-        if "/" not in port and "\\" not in port and port.lower().startswith("tty"):
-            port = f"/dev/{port}"
-
-        # Never put slashes into device_id (it breaks /devices/{device_id}/... routing)
-        port_for_id = str(PurePath(port).name) if ("/" in port or "\\" in port) else port
-        device_id = request.device_id if request and request.device_id else f"mycobrain-{port_for_id}"
-        baudrate = request.baudrate if request else default_baudrate
-        
-        # Check if already connected
-        if device_id in devices:
-            existing = devices[device_id]
-            if existing.get("status") == "connected":
-                return {
-                    "status": "already_connected",
-                    "device_id": device_id,
-                    "port": port,
-                    "timestamp": datetime.now().isoformat()
-                }
-        
-        # Test port accessibility
-        try:
-            import serial
-            import time
-            # Open serial port (Windows requires exclusive access)
-            ser = serial.Serial(port, baudrate, timeout=2)
-            
-            # Clear buffers
-            try:
-                ser.reset_input_buffer()
-                ser.reset_output_buffer()
-            except:
-                pass  # May not be available on all platforms
-            
-            # Test read/write - send newline to wake device
-            try:
-                ser.write(b'\n')
-                time.sleep(0.1)
-            except:
-                pass  # Continue even if write fails
-            
-            # Store device info with serial handle
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "baudrate": baudrate,
-                "status": "connected",
-                "connected_at": datetime.now().isoformat(),
-                "serial_handle": ser  # Keep handle open for commands
-            }
-            
-            logger.info(f"Connected to device {device_id} on {port}")
-            
-            return {
-                "status": "connected",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device connected successfully",
-                "timestamp": datetime.now().isoformat()
-            }
-        except ImportError:
-            # pyserial not available
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "status": "registered",
-                "message": "pyserial not installed - device registered but not tested",
-                "connected_at": datetime.now().isoformat()
-            }
-            return {
-                "status": "registered",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device registered (install pyserial for full functionality)",
-                "timestamp": datetime.now().isoformat()
-            }
-        except serial.SerialException as e:
-            error_msg = str(e)
-            if "Access is denied" in error_msg or "in use" in error_msg.lower() or "could not open port" in error_msg.lower():
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Port {port} is locked or in use. Close serial monitors, Arduino IDE, or other applications using this port."
-                )
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to connect to {port}: {error_msg}")
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-            
-    except HTTPException:
-        raise
+        import serial.tools.list_ports
+        ports = []
+        for p in serial.tools.list_ports.comports():
+            ports.append({
+                "device": p.device,
+                "description": p.description,
+                "hwid": p.hwid,
+                "vid": p.vid,
+                "pid": p.pid,
+            })
+        return {"ports": ports, "count": len(ports), "timestamp": datetime.now().isoformat()}
     except Exception as e:
-        logger.error(f"Failed to connect to device on {port}: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
+        return {"ports": [], "count": 0, "error": str(e), "timestamp": datetime.now().isoformat()}
 
-
-@app.post("/devices/{device_id}/disconnect")
-async def disconnect_device(device_id: str) -> Dict[str, Any]:
-    """Disconnect from a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
+@app.post("/devices/connect/{port:path}")
+async def connect_device(port: str, baudrate: int = 115200):
+    import serial
     
-    device = devices[device_id]
-    # Close serial connection if open
-    if "serial_handle" in device:
-        try:
-            ser = device["serial_handle"]
-            if hasattr(ser, "is_open") and ser.is_open:
-                ser.close()
-        except Exception as e:
-            logger.warning(f"Error closing serial connection: {e}")
+    port = port.replace('-', '/') if port.startswith('COM-') else port
+    device_id = f"mycobrain-{port.replace('/', '-').replace(':', '-')}"
     
-    del devices[device_id]
-    logger.info(f"Disconnected device {device_id}")
+    logger.info(f"Connecting to {port}")
     
-    return {
-        "status": "disconnected",
-        "device_id": device_id,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/{device_id}/command")
-async def send_command(device_id: str, request: CommandRequest) -> Dict[str, Any]:
-    """Send a command to a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
+    if device_id in serial_connections:
+        ser = serial_connections[device_id]
+        if ser.is_open:
+            return {"status": "already_connected", "device_id": device_id, "port": port}
+        del serial_connections[device_id]
     
     try:
-        import serial
-        import json
-        import time
+        ser = serial.Serial(port, baudrate, timeout=2)
+        time.sleep(1)
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
         
-        # Get or create serial connection
-        if "serial_handle" in device:
-            ser = device["serial_handle"]
-            # Check if still open
-            if not (hasattr(ser, "is_open") and ser.is_open):
-                # Reconnect
-                try:
-                    ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                    devices[device_id]["serial_handle"] = ser
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Failed to reconnect: {str(e)}")
-        else:
-            # Create new connection
-            try:
-                ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                devices[device_id]["serial_handle"] = ser
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to connect: {str(e)}")
+        serial_connections[device_id] = ser
         
-        # Clear buffers
+        device_info = {"firmware": "unknown", "board": "MycoBrain ESP32-S3"}
         try:
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
+            response = send_serial_command(device_id, "status", timeout=1.0)
+            if "ESP32-S3" in response:
+                device_info["board"] = "ESP32-S3"
+            if "Arduino-ESP32 core:" in response:
+                for line in response.split('\n'):
+                    if "Arduino-ESP32 core:" in line:
+                        device_info["firmware"] = line.split(':')[1].strip()
+            device_info["raw_status"] = response[:500]
         except:
             pass
         
-        # Send command as plain text (board firmware CLI expects strings like "status", "led rgb 255 0 0", etc.)
-        cmd = None
-        if isinstance(request.command, dict):
-            cmd = request.command.get("cmd")
-            if cmd is None and isinstance(request.command.get("command"), dict):
-                cmd = request.command["command"].get("cmd")
-        cmd_str = (str(cmd) if cmd is not None else json.dumps(request.command)) + "\n"
-        ser.write(cmd_str.encode('utf-8'))
-        ser.flush()
-        
-        # Read response
-        time.sleep(0.5)  # Wait for response
-        response = ""
-        if ser.in_waiting > 0:
-            response_bytes = ser.read(ser.in_waiting)
-            response = response_bytes.decode('utf-8', errors='replace')
-        
-        return {
-            "status": "sent",
+        devices[device_id] = {
             "device_id": device_id,
-            "command": request.command,
-            "response": response.strip() if response else None,
-            "timestamp": datetime.now().isoformat()
+            "port": port,
+            "status": "connected",
+            "connected_at": datetime.now().isoformat(),
+            "info": device_info,
+            "protocol": "MDP v1"
         }
-    except ImportError:
-        return {
-            "status": "echo",
-            "device_id": device_id,
-            "command": request.command,
-            "message": "pyserial not available - command echoed",
-            "timestamp": datetime.now().isoformat()
-        }
-    except HTTPException:
-        raise
+        
+        return {"status": "connected", "device_id": device_id, "port": port, "timestamp": datetime.now().isoformat()}
+        
     except Exception as e:
-        logger.error(f"Failed to send command to {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Command failed: {str(e)}")
-
-
-@app.get("/devices/{device_id}/status")
-async def get_device_status(device_id: str) -> Dict[str, Any]:
-    """Get device status"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    status_info = {
-        "device_id": device_id,
-        "port": device.get("port"),
-        "status": device.get("status"),
-        "connected_at": device.get("connected_at"),
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    # Check if serial connection is still open
-    if "serial_handle" in device:
-        ser = device["serial_handle"]
-        if hasattr(ser, "is_open"):
-            status_info["serial_open"] = ser.is_open
-    
-    return status_info
-
-
-@app.get("/devices/{device_id}/telemetry")
-async def get_telemetry(device_id: str) -> Dict[str, Any]:
-    """Get telemetry from device (request sensor data)"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    # Request sensor data via command
-    try:
-        # Send get_sensors command and return response
-        command_request = CommandRequest(command={"cmd": "get_sensors"})
-        result = await send_command(device_id, command_request)
-        
-        # Parse response if available
-        response_text = result.get("response")
-        if response_text:
-            try:
-                import json
-                telemetry_data = json.loads(response_text)
-                return {
-                    "status": "ok",
-                    "device_id": device_id,
-                    "telemetry": telemetry_data,
-                    "timestamp": datetime.now().isoformat()
-                }
-            except:
-                pass
-        
-        return {
-            "status": "no_data",
-            "device_id": device_id,
-            "message": "No telemetry data received",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Failed to get telemetry: {e}")
-        return {
-            "status": "error",
-            "device_id": device_id,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-def main():
-    """Main entry point"""
-    port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))
-    host = os.getenv("MYCOBRAIN_SERVICE_HOST", "0.0.0.0")
-    
-    logger.info(f"Starting MycoBrain service on {host}:{port}")
-    logger.info(f"Service will be available at: http://localhost:{port}")
-    
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info"
-    )
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-class DeviceConnectionRequest(BaseModel):
-    port: str = default_port
-    baudrate: int = default_baudrate
-    device_id: Optional[str] = None
-
-
-class CommandRequest(BaseModel):
-    command: Dict[str, Any]
-    device_id: Optional[str] = None
-
-
-@app.get("/health")
-async def health() -> Dict[str, Any]:
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "service": "mycobrain",
-        "version": "1.0.0",
-        "devices_connected": len(devices),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.get("/devices")
-async def list_devices() -> Dict[str, Any]:
-    """List all connected devices"""
-    device_list = []
-    for device_id, device in devices.items():
-        device_info = {
-            "device_id": device_id,
-            "port": device.get("port"),
-            "status": device.get("status"),
-            "connected_at": device.get("connected_at"),
-        }
-        device_list.append(device_info)
-    
-    return {
-        "devices": device_list,
-        "count": len(device_list),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/connect/{port}")
-async def connect_device(port: str, request: Optional[DeviceConnectionRequest] = None) -> Dict[str, Any]:
-    """Connect to a MycoBrain device on the specified port"""
-    try:
-        device_id = request.device_id if request and request.device_id else f"mycobrain-{port}"
-        baudrate = request.baudrate if request else default_baudrate
-        
-        # Check if already connected
-        if device_id in devices:
-            existing = devices[device_id]
-            if existing.get("status") == "connected":
-                return {
-                    "status": "already_connected",
-                    "device_id": device_id,
-                    "port": port,
-                    "timestamp": datetime.now().isoformat()
-                }
-        
-        # Test port accessibility
-        try:
-            import serial
-            import time
-            # Open serial port (Windows requires exclusive access)
-            ser = serial.Serial(port, baudrate, timeout=2)
-            
-            # Clear buffers
-            try:
-                ser.reset_input_buffer()
-                ser.reset_output_buffer()
-            except:
-                pass  # May not be available on all platforms
-            
-            # Test read/write - send newline to wake device
-            try:
-                ser.write(b'\n')
-                time.sleep(0.1)
-            except:
-                pass  # Continue even if write fails
-            
-            # Store device info with serial handle
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "baudrate": baudrate,
-                "status": "connected",
-                "connected_at": datetime.now().isoformat(),
-                "serial_handle": ser  # Keep handle open for commands
-            }
-            
-            logger.info(f"Connected to device {device_id} on {port}")
-            
-            return {
-                "status": "connected",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device connected successfully",
-                "timestamp": datetime.now().isoformat()
-            }
-        except ImportError:
-            # pyserial not available
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "status": "registered",
-                "message": "pyserial not installed - device registered but not tested",
-                "connected_at": datetime.now().isoformat()
-            }
-            return {
-                "status": "registered",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device registered (install pyserial for full functionality)",
-                "timestamp": datetime.now().isoformat()
-            }
-        except serial.SerialException as e:
-            error_msg = str(e)
-            if "Access is denied" in error_msg or "in use" in error_msg.lower() or "could not open port" in error_msg.lower():
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Port {port} is locked or in use. Close serial monitors, Arduino IDE, or other applications using this port."
-                )
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to connect to {port}: {error_msg}")
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to connect to device on {port}: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
-
+        error_msg = str(e)
+        logger.error(f"Connection error: {error_msg}")
+        if "Access is denied" in error_msg or "PermissionError" in error_msg:
+            raise HTTPException(status_code=403, detail=f"Port {port} is locked or in use.")
+        raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
 
 @app.post("/devices/{device_id}/disconnect")
-async def disconnect_device(device_id: str) -> Dict[str, Any]:
-    """Disconnect from a device"""
+async def disconnect_device(device_id: str):
     if device_id not in devices:
         raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     
-    device = devices[device_id]
-    # Close serial connection if open
-    if "serial_handle" in device:
-        try:
-            ser = device["serial_handle"]
-            if hasattr(ser, "is_open") and ser.is_open:
-                ser.close()
-        except Exception as e:
-            logger.warning(f"Error closing serial connection: {e}")
-    
-    del devices[device_id]
-    logger.info(f"Disconnected device {device_id}")
-    
-    return {
-        "status": "disconnected",
-        "device_id": device_id,
-        "timestamp": datetime.now().isoformat()
-    }
-
+    try:
+        if device_id in serial_connections:
+            serial_connections[device_id].close()
+            del serial_connections[device_id]
+        del devices[device_id]
+        return {"status": "disconnected", "device_id": device_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/devices/{device_id}/command")
-async def send_command(device_id: str, request: CommandRequest) -> Dict[str, Any]:
-    """Send a command to a device"""
+async def send_command(device_id: str, command: str = Query(None), body: dict = Body(default=None)):
+    """Send a command to the device - supports both query param and JSON body"""
     if device_id not in devices:
         raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     
-    device = devices[device_id]
+    cmd = command
+    if not cmd and body:
+        if "command" in body:
+            cmd_data = body["command"]
+            if isinstance(cmd_data, dict):
+                # Support both "cmd" and "command_type" formats
+                cmd_type = cmd_data.get("command_type") or cmd_data.get("cmd", "")
+                cmd = map_command(cmd_type, cmd_data)
+            else:
+                cmd = str(cmd_data)
+        elif "raw_command" in body:
+            cmd = body["raw_command"]
+    
+    if not cmd:
+        raise HTTPException(status_code=400, detail="No command provided")
     
     try:
-        import serial
-        import json
-        import time
-        
-        # Get or create serial connection
-        if "serial_handle" in device:
-            ser = device["serial_handle"]
-            # Check if still open
-            if not (hasattr(ser, "is_open") and ser.is_open):
-                # Reconnect
-                try:
-                    ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                    devices[device_id]["serial_handle"] = ser
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Failed to reconnect: {str(e)}")
-        else:
-            # Create new connection
-            try:
-                ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                devices[device_id]["serial_handle"] = ser
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to connect: {str(e)}")
-        
-        # Clear buffers
-        try:
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
-        except:
-            pass
-        
-        # Send command as JSON string
-        cmd_str = json.dumps(request.command) + "\n"
-        ser.write(cmd_str.encode('utf-8'))
-        ser.flush()
-        
-        # Read response
-        time.sleep(0.5)  # Wait for response
-        response = ""
-        if ser.in_waiting > 0:
-            response_bytes = ser.read(ser.in_waiting)
-            response = response_bytes.decode('utf-8', errors='replace')
-        
+        response = send_serial_command(device_id, cmd)
         return {
-            "status": "sent",
+            "status": "ok",
             "device_id": device_id,
-            "command": request.command,
-            "response": response.strip() if response else None,
+            "command": cmd,
+            "response": response,
             "timestamp": datetime.now().isoformat()
         }
-    except ImportError:
-        return {
-            "status": "echo",
-            "device_id": device_id,
-            "command": request.command,
-            "message": "pyserial not available - command echoed",
-            "timestamp": datetime.now().isoformat()
-        }
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Failed to send command to {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Command failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@app.get("/devices/{device_id}/status")
-async def get_device_status(device_id: str) -> Dict[str, Any]:
-    """Get device status"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    status_info = {
-        "device_id": device_id,
-        "port": device.get("port"),
-        "status": device.get("status"),
-        "connected_at": device.get("connected_at"),
-        "timestamp": datetime.now().isoformat()
+def map_command(cmd_type: str, params: dict) -> str:
+    """Map frontend command types to device commands"""
+    mappings = {
+        # System commands - both formats
+        "status": lambda p: "status",
+        "ping": lambda p: "status",
+        "info": lambda p: "status",
+        
+        # LED commands
+        "neopixel-set": lambda p: f"led rgb {p.get('r', 0)} {p.get('g', 255)} {p.get('b', 0)}",
+        "neopixel-rainbow": lambda p: "led mode state",
+        "neopixel-off": lambda p: "led rgb 0 0 0",
+        "led-set": lambda p: f"led rgb {p.get('r', 0)} {p.get('g', 255)} {p.get('b', 0)}",
+        "set_led": lambda p: f"led rgb {p.get('r', 0)} {p.get('g', 0)} {p.get('b', 0)}",
+        
+        # Buzzer/sound commands
+        "buzzer-beep": lambda p: "coin",
+        "buzzer-melody": lambda p: "morgio",
+        "buzzer-tone": lambda p: "coin",
+        "beep": lambda p: "coin",
+        "play_sound": lambda p: p.get('sound', 'coin'),
+        
+        # Sensor commands
+        "read-bme1": lambda p: "probe amb",
+        "read-bme2": lambda p: "probe env",
+        "scan-i2c": lambda p: "scan",
+        "i2c-scan": lambda p: "scan",
+        "get-sensors": lambda p: "status",
+        
+        # Live mode
+        "live-on": lambda p: "live on",
+        "live-off": lambda p: "live off",
+        "json-mode": lambda p: "fmt json",
     }
     
-    # Check if serial connection is still open
-    if "serial_handle" in device:
-        ser = device["serial_handle"]
-        if hasattr(ser, "is_open"):
-            status_info["serial_open"] = ser.is_open
+    if cmd_type in mappings:
+        return mappings[cmd_type](params)
     
-    return status_info
-
+    return cmd_type
 
 @app.get("/devices/{device_id}/telemetry")
-async def get_telemetry(device_id: str) -> Dict[str, Any]:
-    """Get telemetry from device (request sensor data)"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
+async def get_telemetry(device_id: str):
+    if device_id not in serial_connections:
+        raise HTTPException(status_code=400, detail=f"Device {device_id} not connected")
     
-    # Request sensor data via command
     try:
-        # Send get_sensors command and return response
-        command_request = CommandRequest(command={"cmd": "get_sensors"})
-        result = await send_command(device_id, command_request)
+        response = send_serial_command(device_id, "status", timeout=2.0)
         
-        # Parse response if available
-        response_text = result.get("response")
-        if response_text:
-            try:
-                import json
-                telemetry_data = json.loads(response_text)
-                return {
-                    "status": "ok",
-                    "device_id": device_id,
-                    "telemetry": telemetry_data,
-                    "timestamp": datetime.now().isoformat()
-                }
-            except:
-                pass
+        telemetry = {"raw": response}
+        
+        for line in response.split('\n'):
+            if "AMB addr=0x77" in line:
+                telemetry["bme1"] = parse_sensor_line(line, "amb")
+            elif "ENV addr=0x76" in line:
+                telemetry["bme2"] = parse_sensor_line(line, "env")
+        
+        telemetry_cache[device_id] = telemetry
         
         return {
-            "status": "no_data",
+            "status": "ok",
             "device_id": device_id,
-            "message": "No telemetry data received",
+            "telemetry": telemetry,
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
-        logger.error(f"Failed to get telemetry: {e}")
-        return {
-            "status": "error",
-            "device_id": device_id,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-def main():
-    """Main entry point"""
-    port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))
-    host = os.getenv("MYCOBRAIN_SERVICE_HOST", "0.0.0.0")
-    
-    logger.info(f"Starting MycoBrain service on {host}:{port}")
-    logger.info(f"Service will be available at: http://localhost:{port}")
-    
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info"
-    )
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-
-class DeviceConnectionRequest(BaseModel):
-    port: str = default_port
-    baudrate: int = default_baudrate
-    device_id: Optional[str] = None
-
-
-class CommandRequest(BaseModel):
-    command: Dict[str, Any]
-    device_id: Optional[str] = None
-
-
-@app.get("/health")
-async def health() -> Dict[str, Any]:
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "service": "mycobrain",
-        "version": "1.0.0",
-        "devices_connected": len(devices),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.get("/devices")
-async def list_devices() -> Dict[str, Any]:
-    """List all connected devices"""
-    device_list = []
-    for device_id, device in devices.items():
-        device_info = {
-            "device_id": device_id,
-            "port": device.get("port"),
-            "status": device.get("status"),
-            "connected_at": device.get("connected_at"),
-        }
-        device_list.append(device_info)
-    
-    return {
-        "devices": device_list,
-        "count": len(device_list),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/connect/{port}")
-async def connect_device(port: str, request: Optional[DeviceConnectionRequest] = None) -> Dict[str, Any]:
-    """Connect to a MycoBrain device on the specified port"""
+def parse_sensor_line(line: str, sensor_type: str) -> dict:
+    """Parse sensor data from status output line"""
+    data = {"type": sensor_type}
     try:
-        device_id = request.device_id if request and request.device_id else f"mycobrain-{port}"
-        baudrate = request.baudrate if request else default_baudrate
-        
-        # Check if already connected
-        if device_id in devices:
-            existing = devices[device_id]
-            if existing.get("status") == "connected":
-                return {
-                    "status": "already_connected",
-                    "device_id": device_id,
-                    "port": port,
-                    "timestamp": datetime.now().isoformat()
-                }
-        
-        # Test port accessibility
+        if "T=" in line:
+            t_part = line.split("T=")[1].split("C")[0]
+            data["temperature"] = float(t_part)
+        if "RH=" in line:
+            rh_part = line.split("RH=")[1].split("%")[0]
+            data["humidity"] = float(rh_part)
+        if "P=" in line:
+            p_part = line.split("P=")[1].split("hPa")[0]
+            data["pressure"] = float(p_part)
+        if "Gas=" in line:
+            gas_part = line.split("Gas=")[1].split("Ohm")[0]
+            data["gas_resistance"] = float(gas_part)
+        if "IAQ=" in line:
+            iaq_part = line.split("IAQ=")[1].split(" ")[0]
+            data["iaq"] = float(iaq_part)
+    except:
+        pass
+    return data
+
+@app.post("/clear-locks")
+async def clear_locks():
+    disconnected = []
+    for device_id in list(serial_connections.keys()):
         try:
-            import serial
-            import time
-            # Open serial port (Windows requires exclusive access)
-            ser = serial.Serial(port, baudrate, timeout=2)
-            
-            # Clear buffers
-            try:
-                ser.reset_input_buffer()
-                ser.reset_output_buffer()
-            except:
-                pass  # May not be available on all platforms
-            
-            # Test read/write - send newline to wake device
-            try:
-                ser.write(b'\n')
-                time.sleep(0.1)
-            except:
-                pass  # Continue even if write fails
-            
-            # Store device info with serial handle
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "baudrate": baudrate,
-                "status": "connected",
-                "connected_at": datetime.now().isoformat(),
-                "serial_handle": ser  # Keep handle open for commands
-            }
-            
-            logger.info(f"Connected to device {device_id} on {port}")
-            
-            return {
-                "status": "connected",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device connected successfully",
-                "timestamp": datetime.now().isoformat()
-            }
-        except ImportError:
-            # pyserial not available
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "status": "registered",
-                "message": "pyserial not installed - device registered but not tested",
-                "connected_at": datetime.now().isoformat()
-            }
-            return {
-                "status": "registered",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device registered (install pyserial for full functionality)",
-                "timestamp": datetime.now().isoformat()
-            }
-        except serial.SerialException as e:
-            error_msg = str(e)
-            if "Access is denied" in error_msg or "in use" in error_msg.lower() or "could not open port" in error_msg.lower():
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Port {port} is locked or in use. Close serial monitors, Arduino IDE, or other applications using this port."
-                )
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to connect to {port}: {error_msg}")
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to connect to device on {port}: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
-
-
-@app.post("/devices/{device_id}/disconnect")
-async def disconnect_device(device_id: str) -> Dict[str, Any]:
-    """Disconnect from a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    # Close serial connection if open
-    if "serial_handle" in device:
-        try:
-            ser = device["serial_handle"]
-            if hasattr(ser, "is_open") and ser.is_open:
-                ser.close()
-        except Exception as e:
-            logger.warning(f"Error closing serial connection: {e}")
-    
-    del devices[device_id]
-    logger.info(f"Disconnected device {device_id}")
-    
-    return {
-        "status": "disconnected",
-        "device_id": device_id,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/{device_id}/command")
-async def send_command(device_id: str, request: CommandRequest) -> Dict[str, Any]:
-    """Send a command to a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    
-    try:
-        import serial
-        import json
-        import time
-        
-        # Get or create serial connection
-        if "serial_handle" in device:
-            ser = device["serial_handle"]
-            # Check if still open
-            if not (hasattr(ser, "is_open") and ser.is_open):
-                # Reconnect
-                try:
-                    ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                    devices[device_id]["serial_handle"] = ser
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Failed to reconnect: {str(e)}")
-        else:
-            # Create new connection
-            try:
-                ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                devices[device_id]["serial_handle"] = ser
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to connect: {str(e)}")
-        
-        # Clear buffers
-        try:
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
+            serial_connections[device_id].close()
+            del serial_connections[device_id]
+            if device_id in devices:
+                del devices[device_id]
+            disconnected.append(device_id)
         except:
             pass
-        
-        # Send command as JSON string
-        cmd_str = json.dumps(request.command) + "\n"
-        ser.write(cmd_str.encode('utf-8'))
-        ser.flush()
-        
-        # Read response
-        time.sleep(0.5)  # Wait for response
-        response = ""
-        if ser.in_waiting > 0:
-            response_bytes = ser.read(ser.in_waiting)
-            response = response_bytes.decode('utf-8', errors='replace')
-        
-        return {
-            "status": "sent",
-            "device_id": device_id,
-            "command": request.command,
-            "response": response.strip() if response else None,
-            "timestamp": datetime.now().isoformat()
-        }
-    except ImportError:
-        return {
-            "status": "echo",
-            "device_id": device_id,
-            "command": request.command,
-            "message": "pyserial not available - command echoed",
-            "timestamp": datetime.now().isoformat()
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to send command to {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Command failed: {str(e)}")
-
-
-@app.get("/devices/{device_id}/status")
-async def get_device_status(device_id: str) -> Dict[str, Any]:
-    """Get device status"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    status_info = {
-        "device_id": device_id,
-        "port": device.get("port"),
-        "status": device.get("status"),
-        "connected_at": device.get("connected_at"),
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    # Check if serial connection is still open
-    if "serial_handle" in device:
-        ser = device["serial_handle"]
-        if hasattr(ser, "is_open"):
-            status_info["serial_open"] = ser.is_open
-    
-    return status_info
-
-
-@app.get("/devices/{device_id}/telemetry")
-async def get_telemetry(device_id: str) -> Dict[str, Any]:
-    """Get telemetry from device (request sensor data)"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    # Request sensor data via command
-    try:
-        # Send get_sensors command and return response
-        command_request = CommandRequest(command={"cmd": "get_sensors"})
-        result = await send_command(device_id, command_request)
-        
-        # Parse response if available
-        response_text = result.get("response")
-        if response_text:
-            try:
-                import json
-                telemetry_data = json.loads(response_text)
-                return {
-                    "status": "ok",
-                    "device_id": device_id,
-                    "telemetry": telemetry_data,
-                    "timestamp": datetime.now().isoformat()
-                }
-            except:
-                pass
-        
-        return {
-            "status": "no_data",
-            "device_id": device_id,
-            "message": "No telemetry data received",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Failed to get telemetry: {e}")
-        return {
-            "status": "error",
-            "device_id": device_id,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-def main():
-    """Main entry point"""
-    port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))
-    host = os.getenv("MYCOBRAIN_SERVICE_HOST", "0.0.0.0")
-    
-    logger.info(f"Starting MycoBrain service on {host}:{port}")
-    logger.info(f"Service will be available at: http://localhost:{port}")
-    
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info"
-    )
-
+    return {"status": "ok", "disconnected": disconnected}
 
 if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-class DeviceConnectionRequest(BaseModel):
-    port: str = default_port
-    baudrate: int = default_baudrate
-    device_id: Optional[str] = None
-
-
-class CommandRequest(BaseModel):
-    command: Dict[str, Any]
-    device_id: Optional[str] = None
-
-
-@app.get("/health")
-async def health() -> Dict[str, Any]:
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "service": "mycobrain",
-        "version": "1.0.0",
-        "devices_connected": len(devices),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.get("/devices")
-async def list_devices() -> Dict[str, Any]:
-    """List all connected devices"""
-    device_list = []
-    for device_id, device in devices.items():
-        device_info = {
-            "device_id": device_id,
-            "port": device.get("port"),
-            "status": device.get("status"),
-            "connected_at": device.get("connected_at"),
-        }
-        device_list.append(device_info)
-    
-    return {
-        "devices": device_list,
-        "count": len(device_list),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/connect/{port}")
-async def connect_device(port: str, request: Optional[DeviceConnectionRequest] = None) -> Dict[str, Any]:
-    """Connect to a MycoBrain device on the specified port"""
-    try:
-        device_id = request.device_id if request and request.device_id else f"mycobrain-{port}"
-        baudrate = request.baudrate if request else default_baudrate
-        
-        # Check if already connected
-        if device_id in devices:
-            existing = devices[device_id]
-            if existing.get("status") == "connected":
-                return {
-                    "status": "already_connected",
-                    "device_id": device_id,
-                    "port": port,
-                    "timestamp": datetime.now().isoformat()
-                }
-        
-        # Test port accessibility
-        try:
-            import serial
-            import time
-            # Open serial port (Windows requires exclusive access)
-            ser = serial.Serial(port, baudrate, timeout=2)
-            
-            # Clear buffers
-            try:
-                ser.reset_input_buffer()
-                ser.reset_output_buffer()
-            except:
-                pass  # May not be available on all platforms
-            
-            # Test read/write - send newline to wake device
-            try:
-                ser.write(b'\n')
-                time.sleep(0.1)
-            except:
-                pass  # Continue even if write fails
-            
-            # Store device info with serial handle
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "baudrate": baudrate,
-                "status": "connected",
-                "connected_at": datetime.now().isoformat(),
-                "serial_handle": ser  # Keep handle open for commands
-            }
-            
-            logger.info(f"Connected to device {device_id} on {port}")
-            
-            return {
-                "status": "connected",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device connected successfully",
-                "timestamp": datetime.now().isoformat()
-            }
-        except ImportError:
-            # pyserial not available
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "status": "registered",
-                "message": "pyserial not installed - device registered but not tested",
-                "connected_at": datetime.now().isoformat()
-            }
-            return {
-                "status": "registered",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device registered (install pyserial for full functionality)",
-                "timestamp": datetime.now().isoformat()
-            }
-        except serial.SerialException as e:
-            error_msg = str(e)
-            if "Access is denied" in error_msg or "in use" in error_msg.lower() or "could not open port" in error_msg.lower():
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Port {port} is locked or in use. Close serial monitors, Arduino IDE, or other applications using this port."
-                )
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to connect to {port}: {error_msg}")
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to connect to device on {port}: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
-
-
-@app.post("/devices/{device_id}/disconnect")
-async def disconnect_device(device_id: str) -> Dict[str, Any]:
-    """Disconnect from a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    # Close serial connection if open
-    if "serial_handle" in device:
-        try:
-            ser = device["serial_handle"]
-            if hasattr(ser, "is_open") and ser.is_open:
-                ser.close()
-        except Exception as e:
-            logger.warning(f"Error closing serial connection: {e}")
-    
-    del devices[device_id]
-    logger.info(f"Disconnected device {device_id}")
-    
-    return {
-        "status": "disconnected",
-        "device_id": device_id,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/{device_id}/command")
-async def send_command(device_id: str, request: CommandRequest) -> Dict[str, Any]:
-    """Send a command to a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    
-    try:
-        import serial
-        import json
-        import time
-        
-        # Get or create serial connection
-        if "serial_handle" in device:
-            ser = device["serial_handle"]
-            # Check if still open
-            if not (hasattr(ser, "is_open") and ser.is_open):
-                # Reconnect
-                try:
-                    ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                    devices[device_id]["serial_handle"] = ser
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Failed to reconnect: {str(e)}")
-        else:
-            # Create new connection
-            try:
-                ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                devices[device_id]["serial_handle"] = ser
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to connect: {str(e)}")
-        
-        # Clear buffers
-        try:
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
-        except:
-            pass
-        
-        # Send command as JSON string
-        cmd_str = json.dumps(request.command) + "\n"
-        ser.write(cmd_str.encode('utf-8'))
-        ser.flush()
-        
-        # Read response
-        time.sleep(0.5)  # Wait for response
-        response = ""
-        if ser.in_waiting > 0:
-            response_bytes = ser.read(ser.in_waiting)
-            response = response_bytes.decode('utf-8', errors='replace')
-        
-        return {
-            "status": "sent",
-            "device_id": device_id,
-            "command": request.command,
-            "response": response.strip() if response else None,
-            "timestamp": datetime.now().isoformat()
-        }
-    except ImportError:
-        return {
-            "status": "echo",
-            "device_id": device_id,
-            "command": request.command,
-            "message": "pyserial not available - command echoed",
-            "timestamp": datetime.now().isoformat()
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to send command to {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Command failed: {str(e)}")
-
-
-@app.get("/devices/{device_id}/status")
-async def get_device_status(device_id: str) -> Dict[str, Any]:
-    """Get device status"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    status_info = {
-        "device_id": device_id,
-        "port": device.get("port"),
-        "status": device.get("status"),
-        "connected_at": device.get("connected_at"),
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    # Check if serial connection is still open
-    if "serial_handle" in device:
-        ser = device["serial_handle"]
-        if hasattr(ser, "is_open"):
-            status_info["serial_open"] = ser.is_open
-    
-    return status_info
-
-
-@app.get("/devices/{device_id}/telemetry")
-async def get_telemetry(device_id: str) -> Dict[str, Any]:
-    """Get telemetry from device (request sensor data)"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    # Request sensor data via command
-    try:
-        # Send get_sensors command and return response
-        command_request = CommandRequest(command={"cmd": "get_sensors"})
-        result = await send_command(device_id, command_request)
-        
-        # Parse response if available
-        response_text = result.get("response")
-        if response_text:
-            try:
-                import json
-                telemetry_data = json.loads(response_text)
-                return {
-                    "status": "ok",
-                    "device_id": device_id,
-                    "telemetry": telemetry_data,
-                    "timestamp": datetime.now().isoformat()
-                }
-            except:
-                pass
-        
-        return {
-            "status": "no_data",
-            "device_id": device_id,
-            "message": "No telemetry data received",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Failed to get telemetry: {e}")
-        return {
-            "status": "error",
-            "device_id": device_id,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-def main():
-    """Main entry point"""
     port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))
-    host = os.getenv("MYCOBRAIN_SERVICE_HOST", "0.0.0.0")
-    
-    logger.info(f"Starting MycoBrain service on {host}:{port}")
-    logger.info(f"Service will be available at: http://localhost:{port}")
-    
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info"
-    )
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-
-class DeviceConnectionRequest(BaseModel):
-    port: str = default_port
-    baudrate: int = default_baudrate
-    device_id: Optional[str] = None
-
-
-class CommandRequest(BaseModel):
-    command: Dict[str, Any]
-    device_id: Optional[str] = None
-
-
-@app.get("/health")
-async def health() -> Dict[str, Any]:
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "service": "mycobrain",
-        "version": "1.0.0",
-        "devices_connected": len(devices),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.get("/devices")
-async def list_devices() -> Dict[str, Any]:
-    """List all connected devices"""
-    device_list = []
-    for device_id, device in devices.items():
-        device_info = {
-            "device_id": device_id,
-            "port": device.get("port"),
-            "status": device.get("status"),
-            "connected_at": device.get("connected_at"),
-        }
-        device_list.append(device_info)
-    
-    return {
-        "devices": device_list,
-        "count": len(device_list),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.get("/ports")
-async def list_serial_ports() -> Dict[str, Any]:
-    """List available serial ports.
-
-    - Windows: COM5, COM6, ...
-    - Linux/WSL2: /dev/ttyACM0, /dev/ttyUSB0, ...
-
-    Returns both the raw `path` and a URL-safe `id` (e.g. ttyACM0).
-    """
-    try:
-        from serial.tools import list_ports as serial_list_ports
-    except Exception:
-        return {
-            "ports": [],
-            "count": 0,
-            "error": "pyserial not available",
-            "timestamp": datetime.now().isoformat(),
-        }
-
-    ports: List[Dict[str, Any]] = []
-    for p in serial_list_ports.comports():
-        device_path = getattr(p, "device", None) or ""
-        ports.append(
-            {
-                "id": str(PurePath(device_path).name) if device_path else "",
-                "path": device_path,
-                "description": getattr(p, "description", None),
-                "hwid": getattr(p, "hwid", None),
-            }
-        )
-
-    return {
-        "ports": ports,
-        "count": len(ports),
-        "timestamp": datetime.now().isoformat(),
-    }
-
-
-@app.post("/devices/connect/{port}")
-async def connect_device(port: str, request: Optional[DeviceConnectionRequest] = None) -> Dict[str, Any]:
-    """Connect to a MycoBrain device on the specified port"""
-    try:
-        # Allow Linux/WSL2 ports to be passed without slashes:
-        # /devices/connect/ttyACM0 -> /dev/ttyACM0
-        if "/" not in port and "\\" not in port and port.lower().startswith("tty"):
-            port = f"/dev/{port}"
-
-        # Never put slashes into device_id (it breaks /devices/{device_id}/... routing)
-        port_for_id = str(PurePath(port).name) if ("/" in port or "\\" in port) else port
-        device_id = request.device_id if request and request.device_id else f"mycobrain-{port_for_id}"
-        baudrate = request.baudrate if request else default_baudrate
-        
-        # Check if already connected
-        if device_id in devices:
-            existing = devices[device_id]
-            if existing.get("status") == "connected":
-                return {
-                    "status": "already_connected",
-                    "device_id": device_id,
-                    "port": port,
-                    "timestamp": datetime.now().isoformat()
-                }
-        
-        # Test port accessibility
-        try:
-            import serial
-            import time
-            # Open serial port (Windows requires exclusive access)
-            ser = serial.Serial(port, baudrate, timeout=2)
-            
-            # Clear buffers
-            try:
-                ser.reset_input_buffer()
-                ser.reset_output_buffer()
-            except:
-                pass  # May not be available on all platforms
-            
-            # Test read/write - send newline to wake device
-            try:
-                ser.write(b'\n')
-                time.sleep(0.1)
-            except:
-                pass  # Continue even if write fails
-            
-            # Store device info with serial handle
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "baudrate": baudrate,
-                "status": "connected",
-                "connected_at": datetime.now().isoformat(),
-                "serial_handle": ser  # Keep handle open for commands
-            }
-            
-            logger.info(f"Connected to device {device_id} on {port}")
-            
-            return {
-                "status": "connected",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device connected successfully",
-                "timestamp": datetime.now().isoformat()
-            }
-        except ImportError:
-            # pyserial not available
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "status": "registered",
-                "message": "pyserial not installed - device registered but not tested",
-                "connected_at": datetime.now().isoformat()
-            }
-            return {
-                "status": "registered",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device registered (install pyserial for full functionality)",
-                "timestamp": datetime.now().isoformat()
-            }
-        except serial.SerialException as e:
-            error_msg = str(e)
-            if "Access is denied" in error_msg or "in use" in error_msg.lower() or "could not open port" in error_msg.lower():
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Port {port} is locked or in use. Close serial monitors, Arduino IDE, or other applications using this port."
-                )
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to connect to {port}: {error_msg}")
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to connect to device on {port}: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
-
-
-@app.post("/devices/{device_id}/disconnect")
-async def disconnect_device(device_id: str) -> Dict[str, Any]:
-    """Disconnect from a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    # Close serial connection if open
-    if "serial_handle" in device:
-        try:
-            ser = device["serial_handle"]
-            if hasattr(ser, "is_open") and ser.is_open:
-                ser.close()
-        except Exception as e:
-            logger.warning(f"Error closing serial connection: {e}")
-    
-    del devices[device_id]
-    logger.info(f"Disconnected device {device_id}")
-    
-    return {
-        "status": "disconnected",
-        "device_id": device_id,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/{device_id}/command")
-async def send_command(device_id: str, request: CommandRequest) -> Dict[str, Any]:
-    """Send a command to a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    
-    try:
-        import serial
-        import json
-        import time
-        
-        # Get or create serial connection
-        if "serial_handle" in device:
-            ser = device["serial_handle"]
-            # Check if still open
-            if not (hasattr(ser, "is_open") and ser.is_open):
-                # Reconnect
-                try:
-                    ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                    devices[device_id]["serial_handle"] = ser
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Failed to reconnect: {str(e)}")
-        else:
-            # Create new connection
-            try:
-                ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                devices[device_id]["serial_handle"] = ser
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to connect: {str(e)}")
-        
-        # Clear buffers
-        try:
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
-        except:
-            pass
-        
-        # Send command as plain text (board firmware CLI expects strings like "status", "led rgb 255 0 0", etc.)
-        cmd = None
-        if isinstance(request.command, dict):
-            cmd = request.command.get("cmd")
-            if cmd is None and isinstance(request.command.get("command"), dict):
-                cmd = request.command["command"].get("cmd")
-        cmd_str = (str(cmd) if cmd is not None else json.dumps(request.command)) + "\n"
-        ser.write(cmd_str.encode('utf-8'))
-        ser.flush()
-        
-        # Read response
-        time.sleep(0.5)  # Wait for response
-        response = ""
-        if ser.in_waiting > 0:
-            response_bytes = ser.read(ser.in_waiting)
-            response = response_bytes.decode('utf-8', errors='replace')
-        
-        return {
-            "status": "sent",
-            "device_id": device_id,
-            "command": request.command,
-            "response": response.strip() if response else None,
-            "timestamp": datetime.now().isoformat()
-        }
-    except ImportError:
-        return {
-            "status": "echo",
-            "device_id": device_id,
-            "command": request.command,
-            "message": "pyserial not available - command echoed",
-            "timestamp": datetime.now().isoformat()
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to send command to {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Command failed: {str(e)}")
-
-
-@app.get("/devices/{device_id}/status")
-async def get_device_status(device_id: str) -> Dict[str, Any]:
-    """Get device status"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    status_info = {
-        "device_id": device_id,
-        "port": device.get("port"),
-        "status": device.get("status"),
-        "connected_at": device.get("connected_at"),
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    # Check if serial connection is still open
-    if "serial_handle" in device:
-        ser = device["serial_handle"]
-        if hasattr(ser, "is_open"):
-            status_info["serial_open"] = ser.is_open
-    
-    return status_info
-
-
-@app.get("/devices/{device_id}/telemetry")
-async def get_telemetry(device_id: str) -> Dict[str, Any]:
-    """Get telemetry from device (request sensor data)"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    # Request sensor data via command
-    try:
-        # Send get_sensors command and return response
-        command_request = CommandRequest(command={"cmd": "get_sensors"})
-        result = await send_command(device_id, command_request)
-        
-        # Parse response if available
-        response_text = result.get("response")
-        if response_text:
-            try:
-                import json
-                telemetry_data = json.loads(response_text)
-                return {
-                    "status": "ok",
-                    "device_id": device_id,
-                    "telemetry": telemetry_data,
-                    "timestamp": datetime.now().isoformat()
-                }
-            except:
-                pass
-        
-        return {
-            "status": "no_data",
-            "device_id": device_id,
-            "message": "No telemetry data received",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Failed to get telemetry: {e}")
-        return {
-            "status": "error",
-            "device_id": device_id,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-def main():
-    """Main entry point"""
-    port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))
-    host = os.getenv("MYCOBRAIN_SERVICE_HOST", "0.0.0.0")
-    
-    logger.info(f"Starting MycoBrain service on {host}:{port}")
-    logger.info(f"Service will be available at: http://localhost:{port}")
-    
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info"
-    )
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-class DeviceConnectionRequest(BaseModel):
-    port: str = default_port
-    baudrate: int = default_baudrate
-    device_id: Optional[str] = None
-
-
-class CommandRequest(BaseModel):
-    command: Dict[str, Any]
-    device_id: Optional[str] = None
-
-
-@app.get("/health")
-async def health() -> Dict[str, Any]:
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "service": "mycobrain",
-        "version": "1.0.0",
-        "devices_connected": len(devices),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.get("/devices")
-async def list_devices() -> Dict[str, Any]:
-    """List all connected devices"""
-    device_list = []
-    for device_id, device in devices.items():
-        device_info = {
-            "device_id": device_id,
-            "port": device.get("port"),
-            "status": device.get("status"),
-            "connected_at": device.get("connected_at"),
-        }
-        device_list.append(device_info)
-    
-    return {
-        "devices": device_list,
-        "count": len(device_list),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/connect/{port}")
-async def connect_device(port: str, request: Optional[DeviceConnectionRequest] = None) -> Dict[str, Any]:
-    """Connect to a MycoBrain device on the specified port"""
-    try:
-        device_id = request.device_id if request and request.device_id else f"mycobrain-{port}"
-        baudrate = request.baudrate if request else default_baudrate
-        
-        # Check if already connected
-        if device_id in devices:
-            existing = devices[device_id]
-            if existing.get("status") == "connected":
-                return {
-                    "status": "already_connected",
-                    "device_id": device_id,
-                    "port": port,
-                    "timestamp": datetime.now().isoformat()
-                }
-        
-        # Test port accessibility
-        try:
-            import serial
-            import time
-            # Open serial port (Windows requires exclusive access)
-            ser = serial.Serial(port, baudrate, timeout=2)
-            
-            # Clear buffers
-            try:
-                ser.reset_input_buffer()
-                ser.reset_output_buffer()
-            except:
-                pass  # May not be available on all platforms
-            
-            # Test read/write - send newline to wake device
-            try:
-                ser.write(b'\n')
-                time.sleep(0.1)
-            except:
-                pass  # Continue even if write fails
-            
-            # Store device info with serial handle
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "baudrate": baudrate,
-                "status": "connected",
-                "connected_at": datetime.now().isoformat(),
-                "serial_handle": ser  # Keep handle open for commands
-            }
-            
-            logger.info(f"Connected to device {device_id} on {port}")
-            
-            return {
-                "status": "connected",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device connected successfully",
-                "timestamp": datetime.now().isoformat()
-            }
-        except ImportError:
-            # pyserial not available
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "status": "registered",
-                "message": "pyserial not installed - device registered but not tested",
-                "connected_at": datetime.now().isoformat()
-            }
-            return {
-                "status": "registered",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device registered (install pyserial for full functionality)",
-                "timestamp": datetime.now().isoformat()
-            }
-        except serial.SerialException as e:
-            error_msg = str(e)
-            if "Access is denied" in error_msg or "in use" in error_msg.lower() or "could not open port" in error_msg.lower():
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Port {port} is locked or in use. Close serial monitors, Arduino IDE, or other applications using this port."
-                )
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to connect to {port}: {error_msg}")
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to connect to device on {port}: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
-
-
-@app.post("/devices/{device_id}/disconnect")
-async def disconnect_device(device_id: str) -> Dict[str, Any]:
-    """Disconnect from a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    # Close serial connection if open
-    if "serial_handle" in device:
-        try:
-            ser = device["serial_handle"]
-            if hasattr(ser, "is_open") and ser.is_open:
-                ser.close()
-        except Exception as e:
-            logger.warning(f"Error closing serial connection: {e}")
-    
-    del devices[device_id]
-    logger.info(f"Disconnected device {device_id}")
-    
-    return {
-        "status": "disconnected",
-        "device_id": device_id,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/{device_id}/command")
-async def send_command(device_id: str, request: CommandRequest) -> Dict[str, Any]:
-    """Send a command to a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    
-    try:
-        import serial
-        import json
-        import time
-        
-        # Get or create serial connection
-        if "serial_handle" in device:
-            ser = device["serial_handle"]
-            # Check if still open
-            if not (hasattr(ser, "is_open") and ser.is_open):
-                # Reconnect
-                try:
-                    ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                    devices[device_id]["serial_handle"] = ser
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Failed to reconnect: {str(e)}")
-        else:
-            # Create new connection
-            try:
-                ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                devices[device_id]["serial_handle"] = ser
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to connect: {str(e)}")
-        
-        # Clear buffers
-        try:
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
-        except:
-            pass
-        
-        # Send command as JSON string
-        cmd_str = json.dumps(request.command) + "\n"
-        ser.write(cmd_str.encode('utf-8'))
-        ser.flush()
-        
-        # Read response
-        time.sleep(0.5)  # Wait for response
-        response = ""
-        if ser.in_waiting > 0:
-            response_bytes = ser.read(ser.in_waiting)
-            response = response_bytes.decode('utf-8', errors='replace')
-        
-        return {
-            "status": "sent",
-            "device_id": device_id,
-            "command": request.command,
-            "response": response.strip() if response else None,
-            "timestamp": datetime.now().isoformat()
-        }
-    except ImportError:
-        return {
-            "status": "echo",
-            "device_id": device_id,
-            "command": request.command,
-            "message": "pyserial not available - command echoed",
-            "timestamp": datetime.now().isoformat()
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to send command to {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Command failed: {str(e)}")
-
-
-@app.get("/devices/{device_id}/status")
-async def get_device_status(device_id: str) -> Dict[str, Any]:
-    """Get device status"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    status_info = {
-        "device_id": device_id,
-        "port": device.get("port"),
-        "status": device.get("status"),
-        "connected_at": device.get("connected_at"),
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    # Check if serial connection is still open
-    if "serial_handle" in device:
-        ser = device["serial_handle"]
-        if hasattr(ser, "is_open"):
-            status_info["serial_open"] = ser.is_open
-    
-    return status_info
-
-
-@app.get("/devices/{device_id}/telemetry")
-async def get_telemetry(device_id: str) -> Dict[str, Any]:
-    """Get telemetry from device (request sensor data)"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    # Request sensor data via command
-    try:
-        # Send get_sensors command and return response
-        command_request = CommandRequest(command={"cmd": "get_sensors"})
-        result = await send_command(device_id, command_request)
-        
-        # Parse response if available
-        response_text = result.get("response")
-        if response_text:
-            try:
-                import json
-                telemetry_data = json.loads(response_text)
-                return {
-                    "status": "ok",
-                    "device_id": device_id,
-                    "telemetry": telemetry_data,
-                    "timestamp": datetime.now().isoformat()
-                }
-            except:
-                pass
-        
-        return {
-            "status": "no_data",
-            "device_id": device_id,
-            "message": "No telemetry data received",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Failed to get telemetry: {e}")
-        return {
-            "status": "error",
-            "device_id": device_id,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-def main():
-    """Main entry point"""
-    port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))
-    host = os.getenv("MYCOBRAIN_SERVICE_HOST", "0.0.0.0")
-    
-    logger.info(f"Starting MycoBrain service on {host}:{port}")
-    logger.info(f"Service will be available at: http://localhost:{port}")
-    
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info"
-    )
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-
-class DeviceConnectionRequest(BaseModel):
-    port: str = default_port
-    baudrate: int = default_baudrate
-    device_id: Optional[str] = None
-
-
-class CommandRequest(BaseModel):
-    command: Dict[str, Any]
-    device_id: Optional[str] = None
-
-
-@app.get("/health")
-async def health() -> Dict[str, Any]:
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "service": "mycobrain",
-        "version": "1.0.0",
-        "devices_connected": len(devices),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.get("/devices")
-async def list_devices() -> Dict[str, Any]:
-    """List all connected devices"""
-    device_list = []
-    for device_id, device in devices.items():
-        device_info = {
-            "device_id": device_id,
-            "port": device.get("port"),
-            "status": device.get("status"),
-            "connected_at": device.get("connected_at"),
-        }
-        device_list.append(device_info)
-    
-    return {
-        "devices": device_list,
-        "count": len(device_list),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/connect/{port}")
-async def connect_device(port: str, request: Optional[DeviceConnectionRequest] = None) -> Dict[str, Any]:
-    """Connect to a MycoBrain device on the specified port"""
-    try:
-        device_id = request.device_id if request and request.device_id else f"mycobrain-{port}"
-        baudrate = request.baudrate if request else default_baudrate
-        
-        # Check if already connected
-        if device_id in devices:
-            existing = devices[device_id]
-            if existing.get("status") == "connected":
-                return {
-                    "status": "already_connected",
-                    "device_id": device_id,
-                    "port": port,
-                    "timestamp": datetime.now().isoformat()
-                }
-        
-        # Test port accessibility
-        try:
-            import serial
-            import time
-            # Open serial port (Windows requires exclusive access)
-            ser = serial.Serial(port, baudrate, timeout=2)
-            
-            # Clear buffers
-            try:
-                ser.reset_input_buffer()
-                ser.reset_output_buffer()
-            except:
-                pass  # May not be available on all platforms
-            
-            # Test read/write - send newline to wake device
-            try:
-                ser.write(b'\n')
-                time.sleep(0.1)
-            except:
-                pass  # Continue even if write fails
-            
-            # Store device info with serial handle
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "baudrate": baudrate,
-                "status": "connected",
-                "connected_at": datetime.now().isoformat(),
-                "serial_handle": ser  # Keep handle open for commands
-            }
-            
-            logger.info(f"Connected to device {device_id} on {port}")
-            
-            return {
-                "status": "connected",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device connected successfully",
-                "timestamp": datetime.now().isoformat()
-            }
-        except ImportError:
-            # pyserial not available
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "status": "registered",
-                "message": "pyserial not installed - device registered but not tested",
-                "connected_at": datetime.now().isoformat()
-            }
-            return {
-                "status": "registered",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device registered (install pyserial for full functionality)",
-                "timestamp": datetime.now().isoformat()
-            }
-        except serial.SerialException as e:
-            error_msg = str(e)
-            if "Access is denied" in error_msg or "in use" in error_msg.lower() or "could not open port" in error_msg.lower():
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Port {port} is locked or in use. Close serial monitors, Arduino IDE, or other applications using this port."
-                )
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to connect to {port}: {error_msg}")
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to connect to device on {port}: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
-
-
-@app.post("/devices/{device_id}/disconnect")
-async def disconnect_device(device_id: str) -> Dict[str, Any]:
-    """Disconnect from a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    # Close serial connection if open
-    if "serial_handle" in device:
-        try:
-            ser = device["serial_handle"]
-            if hasattr(ser, "is_open") and ser.is_open:
-                ser.close()
-        except Exception as e:
-            logger.warning(f"Error closing serial connection: {e}")
-    
-    del devices[device_id]
-    logger.info(f"Disconnected device {device_id}")
-    
-    return {
-        "status": "disconnected",
-        "device_id": device_id,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/{device_id}/command")
-async def send_command(device_id: str, request: CommandRequest) -> Dict[str, Any]:
-    """Send a command to a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    
-    try:
-        import serial
-        import json
-        import time
-        
-        # Get or create serial connection
-        if "serial_handle" in device:
-            ser = device["serial_handle"]
-            # Check if still open
-            if not (hasattr(ser, "is_open") and ser.is_open):
-                # Reconnect
-                try:
-                    ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                    devices[device_id]["serial_handle"] = ser
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Failed to reconnect: {str(e)}")
-        else:
-            # Create new connection
-            try:
-                ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                devices[device_id]["serial_handle"] = ser
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to connect: {str(e)}")
-        
-        # Clear buffers
-        try:
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
-        except:
-            pass
-        
-        # Send command as JSON string
-        cmd_str = json.dumps(request.command) + "\n"
-        ser.write(cmd_str.encode('utf-8'))
-        ser.flush()
-        
-        # Read response
-        time.sleep(0.5)  # Wait for response
-        response = ""
-        if ser.in_waiting > 0:
-            response_bytes = ser.read(ser.in_waiting)
-            response = response_bytes.decode('utf-8', errors='replace')
-        
-        return {
-            "status": "sent",
-            "device_id": device_id,
-            "command": request.command,
-            "response": response.strip() if response else None,
-            "timestamp": datetime.now().isoformat()
-        }
-    except ImportError:
-        return {
-            "status": "echo",
-            "device_id": device_id,
-            "command": request.command,
-            "message": "pyserial not available - command echoed",
-            "timestamp": datetime.now().isoformat()
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to send command to {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Command failed: {str(e)}")
-
-
-@app.get("/devices/{device_id}/status")
-async def get_device_status(device_id: str) -> Dict[str, Any]:
-    """Get device status"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    status_info = {
-        "device_id": device_id,
-        "port": device.get("port"),
-        "status": device.get("status"),
-        "connected_at": device.get("connected_at"),
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    # Check if serial connection is still open
-    if "serial_handle" in device:
-        ser = device["serial_handle"]
-        if hasattr(ser, "is_open"):
-            status_info["serial_open"] = ser.is_open
-    
-    return status_info
-
-
-@app.get("/devices/{device_id}/telemetry")
-async def get_telemetry(device_id: str) -> Dict[str, Any]:
-    """Get telemetry from device (request sensor data)"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    # Request sensor data via command
-    try:
-        # Send get_sensors command and return response
-        command_request = CommandRequest(command={"cmd": "get_sensors"})
-        result = await send_command(device_id, command_request)
-        
-        # Parse response if available
-        response_text = result.get("response")
-        if response_text:
-            try:
-                import json
-                telemetry_data = json.loads(response_text)
-                return {
-                    "status": "ok",
-                    "device_id": device_id,
-                    "telemetry": telemetry_data,
-                    "timestamp": datetime.now().isoformat()
-                }
-            except:
-                pass
-        
-        return {
-            "status": "no_data",
-            "device_id": device_id,
-            "message": "No telemetry data received",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Failed to get telemetry: {e}")
-        return {
-            "status": "error",
-            "device_id": device_id,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-def main():
-    """Main entry point"""
-    port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))
-    host = os.getenv("MYCOBRAIN_SERVICE_HOST", "0.0.0.0")
-    
-    logger.info(f"Starting MycoBrain service on {host}:{port}")
-    logger.info(f"Service will be available at: http://localhost:{port}")
-    
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info"
-    )
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-class DeviceConnectionRequest(BaseModel):
-    port: str = default_port
-    baudrate: int = default_baudrate
-    device_id: Optional[str] = None
-
-
-class CommandRequest(BaseModel):
-    command: Dict[str, Any]
-    device_id: Optional[str] = None
-
-
-@app.get("/health")
-async def health() -> Dict[str, Any]:
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "service": "mycobrain",
-        "version": "1.0.0",
-        "devices_connected": len(devices),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.get("/devices")
-async def list_devices() -> Dict[str, Any]:
-    """List all connected devices"""
-    device_list = []
-    for device_id, device in devices.items():
-        device_info = {
-            "device_id": device_id,
-            "port": device.get("port"),
-            "status": device.get("status"),
-            "connected_at": device.get("connected_at"),
-        }
-        device_list.append(device_info)
-    
-    return {
-        "devices": device_list,
-        "count": len(device_list),
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/connect/{port}")
-async def connect_device(port: str, request: Optional[DeviceConnectionRequest] = None) -> Dict[str, Any]:
-    """Connect to a MycoBrain device on the specified port"""
-    try:
-        device_id = request.device_id if request and request.device_id else f"mycobrain-{port}"
-        baudrate = request.baudrate if request else default_baudrate
-        
-        # Check if already connected
-        if device_id in devices:
-            existing = devices[device_id]
-            if existing.get("status") == "connected":
-                return {
-                    "status": "already_connected",
-                    "device_id": device_id,
-                    "port": port,
-                    "timestamp": datetime.now().isoformat()
-                }
-        
-        # Test port accessibility
-        try:
-            import serial
-            import time
-            # Open serial port (Windows requires exclusive access)
-            ser = serial.Serial(port, baudrate, timeout=2)
-            
-            # Clear buffers
-            try:
-                ser.reset_input_buffer()
-                ser.reset_output_buffer()
-            except:
-                pass  # May not be available on all platforms
-            
-            # Test read/write - send newline to wake device
-            try:
-                ser.write(b'\n')
-                time.sleep(0.1)
-            except:
-                pass  # Continue even if write fails
-            
-            # Store device info with serial handle
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "baudrate": baudrate,
-                "status": "connected",
-                "connected_at": datetime.now().isoformat(),
-                "serial_handle": ser  # Keep handle open for commands
-            }
-            
-            logger.info(f"Connected to device {device_id} on {port}")
-            
-            return {
-                "status": "connected",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device connected successfully",
-                "timestamp": datetime.now().isoformat()
-            }
-        except ImportError:
-            # pyserial not available
-            devices[device_id] = {
-                "device_id": device_id,
-                "port": port,
-                "status": "registered",
-                "message": "pyserial not installed - device registered but not tested",
-                "connected_at": datetime.now().isoformat()
-            }
-            return {
-                "status": "registered",
-                "device_id": device_id,
-                "port": port,
-                "message": "Device registered (install pyserial for full functionality)",
-                "timestamp": datetime.now().isoformat()
-            }
-        except serial.SerialException as e:
-            error_msg = str(e)
-            if "Access is denied" in error_msg or "in use" in error_msg.lower() or "could not open port" in error_msg.lower():
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Port {port} is locked or in use. Close serial monitors, Arduino IDE, or other applications using this port."
-                )
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"Failed to connect to {port}: {error_msg}")
-            raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to connect to device on {port}: {e}")
-        raise HTTPException(status_code=500, detail=f"Connection failed: {str(e)}")
-
-
-@app.post("/devices/{device_id}/disconnect")
-async def disconnect_device(device_id: str) -> Dict[str, Any]:
-    """Disconnect from a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    # Close serial connection if open
-    if "serial_handle" in device:
-        try:
-            ser = device["serial_handle"]
-            if hasattr(ser, "is_open") and ser.is_open:
-                ser.close()
-        except Exception as e:
-            logger.warning(f"Error closing serial connection: {e}")
-    
-    del devices[device_id]
-    logger.info(f"Disconnected device {device_id}")
-    
-    return {
-        "status": "disconnected",
-        "device_id": device_id,
-        "timestamp": datetime.now().isoformat()
-    }
-
-
-@app.post("/devices/{device_id}/command")
-async def send_command(device_id: str, request: CommandRequest) -> Dict[str, Any]:
-    """Send a command to a device"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    
-    try:
-        import serial
-        import json
-        import time
-        
-        # Get or create serial connection
-        if "serial_handle" in device:
-            ser = device["serial_handle"]
-            # Check if still open
-            if not (hasattr(ser, "is_open") and ser.is_open):
-                # Reconnect
-                try:
-                    ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                    devices[device_id]["serial_handle"] = ser
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Failed to reconnect: {str(e)}")
-        else:
-            # Create new connection
-            try:
-                ser = serial.Serial(device.get("port"), device.get("baudrate", 115200), timeout=2)
-                devices[device_id]["serial_handle"] = ser
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to connect: {str(e)}")
-        
-        # Clear buffers
-        try:
-            ser.reset_input_buffer()
-            ser.reset_output_buffer()
-        except:
-            pass
-        
-        # Send command as JSON string
-        cmd_str = json.dumps(request.command) + "\n"
-        ser.write(cmd_str.encode('utf-8'))
-        ser.flush()
-        
-        # Read response
-        time.sleep(0.5)  # Wait for response
-        response = ""
-        if ser.in_waiting > 0:
-            response_bytes = ser.read(ser.in_waiting)
-            response = response_bytes.decode('utf-8', errors='replace')
-        
-        return {
-            "status": "sent",
-            "device_id": device_id,
-            "command": request.command,
-            "response": response.strip() if response else None,
-            "timestamp": datetime.now().isoformat()
-        }
-    except ImportError:
-        return {
-            "status": "echo",
-            "device_id": device_id,
-            "command": request.command,
-            "message": "pyserial not available - command echoed",
-            "timestamp": datetime.now().isoformat()
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to send command to {device_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Command failed: {str(e)}")
-
-
-@app.get("/devices/{device_id}/status")
-async def get_device_status(device_id: str) -> Dict[str, Any]:
-    """Get device status"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    device = devices[device_id]
-    status_info = {
-        "device_id": device_id,
-        "port": device.get("port"),
-        "status": device.get("status"),
-        "connected_at": device.get("connected_at"),
-        "timestamp": datetime.now().isoformat()
-    }
-    
-    # Check if serial connection is still open
-    if "serial_handle" in device:
-        ser = device["serial_handle"]
-        if hasattr(ser, "is_open"):
-            status_info["serial_open"] = ser.is_open
-    
-    return status_info
-
-
-@app.get("/devices/{device_id}/telemetry")
-async def get_telemetry(device_id: str) -> Dict[str, Any]:
-    """Get telemetry from device (request sensor data)"""
-    if device_id not in devices:
-        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
-    
-    # Request sensor data via command
-    try:
-        # Send get_sensors command and return response
-        command_request = CommandRequest(command={"cmd": "get_sensors"})
-        result = await send_command(device_id, command_request)
-        
-        # Parse response if available
-        response_text = result.get("response")
-        if response_text:
-            try:
-                import json
-                telemetry_data = json.loads(response_text)
-                return {
-                    "status": "ok",
-                    "device_id": device_id,
-                    "telemetry": telemetry_data,
-                    "timestamp": datetime.now().isoformat()
-                }
-            except:
-                pass
-        
-        return {
-            "status": "no_data",
-            "device_id": device_id,
-            "message": "No telemetry data received",
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.error(f"Failed to get telemetry: {e}")
-        return {
-            "status": "error",
-            "device_id": device_id,
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-def main():
-    """Main entry point"""
-    port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))
-    host = os.getenv("MYCOBRAIN_SERVICE_HOST", "0.0.0.0")
-    
-    logger.info(f"Starting MycoBrain service on {host}:{port}")
-    logger.info(f"Service will be available at: http://localhost:{port}")
-    
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="info"
-    )
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
+    logger.info(f"Starting MycoBrain service v2.2 on 0.0.0.0:{port}")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")

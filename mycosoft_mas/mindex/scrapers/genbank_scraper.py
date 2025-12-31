@@ -236,3 +236,10 @@ class GenBankScraper:
         
         return stats
 
+
+
+
+
+
+
+

@@ -270,3 +270,10 @@ class GBIFScraper:
         
         return stats
 
+
+
+
+
+
+
+
