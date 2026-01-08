@@ -1,0 +1,154 @@
+# Cursor Indexing Exclusions
+# This file tells Cursor which files/directories to exclude from indexing
+# to prevent crashes and improve performance
+
+# Node.js
+node_modules/
+.npm/
+.pnp/
+.pnp.js
+.yarn/
+.yarn-integrity
+
+# Next.js
+.next/
+out/
+dist/
+build/
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+venv*/
+.venv/
+ENV/
+env/
+venv/
+.pytest_cache/
+.mypy_cache/
+.tox/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+
+# Virtual environments
+venv311/
+venv*/
+.venv/
+
+# Logs
+*.log
+logs/
+**/*.log
+
+# Data directories
+data/
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Build artifacts
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+
+# Docker
+docker/
+*.dockerfile
+docker-compose*.yml
+
+# Infrastructure
+infra/
+grafana/
+prometheus/
+redis/
+n8n/
+migrations/
+models/
+contracts/
+services/
+agents/
+plugins/
+secrets/
+speech/
+static/
+firmware/
+
+# Large Python packages
+mycosoft_mas/
+orchestrator-myca/
+unifi-dashboard/
+WEBSITE/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# Large binary files
+*.mp3
+*.mp4
+*.avi
+*.mov
+*.wav
+*.bin
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test files
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Poetry
+poetry.lock.bak
+
+# Rust
+target/
+Cargo.lock
+
+# Large JSON files (test data)
+*_test.json
+*_req.json
+comprehensive_test_report_*.json
+

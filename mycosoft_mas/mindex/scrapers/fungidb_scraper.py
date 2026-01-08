@@ -214,3 +214,22 @@ class FungiDBScraper:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

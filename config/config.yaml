@@ -81,7 +81,7 @@ monitoring:
     port: 9090
   grafana:
     host: localhost
-    port: 3000
+    port: 3002
   loki:
     host: localhost
     port: 3100

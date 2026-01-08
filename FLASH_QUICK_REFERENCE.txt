@@ -1,0 +1,68 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║          MYCOBRAIN COM7 FLASH - QUICK REFERENCE CARD                     ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+📁 FIRMWARE LOCATION:
+   C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\firmware\MycoBrain_DeviceManager\MycoBrain_DeviceManager.ino
+
+⚙️  ARDUINO IDE SETTINGS (Tools Menu):
+   ┌─────────────────────────────────────┬────────────────────────────┐
+   │ Setting                             │ Value                      │
+   ├─────────────────────────────────────┼────────────────────────────┤
+   │ Board                               │ ESP32S3 Dev Module         │
+   │ USB CDC on boot                     │ ENABLED ✓ (CRITICAL!)     │
+   │ USB DFU on boot                     │ Enabled                   │
+   │ USB Mode                            │ Hardware CDC and JTAG     │
+   │ JTAG Adapter                        │ Integrated USB JTAG        │
+   │ PSRAM                               │ OPI PSRAM                 │
+   │ CPU Frequency                       │ 240 MHz                    │
+   │ Flash Mode                          │ QIO 80MHz                 │
+   │ Flash Size                          │ 16MB (128Mb)              │
+   │ Partition Scheme                    │ 16M Flash (3MB/9.9MB)     │
+   │ Upload Speed                        │ 921600                    │
+   │ Port                                │ COM7                      │
+   └─────────────────────────────────────┴────────────────────────────┘
+
+📚 REQUIRED LIBRARIES (Tools → Manage Libraries):
+   • FastLED (by Daniel Garcia)
+   • ArduinoJson (by Benoit Blanchon) - optional for now
+
+🚀 FLASH STEPS:
+   1. Open Arduino IDE
+   2. File → Open → firmware\MycoBrain_DeviceManager\MycoBrain_DeviceManager.ino
+   3. Set ALL settings above (Tools menu)
+   4. Click Verify (✓) - should compile
+   5. Select COM7 port
+   6. Click Upload (→)
+   7. Wait ~30 seconds
+
+✅ TEST COMMANDS (Serial Monitor @ 115200):
+   help              → Show commands
+   status            → Device info
+   scan              → I2C scan (0 devices for bare board)
+   led rgb 255 0 0   → Red LED
+   led rgb 0 255 0   → Green LED
+   led rgb 0 0 255   → Blue LED
+   coin              → Coin sound
+   morgio            → SuperMorgIO jingle
+
+🌐 DEVICE MANAGER:
+   URL: http://localhost:3002/natureos/devices
+   Steps:
+   1. Click "Refresh Ports"
+   2. Click "COM7" button
+   3. Test LED and buzzer from web interface
+
+🐛 COMMON ISSUES:
+   • Upload fails → Hold BOOT button while uploading
+   • No serial → USB CDC on boot MUST be Enabled
+   • Bootloop → Check power supply (use powered USB hub)
+   • LED not working → Install FastLED library
+   • Buzzer not working → Must be passive buzzer (not active)
+
+📞 QUICK HELP:
+   • Full guide: SYSTEM_READY_FOR_FLASH.md
+   • Hardware pins: docs/MYCOBRAIN_HARDWARE_CONFIG.md
+   • BME688 setup: docs/BME688_DUAL_SENSOR_SETUP.md
+
+═══════════════════════════════════════════════════════════════════════════

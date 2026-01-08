@@ -1,0 +1,29 @@
+﻿version: \"3.9\"
+services:
+  model-training:
+    build:
+      context: ./services/model-training
+      dockerfile: Dockerfile
+    container_name: mycosoft-model-training
+    ports:
+      - \"8002:8000\"
+      - \"8888:8888\"
+      - \"6006:6006\"
+    volumes:
+      - model_training_data:/app/data
+      - model_training_models:/app/models
+      - model_training_logs:/app/logs
+      - model_training_notebooks:/app/notebooks
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+volumes:
+  model_training_data:
+  model_training_models:
+  model_training_logs:
+  model_training_notebooks:
+networks:
+  mycosoft-network:
+    external: true

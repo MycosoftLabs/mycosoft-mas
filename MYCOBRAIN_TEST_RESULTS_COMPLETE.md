@@ -282,3 +282,4 @@ Then UI can:
 **Production Ready**: LED + Buzzer + Optical TX + Basic WiFi  
 **Needs Firmware Update**: Acoustic TX, BLE, Mesh, Full LoRa  
 
+

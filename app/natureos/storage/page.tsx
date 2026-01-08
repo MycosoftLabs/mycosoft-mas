@@ -36,11 +36,22 @@ export default function StoragePage() {
   const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [storageData, setStorageData] = useState<any>(null);
+
   const fetchData = async () => {
     try {
-      const res = await fetch("/api/system");
-      if (res.ok) {
-        setSystemStats(await res.json());
+      const [sysRes, storageRes] = await Promise.all([
+        fetch("/api/system").catch(() => null),
+        fetch("/api/natureos/storage").catch(() => null),
+      ]);
+      
+      if (sysRes?.ok) {
+        setSystemStats(await sysRes.json());
+      }
+      
+      if (storageRes?.ok) {
+        const data = await storageRes.json();
+        setStorageData(data);
       }
     } catch (error) {
       console.error("Error fetching storage data:", error);
@@ -55,40 +66,35 @@ export default function StoragePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const storageLocations = [
-    {
-      name: "MINDEX Database",
-      path: "/data/mindex",
-      icon: Database,
-      used: 2.4 * 1024 * 1024 * 1024, // 2.4 GB
-      total: 50 * 1024 * 1024 * 1024, // 50 GB
-      description: "Fungal knowledge and research data",
-    },
-    {
-      name: "Agent Data",
-      path: "/data/agents",
-      icon: FolderOpen,
-      used: 512 * 1024 * 1024, // 512 MB
-      total: 10 * 1024 * 1024 * 1024, // 10 GB
-      description: "Agent states and configurations",
-    },
-    {
-      name: "Voice Feedback",
-      path: "/data/voice_feedback.db",
-      icon: File,
-      used: 128 * 1024 * 1024, // 128 MB
-      total: 5 * 1024 * 1024 * 1024, // 5 GB
-      description: "TTS and speech recognition data",
-    },
-    {
-      name: "Cloud Sync",
-      path: "azure://mycosoft-storage",
-      icon: Cloud,
-      used: 1.2 * 1024 * 1024 * 1024, // 1.2 GB
-      total: 100 * 1024 * 1024 * 1024, // 100 GB
-      description: "Azure cloud storage sync",
-    },
-  ];
+  // Use real storage data if available, otherwise fallback to defaults
+  const storageLocations = storageData?.mounts?.length > 0
+    ? storageData.mounts.map((mount: any) => ({
+        name: mount.path.split("/").pop() || mount.path,
+        path: mount.path,
+        icon: HardDrive,
+        used: mount.used,
+        total: mount.total,
+        usedPercent: mount.usedPercent,
+        description: `${mount.filesystem} filesystem`,
+      }))
+    : [
+        {
+          name: "MINDEX Database",
+          path: "/data/mindex",
+          icon: Database,
+          used: 2.4 * 1024 * 1024 * 1024,
+          total: 50 * 1024 * 1024 * 1024,
+          description: "Fungal knowledge and research data",
+        },
+        {
+          name: "Agent Data",
+          path: "/data/agents",
+          icon: FolderOpen,
+          used: 512 * 1024 * 1024,
+          total: 10 * 1024 * 1024 * 1024,
+          description: "Agent states and configurations",
+        },
+      ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -183,8 +189,14 @@ export default function StoragePage() {
                   
                   <div className="h-2 bg-gray-700 rounded-full overflow-hidden mb-2">
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
-                      style={{ width: `${(location.used / location.total) * 100}%` }}
+                      className={`h-full transition-all ${
+                        (location.usedPercent || (location.used / location.total) * 100) > 90
+                          ? "bg-red-500"
+                          : (location.usedPercent || (location.used / location.total) * 100) > 70
+                          ? "bg-yellow-500"
+                          : "bg-gradient-to-r from-cyan-500 to-blue-500"
+                      }`}
+                      style={{ width: `${location.usedPercent || (location.used / location.total) * 100}%` }}
                     />
                   </div>
                   

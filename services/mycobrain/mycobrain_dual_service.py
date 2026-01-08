@@ -102,20 +102,32 @@ async def list_devices():
 
 def _get_ports():
     """Helper to get available ports"""
+    print("PRINT: _get_ports() called", flush=True)
+    logger.debug("_get_ports() called from service")
     try:
         import serial.tools.list_ports
+        print(f"PRINT: serial.tools.list_ports from {serial.tools.list_ports.__file__}", flush=True)
+        raw = list(serial.tools.list_ports.comports())
+        print(f"PRINT: Found {len(raw)} ports", flush=True)
+        logger.info(f"Port scan found {len(raw)} ports")
+        for p in raw:
+            print(f"PRINT: Port {p.device}", flush=True)
+            logger.debug(f"  Port: {p.device}")
         return [{"port": p.device, "description": p.description, "vid": hex(p.vid) if p.vid else None,
                  "pid": hex(p.pid) if p.pid else None, "likely_esp32": p.vid == 0x303A or "USB Serial" in p.description,
                  "is_mycobrain": "USB Serial" in p.description}
-                for p in serial.tools.list_ports.comports()]
+                for p in raw]
     except Exception as e:
-        logger.error(f"Error scanning ports: {e}")
+        print(f"PRINT: Exception in _get_ports: {e}", flush=True)
+        logger.error(f"Error scanning ports: {e}", exc_info=True)
         return []
 
 @app.get("/ports")
 async def get_ports():
     """Get available serial ports (website compatibility)"""
+    print("ENDPOINT /ports CALLED", flush=True)
     ports = _get_ports()
+    print(f"ENDPOINT returning {len(ports)} ports", flush=True)
     return {"ports": ports, "discovery_running": False, "timestamp": datetime.now().isoformat()}
 
 @app.post("/devices/scan")
@@ -367,11 +379,59 @@ async def send_command(device_id: str, request: CommandRequest):
             # Send as plain text CLI command (Garrett's firmware expects plain text, not JSON)
             cmd_payload = request.command.copy()
             
-            # Extract the command string
-            if "cmd" in cmd_payload:
+            # Translate JSON command to plaintext CLI format for firmware
+            if "command_type" in cmd_payload:
+                cmd_type = cmd_payload["command_type"]
+                
+                # LED/NeoPixel commands
+                if cmd_type == "set_neopixel":
+                    r = cmd_payload.get("r", cmd_payload.get("parameters", {}).get("r", 0))
+                    g = cmd_payload.get("g", cmd_payload.get("parameters", {}).get("g", 0))
+                    b = cmd_payload.get("b", cmd_payload.get("parameters", {}).get("b", 0))
+                    # Convert RGB to named color or send as RGB
+                    if r == 255 and g == 0 and b == 0:
+                        cmd_str = "led red"
+                    elif r == 0 and g == 255 and b == 0:
+                        cmd_str = "led green"
+                    elif r == 0 and g == 0 and b == 255:
+                        cmd_str = "led blue"
+                    elif r == 0 and g == 0 and b == 0:
+                        cmd_str = "led off"
+                    else:
+                        cmd_str = f"led {r} {g} {b}"
+                
+                # Buzzer commands
+                elif cmd_type == "set_buzzer":
+                    freq = cmd_payload.get("frequency", cmd_payload.get("parameters", {}).get("frequency", 0))
+                    dur = cmd_payload.get("duration", cmd_payload.get("parameters", {}).get("duration", 0))
+                    if freq == 1000 and dur == 200:
+                        cmd_str = "buzzer beep"
+                    elif freq == 2000 and dur == 100:
+                        cmd_str = "buzzer coin"
+                    elif freq == 0 or dur == 0:
+                        cmd_str = "buzzer off"
+                    else:
+                        cmd_str = f"buzzer {freq} {dur}"
+                
+                # I2C scan
+                elif cmd_type == "i2c_scan":
+                    cmd_str = "scan"
+                
+                # Mode commands  
+                elif cmd_type == "set_mode":
+                    mode = cmd_payload.get("mode", cmd_payload.get("parameters", {}).get("mode", "human"))
+                    cmd_str = f"mode {mode}"
+                
+                # Status
+                elif cmd_type == "status" or cmd_type == "get_status":
+                    cmd_str = "status"
+                
+                # Default: just use the command_type
+                else:
+                    cmd_str = cmd_type
+                    
+            elif "cmd" in cmd_payload:
                 cmd_str = cmd_payload["cmd"]
-            elif "command_type" in cmd_payload:
-                cmd_str = cmd_payload["command_type"]
             else:
                 cmd_str = str(cmd_payload)
             
