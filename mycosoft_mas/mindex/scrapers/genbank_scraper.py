@@ -243,3 +243,22 @@ class GenBankScraper:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

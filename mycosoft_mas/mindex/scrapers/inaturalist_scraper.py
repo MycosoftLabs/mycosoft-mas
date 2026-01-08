@@ -258,19 +258,33 @@ class INaturalistScraper:
     
     async def sync(self, limit: int = 1000) -> Dict[str, int]:
         """
-        Full sync of species and observations.
+        Full sync of species and observations with taxonomic reconciliation.
         """
+        from ..reconciliation_integration import reconcile_scraper_output
+        
         stats = {
             "species_fetched": 0,
             "species_inserted": 0,
+            "species_reconciled": 0,
             "observations_fetched": 0,
             "observations_inserted": 0,
+            "observations_reconciled": 0,
             "images_fetched": 0,
         }
         
         # Fetch species
         species = await self.fetch_species(limit=limit)
         stats["species_fetched"] = len(species)
+        
+        # Reconcile with GBIF backbone and Index Fungorum
+        if species:
+            reconciled_species = await reconcile_scraper_output(
+                self,
+                species,
+                enforce_license=True,
+            )
+            stats["species_reconciled"] = len(reconciled_species)
+            species = reconciled_species
         
         if self.db:
             for s in species:
@@ -284,6 +298,16 @@ class INaturalistScraper:
         observations = await self.fetch_observations(limit=limit)
         stats["observations_fetched"] = len(observations)
         
+        # Reconcile observations (ensures consistent taxonomy)
+        if observations:
+            reconciled_obs = await reconcile_scraper_output(
+                self,
+                observations,
+                enforce_license=True,
+            )
+            stats["observations_reconciled"] = len(reconciled_obs)
+            observations = reconciled_obs
+        
         if self.db:
             for obs in observations:
                 try:
@@ -293,6 +317,9 @@ class INaturalistScraper:
                     logger.error(f"Error inserting observation: {e}")
         
         return stats
+
+
+
 
 
 

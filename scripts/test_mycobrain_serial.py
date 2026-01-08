@@ -1,83 +1,79 @@
 #!/usr/bin/env python3
-"""Test MycoBrain serial communication directly"""
-
+"""Direct serial test for MycoBrain device"""
 import serial
 import time
-import json
+import sys
 
-PORT = "COM4"
-BAUDRATE = 115200
-
-def test_serial():
+def test_port(port_name):
+    print(f"Testing {port_name}...")
     try:
-        print(f"Connecting to {PORT} at {BAUDRATE} baud...")
-        ser = serial.Serial(PORT, BAUDRATE, timeout=2)
-        time.sleep(0.5)  # Wait for connection
+        ser = serial.Serial(port_name, 115200, timeout=3, write_timeout=3)
+        print("  Port opened successfully")
+        time.sleep(2)  # Wait for any boot sequence
         
-        # Clear buffers
-        ser.reset_input_buffer()
-        ser.reset_output_buffer()
+        # Drain any boot messages
+        boot_data = b''
+        while ser.in_waiting:
+            boot_data += ser.read(ser.in_waiting)
+            time.sleep(0.1)
         
-        # Test 1: Simple ping
-        print("\n[Test 1] Sending ping command...")
-        ser.write(b'{"cmd": "ping"}\n')
-        ser.flush()
+        if boot_data:
+            decoded = boot_data.decode("utf-8", errors="ignore")
+            print(f"  Boot messages:\n{decoded[:500]}")
+        else:
+            print("  No boot messages received")
+        
+        # Send newline to wake up
+        print("  Sending wake-up...")
+        ser.write(b'\r\n')
         time.sleep(0.5)
-        if ser.in_waiting > 0:
-            response = ser.read(ser.in_waiting).decode('utf-8', errors='replace')
-            print(f"Response: {response}")
-        else:
-            print("No response")
         
-        # Test 2: Status command
-        print("\n[Test 2] Sending status command...")
-        ser.reset_input_buffer()
-        ser.write(b'{"cmd": "status"}\n')
-        ser.flush()
-        time.sleep(0.5)
-        if ser.in_waiting > 0:
-            response = ser.read(ser.in_waiting).decode('utf-8', errors='replace')
-            print(f"Response: {response}")
-        else:
-            print("No response")
+        # Send status command
+        print("  Sending: status")
+        ser.write(b'status\r\n')
+        time.sleep(1)
         
-        # Test 3: I2C scan
-        print("\n[Test 3] Sending I2C scan command...")
-        ser.reset_input_buffer()
-        ser.write(b'{"cmd": "i2c_scan"}\n')
-        ser.flush()
-        time.sleep(1.0)  # I2C scan may take longer
-        if ser.in_waiting > 0:
-            response = ser.read(ser.in_waiting).decode('utf-8', errors='replace')
-            print(f"Response: {response}")
+        response = ser.read(ser.in_waiting) if ser.in_waiting else b''
+        if response:
+            decoded = response.decode("utf-8", errors="ignore")
+            print(f"  Response:\n{decoded}")
+            return True
         else:
-            print("No response")
-        
-        # Test 4: NeoPixel command
-        print("\n[Test 4] Sending NeoPixel command...")
-        ser.reset_input_buffer()
-        cmd = json.dumps({"cmd": "neopixel", "r": 255, "g": 0, "b": 0, "brightness": 128})
-        ser.write((cmd + "\n").encode('utf-8'))
-        ser.flush()
-        time.sleep(0.5)
-        if ser.in_waiting > 0:
-            response = ser.read(ser.in_waiting).decode('utf-8', errors='replace')
-            print(f"Response: {response}")
-        else:
-            print("No response")
+            print("  NO RESPONSE - Device may need firmware reflash")
+            
+            # Try help command
+            print("  Trying: help")
+            ser.write(b'help\r\n')
+            time.sleep(1)
+            
+            help_response = ser.read(ser.in_waiting) if ser.in_waiting else b''
+            if help_response:
+                print(f"  Help response:\n{help_response.decode('utf-8', errors='ignore')}")
+                return True
+            
+            # Check for bootloader mode
+            print("  Checking for bootloader...")
+            ser.setDTR(False)
+            time.sleep(0.1)
+            ser.setDTR(True)
+            time.sleep(0.5)
+            
+            bootloader_check = ser.read(ser.in_waiting) if ser.in_waiting else b''
+            if bootloader_check:
+                decoded = bootloader_check.decode("utf-8", errors="ignore").lower()
+                print(f"  Bootloader check: {decoded[:200]}")
+                if 'waiting' in decoded or 'download' in decoded or 'boot' in decoded:
+                    print("  >>> DEVICE IS IN BOOTLOADER MODE <<<")
+            else:
+                print("  No bootloader response - device may be unresponsive")
+            
+            return False
         
         ser.close()
-        print("\n✅ Serial test completed")
-        
-    except serial.SerialException as e:
-        print(f"❌ Serial error: {e}")
-        print("Make sure:")
-        print("  1. Device is connected to COM4")
-        print("  2. No other application is using the port")
-        print("  3. Device is powered on")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  ERROR: {e}")
+        return False
 
 if __name__ == "__main__":
-    test_serial()
-
+    port = sys.argv[1] if len(sys.argv) > 1 else "COM5"
+    test_port(port)

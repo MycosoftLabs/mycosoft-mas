@@ -240,3 +240,22 @@ class MycoBankScraper:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

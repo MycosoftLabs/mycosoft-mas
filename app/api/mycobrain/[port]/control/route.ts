@@ -9,49 +9,19 @@ export async function POST(
   try {
     const body = await request.json();
     const { command, parameters } = body;
+    const deviceId = params.port; // This is actually the device_id like "mycobrain-COM5"
     
-    // Find device by port
-    const devicesResponse = await fetch(`${MYCOBRAIN_SERVICE_URL}/devices`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    
-    if (!devicesResponse.ok) {
-      throw new Error("Failed to fetch devices");
-    }
-    
-    const devicesData = await devicesResponse.json();
-    const device = devicesData.devices?.find((d: any) => d.port === params.port);
-    
-    if (!device) {
-      return NextResponse.json(
-        { error: `No device found on port ${params.port}` },
-        { status: 404 }
-      );
-    }
-    
-    // Forward command to the correct endpoint
-    // Map common command names to device commands
-    const commandMap: Record<string, string> = {
-      "set_neopixel": "neopixel",
-      "neopixel": "neopixel",
-      "buzzer": "buzzer",
-      "play_buzzer": "buzzer",
-      "i2c_scan": "i2c_scan",
-      "get_sensors": "i2c_scan",
-    };
-    
-    const deviceCommand = commandMap[command] || command;
-    
+    // Build the command payload with proper mapping
     const commandPayload = {
       command: {
-        cmd: deviceCommand,
+        command_type: command,
         ...parameters,
       },
-      use_mdp: false, // Start with JSON, device may not support MDP yet
     };
     
-    const response = await fetch(`${MYCOBRAIN_SERVICE_URL}/devices/${device.device_id}/command`, {
+    console.log(`[MycoBrain Control] Device: ${deviceId}, Command: ${command}, Params:`, parameters);
+    
+    const response = await fetch(`${MYCOBRAIN_SERVICE_URL}/devices/${deviceId}/command`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -60,14 +30,16 @@ export async function POST(
     });
     
     if (!response.ok) {
-      const error = await response.json();
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`[MycoBrain Control] Error:`, errorData);
       return NextResponse.json(
-        { error: error.detail || `Command failed: ${response.statusText}` },
+        { error: errorData.detail || `Command failed: ${response.statusText}` },
         { status: response.status }
       );
     }
     
     const data = await response.json();
+    console.log(`[MycoBrain Control] Response:`, data);
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("Error in MycoBrain control:", error);

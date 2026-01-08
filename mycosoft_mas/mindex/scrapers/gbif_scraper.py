@@ -221,11 +221,14 @@ class GBIFScraper:
     
     async def sync(self, limit: int = 1000) -> Dict[str, int]:
         """
-        Full sync from GBIF.
+        Full sync from GBIF with taxonomic reconciliation.
         """
+        from ..reconciliation_integration import reconcile_scraper_output
+        
         stats = {
             "species_fetched": 0,
             "species_inserted": 0,
+            "species_reconciled": 0,
             "occurrences_fetched": 0,
             "occurrences_inserted": 0,
             "images_fetched": 0,
@@ -234,6 +237,16 @@ class GBIFScraper:
         # Fetch species
         species = await self.fetch_species(limit=limit)
         stats["species_fetched"] = len(species)
+        
+        # Reconcile taxonomy with GBIF backbone (already from GBIF, but ensures consistency)
+        if species:
+            reconciled_species = await reconcile_scraper_output(
+                self,
+                species,
+                enforce_license=True,
+            )
+            stats["species_reconciled"] = len(reconciled_species)
+            species = reconciled_species
         
         if self.db:
             for s in species:
@@ -269,6 +282,9 @@ class GBIFScraper:
                     logger.error(f"Error inserting image: {e}")
         
         return stats
+
+
+
 
 
 

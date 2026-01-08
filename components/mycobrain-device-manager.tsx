@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Cpu,
   RefreshCw,
@@ -67,6 +67,8 @@ export function MycoBrainDeviceManager() {
   const [telemetry, setTelemetry] = useState<Record<string, Telemetry>>({});
   const [loading, setLoading] = useState(false);
   const [connecting, setConnecting] = useState<Record<string, boolean>>({});
+  const telemetryIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchDevices = async () => {
     try {
@@ -130,10 +132,12 @@ export function MycoBrainDeviceManager() {
         if (data.device_id) {
           setSelectedDevice(data.device_id);
           // Start polling telemetry
-          const interval = setInterval(() => {
+          if (telemetryIntervalRef.current) {
+            clearInterval(telemetryIntervalRef.current);
+          }
+          telemetryIntervalRef.current = setInterval(() => {
             fetchTelemetry(data.device_id);
           }, 2000);
-          // Store interval ID for cleanup (would need ref in real implementation)
         }
       } else {
         // Detailed error message
@@ -219,11 +223,21 @@ export function MycoBrainDeviceManager() {
 
   // Separate effect for polling - avoids dependency issues
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+    pollingIntervalRef.current = setInterval(() => {
       fetchDevices();
     }, 5000);
     
-    return () => clearInterval(interval);
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      if (telemetryIntervalRef.current) {
+        clearInterval(telemetryIntervalRef.current);
+      }
+    };
   }, []);
 
   // Poll telemetry for connected devices
@@ -297,7 +311,7 @@ export function MycoBrainDeviceManager() {
                     <div>
                       <div className="font-medium">{device.device_id}</div>
                       <div className="text-sm text-gray-500">
-                        {device.port} • {device.side.toUpperCase()}
+                        {device.port} • {device.side?.toUpperCase() || "AUTO"}
                         {device.mac_address && ` • ${device.mac_address}`}
                       </div>
                       {device.i2c_sensors && device.i2c_sensors.length > 0 && (

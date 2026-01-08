@@ -198,3 +198,4 @@ Advanced features (available in v4.0):
 **Recommendation**: Update UI first, firmware second  
 **Timeline**: UI fix 1 hour, Firmware v4.0: 1-2 weeks  
 
+
