@@ -1158,6 +1158,10 @@ void loop() {
   // Update LED state machine
   ledStateUpdate();
   
+  // Update modem transmitters
+  optxUpdate();
+  aotxUpdate();
+  
   // Periodic telemetry
   if (telemetryEnabled) {
     uint32_t now = millis();
