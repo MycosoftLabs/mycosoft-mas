@@ -264,6 +264,137 @@ static void soundMorgio() {
   ledcWriteTone(BUZZER_LEDC_CHANNEL, 0);
 }
 
+// ============================================================
+// OPTICAL MODEM TX
+// ============================================================
+enum OptxMode { OPTX_IDLE = 0, OPTX_OOK = 1, OPTX_MANCHESTER = 2 };
+static OptxMode gOptxMode = OPTX_IDLE;
+static String gOptxPayload = "";
+static uint32_t gOptxRateHz = 10;
+static uint32_t gOptxRepeat = 1;
+static uint32_t gOptxBitIndex = 0;
+static uint32_t gOptxRepeatCount = 0;
+static uint32_t gOptxLastSymbol = 0;
+static uint8_t gOptxSavedR = 0, gOptxSavedG = 0, gOptxSavedB = 0;
+
+static void optxStart(const String& profile, const String& payload, uint32_t rateHz, uint32_t repeat) {
+  gOptxSavedR = gLedR; gOptxSavedG = gLedG; gOptxSavedB = gLedB;
+  if (profile == "manchester") gOptxMode = OPTX_MANCHESTER;
+  else gOptxMode = OPTX_OOK;
+  gOptxPayload = payload;
+  gOptxRateHz = constrain(rateHz, 1, 100);
+  gOptxRepeat = constrain(repeat, 1, 100);
+  gOptxBitIndex = 0;
+  gOptxRepeatCount = 0;
+  gOptxLastSymbol = 0;
+  gLedMode = LED_MANUAL;
+}
+
+static void optxStop() {
+  gOptxMode = OPTX_IDLE;
+  gLedR = gOptxSavedR; gLedG = gOptxSavedG; gLedB = gOptxSavedB;
+  ledWriteRGB(gLedR, gLedG, gLedB);
+}
+
+static void optxUpdate() {
+  if (gOptxMode == OPTX_IDLE) return;
+  if (gOptxPayload.length() == 0) { optxStop(); return; }
+  uint32_t now = millis();
+  uint32_t symbolPeriod = 1000 / gOptxRateHz;
+  if (now - gOptxLastSymbol >= symbolPeriod) {
+    gOptxLastSymbol = now;
+    uint32_t totalBits = gOptxPayload.length() * 8;
+    if (gOptxBitIndex >= totalBits) {
+      gOptxRepeatCount++;
+      if (gOptxRepeatCount >= gOptxRepeat) { optxStop(); return; }
+      gOptxBitIndex = 0;
+    }
+    uint32_t byteIndex = gOptxBitIndex / 8;
+    uint32_t bitInByte = 7 - (gOptxBitIndex % 8);
+    uint8_t byte = gOptxPayload[byteIndex];
+    bool bit = (byte >> bitInByte) & 1;
+    if (bit) ledWriteRGB(255, 255, 255);
+    else ledWriteRGB(0, 0, 0);
+    gOptxBitIndex++;
+  }
+}
+
+static void cmdOptxStatus(const char* cmdId = nullptr) {
+  StaticJsonDocument<256> doc;
+  doc["ok"] = true;
+  if (cmdId) doc["id"] = cmdId;
+  doc["running"] = (gOptxMode != OPTX_IDLE);
+  doc["mode"] = gOptxMode == OPTX_OOK ? "ook" : (gOptxMode == OPTX_MANCHESTER ? "manchester" : "idle");
+  doc["bit_index"] = gOptxBitIndex;
+  doc["repeat_count"] = gOptxRepeatCount;
+  writeJson(doc);
+}
+
+// ============================================================
+// ACOUSTIC MODEM TX
+// ============================================================
+enum AotxMode { AOTX_IDLE = 0, AOTX_FSK = 1 };
+static AotxMode gAotxMode = AOTX_IDLE;
+static String gAotxPayload = "";
+static uint32_t gAotxSymbolMs = 100;
+static uint32_t gAotxF0 = 1000;
+static uint32_t gAotxF1 = 2000;
+static uint32_t gAotxRepeat = 1;
+static uint32_t gAotxBitIndex = 0;
+static uint32_t gAotxRepeatCount = 0;
+static uint32_t gAotxSymbolStart = 0;
+
+static void aotxStart(const String& payload, uint32_t symbolMs, uint32_t f0, uint32_t f1, uint32_t repeat) {
+  gAotxMode = AOTX_FSK;
+  gAotxPayload = payload;
+  gAotxSymbolMs = constrain(symbolMs, 10, 1000);
+  gAotxF0 = constrain(f0, 100, 10000);
+  gAotxF1 = constrain(f1, 100, 10000);
+  gAotxRepeat = constrain(repeat, 1, 100);
+  gAotxBitIndex = 0;
+  gAotxRepeatCount = 0;
+  gAotxSymbolStart = 0;
+  initBuzzer();
+}
+
+static void aotxStop() {
+  gAotxMode = AOTX_IDLE;
+  ledcWriteTone(BUZZER_LEDC_CHANNEL, 0);
+}
+
+static void aotxUpdate() {
+  if (gAotxMode == AOTX_IDLE) return;
+  if (gAotxPayload.length() == 0) { aotxStop(); return; }
+  uint32_t now = millis();
+  if (now - gAotxSymbolStart >= gAotxSymbolMs) {
+    gAotxSymbolStart = now;
+    uint32_t totalBits = gAotxPayload.length() * 8;
+    if (gAotxBitIndex >= totalBits) {
+      gAotxRepeatCount++;
+      if (gAotxRepeatCount >= gAotxRepeat) { aotxStop(); return; }
+      gAotxBitIndex = 0;
+    }
+    uint32_t byteIndex = gAotxBitIndex / 8;
+    uint32_t bitInByte = 7 - (gAotxBitIndex % 8);
+    uint8_t byte = gAotxPayload[byteIndex];
+    bool bit = (byte >> bitInByte) & 1;
+    ledcWriteTone(BUZZER_LEDC_CHANNEL, bit ? gAotxF1 : gAotxF0);
+    gAotxBitIndex++;
+  }
+}
+
+static void cmdAotxStatus(const char* cmdId = nullptr) {
+  StaticJsonDocument<256> doc;
+  doc["ok"] = true;
+  if (cmdId) doc["id"] = cmdId;
+  doc["running"] = (gAotxMode != AOTX_IDLE);
+  doc["mode"] = gAotxMode == AOTX_FSK ? "fsk" : "idle";
+  doc["bit_index"] = gAotxBitIndex;
+  doc["f0"] = gAotxF0;
+  doc["f1"] = gAotxF1;
+  writeJson(doc);
+}
+
 // MAC / NODE ID
 // ============================================================
 static String getNodeId() {
@@ -371,7 +502,7 @@ static void cmdHelp(const char* cmdId = nullptr) {
     cmds.add("get_mac"); cmds.add("get_version"); cmds.add("i2c_scan");
     cmds.add("config"); cmds.add("telemetry"); cmds.add("led");
     cmds.add("beep"); cmds.add("fmt"); cmds.add("reboot");
-    cmds.add("poster");
+    cmds.add("poster"); cmds.add("optx"); cmds.add("aotx");
     writeJson(doc);
   } else {
     writeLine("=== MycoBrain Side-A Commands ===");
@@ -389,6 +520,8 @@ static void cmdHelp(const char* cmdId = nullptr) {
     writeLine("fmt json|lines - Set output format");
     writeLine("poster        - Print banner");
     writeLine("reboot        - Restart device");
+    writeLine("optx start/stop/status - Optical TX (LED)");
+    writeLine("aotx start/stop/status - Acoustic TX (buzzer)");
   }
 }
 
@@ -775,6 +908,32 @@ static void parseCliCommand(const String& line) {
       } else {
         writeKeyValue("format", "lines");
       }
+    }
+  } else if (firstWord == "optx") {
+    if (args.startsWith("start ")) {
+      String payload = args.substring(6);
+      optxStart("ook", payload, 10, 1);
+      respondOk();
+    } else if (args == "stop") {
+      optxStop();
+      respondOk();
+    } else if (args == "status" || args == "") {
+      cmdOptxStatus();
+    } else {
+      respondError("usage: optx start <payload> | optx stop | optx status");
+    }
+  } else if (firstWord == "aotx") {
+    if (args.startsWith("start ")) {
+      String payload = args.substring(6);
+      aotxStart(payload, 100, 1000, 2000, 1);
+      respondOk();
+    } else if (args == "stop") {
+      aotxStop();
+      respondOk();
+    } else if (args == "status" || args == "") {
+      cmdAotxStatus();
+    } else {
+      respondError("usage: aotx start <payload> | aotx stop | aotx status");
     }
   } else if (firstWord.length() > 0) {
     respondError("unknown command - try 'help'");
