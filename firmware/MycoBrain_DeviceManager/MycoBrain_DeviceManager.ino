@@ -27,6 +27,7 @@
 #include <Wire.h>
 #include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
+#include <Adafruit_BME680.h>
 
 // Brownout disable for bridged board
 #include "soc/rtc_cntl_reg.h"
@@ -78,6 +79,45 @@ static bool telemetryEnabled = true;
 // ============================================================
 static uint8_t i2cAddrs[32];
 static uint8_t i2cCount = 0;
+
+// ============================================================
+// BME688 SENSOR SUPPORT
+// ============================================================
+// BME688 addresses: 0x77 (default/AMB) and 0x76 (alternate/ENV)
+static Adafruit_BME680 bme1;  // First BME688 at 0x77
+static Adafruit_BME680 bme2;  // Second BME688 at 0x76
+static bool bme1_present = false;
+static bool bme2_present = false;
+static uint8_t bme688_count = 0;
+
+// Known I2C device identification
+struct KnownDevice {
+  uint8_t address;
+  const char* vendor;
+  const char* product;
+};
+
+static const KnownDevice knownDevices[] = {
+  {0x76, "Bosch", "BME688"},
+  {0x77, "Bosch", "BME688"},
+  {0x44, "Sensirion", "SHT40"},
+  {0x45, "Sensirion", "SHT40"},
+  {0x23, "ROHM", "BH1750"},
+  {0x59, "Sensirion", "SGP40"},
+  {0x3C, "Generic", "SSD1306"},
+  {0x3D, "Generic", "SSD1306"},
+  {0x48, "TI", "ADS1115"},
+};
+static const int knownDeviceCount = sizeof(knownDevices) / sizeof(knownDevices[0]);
+
+static const char* identifyDevice(uint8_t addr) {
+  for (int i = 0; i < knownDeviceCount; i++) {
+    if (knownDevices[i].address == addr) {
+      return knownDevices[i].product;
+    }
+  }
+  return "Unknown";
+}
 
 // ============================================================
 // SENSOR DATA (placeholders - no sensors connected)
@@ -465,6 +505,100 @@ static void i2cScan() {
 }
 
 // ============================================================
+// BME688 SENSOR FUNCTIONS
+// ============================================================
+
+static void initBME688() {
+  // Try BME at 0x77 (default address)
+  if (bme1.begin(0x77, &Wire)) {
+    bme1_present = true;
+    bme1.setTemperatureOversampling(BME680_OS_8X);
+    bme1.setHumidityOversampling(BME680_OS_2X);
+    bme1.setPressureOversampling(BME680_OS_4X);
+    bme1.setIIRFilterSize(BME680_FILTER_SIZE_3);
+    bme1.setGasHeater(320, 150);
+    Serial.println("[BME688] Initialized at 0x77 (AMB)");
+  }
+  
+  // Try BME at 0x76 (alternate address)
+  if (bme2.begin(0x76, &Wire)) {
+    bme2_present = true;
+    bme2.setTemperatureOversampling(BME680_OS_8X);
+    bme2.setHumidityOversampling(BME680_OS_2X);
+    bme2.setPressureOversampling(BME680_OS_4X);
+    bme2.setIIRFilterSize(BME680_FILTER_SIZE_3);
+    bme2.setGasHeater(320, 150);
+    Serial.println("[BME688] Initialized at 0x76 (ENV)");
+  }
+  
+  bme688_count = (bme1_present ? 1 : 0) + (bme2_present ? 1 : 0);
+}
+
+static void readBME688() {
+  if (bme1_present && bme1.performReading()) {
+    gSensor.valid = true;
+    gSensor.temp_c = bme1.temperature;
+    gSensor.rh_pct = bme1.humidity;
+    gSensor.press_hpa = bme1.pressure / 100.0;
+    gSensor.gas_ohm = bme1.gas_resistance;
+  }
+}
+
+static void cmdSensors(const char* cmdId = nullptr) {
+  if (gOutputFormat == FMT_JSON) {
+    StaticJsonDocument<512> doc;
+    doc["ok"] = true;
+    if (cmdId) doc["id"] = cmdId;
+    doc["bme688_count"] = bme688_count;
+    
+    if (bme1_present) {
+      JsonObject s1 = doc.createNestedObject("bme1");
+      s1["address"] = "0x77";
+      s1["label"] = "AMB";
+      if (bme1.performReading()) {
+        s1["temp_c"] = bme1.temperature;
+        s1["humidity_pct"] = bme1.humidity;
+        s1["pressure_hpa"] = bme1.pressure / 100.0;
+        s1["gas_ohm"] = bme1.gas_resistance;
+      }
+    }
+    
+    if (bme2_present) {
+      JsonObject s2 = doc.createNestedObject("bme2");
+      s2["address"] = "0x76";
+      s2["label"] = "ENV";
+      if (bme2.performReading()) {
+        s2["temp_c"] = bme2.temperature;
+        s2["humidity_pct"] = bme2.humidity;
+        s2["pressure_hpa"] = bme2.pressure / 100.0;
+        s2["gas_ohm"] = bme2.gas_resistance;
+      }
+    }
+    
+    if (!bme1_present && !bme2_present) {
+      doc["message"] = "No BME688 sensors detected";
+    }
+    writeJson(doc);
+  } else {
+    writeLine("BME688 Sensors:");
+    if (!bme1_present && !bme2_present) {
+      writeLine("  No sensors detected");
+    } else {
+      if (bme1_present && bme1.performReading()) {
+        char buf[100];
+        snprintf(buf, sizeof(buf), "  0x77: T=%.2fC H=%.1f%% P=%.1fhPa", bme1.temperature, bme1.humidity, bme1.pressure/100.0);
+        writeLine(buf);
+      }
+      if (bme2_present && bme2.performReading()) {
+        char buf[100];
+        snprintf(buf, sizeof(buf), "  0x76: T=%.2fC H=%.1f%% P=%.1fhPa", bme2.temperature, bme2.humidity, bme2.pressure/100.0);
+        writeLine(buf);
+      }
+    }
+  }
+}
+
+// ============================================================
 // COMMAND RESPONSES (dual format)
 // ============================================================
 
@@ -502,7 +636,7 @@ static void cmdHelp(const char* cmdId = nullptr) {
     cmds.add("get_mac"); cmds.add("get_version"); cmds.add("i2c_scan");
     cmds.add("config"); cmds.add("telemetry"); cmds.add("led");
     cmds.add("beep"); cmds.add("fmt"); cmds.add("reboot");
-    cmds.add("poster"); cmds.add("optx"); cmds.add("aotx");
+    cmds.add("poster"); cmds.add("optx"); cmds.add("aotx"); cmds.add("sensors");
     writeJson(doc);
   } else {
     writeLine("=== MycoBrain Side-A Commands ===");
@@ -606,6 +740,7 @@ static void cmdGetVersion(const char* cmdId = nullptr) {
 
 static void cmdI2cScan(const char* cmdId = nullptr) {
   i2cScan();
+  initBME688();  // Initialize BME688 sensors
   
   if (gOutputFormat == FMT_JSON) {
     StaticJsonDocument<512> doc;
@@ -800,6 +935,8 @@ static void parseCliCommand(const String& line) {
     cmdGetVersion();
   } else if (firstWord == "i2c" || firstWord == "scan" || firstWord == "i2c_scan") {
     cmdI2cScan();
+  } else if (firstWord == "sensors" || firstWord == "bme" || firstWord == "bme688") {
+    cmdSensors();
   } else if (firstWord == "config") {
     cmdConfig();
   } else if (firstWord == "poster") {
@@ -970,6 +1107,7 @@ static void parseJsonCommand(const String& line) {
   else if (strcmp(cmd, "get_mac") == 0 || strcmp(cmd, "identity") == 0) { cmdGetMac(id); }
   else if (strcmp(cmd, "get_version") == 0 || strcmp(cmd, "version") == 0) { cmdGetVersion(id); }
   else if (strcmp(cmd, "i2c_scan") == 0 || strcmp(cmd, "i2c.scan") == 0 || strcmp(cmd, "scan") == 0) { cmdI2cScan(id); }
+  else if (strcmp(cmd, "sensors") == 0 || strcmp(cmd, "bme688") == 0 || strcmp(cmd, "bme") == 0) { cmdSensors(id); }
   else if (strcmp(cmd, "config") == 0 || strcmp(cmd, "config.get") == 0) { cmdConfig(id); }
   else if (strcmp(cmd, "beep") == 0) { 
     int freq = req["freq"] | req["frequency"] | 2000;
