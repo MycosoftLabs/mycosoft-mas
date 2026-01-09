@@ -1,0 +1,23 @@
+{
+  "id": "smell-011",
+  "name": "Lentinula edodes",
+  "category": "fungal",
+  "subcategory": "basidiomycete",
+  "description": "Shiitake mushroom. Strong umami with woody, smoky undertones.",
+  "bsec_class_id": 0,
+  "voc_pattern": {
+    "octanol": 0.35,
+    "ethanol": 0.3,
+    "acetaldehyde": 0.2,
+    "other": 0.15
+  },
+  "icon_type": "mushroom",
+  "color_hex": "#8B4513",
+  "species_id": "species-lentinula-edodes",
+  "species_name": "Lentinula edodes",
+  "training_samples": 0,
+  "confidence_threshold": 0.8,
+  "current_blob_id": null,
+  "created_at": "2026-01-08T19:47:40.252138",
+  "updated_at": "2026-01-08T19:47:40.252138"
+}

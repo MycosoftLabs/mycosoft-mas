@@ -1,0 +1,25 @@
+{
+  "id": "blob-12fbd4336cd9",
+  "name": "Garret_Fungal_Original",
+  "version": "1.0.0",
+  "description": "",
+  "training_date": "2026-01-08T19:47:49.406631",
+  "training_samples": 0,
+  "training_method": "ai_studio",
+  "class_labels": [
+    "clean_air",
+    "mushroom",
+    "mycelium",
+    "contamination"
+  ],
+  "class_count": 4,
+  "blob_hash": "12fbd4336cd94a8bf64b19085231fe4b851f303af93e39c2560320c7a02c0e57",
+  "blob_size_bytes": 1947,
+  "bsec_version": "2.4.0",
+  "sensor_model": "BME688",
+  "f1_score": null,
+  "accuracy": null,
+  "status": "active",
+  "created_at": "2026-01-08T19:47:49.406669",
+  "created_by": null
+}

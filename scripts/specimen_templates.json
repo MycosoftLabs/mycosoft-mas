@@ -1,0 +1,142 @@
+{
+  "fungal_basic": {
+    "description": "Basic fungal smell training - 4 classes",
+    "specimens": {
+      "clean_air": {
+        "duration": 30,
+        "description": "Clean ambient lab air baseline",
+        "bsec_class": -1
+      },
+      "fresh_mushroom": {
+        "duration": 60,
+        "description": "Fresh mushroom fruiting body (any species)",
+        "bsec_class": 0
+      },
+      "mycelium_growth": {
+        "duration": 60,
+        "description": "Active mycelium on substrate",
+        "bsec_class": 1
+      },
+      "contamination": {
+        "duration": 60,
+        "description": "Trichoderma or bacterial contamination",
+        "bsec_class": 3
+      }
+    }
+  },
+  "mushroom_species": {
+    "description": "Species-specific mushroom training",
+    "specimens": {
+      "clean_air": {
+        "duration": 30,
+        "description": "Clean ambient lab air baseline"
+      },
+      "pleurotus_ostreatus": {
+        "duration": 90,
+        "description": "Oyster mushroom (Pleurotus ostreatus) fruiting body",
+        "species_id": "species-pleurotus-ostreatus"
+      },
+      "lentinula_edodes": {
+        "duration": 90,
+        "description": "Shiitake mushroom (Lentinula edodes) fruiting body",
+        "species_id": "species-lentinula-edodes"
+      },
+      "agaricus_bisporus": {
+        "duration": 90,
+        "description": "Button mushroom (Agaricus bisporus) fruiting body",
+        "species_id": "species-agaricus-bisporus"
+      },
+      "ganoderma_lucidum": {
+        "duration": 90,
+        "description": "Reishi mushroom (Ganoderma lucidum) fruiting body",
+        "species_id": "species-ganoderma-lucidum"
+      }
+    }
+  },
+  "contamination_detection": {
+    "description": "Contamination detection training",
+    "specimens": {
+      "clean_substrate": {
+        "duration": 45,
+        "description": "Sterile substrate (sawdust/straw)",
+        "bsec_class": -1
+      },
+      "healthy_colonization": {
+        "duration": 60,
+        "description": "Healthy mycelium colonizing substrate",
+        "bsec_class": 1
+      },
+      "trichoderma_viride": {
+        "duration": 60,
+        "description": "Trichoderma (green mold) contamination",
+        "bsec_class": 3
+      },
+      "bacterial_contamination": {
+        "duration": 60,
+        "description": "Bacterial contamination (wet spot/sour smell)",
+        "bsec_class": 3
+      },
+      "penicillium_contamination": {
+        "duration": 60,
+        "description": "Penicillium (blue/green mold) contamination",
+        "bsec_class": 3
+      }
+    }
+  },
+  "growth_stages": {
+    "description": "Mushroom growth stage detection",
+    "specimens": {
+      "clean_air": {
+        "duration": 30,
+        "description": "Clean ambient lab air baseline"
+      },
+      "spawn_inoculation": {
+        "duration": 60,
+        "description": "Freshly inoculated spawn",
+        "growth_stage": "inoculation"
+      },
+      "colonization_25pct": {
+        "duration": 60,
+        "description": "25% mycelium colonization",
+        "growth_stage": "colonization_early"
+      },
+      "colonization_75pct": {
+        "duration": 60,
+        "description": "75% mycelium colonization",
+        "growth_stage": "colonization_late"
+      },
+      "pinning": {
+        "duration": 60,
+        "description": "Pinhead formation stage",
+        "growth_stage": "pinning"
+      },
+      "fruiting": {
+        "duration": 60,
+        "description": "Mature fruiting bodies",
+        "growth_stage": "fruiting"
+      },
+      "senescence": {
+        "duration": 60,
+        "description": "Over-mature/decaying mushrooms",
+        "growth_stage": "senescence"
+      }
+    }
+  },
+  "quick_test": {
+    "description": "Quick 3-class test training (for development)",
+    "specimens": {
+      "clean_air": {
+        "duration": 15,
+        "description": "Clean air baseline"
+      },
+      "test_sample_1": {
+        "duration": 30,
+        "description": "Test sample 1"
+      },
+      "test_sample_2": {
+        "duration": 30,
+        "description": "Test sample 2"
+      }
+    }
+  }
+}

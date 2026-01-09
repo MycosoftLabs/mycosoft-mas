@@ -1,0 +1,22 @@
+{
+  "id": "smell-020",
+  "name": "Trichoderma viride",
+  "category": "fungal",
+  "subcategory": "contamination",
+  "description": "Green mold contamination. Coconut-like sweet smell that indicates crop loss.",
+  "bsec_class_id": 3,
+  "voc_pattern": {
+    "ethanol": 0.35,
+    "acetaldehyde": 0.25,
+    "other": 0.4
+  },
+  "icon_type": "warning",
+  "color_hex": "#228B22",
+  "species_id": "species-trichoderma-viride",
+  "species_name": "Trichoderma viride",
+  "training_samples": 0,
+  "confidence_threshold": 0.7,
+  "current_blob_id": null,
+  "created_at": "2026-01-08T19:47:40.252483",
+  "updated_at": "2026-01-08T19:47:40.252483"
+}
