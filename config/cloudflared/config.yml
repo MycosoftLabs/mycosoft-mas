@@ -1,0 +1,49 @@
+# Cloudflare Tunnel Configuration for mycosoft.com
+# This file configures the cloudflared daemon for secure access
+
+# Tunnel credentials (set via environment or credential file)
+tunnel: mycosoft-tunnel
+credentials-file: /etc/cloudflared/credentials.json
+
+# Ingress rules - route traffic to local services
+ingress:
+  # Main website (Next.js)
+  - hostname: mycosoft.com
+    service: http://localhost:3000
+  
+  - hostname: www.mycosoft.com
+    service: http://localhost:3000
+  
+  # Staging website (for development testing)
+  - hostname: staging.mycosoft.com
+    service: http://localhost:3000
+  
+  # MYCA API
+  - hostname: api.mycosoft.com
+    service: http://localhost:8001
+  
+  # Dashboard
+  - hostname: dashboard.mycosoft.com
+    service: http://localhost:3100
+  
+  # N8N Webhooks (for external integrations)
+  - hostname: webhooks.mycosoft.com
+    service: http://localhost:5678
+    originRequest:
+      noTLSVerify: true
+  
+  # Catch-all (required)
+  - service: http_status:404
+
+# Origin server settings
+originRequest:
+  # Connection settings
+  connectTimeout: 30s
+  noTLSVerify: false
+  
+  # Keep-alive settings
+  keepAliveTimeout: 90s
+  keepAliveConnections: 100
+  
+  # HTTP/2 support
+  http2Origin: true

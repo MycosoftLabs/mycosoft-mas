@@ -16,6 +16,7 @@ import {
   Cloud,
   Activity,
   Book,
+  Globe,
 } from "lucide-react";
 
 interface AppCard {
@@ -29,6 +30,16 @@ interface AppCard {
 }
 
 const apps: AppCard[] = [
+  // Earth Simulator (First App)
+  {
+    id: "earth-simulator",
+    name: "Earth Simulator",
+    description: "Interactive 3D globe with mycelium mapping and environmental data layers",
+    icon: Globe,
+    href: "/apps/earth-simulator",
+    status: "available",
+    category: "Simulation",
+  },
   // Mycology Apps
   {
     id: "spore-tracker",

@@ -5,8 +5,14 @@ import requests
 import urllib3
 urllib3.disable_warnings()
 
-TOKEN_ID = "myca@pve!mas"
-TOKEN_SECRET = "ca23b6c8-5746-46c4-8e36-fc6caad5a9e5"
+TOKEN_ID = os.environ.get("PROXMOX_TOKEN_ID")
+TOKEN_SECRET = os.environ.get("PROXMOX_TOKEN_SECRET")
+
+if not TOKEN_ID or not TOKEN_SECRET:
+    print("ERROR: Set Proxmox environment variables")
+    print("  PROXMOX_TOKEN_ID=myca@pve!mas")
+    print("  PROXMOX_TOKEN_SECRET=your-secret")
+    exit(1)
 
 NODES = [
     ("build", "192.168.0.202"),
