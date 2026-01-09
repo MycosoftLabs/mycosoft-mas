@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 """Quick UniFi API test"""
+import os
 import requests
 import urllib3
 urllib3.disable_warnings()
 
-API_KEY = "BfRgo4k9aS0-yo8BKqXpEtdo4k2jzM8k"
-HOST = "192.168.0.1"
+API_KEY = os.environ.get("UNIFI_API_KEY")
+HOST = os.environ.get("UNIFI_HOST", "192.168.0.1")
+
+if not API_KEY:
+    print("ERROR: Set UNIFI_API_KEY environment variable")
+    print("  PowerShell: $env:UNIFI_API_KEY = 'your-key'")
+    print("  Bash: export UNIFI_API_KEY='your-key'")
+    exit(1)
 
 session = requests.Session()
 session.verify = False

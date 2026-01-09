@@ -124,9 +124,18 @@ opportunity_scout:
 system:
   name: "Mycosoft MAS"
   version: "1.0.0"
-  environment: "development"
-  log_level: "INFO"
-  data_dir: "data"
+  environment: ${MAS_ENV:-development}
+  log_level: ${LOG_LEVEL:-INFO}
+  data_dir: ${NAS_STORAGE_PATH:-data}
+
+# NAS Storage Configuration (UDM Pro 26TB)
+storage:
+  nas_mount: ${NAS_STORAGE_PATH:-/mnt/mycosoft}
+  databases: ${NAS_DATABASES_PATH:-/mnt/mycosoft/databases}
+  knowledge: ${NAS_KNOWLEDGE_PATH:-/mnt/mycosoft/knowledge}
+  agents: ${NAS_AGENTS_PATH:-/mnt/mycosoft/agents}
+  backups: ${NAS_BACKUPS_PATH:-/mnt/mycosoft/backups}
+  audit: ${NAS_AUDIT_PATH:-/mnt/mycosoft/audit}
 
 # Agent settings
 agents:
@@ -238,7 +247,7 @@ integrations:
     timeout: 30
   
   website:
-    api_url: ${WEBSITE_API_URL:-https://mycosoft.vercel.app/api}
+    api_url: ${WEBSITE_API_URL:-https://mycosoft.com/api}
     api_key: ${WEBSITE_API_KEY:-}
     timeout: 30
   

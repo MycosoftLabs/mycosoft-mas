@@ -154,11 +154,11 @@ def verify_mycobrain_device(ser) -> dict:
             "error": "Device did not respond as MycoBrain board"
         }
     except Exception as e:
-        return {
+    return {
             "is_mycobrain": False,
             "device_info": None,
             "error": str(e)
-        }
+    }
 
 @app.post("/devices/connect/{port}")
 def connect_device(port: str):
@@ -265,9 +265,9 @@ def send_command(device_id: str, body: dict):
         else:
             # JSON/MDP protocol command
             cmd = json.dumps(cmd_data) + "\n"
-            ser.write(cmd.encode())
-            response = ser.readline().decode('utf-8', errors='ignore').strip()
-            return {"response": response, "status": "ok"}
+        ser.write(cmd.encode())
+        response = ser.readline().decode('utf-8', errors='ignore').strip()
+        return {"response": response, "status": "ok"}
     except Exception as e:
         return {"error": str(e)}
 
