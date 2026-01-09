@@ -1,0 +1,23 @@
+{
+  "id": "smell-002",
+  "name": "Active Mycelium Growth",
+  "category": "fungal",
+  "subcategory": "mycelial",
+  "description": "Earthy, musty smell of actively growing mycelium colonizing substrate.",
+  "bsec_class_id": 1,
+  "voc_pattern": {
+    "ethanol": 0.3,
+    "octanol": 0.2,
+    "co2": 0.25,
+    "other": 0.25
+  },
+  "icon_type": "mycelium",
+  "color_hex": "#F5F5DC",
+  "species_id": null,
+  "species_name": null,
+  "training_samples": 0,
+  "confidence_threshold": 0.7,
+  "current_blob_id": null,
+  "created_at": "2026-01-08T19:47:40.250666",
+  "updated_at": "2026-01-08T19:47:40.250666"
+}

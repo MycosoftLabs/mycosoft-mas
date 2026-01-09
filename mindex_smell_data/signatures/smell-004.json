@@ -1,0 +1,23 @@
+{
+  "id": "smell-004",
+  "name": "Contamination Alert",
+  "category": "fungal",
+  "subcategory": "contamination",
+  "description": "Unusual VOC profile indicating possible contamination (Trichoderma, bacteria, mold).",
+  "bsec_class_id": 3,
+  "voc_pattern": {
+    "acetaldehyde": 0.3,
+    "ammonia": 0.2,
+    "hydrogen_sulfide": 0.2,
+    "other": 0.3
+  },
+  "icon_type": "warning",
+  "color_hex": "#FF4500",
+  "species_id": null,
+  "species_name": null,
+  "training_samples": 0,
+  "confidence_threshold": 0.6,
+  "current_blob_id": null,
+  "created_at": "2026-01-08T19:47:40.251470",
+  "updated_at": "2026-01-08T19:47:40.251470"
+}
