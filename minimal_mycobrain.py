@@ -56,6 +56,9 @@ def list_devices():
             "status": dev.get("status"),
             "protocol": dev.get("protocol"),
             "connected": is_connected,  # Add explicit connected flag
+            "is_mycobrain": True,  # Mark as verified MycoBrain device
+            "verified": True,
+            "device_info": dev.get("device_info", {}),
         })
     return {"devices": safe_devices, "count": len(devices)}
 
@@ -89,6 +92,74 @@ def list_ports():
     except Exception as e:
         return {"ports": [], "error": str(e)}
 
+def verify_mycobrain_device(ser) -> dict:
+    """
+    Verify that a serial device is actually a MycoBrain board by sending
+    a 'status' command and checking for expected response fields.
+    Returns dict with 'is_mycobrain', 'device_info', 'error' fields.
+    """
+    try:
+        ser.reset_input_buffer()
+        ser.write(b'status\n')
+        time.sleep(1.0)
+        
+        lines = []
+        while ser.in_waiting:
+            line = ser.readline().decode('utf-8', errors='ignore').strip()
+            if line:
+                lines.append(line)
+        
+        # Look for JSON response with MycoBrain-specific fields
+        for line in lines:
+            if line.startswith("{"):
+                try:
+                    data = json.loads(line)
+                    # MycoBrain firmware returns 'ok', 'side', or 'mdp_version'
+                    is_mycobrain = any([
+                        data.get("ok") is True,
+                        data.get("side") in ["A", "B", "a", "b"],
+                        data.get("mdp_version") is not None,
+                        data.get("bme688_count") is not None,
+                        data.get("bme1") is not None,
+                        data.get("uptime_ms") is not None,
+                    ])
+                    if is_mycobrain:
+                        return {
+                            "is_mycobrain": True,
+                            "device_info": data,
+                            "error": None
+                        }
+                except json.JSONDecodeError:
+                    pass
+        
+        # Check for known CLI responses (text-based firmware)
+        response_text = "\n".join(lines).lower()
+        if any([
+            "mycobrain" in response_text,
+            "bme688" in response_text,
+            "mycoboard" in response_text,
+            "neopixel" in response_text,
+            "buzzer" in response_text,
+            "lora" in response_text,
+        ]):
+            return {
+                "is_mycobrain": True,
+                "device_info": {"raw_response": "\n".join(lines)},
+                "error": None
+            }
+        
+        return {
+            "is_mycobrain": False,
+            "device_info": None,
+            "error": "Device did not respond as MycoBrain board"
+        }
+    except Exception as e:
+        return {
+            "is_mycobrain": False,
+            "device_info": None,
+            "error": str(e)
+        }
+
 @app.post("/devices/connect/{port}")
 def connect_device(port: str):
     if port in devices:
@@ -96,14 +167,36 @@ def connect_device(port: str):
     
     try:
         ser = serial.Serial(port, 115200, timeout=2)
+        
+        # Verify this is actually a MycoBrain device
+        verification = verify_mycobrain_device(ser)
+        
+        if not verification["is_mycobrain"]:
+            ser.close()
+            return {
+                "status": "error",
+                "error": f"Not a MycoBrain device: {verification.get('error', 'Unknown device')}",
+                "port": port,
+                "is_mycobrain": False
+            }
+        
+        device_info = verification.get("device_info", {})
         devices[port] = {
             "device_id": f"mycobrain-{port}",
             "port": port,
             "status": "connected",
             "serial": ser,
-            "protocol": "MDP v1"
+            "protocol": "MDP v1",
+            "verified": True,
+            "device_info": device_info
         }
-        return {"status": "connected", "device_id": f"mycobrain-{port}", "port": port}
+        return {
+            "status": "connected",
+            "device_id": f"mycobrain-{port}",
+            "port": port,
+            "is_mycobrain": True,
+            "device_info": device_info
+        }
     except Exception as e:
         return {"status": "error", "error": str(e)}
 

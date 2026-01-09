@@ -1,0 +1,6 @@
+# Smell Trainer Agent Dependencies
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9
+pyserial>=3.5
+pydantic>=2.6
