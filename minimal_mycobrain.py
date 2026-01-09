@@ -41,11 +41,21 @@ def list_devices():
     # Return only serializable data (exclude serial object)
     safe_devices = []
     for port, dev in devices.items():
+        # Check if serial connection is still open
+        is_connected = False
+        try:
+            ser = dev.get("serial")
+            if ser and ser.is_open:
+                is_connected = True
+        except:
+            pass
+        
         safe_devices.append({
             "device_id": dev.get("device_id"),
             "port": dev.get("port"),
             "status": dev.get("status"),
-            "protocol": dev.get("protocol")
+            "protocol": dev.get("protocol"),
+            "connected": is_connected,  # Add explicit connected flag
         })
     return {"devices": safe_devices, "count": len(devices)}
 
@@ -152,7 +162,7 @@ def send_command(device_id: str, body: dict):
             # CLI text command (for Chris's firmware)
             ser.reset_input_buffer()
             ser.write((cmd_data + "\n").encode())
-            time.sleep(0.5)
+            time.sleep(1.5)  # Wait longer for sensor reads
             lines = []
             while ser.in_waiting:
                 line = ser.readline().decode('utf-8', errors='ignore').strip()
@@ -181,7 +191,7 @@ def send_cli_command(device_id: str, body: dict):
         cmd = body.get("command", "help")
         ser.reset_input_buffer()
         ser.write((cmd + "\n").encode())
-        time.sleep(1.0)  # Give time for multi-line response
+        time.sleep(2.0)  # Give more time for sensor initialization and multi-line response
         
         lines = []
         while ser.in_waiting:
