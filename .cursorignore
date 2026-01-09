@@ -1,4 +1,4 @@
-# Cursor Indexing Exclusions
+﻿# Cursor Indexing Exclusions
 # This file tells Cursor which files/directories to exclude from indexing
 # to prevent crashes and improve performance
 
@@ -90,7 +90,7 @@ plugins/
 secrets/
 speech/
 static/
-firmware/
+# firmware/ - temporarily enabled
 
 # Large Python packages
 mycosoft_mas/
@@ -151,4 +151,5 @@ Cargo.lock
 *_test.json
 *_req.json
 comprehensive_test_report_*.json
+
 

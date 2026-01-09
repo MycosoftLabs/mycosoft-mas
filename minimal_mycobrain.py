@@ -34,7 +34,7 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "healthy", "service": "MycoBrain", "version": "2.2.0"}
+    return {"status": "healthy", "service": "MycoBrain", "version": "2.3.0", "features": ["bsec2", "smell_detection", "aqi"]}
 
 @app.get("/devices")
 def list_devices():
@@ -200,6 +200,70 @@ def send_cli_command(device_id: str, body: dict):
                 lines.append(line)
         
         return {"command": cmd, "response": "\n".join(lines), "lines": lines, "status": "ok"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/devices/{device_id}/smell")
+def get_smell_detection(device_id: str):
+    """Get smell detection data from BSEC2-enabled device"""
+    port = device_id.replace("mycobrain-", "")
+    if port not in devices:
+        return {"error": "Device not connected"}
+    
+    try:
+        ser = devices[port]["serial"]
+        ser.reset_input_buffer()
+        ser.write(b'smell\n')
+        time.sleep(1.5)
+        
+        lines = []
+        while ser.in_waiting:
+            line = ser.readline().decode('utf-8', errors='ignore').strip()
+            if line:
+                lines.append(line)
+        
+        # Parse JSON response if available
+        for line in lines:
+            if line.startswith("{"):
+                try:
+                    data = json.loads(line)
+                    return {"status": "ok", "data": data}
+                except:
+                    pass
+        
+        return {"status": "ok", "raw": "\n".join(lines), "lines": lines}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/devices/{device_id}/bsec")
+def get_bsec_status(device_id: str):
+    """Get BSEC2 mode status"""
+    port = device_id.replace("mycobrain-", "")
+    if port not in devices:
+        return {"error": "Device not connected"}
+    
+    try:
+        ser = devices[port]["serial"]
+        ser.reset_input_buffer()
+        ser.write(b'bsec\n')
+        time.sleep(1.0)
+        
+        lines = []
+        while ser.in_waiting:
+            line = ser.readline().decode('utf-8', errors='ignore').strip()
+            if line:
+                lines.append(line)
+        
+        # Parse JSON response if available
+        for line in lines:
+            if line.startswith("{"):
+                try:
+                    data = json.loads(line)
+                    return {"status": "ok", "data": data}
+                except:
+                    pass
+        
+        return {"status": "ok", "raw": "\n".join(lines), "lines": lines}
     except Exception as e:
         return {"error": str(e)}
 
