@@ -121,3 +121,7 @@ vault-data/
 *.db-shm
 *.db-wal
 *.db-journal
+
+cloudflared.exe
+*.bak*
+.cursor/plans/
