@@ -1,0 +1,161 @@
+{
+  "_comment": "Cloudflare Access Policies for MYCA",
+  "_note": "Configure these in Cloudflare Zero Trust Dashboard",
+  
+  "applications": [
+    {
+      "name": "MYCA Dashboard",
+      "domain": "dashboard.mycosoft.com",
+      "type": "self_hosted",
+      "session_duration": "24h",
+      "policies": [
+        {
+          "name": "Staff Only",
+          "decision": "allow",
+          "include": [
+            {
+              "email": {
+                "email": [
+                  "morgan@mycosoft.com",
+                  "alberto@mycosoft.com",
+                  "garrett@mycosoft.com",
+                  "abelardo@mycosoft.com",
+                  "rj@mycosoft.com",
+                  "chris@mycosoft.com"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MYCA Admin Panel",
+      "domain": "mycosoft.com/admin/*",
+      "type": "self_hosted",
+      "session_duration": "8h",
+      "policies": [
+        {
+          "name": "Admins Only",
+          "decision": "allow",
+          "include": [
+            {
+              "email": {
+                "email": [
+                  "morgan@mycosoft.com",
+                  "alberto@mycosoft.com",
+                  "garrett@mycosoft.com"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "API Admin Endpoints",
+      "domain": "api.mycosoft.com/admin/*",
+      "type": "self_hosted",
+      "session_duration": "8h",
+      "policies": [
+        {
+          "name": "Admins Only",
+          "decision": "allow",
+          "include": [
+            {
+              "email": {
+                "email": [
+                  "morgan@mycosoft.com",
+                  "alberto@mycosoft.com",
+                  "garrett@mycosoft.com"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Debug Endpoints",
+      "domain": "api.mycosoft.com/debug/*",
+      "type": "self_hosted",
+      "session_duration": "1h",
+      "policies": [
+        {
+          "name": "Super Admin Only",
+          "decision": "allow",
+          "include": [
+            {
+              "email": {
+                "email": [
+                  "morgan@mycosoft.com"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  
+  "waf_rules": {
+    "rate_limiting": [
+      {
+        "name": "API Rate Limit",
+        "expression": "(http.request.uri.path contains \"/api/\")",
+        "characteristics": ["ip.src"],
+        "period": 60,
+        "requests_per_period": 100,
+        "action": "block",
+        "mitigation_timeout": 300
+      },
+      {
+        "name": "General Rate Limit",
+        "expression": "true",
+        "characteristics": ["ip.src"],
+        "period": 60,
+        "requests_per_period": 1000,
+        "action": "challenge",
+        "mitigation_timeout": 60
+      }
+    ],
+    "firewall_rules": [
+      {
+        "name": "Block Bad Bots",
+        "expression": "(cf.client.bot) and not (cf.client.bot eq \"verified_bot\")",
+        "action": "block"
+      },
+      {
+        "name": "Block High Threat Score",
+        "expression": "(cf.threat_score gt 50)",
+        "action": "block"
+      },
+      {
+        "name": "Challenge Suspicious",
+        "expression": "(cf.threat_score gt 10) and (cf.threat_score le 50)",
+        "action": "managed_challenge"
+      }
+    ]
+  },
+  
+  "ssl_settings": {
+    "mode": "full_strict",
+    "min_tls_version": "1.2",
+    "automatic_https_rewrites": true,
+    "always_use_https": true,
+    "hsts": {
+      "enabled": true,
+      "max_age": 15552000,
+      "include_subdomains": true,
+      "preload": true
+    }
+  },
+  
+  "security_headers": {
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Content-Type-Options": "nosniff",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+  }
+}

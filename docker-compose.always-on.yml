@@ -2,43 +2,92 @@
 # Start with:
 #   docker compose -f docker-compose.always-on.yml up -d --build
 #
-# Notes (Windows + MycoBoard on COM ports):
-# - Linux containers cannot directly open Windows COM ports.
-# - The `mycobrain` container will run and expose the API, but hardware access
-#   requires USB pass-through via WSL2 + usbipd-win (recommended) OR running
-#   MycoBrain on the host and pointing the website to host.docker.internal:8003.
+# This stack runs the REAL MINDEX (Postgres + FastAPI + ETL scheduler) from CODE/MINDEX/mindex
+# so the website gets persistent taxa, images, observations, traits, genomes, and publications.
 
 name: mycosoft-always-on
 
 services:
   # ----------------------------
-  # MINDEX (FastAPI)
+  # MINDEX Postgres (PostGIS)
   # ----------------------------
-  # Runs the MINDEX API in Docker (port 8000)
-  mindex:
+  mindex-postgres:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mindex
+      POSTGRES_USER: mindex
+      POSTGRES_PASSWORD: mindex
+    volumes:
+      - mindex_postgres_data:/var/lib/postgresql/data
+      - ../../MINDEX/mindex/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindex -d mindex"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - mycosoft-always-on
+
+  # ----------------------------
+  # MINDEX API (FastAPI)
+  # ----------------------------
+  mindex-api:
     build:
-      context: .
-      dockerfile: services/mindex/Dockerfile
+      context: ../../MINDEX/mindex
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      - MINDEX_HOST=0.0.0.0
-      - MINDEX_PORT=8000
-      - MINDEX_AUTO_SYNC=true
-      - MINDEX_SYNC_INTERVAL=24
-      - MINDEX_MAX_RECORDS=100000
-      - LOG_LEVEL=INFO
-    volumes:
-      # Default: use local data folder unless MINDEX_HOST_PATH is set
-      - mindex_data:/mnt/nas/mindex
-      - ./data/mindex:/app/data
+      # Database
+      MINDEX_DB_HOST: mindex-postgres
+      MINDEX_DB_PORT: 5432
+      MINDEX_DB_USER: mindex
+      MINDEX_DB_PASSWORD: mindex
+      MINDEX_DB_NAME: mindex
+
+      # API
+      API_PREFIX: /api/mindex
+      API_KEYS: '["local-dev-key"]'
+
+      # Pagination defaults (safe for website browsing)
+      DEFAULT_PAGE_SIZE: 100
+      MAX_PAGE_SIZE: 1000
+    depends_on:
+      mindex-postgres:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/mindex/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 30s
+      retries: 5
+      start_period: 40s
+    networks:
+      - mycosoft-always-on
+
+  # ----------------------------
+  # MINDEX ETL Scheduler (continuous scraping/sync)
+  # ----------------------------
+  mindex-etl:
+    build:
+      context: ../../MINDEX/mindex
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: python -m mindex_etl.scheduler --interval 60
+    environment:
+      MINDEX_DB_HOST: mindex-postgres
+      MINDEX_DB_PORT: 5432
+      MINDEX_DB_USER: mindex
+      MINDEX_DB_PASSWORD: mindex
+      MINDEX_DB_NAME: mindex
+      DATABASE_URL: postgresql://mindex:mindex@mindex-postgres:5432/mindex
+    volumes:
+      # Persist ETL checkpoints across restarts
+      - mindex_etl_checkpoints:/tmp/mindex_etl_checkpoints
+    depends_on:
+      mindex-postgres:
+        condition: service_healthy
     networks:
       - mycosoft-always-on
 
@@ -57,8 +106,6 @@ services:
       - MYCOBRAIN_PORT=8003
       - DEFAULT_SERIAL_PORT=COM5
       - BAUD_RATE=115200
-    # Hardware pass-through is NOT available on Windows without WSL2+usbipd.
-    # Keep this service running for API availability and logs.
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
       interval: 30s
@@ -75,33 +122,40 @@ services:
     build:
       context: ../../WEBSITE/website
       dockerfile: Dockerfile.container
+      args:
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:-your-maps-key-here}
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      MINDEX_API_BASE_URL: http://mindex:8000
-      MINDEX_API_URL: http://mindex:8000
+      MINDEX_API_BASE_URL: http://mindex-api:8000
+      MINDEX_API_URL: http://mindex-api:8000
+      MINDEX_API_KEY: local-dev-key
       MYCOBRAIN_SERVICE_URL: http://host.docker.internal:8003
       MAS_API_URL: http://host.docker.internal:8001
+      # Google API Keys
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your-client-id-here}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-your-client-secret-here}
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:-your-maps-key-here}
+      # NextAuth
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-your-nextauth-secret-here}
+      # n8n
+      N8N_LOCAL_URL: http://host.docker.internal:5678
     depends_on:
       mycobrain:
         condition: service_healthy
-      mindex:
+      mindex-api:
         condition: service_healthy
     networks:
       - mycosoft-always-on
 
 volumes:
-  mindex_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${MINDEX_HOST_PATH:-./data/mindex}
+  mindex_postgres_data:
+  mindex_etl_checkpoints:
 
 networks:
   mycosoft-always-on:
     external: true
     name: mycosoft-always-on
-
