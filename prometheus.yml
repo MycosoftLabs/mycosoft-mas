@@ -26,4 +26,60 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
     scrape_interval: 15s
-    scrape_timeout: 10s 
+    scrape_timeout: 10s
+
+  # ----------------------------
+  # MycoBrain Device Fleet Monitoring
+  # ----------------------------
+  - job_name: 'mycobrain-service'
+    static_configs:
+      - targets: ['host.docker.internal:8003']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # MycoBrain devices (when exposing /metrics endpoint)
+  # Add device IPs here as they come online
+  - job_name: 'mycobrain-devices'
+    static_configs:
+      - targets: []  # Populated by service discovery or manually
+        labels:
+          device_type: 'mycobrain'
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: device_id
+        regex: '(.+):.+'
+        replacement: '${1}'
+
+  # SporeBase devices
+  - job_name: 'sporebase-devices'
+    static_configs:
+      - targets: []  # Populated by service discovery
+        labels:
+          device_type: 'sporebase'
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+
+  # ----------------------------
+  # MINDEX API Metrics
+  # ----------------------------
+  - job_name: 'mindex-api'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # ----------------------------
+  # Loki (log aggregation health)
+  # ----------------------------
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s

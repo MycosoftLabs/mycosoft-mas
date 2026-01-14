@@ -1,0 +1,43 @@
+﻿{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Device Fleet Status",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [{"expr": "count(up{job=~\"mycobrain-devices|sporebase-devices\"} == 1)", "legendFormat": "Online"}]
+    },
+    {
+      "id": 2,
+      "title": "Device Temperature",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "targets": [{"expr": "myco_temperature_c", "legendFormat": "{{device_id}}"}]
+    },
+    {
+      "id": 3,
+      "title": "Device Humidity",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "targets": [{"expr": "myco_humidity_pct", "legendFormat": "{{device_id}}"}]
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["mycosoft", "fleet", "devices"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Fleet Health Overview",
+  "uid": "fleet-health",
+  "version": 1
+}

@@ -27,6 +27,7 @@
 | **6379** | **Redis** | Cache and message broker |
 | **6333** | **Qdrant** | Vector database |
 | **9090** | **Prometheus** | Metrics collector |
+| **3101** | **Loki** | Log aggregation (Grafana Loki) |
 | **5678** | **n8n** | Workflow automation |
 
 ## Port Conflicts Resolution
