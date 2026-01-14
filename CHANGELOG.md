@@ -20,11 +20,29 @@ All notable changes to the Mycosoft MAS project will be documented in this file.
   - Click-to-filter functionality
   - Live status badge showing "76 ACTIVE" events
   
-- **Layer Controls Panel** (Bottom):
-  - 8 toggleable layers: Global Events, MycoBrain Devices, Seismic Activity, Weather Systems, Active Wildfires, Storm Systems, Thermal Anomalies, Maritime Activity
-  - Active layer count indicator ("5 ACTIVE")
-  - High-tech toggle switches with icons
-  - Collapsed state with expand/collapse button
+- **Right Control Panel** (Tabbed Interface):
+  - **4 Integrated Tabs**: MISSION, LAYERS, SERVICES, MYCA
+  - **MISSION Tab**:
+    - Active mission context (Operation Fungal Watch, etc.)
+    - Mission commander and status
+    - Live statistics (Events, Devices, Critical, Sync Status)
+    - MINDEX Kingdom Summaries (9 kingdoms with live observation counts)
+  - **LAYERS Tab**:
+    - Event Layers: Global Events, Seismic Activity, Storms, Wildfires
+    - Device Layers: MycoBrain Devices, Sensor Network
+    - Environment Layers: Thermal Anomalies, Maritime Activity
+    - Toggle switches with icons and category headers
+  - **SERVICES Tab**:
+    - MycoBrain status (CONNECTED, 47 devices)
+    - MINDEX status (SYNCED, 2.4M records)
+    - MYCA Agent status (ACTIVE, 3 tasks)
+    - NatureOS status (ONLINE)
+    - SporeTracker status (MONITORING, 128 detections/hr)
+  - **MYCA Tab**:
+    - AI chat interface for MYCA agent
+    - Context-aware responses based on map state
+    - "Ask MYCA..." input field with send button
+    - Real-time assistant messages
 
 - **Map Features**:
   - Global event markers with severity-based coloring
@@ -42,6 +60,13 @@ All notable changes to the Mycosoft MAS project will be documented in this file.
 - **MapCN Components Used**: `Map`, `MapMarker`, `MarkerContent`, `MapPopup`, `MapControls`
 - **Data Sources**: `/api/natureos/global-events`, `/api/mycobrain/devices`
 - **Event Types Supported**: Earthquake, Volcano, Wildfire, Storm, Lightning, Tornado, Hurricane, Solar Flare, Fungal Bloom, Migration
+- **Right Panel Architecture**:
+  - Tabbed navigation using ShadCN Tabs component
+  - State management for layer visibility
+  - Integration with global events and device data
+  - MYCA Agent chat interface with input field
+  - Cohesive design with NatureOS, Device User, Services, and MYCA
+  - Stats/data panel relevant to current mission context
 
 ---
 
