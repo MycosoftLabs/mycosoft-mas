@@ -1,0 +1,61 @@
+﻿# Promtail Configuration for Mycosoft MAS
+# Ships logs to Loki for aggregation
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # MAS Application Logs
+  - job_name: mas-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: mas
+          app: mycosoft-mas
+          __path__: /app/logs/*.log
+
+  # MycoBrain Device Logs
+  - job_name: mycobrain-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: mycobrain
+          app: mycobrain-service
+          __path__: /app/logs/mycobrain*.log
+
+  # MINDEX Logs
+  - job_name: mindex-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: mindex
+          app: mindex-api
+          __path__: /app/logs/mindex*.log
+
+  # Error Logs (all services)
+  - job_name: error-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: errors
+          level: error
+          __path__: /app/logs/error*.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z?)\\s+(?P<level>\\w+)\\s+(?P<message>.*)$'
+      - labels:
+          level:
+      - timestamp:
+          source: timestamp
+          format: RFC3339

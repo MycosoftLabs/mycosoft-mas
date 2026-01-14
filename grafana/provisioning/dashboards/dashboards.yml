@@ -1,0 +1,15 @@
+﻿# Grafana Dashboard Provisioning
+# File: grafana/provisioning/dashboards/dashboards.yml
+
+apiVersion: 1
+
+providers:
+  - name: Mycosoft
+    orgId: 1
+    folder: Mycosoft
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

@@ -1,0 +1,196 @@
+﻿{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "expr": "count(up{job=~\"mycobrain-devices|sporebase-devices\"})",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Devices",
+      "type": "stat"
+    },
+    {
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto",
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            { "color": "red", "value": null },
+            { "color": "yellow", "value": 80 },
+            { "color": "green", "value": 95 }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "expr": "100 * sum(up{job=~\"mycobrain-devices|sporebase-devices\"}) / count(up{job=~\"mycobrain-devices|sporebase-devices\"})",
+          "refId": "A"
+        }
+      ],
+      "title": "Online %",
+      "type": "stat"
+    },
+    {
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "avg(myco_wifi_rssi_dbm)",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg RSSI (dBm)",
+      "type": "stat"
+    },
+    {
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "avg(myco_temperature_c)",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Temperature (C)",
+      "type": "stat"
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "options": {},
+      "targets": [
+        {
+          "expr": "myco_temperature_c",
+          "legendFormat": "{{device_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Temperature by Device",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "id": 6,
+      "options": {},
+      "targets": [
+        {
+          "expr": "myco_humidity_pct",
+          "legendFormat": "{{device_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Humidity by Device",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "id": 7,
+      "options": {},
+      "targets": [
+        {
+          "expr": "myco_voc_index",
+          "legendFormat": "{{device_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "VOC Index by Device",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "id": 8,
+      "options": {},
+      "targets": [
+        {
+          "expr": "myco_wifi_rssi_dbm",
+          "legendFormat": "{{device_id}}",
+          "refId": "A"
+        }
+      ],
+      "title": "WiFi RSSI by Device",
+      "type": "timeseries"
+    },
+    {
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 20 },
+      "id": 9,
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "expr": "up{job=~\"mycobrain-devices|sporebase-devices\"} == 0",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Offline Devices",
+      "type": "table",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "__name__": true, "job": false },
+            "indexByName": {},
+            "renameByName": { "device_id": "Device ID", "device_type": "Type" }
+          }
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["mycosoft", "devices", "fleet"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Fleet Health",
+  "uid": "fleet-health",
+  "version": 1,
+  "weekStart": ""
+}

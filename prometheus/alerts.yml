@@ -1,0 +1,126 @@
+﻿# Prometheus Alerting Rules for Mycosoft Device Fleet
+# File: prometheus/alerts.yml
+
+groups:
+  - name: device_fleet
+    rules:
+      # Device Down Alert - No data for 3 minutes
+      - alert: DeviceDown
+        expr: up{job=~"mycobrain-devices|sporebase-devices"} == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Device {{ $labels.device_id }} is down"
+          description: "No metrics received from {{ $labels.device_id }} for more than 3 minutes."
+
+      # Device Degraded - Intermittent connectivity
+      - alert: DeviceDegraded
+        expr: avg_over_time(up{job=~"mycobrain-devices|sporebase-devices"}[5m]) < 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Device {{ $labels.device_id }} has degraded connectivity"
+          description: "Device {{ $labels.device_id }} has less than 80% uptime over the last 5 minutes."
+
+  - name: environmental
+    rules:
+      # Temperature Alert - High temperature
+      - alert: HighTemperature
+        expr: myco_temperature_c > 35
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High temperature on {{ $labels.device_id }}"
+          description: "Temperature is {{ $value }}C on device {{ $labels.device_id }}."
+
+      # Temperature Alert - Low temperature  
+      - alert: LowTemperature
+        expr: myco_temperature_c < 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low temperature on {{ $labels.device_id }}"
+          description: "Temperature is {{ $value }}C on device {{ $labels.device_id }}."
+
+      # VOC Spike - Air quality degradation
+      - alert: VOCSpike
+        expr: myco_voc_index > 90
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "VOC spike detected on {{ $labels.device_id }}"
+          description: "VOC index is {{ $value }} on device {{ $labels.device_id }}."
+
+      # Humidity out of range
+      - alert: HumidityOutOfRange
+        expr: myco_humidity_pct < 30 or myco_humidity_pct > 80
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Humidity out of optimal range on {{ $labels.device_id }}"
+          description: "Humidity is {{ $value }}% on device {{ $labels.device_id }}."
+
+  - name: connectivity
+    rules:
+      # WiFi signal weak
+      - alert: WeakWiFiSignal
+        expr: myco_wifi_rssi_dbm < -80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Weak WiFi signal on {{ $labels.device_id }}"
+          description: "RSSI is {{ $value }} dBm on device {{ $labels.device_id }}."
+
+  - name: firmware
+    rules:
+      # Firmware version drift
+      - alert: FirmwareDrift
+        expr: |
+          count by (device_id) (myco_firmware_info)
+          unless on (device_id)
+          count by (device_id) (myco_firmware_info{version="latest"})
+        for: 1h
+        labels:
+          severity: info
+        annotations:
+          summary: "Firmware drift detected on {{ $labels.device_id }}"
+          description: "Device {{ $labels.device_id }} is not running the latest firmware."
+
+  - name: services
+    rules:
+      # MINDEX API down
+      - alert: MINDEXDown
+        expr: up{job="mindex-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MINDEX API is down"
+          description: "MINDEX API at :8000 is not responding."
+
+      # MycoBrain service down
+      - alert: MycoBrainServiceDown
+        expr: up{job="mycobrain-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MycoBrain service is down"
+          description: "MycoBrain service at :8003 is not responding."
+
+      # Loki down
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Loki log aggregation is down"
+          description: "Loki is not responding - logs may not be collected."

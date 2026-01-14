@@ -84,7 +84,7 @@ monitoring:
     port: 3002
   loki:
     host: localhost
-    port: 3100
+    port: 3101  # Changed from 3100 to avoid conflict with MICA UniFi Dashboard
 
 messaging:
   broker_url: ${MESSAGE_BROKER_URL}

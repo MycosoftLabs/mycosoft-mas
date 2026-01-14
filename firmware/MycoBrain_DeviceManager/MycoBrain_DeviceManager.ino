@@ -435,6 +435,240 @@ static void cmdAotxStatus(const char* cmdId = nullptr) {
   writeJson(doc);
 }
 
+// ============================================================
+// OSCILLOSCOPE / DIAGNOSTIC SCOPE
+// ============================================================
+// Simple ADC oscilloscope for diagnostics
+// Uses ESP32 ADC continuous mode for fast sampling
+
+// Scope configuration
+static bool gScopeRunning = false;
+static uint8_t gScopeChannel = 0;  // Which analog input (0-3 for GPIO6,7,10,11)
+static uint32_t gScopeSamples = 256;
+static uint32_t gScopeSampleRateHz = 10000;
+static uint32_t gScopeTriggerLevel = 2048;  // 12-bit ADC midpoint
+static bool gScopeTriggerRising = true;
+
+// ADC pins mapping
+static const uint8_t ADC_PINS[4] = {6, 7, 10, 11};
+
+// Scope data buffer
+static uint16_t gScopeBuffer[1024];
+static uint32_t gScopeBufferIdx = 0;
+
+static void scopeConfigure(uint8_t channel, uint32_t samples, uint32_t sampleRate) {
+  gScopeChannel = constrain(channel, 0, 3);
+  gScopeSamples = constrain(samples, 16, 1024);
+  gScopeSampleRateHz = constrain(sampleRate, 100, 100000);
+}
+
+static void scopeSetTrigger(uint32_t level, bool rising) {
+  gScopeTriggerLevel = constrain(level, 0, 4095);
+  gScopeTriggerRising = rising;
+}
+
+static void scopeCapture(const char* cmdId = nullptr) {
+  uint8_t pin = ADC_PINS[gScopeChannel];
+  uint32_t delayUs = 1000000 / gScopeSampleRateHz;
+  
+  // Wait for trigger condition
+  uint32_t timeout = millis() + 2000;  // 2 second timeout
+  uint16_t prevSample = analogRead(pin);
+  bool triggered = false;
+  
+  while (millis() < timeout && !triggered) {
+    uint16_t sample = analogRead(pin);
+    if (gScopeTriggerRising) {
+      triggered = (prevSample < gScopeTriggerLevel && sample >= gScopeTriggerLevel);
+    } else {
+      triggered = (prevSample > gScopeTriggerLevel && sample <= gScopeTriggerLevel);
+    }
+    prevSample = sample;
+    delayMicroseconds(10);
+  }
+  
+  // Capture samples
+  uint32_t startUs = micros();
+  for (uint32_t i = 0; i < gScopeSamples && i < 1024; i++) {
+    gScopeBuffer[i] = analogRead(pin);
+    delayMicroseconds(delayUs > 10 ? delayUs - 10 : 1);  // Account for analogRead time
+  }
+  uint32_t captureTimeUs = micros() - startUs;
+  
+  // Output result
+  StaticJsonDocument<512> doc;
+  doc["ok"] = true;
+  if (cmdId) doc["id"] = cmdId;
+  doc["channel"] = gScopeChannel;
+  doc["pin"] = pin;
+  doc["samples"] = gScopeSamples;
+  doc["sample_rate_hz"] = gScopeSampleRateHz;
+  doc["capture_time_us"] = captureTimeUs;
+  doc["triggered"] = triggered;
+  doc["trigger_level"] = gScopeTriggerLevel;
+  doc["trigger_edge"] = gScopeTriggerRising ? "rising" : "falling";
+  
+  // Calculate statistics
+  uint32_t sum = 0;
+  uint16_t minVal = 4095, maxVal = 0;
+  for (uint32_t i = 0; i < gScopeSamples; i++) {
+    sum += gScopeBuffer[i];
+    if (gScopeBuffer[i] < minVal) minVal = gScopeBuffer[i];
+    if (gScopeBuffer[i] > maxVal) maxVal = gScopeBuffer[i];
+  }
+  float avg = (float)sum / gScopeSamples;
+  float vref = 3.3;
+  
+  doc["min_raw"] = minVal;
+  doc["max_raw"] = maxVal;
+  doc["avg_raw"] = avg;
+  doc["min_v"] = (minVal * vref) / 4095.0;
+  doc["max_v"] = (maxVal * vref) / 4095.0;
+  doc["avg_v"] = (avg * vref) / 4095.0;
+  doc["vpp"] = ((maxVal - minVal) * vref) / 4095.0;
+  
+  writeJson(doc);
+}
+
+static void scopeExportWaveform(const char* cmdId = nullptr) {
+  // Export raw waveform data for plotting
+  StaticJsonDocument<256> header;
+  header["type"] = "scope_waveform";
+  header["ok"] = true;
+  if (cmdId) header["id"] = cmdId;
+  header["channel"] = gScopeChannel;
+  header["samples"] = gScopeSamples;
+  header["sample_rate_hz"] = gScopeSampleRateHz;
+  writeJson(header);
+  
+  // Send samples in batches
+  const uint32_t batchSize = 64;
+  for (uint32_t i = 0; i < gScopeSamples; i += batchSize) {
+    StaticJsonDocument<512> batch;
+    batch["type"] = "scope_data";
+    batch["offset"] = i;
+    JsonArray data = batch.createNestedArray("data");
+    for (uint32_t j = i; j < i + batchSize && j < gScopeSamples; j++) {
+      data.add(gScopeBuffer[j]);
+    }
+    writeJson(batch);
+  }
+  
+  // End marker
+  StaticJsonDocument<128> end;
+  end["type"] = "scope_end";
+  end["ok"] = true;
+  writeJson(end);
+}
+
+static void cmdScopeStatus(const char* cmdId = nullptr) {
+  StaticJsonDocument<384> doc;
+  doc["ok"] = true;
+  if (cmdId) doc["id"] = cmdId;
+  doc["running"] = gScopeRunning;
+  doc["channel"] = gScopeChannel;
+  doc["pin"] = ADC_PINS[gScopeChannel];
+  doc["samples"] = gScopeSamples;
+  doc["sample_rate_hz"] = gScopeSampleRateHz;
+  doc["trigger_level"] = gScopeTriggerLevel;
+  doc["trigger_edge"] = gScopeTriggerRising ? "rising" : "falling";
+  
+  JsonArray pins = doc.createNestedArray("available_pins");
+  for (int i = 0; i < 4; i++) {
+    pins.add(ADC_PINS[i]);
+  }
+  
+  writeJson(doc);
+}
+
+static void cmdScope(const String& args, const char* cmdId = nullptr) {
+  if (args == "status" || args == "") {
+    cmdScopeStatus(cmdId);
+  } else if (args == "capture" || args == "single") {
+    scopeCapture(cmdId);
+  } else if (args == "export") {
+    scopeExportWaveform(cmdId);
+  } else if (args.startsWith("channel ")) {
+    int ch = args.substring(8).toInt();
+    gScopeChannel = constrain(ch, 0, 3);
+    respondOk(cmdId);
+  } else if (args.startsWith("samples ")) {
+    int n = args.substring(8).toInt();
+    gScopeSamples = constrain(n, 16, 1024);
+    respondOk(cmdId);
+  } else if (args.startsWith("rate ")) {
+    int r = args.substring(5).toInt();
+    gScopeSampleRateHz = constrain(r, 100, 100000);
+    respondOk(cmdId);
+  } else if (args.startsWith("trigger ")) {
+    String tArgs = args.substring(8);
+    int spIdx = tArgs.indexOf(' ');
+    if (spIdx > 0) {
+      int level = tArgs.substring(0, spIdx).toInt();
+      String edge = tArgs.substring(spIdx + 1);
+      gScopeTriggerLevel = constrain(level, 0, 4095);
+      gScopeTriggerRising = (edge == "rising" || edge == "rise" || edge == "up");
+    } else {
+      gScopeTriggerLevel = tArgs.toInt();
+    }
+    respondOk(cmdId);
+  } else {
+    respondError("usage: scope status|capture|export|channel N|samples N|rate N|trigger LEVEL [rising|falling]", cmdId);
+  }
+}
+
+// ============================================================
+// DIAGNOSTIC COMMANDS
+// ============================================================
+static void cmdDiagnostics(const char* cmdId = nullptr) {
+  StaticJsonDocument<768> doc;
+  doc["ok"] = true;
+  if (cmdId) doc["id"] = cmdId;
+  
+  // System info
+  doc["chip_model"] = ESP.getChipModel();
+  doc["chip_revision"] = ESP.getChipRevision();
+  doc["cpu_cores"] = ESP.getChipCores();
+  doc["cpu_freq_mhz"] = ESP.getCpuFreqMHz();
+  
+  // Memory
+  doc["heap_free"] = ESP.getFreeHeap();
+  doc["heap_total"] = ESP.getHeapSize();
+  doc["heap_min_free"] = ESP.getMinFreeHeap();
+  doc["psram_free"] = ESP.getFreePsram();
+  doc["psram_total"] = ESP.getPsramSize();
+  
+  // Flash
+  doc["flash_size"] = ESP.getFlashChipSize();
+  doc["flash_speed"] = ESP.getFlashChipSpeed();
+  
+  // Sketch
+  doc["sketch_size"] = ESP.getSketchSize();
+  doc["sketch_space"] = ESP.getFreeSketchSpace();
+  
+  // Uptime
+  uint32_t uptime = millis() - bootMs;
+  doc["uptime_ms"] = uptime;
+  doc["uptime_hours"] = uptime / 3600000.0;
+  
+  // I2C
+  doc["i2c_devices"] = i2cCount;
+  doc["bme688_count"] = bme688_count;
+  
+  // ADC readings
+  JsonArray adc = doc.createNestedArray("adc_readings");
+  for (int i = 0; i < 4; i++) {
+    JsonObject ch = adc.createNestedObject();
+    ch["channel"] = i;
+    ch["pin"] = ADC_PINS[i];
+    uint16_t raw = analogRead(ADC_PINS[i]);
+    ch["raw"] = raw;
+    ch["voltage"] = (raw * 3.3) / 4095.0;
+  }
+  
+  writeJson(doc);
+}
+
 // MAC / NODE ID
 // ============================================================
 static String getNodeId() {
@@ -628,7 +862,7 @@ static void respondError(const char* msg, const char* cmdId = nullptr) {
 
 static void cmdHelp(const char* cmdId = nullptr) {
   if (gOutputFormat == FMT_JSON) {
-    StaticJsonDocument<512> doc;
+    StaticJsonDocument<768> doc;
     doc["ok"] = true;
     if (cmdId) doc["id"] = cmdId;
     JsonArray cmds = doc.createNestedArray("commands");
@@ -637,6 +871,7 @@ static void cmdHelp(const char* cmdId = nullptr) {
     cmds.add("config"); cmds.add("telemetry"); cmds.add("led");
     cmds.add("beep"); cmds.add("fmt"); cmds.add("reboot");
     cmds.add("poster"); cmds.add("optx"); cmds.add("aotx"); cmds.add("sensors");
+    cmds.add("scope"); cmds.add("diag");
     writeJson(doc);
   } else {
     writeLine("=== MycoBrain Side-A Commands ===");
@@ -646,6 +881,7 @@ static void cmdHelp(const char* cmdId = nullptr) {
     writeLine("get_mac       - Get MAC address");
     writeLine("get_version   - Firmware version");
     writeLine("i2c / scan    - Scan I2C bus");
+    writeLine("sensors       - Read BME688 sensors");
     writeLine("config        - Show configuration");
     writeLine("telemetry on/off/period <ms>");
     writeLine("led mode off|state|manual");
@@ -656,6 +892,15 @@ static void cmdHelp(const char* cmdId = nullptr) {
     writeLine("reboot        - Restart device");
     writeLine("optx start/stop/status - Optical TX (LED)");
     writeLine("aotx start/stop/status - Acoustic TX (buzzer)");
+    writeLine("--- Diagnostics ---");
+    writeLine("scope status  - Oscilloscope status");
+    writeLine("scope capture - Capture ADC waveform");
+    writeLine("scope export  - Export waveform data");
+    writeLine("scope channel N  - Set ADC channel (0-3)");
+    writeLine("scope samples N  - Set sample count");
+    writeLine("scope rate N     - Set sample rate Hz");
+    writeLine("scope trigger LEVEL [rising|falling]");
+    writeLine("diag          - Full system diagnostics");
   }
 }
 
@@ -1072,6 +1317,10 @@ static void parseCliCommand(const String& line) {
     } else {
       respondError("usage: aotx start <payload> | aotx stop | aotx status");
     }
+  } else if (firstWord == "scope" || firstWord == "oscilloscope") {
+    cmdScope(args);
+  } else if (firstWord == "diag" || firstWord == "diagnostics") {
+    cmdDiagnostics();
   } else if (firstWord.length() > 0) {
     respondError("unknown command - try 'help'");
   }
@@ -1198,6 +1447,38 @@ static void parseJsonCommand(const String& line) {
     if (strcmp(fmt, "json") == 0) gOutputFormat = FMT_JSON;
     else if (strcmp(fmt, "lines") == 0) gOutputFormat = FMT_LINES;
     respondOk(id);
+  }
+  // Scope commands
+  else if (strcmp(cmd, "scope") == 0 || strcmp(cmd, "scope.status") == 0) {
+    const char* action = req["action"] | "";
+    if (strcmp(action, "capture") == 0 || strcmp(action, "single") == 0) {
+      scopeCapture(id);
+    } else if (strcmp(action, "export") == 0) {
+      scopeExportWaveform(id);
+    } else if (strcmp(action, "configure") == 0) {
+      if (req.containsKey("channel")) gScopeChannel = constrain((int)req["channel"], 0, 3);
+      if (req.containsKey("samples")) gScopeSamples = constrain((int)req["samples"], 16, 1024);
+      if (req.containsKey("rate")) gScopeSampleRateHz = constrain((int)req["rate"], 100, 100000);
+      respondOk(id);
+    } else {
+      cmdScopeStatus(id);
+    }
+  }
+  else if (strcmp(cmd, "scope.capture") == 0) { scopeCapture(id); }
+  else if (strcmp(cmd, "scope.export") == 0) { scopeExportWaveform(id); }
+  else if (strcmp(cmd, "trigger") == 0 || strcmp(cmd, "scope.trigger") == 0) {
+    int level = req["level"] | gScopeTriggerLevel;
+    bool rising = true;
+    if (req.containsKey("edge")) {
+      const char* edge = req["edge"];
+      rising = (strcmp(edge, "rising") == 0 || strcmp(edge, "up") == 0);
+    }
+    scopeSetTrigger(level, rising);
+    respondOk(id);
+  }
+  // Diagnostics
+  else if (strcmp(cmd, "diag") == 0 || strcmp(cmd, "diagnostics") == 0) {
+    cmdDiagnostics(id);
   }
   else {
     respondError("unknown_cmd", id);
