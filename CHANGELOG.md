@@ -2,7 +2,23 @@
 
 All notable changes to the Mycosoft MAS project will be documented in this file.
 
-## [Unreleased] - 2026-01-14
+## [Unreleased] - 2026-01-15
+
+### Fixed - MycoBrain Device Integration in CREP
+- **Device Location Handling**: Fixed device mapping to handle missing GPS coordinates
+- **Default Lab Locations**: Devices without GPS now display at configured lab locations (Nanaimo, Victoria, Vancouver, Seattle, Portland)
+- **Enhanced Device Popup**: Shows port, protocol, firmware, and device ID in marker popup
+- **Live Device Count**: CREP now correctly shows connected MycoBrain devices (1 device verified)
+- **Docker Service Isolation**: Website no longer depends on MycoBrain service health for startup
+
+### Verified Working
+- ✅ MycoBrain Service: Healthy (v2.2.0, 1 device connected on /dev/ttyACM0)
+- ✅ CREP Map: 71+ live events, 1 MycoBrain device showing
+- ✅ INTEL Tab: Human & Machines data (population, transport, emissions)
+- ✅ LAYERS Tab: 7 categories with 36 layer toggles
+- ✅ API Integration: `/api/mycobrain/devices` proxying correctly to Docker service
+
+## [2.1.0] - 2026-01-14
 
 ### Added - CREP (Common Relevant Environmental Picture) Intel Map with MapCN
 
