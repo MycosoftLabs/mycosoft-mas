@@ -1,8 +1,10 @@
 ## Mycosoft MAS (Multi-Agent System)
 
-Mycosoft MAS is a **distributed multi-agent system** (Python/FastAPI) plus a **web UI (Next.js “MYCA”)** and an optional **observability stack** (PostgreSQL, Redis, Qdrant, Prometheus, Grafana).
+Mycosoft MAS is a **distributed multi-agent system** (Python/FastAPI) plus a **web UI (Next.js "MYCA")** and an optional **observability stack** (PostgreSQL, Redis, Qdrant, Prometheus, Grafana).
 
-This repository is the **top-level MAS repo**. The previous root README content describing “ENVINT Platform” belongs in subsystem-specific docs and **is not the MAS README**.
+This repository is the **top-level MAS repo**. The previous root README content describing "ENVINT Platform" belongs in subsystem-specific docs and **is not the MAS README**.
+
+> **Latest Update (January 2026):** Major CREP Dashboard enhancements with full data pipelines for aviation, maritime, satellite, and environmental data. New geocoding services, containerized data collectors, and comprehensive documentation. See the [Website Repository](https://github.com/MycosoftLabs/website) for CREP dashboard details.
 
 ---
 
@@ -321,3 +323,35 @@ python scripts/verify_mas.py
 - `app/`, `components/`, `lib/` — Next.js UI
 - `docs/` — repo documentation
 - `scripts/` — operational scripts and helpers
+
+---
+
+## Related Repositories & Systems
+
+Mycosoft MAS integrates with several companion systems:
+
+| System | Description | Repository |
+|--------|-------------|------------|
+| **MINDEX** | Fungal Intelligence Database with 1.2M+ observations | [MycosoftLabs/mindex](https://github.com/MycosoftLabs/mindex) |
+| **Website** | Main Mycosoft website with CREP dashboard | [MycosoftLabs/website](https://github.com/MycosoftLabs/website) |
+| **CREP** | Common Relevant Environmental Picture dashboard | Part of Website repo |
+| **NatureOS** | Biomimetic operating system layer | Part of Website repo |
+| **MycoBrain** | IoT sensor platform for environmental monitoring | Part of MAS repo |
+
+### CREP Dashboard Features (Latest)
+
+The CREP dashboard provides real-time global situational awareness:
+- **Aviation Tracking**: FlightRadar24 integration with animated trajectories
+- **Maritime Tracking**: AIS vessel data with port-to-port routes
+- **Satellite Tracking**: CelesTrak TLE data with orbit visualization
+- **Environmental Events**: Earthquakes, wildfires, storms, lightning
+- **Fungal Observations**: MINDEX integration with 1.2M+ fungal data points
+- **Space Weather**: NOAA SWPC solar/geomagnetic monitoring
+
+For detailed CREP documentation, see `docs/CREP_SYSTEM.md` in the Website repository.
+
+---
+
+## Version History
+
+See [CHANGELOG.md](./CHANGELOG.md) for detailed version history.
