@@ -4,17 +4,28 @@
 
 **CRITICAL: Port 3000 is RESERVED for the Website ONLY**
 
+### Website Routes (Port 3000)
+
+| Route | Description |
+|-------|-------------|
+| http://localhost:3000 | Mycosoft Homepage |
+| http://localhost:3000/dashboard/crep | **CREP Dashboard** - Global Situational Awareness |
+| http://localhost:3000/natureos | NatureOS Earth Simulator |
+| http://localhost:3000/natureos/devices | Device Manager (MycoBrain) |
+| http://localhost:3000/myca | MYCA AI Agent Interface |
+| http://localhost:3000/mindex | MINDEX Species Database |
+
 ### Core Services
 
 | Port | Service | Description | Access |
 |------|---------|-------------|--------|
 | **3000** | **Website** | Next.js website (mycosoft.com) | http://localhost:3000 |
-| **3001** | **MYCA App** | MAS Dashboard (Next.js) | http://localhost:3001 |
+| **3001** | **MYCA App** | MAS Dashboard (DEPRECATED) | http://localhost:3001 |
 | **3002** | **Grafana** | Monitoring dashboards | http://localhost:3002 |
-| **8000** | **MINDEX** | Always-on service | http://localhost:8000 |
+| **3100** | **MYCA UniFi Dashboard** | Voice integration dashboard | http://localhost:3100 |
+| **8000** | **MINDEX** | Fungal database API | http://localhost:8000 |
 | **8001** | **MAS Orchestrator** | FastAPI orchestrator | http://localhost:8001 |
 | **8003** | **MycoBrain Service** | Device management API | http://localhost:8003 |
-| **3100** | **MICA Unifi Dashboard** | Voice integration dashboard | http://localhost:3100 |
 | **5500** | **Open EDAI Speech** | Speech service | http://localhost:5500 |
 | **8765** | **Whisper** | STT service | http://localhost:8765 |
 
