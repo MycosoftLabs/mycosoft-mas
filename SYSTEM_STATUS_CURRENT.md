@@ -1,54 +1,53 @@
 # Mycosoft System Status - Current
-**Date**: December 30, 2025, 10:40 PM PST  
-**Status**: Rebuilding Website Container  
+**Date**: January 16, 2026, 5:22 PM PST  
+**Status**: ✅ OPERATIONAL  
 
-## Current Task
-**Objective**: Fix `initialTimeout is not defined` error by completely rebuilding website Docker image  
-**Progress**: Building fresh Docker image with --no-cache flag  
-**ETA**: 2-3 minutes  
+## Primary URLs
 
-## Services Status
+| Service | URL | Status |
+|---------|-----|--------|
+| **Mycosoft Website** | http://localhost:3000 | ✅ Running |
+| **CREP Dashboard** | http://localhost:3000/dashboard/crep | ✅ Active |
+| **NatureOS** | http://localhost:3000/natureos | ✅ Active |
+| **Device Manager** | http://localhost:3000/natureos/devices | ✅ Active |
+| **MAS Orchestrator** | http://localhost:8001 | ✅ Running |
+| **MINDEX** | http://localhost:8000 | ✅ Healthy |
+| **MycoBrain Service** | http://localhost:8003 | ✅ Running |
+| **MYCA UniFi Dashboard** | http://localhost:3100 | ✅ Running |
+| **Grafana** | http://localhost:3002 | ✅ Running |
+| **n8n Workflows** | http://localhost:5678 | ✅ Running |
 
-### ✅ OPERATIONAL
-1. **MINDEX (Port 8000)**
-   - Status: HEALTHY
-   - Version: 0.2.0
-   - Features: Taxonomic reconciliation (GBIF, Index Fungorum, iNaturalist)
-   - Endpoint: `http://localhost:8000/api/mindex/health`
+## CREP Dashboard Features
 
-2. **MycoBrain Service (Port 8003)**
-   - Status: RUNNING
-   - Version: 2.2.0
-   - Connected Device: mycobrain-COM5 (ESP32-S3)
-   - Firmware: 3.3.5
-   - Sensors: 2x BME688 (AMB @ 0x77, ENV @ 0x76)
-   - Last Test: LED & Sound controls working ✓
-   - Endpoint: `http://localhost:8003/health`
+The CREP (Common Relevant Environmental Picture) dashboard at `/dashboard/crep` provides:
 
-3. **MAS Orchestrator (Port 8001)**
-   - Status: RUNNING
-   - Managing: 42+ specialized agents
-   - Database: PostgreSQL (mas-postgres:5433)
-   - Endpoint: `http://localhost:8001/health`
+### Live Statistics (As of Last Check)
+- **73 Active Events** - Real-time global event monitoring
+- **1 Device** - Connected MycoBrain devices
+- **0 Critical** - No critical alerts
 
-4. **n8n Workflows (Port 5678)**
-   - Status: RUNNING
-   - Active Workflows: 16+
-   - Integrations: Voice, Space, Weather, Device, Lab data
-   - Endpoint: `http://localhost:5678/healthz`
+### Data Feeds
+- **Earthquakes** - USGS real-time feed
+- **Volcanoes** - Global volcanic activity monitoring
+- **Wildfires** - NIFC/IRWIN fire data
+- **Storms** - Tropical cyclone tracking
+- **Fungal Events** - MINDEX observations integration
 
-5. **MYCA UniFi Dashboard (Port 3100)**
-   - Status: RUNNING
-   - Features: Voice integration, Agent monitoring
-   - Endpoint: `http://localhost:3100`
+### Dashboard Tabs
+- **MSSN** - Active mission status (Global Fungal Network Monitoring @ 67%)
+- **DATA** - Data sources and feeds
+- **INTEL** - Intelligence feed
+- **LYRS** - Map layers control
+- **SVCS** - Connected services
+- **MYCA** - MYCA agent integration
 
-### 🔄 REBUILDING
-6. **Mycosoft Website (Port 3000)**
-   - Status: REBUILDING
-   - Issue: Old cached build with `initialTimeout` bug
-   - Solution: Complete rebuild with cache clearing
-   - Framework: Next.js 15.1.11
-   - Target: `http://localhost:3000`
+### MINDEX Kingdoms (Species Database)
+- **Fungi**: 1,247,000 entries
+- **Plants**: 380,000 entries
+- **Birds**: 10,000 entries
+- **Insects**: 950,000 entries
+- **Animals**: 68,000 entries
+- **Marine**: 245,000 entries
 
 ## Hardware Status
 
@@ -64,139 +63,86 @@ PSRAM: OPI PSRAM
 Flash: 16 MB
 
 Sensors:
-- AMB (0x77): T=23.58°C, RH=32.14%, P=709.24hPa, Gas=62868Ω
-- ENV (0x76): T=23.75°C, RH=28.65%, P=645.65hPa, Gas=103728Ω
+- AMB (0x77): T=23.58°C, RH=32.14%, P=709.24hPa
+- ENV (0x76): T=23.75°C, RH=28.65%, P=645.65hPa
 
 Controls:
-- LED: RGB Manual (tested ✓)
-- Buzzer: Coin sound (tested ✓)
-- MOSFETs: 4x available
+- LED: RGB NeoPixel (SK6805)
+- Buzzer: GPIO16
+- MOSFETs: GPIO12, GPIO13, GPIO14
 - I2C: SDA=5, SCL=4 @ 100kHz
 ```
 
-## Integration Points
+## Port Assignments
 
-### Website → Services
+### Core Services
+| Port | Service | Description |
+|------|---------|-------------|
+| **3000** | **Website** | Mycosoft Next.js website (RESERVED) |
+| **3001** | **MYCA App** | MAS Dashboard (DEPRECATED) |
+| **3002** | **Grafana** | Monitoring dashboards |
+| **3100** | **MYCA UniFi** | Voice integration dashboard |
+| **8000** | **MINDEX** | Fungal database API |
+| **8001** | **MAS Orchestrator** | FastAPI orchestrator |
+| **8003** | **MycoBrain** | Device management API |
+
+### Infrastructure
+| Port | Service |
+|------|---------|
+| 5432/5433 | PostgreSQL |
+| 6379 | Redis |
+| 6333 | Qdrant |
+| 9090 | Prometheus |
+| 5678 | n8n Workflows |
+
+## Integration Flow
+
 ```
-/api/mycobrain/*     → http://host.docker.internal:8003
-/api/mindex/*        → http://mindex:8000
-/api/mas/*           → http://mas-orchestrator:8000
-```
-
-### Data Flow
-```
-MycoBrain Device (COM5)
-  ↓ Serial (115200 baud)
-MycoBrain Service (8003)
-  ↓ HTTP REST API
-Website Container (3000)
-  ↓ User Interface
-Browser (Device Manager UI)
-```
-
-## Known Issues & Resolutions
-
-### ✅ RESOLVED
-1. **MINDEX Container Crash** - Fixed with complete FastAPI rewrite
-2. **MycoBrain Port Access** - Run on host, use host.docker.internal
-3. **Port Conflicts** - Systematic port management
-
-### 🔄 IN PROGRESS
-4. **Website `initialTimeout` Error**
-   - **Root Cause**: Old cached build in Docker image
-   - **Solution**: Complete rebuild with --no-cache
-   - **Status**: Building now
-   - **Actions Taken**:
-     - Stopped old container
-     - Removed old images
-     - Cleared .next cache
-     - Cleared node_modules cache
-     - Cleared Docker build cache
-     - Building fresh image
-
-## Testing Plan (Post-Build)
-
-### Phase 1: Basic Connectivity
-- [ ] Website loads on http://localhost:3000
-- [ ] No JavaScript errors in console
-- [ ] API endpoints respond correctly
-
-### Phase 2: Device Manager
-- [ ] Navigate to /natureos/devices
-- [ ] Page loads without `initialTimeout` error
-- [ ] MycoBrain tab visible
-- [ ] Device list shows mycobrain-COM5
-
-### Phase 3: MycoBrain Integration
-- [ ] Sensor data displays correctly
-- [ ] LED controls work (Red, Green, Blue, Purple)
-- [ ] Buzzer controls work
-- [ ] Real-time telemetry updates
-
-### Phase 4: Full System
-- [ ] MINDEX species search
-- [ ] MAS agent status
-- [ ] n8n workflow triggers
-- [ ] End-to-end device automation
-
-## Docker Container List
-```
-mycosoft-always-on-mindex-1              ✅ Up (healthy)
-mycosoft-always-on-mycosoft-website-1    🔄 Rebuilding
-mycosoft-mas-mas-orchestrator-1          ✅ Up (healthy)
-mycosoft-mas-n8n-1                       ✅ Up
-myca-unifi-dashboard                     ✅ Up (healthy)
-mas-postgres                             ✅ Up (healthy)
-mycosoft-mas-qdrant-1                    ✅ Up (healthy)
-mycosoft-mas-redis-1                     ✅ Up (healthy)
-mycosoft-mas-whisper-1                   ✅ Up (healthy)
+CREP Dashboard (localhost:3000/dashboard/crep)
+  ├── MINDEX (localhost:8000) → Fungal observations
+  ├── MycoBrain Service (localhost:8003) → IoT devices
+  ├── MAS Orchestrator (localhost:8001) → 42+ agents
+  └── External APIs
+      ├── USGS Earthquake Feed
+      ├── NIFC Wildfire Data
+      ├── NOAA Weather/Space Weather
+      └── FlightRadar24/AIS Maritime
 ```
 
-## Next Actions
+## Quick Start Commands
 
-1. **Immediate** (Now)
-   - Wait for Docker build to complete
-   - Start website container
-   - Test Device Manager UI
-   - Verify no `initialTimeout` error
+### Start Website (if not running)
+```powershell
+cd C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas
+npm run dev
+```
 
-2. **Short Term** (Tonight)
-   - Complete end-to-end testing
-   - Document all API endpoints
-   - Create backup of working state
+### Start MycoBrain Service
+```powershell
+cd services\mycobrain
+python mycobrain_service_standalone.py
+```
 
-3. **Medium Term** (This Week)
-   - Add monitoring (Prometheus/Grafana)
-   - Implement CI/CD pipeline
-   - Add automated testing
+### Start Docker Services
+```powershell
+docker-compose -f docker-compose.always-on.yml up -d
+```
 
-4. **Long Term** (This Month)
-   - Consider cloud deployment
-   - Add redundancy
-   - Scale horizontally
+### Access Main Dashboards
+```
+CREP Dashboard:    http://localhost:3000/dashboard/crep
+Device Manager:    http://localhost:3000/natureos/devices
+NatureOS:          http://localhost:3000/natureos
+```
 
-## Cost & Resource Usage
+## System Health Indicators
 
-### Current (Local Docker Desktop)
-- **Cost**: $0/month
-- **CPU**: ~40% average
-- **RAM**: ~8GB total (all containers)
-- **Disk**: ~15GB (images + data)
-- **Network**: LAN only
-
-### Optimization Opportunities
-- Use Docker layer caching properly
-- Implement multi-stage builds
-- Use Alpine Linux where possible
-- Compress static assets
-
-## Support & Documentation
-
-- **Integration Plan**: `/DOCKER_INTEGRATION_PLAN.md`
-- **Previous Status**: `/MYCOBRAIN_SYSTEM_STATUS_FINAL.md`
-- **System Summary**: `/FINAL_SYSTEM_SUMMARY.md`
-- **Docker Compose**: `/docker-compose.always-on.yml`
+- **● SYSTEM OPERATIONAL** - All core services running
+- **UPTIME: 99.9%** - High availability maintained
+- **MYCOBRAIN: CONNECTED** - Hardware devices online
+- **MINDEX: SYNCED** - Database synchronized
+- **MYCA: ACTIVE** - AI agents operational
 
 ---
-**Build Status**: Monitoring terminals/6.txt for progress...
 
+**Last Updated**: January 16, 2026 @ 5:22 PM PST

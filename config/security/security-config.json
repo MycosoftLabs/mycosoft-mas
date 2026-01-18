@@ -1,0 +1,210 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-01-17",
+  "description": "Security Operations Center configuration",
+
+  "soc": {
+    "name": "Mycosoft Security Operations Center",
+    "enabled": true,
+    "mode": "active",
+    "monitoring_interval_seconds": 30,
+    "alert_channels": ["dashboard"],
+    "log_retention_days": 365,
+    "threat_level": "elevated"
+  },
+
+  "unifi_integration": {
+    "enabled": true,
+    "host": "192.168.0.1",
+    "port": 443,
+    "site": "default",
+    "poll_interval_seconds": 30,
+    "features": {
+      "client_tracking": true,
+      "threat_detection": true,
+      "ids_ips_integration": true,
+      "traffic_analytics": true,
+      "geo_ip_lookup": true,
+      "device_fingerprinting": true
+    }
+  },
+
+  "geo_ip": {
+    "provider": "maxmind",
+    "database_path": "/data/geoip/GeoLite2-City.mmdb",
+    "update_frequency": "weekly",
+    "fallback_provider": "ip-api.com"
+  },
+
+  "threat_detection": {
+    "enabled": true,
+    "rules": [
+      {
+        "id": "rule-001",
+        "name": "Non-US/CA Traffic",
+        "description": "Alert on traffic from countries outside US/Canada",
+        "condition": "country NOT IN ['US', 'CA']",
+        "severity": "medium",
+        "action": "alert",
+        "exceptions": ["trusted_services"]
+      },
+      {
+        "id": "rule-002",
+        "name": "High-Risk Country Traffic",
+        "description": "Block traffic from high-risk countries",
+        "condition": "country IN ['CN', 'RU', 'KP', 'IR', 'BY']",
+        "severity": "critical",
+        "action": "block_and_alert"
+      },
+      {
+        "id": "rule-003",
+        "name": "Unknown IP Access",
+        "description": "Alert on IPs not matching known user locations",
+        "condition": "ip NOT IN known_user_ranges AND NOT IN trusted_services",
+        "severity": "high",
+        "action": "alert"
+      },
+      {
+        "id": "rule-004",
+        "name": "Brute Force Detection",
+        "description": "Detect brute force login attempts",
+        "condition": "failed_logins > 5 per minute",
+        "severity": "critical",
+        "action": "block_and_alert"
+      },
+      {
+        "id": "rule-005",
+        "name": "Port Scan Detection",
+        "description": "Detect port scanning attempts",
+        "condition": "unique_ports > 20 per minute",
+        "severity": "high",
+        "action": "block_and_alert"
+      },
+      {
+        "id": "rule-006",
+        "name": "Data Exfiltration Detection",
+        "description": "Detect unusual outbound data transfers",
+        "condition": "outbound_mb > 500 per hour",
+        "severity": "critical",
+        "action": "alert"
+      },
+      {
+        "id": "rule-007",
+        "name": "Off-Hours Access",
+        "description": "Alert on access outside business hours from unknown IPs",
+        "condition": "time NOT IN business_hours AND ip NOT IN known_users",
+        "severity": "medium",
+        "action": "alert"
+      },
+      {
+        "id": "rule-008",
+        "name": "TOR Exit Node",
+        "description": "Block traffic from known TOR exit nodes",
+        "condition": "ip IN tor_exit_nodes",
+        "severity": "high",
+        "action": "block_and_alert"
+      },
+      {
+        "id": "rule-009",
+        "name": "VPN Detection",
+        "description": "Log VPN usage for audit",
+        "condition": "is_vpn = true",
+        "severity": "info",
+        "action": "log"
+      },
+      {
+        "id": "rule-010",
+        "name": "New Device Connection",
+        "description": "Alert on new device connections",
+        "condition": "device_id NOT IN known_devices",
+        "severity": "low",
+        "action": "alert"
+      }
+    ]
+  },
+
+  "alerting": {
+    "channels": {
+      "dashboard": {
+        "enabled": true,
+        "realtime": true,
+        "severity_filter": ["info", "low", "medium", "high", "critical"]
+      },
+      "email": {
+        "enabled": false,
+        "recipients": ["security@mycosoft.com"],
+        "smtp_host": "smtp.sendgrid.net",
+        "severity_filter": ["high", "critical"]
+      }
+    },
+    "rate_limits": {
+      "max_alerts_per_hour": 100,
+      "dedup_window_seconds": 300,
+      "escalation_after_minutes": 15
+    }
+  },
+
+  "incident_response": {
+    "auto_block_enabled": true,
+    "auto_block_duration_minutes": 60,
+    "require_manual_unblock": ["critical"],
+    "escalation_chain": [
+      { "delay_minutes": 0, "notify": ["dashboard"] },
+      { "delay_minutes": 5, "notify": ["slack"] },
+      { "delay_minutes": 15, "notify": ["email"] },
+      { "delay_minutes": 30, "notify": ["sms"] }
+    ]
+  },
+
+  "business_hours": {
+    "timezone": "America/Los_Angeles",
+    "weekdays": {
+      "start": "06:00",
+      "end": "23:00"
+    },
+    "weekends": {
+      "start": "08:00",
+      "end": "22:00"
+    }
+  },
+
+  "audit_logging": {
+    "enabled": true,
+    "log_level": "info",
+    "log_path": "/var/log/mycosoft/security",
+    "format": "json",
+    "include_fields": [
+      "timestamp", "event_type", "severity", "source_ip", "destination_ip",
+      "user_id", "user_agent", "geo_location", "action_taken", "rule_matched"
+    ],
+    "retention_days": 365,
+    "compress_after_days": 30
+  },
+
+  "agents": {
+    "watchdog": {
+      "id": "watchdog",
+      "enabled": true,
+      "description": "Continuous threat monitoring",
+      "interval_seconds": 30
+    },
+    "hunter": {
+      "id": "hunter",
+      "enabled": true,
+      "description": "Proactive threat hunting",
+      "interval_seconds": 300
+    },
+    "guardian": {
+      "id": "guardian",
+      "enabled": true,
+      "description": "System protection and blocking",
+      "interval_seconds": 10
+    },
+    "incident_response": {
+      "id": "incident-response",
+      "enabled": true,
+      "description": "Automated incident handling",
+      "interval_seconds": 5
+    }
+  }
+}

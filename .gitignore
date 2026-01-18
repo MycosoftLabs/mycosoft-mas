@@ -125,3 +125,6 @@ vault-data/
 cloudflared.exe
 *.bak*
 .cursor/plans/
+
+# Deprecated MAS website
+_deprecated_mas_website/

@@ -80,10 +80,14 @@ You should see:
 
 Access your services:
 
+- **Mycosoft Website**: http://localhost:3000
+- **CREP Dashboard**: http://localhost:3000/dashboard/crep
+- **NatureOS**: http://localhost:3000/natureos
+- **Device Manager**: http://localhost:3000/natureos/devices
 - **MAS API**: http://localhost:8001
-- **MYCA UI**: http://localhost:3001
-- **Grafana**: http://localhost:3000 (admin/admin)
+- **Grafana**: http://localhost:3002 (admin/admin)
 - **Prometheus**: http://localhost:9090
+- **MYCA UniFi Dashboard**: http://localhost:3100
 
 ## If You Used Local LLM (Option C)
 

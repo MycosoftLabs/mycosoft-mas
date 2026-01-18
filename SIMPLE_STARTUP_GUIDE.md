@@ -22,9 +22,11 @@ python mycobrain_service_standalone.py
 ```
 
 ### Step 2: Open Browser (1 minute)
-```
-http://localhost:3000/natureos/devices
-```
+
+**Main URLs:**
+- **CREP Dashboard**: http://localhost:3000/dashboard/crep
+- **Device Manager**: http://localhost:3000/natureos/devices
+- **NatureOS**: http://localhost:3000/natureos
 
 ### Step 3: Connect Device in UI
 - Click "COM5" button
