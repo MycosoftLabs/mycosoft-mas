@@ -123,8 +123,30 @@ Post-Deployment:
 3. **Tunnel shows healthy but 0 requests** - Check connector, not just status
 4. **DNS A records to private IPs** - Won't work, must use CNAME to cfargotunnel.com
 5. **Cloudflare cache** - Must purge after EVERY rebuild
+6. **Docker image vs Git commit** - Git commit may match but Docker image may be stale. **ALWAYS rebuild Docker image** after code changes
+7. **Environment variables** - `.env.local` is gitignored. Supabase env vars must be in `docker-compose.yml` environment section
+8. **Module-level code** - Any code that runs at module load time (like `createClient()`) will fail during Docker build if env vars aren't set. Use lazy initialization patterns
+9. **ALWAYS compare pages** - After deployment, compare sandbox vs local to verify code is actually deployed
+
+---
+
+## 📋 Post-Deployment Verification
+
+**Always run this check after deployment:**
+
+```bash
+# Compare login page - should match local
+curl -s http://localhost:3000/login | grep -io 'continue with google'
+```
+
+If sandbox doesn't match local:
+1. Verify git commit matches
+2. **Rebuild Docker image with --no-cache**
+3. Restart container
+4. Clear Cloudflare cache
 
 ---
 
 *Document created: January 18, 2026*
+*Updated: January 18, 2026 - Added Docker image rebuild requirement*
 *Purpose: Prevent deployment failures from known issues*
