@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Force rebuild website on VM 103 via SSH/Paramiko"""
+"""Deploy website via SSH/Paramiko - NOT Proxmox API"""
 import paramiko
 import sys
 import time
@@ -12,7 +12,7 @@ VM_PASS = 'Mushroom1!Mushroom1!'
 
 def main():
     print('=' * 60)
-    print('  FORCE REBUILDING WEBSITE FROM SOURCE (SSH/Paramiko)')
+    print('  WEBSITE DEPLOYMENT VIA SSH/PARAMIKO')
     print('=' * 60)
     print(f'\nConnecting to {VM_HOST}...')
     

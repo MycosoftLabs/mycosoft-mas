@@ -116,12 +116,11 @@ def main():
     
     # Deployment commands
     commands = [
-        "cd /opt/mycosoft/website && git pull origin main",
-        "cd /opt/mycosoft/website && docker-compose -f docker-compose.always-on.yml build mycosoft-website --no-cache",
-        "cd /opt/mycosoft/website && docker-compose -f docker-compose.always-on.yml up -d mycosoft-website",
-        "docker exec mindex-postgres psql -U mindex -c 'CREATE EXTENSION IF NOT EXISTS postgis;' 2>/dev/null || echo 'PostGIS check skipped'",
-        "cd /opt/mycosoft/website && docker-compose -f docker-compose.always-on.yml restart mindex-api || true",
-        "sudo systemctl restart cloudflared",
+        "cd /opt/mycosoft/website && git fetch origin && git reset --hard origin/main",
+        "cd /opt/mycosoft/website && docker build -t website-website:latest --no-cache .",
+        "docker stop mycosoft-website 2>/dev/null || true",
+        "docker rm mycosoft-website 2>/dev/null || true",
+        "cd /opt/mycosoft && docker compose -p mycosoft-production up -d mycosoft-website",
         "docker ps --format 'table {{.Names}}\\t{{.Status}}'"
     ]
     

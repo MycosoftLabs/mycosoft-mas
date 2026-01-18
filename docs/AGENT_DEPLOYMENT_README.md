@@ -127,6 +127,9 @@ Post-Deployment:
 7. **Environment variables** - `.env.local` is gitignored. Supabase env vars must be in `docker-compose.yml` environment section
 8. **Module-level code** - Any code that runs at module load time (like `createClient()`) will fail during Docker build if env vars aren't set. Use lazy initialization patterns
 9. **ALWAYS compare pages** - After deployment, compare sandbox vs local to verify code is actually deployed
+10. **Supabase Site URL** - Must be set to production domain (`https://sandbox.mycosoft.com`) in Supabase dashboard → Authentication → URL Configuration. If set to localhost, OAuth will redirect to localhost after authentication
+11. **OAuth callback origin** - Docker containers use `HOSTNAME=0.0.0.0` internally. Auth callbacks must use `X-Forwarded-Host` header or `NEXT_PUBLIC_SITE_URL` env var to get the correct external origin
+12. **NEXT_PUBLIC_* env vars** - Are baked into the build at compile time. Must be set in `Dockerfile` during build stage, not just in docker-compose.yml
 
 ---
 
@@ -147,6 +150,17 @@ If sandbox doesn't match local:
 
 ---
 
+## 🚀 VM Specifications (Current)
+
+| Resource | Value | Notes |
+|----------|-------|-------|
+| RAM | 64GB | Upgraded Jan 18, 2026 |
+| Disk | 2TB | LVM expanded to use full disk |
+| CPUs | 8 cores | Pending upgrade to 16 |
+| IP | 192.168.0.187 | Internal network |
+
+---
+
 *Document created: January 18, 2026*
-*Updated: January 18, 2026 - Added Docker image rebuild requirement*
+*Updated: January 18, 2026 12:26 AM - Added OAuth fixes, VM specs, comprehensive gotchas*
 *Purpose: Prevent deployment failures from known issues*
