@@ -34,11 +34,14 @@ BME688 Sensor 2 (ENV 0x76):
 
 | Service | Port | Status | Notes |
 |---------|------|--------|-------|
-| Website | 3002 | ✅ Running | Alternate port due to conflict |
+| Website | 3000 | ✅ Running | Main Mycosoft website |
+| CREP Dashboard | 3000/dashboard/crep | ✅ Active | Global Situational Awareness |
 | MycoBrain | 8003 | ✅ Running | Local Python service v2.2.0 |
 | MAS Orchestrator | 8001 | ✅ Healthy | Docker container |
 | n8n | 5678 | ✅ Running | Docker container |
-| MINDEX | 8000 | ⚠️ Needs Fix | Container exits immediately |
+| MINDEX | 8000 | ✅ Healthy | Fungal database API |
+| Grafana | 3002 | ✅ Running | Monitoring dashboards |
+| MYCA UniFi | 3100 | ✅ Running | Voice integration dashboard |
 
 ## 🔧 What Was Fixed
 
@@ -134,11 +137,15 @@ Invoke-RestMethod -Uri http://localhost:3002/api/mycobrain/mycobrain-COM5/contro
 # 1. Start MycoBrain service
 Start-Process python -ArgumentList "services\mycobrain\mycobrain_service_standalone.py" -WindowStyle Hidden
 
-# 2. Start website (after rebuild)
+# 2. Start website
+npm run dev
+# OR with Docker:
 docker-compose -f docker-compose.always-on.yml up -d --no-deps mycosoft-website
 
-# 3. Access Device Manager
-# Open browser to: http://localhost:3002/natureos/devices
+# 3. Access Dashboards
+# CREP Dashboard:    http://localhost:3000/dashboard/crep
+# Device Manager:    http://localhost:3000/natureos/devices
+# NatureOS:          http://localhost:3000/natureos
 ```
 
 ### Connect Device

@@ -4,6 +4,9 @@
 #
 # This stack runs the REAL MINDEX (Postgres + FastAPI + ETL scheduler) from CODE/MINDEX/mindex
 # so the website gets persistent taxa, images, observations, traits, genomes, and publications.
+#
+# IMPORTANT: This stack connects to the MAS network for n8n and Redis access.
+# The MAS stack (docker-compose.yml) must be running for full functionality.
 
 name: mycosoft-always-on
 
@@ -28,6 +31,7 @@ services:
       retries: 10
     networks:
       - mycosoft-always-on
+      - mycosoft-mas_mas-network
 
   # ----------------------------
   # MINDEX API (FastAPI)
@@ -65,6 +69,7 @@ services:
       start_period: 40s
     networks:
       - mycosoft-always-on
+      - mycosoft-mas_mas-network
 
   # ----------------------------
   # MINDEX ETL Scheduler (continuous scraping/sync)
@@ -88,6 +93,12 @@ services:
     depends_on:
       mindex-postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "print('ETL running')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - mycosoft-always-on
 
@@ -114,6 +125,7 @@ services:
       start_period: 15s
     networks:
       - mycosoft-always-on
+      - mycosoft-mas_mas-network
 
   # ----------------------------
   # Website (Next.js)
@@ -123,33 +135,56 @@ services:
       context: ../../WEBSITE/website
       dockerfile: Dockerfile.container
       args:
-        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:-your-maps-key-here}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
+      # MINDEX API
       MINDEX_API_BASE_URL: http://mindex-api:8000
       MINDEX_API_URL: http://mindex-api:8000
       MINDEX_API_KEY: local-dev-key
+      # MAS & MycoBrain - Direct container access via shared network
       MYCOBRAIN_SERVICE_URL: http://host.docker.internal:8003
-      MAS_API_URL: http://host.docker.internal:8001
-      # Google API Keys
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-your-client-id-here}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-your-client-secret-here}
-      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:-your-maps-key-here}
+      MAS_API_URL: http://mycosoft-mas-mas-orchestrator-1:8000
+      # n8n - Direct container access via MAS network
+      N8N_LOCAL_URL: http://mycosoft-mas-n8n-1:5678
+      N8N_WEBHOOK_URL: http://mycosoft-mas-n8n-1:5678
+      # Redis - Direct container access for event bus
+      REDIS_URL: redis://mycosoft-mas-redis-1:6379
+      # Google Maps API Key (client-side)
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+      # Google OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       # NextAuth
       NEXTAUTH_URL: http://localhost:3000
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-your-nextauth-secret-here}
-      # n8n
-      N8N_LOCAL_URL: http://host.docker.internal:5678
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      # OEI Data Connectors
+      OPENSKY_USERNAME: ${OPENSKY_USERNAME:-}
+      OPENSKY_PASSWORD: ${OPENSKY_PASSWORD:-}
+      AISSTREAM_API_KEY: ${AISSTREAM_API_KEY:-}
+      FLIGHTRADAR24_API_KEY: ${FLIGHTRADAR24_API_KEY:-}
+      EBIRD_API_KEY: ${EBIRD_API_KEY:-}
+      # Supabase (for OEI event bus persistence)
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+      # Redis (for OEI event bus - fallback if direct doesn't work)
+      UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL:-}
+      UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN:-}
     depends_on:
-      mycobrain:
-        condition: service_healthy
       mindex-api:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || node -e \"require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       - mycosoft-always-on
+      - mycosoft-mas_mas-network
 
 volumes:
   mindex_postgres_data:
@@ -159,3 +194,8 @@ networks:
   mycosoft-always-on:
     external: true
     name: mycosoft-always-on
+  mycosoft-mas_mas-network:
+    external: true
+    name: mycosoft-mas_mas-network
+
+

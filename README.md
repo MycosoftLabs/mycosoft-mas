@@ -80,10 +80,14 @@ docker compose ps
 
 Then check:
 
-- **Grafana**: `http://localhost:3000`
+- **Mycosoft Website**: `http://localhost:3000`
+- **CREP Dashboard**: `http://localhost:3000/dashboard/crep`
+- **NatureOS**: `http://localhost:3000/natureos`
+- **Device Manager**: `http://localhost:3000/natureos/devices`
+- **Grafana**: `http://localhost:3002`
 - **Prometheus**: `http://localhost:9090`
 - **Qdrant**: `http://localhost:6333`
-- **MYCA UI (Next.js)**: `http://localhost:3001`
+- **MYCA UniFi Dashboard**: `http://localhost:3100`
 - **MAS container port mapping**: `http://localhost:8001` (see note below about running the FastAPI app)
 
 ### Important note about the MAS API container
@@ -248,7 +252,7 @@ The recommended entrypoint for cross-system work is the unified manager:
 - **Grafana provisioning/dashboards**: `grafana/`
 - **MAS metrics endpoint**: `GET /metrics` on the FastAPI app
 
-If you’re using Docker Compose, Grafana is exposed at `http://localhost:3000`.
+If you're using Docker Compose, Grafana is exposed at `http://localhost:3002`.
 
 - **Default Grafana login (Compose default)**: username `admin`, password `admin` (see `docker-compose.yml`).
 

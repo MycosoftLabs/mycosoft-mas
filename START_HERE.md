@@ -141,12 +141,15 @@ docker-compose up -d postgres redis
 ## 📊 System Status
 
 Check system status at:
-- **MAS API:** http://localhost:8000
-- **Health Check:** http://localhost:8000/health
-- **Metrics:** http://localhost:8000/metrics
-- **Dashboard:** http://localhost:3001 (Next.js)
-- **Grafana:** http://localhost:3000
+- **Mycosoft Website:** http://localhost:3000
+- **CREP Dashboard:** http://localhost:3000/dashboard/crep
+- **NatureOS:** http://localhost:3000/natureos
+- **Device Manager:** http://localhost:3000/natureos/devices
+- **MAS API:** http://localhost:8001
+- **Health Check:** http://localhost:8001/health
+- **Grafana:** http://localhost:3002
 - **Prometheus:** http://localhost:9090
+- **MYCA UniFi Dashboard:** http://localhost:3100
 
 ## 🎯 Key Endpoints to Test
 
