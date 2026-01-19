@@ -1,32 +1,39 @@
 #!/usr/bin/env python3
+"""Check VM status and fix deployment."""
 import paramiko
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
 
-print('=== Current container status ===')
-cmd = 'echo REDACTED_VM_SSH_PASSWORD | sudo -S docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
-stdin, stdout, stderr = ssh.exec_command(cmd)
-print(stdout.read().decode())
+def main():
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    
+    print("Connecting to VM 192.168.0.187...")
+    client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+    print("Connected!\n")
+    
+    # Check website directory and docker
+    cmds = [
+        ('Check home directory', 'ls -la /home/mycosoft/'),
+        ('Check docker containers', 'docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"'),
+        ('Check website images', 'docker images | grep -i website || echo "No website images found"'),
+        ('Check mycosoft-production dir', 'ls -la /home/mycosoft/mycosoft-production/ 2>/dev/null || echo "Dir not found"'),
+        ('Check docker-compose files', 'find /home/mycosoft -name "docker-compose*.yml" 2>/dev/null | head -10'),
+        ('Check git repos', 'find /home/mycosoft -name ".git" -type d 2>/dev/null | head -10'),
+    ]
+    
+    for name, cmd in cmds:
+        print(f"\n{'='*60}")
+        print(f">>> {name}")
+        print(f">>> {cmd}")
+        print('='*60)
+        stdin, stdout, stderr = client.exec_command(cmd, timeout=30)
+        output = stdout.read().decode()
+        errors = stderr.read().decode()
+        print(output)
+        if errors:
+            print(f"STDERR: {errors}")
+    
+    client.close()
+    print("\n\nDone!")
 
-print('=== Files in /opt/mycosoft ===')
-cmd2 = 'ls -la /opt/mycosoft/'
-stdin, stdout, stderr = ssh.exec_command(cmd2)
-print(stdout.read().decode())
-
-print('=== Website dir ===')
-cmd3 = 'ls /opt/mycosoft/website/ 2>/dev/null | head -20 || echo "No website dir"'
-stdin, stdout, stderr = ssh.exec_command(cmd3)
-print(stdout.read().decode())
-
-print('=== MAS dir ===')
-cmd4 = 'ls /opt/mycosoft/mas/ 2>/dev/null | head -20 || echo "No MAS dir"'
-stdin, stdout, stderr = ssh.exec_command(cmd4)
-print(stdout.read().decode())
-
-print('=== Home mycosoft dir ===')
-cmd5 = 'ls ~/mycosoft/ 2>/dev/null | head -20 || echo "No home dir"'
-stdin, stdout, stderr = ssh.exec_command(cmd5)
-print(stdout.read().decode())
-
-ssh.close()
+if __name__ == "__main__":
+    main()

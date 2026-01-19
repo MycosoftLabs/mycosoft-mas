@@ -9,6 +9,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
 VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+WEBSITE_PATH = '/opt/mycosoft/website'
 
 def main():
     print('=' * 60)
@@ -22,7 +23,7 @@ def main():
     print('Connected!')
     
     print('\n[1] Pulling latest code from GitHub...')
-    _, out, err = ssh.exec_command('cd /opt/mycosoft/website && git fetch origin && git reset --hard origin/main 2>&1')
+    _, out, err = ssh.exec_command(f'cd {WEBSITE_PATH} && git fetch origin && git reset --hard origin/main 2>&1')
     out.channel.recv_exit_status()
     print(out.read().decode('utf-8', errors='replace'))
     
@@ -30,16 +31,17 @@ def main():
     _, out, _ = ssh.exec_command('docker images | grep -E "website|REPOSITORY"')
     print(out.read().decode('utf-8', errors='replace'))
     
-    print('\n[3] Building new image (this takes 3-5 minutes)...')
+    print('\n[3] Building website image ONLY (this takes 5-10 minutes)...')
+    # Build only the website service using docker compose build, not full "up"
     _, out, err = ssh.exec_command(
-        f'cd /opt/mycosoft/website && echo "{VM_PASS}" | sudo -S docker build -t website-website:latest --no-cache . 2>&1',
-        timeout=600
+        f'cd {WEBSITE_PATH} && echo "{VM_PASS}" | sudo -S docker compose build --no-cache website 2>&1',
+        timeout=900  # 15 minute timeout for build
     )
     exit_code = out.channel.recv_exit_status()
     output = out.read().decode('utf-8', errors='replace')
     print(f'Build exit code: {exit_code}')
     lines = output.strip().split('\n')
-    print('\n'.join(lines[-40:]))
+    print('\n'.join(lines[-50:]))
     
     if exit_code != 0:
         print('\n!!! BUILD FAILED !!!')
@@ -48,28 +50,39 @@ def main():
     
     print('\n[4] Stopping old container...')
     _, out, _ = ssh.exec_command(
+        f'echo "{VM_PASS}" | sudo -S docker stop website-website-1 2>/dev/null || true; '
+        f'echo "{VM_PASS}" | sudo -S docker rm website-website-1 2>/dev/null || true; '
         f'echo "{VM_PASS}" | sudo -S docker stop mycosoft-website 2>/dev/null || true; '
         f'echo "{VM_PASS}" | sudo -S docker rm mycosoft-website 2>/dev/null || true'
     )
     out.channel.recv_exit_status()
     print(out.read().decode('utf-8', errors='replace') or 'Done')
     
-    print('\n[5] Starting new container...')
+    print('\n[5] Starting website container ONLY...')
     _, out, _ = ssh.exec_command(
-        f'cd /opt/mycosoft && echo "{VM_PASS}" | sudo -S docker compose -p mycosoft-production up -d mycosoft-website 2>&1'
+        f'cd {WEBSITE_PATH} && echo "{VM_PASS}" | sudo -S docker compose up -d website 2>&1'
     )
     out.channel.recv_exit_status()
     print(out.read().decode('utf-8', errors='replace'))
     
-    print('\n[6] Waiting 20 seconds for startup...')
-    time.sleep(20)
+    print('\n[6] Waiting 25 seconds for startup...')
+    time.sleep(25)
     
     print('\n[7] Container status:')
-    _, out, _ = ssh.exec_command('docker ps --filter name=mycosoft-website --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"')
+    _, out, _ = ssh.exec_command('docker ps --filter name=website --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"')
     print(out.read().decode('utf-8', errors='replace'))
     
-    print('\n[8] Testing localhost:3000...')
+    print('\n[8] Container logs (last 10 lines):')
+    _, out, _ = ssh.exec_command('docker logs website-website-1 --tail 10 2>&1')
+    print(out.read().decode('utf-8', errors='replace'))
+    
+    print('\n[9] Testing localhost:3000...')
     _, out, _ = ssh.exec_command('curl -s -o /dev/null -w "%{http_code}" http://localhost:3000')
+    status = out.read().decode('utf-8', errors='replace').strip()
+    print(f'HTTP Status: {status}')
+    
+    print('\n[10] Testing /devices/mushroom-1...')
+    _, out, _ = ssh.exec_command('curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/devices/mushroom-1')
     status = out.read().decode('utf-8', errors='replace').strip()
     print(f'HTTP Status: {status}')
     
@@ -80,7 +93,7 @@ def main():
     print('=' * 60)
     print('\nNext steps:')
     print('1. Clear Cloudflare cache (PURGE EVERYTHING)')
-    print('2. Test: https://sandbox.mycosoft.com/login?redirectTo=%2Fdashboard%2Fcrep')
+    print('2. Test: https://sandbox.mycosoft.com/devices/mushroom-1')
     return 0
 
 if __name__ == '__main__':
