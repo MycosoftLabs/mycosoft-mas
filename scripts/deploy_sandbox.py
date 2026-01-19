@@ -1,119 +1,134 @@
 #!/usr/bin/env python3
 """
-Deploy Sandbox - Full deployment to sandbox.mycosoft.com
-Uses correct paths at /opt/mycosoft/
-"""
+Mycosoft Sandbox Deployment Script
+===================================
+One-click deployment of all services to sandbox.mycosoft.com
 
+Services Deployed:
+- Website (port 3000)
+- MycoBrain (port 8765)
+- PostgreSQL (port 5432)
+- Redis (port 6379)
+- Plus all collectors and monitoring services
+
+Usage: python deploy_sandbox.py
+"""
 import paramiko
 import sys
 import time
-from pathlib import Path
 
+# Ensure UTF-8 output
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 # VM Configuration
-VM_HOST = "192.168.0.187"
-VM_USER = "mycosoft"
-VM_PASS = "Mushroom1!Mushroom1!"
+VM_HOST = '192.168.0.187'
+VM_USER = 'mycosoft'
+VM_PASS = 'Mushroom1!Mushroom1!'
+WEBSITE_PATH = '/opt/mycosoft/website'
 
-# Correct paths on VM
-WEBSITE_PATH = "/opt/mycosoft/website"
-ASSETS_PATH = f"{WEBSITE_PATH}/public/assets/mushroom1"
-
-# Local paths
-LOCAL_WEBSITE = Path(r"C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website")
-LOCAL_MUSHROOM1 = LOCAL_WEBSITE / "public" / "assets" / "mushroom1"
-
-def run(client, cmd, show=True):
-    """Run SSH command"""
-    print(f"[CMD] {cmd[:100]}...")
-    stdin, stdout, stderr = client.exec_command(cmd, timeout=600)
-    out = stdout.read().decode('utf-8', errors='replace').strip()
-    err = stderr.read().decode('utf-8', errors='replace').strip()
-    exit_code = stdout.channel.recv_exit_status()
-    if show and out:
-        for line in out.split('\n')[-20:]:
-            print(f"      {line}")
-    if err and exit_code != 0:
-        print(f"[ERR] {err[:300]}")
-    return exit_code == 0, out
-
-def upload_folder(sftp, local_dir, remote_dir, extensions):
-    """Upload files matching extensions"""
-    count = 0
-    total_mb = 0
-    for f in Path(local_dir).iterdir():
-        if f.is_file() and f.suffix.lower() in extensions:
-            remote_file = f"{remote_dir}/{f.name}"
-            size_mb = f.stat().st_size / (1024*1024)
-            print(f"      Uploading {f.name} ({size_mb:.1f}MB)")
-            sftp.put(str(f), remote_file)
-            count += 1
-            total_mb += size_mb
-    return count, total_mb
+def run_cmd(ssh, cmd, name, timeout=600):
+    """Execute command on VM with proper output handling."""
+    print(f"\n{'='*60}")
+    print(f"[STEP] {name}")
+    print(f"{'='*60}")
+    print(f"CMD: {cmd[:100]}{'...' if len(cmd) > 100 else ''}")
+    
+    try:
+        stdin, stdout, stderr = ssh.exec_command(cmd, timeout=timeout)
+        exit_code = stdout.channel.recv_exit_status()
+        out = stdout.read().decode('utf-8', errors='replace')
+        err = stderr.read().decode('utf-8', errors='replace')
+        
+        # Show last 30 lines of output
+        lines = out.strip().split('\n')
+        if len(lines) > 30:
+            print(f"... ({len(lines) - 30} lines omitted) ...")
+            print('\n'.join(lines[-30:]))
+        else:
+            print(out)
+        
+        if err and exit_code != 0:
+            print(f"STDERR: {err[:500]}")
+        
+        status = "OK" if exit_code == 0 else "FAILED"
+        print(f"\n[{status}] Exit code: {exit_code}")
+        return exit_code == 0
+    except Exception as e:
+        print(f"[ERROR] {e}")
+        return False
 
 def main():
-    start = time.time()
-    print("=" * 60)
-    print("MYCOSOFT SANDBOX DEPLOYMENT")
-    print("=" * 60)
+    print("=" * 70)
+    print("  MYCOSOFT SANDBOX DEPLOYMENT")
+    print("  Target: sandbox.mycosoft.com (192.168.0.187)")
+    print("=" * 70)
     
-    # Connect
-    print("\n[1/6] Connecting to VM...")
+    # Connect to VM
+    print("\n[1] Connecting to VM...")
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
-    print("      Connected to 192.168.0.187")
     
-    # Check if website directory exists, clone if not
-    print("\n[2/6] Checking website repository...")
-    success, out = run(client, f"test -d {WEBSITE_PATH}/.git && echo EXISTS || echo MISSING", show=False)
+    try:
+        client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
+        print("Connected successfully!")
+    except Exception as e:
+        print(f"Failed to connect: {e}")
+        return 1
     
-    if "MISSING" in out:
-        print("      Cloning website repository...")
-        run(client, f"sudo mkdir -p {WEBSITE_PATH} && sudo chown mycosoft:mycosoft {WEBSITE_PATH}")
-        run(client, f"git clone https://github.com/MycosoftLabs/website.git {WEBSITE_PATH}")
-    else:
-        print("      Pulling latest changes...")
-        run(client, f"cd {WEBSITE_PATH} && git fetch origin && git reset --hard origin/main")
+    # Check system status
+    run_cmd(client, "free -h && df -h / && uptime", "System Status Check")
     
-    # Upload video files
-    print("\n[3/6] Uploading video files (bypassing GitHub 100MB limit)...")
-    run(client, f"mkdir -p {ASSETS_PATH}")
+    # Check what containers are running
+    run_cmd(client, "docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'", "Current Container Status")
     
-    sftp = client.open_sftp()
-    vcount, vsize = upload_folder(sftp, LOCAL_MUSHROOM1, ASSETS_PATH, ['.mp4'])
-    print(f"      Uploaded {vcount} videos ({vsize:.0f}MB)")
+    # Pull latest code
+    run_cmd(client, f"cd {WEBSITE_PATH} && git fetch origin && git reset --hard origin/main && git log --oneline -3", "Pull Latest Code")
     
-    # Upload images
-    print("\n[4/6] Syncing image assets...")
-    icount, isize = upload_folder(sftp, LOCAL_MUSHROOM1, ASSETS_PATH, ['.jpg', '.jpeg', '.png', '.gif', '.webp'])
-    print(f"      Synced {icount} images ({isize:.0f}MB)")
-    sftp.close()
+    # Check the pricing in mushroom1-details.tsx
+    run_cmd(client, f"grep -n '2,000\\|599' {WEBSITE_PATH}/components/devices/mushroom1-details.tsx | head -10", "Check Mushroom1 Pricing in Code")
     
-    # Rebuild Docker
-    print("\n[5/6] Rebuilding website Docker image...")
-    run(client, f"cd {WEBSITE_PATH} && docker build -t website-website:latest . 2>&1 | tail -30")
+    # Stop all containers and clean up
+    run_cmd(client, "docker compose down 2>/dev/null; docker stop $(docker ps -aq) 2>/dev/null; docker system prune -f", "Stop All Containers")
     
-    # Restart container
-    print("\n[6/6] Restarting website container...")
-    run(client, "docker stop mycosoft-website 2>/dev/null; docker rm mycosoft-website 2>/dev/null; true")
-    run(client, f"cd /opt/mycosoft && docker compose up -d mycosoft-website")
+    # Build and start just the essential services first
+    run_cmd(client, f"cd {WEBSITE_PATH} && docker compose up -d postgres redis", "Start Database Services", timeout=120)
     
-    # Wait and verify
-    print("\n[VERIFY] Checking deployment status...")
-    time.sleep(8)
-    run(client, "docker ps --filter name=website --format 'table {{.Names}}\t{{.Status}}'")
-    run(client, "curl -s -o /dev/null -w 'HTTP %{http_code}' http://localhost:3000")
+    # Wait for databases
+    run_cmd(client, "sleep 10 && docker ps --format 'table {{.Names}}\t{{.Status}}'", "Wait for Databases")
+    
+    # Build website with fresh image
+    print("\n" + "=" * 60)
+    print("[CRITICAL] Building Website Container")
+    print("This may take 3-5 minutes...")
+    print("=" * 60)
+    
+    success = run_cmd(client, f"cd {WEBSITE_PATH} && docker compose build website --no-cache 2>&1", "Build Website", timeout=600)
+    
+    if not success:
+        print("\n[!] Build failed, checking Dockerfile...")
+        run_cmd(client, f"cat {WEBSITE_PATH}/Dockerfile.production | head -30", "Dockerfile Check")
+    
+    # Start website
+    run_cmd(client, f"cd {WEBSITE_PATH} && docker compose up -d website", "Start Website", timeout=120)
+    
+    # Check status
+    run_cmd(client, "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'", "Final Container Status")
+    
+    # Test website
+    run_cmd(client, "sleep 5 && curl -s -o /dev/null -w 'HTTP Status: %{http_code}\\n' http://localhost:3000/", "Test Website")
+    
+    # Test the mushroom-1 page
+    run_cmd(client, "curl -s http://localhost:3000/devices/mushroom-1 | grep -o '\\$[0-9,]*' | head -5", "Check Mushroom1 Page Pricing")
     
     client.close()
     
-    elapsed = time.time() - start
-    print(f"\n{'='*60}")
-    print(f"DEPLOYMENT COMPLETE ({elapsed:.0f}s)")
-    print(f"{'='*60}")
-    print(f"Local:  http://192.168.0.187:3000")
-    print(f"Public: https://sandbox.mycosoft.com")
+    print("\n" + "=" * 70)
+    print("  DEPLOYMENT COMPLETE")
+    print("  Website: https://sandbox.mycosoft.com/")
+    print("  Mushroom 1: https://sandbox.mycosoft.com/devices/mushroom-1")
+    print("=" * 70)
+    
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

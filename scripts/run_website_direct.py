@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Start website container from existing image."""
+"""Run website container directly from existing image."""
 import paramiko
 import time
 
 def run(client, cmd, timeout=60):
-    print(f">>> {cmd}")
+    print(f"\n>>> {cmd}")
     stdin, stdout, stderr = client.exec_command(cmd, timeout=timeout)
     out = stdout.read().decode()
     err = stderr.read().decode()
@@ -23,14 +23,19 @@ def main():
     print("Connected!\n")
     
     # Check existing images
-    run(client, 'docker images | grep -E "website|REPOSITORY"')
+    run(client, 'docker images | grep website')
     
-    # Find docker-compose file
-    run(client, 'ls -la /home/mycosoft/mycosoft/website/*.yml')
+    # Remove any existing container
+    run(client, 'docker rm -f mycosoft-website 2>/dev/null || true')
     
-    # Start the container using docker compose
-    print("\n>>> Starting website container...")
-    run(client, 'cd /home/mycosoft/mycosoft/website && docker compose up -d', timeout=120)
+    # Run container directly from existing image
+    print("\n>>> Starting website container directly...")
+    run(client, '''docker run -d \\
+        --name mycosoft-website \\
+        -p 3000:3000 \\
+        --restart unless-stopped \\
+        -e NODE_ENV=production \\
+        website-website:latest''', timeout=30)
     
     print("\n>>> Waiting 15 seconds for startup...")
     time.sleep(15)
@@ -40,7 +45,7 @@ def main():
     
     # Check logs
     print("\n>>> Container logs:")
-    run(client, 'docker logs mycosoft-website --tail 20 2>&1')
+    run(client, 'docker logs mycosoft-website --tail 30 2>&1')
     
     # Test endpoints
     print("\n>>> Testing endpoints...")

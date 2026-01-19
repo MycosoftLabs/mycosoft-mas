@@ -1,41 +1,60 @@
+#!/usr/bin/env python3
+"""Rebuild website on VM with Node 18 Dockerfile."""
 import paramiko
 import sys
-import time
-sys.stdout.reconfigure(encoding='utf-8')
 
-VM_HOST = '192.168.0.187'
-VM_USER = 'mycosoft'
-VM_PASS = 'Mushroom1!Mushroom1!'
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
+def main():
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    
+    print("=" * 60)
+    print("  REBUILDING WEBSITE WITH NODE 18")
+    print("=" * 60)
+    
+    print("\nConnecting to VM 192.168.0.187...")
+    client.connect('192.168.0.187', username='mycosoft', password='Mushroom1!Mushroom1!', timeout=30)
+    print("Connected!")
+    
+    commands = [
+        ("Pull latest code", "cd /opt/mycosoft/website && git fetch origin && git reset --hard origin/main"),
+        ("Check Dockerfile", "cat /opt/mycosoft/website/Dockerfile.production | head -15"),
+        ("Stop container", "docker stop mycosoft-website 2>/dev/null || true"),
+        ("Remove container", "docker rm mycosoft-website 2>/dev/null || true"),
+        ("Build image (this takes ~5 min)", "cd /opt/mycosoft/website && docker build -t website-website:latest -f Dockerfile.production . 2>&1"),
+        ("Start container", "docker run -d --name mycosoft-website -p 3000:3000 --restart unless-stopped website-website:latest"),
+        ("Check status", "docker ps | grep website"),
+        ("Wait for startup", "sleep 10"),
+        ("Test endpoint", "curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/devices/mushroom-1"),
+    ]
+    
+    for name, cmd in commands:
+        print(f"\n[{name}]")
+        print(f">>> {cmd[:80]}...")
+        stdin, stdout, stderr = client.exec_command(cmd, timeout=600)  # 10 min timeout for build
+        stdout.channel.recv_exit_status()
+        output = stdout.read().decode('utf-8', errors='replace')
+        errors = stderr.read().decode('utf-8', errors='replace')
+        
+        # Print last 50 lines of output for long commands
+        lines = output.strip().split('\n')
+        if len(lines) > 50:
+            print(f"... ({len(lines)-50} lines omitted) ...")
+            print('\n'.join(lines[-50:]))
+        else:
+            print(output)
+        
+        if errors and 'warning' not in errors.lower():
+            print(f"[INFO] {errors[:500]}")
+    
+    client.close()
+    
+    print("\n" + "=" * 60)
+    print("  REBUILD COMPLETE!")
+    print("=" * 60)
+    print("\nTest: https://sandbox.mycosoft.com/devices/mushroom-1")
+    print("Expected: $2,000 price, videos, waterfall section")
 
-print('=== STARTING DOCKER BUILD IN BACKGROUND ON VM ===')
-
-# Start the build in background on the VM
-cmd = f'''cd /opt/mycosoft/website && \\
-  nohup docker build -t website-website:latest . > /tmp/docker_build.log 2>&1 &
-  echo "Build started in background"
-'''
-
-_, out, _ = ssh.exec_command(cmd)
-print(out.read().decode('utf-8', errors='replace'))
-
-print('\n[1] Checking build progress (waiting 10 seconds)...')
-time.sleep(10)
-
-_, out, _ = ssh.exec_command('tail -20 /tmp/docker_build.log 2>&1')
-print(out.read().decode('utf-8', errors='replace'))
-
-print('\n[2] Is docker build still running?')
-_, out, _ = ssh.exec_command('ps aux | grep "docker build" | grep -v grep')
-result = out.read().decode('utf-8', errors='replace')
-if result:
-    print('Build is running...')
-    print(result)
-else:
-    print('Build may have finished or not started')
-
-ssh.close()
-print('\nRun this script again to check progress, or check /tmp/docker_build.log on the VM')
+if __name__ == "__main__":
+    main()
