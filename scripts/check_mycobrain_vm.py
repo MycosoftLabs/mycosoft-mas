@@ -1,8 +1,19 @@
 #!/usr/bin/env python3
-"""Check MycoBrain services on VM and test connectivity."""
+"""Check MycoBrain services on VM and test connectivity.
+
+Notes:
+- This script is run from Windows terminals sometimes; force UTF-8 stdout to avoid encoding crashes.
+"""
 
 import paramiko
 import json
+import sys
+
+# Avoid UnicodeEncodeError on Windows consoles (cp1252).
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -27,7 +38,7 @@ mycobrain_containers = stdout.read().decode()
 if mycobrain_containers.strip():
     print(mycobrain_containers)
 else:
-    print("  ❌ No MycoBrain containers found!")
+    print("  [ERROR] No MycoBrain containers found!")
 
 # 3. Check docker-compose services
 print("\n3. DOCKER COMPOSE SERVICES:")

@@ -37,8 +37,10 @@ for i, r in enumerate(config['ingress']):
 
 # Insert MycoBrain routes BEFORE catch-all (more specific first)
 mycobrain_routes = [
-    {"hostname": "sandbox.mycosoft.com", "service": "http://localhost:8003", "path": "/api/mycobrain/*"},
-    {"hostname": "sandbox.mycosoft.com", "service": "http://localhost:8003", "path": "/api/mycobrain"},
+    # Route sandbox API requests to the Windows MycoBrain service on the LAN.
+    # This enables real board/COM telemetry without running MycoBrain inside the VM.
+    {"hostname": "sandbox.mycosoft.com", "service": "http://192.168.0.172:8003", "path": "/api/mycobrain/*"},
+    {"hostname": "sandbox.mycosoft.com", "service": "http://192.168.0.172:8003", "path": "/api/mycobrain"},
 ]
 
 config['ingress'] = (
