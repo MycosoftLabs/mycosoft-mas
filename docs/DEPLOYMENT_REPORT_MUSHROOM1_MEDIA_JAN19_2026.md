@@ -44,3 +44,14 @@
 - Cloudflare cache was purged (Purge Everything) on the date above.
 - Docker compose may show website “unhealthy” if healthcheck tools are missing; HTTP 200 on `/` and MP4 endpoints is the practical validation.
 
+## MycoBrain (live board telemetry on sandbox)
+
+- **Windows MycoBrain service** (LAN): `192.168.0.172:8003` (FastAPI + serial)
+- **Cloudflare tunnel route** on VM updated to forward:
+	- `https://sandbox.mycosoft.com/api/mycobrain*` → `http://192.168.0.172:8003`
+- **Verified (public)**:
+	- `GET https://sandbox.mycosoft.com/api/mycobrain` → **200** with live device payload
+	- `GET https://sandbox.mycosoft.com/api/mycobrain/devices` → **200**, count=2 (COM7 + COM10)
+	- `GET https://sandbox.mycosoft.com/api/mycobrain/ports` → **200**, includes COM7/COM10 marked `is_mycobrain=true`
+
+
