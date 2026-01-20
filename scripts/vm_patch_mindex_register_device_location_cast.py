@@ -59,7 +59,8 @@ print("patched_snippets:", count, "patched_case:", case_count)
 """
 
     encoded = base64.b64encode(py.encode("utf-8")).decode("ascii")
-    cmd = "docker exec mindex-api python -c " + repr(
+    mindex_container = "mycosoft-always-on-mindex-api-1"
+    cmd = f"docker exec {mindex_container} python -c " + repr(
         f"import base64; exec(base64.b64decode('{encoded}').decode('utf-8'))"
     )
 
@@ -67,7 +68,7 @@ print("patched_snippets:", count, "patched_case:", case_count)
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(VM_IP, username=VM_USER, password=VM_PASS, timeout=30)
     print(run(ssh, cmd))
-    print(run(ssh, "docker restart mindex-api || true"))
+    print(run(ssh, f"docker restart {mindex_container} || true"))
     ssh.close()
 
 

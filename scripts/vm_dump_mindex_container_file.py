@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dump a file from inside the mindex-api container on the VM with line numbers."""
+"""Dump a file from inside the running MINDEX API container on the VM with line numbers."""
 
 from __future__ import annotations
 
@@ -43,7 +43,8 @@ for i, line in enumerate(text, start=1):
         print(f\"{{i}}:{{line}}\")
 """
     encoded = base64.b64encode(py.encode("utf-8")).decode("ascii")
-    cmd = "docker exec mindex-api python -c " + repr(
+    mindex_container = "mycosoft-always-on-mindex-api-1"
+    cmd = f"docker exec {mindex_container} python -c " + repr(
         f"import base64; exec(base64.b64decode('{encoded}').decode('utf-8'))"
     )
 
