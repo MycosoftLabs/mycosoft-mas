@@ -5,6 +5,7 @@
 Stop spending hours moving videos during deployments.
 
 **Rule**: large media (mp4/webm) must not be part of the Docker image build context whenever possible.
+**Also**: keep images (jpg/png/webp) out of the Docker build context when feasible, so the “device gallery” can update instantly too.
 
 ## Recommended Architecture
 
@@ -47,6 +48,16 @@ Then in the website code, reference videos as:
 
 - `/media/mushroom1/waterfall-1.mp4`
 
+## Current Implementation (as deployed on sandbox)
+
+Sandbox is currently using:
+
+- **Host path**: `/opt/mycosoft/media/website/assets`
+- **Container path**: `/app/public/assets` (read-only)
+- **Public URLs**:
+	- `/assets/mushroom1/*.mp4`
+	- `/assets/mushroom1/*.jpg`
+
 ## Sync Options (Fast)
 
 ### Option A — NAS (best on LAN)
@@ -65,6 +76,9 @@ Use Drive → VM sync (or Drive → object storage/CDN), then serve from the VM 
 
 - `scripts/media/sync-website-media.ps1`
   - Syncs local `website/public/...` media to a target (NAS path or VM path).
+- `scripts/media/sync_website_media_paramiko.py`
+  - Syncs `website/public/assets/**` to `/opt/mycosoft/media/website/assets`
+  - **Includes videos + images** (mp4/webm/mov + jpg/jpeg/png/webp/gif/svg)
 
 ## Deployment Impact
 
@@ -74,3 +88,11 @@ With this pipeline:
 - **Media update**: fast (sync only changed files)
 - **No rebuild needed** for media-only updates (container reads from volume)
 
+## Critical note: restart required for newly-synced `/assets/*`
+
+We observed that **Next.js standalone may return 404 for new files under `/public/assets` until the server process restarts**.
+
+- After syncing new media files:
+	- Run `docker restart mycosoft-website`
+	- Then verify with:
+		- `HEAD https://sandbox.mycosoft.com/assets/mushroom1/Main%20A.jpg` → **200**

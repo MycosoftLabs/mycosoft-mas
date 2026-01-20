@@ -25,7 +25,17 @@ function Write-Log {
     param([string]$Message)
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $logMessage = "[$timestamp] $Message"
-    Add-Content -Path $WatchdogLog -Value $logMessage
+    try {
+        # Use file stream to avoid locking issues
+        $fileStream = [System.IO.File]::Open($WatchdogLog, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write, [System.IO.FileShare]::ReadWrite)
+        $writer = New-Object System.IO.StreamWriter($fileStream)
+        $writer.WriteLine($logMessage)
+        $writer.Close()
+        $fileStream.Close()
+    } catch {
+        # If file is locked, just write to console
+        Write-Host "WARNING: Could not write to log file: $_" -ForegroundColor Yellow
+    }
     Write-Host $logMessage
 }
 

@@ -24,17 +24,17 @@ if ($portInUse) {
 }
 
 # Start the service
-Write-Host "Starting uvicorn on port 8003..." -ForegroundColor Green
-$env:PORT = "8003"
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$serviceDir'; python -m uvicorn mycobrain_service:app --host 0.0.0.0 --port 8003 --reload"
+Write-Host "Starting uvicorn on port 18003..." -ForegroundColor Green
+$env:PORT = "18003"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$serviceDir'; python -m uvicorn mycobrain_service:app --host 0.0.0.0 --port 18003 --reload"
 
 Start-Sleep -Seconds 3
 
 # Verify service is running
 try {
-    $response = Invoke-WebRequest -Uri "http://localhost:8003/health" -UseBasicParsing -TimeoutSec 3
-    Write-Host "✅ MycoBrain service is running on port 8003" -ForegroundColor Green
-    Write-Host "Service URL: http://localhost:8003" -ForegroundColor Cyan
+    $response = Invoke-WebRequest -Uri "http://localhost:18003/health" -UseBasicParsing -TimeoutSec 3
+    Write-Host "✅ MycoBrain service is running on port 18003" -ForegroundColor Green
+    Write-Host "Service URL: http://localhost:18003" -ForegroundColor Cyan
 } catch {
     Write-Host "⚠️  Service may still be starting. Check the service window." -ForegroundColor Yellow
 }

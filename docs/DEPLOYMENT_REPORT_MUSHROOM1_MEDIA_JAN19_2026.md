@@ -18,6 +18,17 @@
 - Result:
 	- Updating MP4/JPG = **sync files only**, no docker rebuild needed.
 
+### Important nuance: container restart required for new `/assets/*`
+
+We discovered that **Next.js standalone can continue returning 404 for new files under `/public/assets` until the server process restarts**.
+
+- Symptom:
+	- Files exist on the VM and are visible inside the container at `/app/public/assets/...`
+	- But `GET/HEAD https://sandbox.mycosoft.com/assets/...` returns **404**
+- Fix:
+	- **Restart the website container** to force Next.js to re-scan `public/`:
+		- `docker restart mycosoft-website`
+
 ## Verification (localhost vs sandbox)
 
 ### Localhost
@@ -43,6 +54,20 @@
 
 - Cloudflare cache was purged (Purge Everything) on the date above.
 - Docker compose may show website “unhealthy” if healthcheck tools are missing; HTTP 200 on `/` and MP4 endpoints is the practical validation.
+
+## Incident: `/devices` Mushroom 1 image missing (fixed)
+
+- Page: `https://sandbox.mycosoft.com/devices`
+- Broken request:
+	- `/assets/mushroom1/Main A.jpg` → **404**
+- Root cause:
+	- VM media mount contained videos but **did not contain the `public/assets/mushroom1/*.jpg` images yet**
+	- After syncing images, Next still returned 404 until restart (see nuance above)
+- Fix:
+	- Sync `public/assets` media (videos + images) to VM
+	- Restart `mycosoft-website`
+- Verified:
+	- `HEAD https://sandbox.mycosoft.com/assets/mushroom1/Main%20A.jpg` → **200**
 
 ## MycoBrain (live board telemetry on sandbox)
 

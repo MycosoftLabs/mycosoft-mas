@@ -1,0 +1,84 @@
+# Voice Services for Mycosoft MAS
+# Usage: docker compose -f docker-compose.yml -f docker-compose.voice.yml up -d
+#
+# This file adds optional voice services:
+#   - Whisper STT (Speech-to-Text)
+#   - OpenEDAI Speech TTS (Text-to-Speech)
+#   - Voice UI (nginx reverse proxy)
+
+services:
+  # ============================================================================
+  # Whisper STT (Speech-to-Text)
+  # ============================================================================
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    container_name: mas-whisper
+    ports:
+      - "8765:9000"
+    environment:
+      - ASR_MODEL=base
+      - ASR_ENGINE=faster_whisper
+    volumes:
+      - whisper_models:/root/.cache/whisper
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/health || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # OpenEDAI Speech TTS (Text-to-Speech)
+  # ============================================================================
+  openedai-speech:
+    image: ghcr.io/matatonic/openedai-speech:latest
+    container_name: mas-openedai-speech
+    ports:
+      - "5500:8000"
+    environment:
+      - TTS_HOME=/app/voices
+      - HF_HOME=/app/voices
+    volumes:
+      - openedai_speech_data:/app/voices
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/models || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+  # ============================================================================
+  # Voice UI (Nginx reverse proxy for voice services)
+  # ============================================================================
+  voice-ui:
+    image: nginx:alpine
+    container_name: mas-voice-ui
+    ports:
+      - "8090:80"
+    volumes:
+      - ./mycosoft_mas/web/voice_chat.html:/usr/share/nginx/html/index.html:ro
+      - ./mycosoft_mas/web/voice_ui.nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      whisper:
+        condition: service_healthy
+      openedai-speech:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - mas-network
+    restart: unless-stopped
+
+volumes:
+  whisper_models:
+  openedai_speech_data:

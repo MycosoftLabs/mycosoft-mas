@@ -8,6 +8,8 @@ from io import StringIO
 vm_ip = '192.168.0.187'
 vm_user = 'mycosoft'
 vm_password = 'REDACTED_VM_SSH_PASSWORD'
+mycobrain_lan_host = "192.168.0.172"
+mycobrain_lan_port = "18003"
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -39,8 +41,8 @@ for i, r in enumerate(config['ingress']):
 mycobrain_routes = [
     # Route sandbox API requests to the Windows MycoBrain service on the LAN.
     # This enables real board/COM telemetry without running MycoBrain inside the VM.
-    {"hostname": "sandbox.mycosoft.com", "service": "http://192.168.0.172:8003", "path": "/api/mycobrain/*"},
-    {"hostname": "sandbox.mycosoft.com", "service": "http://192.168.0.172:8003", "path": "/api/mycobrain"},
+    {"hostname": "sandbox.mycosoft.com", "service": f"http://{mycobrain_lan_host}:{mycobrain_lan_port}", "path": "/api/mycobrain/*"},
+    {"hostname": "sandbox.mycosoft.com", "service": f"http://{mycobrain_lan_host}:{mycobrain_lan_port}", "path": "/api/mycobrain"},
 ]
 
 config['ingress'] = (
