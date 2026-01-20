@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Set up Cloudflare tunnel for MycoBrain service on VM."""
+"""Set up Cloudflare tunnel for MycoBrain (sandbox routing).
+
+Authoritative behavior (per docs/DEPLOYMENT_INSTRUCTIONS_MASTER.md):
+- Cloudflared runs on the VM (single connector).
+- sandbox.mycosoft.com `/api/mycobrain*` routes to the Windows LAN host running
+  the MycoBrain service: `http://192.168.0.172:8003`.
+"""
+"""Set up Cloudflare tunnel for MycoBrain service on sandbox."""
 
 import paramiko
 import yaml
@@ -72,17 +79,17 @@ if not tunnel_id:
     print("   2. Copy the tunnel ID that's output")
     print("   3. Run this script again with the tunnel ID")
 
-# Create ingress rules
+# Create ingress rules (order matters: specific paths before catch-all)
 ingress_rules = [
     {
         "hostname": "sandbox.mycosoft.com",
-        "service": "http://localhost:8003",
-        "path": "/api/mycobrain"
+        "path": "/api/mycobrain/*",
+        "service": "http://192.168.0.172:18003"
     },
     {
         "hostname": "sandbox.mycosoft.com",
-        "service": "http://localhost:8003",
-        "path": "/api/mycobrain/*"
+        "path": "/api/mycobrain",
+        "service": "http://192.168.0.172:18003"
     },
     {
         "service": "http_status:404"
@@ -91,13 +98,24 @@ ingress_rules = [
 
 # If config already has ingress, merge with existing
 if "ingress" in config and isinstance(config["ingress"], list):
-    # Remove any existing MycoBrain routes
+    # Remove any existing MycoBrain routes (both localhost and LAN variants)
     config["ingress"] = [
         rule for rule in config["ingress"]
-        if not (isinstance(rule, dict) and "service" in rule and "8003" in str(rule.get("service", "")))
+        if not (
+            isinstance(rule, dict)
+            and str(rule.get("hostname", "")).lower() == "sandbox.mycosoft.com"
+            and str(rule.get("path", "")).startswith("/api/mycobrain")
+        )
     ]
-    # Add new MycoBrain routes at the beginning (more specific routes first)
-    config["ingress"] = ingress_rules[:-1] + config["ingress"] + [ingress_rules[-1]]
+    # Insert BEFORE catch-all if present
+    catch_idx = len(config["ingress"])
+    for i, rule in enumerate(config["ingress"]):
+        if isinstance(rule, dict) and str(rule.get("service", "")).startswith("http_status"):
+            catch_idx = i
+            break
+    config["ingress"] = config["ingress"][:catch_idx] + ingress_rules[:-1] + config["ingress"][catch_idx:]
+    if catch_idx == len(config["ingress"]):  # no catch-all existed
+        config["ingress"].append(ingress_rules[-1])
 else:
     config["ingress"] = ingress_rules
 
