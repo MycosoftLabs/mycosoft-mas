@@ -1,7 +1,7 @@
 # Sandbox Deployment Process
 
 **Created**: January 18, 2026  
-**Last Updated**: January 18, 2026  
+**Last Updated**: January 19, 2026  
 **Author**: Cursor AI Agent
 
 ---
@@ -46,6 +46,27 @@ This document outlines the complete deployment process for updating `sandbox.myc
 ├── config/                 # Configuration files
 └── backups/                # Backup files
 ```
+
+## Media (large files) — fast updates without rebuild
+
+Sandbox uses a volume-mounted media path so videos/images do **not** need to be included in Docker build context.
+
+- **Host path**: `/opt/mycosoft/media/website/assets`
+- **Container path**: `/app/public/assets` (read-only mount on `mycosoft-website`)
+- **Public URLs**:
+	- `/assets/...` (ex: `/assets/mushroom1/Main A.jpg`)
+
+### Critical nuance: restart required for newly-synced `/assets/*`
+
+We observed that Next.js (standalone) can return **404** for new files under `public/assets` until the server process restarts.
+
+Fix:
+
+- `docker restart mycosoft-website`
+
+Verification:
+
+- `HEAD https://sandbox.mycosoft.com/assets/mushroom1/Main%20A.jpg` → **200**
 
 ## Docker Architecture
 
@@ -144,8 +165,9 @@ The Cloudflare tunnel configuration is at:
 ```
 
 Tunnel routes:
-- `sandbox.mycosoft.com` → `http://localhost:3000` (Website)
-- `api-sandbox.mycosoft.com` → `http://localhost:8000` (MINDEX API)
+- `sandbox.mycosoft.com` → `http://localhost:3000` (Website default)
+- `sandbox.mycosoft.com/api/mindex*` → `http://localhost:8000` (MINDEX API)
+- `sandbox.mycosoft.com/api/mycobrain*` → `http://192.168.0.172:8003` (MycoBrain on Windows LAN)
 
 ### Clear Cloudflare Cache
 

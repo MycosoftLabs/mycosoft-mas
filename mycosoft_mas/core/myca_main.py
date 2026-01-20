@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA / MAS API entrypoint.
 
 This module intentionally stays lightweight: it exposes health/version endpoints,
@@ -15,6 +15,7 @@ from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from mycosoft_mas.core.rate_limit import RateLimitMiddleware
 from pydantic import BaseModel, Field
 
 from mycosoft_mas import __version__
@@ -55,7 +56,7 @@ def load_config() -> dict[str, Any]:
 
 
 class MycosoftMAS:
-    """Small faÃ§ade object to keep compatibility with older imports."""
+    """Small façade object to keep compatibility with older imports."""
 
     def __init__(self) -> None:
         self.config = load_config()
@@ -85,6 +86,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
 
 # ---------------------------------------------------------------------------
 # Core routes

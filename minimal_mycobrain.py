@@ -1,14 +1,25 @@
-"""Minimal MycoBrain service for testing"""
-from fastapi import FastAPI
+"""Minimal MycoBrain service (Windows-hosted) used by sandbox via Cloudflare tunnel.
+
+This service is intended to run on the Windows LAN host with the MycoBrain attached
+over a COM port. The sandbox VM's `cloudflared` routes `/api/mycobrain*` to this host.
+"""
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 import serial
 import serial.tools.list_ports
 import json
 import time
 import threading
+import os
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 app = FastAPI(title="MycoBrain Minimal Service")
+api = APIRouter(prefix="/api/mycobrain")
+
+# Runtime config
+APP_HOST = os.getenv("MYCOBRAIN_HOST", "0.0.0.0")
+APP_PORT = int(os.getenv("MYCOBRAIN_PORT", "8003"))
+DEFAULT_BAUD_RATE = int(os.getenv("BAUD_RATE", "115200"))
 
 # Thread pool for port enumeration (can block on Windows)
 executor = ThreadPoolExecutor(max_workers=2)
@@ -33,10 +44,12 @@ def root():
     return {"status": "ok", "service": "MycoBrain Minimal"}
 
 @app.get("/health")
+@api.get("/health")
 def health():
     return {"status": "healthy", "service": "MycoBrain", "version": "2.3.0", "features": ["bsec2", "smell_detection", "aqi"]}
 
 @app.get("/devices")
+@api.get("/devices")
 def list_devices():
     # Return only serializable data (exclude serial object)
     safe_devices = []
@@ -71,6 +84,7 @@ def _enumerate_ports():
         return []
 
 @app.get("/ports")
+@api.get("/ports")
 def list_ports():
     global _port_cache
     current_time = time.time()
@@ -154,19 +168,37 @@ def verify_mycobrain_device(ser) -> dict:
             "error": "Device did not respond as MycoBrain board"
         }
     except Exception as e:
-    return {
+        return {
             "is_mycobrain": False,
             "device_info": None,
             "error": str(e)
-    }
+        }
+
+
+def _infer_device_id(port: str, device_info: dict | None) -> str:
+    """Best-effort stable-ish device id.
+
+    We prefer an explicit device identifier from firmware when present; otherwise we
+    fall back to the port-based id (ephemeral). This avoids pretending we have a
+    stable id when we do not.
+    """
+    if isinstance(device_info, dict):
+        for key in ("device_id", "board_id", "chip_id", "serial", "mac", "uid"):
+            value = device_info.get(key)
+            if isinstance(value, str) and value.strip():
+                return f"mycobrain-{value.strip()}"
+            if isinstance(value, (int, float)) and str(value).strip():
+                return f"mycobrain-{str(value).strip()}"
+    return f"mycobrain-port-{port}"
 
 @app.post("/devices/connect/{port}")
+@api.post("/devices/connect/{port}")
 def connect_device(port: str):
     if port in devices:
         return {"status": "already_connected", "device_id": f"mycobrain-{port}"}
     
     try:
-        ser = serial.Serial(port, 115200, timeout=2)
+        ser = serial.Serial(port, DEFAULT_BAUD_RATE, timeout=2)
         
         # Verify this is actually a MycoBrain device
         verification = verify_mycobrain_device(ser)
@@ -181,18 +213,21 @@ def connect_device(port: str):
             }
         
         device_info = verification.get("device_info", {})
+        device_id = _infer_device_id(port=port, device_info=device_info)
         devices[port] = {
-            "device_id": f"mycobrain-{port}",
+            "device_id": device_id,
             "port": port,
             "status": "connected",
             "serial": ser,
             "protocol": "MDP v1",
             "verified": True,
-            "device_info": device_info
+            "connected_at": time.time(),
+            "last_seen_at": time.time(),
+            "device_info": device_info,
         }
         return {
             "status": "connected",
-            "device_id": f"mycobrain-{port}",
+            "device_id": device_id,
             "port": port,
             "is_mycobrain": True,
             "device_info": device_info
@@ -201,6 +236,7 @@ def connect_device(port: str):
         return {"status": "error", "error": str(e)}
 
 @app.post("/devices/disconnect/{port}")
+@api.post("/devices/disconnect/{port}")
 def disconnect_device(port: str):
     if port in devices:
         try:
@@ -212,8 +248,9 @@ def disconnect_device(port: str):
     return {"status": "not_connected"}
 
 @app.get("/devices/{device_id}/telemetry")
+@api.get("/devices/{device_id}/telemetry")
 def get_telemetry(device_id: str):
-    port = device_id.replace("mycobrain-", "")
+    port = device_id.replace("mycobrain-port-", "").replace("mycobrain-", "")
     if port not in devices:
         return {"error": "Device not connected"}
     
@@ -230,13 +267,15 @@ def get_telemetry(device_id: str):
             line = ser.readline().decode('utf-8', errors='ignore').strip()
             if line:
                 lines.append(line)
+        devices[port]["last_seen_at"] = time.time()
         return {"raw": "\n".join(lines), "lines": lines, "status": "ok"}
     except Exception as e:
         return {"error": str(e)}
 
 @app.post("/devices/{device_id}/command")
+@api.post("/devices/{device_id}/command")
 def send_command(device_id: str, body: dict):
-    port = device_id.replace("mycobrain-", "")
+    port = device_id.replace("mycobrain-port-", "").replace("mycobrain-", "")
     if port not in devices:
         return {"error": "Device not connected"}
     
@@ -261,20 +300,23 @@ def send_command(device_id: str, body: dict):
                 line = ser.readline().decode('utf-8', errors='ignore').strip()
                 if line:
                     lines.append(line)
+            devices[port]["last_seen_at"] = time.time()
             return {"response": "\n".join(lines), "lines": lines, "status": "ok"}
         else:
             # JSON/MDP protocol command
             cmd = json.dumps(cmd_data) + "\n"
         ser.write(cmd.encode())
         response = ser.readline().decode('utf-8', errors='ignore').strip()
+        devices[port]["last_seen_at"] = time.time()
         return {"response": response, "status": "ok"}
     except Exception as e:
         return {"error": str(e)}
 
 @app.post("/devices/{device_id}/cli")
+@api.post("/devices/{device_id}/cli")
 def send_cli_command(device_id: str, body: dict):
     """Send a CLI text command to the device (for Chris's firmware)"""
-    port = device_id.replace("mycobrain-", "")
+    port = device_id.replace("mycobrain-port-", "").replace("mycobrain-", "")
     if port not in devices:
         return {"error": "Device not connected"}
     
@@ -291,15 +333,17 @@ def send_cli_command(device_id: str, body: dict):
             line = ser.readline().decode('utf-8', errors='ignore').strip()
             if line:
                 lines.append(line)
+        devices[port]["last_seen_at"] = time.time()
         
         return {"command": cmd, "response": "\n".join(lines), "lines": lines, "status": "ok"}
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/devices/{device_id}/smell")
+@api.get("/devices/{device_id}/smell")
 def get_smell_detection(device_id: str):
     """Get smell detection data from BSEC2-enabled device"""
-    port = device_id.replace("mycobrain-", "")
+    port = device_id.replace("mycobrain-port-", "").replace("mycobrain-", "")
     if port not in devices:
         return {"error": "Device not connected"}
     
@@ -320,18 +364,21 @@ def get_smell_detection(device_id: str):
             if line.startswith("{"):
                 try:
                     data = json.loads(line)
+                    devices[port]["last_seen_at"] = time.time()
                     return {"status": "ok", "data": data}
                 except:
                     pass
         
+        devices[port]["last_seen_at"] = time.time()
         return {"status": "ok", "raw": "\n".join(lines), "lines": lines}
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/devices/{device_id}/bsec")
+@api.get("/devices/{device_id}/bsec")
 def get_bsec_status(device_id: str):
     """Get BSEC2 mode status"""
-    port = device_id.replace("mycobrain-", "")
+    port = device_id.replace("mycobrain-port-", "").replace("mycobrain-", "")
     if port not in devices:
         return {"error": "Device not connected"}
     
@@ -352,14 +399,19 @@ def get_bsec_status(device_id: str):
             if line.startswith("{"):
                 try:
                     data = json.loads(line)
+                    devices[port]["last_seen_at"] = time.time()
                     return {"status": "ok", "data": data}
                 except:
                     pass
         
+        devices[port]["last_seen_at"] = time.time()
         return {"status": "ok", "raw": "\n".join(lines), "lines": lines}
     except Exception as e:
         return {"error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8003)
+    uvicorn.run(app, host=APP_HOST, port=APP_PORT)
+
+
+app.include_router(api)

@@ -8,9 +8,19 @@ import logging
 import threading
 from datetime import datetime
 from typing import Optional, Dict, Any, List
-from fastapi import FastAPI, HTTPException, Query, Body
+from fastapi import FastAPI, HTTPException, Query, Body, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Annotated
+
+# Import authentication (optional - graceful fallback if not available)
+try:
+    from auth import verify_api_key
+    AUTH_ENABLED = True
+except ImportError:
+    AUTH_ENABLED = False
+    def verify_api_key():
+        return "no-auth"
 import uvicorn
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -92,7 +102,7 @@ async def scan_ports():
         return {"ports": [], "count": 0, "error": str(e), "timestamp": datetime.now().isoformat()}
 
 @app.post("/devices/connect/{port:path}")
-async def connect_device(port: str, baudrate: int = 115200):
+async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depends(verify_api_key)):
     import serial
     
     port = port.replace('-', '/') if port.startswith('COM-') else port
@@ -146,7 +156,7 @@ async def connect_device(port: str, baudrate: int = 115200):
         raise HTTPException(status_code=500, detail=f"Connection failed: {error_msg}")
 
 @app.post("/devices/{device_id}/disconnect")
-async def disconnect_device(device_id: str):
+async def disconnect_device(device_id: str, api_key: str = Depends(verify_api_key)):
     if device_id not in devices:
         raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     
@@ -160,7 +170,7 @@ async def disconnect_device(device_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/devices/{device_id}/command")
-async def send_command(device_id: str, command: str = Query(None), body: dict = Body(default=None)):
+async def send_command(device_id: str, command: str = Query(None), body: dict = Body(default=None), api_key: str = Depends(verify_api_key)):
     """Send a command to the device - supports both query param and JSON body"""
     if device_id not in devices:
         raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
@@ -284,7 +294,7 @@ def parse_sensor_line(line: str, sensor_type: str) -> dict:
     return data
 
 @app.post("/clear-locks")
-async def clear_locks():
+async def clear_locks(api_key: str = Depends(verify_api_key)):
     disconnected = []
     for device_id in list(serial_connections.keys()):
         try:

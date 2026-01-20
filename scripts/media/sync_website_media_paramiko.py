@@ -7,7 +7,7 @@ Goal:
 - Upload large website media files (mp4/webm/etc) to the VM quickly, without git/docker rebuild.
 
 Default behavior:
-- Sync ONLY videos from: WEBSITE/public/assets
+- Sync media assets (videos + images) from: WEBSITE/public/assets
 - To VM: /opt/mycosoft/media/website/assets
 
 Why:
@@ -37,6 +37,8 @@ class VmTarget:
 
 
 VIDEO_EXTS = {".mp4", ".webm", ".mov"}
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"}
+MEDIA_EXTS = VIDEO_EXTS | IMAGE_EXTS
 
 
 def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
@@ -112,13 +114,13 @@ def main() -> int:
         print(f"[ERROR] Local assets folder not found: {local_assets}")
         return 1
 
-    videos: list[Path] = []
+    media_files: list[Path] = []
     for p in local_assets.rglob("*"):
-        if p.is_file() and p.suffix.lower() in VIDEO_EXTS:
-            videos.append(p)
+        if p.is_file() and p.suffix.lower() in MEDIA_EXTS:
+            media_files.append(p)
 
-    if not videos:
-        print(f"[WARN] No video files found under: {local_assets}")
+    if not media_files:
+        print(f"[WARN] No media files found under: {local_assets} (exts: {sorted(MEDIA_EXTS)})")
         return 0
 
     print("============================================================")
@@ -126,7 +128,7 @@ def main() -> int:
     print("------------------------------------------------------------")
     print(f" Local: {local_assets}")
     print(f" VM   : {target.username}@{target.host}:{vm_assets_root}")
-    print(f" Files: {len(videos)} (video only)")
+    print(f" Files: {len(media_files)} (videos + images)")
     print("============================================================")
 
     ssh = paramiko.SSHClient()
@@ -142,7 +144,7 @@ def main() -> int:
         uploaded = 0
         skipped = 0
 
-        for local_file in sorted(videos, key=lambda x: str(x).lower()):
+        for local_file in sorted(media_files, key=lambda x: str(x).lower()):
             rel = local_file.relative_to(local_assets).as_posix()
             remote_path = posixpath.join(vm_assets_root, rel)
             remote_dir = posixpath.dirname(remote_path)
