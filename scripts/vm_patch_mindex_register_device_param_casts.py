@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Hot-patch MINDEX MycoBrain device registration SQL to avoid ':param::type' parsing issues.
+"""Hot-patch the running MINDEX API container to avoid ':param::type' patterns in SQL text().
 
-Fixes:
+Fixes in /app/mindex_api/routers/mycobrain.py:
 - :device_type::mycobrain.device_type  -> CAST(:device_type AS mycobrain.device_type)
 - :analog_channels::jsonb              -> CAST(:analog_channels AS jsonb)
 - :metadata::jsonb                     -> CAST(:metadata AS jsonb)
@@ -58,7 +58,8 @@ print("replacements_applied:", total)
 """
 
     encoded = base64.b64encode(py.encode("utf-8")).decode("ascii")
-    cmd = "docker exec mindex-api python -c " + repr(
+    mindex_container = "mycosoft-always-on-mindex-api-1"
+    cmd = "docker exec " + mindex_container + " python -c " + repr(
         f"import base64; exec(base64.b64decode('{encoded}').decode('utf-8'))"
     )
 
@@ -66,7 +67,7 @@ print("replacements_applied:", total)
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(VM_IP, username=VM_USER, password=VM_PASS, timeout=30)
     print(run(ssh, cmd))
-    print(run(ssh, "docker restart mindex-api || true"))
+    print(run(ssh, f"docker restart {mindex_container} || true"))
     ssh.close()
 
 

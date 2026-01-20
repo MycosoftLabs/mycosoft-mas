@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Apply MINDEX SQL migrations on the VM (inside the mindex-api container), stripping UTF-8 BOMs."""
+"""Apply MINDEX SQL migrations on the VM (inside the running MINDEX API container), stripping UTF-8 BOMs."""
 
 from __future__ import annotations
 
@@ -29,6 +29,8 @@ def main() -> None:
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(VM_IP, username=VM_USER, password=VM_PASS, timeout=30)
 
+    mindex_container = "mycosoft-always-on-mindex-api-1"
+
     # Run migrations via a small inline Python runner that reads SQL with utf-8-sig (BOM-safe).
     py = r"""
 from pathlib import Path
@@ -47,6 +49,16 @@ with psycopg.connect(dsn, autocommit=True) as conn:
         except Exception as e:
             has_vector = False
             print(f"[WARN] pgvector extension not available; skipping image embedding features: {e}", flush=True)
+
+        # Base schemas are expected by subsequent migrations.
+        cur.execute("CREATE SCHEMA IF NOT EXISTS core;")
+        cur.execute("CREATE SCHEMA IF NOT EXISTS bio;")
+        cur.execute("CREATE SCHEMA IF NOT EXISTS obs;")
+        cur.execute("CREATE SCHEMA IF NOT EXISTS telemetry;")
+        cur.execute("CREATE SCHEMA IF NOT EXISTS ip;")
+        cur.execute("CREATE SCHEMA IF NOT EXISTS ledger;")
+        cur.execute("CREATE SCHEMA IF NOT EXISTS app;")
+        cur.execute("CREATE SCHEMA IF NOT EXISTS mycobrain;")
 
         cur.execute("CREATE SCHEMA IF NOT EXISTS media;")
         # Some migrations append to a migration log; ensure it exists.
@@ -71,13 +83,13 @@ print("Migrations applied.")
 """
 
     encoded = base64.b64encode(py.encode("utf-8")).decode("ascii")
-    cmd = "docker exec mindex-api python -c " + repr(
+    cmd = f"docker exec {mindex_container} python -c " + repr(
         f"import base64; exec(base64.b64decode('{encoded}').decode('utf-8'))"
     )
     print(run(ssh, cmd))
 
     # Restart mindex-api to ensure any startup-time constructs reload cleanly
-    print(run(ssh, "docker restart mindex-api || true"))
+    print(run(ssh, f"docker restart {mindex_container} || true"))
 
     ssh.close()
 
