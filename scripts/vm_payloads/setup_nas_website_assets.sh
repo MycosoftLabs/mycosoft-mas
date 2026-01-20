@@ -3,7 +3,7 @@ set -euo pipefail
 
 NAS_HOST="192.168.0.105"
 SMB_SHARE="mycosoft.com"
-SMB_USER="morgan@mycosoft.org"
+SMB_USER_DEFAULT="morgan@mycosoft.org"
 
 MOUNT_ROOT="/mnt/mycosoft-nas"
 TARGET="/opt/mycosoft/media/website/assets"
@@ -40,12 +40,22 @@ echo "[2/9] Creating mountpoints"
 sudo mkdir -p "$MOUNT_ROOT" "$TARGET"
 sudo install -d -m 0700 /etc/samba
 
-echo "[3/9] Writing credentials file (NAS password prompt; not echoed)"
-read -rsp "NAS SMB password for ${SMB_USER}: " SMB_PASS
-echo
-printf "username=%s\npassword=%s\n" "$SMB_USER" "$SMB_PASS" | sudo tee "$CREDS" >/dev/null
-unset SMB_PASS
-sudo chmod 600 "$CREDS"
+echo "[3/9] SMB credentials (entered on VM; never stored in chat)"
+read -rp "NAS SMB username [${SMB_USER_DEFAULT}] (or type 'guest'): " SMB_USER_INPUT
+SMB_USER="${SMB_USER_INPUT:-$SMB_USER_DEFAULT}"
+unset SMB_USER_INPUT
+
+if [ "$SMB_USER" = "guest" ]; then
+  echo "[INFO] Using guest SMB mode (no credentials file)."
+  USE_GUEST="true"
+else
+  USE_GUEST="false"
+  read -rsp "NAS SMB password for ${SMB_USER}: " SMB_PASS
+  echo
+  printf "username=%s\npassword=%s\n" "$SMB_USER" "$SMB_PASS" | sudo tee "$CREDS" >/dev/null
+  unset SMB_PASS
+  sudo chmod 600 "$CREDS"
+fi
 
 echo "[4/9] Test-mount SMB share (do NOT write fstab until this succeeds)"
 
@@ -53,7 +63,11 @@ echo "[4/9] Test-mount SMB share (do NOT write fstab until this succeeds)"
 # - sec=ntlmssp is the most common fix for mount error(13) with modern SMB/NAS auth setups.
 # - noserverino avoids inode issues seen on some NAS implementations.
 # - nounix helps when the server doesn't support Unix extensions correctly.
-MOUNT_OPTS_BASE="credentials=${CREDS},iocharset=utf8,uid=mycosoft,gid=mycosoft,file_mode=0644,dir_mode=0755,nofail,_netdev"
+if [ "$USE_GUEST" = "true" ]; then
+  MOUNT_OPTS_BASE="guest,iocharset=utf8,uid=mycosoft,gid=mycosoft,file_mode=0644,dir_mode=0755,nofail,_netdev"
+else
+  MOUNT_OPTS_BASE="credentials=${CREDS},iocharset=utf8,uid=mycosoft,gid=mycosoft,file_mode=0644,dir_mode=0755,nofail,_netdev"
+fi
 
 if ! try_mount_root_share "${MOUNT_OPTS_BASE},vers=3.0,sec=ntlmssp,noserverino,nounix"; then
   echo "Retrying with fallback options..."
