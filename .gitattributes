@@ -1,0 +1,5 @@
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Keep PowerShell scripts native on Windows
+*.ps1 text eol=crlf
