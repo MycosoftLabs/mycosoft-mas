@@ -15,7 +15,7 @@
 | Issue | Location | Risk |
 |-------|----------|------|
 | SSH Password in plain text | Multiple .md files | 🔴 Critical |
-| `Mushroom1!Mushroom1!` | PROXMOX_VM_SPECIFICATIONS.md | 🔴 Critical |
+| `<redacted-password>` | PROXMOX_VM_SPECIFICATIONS.md | 🔴 Critical |
 
 **Immediate Action Required:**
 ```bash
@@ -86,7 +86,7 @@ sudo passwd mycosoft
 
 | Account | Current | Action |
 |---------|---------|--------|
-| VM SSH (mycosoft@192.168.0.187) | `Mushroom1!Mushroom1!` | **CHANGE NOW** |
+| VM SSH (mycosoft@192.168.0.187) | `<redacted-password>` | **CHANGE NOW** |
 | PostgreSQL (main) | Check .env | Rotate |
 | PostgreSQL (mas) | Check .env | Rotate |
 | n8n Admin | Check UI | Rotate |
