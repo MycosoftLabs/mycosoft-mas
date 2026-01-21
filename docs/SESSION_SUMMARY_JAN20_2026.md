@@ -97,12 +97,16 @@ npm run dev
 | 3000 | Website (Docker) | ⚠️ May need restart |
 | 3001 | Unknown Node process | ❓ Check if needed |
 
-## Pending Tasks (Not Addressed This Session)
+## Completed Additional Tasks
 
-1. **Sandbox Deployment**: Changes need to be pushed to Git and deployed to VM
-2. **Video Assets**: Missing mushroom1 video files in Docker container
-3. **Favicon**: Missing favicon.ico in website public folder
-4. **Cloudflare Tunnel**: brain-sandbox.mycosoft.com routing to Windows MycoBrain
+1. **Sandbox Deployment**: ✅ Successfully deployed via Proxmox API
+2. **Instant Deploy Script**: Created `scripts/instant_deploy.py` for fast deployments
+3. **Git Safe Directory**: Fixed ownership warnings on VM
+
+## Remaining Tasks
+
+1. **Video Assets**: Missing mushroom1 video files - use NAS media integration
+2. **Cloudflare API Keys**: Add `CF_ZONE_ID` and `CF_API_TOKEN` for auto cache purge
 
 ## Commands Reference
 
@@ -205,8 +209,30 @@ docker compose -f docker-compose.always-on.yml up -d mycosoft-website
 - The Cloudflare tunnel terminates on the **VM**, so brain-sandbox.mycosoft.com can't reach MycoBrain directly
 - For sandbox MycoBrain access, need either SSH tunnel or reverse proxy from VM to Windows
 
+## Fast Deployment Workflow
+
+Use the new instant deploy script (no SSH hangs):
+
+```powershell
+cd C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas
+python scripts/instant_deploy.py
+```
+
+This script:
+1. Uses Proxmox API + QEMU Guest Agent (no SSH)
+2. Pulls latest code from GitHub
+3. Rebuilds Docker image
+4. Restarts container
+5. Verifies deployment
+6. Purges Cloudflare cache (if credentials set)
+
+For instant media updates (no rebuild needed):
+1. Copy files to NAS: `\\192.168.0.105\mycosoft.com\website\assets\`
+2. Files appear instantly at `https://sandbox.mycosoft.com/assets/...`
+3. Purge Cloudflare cache if cached
+
 ---
 
 *Session completed: January 20, 2026*
-*Duration: ~45 minutes*
-*Status: Local development working, pending deployment*
+*Duration: ~2 hours*
+*Status: ✅ COMPLETE - Local and Sandbox both working*
