@@ -302,6 +302,6 @@
 - Reference: [HipCityReg Situation Monitor](https://hipcityreg-situation-monitor.vercel.app/)
 - All data should flow from MINDEX as single source of truth
 - Device data from MycoBrain service at localhost:8003
-- Google Maps API key: `AIzaSyA9wzTz5MiDhYBdY1vHJQtOnw9uikwauBk`
+- Google Maps API key: `<redacted-google-maps-api-key>`
 - Future Supabase integration for user data, auth, realtime
 
