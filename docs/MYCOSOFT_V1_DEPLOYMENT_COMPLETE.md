@@ -238,7 +238,7 @@ This represents a major milestone: real-time IoT control over Cloudflare's globa
 
 | Account | Location | Notes |
 |---------|----------|-------|
-| VM SSH (mycosoft) | 192.168.0.187 | `Mushroom1!Mushroom1!` |
+| VM SSH (mycosoft) | 192.168.0.187 | `<redacted-password>` |
 | PostgreSQL (postgres) | Containers | Check .env files |
 | Redis | Containers | Usually no auth |
 | n8n | Web UI | Admin password |
