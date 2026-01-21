@@ -65,7 +65,7 @@ To fix the brain-sandbox.mycosoft.com route:
 | **Name** | mycosoft-sandbox |
 | **IP Address** | 192.168.0.187 |
 | **SSH** | `ssh mycosoft@192.168.0.187` |
-| **Password** | `REDACTED_VM_SSH_PASSWORD` |
+| **Password** | `<redacted-password>` |
 | **OS** | Ubuntu 24.04.2 LTS |
 | **Docker** | 29.1.5 |
 | **Docker Compose** | v5.0.1 |

@@ -39,7 +39,7 @@ Before proceeding, read:
 ```
 VM IP: 192.168.0.187
 User: mycosoft
-Password: REDACTED_VM_SSH_PASSWORD
+Password: <redacted-password>
 Tunnel ID: bd385313-a44a-47ae-8f8a-581608118127
 ```
 

@@ -33,12 +33,12 @@
 ## 📋 Key Details
 
 ### Supabase
-- **Project URL:** `https://hnevnsxnhfibhbsipqvz.supabase.co`
+- **Project URL:** `<redacted-supabase-project-url>`
 - **Anon Key:** Configured (JWT token)
 - **Service Role Key:** ⚠️ MISSING - Get from Supabase Dashboard → Settings → API → `service_role`
 
 ### Google Maps
-- **API Key:** `AIzaSyA9wzTz5MiDhYBdY1vHJQtOnw9uikwauBk`
+- **API Key:** `<redacted-google-maps-api-key>`
 - **Services enabled:** Maps JavaScript API, Geocoding, Places
 
 ### UniFi
@@ -46,7 +46,7 @@
 - **Host:** `192.168.0.1` (default, update if different)
 
 ### Anthropic/Claude
-- **API Key:** Configured (sk-ant-api03-...)
+- **API Key:** Configured (<redacted>)
 - **Usage:** LLM provider for MYCA agents
 
 ### Research APIs
@@ -55,7 +55,7 @@
 - **Elsevier:** API key configured (for research paper access)
 
 ### Blockchain
-- **Infura (Ethereum):** `512bd4125cb94be780179a3c3a3ee232`
+- **Infura (Ethereum):** `<redacted-infura-api-key>`
 - **QuickNode (Solana):** Full endpoint URL configured
 
 ### FlightRadar24
@@ -64,22 +64,22 @@
 
 ### Discord
 - **Bot Token:** Configured for Mycosoft Discord bot
-- **Bot ID:** `1450212628117979227`
+- **Bot ID:** `<redacted-discord-bot-id>`
 
 ### Asana
-- **Client ID:** `1212449690857813`
+- **Client ID:** `<redacted-asana-client-id>`
 - **Client Secret:** Configured
 - **Usage:** Task management integration for MAS
 
 ### Cursor
-- **Primary Key:** `key_be2febce62e4...` (general use)
-- **Shell Key:** `key_98a45a95224...` (Mycosoft Shell specific)
+- **Primary Key:** `<redacted-cursor-primary-key>` (general use)
+- **Shell Key:** `<redacted-cursor-shell-key>` (Mycosoft Shell specific)
 
 ## 🔑 Unidentified Key
 
 The following key was provided but purpose is unclear:
 ```
-12b49cb1-568e-4623-9fc3-52ec21002298
+<redacted-unidentified-key>
 ```
 Format suggests a UUID - possibly a project ID or integration ID.
 
