@@ -80,7 +80,7 @@ After stopping the Windows cloudflared, Cloudflare automatically routed to the V
 ```python
 VM_HOST = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASS = "Mushroom1!Mushroom1!"
+VM_PASS = "<redacted-password>"
 ```
 
 ### Tunnel Information

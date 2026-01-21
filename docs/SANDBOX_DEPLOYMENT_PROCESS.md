@@ -27,7 +27,7 @@ This document outlines the complete deployment process for updating `sandbox.myc
 | **VM Name** | mycosoft-sandbox |
 | **VM IP** | 192.168.0.187 |
 | **SSH User** | mycosoft |
-| **SSH Password** | Mushroom1!Mushroom1! |
+| **SSH Password** | <redacted-password> |
 | **Proxmox Host** | 192.168.0.202:8006 |
 | **API Token ID** | myca@pve!mas |
 | **API Token Secret** | ca23b6c8-5746-46c4-8e36-fc6caad5a9e5 |
@@ -124,7 +124,7 @@ If the script fails, deploy manually via SSH:
 
 ```bash
 ssh mycosoft@192.168.0.187
-# Password: Mushroom1!Mushroom1!
+# Password: <redacted-password>
 ```
 
 ### 2. Pull Latest Code
@@ -273,7 +273,7 @@ Uses Python's paramiko library for SSH with password auth.
 import paramiko
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect("192.168.0.187", username="mycosoft", password="Mushroom1!Mushroom1!")
+ssh.connect("192.168.0.187", username="mycosoft", password="<redacted-password>")
 stdin, stdout, stderr = ssh.exec_command("docker ps")
 ```
 
