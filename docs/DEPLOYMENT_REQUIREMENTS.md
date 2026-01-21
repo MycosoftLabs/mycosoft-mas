@@ -178,7 +178,7 @@ If these return 200, the container is fine.
 ```
 Host: 192.168.0.187
 User: mycosoft
-Password: REDACTED_VM_SSH_PASSWORD
+Password: <redacted-password>
 Website Path: /opt/mycosoft/website
 Docker Compose Path: /opt/mycosoft/docker-compose.yml
 Project Name: mycosoft-production

@@ -197,7 +197,7 @@ git push origin main
 
 ```bash
 ssh mycosoft@192.168.0.187
-# Password: REDACTED_VM_SSH_PASSWORD
+# Password: <redacted-password>
 
 cd /opt/mycosoft/website
 git fetch origin main
@@ -621,7 +621,7 @@ curl -I https://sandbox.mycosoft.com/assets/path/to/file.jpg
 
 | System | User | Password/Token |
 |--------|------|----------------|
-| VM SSH | mycosoft | REDACTED_VM_SSH_PASSWORD |
+| VM SSH | mycosoft | <redacted-password> |
 | Proxmox API | myca@pve!mas | ca23b6c8-5746-46c4-8e36-fc6caad5a9e5 |
 | Supabase | (dashboard) | See 1Password |
 | Cloudflare | (dashboard) | See 1Password |

@@ -23,7 +23,7 @@ Successfully deployed Mycosoft sandbox VM on Proxmox with full Docker stack.
 
 ```
 SSH: ssh mycosoft@192.168.0.187
-Password: REDACTED_VM_SSH_PASSWORD
+Password: <redacted-password>
 ```
 
 ## Installed Software
