@@ -1,8 +1,8 @@
 # MYCOSOFT MAS Agent Registry
 
-**Version**: 2.0.0  
-**Date**: 2026-01-10  
-**Total Agents**: 215+  
+**Version**: 2.1.0  
+**Date**: 2026-01-24  
+**Total Agents**: 223+  
 
 ---
 
@@ -28,6 +28,7 @@ The Mycosoft Multi-Agent System (MAS) consists of 215+ specialized AI agents org
 | Security | 8 | Auth, watchdog, compliance |
 | Integration | 20 | APIs, webhooks, services |
 | Device | 18 | MycoBrain, sensors, drones |
+| Chemistry | 8 | ChemSpider, compounds, SAR |
 | NLM | 20 | Training, inference, feedback |
 
 ---
@@ -376,9 +377,33 @@ The Mycosoft Multi-Agent System (MAS) consists of 215+ specialized AI agents org
 
 ---
 
+## Chemistry Agents (8)
+
+### 216-223. Chemistry Suite
+
+| ID | Name | Status | Description |
+|----|------|--------|-------------|
+| 216 | `chemspider-sync` | Active | Syncs compound data from ChemSpider API |
+| 217 | `compound-enricher` | Active | Enriches compounds with external data sources |
+| 218 | `compound-analyzer` | Active | Analyzes compound properties and activities |
+| 219 | `sar-analyzer` | Active | Structure-Activity Relationship analysis |
+| 220 | `protein-folder` | Planned | Protein folding predictions (AlphaFold) |
+| 221 | `peptide-analyzer` | Planned | Peptide sequence analysis |
+| 222 | `chemical-sim` | Active | Chemical simulation engine |
+| 223 | `bioactivity-predictor` | Active | Predicts biological activity from structure |
+
+**ChemSpider Integration Details:**
+- API Key: Environment variable `CHEMSPIDER_API_KEY`
+- Base URL: `https://api.rsc.org/compounds/v1`
+- Rate Limit: 100 requests/minute
+- Data cached for 24 hours
+- Syncs to MINDEX `bio.compound` tables
+
+---
+
 ## NLM Agents (20)
 
-### 216-235. Nature Learning Model Suite
+### 224-243. Nature Learning Model Suite
 
 | ID | Name | Status | Description |
 |----|------|--------|-------------|
@@ -499,4 +524,4 @@ The Mycosoft Multi-Agent System (MAS) consists of 215+ specialized AI agents org
 
 ---
 
-*Last Updated: 2026-01-10 v2.0*
+*Last Updated: 2026-01-24 v2.1 - Added Chemistry Agents (ChemSpider Integration)*

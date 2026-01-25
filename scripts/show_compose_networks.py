@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Check container status and logs on VM 103"""
+"""Show networks section of compose file"""
 import requests
 import urllib3
 import time
 import base64
 import sys
 
-# Fix Windows encoding
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 urllib3.disable_warnings()
 
@@ -52,22 +51,31 @@ def exec_cmd(cmd, timeout=60):
     except Exception as e:
         return None, str(e)
 
-print("=== CHECKING CONTAINER STATUS ===")
-code, out = exec_cmd("docker ps -a --format 'table {{.Names}}\t{{.Status}}' | grep -E 'website|NAMES'")
-print(out if out else "No output")
+print("=== NETWORKS SECTION OF COMPOSE FILE ===")
+code, out = exec_cmd("grep -A20 '^networks:' /home/mycosoft/mycosoft/mas/docker-compose.always-on.yml")
+print(out if out else "Not found")
 
-print("\n=== CHECKING SYMLINK ===")
-code, out = exec_cmd("ls -la /home/mycosoft/WEBSITE/")
-print(out if out else "No output")
+print("\n=== EXISTING DOCKER NETWORKS ===")
+code, out = exec_cmd("docker network ls")
+print(out if out else "None")
 
-print("\n=== CHECKING WEBSITE PATH ===")  
-code, out = exec_cmd("ls -la /home/mycosoft/mycosoft/website/ | head -10")
-print(out if out else "No output")
+print("\n=== CREATE ALL NETWORKS ===")
+code, out = exec_cmd("""
+docker network create mycosoft-always-on 2>/dev/null || true
+docker network create mycosoft-mas_mas-network 2>/dev/null || true
+docker network create mycosoft-always-on_default 2>/dev/null || true
+echo 'Networks created'
+docker network ls | grep mycosoft
+""")
+print(out if out else "Done")
 
-print("\n=== LAST BUILD ERROR (if any) ===")
-code, out = exec_cmd("docker logs mycosoft-always-on-mycosoft-website-1 --tail 20 2>&1")
-print(out if out else "No container logs")
+print("\n=== TRYING TO START JUST THE WEBSITE ===")
+code, out = exec_cmd("""
+cd /home/mycosoft/mycosoft/mas
+docker compose -f docker-compose.always-on.yml up -d --no-deps mycosoft-website 2>&1
+""")
+print(out if out else "Done")
 
-print("\n=== TRYING DIRECT BUILD TO SEE ERROR ===")
-code, out = exec_cmd("cd /home/mycosoft/mycosoft/mas && docker compose -f docker-compose.always-on.yml build mycosoft-website 2>&1 | tail -50", timeout=180)
-print(out if out else "No build output")
+print("\n=== CONTAINER STATUS ===")
+code, out = exec_cmd("docker ps -a --format 'table {{.Names}}\t{{.Status}}' | head -10")
+print(out if out else "None")

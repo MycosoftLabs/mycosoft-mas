@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Check container status and logs on VM 103"""
+"""
+Deep debug the build issue - find what's referencing /app/website
+"""
 import requests
 import urllib3
 import time
 import base64
 import sys
 
-# Fix Windows encoding
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 urllib3.disable_warnings()
 
@@ -52,22 +53,26 @@ def exec_cmd(cmd, timeout=60):
     except Exception as e:
         return None, str(e)
 
-print("=== CHECKING CONTAINER STATUS ===")
-code, out = exec_cmd("docker ps -a --format 'table {{.Names}}\t{{.Status}}' | grep -E 'website|NAMES'")
-print(out if out else "No output")
+print("=== CHECKING FOR SYMLINKS IN WEBSITE DIR ===")
+code, out = exec_cmd("find /home/mycosoft/mycosoft/website -type l 2>/dev/null | head -20")
+print(out if out else "No symlinks found")
 
-print("\n=== CHECKING SYMLINK ===")
-code, out = exec_cmd("ls -la /home/mycosoft/WEBSITE/")
-print(out if out else "No output")
+print("\n=== CHECKING FOR .next DIRECTORY ===")
+code, out = exec_cmd("ls -la /home/mycosoft/mycosoft/website/.next 2>&1 | head -10")
+print(out if out else "No .next")
 
-print("\n=== CHECKING WEBSITE PATH ===")  
-code, out = exec_cmd("ls -la /home/mycosoft/mycosoft/website/ | head -10")
-print(out if out else "No output")
+print("\n=== CHECKING next.config.js ===")
+code, out = exec_cmd("cat /home/mycosoft/mycosoft/website/next.config.js")
+print(out if out else "Not found")
 
-print("\n=== LAST BUILD ERROR (if any) ===")
-code, out = exec_cmd("docker logs mycosoft-always-on-mycosoft-website-1 --tail 20 2>&1")
-print(out if out else "No container logs")
+print("\n=== CHECKING Dockerfile.container ===")
+code, out = exec_cmd("cat /home/mycosoft/mycosoft/website/Dockerfile.container")
+print(out if out else "Not found")
 
-print("\n=== TRYING DIRECT BUILD TO SEE ERROR ===")
-code, out = exec_cmd("cd /home/mycosoft/mycosoft/mas && docker compose -f docker-compose.always-on.yml build mycosoft-website 2>&1 | tail -50", timeout=180)
-print(out if out else "No build output")
+print("\n=== SEARCH FOR 'website' STRING IN CODE FILES ===")
+code, out = exec_cmd("grep -r 'website' /home/mycosoft/mycosoft/website/*.js /home/mycosoft/mycosoft/website/*.mjs 2>/dev/null | head -20")
+print(out if out else "No matches")
+
+print("\n=== CHECKING DOCKER COMPOSE BUILD CONTEXT ===")
+code, out = exec_cmd("grep -A5 'mycosoft-website' /home/mycosoft/mycosoft/mas/docker-compose.always-on.yml | head -20")
+print(out if out else "Not found")
