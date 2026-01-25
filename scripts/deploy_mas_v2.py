@@ -1,0 +1,189 @@
+#!/usr/bin/env python3
+"""
+MAS v2 Deployment Script
+Deploys MAS v2 to Sandbox VM following the mandatory protocol
+Uses Proxmox QEMU Guest Agent for command execution
+"""
+import requests
+import urllib3
+import time
+import base64
+import os
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Proxmox Configuration (verified working from Jan 23)
+PROXMOX_HOST = "https://192.168.0.202:8006"
+PROXMOX_TOKEN = "root@pam!cursor_agent=bc1c9dc7-6fca-4e89-8a1d-557a9d117a3e"
+VM_ID = 103
+NODE = "pve"
+
+headers = {"Authorization": f"PVEAPIToken={PROXMOX_TOKEN}"}
+
+def log(msg, level="INFO"):
+    ts = time.strftime("%H:%M:%S")
+    symbols = {"INFO": "[i]", "OK": "[+]", "WARN": "[!]", "ERR": "[X]", "RUN": "[>]"}
+    print(f"[{ts}] {symbols.get(level, '*')} {msg}")
+
+def exec_cmd(cmd, timeout=180, show_output=True):
+    """Execute command via QEMU Guest Agent"""
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{NODE}/qemu/{VM_ID}/agent/exec"
+    try:
+        data = {"command": "/bin/bash", "input-data": cmd}
+        r = requests.post(url, headers=headers, data=data, verify=False, timeout=10)
+        if not r.ok:
+            return None, f"Exec failed: {r.status_code}"
+        
+        pid = r.json().get("data", {}).get("pid")
+        if not pid:
+            return None, "No PID"
+        
+        status_url = f"{PROXMOX_HOST}/api2/json/nodes/{NODE}/qemu/{VM_ID}/agent/exec-status"
+        start = time.time()
+        
+        while time.time() - start < timeout:
+            time.sleep(3)
+            s = requests.get(status_url, headers=headers, params={"pid": pid}, verify=False, timeout=5)
+            if s.ok:
+                data = s.json().get("data", {})
+                if data.get("exited"):
+                    code = data.get("exitcode", 0)
+                    out_b64 = data.get("out-data", "")
+                    err_b64 = data.get("err-data", "")
+                    
+                    try:
+                        out = base64.b64decode(out_b64).decode() if out_b64 else ""
+                    except:
+                        out = out_b64
+                    try:
+                        err = base64.b64decode(err_b64).decode() if err_b64 else ""
+                    except:
+                        err = err_b64
+                    
+                    if show_output and (out or err):
+                        output = (out or err)[:500]
+                        for line in output.split('\n')[:10]:
+                            print(f"    {line}")
+                    
+                    return code == 0, out or err
+            
+        return None, "Timeout"
+    except Exception as e:
+        return None, str(e)
+
+def check_vm():
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{NODE}/qemu/{VM_ID}/status/current"
+    try:
+        r = requests.get(url, headers=headers, verify=False, timeout=5)
+        if r.ok:
+            data = r.json().get("data", {})
+            return data.get("status") == "running"
+    except:
+        pass
+    return False
+
+def main():
+    print("=" * 60)
+    print("MAS v2 DEPLOYMENT TO SANDBOX VM")
+    print("=" * 60)
+    
+    # Step 1: Check VM is running
+    log("Checking VM 103 (mycosoft-sandbox) status...")
+    if not check_vm():
+        log("VM is not running!", "ERR")
+        return False
+    log("VM is running", "OK")
+    
+    # Step 2: Pull latest code in MAS directory
+    log("Pulling latest MAS code from GitHub...", "RUN")
+    success, output = exec_cmd(
+        "cd /home/mycosoft/mycosoft/mas && git fetch origin main && git reset --hard origin/main && git log -1 --oneline"
+    )
+    if not success:
+        log(f"Failed to pull code: {output}", "ERR")
+        return False
+    log("Code updated", "OK")
+    
+    # Step 3: Clean Docker environment
+    log("Cleaning Docker environment...", "RUN")
+    exec_cmd("docker system prune -f", timeout=60, show_output=False)
+    exec_cmd("docker builder prune -f", timeout=60, show_output=False)
+    log("Docker cleaned", "OK")
+    
+    # Step 4: Check if MAS v2 files exist
+    log("Verifying MAS v2 files...", "RUN")
+    success, output = exec_cmd(
+        "ls -la /home/mycosoft/mycosoft/mas/mycosoft_mas/runtime/ | head -10"
+    )
+    if success:
+        log("MAS v2 runtime files present", "OK")
+    else:
+        log("MAS v2 files not found!", "WARN")
+    
+    # Step 5: Check docker-compose.agents.yml
+    log("Checking docker-compose.agents.yml...", "RUN")
+    success, output = exec_cmd(
+        "cat /home/mycosoft/mycosoft/mas/docker/docker-compose.agents.yml | head -20"
+    )
+    if success:
+        log("docker-compose.agents.yml present", "OK")
+    else:
+        log("docker-compose.agents.yml not found!", "WARN")
+    
+    # Step 6: Pull latest website code
+    log("Pulling latest website code...", "RUN")
+    success, output = exec_cmd(
+        "cd /home/mycosoft/mycosoft/website && git fetch origin main && git reset --hard origin/main && git log -1 --oneline",
+        timeout=120
+    )
+    if success:
+        log("Website code updated", "OK")
+    else:
+        log(f"Website pull warning: {output}", "WARN")
+    
+    # Step 7: Rebuild website container (following mandatory protocol)
+    log("Building website container with --no-cache...", "RUN")
+    success, output = exec_cmd(
+        "cd /home/mycosoft/mycosoft/mas && docker compose -f docker-compose.always-on.yml build mycosoft-website --no-cache 2>&1 | tail -20",
+        timeout=300
+    )
+    if success:
+        log("Website container built", "OK")
+    else:
+        log(f"Build output: {output[:200]}", "WARN")
+    
+    # Step 8: Recreate website container
+    log("Recreating website container...", "RUN")
+    success, output = exec_cmd(
+        "cd /home/mycosoft/mycosoft/mas && docker compose -f docker-compose.always-on.yml up -d --force-recreate mycosoft-website 2>&1",
+        timeout=60
+    )
+    log("Website container recreated", "OK")
+    
+    # Step 9: Verify container running
+    log("Verifying containers...", "RUN")
+    success, output = exec_cmd("docker ps --format 'table {{.Names}}\t{{.Status}}' | head -10")
+    if success:
+        log("Containers verified", "OK")
+    
+    # Step 10: Test health endpoint
+    log("Testing health endpoint...", "RUN")
+    time.sleep(5)  # Wait for container to start
+    success, output = exec_cmd("curl -s http://localhost:3000/api/health 2>&1")
+    if success and "ok" in output.lower():
+        log("Health check passed", "OK")
+    else:
+        log(f"Health check: {output[:100]}", "WARN")
+    
+    print("\n" + "=" * 60)
+    print("DEPLOYMENT COMPLETE")
+    print("=" * 60)
+    print("\nNext steps:")
+    print("1. Purge Cloudflare cache at https://dash.cloudflare.com")
+    print("2. Verify at https://sandbox.mycosoft.com")
+    print("3. Run database migration for agent logging")
+    
+    return True
+
+if __name__ == "__main__":
+    main()

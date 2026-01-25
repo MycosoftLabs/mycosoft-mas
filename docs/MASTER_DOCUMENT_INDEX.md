@@ -1,9 +1,9 @@
 # MYCOSOFT MASTER DOCUMENT INDEX
 
-**Version**: 1.3.0  
+**Version**: 1.4.0  
 **Date**: 2026-01-17  
-**Last Updated**: 2026-01-24 UTC  
-**Total Documents**: 195+ (January 15-24, 2026)
+**Last Updated**: 2026-01-24 23:00 UTC  
+**Total Documents**: 200+ (January 15-24, 2026)
 
 ---
 
@@ -33,6 +33,12 @@
 | [Security Audit](./SECURITY_AUDIT_JAN17_2026.md) | docs/ | Security overview |
 | [Port Assignments](../PORT_ASSIGNMENTS.md) | root | All service ports |
 | [README](../README.md) | root | Quick start guide |
+
+### Master Status Documents
+
+| Document | Date | Content |
+|----------|------|---------|
+| **[MASTER_STATUS_JAN24_2026.md](./MASTER_STATUS_JAN24_2026.md)** | **Jan 24** | **Complete system integration status, MYCA VM preparation** |
 
 ### Session Summaries
 
@@ -71,6 +77,7 @@
 | [MAS_V2_IMPLEMENTATION_SUMMARY.md](./MAS_V2_IMPLEMENTATION_SUMMARY.md) | Implementation summary and metrics |
 | [MAS_VM_PROVISIONING_GUIDE.md](./MAS_VM_PROVISIONING_GUIDE.md) | VM provisioning guide (16 cores, 64GB) |
 | [DASHBOARD_COMPONENTS.md](./DASHBOARD_COMPONENTS.md) | Dashboard component specifications |
+| **[MYCA_VM_DEPLOYMENT_PREPARATION.md](./MYCA_VM_DEPLOYMENT_PREPARATION.md)** | **Step-by-step MYCA orchestrator VM deployment** |
 
 #### MAS v2 Key Implementation Files
 
