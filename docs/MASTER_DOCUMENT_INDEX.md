@@ -2,7 +2,7 @@
 
 > **Central reference for all Mycosoft documentation**
 > 
-> Last Updated: 2026-01-24 v2.3.0
+> Last Updated: 2026-01-24 v2.4.0
 
 ---
 
@@ -99,6 +99,7 @@
 | **SPECIES_PAGES.md** | Taxonomy display |
 | **ALCHEMY_LAB.md** | Compound designer app |
 | **INNOVATION_APPS_USER_GUIDE.md** | All innovation apps usage guide |
+| **INNOVATION_APPS_MASTER_PLAN.md** | 🔴 Complete technical spec: UX, database, algorithms, integration for all 7 apps |
 | **API_ENDPOINTS_REFERENCE.md** | Complete API reference |
 | **INNOVATION_IMPLEMENTATION_SUMMARY.md** | Technical implementation details |
 
@@ -132,6 +133,7 @@
 | **REPO_STRUCTURE.md** | Repository organization |
 | **CODE_STANDARDS.md** | Coding conventions |
 | **TESTING_GUIDE.md** | Test procedures |
+| **INNOVATION_TESTING_GUIDE.md** | 🔴 Complete testing instructions for all innovation apps |
 
 ---
 
@@ -187,17 +189,17 @@
 | Deployment Guides | 4 |
 | MycoBrain Docs | 4 |
 | Security Docs | 3 |
-| API Guides | 4 |
+| API Guides | 5 |
 | Infrastructure | 4 |
-| Feature Docs | 4 |
+| Feature Docs | 8 |
 | Troubleshooting | 3 |
 | Planning | 4 |
-| Codebase | 3 |
+| Codebase | 4 |
 | Chemistry | 4 |
 | NLM/Computation | 6 |
 | Hardware | 3 |
 | Products | 3 |
-| **TOTAL** | **57** |
+| **TOTAL** | **63** |
 
 ---
 
@@ -205,12 +207,16 @@
 
 | Date | Document | Change |
 |------|----------|--------|
-| 2026-01-24 | INNOVATION_IMPLEMENTATION_SUMMARY.md | Created - Phase 1 complete |
+| 2026-01-24 | INNOVATION_APPS_USER_GUIDE.md | 🔴 Created - Complete user guide for all 7 innovation apps |
+| 2026-01-24 | INNOVATION_TESTING_GUIDE.md | 🔴 Created - API testing, browser testing, automated scripts |
+| 2026-01-24 | API_ENDPOINTS_REFERENCE.md | 🔴 Created - Full API documentation with examples |
+| 2026-01-24 | INNOVATION_IMPLEMENTATION_SUMMARY.md | 🔴 Created - Technical summary of all implementations |
+| 2026-01-24 | INNOVATION_APPS_MASTER_PLAN.md | Created - Complete technical specification |
 | 2026-01-24 | BIOLOGICAL_NEURAL_COMPUTER.md | Created - BNC research plan |
 | 2026-01-24 | COMPUTE_MARKETPLACE.md | Created - Marketplace spec |
 | 2026-01-24 | CITIZEN_SCIENCE_PLATFORM.md | Created - MycoScout design |
 | 2026-01-24 | SPOREBASE_ATMOSPHERIC_SAMPLER.md | Created - Hardware spec |
-| 2026-01-24 | MASTER_DOCUMENT_INDEX.md | Updated - v2.2.0 |
+| 2026-01-24 | MASTER_DOCUMENT_INDEX.md | Updated - v2.4.0 |
 | 2026-01-23 | CHEMSPIDER_INTEGRATION.md | Created - API integration |
 | 2026-01-23 | AGENT_REGISTRY.md | Updated - Chemistry agents |
 
@@ -240,4 +246,4 @@
 
 *This index is automatically maintained. Report missing documents to the documentation team.*
 
-*Version: 2.2.0 | Last Updated: 2026-01-24*
+*Version: 2.4.0 | Last Updated: 2026-01-24*
