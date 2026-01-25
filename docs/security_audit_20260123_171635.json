@@ -1,0 +1,22 @@
+{
+  "scan_time": "2026-01-23T17:16:35.810257",
+  "total_findings": 1,
+  "critical_count": 0,
+  "high_count": 0,
+  "medium_count": 0,
+  "low_count": 0,
+  "findings": [
+    {
+      "severity": "INFO",
+      "category": "network",
+      "title": "UniFi Controller Accessible",
+      "description": "UniFi controller is reachable but API credentials not configured for full scan",
+      "remediation": "Configure UniFi API credentials for complete network audit",
+      "evidence": null
+    }
+  ],
+  "api_tests": [],
+  "proxmox_status": null,
+  "unifi_status": null,
+  "overall_risk": "HEALTHY"
+}

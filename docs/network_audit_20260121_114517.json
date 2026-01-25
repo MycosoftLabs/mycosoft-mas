@@ -1,0 +1,265 @@
+{
+  "scan_time": "2026-01-21T11:45:17.135328",
+  "total_devices": 11,
+  "devices": [
+    {
+      "ip": "192.168.0.1",
+      "hostname": null,
+      "mac": null,
+      "device_type": "router",
+      "role": "fiber_router_gateway",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "fiber",
+      "expected_speed_mbps": 10000,
+      "actual_speed_mbps": null,
+      "notes": [
+        "Fiber Optic Router (WAN Gateway)"
+      ]
+    },
+    {
+      "ip": "192.168.0.2",
+      "hostname": null,
+      "mac": null,
+      "device_type": "switch",
+      "role": "10gig_distribution_switch",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "cat8_10gbase_t",
+      "expected_speed_mbps": 10000,
+      "actual_speed_mbps": null,
+      "notes": [
+        "8-Port 10 Gigabit Switch"
+      ]
+    },
+    {
+      "ip": "192.168.0.3",
+      "hostname": null,
+      "mac": null,
+      "device_type": "router",
+      "role": "dream_machine_controller",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "cat8",
+      "expected_speed_mbps": 2500,
+      "actual_speed_mbps": null,
+      "notes": [
+        "UniFi Dream Machine (Network Controller)"
+      ]
+    },
+    {
+      "ip": "192.168.0.105",
+      "hostname": null,
+      "mac": null,
+      "device_type": "nas",
+      "role": "network_storage",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "cat8",
+      "expected_speed_mbps": 2500,
+      "actual_speed_mbps": null,
+      "notes": [
+        "Network Attached Storage (Media/Backups)"
+      ]
+    },
+    {
+      "ip": "192.168.0.202",
+      "hostname": null,
+      "mac": null,
+      "device_type": "server",
+      "role": "proxmox_host_1",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "cat8_10gbase_t",
+      "expected_speed_mbps": 10000,
+      "actual_speed_mbps": null,
+      "notes": [
+        "Dell Server #1 - Proxmox VE (Primary)"
+      ]
+    },
+    {
+      "ip": "192.168.0.203",
+      "hostname": null,
+      "mac": null,
+      "device_type": "server",
+      "role": "proxmox_host_2",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "cat8_10gbase_t",
+      "expected_speed_mbps": 10000,
+      "actual_speed_mbps": null,
+      "notes": [
+        "Dell Server #2 - Proxmox VE"
+      ]
+    },
+    {
+      "ip": "192.168.0.204",
+      "hostname": null,
+      "mac": null,
+      "device_type": "server",
+      "role": "proxmox_host_3",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "cat8_10gbase_t",
+      "expected_speed_mbps": 10000,
+      "actual_speed_mbps": null,
+      "notes": [
+        "Dell Server #3 - Proxmox VE"
+      ]
+    },
+    {
+      "ip": "192.168.0.187",
+      "hostname": null,
+      "mac": null,
+      "device_type": "vm",
+      "role": "sandbox_vm",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "virtual",
+      "expected_speed_mbps": 1000,
+      "actual_speed_mbps": null,
+      "notes": [
+        "Mycosoft Sandbox VM (VM 103)"
+      ]
+    },
+    {
+      "ip": "192.168.0.172",
+      "hostname": null,
+      "mac": null,
+      "device_type": "workstation",
+      "role": "development_pc",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "cat8",
+      "expected_speed_mbps": 2500,
+      "actual_speed_mbps": null,
+      "notes": [
+        "Windows Development PC"
+      ]
+    },
+    {
+      "ip": "192.168.0.10",
+      "hostname": null,
+      "mac": null,
+      "device_type": "access_point",
+      "role": "ubiquiti_ap_1",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "poe_cat6",
+      "expected_speed_mbps": 2500,
+      "actual_speed_mbps": 30,
+      "notes": [
+        "Ubiquiti WiFi AP #1 (BOTTLENECK)"
+      ]
+    },
+    {
+      "ip": "192.168.0.11",
+      "hostname": null,
+      "mac": null,
+      "device_type": "access_point",
+      "role": "ubiquiti_ap_2",
+      "ports": [],
+      "latency_ms": null,
+      "status": "offline",
+      "connection_type": "poe_cat6",
+      "expected_speed_mbps": 2500,
+      "actual_speed_mbps": 30,
+      "notes": [
+        "Ubiquiti WiFi AP #2 (BOTTLENECK)"
+      ]
+    }
+  ],
+  "links": [],
+  "bottlenecks": [
+    {
+      "device": "192.168.0.10",
+      "role": "ubiquiti_ap_1",
+      "severity": "CRITICAL",
+      "issue": "WiFi throughput severely degraded: 30 Mbps vs expected 2500 Mbps",
+      "expected_speed": 2500,
+      "actual_speed": 30,
+      "speed_percentage": 1.2,
+      "recommendations": [
+        "Check uplink cable - may be Cat 5e limiting to 100Mbps",
+        "Verify PoE switch port is 1Gig+ capable",
+        "Check AP firmware is up to date",
+        "Verify 2.5Gbe port is negotiating at full speed",
+        "Consider dedicated Cat 8 or Cat 6a run to each AP",
+        "Check for interference or channel congestion"
+      ]
+    },
+    {
+      "device": "192.168.0.11",
+      "role": "ubiquiti_ap_2",
+      "severity": "CRITICAL",
+      "issue": "WiFi throughput severely degraded: 30 Mbps vs expected 2500 Mbps",
+      "expected_speed": 2500,
+      "actual_speed": 30,
+      "speed_percentage": 1.2,
+      "recommendations": [
+        "Check uplink cable - may be Cat 5e limiting to 100Mbps",
+        "Verify PoE switch port is 1Gig+ capable",
+        "Check AP firmware is up to date",
+        "Verify 2.5Gbe port is negotiating at full speed",
+        "Consider dedicated Cat 8 or Cat 6a run to each AP",
+        "Check for interference or channel congestion"
+      ]
+    }
+  ],
+  "cable_upgrades_needed": [
+    {
+      "device": "192.168.0.10",
+      "current_cable": "poe_cat6",
+      "recommended_cable": "Cat 6a or Cat 8",
+      "reason": "Current cable limits negotiation speed for 2.5Gbe AP uplink",
+      "expected_improvement": "30 Mbps \u2192 2500 Mbps (83x improvement)",
+      "priority": "HIGH"
+    },
+    {
+      "device": "192.168.0.11",
+      "current_cable": "poe_cat6",
+      "recommended_cable": "Cat 6a or Cat 8",
+      "reason": "Current cable limits negotiation speed for 2.5Gbe AP uplink",
+      "expected_improvement": "30 Mbps \u2192 2500 Mbps (83x improvement)",
+      "priority": "HIGH"
+    }
+  ],
+  "routing_improvements": [
+    {
+      "issue": "WiFi AP uplink chain",
+      "current_path": "Fiber Router \u2192 10G Switch \u2192 Dream Machine \u2192 PoE Switch \u2192 WiFi APs",
+      "bottleneck_location": "PoE Switch or cabling to APs",
+      "recommendations": [
+        "1. Verify PoE switch supports 2.5Gbe on AP ports",
+        "2. Replace Cat 5e/6 runs to APs with Cat 6a minimum",
+        "3. If PoE switch is only 1Gig, upgrade to 2.5Gbe PoE+ switch",
+        "4. Consider shorter cable runs or fiber SFP+ for long runs",
+        "5. Check if APs are daisy-chained (reduces bandwidth)"
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "issue": "10Gig server backbone",
+      "current_path": "Fiber Router \u2192 10G Switch \u2192 Dell Servers",
+      "recommendation": [
+        "1. Ensure all server NICs are 10Gbase-T or SFP+",
+        "2. Use Cat 8 for runs under 30m for 10Gig",
+        "3. For longer runs, consider fiber with SFP+ modules",
+        "4. Verify switch ports are all negotiating at 10Gbps"
+      ],
+      "priority": "MEDIUM"
+    }
+  ],
+  "overall_health": "critical",
+  "summary": "\nNetwork Audit Summary - 2026-01-21 11:45:17\n=====================================================\n\nInfrastructure Overview:\n- Total Devices Scanned: 11\n- Devices Online: 0\n- Devices Offline: 11\n- Overall Health: CRITICAL\n\nCritical Issues Found: 2\n- WiFi AP throughput severely degraded (10Gig \u2192 2.5Gig \u2192 30Mbps)\n- Root cause: Likely cable or PoE switch limitation\n\nRecommendations:\n1. IMMEDIATE: Audit cabling from PoE switches to WiFi APs\n2. IMMEDIATE: Check PoE switch port speed capabilities\n3. SHORT-TERM: Replace any Cat 5e/6 runs with Cat 6a minimum\n4. MEDIUM-TERM: Consider upgrading PoE switches to 2.5Gbe models\n\nCable Upgrades Needed: 2\nPhysical Routing Changes: 2\n"
+}

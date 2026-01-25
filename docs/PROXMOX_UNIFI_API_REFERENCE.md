@@ -22,18 +22,19 @@ Quick reference for all available infrastructure APIs.
 ```python
 # API Token Authentication
 headers = {
-    "Authorization": "PVEAPIToken=root@pam!cursor_mycocomp=9b86f08b-40ff-4eb9-b41b-93bc9e11700f"
+    "Authorization": "PVEAPIToken=root@pam!cursor_agent=bc1c9dc7-6fca-4e89-8a1d-557a9d117a3e"
 }
 ```
 
 | Token Setting | Value |
 |---------------|-------|
 | **User** | `root@pam` |
-| **Token ID** | `cursor_mycocomp` |
-| **Secret** | `9b86f08b-40ff-4eb9-b41b-93bc9e11700f` |
-| **Full Token** | `root@pam!cursor_mycocomp` |
+| **Token ID** | `cursor_agent` |
+| **Secret** | `bc1c9dc7-6fca-4e89-8a1d-557a9d117a3e` |
+| **Full Token** | `root@pam!cursor_agent` |
 | **Privilege Separation** | Disabled (No) |
 | **Expiry** | Never |
+| **Updated** | January 23, 2026 |
 
 ### Common Endpoints
 
@@ -82,7 +83,7 @@ urllib3.disable_warnings()
 
 PROXMOX_URL = "https://192.168.0.202:8006/api2/json"
 HEADERS = {
-    "Authorization": "PVEAPIToken=root@pam!cursor_mycocomp=9b86f08b-40ff-4eb9-b41b-93bc9e11700f"
+    "Authorization": "PVEAPIToken=root@pam!cursor_agent=bc1c9dc7-6fca-4e89-8a1d-557a9d117a3e"
 }
 
 def get_vms():
@@ -212,9 +213,9 @@ def start_vm(vmid):
 python scripts\test_proxmox_api.py
 ```
 
-### List VMs via curl (from Linux)
+### List VMs via curl (from Linux/Windows)
 ```bash
-curl -k -H "Authorization: PVEAPIToken=root@pam!cursor_mycocomp=9b86f08b-40ff-4eb9-b41b-93bc9e11700f" \
+curl -k -H "Authorization: PVEAPIToken=root@pam!cursor_agent=bc1c9dc7-6fca-4e89-8a1d-557a9d117a3e" \
      https://192.168.0.202:8006/api2/json/nodes/pve/qemu
 ```
 
