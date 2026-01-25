@@ -1,0 +1,51 @@
+{
+  "scan_time": "2026-01-23T17:17:40.460378",
+  "total_findings": 1,
+  "critical_count": 0,
+  "high_count": 1,
+  "medium_count": 0,
+  "low_count": 0,
+  "findings": [
+    {
+      "severity": "HIGH",
+      "category": "api_auth",
+      "title": "Unprotected Endpoint: security_block_ip",
+      "description": "Security IP blocking accepts unauthenticated requests (got 404)",
+      "remediation": "Add authentication middleware to this endpoint",
+      "evidence": "URL: http://localhost:3000/api/security, Response: 404"
+    }
+  ],
+  "api_tests": [
+    {
+      "endpoint": "mycobrain_connect",
+      "url": "http://localhost:8003/devices/connect/COM7",
+      "status": "SKIP",
+      "message": "Service not reachable",
+      "response_code": null
+    },
+    {
+      "endpoint": "mycobrain_disconnect",
+      "url": "http://localhost:8003/devices/disconnect/COM7",
+      "status": "SKIP",
+      "message": "Service not reachable",
+      "response_code": null
+    },
+    {
+      "endpoint": "mycobrain_command",
+      "url": "http://localhost:8003/devices/COM7/command",
+      "status": "SKIP",
+      "message": "Service not reachable",
+      "response_code": null
+    },
+    {
+      "endpoint": "security_block_ip",
+      "url": "http://localhost:3000/api/security",
+      "status": "FAIL",
+      "message": "Should reject unauthenticated but got 404",
+      "response_code": 404
+    }
+  ],
+  "proxmox_status": null,
+  "unifi_status": null,
+  "overall_risk": "HIGH"
+}

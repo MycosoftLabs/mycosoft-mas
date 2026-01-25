@@ -112,9 +112,11 @@ def main():
         sys.exit(1)
     log("VM 103 is running", "OK")
     
-    # Step 2: Pull latest code
+    # Step 2: Fix git ownership and pull latest code
     log("Pulling latest code from GitHub...", "RUN")
-    code, out = exec_cmd("cd /home/mycosoft/mycosoft/website && git fetch origin && git reset --hard origin/main", 30)
+    # First fix git safe.directory (HOME must be set explicitly for qemu-ga)
+    exec_cmd("export HOME=/root && git config --global --add safe.directory /home/mycosoft/mycosoft/website", 10)
+    code, out = exec_cmd("export HOME=/root && cd /home/mycosoft/mycosoft/website && git fetch origin && git reset --hard origin/main", 30)
     if code == 0:
         log("Code updated", "OK")
     else:

@@ -1,0 +1,82 @@
+# =============================================================================
+# Dockerfile.agent - Base Agent Container Image for MAS v2
+# =============================================================================
+# This is the standardized container image for all MAS agents.
+# Each agent runs in an isolated Docker container with:
+# - Resource limits (CPU, Memory)
+# - Health check endpoint
+# - Task queue consumer (Redis)
+# - Logging to MINDEX
+# - Agent-to-Agent messaging capability
+# =============================================================================
+
+FROM python:3.11-slim
+
+LABEL maintainer="Mycosoft"
+LABEL version="2.0.0"
+LABEL description="MAS Agent Container Runtime"
+
+# Build arguments for agent configuration
+ARG AGENT_ID=default-agent
+ARG AGENT_TYPE=generic
+ARG AGENT_CATEGORY=core
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    wget \
+    libpq5 \
+    redis-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN useradd -m -s /bin/bash agent && \
+    mkdir -p /app/data /app/logs /app/snapshots && \
+    chown -R agent:agent /app
+
+# Copy requirements first for better caching
+COPY requirements-agent.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy runtime modules
+COPY mycosoft_mas/runtime /app/runtime
+COPY mycosoft_mas/agents /app/agents
+COPY mycosoft_mas/core /app/core
+COPY config/agent_config.json /app/config/agent_config.json
+
+# Set ownership
+RUN chown -R agent:agent /app
+
+# Switch to non-root user
+USER agent
+
+# Environment variables
+ENV PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1 \
+    AGENT_ID=${AGENT_ID} \
+    AGENT_TYPE=${AGENT_TYPE} \
+    AGENT_CATEGORY=${AGENT_CATEGORY} \
+    AGENT_STATUS=initializing \
+    REDIS_URL=redis://redis:6379/0 \
+    MINDEX_URL=http://mindex:8000 \
+    ORCHESTRATOR_URL=http://orchestrator:8001 \
+    LOG_LEVEL=INFO \
+    HEALTH_CHECK_INTERVAL=30 \
+    HEARTBEAT_INTERVAL=10 \
+    TASK_TIMEOUT=300 \
+    MAX_CONCURRENT_TASKS=5
+
+# Expose health check port
+EXPOSE 8080
+
+# Health check - agent must respond to /health
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Default command - runs the agent runtime
+ENTRYPOINT ["python", "-m", "runtime.agent_runtime"]
+
+# Default CMD passes the agent ID
+CMD ["--agent-id", "${AGENT_ID}"]

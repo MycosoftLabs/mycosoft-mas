@@ -1,0 +1,280 @@
+# MAS v2 Agent Deployment
+# Docker Compose configuration for deploying MAS agents
+
+version: '3.8'
+
+services:
+  # MYCA Orchestrator
+  myca-orchestrator:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.orchestrator
+    container_name: myca-orchestrator
+    ports:
+      - "8001:8001"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - MINDEX_URL=http://mindex:8000
+      - LOG_LEVEL=INFO
+      - HEALTH_CHECK_INTERVAL=30
+      - HEARTBEAT_TIMEOUT=60
+    networks:
+      - mas-network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Redis for messaging
+  redis:
+    image: redis:7-alpine
+    container_name: mas-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - mas-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Core Agents
+  myca-core:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent
+      args:
+        AGENT_ID: myca-core
+        AGENT_TYPE: orchestrator
+        AGENT_CATEGORY: core
+    container_name: mas-agent-myca-core
+    environment:
+      - AGENT_ID=myca-core
+      - AGENT_TYPE=orchestrator
+      - AGENT_CATEGORY=core
+      - REDIS_URL=redis://redis:6379/0
+      - ORCHESTRATOR_URL=http://myca-orchestrator:8001
+    networks:
+      - mas-network
+    depends_on:
+      - myca-orchestrator
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
+  # Infrastructure Agents
+  proxmox-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent
+      args:
+        AGENT_ID: proxmox-agent
+        AGENT_TYPE: vm-manager
+        AGENT_CATEGORY: infrastructure
+    container_name: mas-agent-proxmox
+    environment:
+      - AGENT_ID=proxmox-agent
+      - AGENT_TYPE=vm-manager
+      - AGENT_CATEGORY=infrastructure
+      - REDIS_URL=redis://redis:6379/0
+      - ORCHESTRATOR_URL=http://myca-orchestrator:8001
+      - PROXMOX_HOST=${PROXMOX_HOST:-192.168.0.100}
+      - PROXMOX_TOKEN=${PROXMOX_TOKEN}
+    networks:
+      - mas-network
+    depends_on:
+      - myca-orchestrator
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
+  docker-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent
+      args:
+        AGENT_ID: docker-agent
+        AGENT_TYPE: container-manager
+        AGENT_CATEGORY: infrastructure
+    container_name: mas-agent-docker
+    environment:
+      - AGENT_ID=docker-agent
+      - AGENT_TYPE=container-manager
+      - AGENT_CATEGORY=infrastructure
+      - REDIS_URL=redis://redis:6379/0
+      - ORCHESTRATOR_URL=http://myca-orchestrator:8001
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - mas-network
+    depends_on:
+      - myca-orchestrator
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
+  # Security Agents
+  soc-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent
+      args:
+        AGENT_ID: soc-agent
+        AGENT_TYPE: security
+        AGENT_CATEGORY: security
+    container_name: mas-agent-soc
+    environment:
+      - AGENT_ID=soc-agent
+      - AGENT_TYPE=security
+      - AGENT_CATEGORY=security
+      - REDIS_URL=redis://redis:6379/0
+      - ORCHESTRATOR_URL=http://myca-orchestrator:8001
+      - UNIFI_HOST=${UNIFI_HOST:-192.168.1.1}
+      - UNIFI_USERNAME=${UNIFI_USERNAME}
+      - UNIFI_PASSWORD=${UNIFI_PASSWORD}
+    networks:
+      - mas-network
+    depends_on:
+      - myca-orchestrator
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
+  # Integration Agents
+  n8n-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent
+      args:
+        AGENT_ID: n8n-agent
+        AGENT_TYPE: workflow
+        AGENT_CATEGORY: integration
+    container_name: mas-agent-n8n
+    environment:
+      - AGENT_ID=n8n-agent
+      - AGENT_TYPE=workflow
+      - AGENT_CATEGORY=integration
+      - REDIS_URL=redis://redis:6379/0
+      - ORCHESTRATOR_URL=http://myca-orchestrator:8001
+      - N8N_HOST=${N8N_HOST:-http://n8n:5678}
+    networks:
+      - mas-network
+    depends_on:
+      - myca-orchestrator
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
+  elevenlabs-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent
+      args:
+        AGENT_ID: elevenlabs-agent
+        AGENT_TYPE: voice
+        AGENT_CATEGORY: integration
+    container_name: mas-agent-elevenlabs
+    environment:
+      - AGENT_ID=elevenlabs-agent
+      - AGENT_TYPE=voice
+      - AGENT_CATEGORY=integration
+      - REDIS_URL=redis://redis:6379/0
+      - ORCHESTRATOR_URL=http://myca-orchestrator:8001
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+    networks:
+      - mas-network
+    depends_on:
+      - myca-orchestrator
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
+  # Data Agents
+  mindex-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent
+      args:
+        AGENT_ID: mindex-agent
+        AGENT_TYPE: database
+        AGENT_CATEGORY: data
+    container_name: mas-agent-mindex
+    environment:
+      - AGENT_ID=mindex-agent
+      - AGENT_TYPE=database
+      - AGENT_CATEGORY=data
+      - REDIS_URL=redis://redis:6379/0
+      - ORCHESTRATOR_URL=http://myca-orchestrator:8001
+      - MINDEX_URL=http://mindex:8000
+    networks:
+      - mas-network
+    depends_on:
+      - myca-orchestrator
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1024M
+    restart: unless-stopped
+
+  # Device Agents
+  mycobrain-coordinator:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.agent
+      args:
+        AGENT_ID: mycobrain-coordinator
+        AGENT_TYPE: device-coordinator
+        AGENT_CATEGORY: device
+    container_name: mas-agent-mycobrain
+    environment:
+      - AGENT_ID=mycobrain-coordinator
+      - AGENT_TYPE=device-coordinator
+      - AGENT_CATEGORY=device
+      - REDIS_URL=redis://redis:6379/0
+      - ORCHESTRATOR_URL=http://myca-orchestrator:8001
+    networks:
+      - mas-network
+    depends_on:
+      - myca-orchestrator
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    restart: unless-stopped
+
+networks:
+  mas-network:
+    driver: bridge
+    name: mas-network
+
+volumes:
+  redis-data:

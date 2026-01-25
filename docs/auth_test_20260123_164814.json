@@ -1,0 +1,200 @@
+{
+  "test_time": "2026-01-23T16:48:14.487371",
+  "total_tests": 27,
+  "passed": 6,
+  "failed": 0,
+  "warnings": 13,
+  "skipped": 8,
+  "results": [
+    {
+      "test_name": "Public: Homepage",
+      "status": "PASS",
+      "message": "Accessible without auth",
+      "response_code": 200,
+      "details": null
+    },
+    {
+      "test_name": "Public: Health Check",
+      "status": "PASS",
+      "message": "Accessible without auth",
+      "response_code": 200,
+      "details": null
+    },
+    {
+      "test_name": "Public: Login Page",
+      "status": "PASS",
+      "message": "Accessible without auth",
+      "response_code": 200,
+      "details": null
+    },
+    {
+      "test_name": "Public: MINDEX Public Page",
+      "status": "PASS",
+      "message": "Accessible without auth",
+      "response_code": 200,
+      "details": null
+    },
+    {
+      "test_name": "Public: About Page",
+      "status": "PASS",
+      "message": "Accessible without auth",
+      "response_code": 200,
+      "details": null
+    },
+    {
+      "test_name": "Protected: Agents API",
+      "status": "SKIP",
+      "message": "Endpoint not found (404)",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Protected: Network API",
+      "status": "SKIP",
+      "message": "Endpoint not found (404)",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Protected: Traffic API",
+      "status": "SKIP",
+      "message": "Endpoint not found (404)",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Protected: System API",
+      "status": "SKIP",
+      "message": "Endpoint not found (404)",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Protected: Flows API",
+      "status": "SKIP",
+      "message": "Endpoint not found (404)",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Protected: Topology API",
+      "status": "SKIP",
+      "message": "Endpoint not found (404)",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Protected: MYCA Chat API",
+      "status": "SKIP",
+      "message": "Endpoint not found (404)",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Protected: MYCA TTS API",
+      "status": "SKIP",
+      "message": "Endpoint not found (404)",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Protected: Dashboard Page",
+      "status": "WARN",
+      "message": "Accessible without auth - verify if intentional",
+      "response_code": 200,
+      "details": null
+    },
+    {
+      "test_name": "Protected: Security Dashboard",
+      "status": "WARN",
+      "message": "Accessible without auth - verify if intentional",
+      "response_code": 200,
+      "details": null
+    },
+    {
+      "test_name": "Protected: Admin Panel",
+      "status": "WARN",
+      "message": "Accessible without auth - verify if intentional",
+      "response_code": 200,
+      "details": null
+    },
+    {
+      "test_name": "Login Flow: Login Endpoint",
+      "status": "WARN",
+      "message": "Unexpected response 400",
+      "response_code": 400,
+      "details": null
+    },
+    {
+      "test_name": "Login Flow: Logout Endpoint",
+      "status": "WARN",
+      "message": "Unexpected response 400",
+      "response_code": 400,
+      "details": null
+    },
+    {
+      "test_name": "Login Flow: Session Check",
+      "status": "PASS",
+      "message": "Endpoint active (HTTP 200)",
+      "response_code": 200,
+      "details": null
+    },
+    {
+      "test_name": "Login Flow: Token Refresh",
+      "status": "WARN",
+      "message": "Unexpected response 400",
+      "response_code": 400,
+      "details": null
+    },
+    {
+      "test_name": "Login Flow: Current User",
+      "status": "WARN",
+      "message": "Unexpected response 400",
+      "response_code": 400,
+      "details": null
+    },
+    {
+      "test_name": "Token: Invalid token rejected (/api/agents)",
+      "status": "WARN",
+      "message": "Unexpected status 404",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Token: Invalid token rejected (/api/network)",
+      "status": "WARN",
+      "message": "Unexpected status 404",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Token: Invalid token rejected (/api/system)",
+      "status": "WARN",
+      "message": "Unexpected status 404",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Token: Malformed header #1",
+      "status": "WARN",
+      "message": "Got 404 instead of 401/403",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Token: Malformed header #2",
+      "status": "WARN",
+      "message": "Got 404 instead of 401/403",
+      "response_code": 404,
+      "details": null
+    },
+    {
+      "test_name": "Token: Malformed header #3",
+      "status": "WARN",
+      "message": "Got 404 instead of 401/403",
+      "response_code": 404,
+      "details": null
+    }
+  ],
+  "overall_status": "NEEDS_ATTENTION"
+}

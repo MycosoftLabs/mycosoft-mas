@@ -1,9 +1,9 @@
 # MYCOSOFT MASTER DOCUMENT INDEX
 
-**Version**: 1.0.0  
+**Version**: 1.3.0  
 **Date**: 2026-01-17  
-**Last Updated**: 2026-01-17 18:30 UTC  
-**Total Documents**: 155+ (January 15-16, 2026)
+**Last Updated**: 2026-01-24 UTC  
+**Total Documents**: 195+ (January 15-24, 2026)
 
 ---
 
@@ -38,9 +38,51 @@
 
 | Document | Date | Content |
 |----------|------|---------|
+| **SESSION_SUMMARY_JAN23_2026.md** | Jan 23 | Network/security audit, topology scanning |
+| **SESSION_SUMMARY_JAN22_2026.md** | Jan 22 | MINDEX page, MycoNode/SporeBase updates |
+| **SESSION_SUMMARY_JAN20_2026_EVENING.md** | Jan 20 | MycoBrain fix, deployment |
+| **SESSION_SUMMARY_JAN20_2026.md** | Jan 20 | Device lookup fix |
+| **STAFF_BRIEFING_JAN20_2026.md** | Jan 20 | Staff-friendly summary |
+| DEPLOYMENT_SESSION_JAN19_2026_TODAY.md | Jan 19 | Mushroom1 media deployment |
 | SESSION_SUMMARY_JAN16_2026_FINAL.md | Jan 16 | Complete day summary |
 | DOCUMENTATION_SUMMARY_JAN17_2026.md | Jan 16 | Doc organization |
 | COMPREHENSIVE_BROWSER_TESTING_REPORT.md | Jan 15 | Browser test results |
+
+### System Architecture
+
+| Document | Purpose |
+|----------|---------|
+| **SYSTEM_ARCHITECTURE_OVERVIEW_JAN2026.md** | Complete system topology |
+| MASTER_ARCHITECTURE.md | Detailed component design |
+| PORT_SERVICE_REQUIREMENTS.md | Port assignments |
+
+### Chemistry Integration (Jan 24)
+
+| Document | Purpose |
+|----------|---------|
+| **CHEMSPIDER_INTEGRATION.md** | ChemSpider API integration guide |
+| AGENT_REGISTRY.md (v2.1) | Updated with 8 chemistry agents |
+
+### MAS v2 Architecture (NEW - Jan 24)
+
+| Document | Purpose |
+|----------|---------|
+| **[MAS_V2_COMPLETE_DOCUMENTATION.md](./MAS_V2_COMPLETE_DOCUMENTATION.md)** | **Complete MAS v2 implementation documentation** |
+| [MAS_V2_IMPLEMENTATION_SUMMARY.md](./MAS_V2_IMPLEMENTATION_SUMMARY.md) | Implementation summary and metrics |
+| [MAS_VM_PROVISIONING_GUIDE.md](./MAS_VM_PROVISIONING_GUIDE.md) | VM provisioning guide (16 cores, 64GB) |
+| [DASHBOARD_COMPONENTS.md](./DASHBOARD_COMPONENTS.md) | Dashboard component specifications |
+
+#### MAS v2 Key Implementation Files
+
+| Path | Description |
+|------|-------------|
+| `mycosoft_mas/runtime/` | Agent runtime engine (9 files) |
+| `mycosoft_mas/agents/v2/` | 40 agent classes (6 files) |
+| `mycosoft_mas/core/orchestrator_service.py` | MYCA orchestrator upgrade |
+| `mycosoft_mas/core/dashboard_api.py` | Real-time dashboard API |
+| `docker/Dockerfile.agent` | Agent container image |
+| `docker/docker-compose.agents.yml` | Agent deployment stack |
+| `migrations/003_agent_logging.sql` | Database schema additions |
 
 ---
 
@@ -72,6 +114,50 @@
 | CLOUDFLARE_TUNNEL_SETUP.md | Tunnel configuration |
 | SERVER_MIGRATION_MASTER_GUIDE.md | Migration procedures |
 | MIGRATION_CHECKLIST.md | Migration checklist |
+| **NETWORK_INFRASTRUCTURE_JAN21_2026.md** | Complete network topology after Jan 21 recabling |
+
+### Network & Security Tools
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/network_topology_scanner.py` | Scan network, identify bottlenecks, generate audit reports |
+| `scripts/security_audit_scanner.py` | API auth testing, secrets detection, infrastructure scan |
+
+### Configuration Guides
+
+| Document | Purpose |
+|----------|---------|
+| **API_TOKEN_REGENERATION_GUIDE.md** | Step-by-step guide for Proxmox & UniFi API token setup |
+| PROXMOX_UNIFI_API_REFERENCE.md | API endpoints and current token reference |
+
+### Security Audit Reports
+
+| Document | Purpose |
+|----------|---------|
+| **DEPLOYMENT_SUMMARY_JAN23_2026.md** | Commit hash, tested routes, issues found |
+| **SANITY_CHECK_REPORT_JAN23_2026.md** | Website sanity check - no loops/runaway requests |
+| **SNAPSHOT_ROLLBACK_POINT_JAN23_2026.md** | VM snapshot & rollback instructions |
+| **ROUTE_VERIFICATION_REPORT_JAN23_2026.md** | NatureOS/MYCA route verification |
+| **AUTH_VERIFICATION_REPORT_JAN23_2026.md** | Authentication flow verification |
+| SECURITY_AUDIT_*.md | Generated security audit reports |
+| security_audit_*.json | Machine-readable security data |
+| AUTH_TEST_REPORT_*.md | Authentication test results |
+
+### Authentication Tools
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/auth_flow_tester.py` | Comprehensive auth flow testing |
+
+### Media Assets & NAS
+
+| Document | Purpose |
+|----------|---------|
+| **DEPLOYMENT_INSTRUCTIONS_MASTER.md** | Complete deployment reference |
+| **NAS_MEDIA_INTEGRATION.md** | NAS mount setup |
+| **RUNBOOK_NAS_MEDIA_WEBSITE_ASSETS.md** | Media deployment runbook |
+| **AGENT_HANDOFF_NAS_MEDIA_INTEGRATION.md** | Agent handoff notes |
+| MEDIA_ASSETS_PIPELINE.md | Media sync pipeline |
 
 ---
 
@@ -95,6 +181,8 @@
 | MYCOBRAIN_SETUP_INSTRUCTIONS.md | Setup steps |
 | MYCOBRAIN_SETUP_FINAL_STATUS.md | Final status |
 | setup_mycobrain_bridge.md | Bridge configuration |
+| **MYCOBRAIN_TROUBLESHOOTING_GUIDE.md** | Troubleshooting reference |
+| **MYCOBRAIN_FIX_JAN20_2026.md** | Device lookup fix |
 
 ### Testing & Status
 
@@ -104,6 +192,7 @@
 | MYCOBRAIN_COMPLETE_STATUS_REPORT.md | Full status |
 | MYCOBRAIN_CURRENT_STATUS_JAN_16_2026.md | Jan 16 status |
 | MYCOBRAIN_STATUS_UPDATE_JAN_16_2026.md | Status update |
+| **MYCOBRAIN_CONNECTION_REPORT_JAN23_2026.md** | Jan 23 - COM7 connected via VM bridge |
 
 ### Device Manager
 
