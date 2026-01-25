@@ -1,0 +1,187 @@
+{
+  "sandbox_vm": {
+    "connected": true,
+    "uptime": "09:31:50 up 4 days,  7:57,  1 user,  load average: 1.96, 2.00, 1.53",
+    "nas_mount": "total 16\ndrwxrwxr-x  4 mycosoft mycosoft 4096 Jan 25 03:12 .\ndrwxr-xr-x 11 mycosoft mycosoft 4096 Jan 19 20:28 ..\ndrwxrwxr-x  2 mycosoft mycosoft 4096 Jan 25 03:12 mindex-backups\ndrwxrwxr-x  3 mycosoft mycosoft 4096 Jan 19 20:28 website"
+  },
+  "containers": {
+    "list": [
+      {
+        "name": "mycosoft-website",
+        "status": "Up 19 seconds (healthy)",
+        "ports": "0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp"
+      },
+      {
+        "name": "mindex-etl-scheduler",
+        "status": "Up 6 hours",
+        "ports": ""
+      },
+      {
+        "name": "mindex-api",
+        "status": "Up 8 hours",
+        "ports": "0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp"
+      },
+      {
+        "name": "mindex-postgres-data",
+        "status": "Up 8 hours",
+        "ports": "0.0.0.0:5434->5432/tcp, [::]:5434->5432/tcp"
+      },
+      {
+        "name": "mas-n8n-1",
+        "status": "Up 4 days",
+        "ports": "0.0.0.0:5678->5678/tcp, [::]:5678->5678/tcp"
+      },
+      {
+        "name": "mycosoft-redis",
+        "status": "Up 4 days (healthy)",
+        "ports": "0.0.0.0:6379->6379/tcp, [::]:6379->6379/tcp"
+      },
+      {
+        "name": "mycosoft-postgres",
+        "status": "Up 4 days (healthy)",
+        "ports": "0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp"
+      }
+    ],
+    "mindex-postgres-data": true,
+    "mindex-api": true,
+    "mindex-etl-scheduler": true,
+    "etl_logs": "[2026-01-25 08:43:20] Current taxa: 10000, starting from page 51\n[2026-01-25 08:43:20] ETL complete: +0 taxa (total: 10000)\n[2026-01-25 09:13:20] Starting scheduled ETL run...\n[2026-01-25 09:13:20] Current taxa: 10000, starting from page 51\n[2026-01-25 09:13:20] ETL complete: +0 taxa (total: 10000)"
+  },
+  "mindex_api": {
+    "health": {
+      "status": "healthy",
+      "database": true
+    },
+    "stats": {
+      "total_taxa": 10000,
+      "total_observations": 800,
+      "total_external_ids": 0,
+      "observations_with_location": 800,
+      "observations_with_images": 0,
+      "taxa_with_observations": 0,
+      "taxa_by_source": {
+        "inat": 10000
+      },
+      "observations_by_source": {},
+      "observation_date_range": {
+        "earliest": null,
+        "latest": null
+      },
+      "genome_records": 0,
+      "trait_records": 0,
+      "synonym_records": 0,
+      "tables_found": [
+        "geography_columns",
+        "geometry_columns",
+        "spatial_ref_sys",
+        "external_ids",
+        "synonyms",
+        "taxa",
+        "observations",
+        "traits",
+        "genomes",
+        "compounds",
+        "etl_runs"
+      ]
+    },
+    "external_stats": {
+      "total_taxa": 10000,
+      "total_observations": 800,
+      "total_external_ids": 0,
+      "observations_with_location": 800,
+      "observations_with_images": 0,
+      "taxa_with_observations": 0,
+      "taxa_by_source": {
+        "inat": 10000
+      },
+      "observations_by_source": {},
+      "observation_date_range": {
+        "earliest": null,
+        "latest": null
+      },
+      "etl_status": "ready",
+      "genome_records": 0,
+      "trait_records": 0,
+      "synonym_records": 0,
+      "last_updated": "2026-01-25T09:31:55.794Z",
+      "data_source": "live"
+    }
+  },
+  "website": {
+    "local_http": "200"
+  },
+  "external_endpoints": {
+    "Sandbox Homepage": {
+      "status": 200,
+      "url": "https://sandbox.mycosoft.com/"
+    },
+    "MINDEX Dashboard": {
+      "status": 200,
+      "url": "https://sandbox.mycosoft.com/natureos/mindex"
+    },
+    "MINDEX API Stats": {
+      "status": 200,
+      "url": "https://sandbox.mycosoft.com/api/natureos/mindex/stats"
+    },
+    "MINDEX API Health": {
+      "status": 200,
+      "url": "https://sandbox.mycosoft.com/api/natureos/mindex/health"
+    },
+    "Ancestry Page": {
+      "status": 200,
+      "url": "https://sandbox.mycosoft.com/ancestry"
+    },
+    "Security Incidents": {
+      "status": 200,
+      "url": "https://sandbox.mycosoft.com/security/incidents"
+    },
+    "API Health": {
+      "status": 200,
+      "url": "https://sandbox.mycosoft.com/api/health"
+    },
+    "Earth Sim": {
+      "status": 200,
+      "url": "https://sandbox.mycosoft.com/natureos/earth-sim"
+    }
+  },
+  "databases": {
+    "postgres_taxa_count": 10000
+  },
+  "integrations": {
+    "crep": false,
+    "natureos": true,
+    "ledger": {
+      "hypergraph": {
+        "connected": false,
+        "node_url": "http://localhost:9000",
+        "status": "offline"
+      },
+      "solana": {
+        "connected": false,
+        "network": "mainnet-beta",
+        "rpc_url": "Not configured",
+        "slot": 0,
+        "block_height": 0,
+        "health": "unknown",
+        "estimated_fee_sol": 5e-06
+      },
+      "bitcoin": {
+        "connected": true,
+        "network": "mainnet",
+        "api_url": "https://mempool.space/api",
+        "block_height": 933720,
+        "mempool_size": 17937,
+        "fee_rates": {
+          "fastest": 1,
+          "half_hour": 1,
+          "hour": 1,
+          "economy": 1
+        }
+      },
+      "last_updated": "2026-01-25T09:31:57.093Z"
+    },
+    "taxa_list": true,
+    "observations": true,
+    "search": true
+  }
+}
