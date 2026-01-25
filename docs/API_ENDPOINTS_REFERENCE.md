@@ -1,23 +1,508 @@
 # API Endpoints Reference
 
-**Version**: 1.0  
-**Date**: 2026-01-24  
-**Base URLs**:
-- Production: `https://mindex.mycosoft.com/api`
-- Sandbox: `https://sandbox.mindex.mycosoft.com/api`
-- Local MINDEX: `http://localhost:8000/api`
-- Local Website: `http://localhost:3010`
+> Complete API documentation for all MYCOSOFT systems
+
+**Version**: 2.0.0  
+**Base URL**: `https://api.mycosoft.io` (Production) | `http://localhost:3010` (Development)  
+**Last Updated**: 2026-01-24
 
 ---
 
 ## Table of Contents
 
-1. [Compounds API](#compounds-api)
-2. [Physics API](#physics-api)
-3. [Taxon API](#taxon-api)
-4. [Telemetry API](#telemetry-api)
-5. [Authentication](#authentication)
+1. [Authentication](#authentication)
+2. [Innovation Apps API](#innovation-apps-api)
+3. [MINDEX Core API](#mindex-core-api)
+4. [Compounds API](#compounds-api)
+5. [User Data API](#user-data-api)
 6. [Error Handling](#error-handling)
+
+---
+
+## Authentication
+
+All API endpoints require authentication via JWT token or API key.
+
+### Headers
+
+```http
+Authorization: Bearer <jwt_token>
+X-API-Key: <api_key>
+Content-Type: application/json
+```
+
+### Get Token
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password"
+}
+```
+
+**Response**:
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "token_type": "bearer",
+  "expires_in": 3600
+}
+```
+
+---
+
+## Innovation Apps API
+
+### Physics Simulator
+
+#### Run Simulation
+
+```http
+POST /api/mindex/innovation/physics
+```
+
+**Request Body**:
+```json
+{
+  "action": "simulate",
+  "molecule": {
+    "name": "Psilocybin",
+    "smiles": "CN(C)CCc1c[nH]c2cccc(OP(=O)(O)O)c12",
+    "formula": "C12H17N2O4P"
+  },
+  "parameters": {
+    "steps": 100,
+    "timestep": 1.0,
+    "method": "qise",
+    "force_field": "universal"
+  }
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "simulation_id": "sim_abc123",
+  "status": "completed",
+  "trajectory": [
+    {"step": 0, "energy": -42.5, "positions": [...]},
+    {"step": 1, "energy": -42.3, "positions": [...]}
+  ],
+  "final_energy": -41.8,
+  "quantum_properties": {
+    "homo_lumo_gap": 3.24,
+    "dipole_moment": 1.52,
+    "polarizability": 18.7
+  },
+  "execution_time_ms": 1250
+}
+```
+
+#### Get Simulation Status
+
+```http
+GET /api/mindex/innovation/physics/{simulation_id}
+```
+
+---
+
+### Digital Twin Mycelium
+
+#### Get Digital Twin State
+
+```http
+GET /api/mindex/innovation/digital-twin?species={species_id}
+```
+
+**Query Parameters**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| species | string | No | Species identifier |
+
+**Response** (200 OK):
+```json
+{
+  "twin_id": "dtm_xyz789",
+  "species": "psilocybe_cubensis",
+  "state": {
+    "biomass_grams": 5.2,
+    "network_density": 0.35,
+    "health": 100,
+    "temperature": 24.0,
+    "humidity": 85.0
+  },
+  "nodes": [
+    {"id": "node_0", "x": 400, "y": 300, "type": "junction"},
+    {"id": "node_1", "x": 450, "y": 280, "type": "tip"}
+  ],
+  "edges": [
+    {"source": "node_0", "target": "node_1", "strength": 0.9}
+  ],
+  "last_update": "2026-01-24T10:30:00Z"
+}
+```
+
+#### Update Digital Twin
+
+```http
+POST /api/mindex/innovation/digital-twin
+```
+
+**Request Body**:
+```json
+{
+  "action": "update",
+  "sensor_data": {
+    "temperature_celsius": 24.5,
+    "humidity_percent": 87,
+    "co2_ppm": 850
+  }
+}
+```
+
+#### Predict Growth
+
+```http
+POST /api/mindex/innovation/digital-twin
+```
+
+**Request Body**:
+```json
+{
+  "action": "predict",
+  "duration_hours": 24
+}
+```
+
+**Response**:
+```json
+{
+  "current_biomass_grams": 5.2,
+  "predicted_biomass_grams": 6.8,
+  "predicted_network_density": 0.42,
+  "fruiting_probability": 0.15,
+  "growth_rate_per_hour": 0.012,
+  "recommendations": [
+    "Conditions are optimal, maintain current parameters"
+  ]
+}
+```
+
+---
+
+### Lifecycle Simulator
+
+#### Advance Lifecycle
+
+```http
+POST /api/mindex/innovation/lifecycle
+```
+
+**Request Body**:
+```json
+{
+  "action": "advance",
+  "species": "psilocybe_cubensis",
+  "hours": 24,
+  "environment": {
+    "temperature": 24,
+    "humidity": 90,
+    "co2": 800,
+    "light_hours": 12
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "stage": "hyphal_growth",
+  "stage_index": 2,
+  "stage_progress": 0.45,
+  "day_count": 5.0,
+  "biomass_grams": 2.5,
+  "health": 95.0,
+  "environment": {
+    "temperature": 24,
+    "humidity": 90
+  },
+  "recommendations": [
+    "Conditions are optimal. Maintain current parameters."
+  ],
+  "predicted_harvest_date": "2026-02-15T12:00:00Z"
+}
+```
+
+#### Available Species Profiles
+
+| Species Key | Common Name | Germination Days | Colonization Days |
+|-------------|-------------|------------------|-------------------|
+| psilocybe_cubensis | Golden Teacher | 2 | 14 |
+| hericium_erinaceus | Lion's Mane | 5 | 21 |
+| pleurotus_ostreatus | Oyster | 2 | 10 |
+| ganoderma_lucidum | Reishi | 7 | 30 |
+| cordyceps_militaris | Cordyceps | 5 | 28 |
+
+---
+
+### Genetic Circuit Designer
+
+#### Get Available Circuits
+
+```http
+GET /api/mindex/innovation/genetic-circuit
+```
+
+**Response**:
+```json
+{
+  "circuits": [
+    {
+      "id": "psilocybin_pathway",
+      "name": "Psilocybin Biosynthesis",
+      "species": "Psilocybe cubensis",
+      "product": "Psilocybin",
+      "genes": ["psiD", "psiK", "psiM", "psiH"]
+    }
+  ]
+}
+```
+
+#### Run Circuit Simulation
+
+```http
+POST /api/mindex/innovation/genetic-circuit
+```
+
+**Request Body**:
+```json
+{
+  "action": "simulate",
+  "circuit_id": "psilocybin_pathway",
+  "steps": 100,
+  "timestep": 0.1,
+  "modifications": {
+    "psiD": 20,
+    "psiM": -10
+  },
+  "conditions": {
+    "stress_level": 0,
+    "nutrient_level": 50
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "circuit_name": "Psilocybin Biosynthesis",
+  "trajectory": [
+    {"psiD": 60, "psiK": 45, "psiM": 55, "psiH": 40},
+    {"psiD": 61, "psiK": 46, "psiM": 54, "psiH": 41}
+  ],
+  "final_state": {
+    "psiD": 72.5,
+    "psiK": 58.2,
+    "psiM": 48.1,
+    "psiH": 52.0
+  },
+  "final_metabolite": 15.8,
+  "bottleneck_gene": "psiM",
+  "average_expression": 57.7,
+  "flux_rate": 0.158,
+  "execution_time_ms": 45
+}
+```
+
+---
+
+### Symbiosis Mapper
+
+#### Get Network
+
+```http
+GET /api/mindex/innovation/symbiosis
+```
+
+**Response**:
+```json
+{
+  "organisms": [
+    {"id": "org_1", "name": "P. cubensis", "type": "fungus", "x": 400, "y": 300}
+  ],
+  "relationships": [
+    {"source": "org_1", "target": "org_2", "type": "mycorrhizal", "strength": 0.8}
+  ]
+}
+```
+
+#### Analyze Network
+
+```http
+POST /api/mindex/innovation/symbiosis
+```
+
+**Request Body**:
+```json
+{
+  "action": "analyze"
+}
+```
+
+**Response**:
+```json
+{
+  "num_organisms": 30,
+  "num_relationships": 45,
+  "average_degree": 3.0,
+  "density": 0.103,
+  "keystone_species": [
+    {"id": "org_5", "name": "Fungus 5", "type": "fungus", "degree": 12, "betweenness": 26.7}
+  ],
+  "relationship_breakdown": {
+    "mycorrhizal": 15,
+    "parasitic": 8,
+    "saprotrophic": 12,
+    "endophytic": 10
+  },
+  "communities": [
+    {"id": 1, "organism_type": "fungus", "size": 12, "dominant_relationship": "mycorrhizal"}
+  ]
+}
+```
+
+---
+
+### Retrosynthesis Viewer
+
+#### Analyze Pathway
+
+```http
+GET /api/mindex/innovation/retrosynthesis?compound={compound_name}
+```
+
+**Query Parameters**:
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| compound | string | Yes | Compound name or SMILES |
+| max_steps | integer | No | Maximum pathway depth (default: 6) |
+
+**Response**:
+```json
+{
+  "target": {
+    "name": "Psilocybin",
+    "formula": "C12H17N2O4P"
+  },
+  "starting_material": "L-Tryptophan",
+  "total_steps": 5,
+  "steps": [
+    {
+      "step_number": 1,
+      "precursor": {"name": "L-Tryptophan"},
+      "product": {"name": "Tryptamine"},
+      "reaction_type": "decarboxylation",
+      "enzyme": "PsiD (Tryptophan decarboxylase)",
+      "confidence": 0.95,
+      "description": "Removal of carboxyl group as CO2"
+    }
+  ],
+  "pathway_confidence": 0.85,
+  "pathway_type": "known"
+}
+```
+
+---
+
+### Alchemy Lab
+
+#### Design Compound
+
+```http
+POST /api/mindex/innovation/alchemy
+```
+
+**Request Body**:
+```json
+{
+  "action": "design",
+  "scaffold": "tryptamine",
+  "modifications": ["hydroxyl", "methyl"],
+  "target_activities": ["psychedelic", "neurotrophic"],
+  "mw_range": [200, 400]
+}
+```
+
+**Response**:
+```json
+{
+  "id": "MYCO-54321",
+  "name": "Tryptamine Derivative MYCO-54321",
+  "formula": "C11H14N2O",
+  "molecular_weight": 190.24,
+  "smiles": "CN(C)CCc1c[nH]c2ccc(O)cc12",
+  "scaffold": "tryptamine",
+  "modifications": [
+    {"name": "hydroxyl", "effect": "hydrophilicity"},
+    {"name": "methyl", "effect": "lipophilicity"}
+  ],
+  "predicted_properties": {
+    "molecular_weight": 190.24,
+    "logP": 1.85,
+    "h_bond_donors": 2,
+    "h_bond_acceptors": 3,
+    "tpsa": 45.2,
+    "rotatable_bonds": 3,
+    "ro5_violations": 0,
+    "drug_likeness": "Good"
+  },
+  "predicted_activities": [
+    {"activity_name": "Psychedelic", "activity_id": "psychedelic", "confidence": 0.82},
+    {"activity_name": "Neurotrophic", "activity_id": "neurotrophic", "confidence": 0.65}
+  ],
+  "optimization_score": 0.735
+}
+```
+
+#### Virtual Screening
+
+```http
+POST /api/mindex/innovation/alchemy
+```
+
+**Request Body**:
+```json
+{
+  "action": "screen",
+  "target_activity": "anticancer",
+  "num_compounds": 10
+}
+```
+
+---
+
+## MINDEX Core API
+
+### Taxon Endpoints
+
+```http
+GET /api/mindex/v1/taxa
+GET /api/mindex/v1/taxa/{taxon_id}
+GET /api/mindex/v1/taxa/search?q={query}
+```
+
+### Compound Endpoints
+
+```http
+GET /api/mindex/compounds
+GET /api/mindex/compounds/{compound_id}
+GET /api/mindex/compounds/for-taxon/{taxon_id}
+GET /api/mindex/compounds/chemspider/search?query={query}
+POST /api/mindex/compounds/enrich
+```
 
 ---
 
@@ -26,17 +511,10 @@
 ### List Compounds
 
 ```http
-GET /compounds
+GET /api/mindex/compounds?limit=100&offset=0&search={query}
 ```
 
-**Query Parameters:**
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| limit | integer | 100 | Max results (1-1000) |
-| offset | integer | 0 | Pagination offset |
-| search | string | - | Search by name or formula |
-
-**Response:**
+**Response**:
 ```json
 {
   "items": [
@@ -45,396 +523,62 @@ GET /compounds
       "name": "Psilocybin",
       "formula": "C12H17N2O4P",
       "molecular_weight": 284.25,
-      "smiles": "CN(C)CCc1c[nH]c2cccc(OP(=O)(O)O)c12",
-      "inchi": "InChI=1S/C12H17N2O4P/c...",
-      "inchikey": "QZFMSOQMXGXQRX-UHFFFAOYSA-N",
-      "chemspider_id": "10086",
-      "pubchem_id": "10624",
-      "source": "ChemSpider",
+      "smiles": "...",
+      "inchi": "...",
+      "chemspider_id": "10254679",
       "activities": [
-        {"id": "uuid", "name": "Hallucinogenic", "category": "Psychoactive"}
-      ],
-      "created_at": "2026-01-24T00:00:00Z",
-      "updated_at": "2026-01-24T00:00:00Z"
+        {"id": "uuid", "name": "Psychedelic", "category": "Neuroactive"}
+      ]
     }
   ],
   "meta": {
     "limit": 100,
     "offset": 0,
-    "total": 500
+    "total": 250
   }
 }
 ```
 
----
-
-### Get Compound by ID
+### ChemSpider Search
 
 ```http
-GET /compounds/{compound_id}
+GET /api/mindex/compounds/chemspider/search?query=psilocybin
 ```
 
-**Path Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| compound_id | UUID | Compound identifier |
-
-**Response:** Single compound object (see above)
-
----
-
-### Get Compounds for Taxon
+### Enrich Compound
 
 ```http
-GET /compounds/for-taxon/{taxon_id}
-```
+POST /api/mindex/compounds/enrich
+Content-Type: application/json
 
-**Path Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| taxon_id | UUID | Taxon (species) identifier |
-
-**Response:**
-```json
 {
-  "compounds": [
-    {
-      "id": "uuid",
-      "taxon_id": "uuid",
-      "compound_id": "uuid",
-      "evidence_level": "verified",
-      "source": "MINDEX ETL",
-      "compound": {
-        "id": "uuid",
-        "name": "Psilocybin",
-        "formula": "C12H17N2O4P",
-        ...
-      }
-    }
-  ]
+  "compound_id": "uuid-of-compound"
 }
 ```
 
 ---
 
-### Enrich Compound from ChemSpider
+## User Data API
+
+### Get User Sessions
 
 ```http
-POST /compounds/enrich
+GET /api/user/sessions?app_name={app_name}
 ```
 
-**Request Body:**
-```json
+### Log Simulation
+
+```http
+POST /api/user/simulations
+Content-Type: application/json
+
 {
-  "compound_id": "uuid"
+  "app_name": "physics-sim",
+  "simulation_type": "molecular_dynamics",
+  "input_data": {...},
+  "output_data": {...}
 }
 ```
-
-**Response:** Updated compound object with ChemSpider data
-
----
-
-### Search ChemSpider
-
-```http
-GET /compounds/chemspider/search
-```
-
-**Query Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| query | string | Search term (name, formula, SMILES) |
-
-**Response:**
-```json
-{
-  "compounds": [
-    {
-      "id": "generated-uuid",
-      "name": "Compound Name",
-      "formula": "C10H12N2",
-      "molecular_weight": 164.21,
-      "chemspider_id": "12345",
-      ...
-    }
-  ]
-}
-```
-
-**Note:** Requires `CHEMSPIDER_API_KEY` environment variable.
-
----
-
-## Physics API
-
-### Molecular Simulation (QISE)
-
-```http
-POST /physics/molecular/simulate
-```
-
-**Request Body:**
-```json
-{
-  "molecule": {
-    "name": "Psilocybin",
-    "atoms": ["C", "C", "C", "H", "N", ...],
-    "bonds": [[0, 1], [1, 2], ...],
-    "coordinates": [[0.0, 0.0, 0.0], ...]
-  },
-  "method": "qise",
-  "parameters": {
-    "max_iterations": 100,
-    "convergence_threshold": 1e-6
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "ground_state_energy": -156.78,
-  "homo_lumo_gap": 3.45,
-  "dipole_moment": 2.34,
-  "polarizability": 87.6,
-  "message": "Simulation completed successfully"
-}
-```
-
----
-
-### Molecular Dynamics
-
-```http
-POST /physics/molecular/dynamics
-```
-
-**Request Body:**
-```json
-{
-  "system": {
-    "atoms": [...],
-    "initial_positions": [...],
-    "initial_velocities": [...]
-  },
-  "parameters": {
-    "steps": 1000,
-    "timestep": 0.5,
-    "force_field": "universal"
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "trajectory": [...],
-  "final_positions": [...],
-  "final_velocities": [...],
-  "potential_energy": -45.67,
-  "message": "MD simulation completed"
-}
-```
-
----
-
-### Field Physics Conditions
-
-```http
-POST /physics/field/conditions
-```
-
-**Request Body:**
-```json
-{
-  "location": {
-    "latitude": 37.7749,
-    "longitude": -122.4194,
-    "altitude": 10
-  },
-  "timestamp": "2026-01-24T12:00:00Z"
-}
-```
-
-**Response:**
-```json
-{
-  "geomagnetic_field": {
-    "bx": 22456.7,
-    "by": -5678.9,
-    "bz": 42345.6,
-    "total": 48123.4,
-    "inclination": 62.5,
-    "declination": -14.2
-  },
-  "lunar_influence": {
-    "gravitational_force": 3.3e-6,
-    "tidal_potential": 1.2e-5,
-    "phase": "Waxing Gibbous"
-  },
-  "atmospheric": {
-    "temperature_celsius": 18.5,
-    "pressure_hpa": 1013.25,
-    "humidity_percent": 65.0,
-    "wind_speed_mps": 5.2
-  }
-}
-```
-
----
-
-### Fruiting Prediction
-
-```http
-POST /physics/field/fruiting-prediction
-```
-
-**Request Body:**
-```json
-{
-  "location": {
-    "latitude": 37.7749,
-    "longitude": -122.4194,
-    "altitude": 10
-  },
-  "species_id": "uuid",
-  "forecast_days": 7
-}
-```
-
-**Response:**
-```json
-{
-  "probability": 0.72,
-  "optimal_date": "2026-01-28",
-  "conditions_summary": "Good - high humidity expected",
-  "recommendations": [
-    "Monitor humidity levels",
-    "Reduce light during pinning phase"
-  ]
-}
-```
-
----
-
-## Taxon API
-
-### List Taxa
-
-```http
-GET /taxon
-```
-
-**Query Parameters:**
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| limit | integer | 100 | Max results |
-| offset | integer | 0 | Pagination offset |
-| rank | string | - | Filter by rank (species, genus, family) |
-| search | string | - | Search by name |
-
----
-
-### Get Taxon by ID
-
-```http
-GET /taxon/{taxon_id}
-```
-
-**Response:**
-```json
-{
-  "id": "uuid",
-  "canonical_name": "Psilocybe cubensis",
-  "common_name": "Golden Teacher",
-  "rank": "species",
-  "description": "...",
-  "parent_id": "uuid",
-  "ancestry": "Fungi > Basidiomycota > ...",
-  "image_url": "https://...",
-  "metadata": {...}
-}
-```
-
----
-
-### Get Taxa with Compounds
-
-```http
-GET /taxon/with-compounds
-```
-
-Returns taxa that have associated compound data.
-
----
-
-## Telemetry API
-
-### Submit Telemetry
-
-```http
-POST /telemetry
-```
-
-**Request Body:**
-```json
-{
-  "device_id": "MB-001",
-  "timestamp": "2026-01-24T12:00:00Z",
-  "readings": {
-    "temperature": 22.5,
-    "humidity": 85.0,
-    "co2": 450,
-    "light": 200,
-    "ph": 6.5,
-    "conductivity": 1.2
-  },
-  "location": {
-    "latitude": 37.7749,
-    "longitude": -122.4194
-  }
-}
-```
-
----
-
-### Get Device Telemetry
-
-```http
-GET /telemetry/device/{device_id}
-```
-
-**Query Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| start | datetime | Start of time range |
-| end | datetime | End of time range |
-| limit | integer | Max results |
-
----
-
-## Authentication
-
-### API Key Authentication
-
-Include your API key in the request header:
-
-```http
-Authorization: Bearer your_api_key_here
-```
-
-Or as a query parameter:
-
-```http
-GET /api/compounds?api_key=your_api_key_here
-```
-
-### Getting an API Key
-
-1. Log in to NatureOS at `https://natureos.mycosoft.com`
-2. Navigate to Settings > API Keys
-3. Generate a new key
-4. Store securely (key is shown only once)
 
 ---
 
@@ -446,116 +590,91 @@ GET /api/compounds?api_key=your_api_key_here
 {
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Invalid compound_id format",
+    "message": "Invalid input parameters",
     "details": {
-      "field": "compound_id",
-      "expected": "UUID"
+      "field": "steps",
+      "issue": "Must be between 1 and 10000"
     }
-  }
+  },
+  "request_id": "req_abc123"
 }
 ```
 
-### HTTP Status Codes
+### Error Codes
 
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 201 | Created |
-| 400 | Bad Request - Invalid parameters |
-| 401 | Unauthorized - Invalid/missing API key |
-| 403 | Forbidden - Insufficient permissions |
-| 404 | Not Found - Resource doesn't exist |
-| 429 | Too Many Requests - Rate limited |
-| 500 | Internal Server Error |
-| 503 | Service Unavailable - API down or missing config |
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `AUTH_REQUIRED` | 401 | Authentication needed |
+| `AUTH_EXPIRED` | 401 | Token expired |
+| `FORBIDDEN` | 403 | Insufficient permissions |
+| `NOT_FOUND` | 404 | Resource not found |
+| `VALIDATION_ERROR` | 400 | Invalid input |
+| `RATE_LIMITED` | 429 | Too many requests |
+| `MINDEX_UNAVAILABLE` | 503 | Database unavailable |
+| `CHEMSPIDER_ERROR` | 502 | External API error |
+| `INTERNAL_ERROR` | 500 | Server error |
 
 ### Rate Limits
 
-| Tier | Requests/minute | Requests/day |
-|------|-----------------|--------------|
-| Free | 60 | 1,000 |
-| Pro | 300 | 10,000 |
-| Enterprise | 1,000 | Unlimited |
+| Endpoint | Limit |
+|----------|-------|
+| Innovation APIs | 100 req/min |
+| Compounds API | 60 req/min |
+| ChemSpider Search | 10 req/min |
+| Auth | 10 req/min |
 
 ---
 
 ## SDK Examples
 
-### Python
-
-```python
-import httpx
-
-MINDEX_URL = "https://mindex.mycosoft.com/api"
-API_KEY = "your_key_here"
-
-async def get_compounds():
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            f"{MINDEX_URL}/compounds",
-            headers={"Authorization": f"Bearer {API_KEY}"}
-        )
-        return response.json()
-```
-
-### TypeScript
+### JavaScript/TypeScript
 
 ```typescript
-const MINDEX_URL = process.env.NEXT_PUBLIC_MINDEX_API_URL;
-
-async function getCompounds() {
-  const response = await fetch(`${MINDEX_URL}/compounds`, {
+// Using fetch
+async function runPhysicsSimulation(molecule: string) {
+  const response = await fetch('/api/mindex/innovation/physics', {
+    method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.API_KEY}`
-    }
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      action: 'simulate',
+      molecule: { name: molecule },
+      parameters: { steps: 100 }
+    })
   });
   return response.json();
 }
 ```
 
+### Python
+
+```python
+import requests
+
+def run_physics_simulation(molecule: str, steps: int = 100):
+    response = requests.post(
+        'http://localhost:3010/api/mindex/innovation/physics',
+        json={
+            'action': 'simulate',
+            'molecule': {'name': molecule},
+            'parameters': {'steps': steps}
+        },
+        headers={'Authorization': f'Bearer {token}'}
+    )
+    return response.json()
+```
+
 ### cURL
 
 ```bash
-curl -X GET "https://mindex.mycosoft.com/api/compounds" \
-  -H "Authorization: Bearer your_api_key_here" \
-  -H "Content-Type: application/json"
+curl -X POST http://localhost:3010/api/mindex/innovation/physics \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"action":"simulate","molecule":{"name":"Psilocybin"},"parameters":{"steps":100}}'
 ```
 
 ---
 
-## WebSocket Endpoints
-
-### Live Telemetry Stream
-
-```
-wss://mindex.mycosoft.com/ws/telemetry/{device_id}
-```
-
-**Message Format:**
-```json
-{
-  "type": "telemetry",
-  "device_id": "MB-001",
-  "timestamp": "2026-01-24T12:00:00Z",
-  "data": {
-    "temperature": 22.5,
-    "humidity": 85.0,
-    ...
-  }
-}
-```
-
----
-
-## Changelog
-
-### v1.0.0 (2026-01-24)
-- Initial release
-- Compounds API with ChemSpider integration
-- Physics API with QISE, MD, field physics
-- Taxon API with compound associations
-- Telemetry API for MycoBrain devices
-
----
-
-*Document Version 1.0 | Last Updated: 2026-01-24*
+*API Reference v2.0 - Generated 2026-01-24*
