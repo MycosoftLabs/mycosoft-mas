@@ -1,372 +1,562 @@
 # Innovation Apps User Guide
 
-**Version**: 1.0  
-**Date**: 2026-01-24  
-**Author**: Mycosoft Engineering Team
+> Complete guide for using MYCOSOFT's Innovation Suite applications
 
-## Overview
-
-This guide covers all innovation applications in the Mycosoft platform. These apps leverage the Nature Learning Model (NLM) for advanced physics, biology, and chemistry computations.
+**Version**: 2.0.0  
+**Last Updated**: 2026-01-24  
+**Status**: Production Ready
 
 ---
 
 ## Table of Contents
 
-1. [Physics Simulator (QISE)](#1-physics-simulator-qise)
-2. [Digital Twin Mycelium](#2-digital-twin-mycelium)
-3. [Lifecycle Simulator](#3-lifecycle-simulator)
-4. [Genetic Circuit Designer](#4-genetic-circuit-designer)
-5. [Symbiosis Network Mapper](#5-symbiosis-network-mapper)
-6. [Retrosynthesis Pathway Viewer](#6-retrosynthesis-pathway-viewer)
-7. [Computational Alchemy Lab](#7-computational-alchemy-lab)
-8. [API Integration](#8-api-integration)
+1. [Getting Started](#getting-started)
+2. [Physics Simulator](#physics-simulator)
+3. [Digital Twin Mycelium](#digital-twin-mycelium)
+4. [Lifecycle Simulator](#lifecycle-simulator)
+5. [Genetic Circuit Designer](#genetic-circuit-designer)
+6. [Symbiosis Mapper](#symbiosis-mapper)
+7. [Retrosynthesis Viewer](#retrosynthesis-viewer)
+8. [Alchemy Lab](#alchemy-lab)
+9. [Research Apps](#research-apps)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
-## 1. Physics Simulator (QISE)
+## Getting Started
 
-**URL**: `/apps/physics-sim`
+### Accessing the Apps
 
-### Purpose
-Perform quantum-inspired molecular simulations using the QISE (Quantum-Inspired Simulation Engine) to calculate ground state energies, molecular properties, and field physics correlations.
+1. Navigate to `https://mycosoft.io/apps` or your local development server at `http://localhost:3010/apps`
+2. Select the **Innovation** tab to see all innovation apps
+3. Click on any app card to launch it
 
-### Features
-- **QISE Mode**: Variational quantum eigensolver for ground state calculation
-- **Molecular Dynamics**: Real-time MD simulations with force field support
-- **Tensor Network**: Matrix Product States for large (50+ atom) systems
-- **Field Physics**: Geomagnetic, lunar, and atmospheric influence analysis
+### Authentication
 
-### How to Use
+All apps require NatureOS authentication:
+- Log in at `/natureos/login`
+- Your session persists across all apps
+- User data is automatically saved to MINDEX for the Nature Learning Model
 
-1. **Select a Molecule**: Choose from predefined fungal compounds (Psilocybin, Muscimol, etc.)
-2. **Choose Simulation Method**:
-   - QISE: Best for ground state energy calculation
-   - Molecular Dynamics: Best for trajectory analysis
-   - Tensor Network: Best for large molecular systems
-3. **Adjust Parameters** (if applicable):
-   - Simulation steps
-   - Timestep (for MD)
-   - Bond dimension (for Tensor Networks)
-4. **Run Simulation**: Click the run button and wait for results
-5. **View Results**: Ground state energy, HOMO-LUMO gap, dipole moment, polarizability
+### System Requirements
 
-### Field Physics Tab
-- Enter latitude, longitude, and altitude
-- Get geomagnetic field vectors (Bx, By, Bz)
-- View lunar phase and gravitational influence
-- Receive fruiting probability predictions based on environmental conditions
-
-### Integration Points
-- Exports data for Earth Simulator visualization
-- Connects to MINDEX compound database
-- Uses NLM physics layer (`nlm/physics/`)
+- Modern browser (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
+- WebGL 2.0 support for 3D visualizations
+- Minimum 4GB RAM recommended
+- Stable internet connection for API calls
 
 ---
 
-## 2. Digital Twin Mycelium
+## Physics Simulator
 
-**URL**: `/apps/digital-twin`
-
-### Purpose
-Create real-time digital representations of mycelial networks that can be fed with MycoBrain sensor data for predictive modeling and growth optimization.
+**Location**: `/apps/physics-sim`  
+**Theme**: Indigo/Purple (Quantum aesthetic)  
+**Purpose**: Quantum-inspired molecular simulations
 
 ### Features
-- **Live Network Visualization**: See mycelial network topology in real-time
-- **MycoBrain Integration**: Connect to physical sensors for data updates
-- **Growth Prediction**: Forecast biomass and network density
-- **Signal Propagation**: Visualize electrical and chemical signals moving through the network
+
+| Feature | Description |
+|---------|-------------|
+| QISE Engine | Quantum-Inspired Simulation Engine for molecular dynamics |
+| Tensor Networks | Large molecular system approximations |
+| Field Physics | Geomagnetic and atmospheric modeling |
+| Property Calculator | Quantum property predictions |
 
 ### How to Use
 
-1. **Connect to MycoBrain** (optional):
-   - Enter device ID (e.g., MB-001)
-   - Click "Connect" to receive live sensor data
-2. **View Network Visualization**:
-   - Green dots = hyphal tips
-   - Blue dots = junctions
-   - Orange dots = fruiting body initiation sites
-   - Lines = hyphal connections with signal activity
-3. **Monitor Sensor Data**:
-   - Temperature, humidity, CO2, light, pH, electrical conductivity
-   - Auto-update toggle for continuous monitoring
-4. **Run Growth Predictions**:
-   - Set prediction window (6-168 hours)
-   - View predicted biomass, density, and fruiting probability
-   - Follow recommendations for optimal conditions
+#### Running a Molecular Dynamics Simulation
 
-### Key Metrics
-- **Biomass**: Total mycelial mass in grams
-- **Network Density**: Interconnectedness (0-100%)
-- **Resource Level**: Available nutrients
-- **Signal Activity**: Electrical/chemical communication intensity
+1. **Load a Molecule**
+   - Click "Load Molecule" button
+   - Enter molecule name or paste SMILES notation
+   - Or select from the compound library
 
-### Integration Points
-- Connects to MycoBrain devices via WebSocket
-- Exports GeoJSON for Earth Simulator
-- Uses NLM biology layer (`nlm/biology/digital_twin.py`)
+2. **Configure Simulation**
+   - Set number of steps (10-10000)
+   - Choose timestep (0.1-10 femtoseconds)
+   - Select force field (Universal, AMBER, CHARMM)
+
+3. **Run Simulation**
+   - Click "Simulate" button
+   - Watch the real-time trajectory visualization
+   - View energy graphs as simulation progresses
+
+4. **Analyze Results**
+   - Export trajectory data (JSON/PDB format)
+   - View final energy states
+   - Compare with literature values
+
+#### Calculating Quantum Properties
+
+1. Load your molecule
+2. Click "Calculate Properties"
+3. View results:
+   - HOMO-LUMO gap (eV)
+   - Dipole moment (Debye)
+   - Polarizability
+   - Electronic configuration
+
+### API Endpoint
+
+```
+POST /api/mindex/innovation/physics
+Content-Type: application/json
+
+{
+  "action": "simulate",
+  "molecule": {
+    "name": "Psilocybin",
+    "smiles": "CN(C)CCc1c[nH]c2cccc(OP(=O)(O)O)c12"
+  },
+  "parameters": {
+    "steps": 100,
+    "timestep": 1.0,
+    "method": "qise"
+  }
+}
+```
 
 ---
 
-## 3. Lifecycle Simulator
+## Digital Twin Mycelium
 
-**URL**: `/apps/lifecycle-sim`
-
-### Purpose
-Simulate the complete fungal lifecycle from spore germination to fruiting body development and sporulation, with environmental optimization recommendations.
+**Location**: `/apps/digital-twin`  
+**Theme**: Lime Green (Neural network aesthetic)  
+**Purpose**: Real-time mycelial network modeling
 
 ### Features
-- **7-Stage Lifecycle**: Spore → Germination → Hyphal Growth → Mycelial Network → Primordial → Fruiting → Sporulation
-- **Species Profiles**: Pre-configured settings for common species
-- **Environmental Controls**: Temperature, humidity, light, CO2
-- **Harvest Prediction**: Estimated dates and yields
+
+| Feature | Description |
+|---------|-------------|
+| Network Visualization | Interactive graph of mycelium structure |
+| Sensor Integration | Live MycoBrain data connection |
+| Growth Prediction | ML-based growth forecasting |
+| Anomaly Detection | Environmental stress identification |
 
 ### How to Use
 
-1. **Select Species**: Choose from:
-   - *Psilocybe cubensis*
-   - *Hericium erinaceus*
-   - *Pleurotus ostreatus*
-   - *Ganoderma lucidum*
-   - *Cordyceps militaris*
-   - *Trametes versicolor*
-2. **Start Simulation**: Click Play to begin
-3. **Adjust Environment**:
-   - Match conditions to species requirements
-   - Watch health score for optimization feedback
-4. **Monitor Progress**:
-   - Current stage and progress
-   - Days elapsed
-   - Biomass accumulation
-5. **Speed Control**: Adjust simulation speed (0.5x - 10x)
+#### Creating a New Digital Twin
 
-### Environmental Guidelines
-| Parameter | Typical Range | Effect on Growth |
-|-----------|---------------|------------------|
-| Temperature | 15-28°C | Species-specific optimum |
-| Humidity | 85-95% | Higher = faster growth |
-| Light Hours | 0-24h | Required for fruiting |
-| CO2 | 200-2000 ppm | Lower = better fruiting |
+1. **Initialize Twin**
+   - Click "New Digital Twin"
+   - Select species (P. cubensis, H. erinaceus, etc.)
+   - Set initial biomass (grams)
 
-### Integration Points
-- Uses species data from MINDEX
-- Connects to MycoBrain for real-world validation
-- Uses NLM biology layer (`nlm/biology/lifecycle.py`)
+2. **Configure Environment**
+   - Set temperature (°C)
+   - Set humidity (%)
+   - Set CO2 level (ppm)
+
+3. **View Network**
+   - Nodes represent hyphal tips and junctions
+   - Edges show connections
+   - Colors indicate resource levels
+
+#### Connecting MycoBrain Sensors
+
+1. Go to Settings → Device Connection
+2. Enter MycoBrain device ID
+3. Click "Connect"
+4. Data will stream automatically
+
+#### Growth Prediction
+
+1. Click "Predict Growth"
+2. Set prediction window (1-168 hours)
+3. View predictions:
+   - Biomass trajectory
+   - Network density
+   - Fruiting probability
+   - Recommendations
+
+### API Endpoint
+
+```
+GET /api/mindex/innovation/digital-twin?species=psilocybe_cubensis
+POST /api/mindex/innovation/digital-twin
+{
+  "action": "predict",
+  "duration_hours": 24
+}
+```
 
 ---
 
-## 4. Genetic Circuit Designer
+## Lifecycle Simulator
 
-**URL**: `/apps/genetic-circuit`
+**Location**: `/apps/lifecycle-sim`  
+**Theme**: Green/Amber gradient (Growth aesthetic)  
+**Purpose**: Fungal lifecycle modeling from spore to sporulation
 
-### Purpose
-Simulate gene regulatory networks and metabolic pathways to understand and optimize biosynthesis of fungal compounds.
+### Lifecycle Stages
 
-### Features
-- **Pre-built Pathways**: Psilocybin, Hericenone, Ganoderic Acid, Cordycepin
-- **Gene Expression Visualization**: Real-time expression levels
-- **Modification System**: Overexpress or knockdown genes
-- **Flux Analysis**: Metabolite production rates
+1. **Spore** - Dormant state
+2. **Germination** - Breaking dormancy
+3. **Hyphal Growth** - Initial filament extension
+4. **Mycelial Network** - Colonization
+5. **Primordial** - Pinning initiation
+6. **Fruiting Body** - Mushroom development
+7. **Sporulation** - Spore release
+8. **Decay** - Senescence
 
 ### How to Use
 
-1. **Select Genetic Circuit**: Choose a biosynthetic pathway
-2. **View Pathway Visualization**:
-   - Colored bars show gene expression levels
-   - Green = activated, Blue = basal, Red = repressed
-   - Orange circle = product accumulation
-3. **Start Simulation**: Click Play
-4. **Apply Gene Modifications**:
-   - Use sliders to overexpress (+) or knockdown (-) genes
-   - Observe effects on metabolite production
-5. **Adjust Environmental Stress**:
-   - Increase stress to simulate unfavorable conditions
-   - Adjust nutrient levels
+#### Starting a Simulation
 
-### Key Metrics
-- **Metabolite Level**: Target compound concentration
-- **Flux Rate**: Production velocity
-- **Bottleneck Gene**: Rate-limiting step in pathway
-- **Average Expression**: Overall pathway activity
+1. **Select Species**
+   - Choose from preset profiles:
+     - Golden Teacher (P. cubensis)
+     - Lion's Mane (H. erinaceus)
+     - Oyster (P. ostreatus)
+     - Reishi (G. lucidum)
+     - Cordyceps (C. militaris)
 
-### Integration Points
-- Connects to Retrosynthesis Viewer for pathway details
-- Links to Alchemy Lab for compound design
-- Uses NLM biology layer (`nlm/biology/genetic_circuit.py`)
+2. **Set Environment**
+   - Temperature: Adjust slider (10-35°C)
+   - Humidity: Adjust slider (40-100%)
+   - CO2: Adjust slider (400-5000 ppm)
+   - Light: Adjust hours per day (0-24)
+
+3. **Run Simulation**
+   - Click "Start" to begin
+   - Use "Advance 1 Day" for step-by-step
+   - Use "Fast Forward" for quick simulation
+
+4. **Monitor Progress**
+   - Stage indicator shows current phase
+   - Progress bar shows completion
+   - Health meter shows organism vitality
+   - Biomass graph tracks growth
+
+#### Predicting Harvest Date
+
+1. Run simulation to at least mycelial network stage
+2. Click "Predict Harvest"
+3. View estimated date and confidence
+
+### API Endpoint
+
+```
+POST /api/mindex/innovation/lifecycle
+{
+  "action": "advance",
+  "species": "psilocybe_cubensis",
+  "hours": 24,
+  "environment": {
+    "temperature": 24,
+    "humidity": 90,
+    "co2": 800,
+    "light_hours": 12
+  }
+}
+```
 
 ---
 
-## 5. Symbiosis Network Mapper
+## Genetic Circuit Designer
 
-**URL**: `/apps/symbiosis`
+**Location**: `/apps/genetic-circuit`  
+**Theme**: Purple/Cyan (DNA bioluminescent aesthetic)  
+**Purpose**: Gene regulatory network simulation
 
-### Purpose
-Map and analyze symbiotic relationships between fungi and other organisms to understand ecosystem dynamics.
+### Pre-built Circuits
 
-### Features
-- **Relationship Types**: Mycorrhizal, Parasitic, Saprotrophic, Endophytic, Lichen, Predatory
-- **Interactive Network**: Click to explore organisms and connections
-- **Filtering**: View specific relationship types
-- **Statistics**: Network analysis metrics
+| Circuit | Species | Product |
+|---------|---------|---------|
+| Psilocybin Pathway | P. cubensis | Psilocybin |
+| Hericenone Pathway | H. erinaceus | Hericenone A |
+| Ganoderic Pathway | G. lucidum | Ganoderic Acid A |
+| Cordycepin Pathway | C. militaris | Cordycepin |
 
 ### How to Use
 
-1. **Explore the Network**:
-   - Green nodes = Fungi
-   - Light green = Plants
-   - Cyan = Bacteria
-   - Red = Animals
-   - Teal = Algae
-2. **Click on Organisms**: View details and relationships
-3. **Filter by Relationship Type**: Use dropdown to focus on specific interactions
-4. **Analyze Statistics**:
-   - Total organisms and relationships
-   - Average connectivity
+#### Loading a Circuit
 
-### Relationship Types Explained
+1. Click "Load Circuit"
+2. Select from preset pathways
+3. View the gene network diagram
+
+#### Running Simulation
+
+1. **Set Parameters**
+   - Simulation steps (10-1000)
+   - Timestep (0.01-1.0)
+   - Stress level (0-100%)
+   - Nutrient level (0-100%)
+
+2. **Apply Modifications**
+   - Click on any gene node
+   - Use slider to modify expression (-50 to +50)
+   - Changes are highlighted in real-time
+
+3. **Run**
+   - Click "Simulate"
+   - Watch gene expression dynamics
+   - View metabolite accumulation
+
+#### Analyzing Results
+
+- **Trajectory Plot**: Expression levels over time
+- **Bottleneck Analysis**: Identifies rate-limiting genes
+- **Flux Rate**: Metabolite production efficiency
+- **Optimization Suggestions**: Recommendations for improvement
+
+### API Endpoint
+
+```
+POST /api/mindex/innovation/genetic-circuit
+{
+  "action": "simulate",
+  "circuit_id": "psilocybin_pathway",
+  "steps": 100,
+  "modifications": {
+    "psiD": 20,
+    "psiM": -10
+  }
+}
+```
+
+---
+
+## Symbiosis Mapper
+
+**Location**: `/apps/symbiosis`  
+**Theme**: Forest Green (Ecosystem aesthetic)  
+**Purpose**: Inter-species relationship mapping
+
+### Relationship Types
 
 | Type | Color | Description |
 |------|-------|-------------|
 | Mycorrhizal | Green | Mutualistic root association |
-| Parasitic | Red | Harmful to host organism |
-| Saprotrophic | Orange | Decomposing dead matter |
+| Parasitic | Red | One organism harmed |
+| Saprotrophic | Orange | Decomposition relationship |
 | Endophytic | Blue | Living within plant tissues |
 | Lichen | Purple | Fungi-algae partnership |
-| Predatory | Red | Nematode-trapping, etc. |
-
-### Integration Points
-- Exports GeoJSON for Earth Simulator
-- Uses MINDEX species data
-- Uses NLM biology layer (`nlm/biology/symbiosis.py`)
-
----
-
-## 6. Retrosynthesis Pathway Viewer
-
-**URL**: `/apps/retrosynthesis`
-
-### Purpose
-Analyze biosynthetic pathways from target compound back to precursor molecules, identifying enzymes and conditions required for production.
-
-### Features
-- **Pathway Analysis**: Step-by-step biosynthesis routes
-- **Enzyme Mapping**: Identify all enzymes in the pathway
-- **Yield Calculation**: Overall and per-step yields
-- **Cultivation Notes**: Practical growing recommendations
+| Predatory | Dark Red | Capturing other organisms |
 
 ### How to Use
 
-1. **Select Target Compound**: Choose from:
-   - Psilocybin, Muscimol, Hericenone A, Cordycepin, Ganoderic Acid A, Ergotamine
-2. **Analyze Pathway**: Click search button
-3. **Explore Steps**:
-   - Click each step to expand details
-   - View substrate, product, enzyme, conditions
-   - Check yield percentages
-4. **Review Cultivation Notes**: Practical tips for production
+#### Creating a Network
 
-### Pathway Metrics
-- **Rate-Limiting Step**: Lowest yield step
-- **Reversible Steps**: Steps that can go backward
-- **Cofactor Requirements**: ATP, NADPH, etc.
+1. **Add Organisms**
+   - Click "Add Organism"
+   - Enter name and type (fungus, plant, bacteria, animal, algae)
+   - Position is automatically arranged
 
-### Integration Points
-- Opens compounds in Alchemy Lab
-- Links to Genetic Circuit Designer
-- Uses NLM chemistry layer (`nlm/chemistry/retrosynthesis.py`)
+2. **Add Relationships**
+   - Click source organism
+   - Click target organism
+   - Select relationship type
+   - Set strength (0.1-1.0)
+
+3. **View Network**
+   - Nodes are colored by organism type
+   - Edges show relationship type and strength
+   - Hover for detailed information
+
+#### Network Analysis
+
+1. Click "Analyze Network"
+2. View metrics:
+   - Keystone species (most connected)
+   - Community structure
+   - Relationship breakdown
+   - Network density
+
+#### Exporting
+
+- **JSON**: Full network data
+- **GeoJSON**: For Earth Simulator integration
+- **CSV**: For spreadsheet analysis
+
+### API Endpoint
+
+```
+GET /api/mindex/innovation/symbiosis
+POST /api/mindex/innovation/symbiosis
+{
+  "action": "analyze"
+}
+```
 
 ---
 
-## 7. Computational Alchemy Lab
+## Retrosynthesis Viewer
 
-**URL**: `/apps/alchemy-lab`
-
-### Purpose
-Design novel fungal compounds by combining molecular scaffolds with functional groups and predict their properties using AI.
-
-### Features
-- **Scaffold Library**: Indole, Ergoline, β-Carboline, Lanostane, Macrolide
-- **Functional Groups**: Hydroxyl, Amino, Methyl, Phosphate, Acetyl, Phenyl
-- **Property Prediction**: Drug-likeness, synthesizability, toxicity, bioactivity
-- **Synthesis Planning**: Step-by-step production routes
+**Location**: `/apps/retrosynthesis`  
+**Theme**: Amber/Orange (Chemical aesthetic)  
+**Purpose**: Biosynthetic pathway analysis
 
 ### How to Use
 
-1. **Select Scaffold**: Base molecular structure
-2. **Add Modifications**:
-   - Choose position (1-6)
-   - Select functional group
-   - Add up to 6 modifications
-3. **Name Compound** (optional)
-4. **Design & Predict**: Generate AI predictions
-5. **View Results**:
-   - Molecular weight, logP
-   - Drug-likeness score
-   - Synthesizability score
-   - Safety score
-   - Predicted bioactivities
-6. **Plan Synthesis**: Get a production route with yields and costs
+#### Analyzing a Compound
 
-### Scoring Explained
-| Score | Description |
-|-------|-------------|
-| Drug-Likeness | How similar to known drugs |
-| Synthesizability | Ease of production |
-| Safety | Inverse of toxicity risk |
-| Bioactivities | Predicted biological effects |
+1. **Enter Target Compound**
+   - Type compound name (e.g., "Psilocybin")
+   - Or paste SMILES notation
+   - Or select from MINDEX library
 
-### Integration Points
-- Connects to ChemSpider for compound data
-- Links to MINDEX compound database
-- Uses NLM chemistry layer (`nlm/chemistry/alchemy.py`)
+2. **Run Analysis**
+   - Click "Analyze Pathway"
+   - Wait for retrosynthesis computation
+   - View step-by-step pathway
+
+3. **Explore Results**
+   - Each step shows:
+     - Precursor compound
+     - Reaction type
+     - Enzyme involved
+     - Confidence score
+   - Click any step for details
+
+#### Pathway Visualization
+
+- **Node View**: Compounds as nodes, reactions as edges
+- **Flow View**: Linear pathway representation
+- **Tree View**: Alternative pathways branching
+
+#### Predicting Precursors
+
+1. Select any compound in the pathway
+2. Click "Predict Precursors"
+3. View alternative precursor suggestions
+
+### API Endpoint
+
+```
+GET /api/mindex/innovation/retrosynthesis?compound=psilocybin
+```
 
 ---
 
-## 8. API Integration
+## Alchemy Lab
 
-All innovation apps connect to backend APIs for data and computation:
+**Location**: `/apps/alchemy-lab`  
+**Theme**: Violet/Gold (Mystical aesthetic)  
+**Purpose**: Virtual compound design
 
-### MINDEX API Endpoints
+### How to Use
+
+#### Designing a New Compound
+
+1. **Select Scaffold**
+   - Tryptamine (psychedelics, neuroactives)
+   - Steroid (anti-inflammatory, hormonal)
+   - Triterpene (anticancer, hepatoprotective)
+   - Polyketide (antimicrobial, cytotoxic)
+   - Peptide (antimicrobial, immunomodulatory)
+   - Polysaccharide (immunomodulatory, antioxidant)
+
+2. **Add Modifications**
+   - Hydroxyl (increases hydrophilicity)
+   - Methyl (increases lipophilicity)
+   - Amino (increases basicity)
+   - Phosphate (prodrug conversion)
+   - Acetyl (improves stability)
+   - Fluorine (metabolic stability)
+
+3. **Set Target Properties**
+   - Molecular weight range
+   - Target activities
+   - Toxicity constraints
+
+4. **Generate**
+   - Click "Design Compound"
+   - View predicted properties
+   - See activity predictions
+
+#### Virtual Screening
+
+1. Click "Virtual Screening"
+2. Set target activity
+3. Set number of compounds (5-50)
+4. Review ranked results
+
+#### Optimization
+
+1. Load a designed compound
+2. Click "Optimize for Activity"
+3. Select target activity
+4. View optimization suggestions
+
+### API Endpoint
 
 ```
-GET  /api/compounds                    - List all compounds
-GET  /api/compounds/{id}               - Get compound details
-GET  /api/compounds/for-taxon/{id}     - Get compounds for species
-POST /api/compounds/enrich             - Enrich from ChemSpider
-GET  /api/compounds/chemspider/search  - Search ChemSpider
+POST /api/mindex/innovation/alchemy
+{
+  "action": "design",
+  "scaffold": "tryptamine",
+  "modifications": ["hydroxyl", "methyl"],
+  "target_activities": ["psychedelic", "neurotrophic"],
+  "mw_range": [200, 400]
+}
 ```
 
-### NLM Physics API Endpoints
+---
 
-```
-POST /api/physics/molecular/simulate   - QISE simulation
-POST /api/physics/molecular/dynamics   - MD simulation
-POST /api/physics/field/conditions     - Field physics data
-POST /api/physics/field/fruiting-prediction - Fruiting forecast
-```
+## Research Apps
 
-### Environment Variables Required
+### Petri Dish Simulator (`/apps/petri-dish-sim`)
 
-```env
-NEXT_PUBLIC_MINDEX_API_URL=https://mindex.mycosoft.com
-CHEMSPIDER_API_KEY=your_key_here
-NEXT_PUBLIC_CHEMSPIDER_API_KEY=your_key_here
-```
+Simulates fungal colony growth on agar plates.
 
-### Local Development
+**Controls**:
+- Click to add spore inoculation points
+- Adjust temperature, humidity, nutrients
+- Watch colony expansion over time
+- Measure growth rate in mm/day
 
-1. Start MINDEX API:
-   ```bash
-   cd MINDEX/mindex
-   docker-compose up -d
-   ```
+### Mushroom Simulator (`/apps/mushroom-sim`)
 
-2. Start Website:
-   ```bash
-   cd WEBSITE/website
-   npm run dev
-   ```
+3D visualization of mushroom development.
 
-3. Access apps at `http://localhost:3010/apps`
+**Controls**:
+- Select species for accurate morphology
+- Adjust environmental parameters
+- View development stages
+- Export 3D models
+
+### Compound Analyzer (`/apps/compound-sim`)
+
+Analyze chemical compounds from MINDEX.
+
+**Features**:
+- Search MINDEX compound library
+- Search ChemSpider directly
+- View molecular structure
+- See bioactivity predictions
+- Enrich data from external sources
+
+### Spore Tracker (`/apps/spore-tracker`)
+
+Global spore distribution monitoring.
+
+**Features**:
+- Interactive world map
+- Real-time spore data
+- Seasonal patterns
+- Alert configuration
+
+### Ancestry Database (`/ancestry`)
+
+Fungal phylogenetic relationships.
+
+**Features**:
+- Species search
+- Phylogenetic tree view
+- Chemistry tab for compounds
+- Research papers integration
+
+### Growth Analytics (`/apps/growth-analytics`)
+
+ML-powered growth predictions.
+
+**Features**:
+- Historical data analysis
+- Trend prediction
+- Optimization recommendations
+- Export reports
 
 ---
 
@@ -374,27 +564,43 @@ NEXT_PUBLIC_CHEMSPIDER_API_KEY=your_key_here
 
 ### Common Issues
 
-1. **"Failed to connect to MINDEX"**
-   - Check MINDEX API is running
-   - Verify `NEXT_PUBLIC_MINDEX_API_URL` is set
+| Issue | Solution |
+|-------|----------|
+| App won't load | Clear browser cache, check internet connection |
+| Simulation runs slow | Reduce step count, close other tabs |
+| No data appearing | Check API connection, verify authentication |
+| 3D view not working | Enable WebGL in browser settings |
+| Results not saving | Check login status, verify MINDEX connection |
 
-2. **"ChemSpider API key not configured"**
-   - Add `CHEMSPIDER_API_KEY` to environment
+### Error Messages
 
-3. **Simulation not running**
-   - Select required inputs (molecule, species, etc.)
-   - Check browser console for errors
+| Error Code | Meaning | Fix |
+|------------|---------|-----|
+| `MINDEX_UNAVAILABLE` | Database connection failed | Retry in 30 seconds |
+| `AUTH_EXPIRED` | Session timed out | Re-login at /natureos/login |
+| `RATE_LIMIT` | Too many requests | Wait 1 minute |
+| `INVALID_INPUT` | Bad parameter format | Check input values |
 
-4. **Network visualization blank**
-   - Enable JavaScript/Canvas in browser
-   - Check for WebGL support
+### Getting Help
 
-### Support
-
-- Technical docs: `/docs/INNOVATION_IMPLEMENTATION_SUMMARY.md`
-- API reference: `/docs/API_ENDPOINTS_REFERENCE.md`
-- Architecture: `/docs/NLM_IMPLEMENTATION_PLAN.md`
+- **Documentation**: `/docs` in the codebase
+- **API Reference**: `/api/docs` (Swagger UI)
+- **Support**: Contact MYCOSOFT support team
+- **Community**: Discord/Slack channels
 
 ---
 
-*Document Version 1.0 | Last Updated: 2026-01-24*
+## Appendix: Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Space` | Start/Pause simulation |
+| `R` | Reset simulation |
+| `S` | Save current state |
+| `E` | Export results |
+| `?` | Show help |
+| `Esc` | Close dialogs |
+
+---
+
+*Document generated by MYCOSOFT MAS v2.0*
