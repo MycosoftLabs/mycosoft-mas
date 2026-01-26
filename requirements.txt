@@ -66,3 +66,9 @@ watchfiles==1.1.1 ; python_version >= "3.11" and python_version < "3.14"
 websockets==15.0.1 ; python_version >= "3.11" and python_version < "3.14"
 yarl==1.22.0 ; python_version >= "3.11" and python_version < "3.14"
 requests==2.31.0
+pycirclize>=1.0.0
+matplotlib>=3.8.0
+biopython>=1.80
+langgraph>=0.2.0
+langchain>=0.3.0
+langchain-openai>=0.2.0
