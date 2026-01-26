@@ -531,6 +531,116 @@ async def detect_gaps():
     return {"gaps": gaps}
 
 
+
+# ==================== CONNECTION MANAGEMENT ====================
+
+class ConnectionCreateRequest(BaseModel):
+    source: str
+    target: str
+    type: str = "message"
+    bidirectional: bool = True
+    priority: int = 5
+
+
+class ConnectionDeleteRequest(BaseModel):
+    source: str
+    target: str
+
+
+# In-memory connection store (will be persisted to Redis/DB)
+agent_connections: Dict[str, List[Dict[str, Any]]] = {}
+
+
+@app.get("/connections")
+async def list_connections():
+    """List all agent connections"""
+    all_connections = []
+    for agent_id, conns in agent_connections.items():
+        for conn in conns:
+            all_connections.append({
+                "source": agent_id,
+                **conn
+            })
+    return {"connections": all_connections, "total": len(all_connections)}
+
+
+@app.get("/connections/{agent_id}")
+async def get_agent_connections(agent_id: str):
+    """Get connections for a specific agent"""
+    conns = agent_connections.get(agent_id, [])
+    return {"agent_id": agent_id, "connections": conns}
+
+
+@app.post("/connections/create")
+async def create_connection(request: ConnectionCreateRequest):
+    """Create a connection between two agents"""
+    source = request.source
+    target = request.target
+    
+    # Initialize if needed
+    if source not in agent_connections:
+        agent_connections[source] = []
+    
+    # Check if connection exists
+    existing = next((c for c in agent_connections[source] if c["target"] == target), None)
+    if existing:
+        return {"status": "exists", "connection": existing}
+    
+    # Create connection
+    connection = {
+        "target": target,
+        "type": request.type,
+        "bidirectional": request.bidirectional,
+        "priority": request.priority,
+        "created_at": datetime.utcnow().isoformat(),
+        "status": "active"
+    }
+    agent_connections[source].append(connection)
+    
+    # If bidirectional, create reverse connection
+    if request.bidirectional:
+        if target not in agent_connections:
+            agent_connections[target] = []
+        reverse_exists = next((c for c in agent_connections[target] if c["target"] == source), None)
+        if not reverse_exists:
+            agent_connections[target].append({
+                "target": source,
+                "type": request.type,
+                "bidirectional": True,
+                "priority": request.priority,
+                "created_at": datetime.utcnow().isoformat(),
+                "status": "active"
+            })
+    
+    logger.info(f"Connection created: {source} -> {target} (type: {request.type})")
+    return {"status": "created", "connection": {"source": source, **connection}}
+
+
+@app.post("/connections/delete")
+async def delete_connection(request: ConnectionDeleteRequest):
+    """Delete a connection between agents"""
+    source = request.source
+    target = request.target
+    
+    if source not in agent_connections:
+        raise HTTPException(status_code=404, detail="Source agent has no connections")
+    
+    # Find and remove connection
+    original_len = len(agent_connections[source])
+    agent_connections[source] = [c for c in agent_connections[source] if c["target"] != target]
+    
+    if len(agent_connections[source]) == original_len:
+        raise HTTPException(status_code=404, detail="Connection not found")
+    
+    # Also remove reverse if exists
+    if target in agent_connections:
+        agent_connections[target] = [c for c in agent_connections[target] if c["target"] != source]
+    
+    logger.info(f"Connection deleted: {source} -> {target}")
+    return {"status": "deleted", "source": source, "target": target}
+
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)

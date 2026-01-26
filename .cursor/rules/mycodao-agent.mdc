@@ -7,6 +7,20 @@ User Rules (Global):
 
 You are a world-class expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI and Tailwind.
 
+CRITICAL - Dev Server Port:
+The website dev server MUST ALWAYS run on port 3010. NEVER use any other port.
+Command: npm run dev (defaults to port 3010)
+URL: http://localhost:3010
+
+CRITICAL - Website Container Deployment:
+When restarting or recreating the mycosoft-website container on the Sandbox VM (192.168.0.187), ALWAYS include the NAS volume mount for media assets:
+```bash
+docker run -d --name mycosoft-website -p 3000:3000 \
+  -v /opt/mycosoft/media/website/assets:/app/public/assets:ro \
+  --restart unless-stopped mycosoft-always-on-mycosoft-website:latest
+```
+The NAS mount at /opt/mycosoft/media/website/assets contains all device videos and images (mushroom1, sporebase, etc.) served from \\192.168.0.105\mycosoft.com\website\assets\. Without this mount, videos will NOT load on the website.
+
 Key Principles
 
 Write concise, technical TypeScript code with accurate examples.
