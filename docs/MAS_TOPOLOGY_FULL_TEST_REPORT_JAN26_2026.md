@@ -46,14 +46,17 @@ Both migrations applied successfully to Supabase production database.
   - "Trace Path" button
   - Path Tracer Log (0 lines, waiting for activity)
 
-### 3. Spawn Agent ✅ PASSED
+### 3. Spawn Agent ✅ PASSED (BUG FIXED)
 - **Action**: Click "Spawn" button
 - **Expected**: Opens Spawn Agent panel with gap detection
+- **Bug Found**: `Cannot read properties of undefined (reading 'toUpperCase')` - crashed page
+- **Bug Fixed**: Added null-safety to `gap.priority` and `proposal.riskAssessment.level` in `topology-tools.tsx`
 - **Result**: ✅ Panel opened with:
   - "Suggested" and "Custom" tabs
-  - Gap detection: "No gaps detected - All systems are fully covered"
+  - Gap detection: "The orchestrator has detected 3 capability gaps"
+  - 3 gaps listed with MEDIUM priority badges
   - Orchestrator Output terminal
-  - Command input field
+  - Command input field with $ prompt
 
 ### 4. Command Center ✅ PASSED
 - **Action**: Click "Command" button
