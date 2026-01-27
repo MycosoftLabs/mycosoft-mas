@@ -1,0 +1,356 @@
+networks:
+  mas-network:
+    external: true
+    name: myca-integration-network
+services:
+  mas-agent-config-manager:
+    container_name: mas-agent-config-manager
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: config-manager
+      AGENT_NAME: Config Manager
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:config-manager
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-dashboard:
+    container_name: mas-agent-dashboard
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: dashboard
+      AGENT_NAME: Dashboard
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:dashboard
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-health-monitor:
+    container_name: mas-agent-health-monitor
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: health-monitor
+      AGENT_NAME: Health Monitor
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:health-monitor
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-heartbeat:
+    container_name: mas-agent-heartbeat
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: heartbeat
+      AGENT_NAME: Heartbeat
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:heartbeat
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-hr-manager:
+    container_name: mas-agent-hr-manager
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: hr-manager
+      AGENT_NAME: HR Manager
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:hr-manager
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-legal:
+    container_name: mas-agent-legal
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: legal
+      AGENT_NAME: Legal Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:legal
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-logger:
+    container_name: mas-agent-logger
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: logger
+      AGENT_NAME: Logger
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:logger
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-marketing-agent:
+    container_name: mas-agent-marketing-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: marketing-agent
+      AGENT_NAME: Marketing
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:marketing-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-memory-manager:
+    container_name: mas-agent-memory-manager
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: memory-manager
+      AGENT_NAME: Memory Manager
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:memory-manager
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-message-broker:
+    container_name: mas-agent-message-broker
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: message-broker
+      AGENT_NAME: Message Broker
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:message-broker
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-myca-orchestrator:
+    container_name: mas-agent-myca-orchestrator
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: myca-orchestrator
+      AGENT_NAME: MYCA Orchestrator
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:myca-orchestrator
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-sales-agent:
+    container_name: mas-agent-sales-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: sales-agent
+      AGENT_NAME: Sales
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:sales-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-scheduler:
+    container_name: mas-agent-scheduler
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: scheduler
+      AGENT_NAME: Scheduler
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:scheduler
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-task-router:
+    container_name: mas-agent-task-router
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: task-router
+      AGENT_NAME: Task Router
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:task-router
+    networks:
+    - mas-network
+    restart: unless-stopped
+version: '3.8'
