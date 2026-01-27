@@ -1,0 +1,281 @@
+networks:
+  mas-network:
+    external: true
+    name: myca-integration-network
+services:
+  mas-agent-anthropic-agent:
+    container_name: mas-agent-anthropic-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: anthropic-agent
+      AGENT_NAME: Anthropic Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:anthropic-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-elevenlabs-agent:
+    container_name: mas-agent-elevenlabs-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: elevenlabs-agent
+      AGENT_NAME: ElevenLabs Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:elevenlabs-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-gemini-agent:
+    container_name: mas-agent-gemini-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: gemini-agent
+      AGENT_NAME: Gemini Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:gemini-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-grok-agent:
+    container_name: mas-agent-grok-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: grok-agent
+      AGENT_NAME: Grok Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:grok-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-ifttt-agent:
+    container_name: mas-agent-ifttt-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: ifttt-agent
+      AGENT_NAME: IFTTT Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:ifttt-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-n8n-integration:
+    container_name: mas-agent-n8n-integration
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: n8n-integration
+      AGENT_NAME: n8n Integration
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:n8n-integration
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-notion-agent:
+    container_name: mas-agent-notion-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: notion-agent
+      AGENT_NAME: Notion Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:notion-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-openai-connector:
+    container_name: mas-agent-openai-connector
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: openai-connector
+      AGENT_NAME: OpenAI Connector
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:openai-connector
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-supabase-agent:
+    container_name: mas-agent-supabase-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: supabase-agent
+      AGENT_NAME: Supabase Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:supabase-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-website-agent:
+    container_name: mas-agent-website-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: website-agent
+      AGENT_NAME: Website Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:website-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-zapier-agent:
+    container_name: mas-agent-zapier-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: zapier-agent
+      AGENT_NAME: Zapier Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:zapier-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+version: '3.8'
