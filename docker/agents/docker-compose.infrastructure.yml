@@ -1,0 +1,206 @@
+networks:
+  mas-network:
+    external: true
+    name: myca-integration-network
+services:
+  mas-agent-cloudflare-agent:
+    container_name: mas-agent-cloudflare-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: cloudflare-agent
+      AGENT_NAME: Cloudflare Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:cloudflare-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-deployment-agent:
+    container_name: mas-agent-deployment-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: deployment-agent
+      AGENT_NAME: Deployment Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:deployment-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-docker-manager:
+    container_name: mas-agent-docker-manager
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: docker-manager
+      AGENT_NAME: Docker Manager
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:docker-manager
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-monitoring-agent:
+    container_name: mas-agent-monitoring-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: monitoring-agent
+      AGENT_NAME: Monitoring Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:monitoring-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-network-monitor:
+    container_name: mas-agent-network-monitor
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: network-monitor
+      AGENT_NAME: Network Monitor
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:network-monitor
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-proxmox-monitor:
+    container_name: mas-agent-proxmox-monitor
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: proxmox-monitor
+      AGENT_NAME: Proxmox Monitor
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:proxmox-monitor
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-security-infra:
+    container_name: mas-agent-security-infra
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: security-infra
+      AGENT_NAME: Security Infrastructure
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:security-infra
+    networks:
+    - mas-network
+    restart: unless-stopped
+  mas-agent-storage-agent:
+    container_name: mas-agent-storage-agent
+    depends_on:
+      mas-redis:
+        condition: service_healthy
+      myca-orchestrator:
+        condition: service_started
+    environment:
+      AGENT_ID: storage-agent
+      AGENT_NAME: Storage Agent
+      MAS_ORCHESTRATOR_URL: http://myca-orchestrator:8001
+      REDIS_URL: redis://mas-redis:6379/0
+    healthcheck:
+      interval: 30s
+      retries: 3
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8080/health
+      timeout: 10s
+    image: mycosoft/mas-agent:storage-agent
+    networks:
+    - mas-network
+    restart: unless-stopped
+version: '3.8'
