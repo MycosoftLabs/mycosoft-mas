@@ -1,82 +1,62 @@
 #!/usr/bin/env python3
-"""Verify the deployment is working"""
+"""Verify deployment status - January 27, 2026"""
 import requests
-import urllib3
-import time
-import base64
-import sys
+from datetime import datetime
 
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-urllib3.disable_warnings()
-
-PROXMOX_HOST = "https://192.168.0.202:8006"
-PROXMOX_TOKEN_ID = "myca@pve!mas"
-PROXMOX_TOKEN_SECRET = "ca23b6c8-5746-46c4-8e36-fc6caad5a9e5"
-VM_ID = 103
-NODE = "pve"
-
-headers = {"Authorization": f"PVEAPIToken={PROXMOX_TOKEN_ID}={PROXMOX_TOKEN_SECRET}"}
-
-def exec_cmd(cmd, timeout=60):
-    url = f"{PROXMOX_HOST}/api2/json/nodes/{NODE}/qemu/{VM_ID}/agent/exec"
+def check(name, url, timeout=10, expected_codes=[200]):
     try:
-        data = {"command": "/bin/bash", "input-data": cmd}
-        r = requests.post(url, headers=headers, data=data, verify=False, timeout=10)
-        if not r.ok:
-            return None, f"Exec failed: {r.status_code}"
-        pid = r.json().get("data", {}).get("pid")
-        if not pid:
-            return None, "No PID"
-        
-        status_url = f"{PROXMOX_HOST}/api2/json/nodes/{NODE}/qemu/{VM_ID}/agent/exec-status?pid={pid}"
-        start = time.time()
-        while time.time() - start < timeout:
-            time.sleep(2)
-            r2 = requests.get(status_url, headers=headers, verify=False, timeout=10)
-            if r2.ok:
-                result = r2.json().get("data", {})
-                if result.get("exited"):
-                    out_b64 = result.get("out-data", "")
-                    err_b64 = result.get("err-data", "")
-                    try:
-                        out = base64.b64decode(out_b64).decode() if out_b64 else ""
-                    except:
-                        out = out_b64
-                    try:
-                        err = base64.b64decode(err_b64).decode() if err_b64 else ""
-                    except:
-                        err = err_b64
-                    return result.get("exitcode", 0), out + err
-        return None, "Timeout"
+        r = requests.get(url, timeout=timeout)
+        status = "OK" if r.status_code in expected_codes else "WARN"
+        return status, r.status_code
+    except requests.exceptions.ConnectionError:
+        return "DOWN", "Connection refused"
+    except requests.exceptions.Timeout:
+        return "TIMEOUT", "Timeout"
     except Exception as e:
-        return None, str(e)
+        return "ERROR", str(e)[:50]
 
-print("=" * 60)
-print("  VERIFYING DEPLOYMENT")
-print("=" * 60)
+def check_webhook(url, timeout=10):
+    try:
+        r = requests.post(url, json={"message": "test", "action": "health"}, timeout=timeout)
+        return r.status_code
+    except Exception as e:
+        return str(e)[:30]
 
-# Wait for health check
-print("\nWaiting 20 seconds for container health check...")
-time.sleep(20)
+print("=" * 70)
+print(f"DEPLOYMENT VERIFICATION - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print("=" * 70)
 
-print("\n=== CONTAINER STATUS ===")
-code, out = exec_cmd("docker ps --format 'table {{.Names}}\t{{.Status}}' | grep website")
-print(out.strip() if out else "Not found")
+print("\n[n8n Services]")
+status, code = check("Sandbox n8n", "http://192.168.0.187:5678/healthz", timeout=5)
+print(f"  Sandbox VM (187) n8n: {status} ({code})" + (" <- Should be STOPPED" if status == "OK" else " <- CORRECT"))
 
-print("\n=== HEALTH CHECK ===")
-code, out = exec_cmd("curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/")
-http_code = out.strip() if out else "000"
-print(f"HTTP Response: {http_code}")
+status, code = check("MAS n8n", "http://192.168.0.188:5678/healthz")
+print(f"  MAS VM (188) n8n:     {status} ({code})" + (" <- CORRECT" if status == "OK" else " <- SHOULD BE RUNNING"))
 
-print("\n=== CONTAINER LOGS ===")
-code, out = exec_cmd("docker logs mycosoft-always-on-mycosoft-website-1 --tail 15 2>&1")
-print(out if out else "No logs")
+print("\n[External Endpoints]")
+status, code = check("sandbox.mycosoft.com", "https://sandbox.mycosoft.com/api/health", timeout=15)
+print(f"  sandbox.mycosoft.com: {status} ({code})")
 
-if "200" in http_code:
-    print("\n" + "=" * 60)
-    print("  SUCCESS!")
-    print("  Website is running on sandbox.mycosoft.com")
-    print("  ")
-    print("  NEXT STEP: Purge Cloudflare cache!")
-    print("  Go to: dash.cloudflare.com -> mycosoft.com -> Caching -> Purge Everything")
-    print("=" * 60)
+status, code = check("dev.mycosoft.com", "https://dev.mycosoft.com/api/health", timeout=15)
+print(f"  dev.mycosoft.com:     {status} ({code})")
+
+print("\n[n8n Webhooks on MAS VM]")
+webhooks = [
+    ("myca/command", "http://192.168.0.188:5678/webhook/myca/command"),
+    ("myca-chat", "http://192.168.0.188:5678/webhook/myca-chat"),
+]
+for name, url in webhooks:
+    code = check_webhook(url)
+    status = "OK" if isinstance(code, int) and code < 500 else ("ERR" if isinstance(code, int) else code)
+    print(f"  /webhook/{name}: {code}")
+
+print("\n[MAS API]")
+status, code = check("MAS API", "http://192.168.0.188:8001/health")
+print(f"  MAS API (8001): {status} ({code})")
+
+print("\n[Summary]")
+print("  - MAS n8n should be RUNNING on 192.168.0.188")
+print("  - Sandbox n8n should be STOPPED on 192.168.0.187")
+print("  - sandbox.mycosoft.com points to VM 103 (Sandbox)")
+print("  - dev.mycosoft.com points to VM 101 (MAS)")
+print()
