@@ -1,0 +1,77 @@
+﻿# PersonaPlex Docker Compose - January 27, 2026
+version: '3.8'
+
+services:
+  personaplex:
+    build:
+      context: ./services/personaplex
+      dockerfile: Dockerfile
+    container_name: mycosoft-personaplex
+    ports:
+      - '8998:8998'
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - VOICE_PROMPT=NATF2.pt
+      - TEXT_PROMPT_FILE=/app/myca_persona.txt
+      - CPU_OFFLOAD=${PERSONAPLEX_CPU_OFFLOAD:-false}
+    volumes:
+      - ./services/personaplex/myca_persona.txt:/app/myca_persona.txt:ro
+      - personaplex-cache:/root/.cache/huggingface
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+    profiles:
+      - gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  personaplex-cpu:
+    build:
+      context: ./services/personaplex
+      dockerfile: Dockerfile
+    container_name: mycosoft-personaplex-cpu
+    ports:
+      - '8998:8998'
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - VOICE_PROMPT=NATF2.pt
+      - TEXT_PROMPT_FILE=/app/myca_persona.txt
+      - CPU_OFFLOAD=true
+    volumes:
+      - ./services/personaplex/myca_persona.txt:/app/myca_persona.txt:ro
+      - personaplex-cache:/root/.cache/huggingface
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+    profiles:
+      - cpu
+
+  personaplex-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile.personaplex-bridge
+    container_name: mycosoft-personaplex-bridge
+    ports:
+      - '8999:8999'
+    environment:
+      - PERSONAPLEX_URL=wss://personaplex:8998
+      - MAS_ORCHESTRATOR_URL=http://mas-orchestrator:8001
+      - N8N_WEBHOOK_URL=http://n8n:5678/webhook
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+    profiles:
+      - gpu
+      - cpu
+
+volumes:
+  personaplex-cache:
+
+networks:
+  mycosoft-network:
+    external: true
