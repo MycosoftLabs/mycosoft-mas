@@ -1,0 +1,129 @@
+{
+  "scan_time": "2026-01-28T12:53:56.604804",
+  "total_devices": 11,
+  "devices": [
+    {
+      "ip": "192.168.0.1",
+      "mac": "58:D6:1F:21:13:18",
+      "open_ports": [],
+      "device_type": "UNKNOWN",
+      "known_role": "Dream Machine (Gateway)"
+    },
+    {
+      "ip": "192.168.0.2",
+      "mac": "24:6E:96:63:7F:14",
+      "open_ports": [],
+      "device_type": "UNKNOWN",
+      "known_role": "10G Switch / USW Pro Max 24 PoE"
+    },
+    {
+      "ip": "192.168.0.34",
+      "mac": "84:7B:EB:F5:E3:C2",
+      "open_ports": [
+        22
+      ],
+      "device_type": "LINUX/SERVER",
+      "known_role": ""
+    },
+    {
+      "ip": "192.168.0.68",
+      "mac": "8C:30:66:7A:3F:70",
+      "open_ports": [],
+      "device_type": "UNKNOWN",
+      "known_role": ""
+    },
+    {
+      "ip": "192.168.0.85",
+      "mac": "84:7B:EB:F7:61:F6",
+      "open_ports": [],
+      "device_type": "UNKNOWN",
+      "known_role": ""
+    },
+    {
+      "ip": "192.168.0.90",
+      "mac": "24:6E:96:60:65:CC",
+      "open_ports": [],
+      "device_type": "UNKNOWN",
+      "known_role": ""
+    },
+    {
+      "ip": "192.168.0.104",
+      "mac": "6C:63:F8:37:12:25",
+      "open_ports": [],
+      "device_type": "UNKNOWN",
+      "known_role": ""
+    },
+    {
+      "ip": "192.168.0.105",
+      "mac": "6C:63:F8:37:12:26",
+      "open_ports": [],
+      "device_type": "UNKNOWN",
+      "known_role": "NAS (UNAS-Pro)"
+    },
+    {
+      "ip": "192.168.0.120",
+      "mac": "84:2B:2B:46:13:EE",
+      "open_ports": [],
+      "device_type": "UNKNOWN",
+      "known_role": ""
+    },
+    {
+      "ip": "192.168.0.163",
+      "mac": "58:D6:1F:47:33:EB",
+      "open_ports": [
+        22
+      ],
+      "device_type": "LINUX/SERVER",
+      "known_role": ""
+    },
+    {
+      "ip": "192.168.0.172",
+      "mac": null,
+      "open_ports": [
+        3000,
+        5678,
+        8000,
+        8003,
+        8443
+      ],
+      "device_type": "UNIFI/NETWORK",
+      "known_role": "Windows Dev PC (MycoComp)"
+    }
+  ],
+  "proxmox_servers": [],
+  "vm_candidates": [
+    {
+      "ip": "192.168.0.34",
+      "mac": "84:7B:EB:F5:E3:C2",
+      "open_ports": [
+        22
+      ],
+      "device_type": "LINUX/SERVER",
+      "known_role": ""
+    },
+    {
+      "ip": "192.168.0.163",
+      "mac": "58:D6:1F:47:33:EB",
+      "open_ports": [
+        22
+      ],
+      "device_type": "LINUX/SERVER",
+      "known_role": ""
+    }
+  ],
+  "unifi_devices": [
+    {
+      "ip": "192.168.0.172",
+      "mac": null,
+      "open_ports": [
+        3000,
+        5678,
+        8000,
+        8003,
+        8443
+      ],
+      "device_type": "UNIFI/NETWORK",
+      "known_role": "Windows Dev PC (MycoComp)"
+    }
+  ]
+}
