@@ -1,0 +1,14 @@
+﻿# PersonaPlex Local Server Requirements - January 28, 2026
+torch>=2.1.0
+torchaudio>=2.1.0
+transformers>=4.36.0
+accelerate>=0.25.0
+websockets>=12.0
+aiohttp>=3.9.0
+numpy>=1.24.0
+scipy>=1.11.0
+soundfile>=0.12.0
+huggingface-hub>=0.20.0
+fastapi>=0.109.0
+uvicorn>=0.25.0
+httpx>=0.26.0
