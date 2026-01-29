@@ -1,16 +1,18 @@
 ﻿#!/usr/bin/env python3
-"""PersonaPlex Test Server (No PyTorch) - January 28, 2026"""
+"""
+PersonaPlex Voice Server - January 28, 2026
+Full integration with MAS orchestrator, n8n, MINDEX, and LLM backends
+"""
 import asyncio
 import json
 import logging
 import os
-import time
-import math
 from datetime import datetime
 from uuid import uuid4
 import numpy as np
 import websockets
 from websockets.server import serve
+import httpx
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,93 +20,194 @@ logger = logging.getLogger(__name__)
 HOST = os.getenv("PERSONAPLEX_HOST", "0.0.0.0")
 PORT = int(os.getenv("PERSONAPLEX_PORT", "8998"))
 
+# Backend URLs
+MAS_ORCHESTRATOR_URL = os.getenv("MAS_ORCHESTRATOR_URL", "http://192.168.0.188:8001")
+N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "http://192.168.0.188:5678/webhook/myca-voice")
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "aEO01A4wXwd1O8GPgGlF")
+
 class Session:
     def __init__(self, sid, ws):
         self.session_id = sid
         self.websocket = ws
         self.turn_count = 0
+        self.conversation_id = str(uuid4())
 
 class PersonaPlexServer:
     def __init__(self):
         self.sessions = {}
         self.sample_rate = 24000
+        self.http_client = None
+        
+    async def get_http(self):
+        if self.http_client is None:
+            self.http_client = httpx.AsyncClient(timeout=30.0)
+        return self.http_client
         
     async def handle_connection(self, ws):
         sid = str(uuid4())
         session = Session(sid, ws)
         self.sessions[sid] = session
-        logger.info(f"Connected: {sid}")
-        await ws.send(json.dumps({"type": "connected", "session_id": sid, "sample_rate": self.sample_rate}))
+        logger.info(f"Session started: {sid}")
+        await ws.send(json.dumps({
+            "type": "connected", 
+            "session_id": sid,
+            "conversation_id": session.conversation_id,
+            "sample_rate": self.sample_rate,
+            "backend": "mas-orchestrator"
+        }))
         try:
             async for msg in ws:
                 await self.handle_message(session, msg)
         except websockets.ConnectionClosed:
             pass
         finally:
+            logger.info(f"Session ended: {sid}")
             del self.sessions[sid]
     
     async def handle_message(self, session, msg):
         if isinstance(msg, bytes):
-            await self.process_audio(session, msg)
+            # Audio input - would be processed by real PersonaPlex
+            await session.websocket.send(json.dumps({"type": "processing"}))
         else:
             data = json.loads(msg)
-            await self.handle_control(session, data)
+            if data.get("type") == "text_input":
+                await self.process_text(session, data.get("text", ""))
+            elif data.get("type") == "ping":
+                await session.websocket.send(json.dumps({"type": "pong"}))
     
-    async def handle_control(self, session, data):
-        t = data.get("type")
-        if t == "text_input":
-            await self.generate_response(session, data.get("text", ""))
-        elif t == "ping":
-            await session.websocket.send(json.dumps({"type": "pong"}))
-    
-    async def process_audio(self, session, audio_data):
-        audio = np.frombuffer(audio_data, dtype=np.float32)
-        if len(audio) > 4800:
-            await session.websocket.send(json.dumps({"type": "processing", "samples": len(audio)}))
-    
-    async def generate_response(self, session, user_text):
+    async def process_text(self, session, user_text):
         session.turn_count += 1
-        start = time.time()
+        start = datetime.utcnow()
+        
+        # Send user text back
         await session.websocket.send(json.dumps({"type": "user_text", "text": user_text}))
         
-        # Generate response
-        response = self._gen_text(user_text)
-        latency = (time.time() - start) * 1000
+        # Call MAS orchestrator for real AI response
+        response_text = await self.call_mas_orchestrator(session, user_text)
         
-        await session.websocket.send(json.dumps({"type": "agent_text", "text": response, "latency_ms": latency}))
+        latency_ms = (datetime.utcnow() - start).total_seconds() * 1000
         
-        # Generate audio
-        audio = self._gen_audio(response)
-        await session.websocket.send(audio.tobytes())
-        await session.websocket.send(json.dumps({"type": "speaking_done", "turn": session.turn_count}))
+        # Send agent response
+        await session.websocket.send(json.dumps({
+            "type": "agent_text", 
+            "text": response_text,
+            "latency_ms": latency_ms,
+            "backend": "mas-orchestrator"
+        }))
+        
+        # Generate and send audio
+        audio_data = await self.generate_speech(response_text)
+        if audio_data:
+            await session.websocket.send(audio_data)
+        
+        await session.websocket.send(json.dumps({
+            "type": "speaking_done", 
+            "turn": session.turn_count
+        }))
     
-    def _gen_text(self, text):
-        t = text.lower()
-        if any(g in t for g in ["hello", "hi", "hey"]):
-            return "Hello! I'm MYCA, your Mycosoft Autonomous Cognitive Agent. How can I help you today?"
-        elif "status" in t:
-            return "All systems operational. MAS orchestrator is running, n8n workflows are active, and I'm ready to assist."
-        elif "agent" in t:
-            return "I can manage agents for you. Would you like me to list active agents, spawn a new one, or check their status?"
-        elif any(c in t for c in ["light", "turn on", "turn off"]):
-            return "I'll handle that control for you. Command sent to the smart home system."
-        elif "help" in t:
-            return "I can help with system status, agent management, smart device control, database queries, and workflow execution."
-        elif "test" in t:
-            return "This is a test response from MYCA. The PersonaPlex voice system is working correctly on your local RTX 5090!"
-        return f"I heard: {text}. Processing your request."
+    async def call_mas_orchestrator(self, session, user_text):
+        """Call MAS orchestrator which handles LLM routing, n8n, MINDEX, tools"""
+        try:
+            http = await self.get_http()
+            
+            # MAS orchestrator endpoint handles:
+            # - LLM selection (OpenAI, Anthropic, Groq, Gemini)
+            # - Tool calling
+            # - MINDEX knowledge retrieval
+            # - n8n workflow triggers
+            payload = {
+                "message": user_text,
+                "conversation_id": session.conversation_id,
+                "source": "personaplex",
+                "want_audio": False,
+                "context": {
+                    "session_id": session.session_id,
+                    "turn": session.turn_count
+                }
+            }
+            
+            response = await http.post(
+                f"{MAS_ORCHESTRATOR_URL}/voice/orchestrator/chat",
+                json=payload
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"MAS response: {data.get('agent', 'unknown')} - {len(data.get('response_text', ''))} chars")
+                return data.get("response_text", "I received your message but couldn't process it.")
+            else:
+                logger.error(f"MAS error: {response.status_code}")
+                # Fallback to n8n webhook
+                return await self.call_n8n_fallback(session, user_text)
+                
+        except Exception as e:
+            logger.error(f"Orchestrator error: {e}")
+            return await self.call_n8n_fallback(session, user_text)
     
-    def _gen_audio(self, text):
-        duration_s = min(len(text) * 0.05, 5.0)
-        samples = int(self.sample_rate * duration_s)
-        t = np.linspace(0, duration_s, samples, dtype=np.float32)
-        # Generate a pleasant tone sweep
-        freq = 220 + 220 * np.sin(2 * np.pi * 0.5 * t)
-        audio = 0.15 * np.sin(2 * np.pi * freq * t / self.sample_rate * 100)
-        return audio
+    async def call_n8n_fallback(self, session, user_text):
+        """Fallback to n8n webhook if MAS is unavailable"""
+        try:
+            http = await self.get_http()
+            payload = {
+                "message": user_text,
+                "conversation_id": session.conversation_id,
+                "source": "personaplex-fallback"
+            }
+            
+            response = await http.post(N8N_WEBHOOK_URL, json=payload)
+            if response.status_code == 200:
+                data = response.json()
+                return data.get("response", data.get("message", "Processing via n8n workflow."))
+        except Exception as e:
+            logger.error(f"n8n fallback error: {e}")
+        
+        return "I'm having trouble connecting to the backend. Please try again."
+    
+    async def generate_speech(self, text):
+        """Generate speech audio using ElevenLabs TTS"""
+        if not ELEVENLABS_API_KEY:
+            logger.warning("No ElevenLabs API key - generating beep")
+            return self._gen_beep()
+        
+        try:
+            http = await self.get_http()
+            response = await http.post(
+                f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}",
+                headers={
+                    "xi-api-key": ELEVENLABS_API_KEY,
+                    "Content-Type": "application/json",
+                    "Accept": "audio/mpeg"
+                },
+                json={
+                    "text": text,
+                    "model_id": "eleven_turbo_v2_5",
+                    "voice_settings": {"stability": 0.5, "similarity_boost": 0.75}
+                }
+            )
+            
+            if response.status_code == 200:
+                return response.content
+            else:
+                logger.error(f"ElevenLabs error: {response.status_code}")
+                return self._gen_beep()
+        except Exception as e:
+            logger.error(f"TTS error: {e}")
+            return self._gen_beep()
+    
+    def _gen_beep(self):
+        """Generate audible beep as fallback"""
+        duration = 0.3
+        samples = int(self.sample_rate * duration)
+        t = np.linspace(0, duration, samples, dtype=np.float32)
+        audio = 0.8 * np.sin(2 * np.pi * 880 * t)  # 880Hz beep
+        return audio.tobytes()
     
     async def run(self):
-        logger.info(f"PersonaPlex Test Server on ws://{HOST}:{PORT}")
+        logger.info(f"PersonaPlex Server on ws://{HOST}:{PORT}")
+        logger.info(f"MAS Orchestrator: {MAS_ORCHESTRATOR_URL}")
+        logger.info(f"n8n Webhook: {N8N_WEBHOOK_URL}")
+        logger.info(f"ElevenLabs TTS: {'ENABLED' if ELEVENLABS_API_KEY else 'DISABLED'}")
         async with serve(self.handle_connection, HOST, PORT):
             await asyncio.Future()
 
