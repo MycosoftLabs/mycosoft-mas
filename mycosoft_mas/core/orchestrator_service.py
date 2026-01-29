@@ -1,4 +1,4 @@
-﻿"""
+"""
 MAS v2 Orchestrator Service
 
 The central MYCA orchestrator that manages all agents, tasks, and communications.
@@ -48,8 +48,50 @@ except ImportError:
         AgentTask,
     )
 
+try:
+    from mycosoft_mas.integrations.n8n_client import N8NClient
+except ImportError:
+    from integrations.n8n_client import N8NClient
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MYCA_Orchestrator")
+
+N8N_VOICE_WEBHOOK = os.getenv("N8N_VOICE_WEBHOOK", "myca/command")
+
+def resolve_n8n_webhook_url() -> Optional[str]:
+    base = os.getenv("N8N_WEBHOOK_URL") or os.getenv("N8N_URL")
+    if not base:
+        return None
+    base = base.rstrip("/")
+    if not base.endswith("/webhook"):
+        base = f"{base}/webhook"
+    return base
+
+def extract_response_text(payload: object) -> Optional[str]:
+    if isinstance(payload, dict):
+        for key in ("response_text", "response", "text", "message", "answer"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    if isinstance(payload, list) and payload:
+        first = payload[0]
+        if isinstance(first, str) and first.strip():
+            return first.strip()
+        if isinstance(first, dict):
+            for key in ("response_text", "response", "text", "message", "answer"):
+                value = first.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+    return None
+
+_n8n_client: Optional[N8NClient] = None
+
+def get_n8n_client() -> N8NClient:
+    global _n8n_client
+    if _n8n_client is None:
+        webhook_url = resolve_n8n_webhook_url()
+        _n8n_client = N8NClient(config={"webhook_url": webhook_url} if webhook_url else {})
+    return _n8n_client
 
 
 # Pydantic models for API
@@ -647,6 +689,8 @@ async def delete_connection(request: ConnectionDeleteRequest):
 class VoiceChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None
+    session_id: Optional[str] = None
+    source: Optional[str] = None
     want_audio: bool = False
 
 
@@ -655,27 +699,37 @@ async def voice_orchestrator_chat(request: VoiceChatRequest):
     """
     Main MYCA voice/chat interface.
     """
-    message = request.message.lower()
+    if not request.message or not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message is required")
+
     conversation_id = request.conversation_id or str(uuid4())
-    
-    # Get active agents count
-    agents = await orchestrator.list_agents() if hasattr(orchestrator, "list_agents") else []
-    active_count = len(agents) if isinstance(agents, list) else 16
-    
-    # Generate intelligent response based on message
-    if "status" in message or "health" in message:
-        response = "**System Status Report**\n\nOrchestrator: Online\nAgent Pool: " + str(active_count) + " active agents\nAll systems operational."
-    elif "agent" in message and ("list" in message or "show" in message):
-        response = "**MYCA Agent Registry** (223 total)\n\nCurrently Active: " + str(active_count) + " agents\n\nCategories: Core, Financial, Mycology, Data, Infrastructure, Security"
-    elif "hello" in message or "hi" in message:
-        response = "Hello! I am MYCA - Mycosoft Autonomous Cognitive Agent.\n\nI am orchestrating " + str(active_count) + " active agents.\n\nHow can I help you?"
-    else:
-        response = "I understand. Let me check with the relevant agents. Currently " + str(active_count) + " agents are active."
-    
+    webhook_url = resolve_n8n_webhook_url()
+    if not webhook_url:
+        raise HTTPException(status_code=503, detail="N8N webhook URL not configured")
+
+    payload = {
+        "message": request.message,
+        "conversation_id": conversation_id,
+        "session_id": request.session_id,
+        "source": request.source or "mas-voice",
+        "want_audio": request.want_audio,
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+    try:
+        client = get_n8n_client()
+        result = await client.trigger_workflow(N8N_VOICE_WEBHOOK, payload)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"N8N workflow failed: {exc}") from exc
+
+    response_text = extract_response_text(result)
+    if not response_text:
+        raise HTTPException(status_code=502, detail="N8N workflow returned no response_text")
+
     return {
-        "response_text": response,
-        "response": response,
-        "agent": "myca-orchestrator",
+        "response_text": response_text,
+        "response": response_text,
+        "agent": "n8n-workflow",
         "conversation_id": conversation_id,
     }
 

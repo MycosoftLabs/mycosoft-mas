@@ -8,12 +8,14 @@ includes the core routers, and provides minimal voice endpoints used by the UI.
 from __future__ import annotations
 
 from dataclasses import asdict
+from datetime import datetime
+from uuid import uuid4
 from pathlib import Path
 import os
 import subprocess
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from mycosoft_mas.core.rate_limit import RateLimitMiddleware
 from pydantic import BaseModel, Field
@@ -28,6 +30,11 @@ from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.documents import router as documents_router
+
+try:
+    from mycosoft_mas.integrations.n8n_client import N8NClient
+except ImportError:
+    from integrations.n8n_client import N8NClient
 
 
 def load_config() -> dict[str, Any]:
@@ -53,6 +60,44 @@ def load_config() -> dict[str, Any]:
         }
     )
     return config
+
+
+N8N_VOICE_WEBHOOK = os.getenv("N8N_VOICE_WEBHOOK", "myca/command")
+
+def resolve_n8n_webhook_url() -> str | None:
+    base = os.getenv("N8N_WEBHOOK_URL") or os.getenv("N8N_URL")
+    if not base:
+        return None
+    base = base.rstrip("/")
+    if not base.endswith("/webhook"):
+        base = f"{base}/webhook"
+    return base
+
+def extract_response_text(payload: object) -> str | None:
+    if isinstance(payload, dict):
+        for key in ("response_text", "response", "text", "message", "answer"):
+            value = payload.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    if isinstance(payload, list) and payload:
+        first = payload[0]
+        if isinstance(first, str) and first.strip():
+            return first.strip()
+        if isinstance(first, dict):
+            for key in ("response_text", "response", "text", "message", "answer"):
+                value = first.get(key)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+    return None
+
+_n8n_client: N8NClient | None = None
+
+def get_n8n_client() -> N8NClient:
+    global _n8n_client
+    if _n8n_client is None:
+        webhook_url = resolve_n8n_webhook_url()
+        _n8n_client = N8NClient(config={"webhook_url": webhook_url} if webhook_url else {})
+    return _n8n_client
 
 
 class MycosoftMAS:
@@ -157,24 +202,54 @@ class VoiceChatResponse(BaseModel):
 
 @app.post("/voice/orchestrator/chat", response_model=VoiceChatResponse)
 async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatResponse:
+    if not payload.message or not payload.message.strip():
+        raise HTTPException(status_code=400, detail="Message is required")
+
+    webhook_url = resolve_n8n_webhook_url()
+    if not webhook_url:
+        raise HTTPException(status_code=503, detail="N8N webhook URL not configured")
+
     registry = get_agent_registry()
     matches = registry.find_by_voice_trigger(payload.message)
-
     primary = None
     if matches:
         active_matches = [m for m in matches if m.is_active]
         primary = active_matches[0] if active_matches else matches[0]
 
     agent_name = primary.display_name if primary else "MYCA"
-    routing_hint = f" Routed to {agent_name}." if primary else ""
-    response_text = (
-        f"Received: \"{payload.message}\"." + routing_hint +
-        " (Voice backend is connected; deeper agent execution can be enabled next.)"
-    )
+    conversation_id = payload.conversation_id or payload.session_id or str(uuid4())
+    request_payload = {
+        "message": payload.message,
+        "actor": payload.actor,
+        "conversation_id": conversation_id,
+        "session_id": payload.session_id,
+        "primary_agent": agent_name,
+        "matched_agents": [
+            {
+                "agent_id": a.agent_id,
+                "display_name": a.display_name,
+                "category": a.category.value,
+                "requires_confirmation": a.requires_confirmation,
+                "is_active": a.is_active,
+            }
+            for a in matches[:5]
+        ],
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+    try:
+        client = get_n8n_client()
+        result = await client.trigger_workflow(N8N_VOICE_WEBHOOK, request_payload)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"N8N workflow failed: {exc}") from exc
+
+    response_text = extract_response_text(result)
+    if not response_text:
+        raise HTTPException(status_code=502, detail="N8N workflow returned no response_text")
 
     try:
         _feedback_store.add_feedback(
-            conversation_id=payload.conversation_id or payload.session_id,
+            conversation_id=conversation_id,
             agent_name=agent_name,
             transcript=payload.message,
             response_text=response_text,
@@ -187,7 +262,7 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
         pass
 
     return VoiceChatResponse(
-        conversation_id=payload.conversation_id or payload.session_id,
+        conversation_id=conversation_id,
         agent_name=agent_name,
         response_text=response_text,
         matched_agents=[
