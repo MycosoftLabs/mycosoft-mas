@@ -1,17 +1,17 @@
-﻿# PersonaPlex Bridge Dockerfile - January 27, 2026
+# PersonaPlex Bridge Dockerfile - January 27, 2026
 FROM python:3.11-slim
 
 WORKDIR /app
 
 RUN pip install --no-cache-dir aiohttp websockets httpx uvicorn fastapi
 
-COPY mycosoft_mas/voice /app/voice
-COPY mycosoft_mas/__init__.py /app/mycosoft_mas/__init__.py
+COPY services/personaplex-local/personaplex_bridge_nvidia.py /app/personaplex_bridge_nvidia.py
 
-ENV PERSONAPLEX_URL=wss://personaplex:8998
+ENV MOSHI_HOST=personaplex
+ENV MOSHI_PORT=8998
 ENV MAS_ORCHESTRATOR_URL=http://mas-orchestrator:8001
-ENV N8N_WEBHOOK_URL=http://n8n:5678/webhook
+ENV MAS_CHAT_PATH=/voice/orchestrator/chat
 
 EXPOSE 8999
 
-CMD ["python", "-m", "uvicorn", "voice.bridge_api:app", "--host", "0.0.0.0", "--port", "8999"]
+CMD ["python", "/app/personaplex_bridge_nvidia.py"]
