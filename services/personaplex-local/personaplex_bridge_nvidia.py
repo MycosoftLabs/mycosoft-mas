@@ -11,6 +11,7 @@ This bridge:
 5. Provides REST API for website integration
 '''
 import asyncio
+import base64
 import json
 import logging
 import os
@@ -23,7 +24,7 @@ from uuid import uuid4
 
 import aiohttp
 import httpx
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
@@ -72,6 +73,12 @@ class SessionCreate(BaseModel):
     mode: str = "personaplex"
     persona: str = "myca"
     voice: str = "myca"
+
+class ChatRequest(BaseModel):
+    session_id: Optional[str] = None
+    text: str
+    persona: str = "myca"
+    voice_prompt: Optional[str] = None
 
 @dataclass
 class BridgeSession:
@@ -285,6 +292,85 @@ async def list_voices():
             {"id": "NATM0.pt", "name": "Natural Male 0", "gender": "male"},
         ],
         "default": "NATF2.pt"
+    }
+
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    if not moshi_available:
+        raise HTTPException(status_code=503, detail="PersonaPlex (Moshi) is not available")
+    text = normalize_text(request.text)
+    if not text:
+        raise HTTPException(status_code=400, detail="Text is required")
+    if not ENABLE_MOSHI_TEXT_INJECTION:
+        raise HTTPException(status_code=503, detail="Moshi text injection disabled")
+
+    session = sessions.get(request.session_id or "")
+    if session is None:
+        session = BridgeSession(
+            session_id=request.session_id or str(uuid4()),
+            conversation_id=str(uuid4()),
+            persona=request.persona,
+            voice="myca",
+            voice_prompt=request.voice_prompt or VOICE_PROMPTS["default"],
+            text_prompt=MYCA_PERSONA if request.persona == "myca" else "",
+            created_at=datetime.now(timezone.utc).isoformat(),
+        )
+
+    import urllib.parse
+    params = urllib.parse.urlencode({
+        "text_prompt": session.text_prompt or MYCA_PERSONA,
+        "voice_prompt": request.voice_prompt or session.voice_prompt or "NATF2.pt",
+        "audio_temperature": "0.8",
+        "text_temperature": "0.8",
+        "text_topk": "25",
+        "audio_topk": "250",
+    })
+    moshi_url = f"{MOSHI_WS_URL}?{params}"
+    audio_chunks: list[bytes] = []
+    response_text: Optional[str] = None
+
+    async with aiohttp.ClientSession() as aio_session:
+        async with aio_session.ws_connect(moshi_url) as moshi_ws:
+            handshake = await asyncio.wait_for(moshi_ws.receive(), timeout=30.0)
+            if handshake.type != aiohttp.WSMsgType.BINARY or handshake.data != b"\x00":
+                raise HTTPException(status_code=502, detail="Moshi handshake failed")
+
+            await send_moshi_text(moshi_ws, text)
+
+            last_audio_at = time.monotonic()
+            while True:
+                try:
+                    msg = await asyncio.wait_for(moshi_ws.receive(), timeout=1.5)
+                except asyncio.TimeoutError:
+                    if audio_chunks and time.monotonic() - last_audio_at > 0.6:
+                        break
+                    continue
+
+                if msg.type == aiohttp.WSMsgType.BINARY:
+                    data = msg.data
+                    if not data:
+                        continue
+                    kind = data[0]
+                    payload = data[1:]
+                    if kind == 1 and payload:
+                        audio_chunks.append(payload)
+                        last_audio_at = time.monotonic()
+                    elif kind == 2 and payload:
+                        decoded = payload.decode("utf-8", errors="ignore").strip()
+                        if decoded:
+                            response_text = decoded
+                elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                    break
+
+    audio_bytes = b"".join(audio_chunks)
+    audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
+
+    return {
+        "session_id": session.session_id,
+        "response_text": response_text or text,
+        "has_audio": bool(audio_bytes),
+        "audio_mime": "audio/ogg; codecs=opus",
+        "audio_base64": audio_b64,
     }
 
 @app.websocket("/ws/{session_id}")
