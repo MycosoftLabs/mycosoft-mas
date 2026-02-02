@@ -69,8 +69,7 @@ def resolve_n8n_webhook_url() -> str | None:
     if not base:
         return None
     base = base.rstrip("/")
-    if not base.endswith("/webhook"):
-        base = f"{base}/webhook"
+    # Don't modify base - n8n client handles webhook path
     return base
 
 def extract_response_text(payload: object) -> str | None:
