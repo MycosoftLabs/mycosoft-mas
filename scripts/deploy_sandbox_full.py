@@ -38,8 +38,8 @@ MAS_REPO = "/home/mycosoft/mycosoft/mas"
 COMPOSE_DIR = "/opt/mycosoft"
 
 # Cloudflare
-CF_ZONE_ID = os.getenv("CLOUDFLARE_ZONE_ID", "afd4d5ce84fb58d7a6e2fb98a207fbc6")
-CF_API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "")
+CF_ZONE_ID = os.getenv("CLOUDFLARE_ZONE_ID", "af274016182495aeac049ac2c1f07b6d")
+CF_API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN", "BdvbQeLwi_yxOBUpJJIGF8eWmGKX-HQFKzn_aLkb")
 
 def log(msg, level="INFO"):
     icons = {"INFO": "ℹ️", "OK": "✅", "WARN": "⚠️", "ERROR": "❌", "STEP": "🔷"}
