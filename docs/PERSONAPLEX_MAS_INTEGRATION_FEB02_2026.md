@@ -187,4 +187,30 @@ c829dc3 - Add chat TTS endpoint to PersonaPlex bridge
 
 ---
 
+## Sandbox Deployment
+
+### Deployment Completed
+- **VM:** 192.168.0.187
+- **Website repo:** `/opt/mycosoft/website` (git updated)
+- **MAS repo:** `/home/mycosoft/mycosoft/mas` (git permission issue - needs sudo)
+- **Container:** `mycosoft-website` rebuilt and restarted
+
+### Sandbox Status
+| Service | Status |
+|---------|--------|
+| Website | ✅ Running (healthy) |
+| Database | ⚠️ NEON_DATABASE_URL not configured |
+| MAS API | ⚠️ Not deployed on sandbox |
+
+### Verified Working
+- https://sandbox.mycosoft.com - Loading correctly
+- Myca AI Assistant button present
+- All navigation working
+
+### Cloudflare Cache
+- API token expired - purge manually at https://dash.cloudflare.com if needed
+- Zone ID: `afd4d5ce84fb58d7a6e2fb98a207fbc6`
+
+---
+
 *Report generated: February 2, 2026*
