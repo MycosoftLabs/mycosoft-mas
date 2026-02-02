@@ -15,8 +15,8 @@ VM_USER = "mycosoft"
 VM_PASS = "REDACTED_VM_SSH_PASSWORD"
 
 # Cloudflare Configuration
-CF_ZONE_ID = "afd4d5ce84fb58d7a6e2fb98a207fbc6"
-CF_API_TOKEN = "4YL2fJMqQBJiJQSVZqVVi-MF_cHTbnA1FVvEH8Dh"  # From previous successful deployments
+CF_ZONE_ID = "af274016182495aeac049ac2c1f07b6d"
+CF_API_TOKEN = "BdvbQeLwi_yxOBUpJJIGF8eWmGKX-HQFKzn_aLkb"  # Updated Feb 2, 2026
 
 # Paths
 WEBSITE_PATH = "/home/mycosoft/mycosoft/website"
