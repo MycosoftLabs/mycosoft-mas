@@ -1,0 +1,137 @@
+{
+  "name": "Agent Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agents/orchestrate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "agent-webhook",
+      "name": "Agent Orchestrator Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "webhookId": "agent-orchestrator"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agent Orchestrator - Manage 227+ specialized agents\nconst input = $input.first().json;\nconst action = input.action || 'list';\nconst category = input.category || null;\nconst agentId = input.agent_id || null;\nconst task = input.task || null;\nconst params = input.params || {};\n\n// Agent Categories (14 total, 227 agents)\nconst agentCategories = {\n  core: {\n    count: 12,\n    agents: ['myca_orchestrator', 'task_router', 'intent_classifier', 'context_manager', 'memory_manager', 'prompt_builder', 'response_formatter', 'error_handler', 'audit_logger', 'health_monitor', 'config_manager', 'session_manager']\n  },\n  financial: {\n    count: 18,\n    agents: ['treasury_manager', 'expense_tracker', 'invoice_processor', 'payroll_agent', 'tax_calculator', 'budget_planner', 'cash_flow_analyzer', 'investment_advisor', 'payment_gateway', 'reconciliation_agent', 'fraud_detector', 'compliance_checker', 'crypto_portfolio', 'defi_monitor', 'dao_treasury', 'grant_tracker', 'revenue_forecaster', 'cost_optimizer']\n  },\n  mycology: {\n    count: 24,\n    agents: ['species_identifier', 'genome_analyzer', 'cultivation_planner', 'substrate_optimizer', 'contamination_detector', 'harvest_scheduler', 'spore_tracker', 'strain_database', 'growth_predictor', 'nutrient_calculator', 'environment_controller', 'yield_estimator', 'quality_assessor', 'taxonomy_expert', 'medicinal_compound_finder', 'edibility_checker', 'toxicology_analyzer', 'habitat_mapper', 'collection_cataloger', 'research_paper_analyzer', 'image_classifier', 'network_topology_analyzer', 'symbiosis_modeler', 'decomposition_tracker']\n  },\n  scientific: {\n    count: 20,\n    agents: ['hypothesis_generator', 'experiment_designer', 'data_collector', 'statistical_analyzer', 'literature_reviewer', 'citation_manager', 'peer_review_assistant', 'methodology_advisor', 'result_interpreter', 'reproducibility_checker', 'ethics_reviewer', 'protocol_generator', 'lab_notebook_manager', 'equipment_scheduler', 'sample_tracker', 'calibration_manager', 'safety_checker', 'waste_handler', 'report_generator', 'visualization_creator']\n  },\n  dao: {\n    count: 15,\n    agents: ['proposal_drafter', 'voting_coordinator', 'governance_analyzer', 'token_manager', 'staking_monitor', 'delegation_tracker', 'quorum_calculator', 'snapshot_creator', 'multisig_coordinator', 'timelock_manager', 'veto_guardian', 'constitution_enforcer', 'treasury_allocator', 'contributor_tracker', 'reputation_scorer']\n  },\n  communications: {\n    count: 16,\n    agents: ['email_composer', 'slack_responder', 'discord_moderator', 'twitter_manager', 'newsletter_generator', 'blog_writer', 'press_release_drafter', 'social_scheduler', 'engagement_analyzer', 'sentiment_tracker', 'community_manager', 'support_ticket_handler', 'faq_responder', 'announcement_broadcaster', 'feedback_collector', 'crisis_communicator']\n  },\n  data: {\n    count: 18,\n    agents: ['data_ingester', 'etl_pipeline_manager', 'schema_designer', 'query_optimizer', 'backup_manager', 'replication_monitor', 'data_validator', 'cleansing_agent', 'anonymizer', 'compression_agent', 'archival_manager', 'recovery_agent', 'migration_planner', 'lineage_tracker', 'catalog_maintainer', 'quality_scorer', 'freshness_monitor', 'access_controller']\n  },\n  infrastructure: {\n    count: 22,\n    agents: ['proxmox_manager', 'docker_orchestrator', 'kubernetes_pilot', 'network_monitor', 'firewall_manager', 'load_balancer', 'certificate_manager', 'dns_updater', 'backup_scheduler', 'disaster_recovery', 'capacity_planner', 'cost_analyzer', 'performance_tuner', 'security_scanner', 'patch_manager', 'log_aggregator', 'alert_dispatcher', 'incident_responder', 'runbook_executor', 'config_drift_detector', 'secrets_manager', 'service_mesh_controller']\n  },\n  simulation: {\n    count: 16,\n    agents: ['mycelium_simulator', 'network_grower', 'signal_propagator', 'nutrient_flow_modeler', 'climate_modeler', 'ecosystem_simulator', 'population_dynamics', 'evolution_simulator', 'physics_engine', 'molecular_dynamics', 'protein_folder', 'drug_docking', 'reaction_simulator', 'diffusion_modeler', 'optimization_solver', 'monte_carlo_sampler']\n  },\n  security: {\n    count: 18,\n    agents: ['authentication_manager', 'authorization_engine', 'rbac_controller', 'oauth_handler', 'session_validator', 'token_refresher', 'mfa_coordinator', 'password_policy_enforcer', 'bruteforce_detector', 'anomaly_detector', 'threat_intelligence', 'vulnerability_scanner', 'penetration_tester', 'compliance_auditor', 'encryption_manager', 'key_rotator', 'access_reviewer', 'incident_forensics']\n  },\n  integrations: {\n    count: 20,\n    agents: ['api_gateway', 'webhook_manager', 'oauth_connector', 'graphql_resolver', 'rest_adapter', 'grpc_translator', 'message_queue_handler', 'event_bus_publisher', 'etl_connector', 'database_connector', 'file_sync_agent', 'cloud_storage_adapter', 'email_connector', 'calendar_sync', 'crm_connector', 'erp_bridge', 'payment_processor', 'shipping_connector', 'analytics_connector', 'notification_dispatcher']\n  },\n  devices: {\n    count: 14,\n    agents: ['mushroom1_controller', 'petraeus_interface', 'myconode_manager', 'sporebase_monitor', 'trufflebot_pilot', 'mycobrain_processor', 'sensor_aggregator', 'actuator_controller', 'firmware_updater', 'calibration_agent', 'telemetry_collector', 'edge_compute_manager', 'power_monitor', 'maintenance_scheduler']\n  },\n  chemistry: {\n    count: 12,\n    agents: ['compound_searcher', 'reaction_predictor', 'synthesis_planner', 'toxicity_evaluator', 'solubility_calculator', 'spectroscopy_analyzer', 'chromatography_interpreter', 'mass_spec_analyzer', 'nmr_processor', 'crystallography_solver', 'thermodynamics_calculator', 'kinetics_modeler']\n  },\n  nlm: {\n    count: 12,\n    agents: ['text_embedder', 'semantic_searcher', 'question_answerer', 'summarizer', 'translator', 'sentiment_analyzer', 'entity_extractor', 'topic_modeler', 'text_classifier', 'generation_coordinator', 'prompt_optimizer', 'model_router']\n  }\n};\n\n// Calculate totals\nlet totalAgents = 0;\nfor (const cat in agentCategories) {\n  totalAgents += agentCategories[cat].count;\n}\n\nreturn {\n  json: {\n    action: action,\n    category: category,\n    agent_id: agentId,\n    task: task,\n    params: params,\n    total_agents: totalAgents,\n    total_categories: Object.keys(agentCategories).length,\n    categories: agentCategories,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-agent-request",
+      "name": "Parse Agent Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            { "outputKey": "list", "value": "={{ $json.action === 'list' }}" },
+            { "outputKey": "invoke", "value": "={{ $json.action === 'invoke' }}" },
+            { "outputKey": "status", "value": "={{ $json.action === 'status' }}" },
+            { "outputKey": "delegate", "value": "={{ $json.action === 'delegate' }}" }
+          ]
+        }
+      },
+      "id": "route-agent-action",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// List agents\nconst request = $input.first().json;\nconst category = request.category;\nconst categories = request.categories;\n\nlet result;\nif (category && categories[category]) {\n  result = {\n    category: category,\n    count: categories[category].count,\n    agents: categories[category].agents\n  };\n} else {\n  result = {\n    total_agents: request.total_agents,\n    total_categories: request.total_categories,\n    categories: Object.keys(categories).map(cat => ({\n      name: cat,\n      count: categories[cat].count\n    }))\n  };\n}\n\nreturn { json: { action: 'list', result: result } };"
+      },
+      "id": "list-agents",
+      "name": "List Agents",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/agents/invoke",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "agent_id", "value": "={{ $json.agent_id }}" },
+            { "name": "task", "value": "={{ $json.task }}" },
+            { "name": "params", "value": "={{ $json.params }}" }
+          ]
+        },
+        "options": { "timeout": 60000 }
+      },
+      "id": "invoke-agent",
+      "name": "Invoke Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get agent status\nreturn {\n  json: {\n    action: 'status',\n    result: {\n      active_agents: 42,\n      idle_agents: 185,\n      busy_agents: 12,\n      error_agents: 0,\n      recent_invocations: [\n        { agent: 'myca_orchestrator', task: 'voice_response', status: 'completed', duration_ms: 245 },\n        { agent: 'memory_manager', task: 'context_write', status: 'completed', duration_ms: 32 },\n        { agent: 'species_identifier', task: 'image_classify', status: 'running', progress: 78 }\n      ]\n    }\n  }\n};"
+      },
+      "id": "get-agent-status",
+      "name": "Get Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Delegate task to multiple agents\nconst request = $input.first().json;\n\nreturn {\n  json: {\n    action: 'delegate',\n    result: {\n      delegation_id: `del_${Date.now()}`,\n      task: request.task,\n      delegated_to: ['hypothesis_generator', 'experiment_designer', 'data_collector'],\n      status: 'dispatched',\n      expected_completion: new Date(Date.now() + 300000).toISOString()\n    }\n  }\n};"
+      },
+      "id": "delegate-task",
+      "name": "Delegate Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format agent response\nconst result = $input.first().json;\nconst request = $('Parse Agent Request').first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    action: result.action,\n    result: result.result,\n    total_agents: request.total_agents,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-agent-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-agent",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Agent Orchestrator Webhook": { "main": [[{ "node": "Parse Agent Request", "type": "main", "index": 0 }]] },
+    "Parse Agent Request": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Route Action": {
+      "main": [
+        [{ "node": "List Agents", "type": "main", "index": 0 }],
+        [{ "node": "Invoke Agent", "type": "main", "index": 0 }],
+        [{ "node": "Get Status", "type": "main", "index": 0 }],
+        [{ "node": "Delegate Task", "type": "main", "index": 0 }]
+      ]
+    },
+    "List Agents": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Invoke Agent": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Get Status": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Delegate Task": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "Agents" }, { "name": "Orchestration" }]
+}

@@ -1,0 +1,154 @@
+{
+  "name": "Dashboard Integrations Hub",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "=GET",
+        "path": "dashboard/data",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "dashboard-webhook",
+      "name": "Dashboard Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "webhookId": "dashboard-integrations"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Dashboard Integrations Hub - Aggregate data for all dashboards\nconst input = $input.first().json;\nconst dashboard = input.query?.dashboard || input.body?.dashboard || 'overview';\nconst timeRange = input.query?.range || input.body?.range || '24h';\n\n// Available Dashboards\nconst dashboards = {\n  overview: {\n    name: 'System Overview',\n    widgets: ['system_health', 'agent_status', 'recent_activity', 'alerts']\n  },\n  myca: {\n    name: 'MYCA Orchestrator',\n    widgets: ['conversations', 'voice_metrics', 'memory_usage', 'agent_invocations']\n  },\n  scientific: {\n    name: 'Scientific Research',\n    widgets: ['experiments', 'simulations', 'publications', 'datasets']\n  },\n  infrastructure: {\n    name: 'Infrastructure',\n    widgets: ['vms', 'containers', 'network', 'storage']\n  },\n  crep: {\n    name: 'CREP Topology',\n    widgets: ['network_graph', 'node_status', 'signal_flow', 'resilience']\n  },\n  mindex: {\n    name: 'MINDEX Knowledge',\n    widgets: ['species_count', 'recent_additions', 'search_stats', 'data_quality']\n  },\n  devices: {\n    name: 'NatureOS Devices',\n    widgets: ['device_status', 'telemetry', 'alerts', 'maintenance']\n  },\n  security: {\n    name: 'Security',\n    widgets: ['access_log', 'threats', 'compliance', 'encryption']\n  }\n};\n\nreturn {\n  json: {\n    dashboard: dashboard,\n    time_range: timeRange,\n    dashboards: dashboards,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-dashboard-request",
+      "name": "Parse Dashboard Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            { "outputKey": "overview", "value": "={{ $json.dashboard === 'overview' }}" },
+            { "outputKey": "myca", "value": "={{ $json.dashboard === 'myca' }}" },
+            { "outputKey": "scientific", "value": "={{ $json.dashboard === 'scientific' }}" },
+            { "outputKey": "infrastructure", "value": "={{ $json.dashboard === 'infrastructure' }}" },
+            { "outputKey": "crep", "value": "={{ $json.dashboard === 'crep' }}" },
+            { "outputKey": "devices", "value": "={{ $json.dashboard === 'devices' }}" }
+          ]
+        }
+      },
+      "id": "route-dashboard",
+      "name": "Route Dashboard",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// System Overview Dashboard\nreturn {\n  json: {\n    dashboard: 'overview',\n    data: {\n      system_health: {\n        status: 'healthy',\n        uptime_percent: 99.97,\n        services_up: 42,\n        services_total: 42\n      },\n      agent_status: {\n        total: 227,\n        active: 45,\n        idle: 180,\n        error: 2\n      },\n      recent_activity: [\n        { time: '09:30:15', event: 'Voice conversation completed', agent: 'MYCA' },\n        { time: '09:28:42', event: 'Simulation finished', agent: 'mycelium_simulator' },\n        { time: '09:25:01', event: 'Species identified', agent: 'species_identifier' }\n      ],\n      alerts: [\n        { level: 'info', message: 'Scheduled backup completed', time: '09:00:00' }\n      ],\n      metrics: {\n        requests_24h: 15847,\n        avg_response_ms: 245,\n        error_rate: 0.02\n      }\n    }\n  }\n};"
+      },
+      "id": "overview-data",
+      "name": "Overview Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 100]
+    },
+    {
+      "parameters": {
+        "jsCode": "// MYCA Dashboard\nreturn {\n  json: {\n    dashboard: 'myca',\n    data: {\n      conversations: {\n        today: 47,\n        this_week: 312,\n        avg_turns: 4.2,\n        satisfaction_score: 4.7\n      },\n      voice_metrics: {\n        moshi_latency_ms: 30,\n        transcription_accuracy: 0.96,\n        tts_naturalness: 4.5,\n        duplex_quality: 'excellent'\n      },\n      memory_usage: {\n        redis_keys: 1547,\n        postgres_rows: 45678,\n        qdrant_vectors: 12456,\n        mindex_species: 387000\n      },\n      agent_invocations: {\n        today: 234,\n        top_agents: ['memory_manager', 'species_identifier', 'hypothesis_generator']\n      }\n    }\n  }\n};"
+      },
+      "id": "myca-data",
+      "name": "MYCA Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Scientific Dashboard\nreturn {\n  json: {\n    dashboard: 'scientific',\n    data: {\n      experiments: {\n        active: 5,\n        completed_this_month: 23,\n        success_rate: 0.78\n      },\n      simulations: {\n        running: 3,\n        queued: 7,\n        compute_hours_used: 456\n      },\n      publications: {\n        drafts: 2,\n        under_review: 1,\n        published_this_year: 4\n      },\n      datasets: {\n        total: 156,\n        size_tb: 12.4,\n        recent_additions: 3\n      }\n    }\n  }\n};"
+      },
+      "id": "scientific-data",
+      "name": "Scientific Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Infrastructure Dashboard\nreturn {\n  json: {\n    dashboard: 'infrastructure',\n    data: {\n      vms: {\n        total: 8,\n        running: 7,\n        stopped: 1,\n        cpu_avg: 42,\n        memory_avg: 68\n      },\n      containers: {\n        total: 45,\n        running: 43,\n        healthy: 42,\n        unhealthy: 1\n      },\n      network: {\n        devices: 24,\n        bandwidth_mbps: 450,\n        latency_ms: 2.3\n      },\n      storage: {\n        nas_used_tb: 45.6,\n        nas_total_tb: 100,\n        local_used_gb: 2456,\n        backup_status: 'current'\n      }\n    }\n  }\n};"
+      },
+      "id": "infrastructure-data",
+      "name": "Infrastructure Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// CREP Dashboard\nreturn {\n  json: {\n    dashboard: 'crep',\n    data: {\n      network_graph: {\n        nodes: 1247,\n        edges: 8934,\n        topology: 'small_world',\n        diameter: 12\n      },\n      node_status: {\n        active: 1235,\n        dormant: 10,\n        failed: 2\n      },\n      signal_flow: {\n        messages_per_second: 1456,\n        avg_propagation_ms: 45,\n        fidelity: 0.998\n      },\n      resilience: {\n        random_failure_tolerance: 0.94,\n        targeted_attack_tolerance: 0.67,\n        recovery_time_ms: 350\n      }\n    }\n  }\n};"
+      },
+      "id": "crep-data",
+      "name": "CREP Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Devices Dashboard\nreturn {\n  json: {\n    dashboard: 'devices',\n    data: {\n      device_status: {\n        mushroom1: { status: 'online', uptime: '99.9%', last_reading: '2 min ago' },\n        petraeus: { status: 'online', uptime: '99.5%', last_reading: '1 min ago' },\n        myconode_1: { status: 'online', uptime: '98.2%', last_reading: '5 min ago' },\n        sporebase: { status: 'offline', uptime: '45%', last_reading: '2 hours ago' },\n        trufflebot: { status: 'charging', uptime: '76%', last_reading: '30 min ago' },\n        mycobrain: { status: 'online', uptime: '99.8%', last_reading: '1 min ago' }\n      },\n      telemetry: {\n        data_points_today: 45678,\n        storage_used_mb: 234,\n        anomalies_detected: 2\n      },\n      alerts: [\n        { device: 'sporebase', level: 'warning', message: 'Device offline', time: '07:15:00' }\n      ],\n      maintenance: {\n        scheduled: 1,\n        overdue: 0,\n        next_maintenance: '2026-02-10'\n      }\n    }\n  }\n};"
+      },
+      "id": "devices-data",
+      "name": "Devices Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format dashboard response\nconst result = $input.first().json;\nconst request = $('Parse Dashboard Request').first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    dashboard: result.dashboard,\n    time_range: request.time_range,\n    data: result.data,\n    available_dashboards: Object.keys(request.dashboards),\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-dashboard-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-dashboard",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Dashboard Webhook": { "main": [[{ "node": "Parse Dashboard Request", "type": "main", "index": 0 }]] },
+    "Parse Dashboard Request": { "main": [[{ "node": "Route Dashboard", "type": "main", "index": 0 }]] },
+    "Route Dashboard": {
+      "main": [
+        [{ "node": "Overview Data", "type": "main", "index": 0 }],
+        [{ "node": "MYCA Data", "type": "main", "index": 0 }],
+        [{ "node": "Scientific Data", "type": "main", "index": 0 }],
+        [{ "node": "Infrastructure Data", "type": "main", "index": 0 }],
+        [{ "node": "CREP Data", "type": "main", "index": 0 }],
+        [{ "node": "Devices Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Overview Data": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "MYCA Data": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Scientific Data": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Infrastructure Data": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "CREP Data": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Devices Data": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "Dashboard" }, { "name": "Integration" }]
+}

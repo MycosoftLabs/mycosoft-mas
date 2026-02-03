@@ -1,0 +1,202 @@
+{
+  "name": "Science Research Hub",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "science/research",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "science-webhook",
+      "name": "Science Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "webhookId": "science-research-hub"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Science Research Hub - Route to appropriate science module\nconst input = $input.first().json;\nconst module = input.module || 'general';\nconst action = input.action || 'query';\nconst params = input.params || {};\n\n// Available modules\nconst modules = {\n  mycology: ['species_lookup', 'genome_analysis', 'cultivation_protocol', 'network_topology'],\n  protein: ['structure_predict', 'folding_simulate', 'docking_analyze', 'alphafold_query'],\n  chemistry: ['compound_search', 'reaction_predict', 'synthesis_plan', 'toxicity_check'],\n  bioinformatics: ['sequence_align', 'blast_search', 'phylogenetic_tree', 'gene_expression'],\n  simulation: ['mycelium_grow', 'network_propagate', 'signal_flow', 'optimization'],\n  mindex: ['species_search', 'taxonomy_lookup', 'property_query', 'image_search']\n};\n\nreturn {\n  json: {\n    module: module,\n    action: action,\n    params: params,\n    available_actions: modules[module] || [],\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-science-request",
+      "name": "Parse Science Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            { "outputKey": "mycology", "value": "={{ $json.module === 'mycology' }}" },
+            { "outputKey": "protein", "value": "={{ $json.module === 'protein' }}" },
+            { "outputKey": "chemistry", "value": "={{ $json.module === 'chemistry' }}" },
+            { "outputKey": "bioinformatics", "value": "={{ $json.module === 'bioinformatics' }}" },
+            { "outputKey": "simulation", "value": "={{ $json.module === 'simulation' }}" },
+            { "outputKey": "mindex", "value": "={{ $json.module === 'mindex' }}" }
+          ]
+        }
+      },
+      "id": "route-science-module",
+      "name": "Route to Module",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/science/mycology",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "={{ $json.action }}" },
+            { "name": "params", "value": "={{ $json.params }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "mycology-api",
+      "name": "Mycology API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 100]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/science/protein",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "={{ $json.action }}" },
+            { "name": "params", "value": "={{ $json.params }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "protein-api",
+      "name": "Protein API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/science/chemistry",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "={{ $json.action }}" },
+            { "name": "params", "value": "={{ $json.params }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "chemistry-api",
+      "name": "Chemistry API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/science/bioinformatics",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "={{ $json.action }}" },
+            { "name": "params", "value": "={{ $json.params }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bioinformatics-api",
+      "name": "Bioinformatics API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/simulation/mycelium",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "={{ $json.action }}" },
+            { "name": "params", "value": "={{ $json.params }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "simulation-api",
+      "name": "Simulation API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 500]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/mindex/query",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "={{ $json.action }}" },
+            { "name": "params", "value": "={{ $json.params }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "mindex-api",
+      "name": "MINDEX API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format science response\nconst result = $input.first().json;\nconst request = $('Parse Science Request').first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    module: request.module,\n    action: request.action,\n    result: result,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-science-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-science",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Science Webhook": { "main": [[{ "node": "Parse Science Request", "type": "main", "index": 0 }]] },
+    "Parse Science Request": { "main": [[{ "node": "Route to Module", "type": "main", "index": 0 }]] },
+    "Route to Module": {
+      "main": [
+        [{ "node": "Mycology API", "type": "main", "index": 0 }],
+        [{ "node": "Protein API", "type": "main", "index": 0 }],
+        [{ "node": "Chemistry API", "type": "main", "index": 0 }],
+        [{ "node": "Bioinformatics API", "type": "main", "index": 0 }],
+        [{ "node": "Simulation API", "type": "main", "index": 0 }],
+        [{ "node": "MINDEX API", "type": "main", "index": 0 }]
+      ]
+    },
+    "Mycology API": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Protein API": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Chemistry API": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Bioinformatics API": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Simulation API": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "MINDEX API": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "Science" }, { "name": "Research" }]
+}
