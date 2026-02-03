@@ -40,10 +40,13 @@ router = APIRouter(prefix="/api/memory", tags=["memory"])
 class MemoryScope(str, Enum):
     """Memory scope determines storage backend and TTL."""
     CONVERSATION = "conversation"  # Redis, session TTL
-    USER = "user"                  # MINDEX + Qdrant, permanent
+    USER = "user"                  # Postgres + Qdrant, permanent
     AGENT = "agent"                # Redis, 24h TTL
-    SYSTEM = "system"              # MINDEX, permanent
+    SYSTEM = "system"              # Postgres, permanent
     EPHEMERAL = "ephemeral"        # In-memory, request only
+    DEVICE = "device"              # Postgres, permanent - NatureOS device state
+    EXPERIMENT = "experiment"      # Postgres + Qdrant, permanent - scientific data
+    WORKFLOW = "workflow"          # Redis + Postgres, 7 days - n8n executions
 
 
 class MemoryWriteRequest(BaseModel):
