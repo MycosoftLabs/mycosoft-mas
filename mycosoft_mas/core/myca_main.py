@@ -1,4 +1,4 @@
-"""
+﻿"""
 MYCA / MAS API entrypoint.
 
 This module intentionally stays lightweight: it exposes health/version endpoints,
@@ -30,6 +30,16 @@ from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.documents import router as documents_router
+
+# Scientific platform routers
+from mycosoft_mas.core.routers.scientific_api import router as scientific_router
+from mycosoft_mas.core.routers.scientific_ws import router as scientific_ws_router
+from mycosoft_mas.core.routers.mindex_query import router as mindex_router
+from mycosoft_mas.core.routers.platform_api import router as platform_router
+from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
+from mycosoft_mas.core.routers.bio_api import router as bio_router
+from mycosoft_mas.core.routers.memory_api import router as memory_router
+from mycosoft_mas.core.routers.security_audit_api import router as security_router
 
 # N8N Client - use mycosoft_mas path
 try:
@@ -133,7 +143,7 @@ def get_n8n_client() -> N8NClient:
 
 
 class MycosoftMAS:
-    """Small façade object to keep compatibility with older imports."""
+    """Small faÃ§ade object to keep compatibility with older imports."""
 
     def __init__(self) -> None:
         self.config = load_config()
@@ -178,6 +188,16 @@ app.include_router(integrations_router)
 app.include_router(notifications_router)
 app.include_router(infrastructure_router)
 app.include_router(documents_router)
+
+# Scientific platform routers
+app.include_router(scientific_router, prefix="/scientific", tags=["scientific"])
+app.include_router(scientific_ws_router, tags=["websocket"])
+app.include_router(mindex_router, prefix="/mindex", tags=["mindex"])
+app.include_router(platform_router, prefix="/platform", tags=["platform"])
+app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
+app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
+app.include_router(memory_router, tags=["memory"])
+app.include_router(security_router, tags=["security"])
 
 
 # ---------------------------------------------------------------------------
@@ -350,3 +370,5 @@ async def voice_feedback_recent(limit: int = 20) -> dict[str, Any]:
 @app.get("/voice/feedback/summary")
 async def voice_feedback_summary() -> dict[str, Any]:
     return {"status": "ok", "summary": _feedback_store.summary()}
+
+
