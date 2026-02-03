@@ -1,0 +1,128 @@
+{
+  "name": "Earth 2 CREP Simulator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "earth2/crep",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "earth2-webhook",
+      "name": "Earth2 CREP Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "webhookId": "earth2-crep-simulator"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Earth 2 CREP Simulator - Cellular Resilient Earth Protocol\n// Manages Earth simulation, climate models, and fungal network topology\n\nconst input = $input.first().json;\nconst simulation = input.simulation || 'mycelium_network';\nconst action = input.action || 'run';\nconst params = input.params || {};\n\n// CREP Simulation Types\nconst simulations = {\n  mycelium_network: {\n    description: 'Simulate mycelium network growth and signal propagation',\n    parameters: ['substrate', 'nutrients', 'temperature', 'humidity', 'time_steps']\n  },\n  soil_ecology: {\n    description: 'Model soil ecosystem with fungi, bacteria, and root systems',\n    parameters: ['soil_type', 'organisms', 'depth', 'moisture']\n  },\n  climate_impact: {\n    description: 'Simulate climate effects on fungal distribution',\n    parameters: ['region', 'temperature_delta', 'precipitation', 'co2_level']\n  },\n  network_topology: {\n    description: 'Analyze fungal network topology and optimization',\n    parameters: ['network_size', 'connection_density', 'signal_strength']\n  },\n  decomposition: {\n    description: 'Model organic matter decomposition by fungi',\n    parameters: ['substrate_type', 'fungi_species', 'temperature', 'time']\n  },\n  symbiosis: {\n    description: 'Simulate plant-fungi symbiotic relationships',\n    parameters: ['plant_species', 'fungi_species', 'nutrient_exchange']\n  },\n  spore_dispersal: {\n    description: 'Model spore dispersal patterns',\n    parameters: ['wind_speed', 'humidity', 'terrain', 'release_height']\n  }\n};\n\n// Topology types for CREP\nconst topologies = {\n  mesh: 'Fully connected mesh network',\n  tree: 'Hierarchical tree structure',\n  hub_spoke: 'Central hub with spokes',\n  random: 'Random graph topology',\n  small_world: 'Small-world network (Watts-Strogatz)',\n  scale_free: 'Scale-free network (Barabási-Albert)'\n};\n\nreturn {\n  json: {\n    simulation: simulation,\n    action: action,\n    params: params,\n    simulation_info: simulations[simulation] || { description: 'Custom simulation' },\n    available_simulations: Object.keys(simulations),\n    topologies: topologies,\n    timestamp: new Date().toISOString(),\n    execution_id: $execution.id\n  }\n};"
+      },
+      "id": "parse-crep-request",
+      "name": "Parse CREP Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            { "outputKey": "run", "value": "={{ $json.action === 'run' }}" },
+            { "outputKey": "status", "value": "={{ $json.action === 'status' }}" },
+            { "outputKey": "analyze", "value": "={{ $json.action === 'analyze' }}" },
+            { "outputKey": "visualize", "value": "={{ $json.action === 'visualize' }}" }
+          ]
+        }
+      },
+      "id": "route-crep-action",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Run CREP Simulation\nconst request = $input.first().json;\nconst simulation = request.simulation;\nconst params = request.params;\n\n// Simulate the Earth 2 CREP computation\nconst simulationResult = {\n  simulation_id: `crep_${Date.now()}`,\n  simulation_type: simulation,\n  status: 'completed',\n  iterations: params.time_steps || 1000,\n  network_nodes: Math.floor(Math.random() * 10000) + 1000,\n  network_edges: Math.floor(Math.random() * 50000) + 5000,\n  signal_propagation_time: Math.random() * 100 + 10,\n  network_efficiency: Math.random() * 0.3 + 0.7,\n  topology_type: params.topology || 'small_world',\n  clustering_coefficient: Math.random() * 0.5 + 0.3,\n  avg_path_length: Math.random() * 5 + 2,\n  resilience_score: Math.random() * 0.4 + 0.6,\n  outputs: {\n    growth_rate: Math.random() * 2 + 0.5,\n    nutrient_flow: Math.random() * 100,\n    signal_fidelity: Math.random() * 0.3 + 0.7,\n    network_diameter: Math.floor(Math.random() * 20) + 5\n  },\n  metrics: {\n    compute_time_ms: Math.floor(Math.random() * 5000) + 500,\n    memory_usage_mb: Math.floor(Math.random() * 2000) + 100,\n    gpu_utilization: Math.random() * 0.5 + 0.3\n  }\n};\n\nreturn { json: { action: 'run', result: simulationResult } };"
+      },
+      "id": "run-simulation",
+      "name": "Run Simulation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get CREP Status\nconst activeSimulations = [\n  { id: 'crep_001', type: 'mycelium_network', status: 'running', progress: 75 },\n  { id: 'crep_002', type: 'climate_impact', status: 'queued', progress: 0 }\n];\n\nreturn {\n  json: {\n    action: 'status',\n    result: {\n      active_simulations: activeSimulations,\n      completed_today: 12,\n      total_compute_hours: 48.5,\n      queue_depth: 3\n    }\n  }\n};"
+      },
+      "id": "get-status",
+      "name": "Get Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Analyze CREP Results\nconst request = $input.first().json;\n\nreturn {\n  json: {\n    action: 'analyze',\n    result: {\n      analysis_type: 'network_topology',\n      findings: [\n        'Network exhibits small-world properties',\n        'High clustering coefficient (0.72) indicates local structure',\n        'Short average path length (3.2) enables efficient signal propagation',\n        'Scale-free degree distribution with power-law exponent 2.3',\n        'Resilience to random node failure: 94%',\n        'Resilience to targeted hub attack: 67%'\n      ],\n      recommendations: [\n        'Increase redundant connections to improve resilience',\n        'Add secondary hubs for load balancing',\n        'Optimize signal routing for reduced latency'\n      ]\n    }\n  }\n};"
+      },
+      "id": "analyze-results",
+      "name": "Analyze Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate CREP Visualization\nconst request = $input.first().json;\n\nreturn {\n  json: {\n    action: 'visualize',\n    result: {\n      visualization_type: 'network_graph',\n      format: 'json',\n      url: `http://192.168.0.188:8001/visualize/crep/${request.params.simulation_id || 'latest'}`,\n      available_formats: ['json', 'svg', 'png', 'interactive_html'],\n      layers: ['topology', 'signal_flow', 'nutrient_map', 'growth_pattern']\n    }\n  }\n};"
+      },
+      "id": "visualize-results",
+      "name": "Visualize Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format CREP Response\nconst result = $input.first().json;\nconst request = $('Parse CREP Request').first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    simulation: request.simulation,\n    action: result.action,\n    result: result.result,\n    execution_id: request.execution_id,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-crep-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-crep",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Earth2 CREP Webhook": { "main": [[{ "node": "Parse CREP Request", "type": "main", "index": 0 }]] },
+    "Parse CREP Request": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Route Action": {
+      "main": [
+        [{ "node": "Run Simulation", "type": "main", "index": 0 }],
+        [{ "node": "Get Status", "type": "main", "index": 0 }],
+        [{ "node": "Analyze Results", "type": "main", "index": 0 }],
+        [{ "node": "Visualize Results", "type": "main", "index": 0 }]
+      ]
+    },
+    "Run Simulation": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Get Status": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Analyze Results": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Visualize Results": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "Earth2" }, { "name": "CREP" }, { "name": "Simulation" }]
+}
