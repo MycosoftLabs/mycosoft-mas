@@ -401,6 +401,145 @@ class VoiceMemoryLog(BaseModel):
     timestamp: str
     source: str = "personaplex_voice"
 
+
+# ============================================================================
+# MAS EVENT STREAM - Real-time events for PersonaPlex
+# ============================================================================
+
+from collections import defaultdict
+import threading
+
+class MASEventStore:
+    """In-memory event store for real-time PersonaPlex events."""
+    
+    def __init__(self, max_events_per_session: int = 100):
+        self._events: dict[str, list[dict]] = defaultdict(list)
+        self._global_events: list[dict] = []
+        self._max_events = max_events_per_session
+        self._lock = threading.Lock()
+    
+    def publish(self, event_type: str, message: str, session_id: str = None, 
+                priority: str = "normal", **extra):
+        """
+        Publish an event that PersonaPlex can poll.
+        
+        Event types: agent_update, tool_result, memory_insight, knowledge, 
+                     system_status, notification
+        """
+        event = {
+            "id": str(uuid4()),
+            "type": event_type,
+            "message": message,
+            "priority": priority,
+            "timestamp": datetime.utcnow().isoformat(),
+            **extra
+        }
+        
+        with self._lock:
+            if session_id:
+                self._events[session_id].append(event)
+                if len(self._events[session_id]) > self._max_events:
+                    self._events[session_id] = self._events[session_id][-self._max_events:]
+            else:
+                self._global_events.append(event)
+                if len(self._global_events) > self._max_events:
+                    self._global_events = self._global_events[-self._max_events:]
+        
+        return event
+    
+    def get_events(self, session_id: str = None, since: float = 0) -> list[dict]:
+        """Get events since a timestamp."""
+        with self._lock:
+            events = list(self._global_events)
+            if session_id and session_id in self._events:
+                events.extend(self._events[session_id])
+        
+        # Filter by timestamp
+        if since > 0:
+            since_dt = datetime.utcfromtimestamp(since).isoformat()
+            events = [e for e in events if e.get("timestamp", "") > since_dt]
+        
+        return sorted(events, key=lambda e: e.get("timestamp", ""))
+    
+    def clear_session(self, session_id: str):
+        """Clear events for a session."""
+        with self._lock:
+            if session_id in self._events:
+                del self._events[session_id]
+
+# Global event store
+_event_store = MASEventStore()
+
+def get_event_store() -> MASEventStore:
+    return _event_store
+
+def publish_event(event_type: str, message: str, session_id: str = None, **extra):
+    """Convenience function to publish events."""
+    return _event_store.publish(event_type, message, session_id, **extra)
+
+
+class EventStreamQuery(BaseModel):
+    session_id: Optional[str] = None
+    conversation_id: Optional[str] = None
+    since: Optional[float] = 0
+
+
+@app.get("/events/stream")
+async def get_event_stream(session_id: str = None, conversation_id: str = None, since: float = 0):
+    """
+    Get pending events for PersonaPlex to inject into Moshi.
+    Called by the bridge every few seconds.
+    """
+    events = _event_store.get_events(session_id=session_id or conversation_id, since=since)
+    return {"events": events, "count": len(events), "timestamp": time.time()}
+
+
+class PublishEventRequest(BaseModel):
+    event_type: str
+    message: str
+    session_id: Optional[str] = None
+    priority: str = "normal"
+    extra: dict = {}
+
+
+@app.post("/events/publish")
+async def publish_event_endpoint(req: PublishEventRequest):
+    """
+    Publish an event that will be sent to PersonaPlex/Moshi.
+    Can be called by agents, tools, or any MAS component.
+    """
+    event = _event_store.publish(
+        event_type=req.event_type,
+        message=req.message,
+        session_id=req.session_id,
+        priority=req.priority,
+        **req.extra
+    )
+    return {"status": "published", "event": event}
+
+
+# Helper functions for common event types
+def notify_agent_update(agent_name: str, status: str, message: str, session_id: str = None):
+    """Notify PersonaPlex of an agent update."""
+    return publish_event("agent_update", message, session_id, agent_name=agent_name, status=status)
+
+def notify_tool_result(tool_name: str, result_summary: str, session_id: str = None):
+    """Notify PersonaPlex of a tool call result."""
+    return publish_event("tool_result", result_summary, session_id, tool_name=tool_name)
+
+def notify_memory_insight(insight: str, session_id: str = None):
+    """Notify PersonaPlex of a memory insight."""
+    return publish_event("memory_insight", insight, session_id, insight=insight)
+
+def notify_knowledge(topic: str, info: str, session_id: str = None):
+    """Notify PersonaPlex of knowledge discovery."""
+    return publish_event("knowledge", info, session_id, topic=topic, info=info)
+
+def notify_system_status(system: str, status: str, session_id: str = None):
+    """Notify PersonaPlex of system status change."""
+    return publish_event("system_status", f"{system}: {status}", session_id, system=system, status=status)
+
+
 @app.post("/voice/memory/log")
 async def log_voice_memory(log: VoiceMemoryLog):
     """
@@ -450,6 +589,7 @@ async def voice_feedback_recent(limit: int = 20) -> dict[str, Any]:
 @app.get("/voice/feedback/summary")
 async def voice_feedback_summary() -> dict[str, Any]:
     return {"status": "ok", "summary": _feedback_store.summary()}
+
 
 
 
