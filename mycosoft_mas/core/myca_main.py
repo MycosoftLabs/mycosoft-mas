@@ -391,6 +391,39 @@ class VoiceFeedbackRequest(BaseModel):
     notes: str | None = None
 
 
+
+# Voice Memory Logging Endpoint (for PersonaPlex async memory cloning)
+class VoiceMemoryLog(BaseModel):
+    conversation_id: str
+    session_id: str
+    speaker: str  # "user" or "myca"
+    text: str
+    timestamp: str
+    source: str = "personaplex_voice"
+
+@app.post("/voice/memory/log")
+async def log_voice_memory(log: VoiceMemoryLog):
+    """
+    Async endpoint for PersonaPlex to clone voice transcripts for memory building.
+    This is fire-and-forget from PersonaPlex's perspective.
+    """
+    try:
+        # Store in memory/feedback system
+        _feedback_store.add_feedback(
+            conversation_id=log.conversation_id,
+            session_id=log.session_id,
+            user_input=log.text if log.speaker == "user" else None,
+            myca_response=log.text if log.speaker == "myca" else None,
+            feedback_type="voice_transcript",
+            timestamp=log.timestamp,
+            source=log.source,
+        )
+        return {"status": "logged", "speaker": log.speaker}
+    except Exception as e:
+        # Non-critical - just acknowledge
+        return {"status": "acknowledged", "error": str(e)}
+
+
 @app.post("/voice/feedback")
 async def create_voice_feedback(payload: VoiceFeedbackRequest) -> dict[str, Any]:
     item = _feedback_store.add_feedback(
@@ -417,6 +450,7 @@ async def voice_feedback_recent(limit: int = 20) -> dict[str, Any]:
 @app.get("/voice/feedback/summary")
 async def voice_feedback_summary() -> dict[str, Any]:
     return {"status": "ok", "summary": _feedback_store.summary()}
+
 
 
 
