@@ -2,11 +2,12 @@
 
 ## Overview
 
-PersonaPlex v5.0.0 implements a **full-duplex voice architecture** where:
+PersonaPlex v5.1.0 implements a **full-duplex voice architecture** with **real-time event feedback**:
 
 1. **Moshi handles all voice processing** (STT + LLM + TTS)
 2. **MAS receives async text clones** for memory and knowledge building
-3. **No interruption** of real-time conversation flow
+3. **MAS Event Stream feeds back to Moshi** - agent updates, tool results, memory insights
+4. **No interruption** of real-time conversation flow (events are injected naturally)
 
 ## Architecture Diagram
 
@@ -156,10 +157,60 @@ config/myca_personaplex_prompt.txt
 | Transcript batching to MAS | Fire-and-forget memory logging |
 | Dual STT systems | Single STT (Moshi only) |
 
+## MAS Event Stream
+
+The bridge polls MAS every 2 seconds for events that should be injected into Moshi's conversation.
+
+### Event Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `agent_update` | Agent status/result | "Opportunity Scout found 3 new leads" |
+| `tool_result` | Tool execution result | "Database query returned 15 results" |
+| `memory_insight` | Memory recall | "I recall you mentioned mushroom cultivation earlier" |
+| `knowledge` | Knowledge discovery | "MINDEX shows Cordyceps grows best at 22°C" |
+| `system_status` | System change | "VM backup completed successfully" |
+| `notification` | General notification | "Meeting reminder in 10 minutes" |
+
+### Publishing Events
+
+Any MAS component (agents, tools, services) can publish events:
+
+```python
+from mycosoft_mas.core.myca_main import publish_event, notify_agent_update
+
+# Generic event
+publish_event("notification", "Something happened!", session_id="abc123")
+
+# Agent update
+notify_agent_update("OpportunityScout", "completed", "Found 3 new investor leads")
+
+# Tool result
+notify_tool_result("MINDEXQuery", "Retrieved 15 fungal species matching criteria")
+
+# Memory insight
+notify_memory_insight("User previously expressed interest in Cordyceps cultivation")
+```
+
+### Event Flow
+
+```
+Agent/Tool/Service → publish_event() → MASEventStore
+                                            ↓
+                                    Bridge polls /events/stream
+                                            ↓
+                                    format_event_for_moshi()
+                                            ↓
+                                    Inject into Moshi (0x02 text)
+                                            ↓
+                                    Moshi speaks: "One moment, I just got an update..."
+```
+
 ## Benefits
 
 1. **Lower Latency**: No waiting for MAS response
 2. **Natural Flow**: Moshi's full-duplex model works uninterrupted
 3. **Memory Building**: MAS still receives all transcripts for context
-4. **Simpler Browser**: No Web Speech API complexity
-5. **Clean Architecture**: Clear separation of concerns
+4. **Real-time Awareness**: Moshi can react to agent updates mid-conversation
+5. **Simpler Browser**: No Web Speech API complexity
+6. **Clean Architecture**: Clear separation of concerns
