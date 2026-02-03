@@ -31,10 +31,13 @@ from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.documents import router as documents_router
 
+# N8N Client - use mycosoft_mas path
 try:
     from mycosoft_mas.integrations.n8n_client import N8NClient
-except ImportError:
-    from integrations.n8n_client import N8NClient
+except ImportError as e:
+    import logging
+    logging.warning(f"Could not import N8NClient: {e}")
+    N8NClient = None
 
 
 def load_config() -> dict[str, Any]:
