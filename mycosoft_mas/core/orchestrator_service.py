@@ -48,10 +48,13 @@ except ImportError:
         AgentTask,
     )
 
+# N8N Client import
 try:
     from mycosoft_mas.integrations.n8n_client import N8NClient
-except ImportError:
-    from integrations.n8n_client import N8NClient
+except ImportError as e:
+    import logging
+    logging.warning(f"Could not import N8NClient: {e}")
+    N8NClient = None
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MYCA_Orchestrator")
