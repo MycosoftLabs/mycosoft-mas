@@ -1,21 +1,8 @@
-"""
-NLM - Nature Learning Model
+﻿"""NLM Module - February 3, 2026
 
-Mycosoft's custom language model trained on:
-- Species databases and taxonomy
-- Mycology research papers
-- Environmental sensor data
-- Genetic sequences and phenotypes
-- Ecological interactions
-- Geographic distribution data
-
-This module provides training, inference, and fine-tuning capabilities
-for the Nature Learning Model.
+Nature Learning Model memory storage.
 """
 
-from .trainer import NLMTrainer
-from .inference import NLMInference
-from .data_pipeline import NLMDataPipeline
+from .memory_store import NLMMemoryStore, get_nlm_store
 
-__all__ = ["NLMTrainer", "NLMInference", "NLMDataPipeline"]
-
+__all__ = ["NLMMemoryStore", "get_nlm_store"]
