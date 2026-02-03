@@ -40,6 +40,7 @@ from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
 from mycosoft_mas.core.routers.bio_api import router as bio_router
 from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
+from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 
 # N8N Client - use mycosoft_mas path
 try:
@@ -243,6 +244,7 @@ app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
 app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
+app.include_router(memory_integration_router, tags=["memory-integration"])
 
 
 # ---------------------------------------------------------------------------
