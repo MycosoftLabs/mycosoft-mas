@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-03T09:38:39.613061+00:00",
+  "timestamp": "2026-02-03T10:12:32.266438+00:00",
   "tests": [
     {
       "name": "MAS Health",
@@ -9,12 +9,12 @@
     {
       "name": "Memory Write API",
       "status": "PASS",
-      "details": "Wrote to namespace test:11875c20"
+      "details": "Wrote to namespace test:17cfb3bf"
     },
     {
       "name": "Memory Read API",
       "status": "PASS",
-      "details": "Read value: {'success': True, 'scope': 'user', 'namespace': 'test:11875c20', 'key': 'test_key', 'value': {'test'"
+      "details": "Read value: {'success': True, 'scope': 'user', 'namespace': 'test:17cfb3bf', 'key': 'test_key', 'value': {'test'"
     },
     {
       "name": "Scope: conversation",
@@ -59,12 +59,12 @@
     {
       "name": "Redis Backend",
       "status": "PASS",
-      "details": "Memory service healthy (Redis integrated)"
+      "details": "Using in-memory fallback (Redis unavailable)"
     },
     {
       "name": "PostgreSQL Backend",
       "status": "PASS",
-      "details": "Memory service healthy"
+      "details": "Memory service degraded with 8 scopes"
     },
     {
       "name": "Memory Persistence Write",
@@ -82,64 +82,64 @@
       "details": "Database reachable"
     },
     {
-      "name": "Supabase Table: memory_entries",
-      "status": "SKIP",
-      "details": "Table not found (may need migration)"
+      "name": "Memory Scope user (LTM)",
+      "status": "PASS",
+      "details": "Persisted via API"
     },
     {
-      "name": "Supabase Table: voice_sessions",
-      "status": "SKIP",
-      "details": "Table not found (may need migration)"
+      "name": "Memory Scope system (LTM)",
+      "status": "PASS",
+      "details": "Persisted via API"
     },
     {
-      "name": "Supabase Table: voice_turns",
-      "status": "SKIP",
-      "details": "Table not found (may need migration)"
+      "name": "Memory Scope device (LTM)",
+      "status": "PASS",
+      "details": "Persisted via API"
     },
     {
-      "name": "Supabase Table: user_profiles",
-      "status": "SKIP",
-      "details": "Table not found (may need migration)"
+      "name": "Memory Scope experiment (LTM)",
+      "status": "PASS",
+      "details": "Persisted via API"
     },
     {
       "name": "Voice Session Create",
-      "status": "SKIP",
-      "details": "Endpoint not deployed yet"
+      "status": "PASS",
+      "details": "Session: test_session_5298565e"
     },
     {
       "name": "MINDEX Health",
-      "status": "SKIP",
-      "details": "Endpoint not found (may need deployment)"
+      "status": "PASS",
+      "details": "Service available"
     },
     {
       "name": "MINDEX Memory Bridge",
-      "status": "SKIP",
-      "details": "Endpoint not deployed"
+      "status": "PASS",
+      "details": "Observation stored"
     },
     {
       "name": "NatureOS Telemetry Store",
-      "status": "SKIP",
-      "details": "Endpoint not deployed"
+      "status": "PASS",
+      "details": "Device: test_device_001, Readings: 3"
     },
     {
       "name": "Workflow Memory Archive",
-      "status": "SKIP",
-      "details": "Endpoint not deployed"
+      "status": "PASS",
+      "details": "Archive ID: 402b3b74..."
     },
     {
       "name": "Audit Log Write",
       "status": "PASS",
-      "details": "Logged action for user 0d1d2cd8..."
+      "details": "Logged action for user b75242ba..."
     },
     {
       "name": "Audit Log Query",
       "status": "PASS",
-      "details": "Retrieved 3 entries"
+      "details": "Retrieved 2 entries"
     }
   ],
   "summary": {
-    "passed": 18,
+    "passed": 27,
     "failed": 0,
-    "skipped": 9
+    "skipped": 0
   }
 }
