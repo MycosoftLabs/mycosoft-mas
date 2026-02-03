@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MYCA Voice Debug Console - February 3, 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-panel: #12121a;
+            --bg-card: #1a1a24;
+            --border: #2a2a3a;
+            --text: #e0e0e0;
+            --text-dim: #666;
+            --accent: #7c3aed;
+            --accent-blue: #00d4ff;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #ef4444;
+            --user-msg: #7c3aed;
+            --myca-msg: #1e3a5f;
+        }
+        
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            background: var(--bg-dark);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            grid-template-rows: auto 1fr auto;
+            height: 100vh;
+            gap: 1px;
+            background: var(--border);
+        }
+        
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: var(--bg-panel);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo { font-size: 1.5rem; }
+        
+        .title {
+            font-size: 1.2rem;
+            background: linear-gradient(90deg, var(--accent), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-dim);
+        }
+        
+        .status-dot.ok { background: var(--success); }
+        .status-dot.warn { background: var(--warning); }
+        .status-dot.error { background: var(--error); }
+        .status-dot.pulse { animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-rows: 1fr auto;
+            background: var(--bg-dark);
+            overflow: hidden;
+        }
+        
+        /* Conversation Panel */
+        .conversation-panel {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            overflow: hidden;
+        }
+        
+        /* Chat Area */
+        .chat-area {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border);
+        }
+        
+        .chat-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            position: relative;
+        }
+        
+        .message.user {
+            background: var(--user-msg);
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+        }
+        
+        .message.assistant {
+            background: var(--myca-msg);
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+        }
+        
+        .message-meta {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .message-latency {
+            color: var(--accent-blue);
+        }
+        
+        /* Duplex Visualization */
+        .duplex-viz {
+            background: var(--bg-card);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .duplex-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .duplex-timeline {
+            height: 60px;
+            background: var(--bg-dark);
+            border-radius: 0.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .duplex-track {
+            position: absolute;
+            height: 25px;
+            left: 0;
+            right: 0;
+        }
+        
+        .duplex-track.user { top: 5px; }
+        .duplex-track.myca { bottom: 5px; }
+        
+        .duplex-bar {
+            position: absolute;
+            height: 100%;
+            border-radius: 2px;
+            opacity: 0.8;
+        }
+        
+        .duplex-bar.speaking { background: var(--success); }
+        .duplex-bar.listening { background: var(--accent-blue); }
+        .duplex-bar.processing { background: var(--warning); }
+        
+        .duplex-label {
+            position: absolute;
+            left: 4px;
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .duplex-track.user .duplex-label { top: 4px; }
+        .duplex-track.myca .duplex-label { top: 4px; }
+        
+        /* Flow Panel */
+        .flow-panel {
+            background: var(--bg-card);
+            overflow-y: auto;
+            padding: 0.75rem;
+        }
+        
+        .flow-header {
+            font-size: 0.75rem;
+            color: var(--accent-blue);
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .flow-item {
+            background: var(--bg-panel);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.7rem;
+            border-left: 3px solid var(--border);
+        }
+        
+        .flow-item.service { border-left-color: var(--accent-blue); }
+        .flow-item.llm { border-left-color: var(--accent); }
+        .flow-item.api { border-left-color: var(--success); }
+        .flow-item.agent { border-left-color: var(--warning); }
+        .flow-item.tool { border-left-color: #f472b6; }
+        .flow-item.memory { border-left-color: #a78bfa; }
+        
+        .flow-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+        
+        .flow-item-type {
+            text-transform: uppercase;
+            font-size: 0.6rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.2rem;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .flow-item-time {
+            color: var(--text-dim);
+        }
+        
+        .flow-item-content {
+            color: var(--text);
+            word-break: break-word;
+        }
+        
+        .flow-item-detail {
+            color: var(--text-dim);
+            font-size: 0.65rem;
+            margin-top: 0.25rem;
+        }
+        
+        /* Input Area */
+        .input-area {
+            background: var(--bg-panel);
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        .mic-viz {
+            width: 60px;
+            height: 40px;
+            background: var(--bg-card);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+        
+        .mic-bar {
+            width: 3px;
+            background: var(--accent);
+            border-radius: 1px;
+            height: 10px;
+            transition: height 0.05s;
+        }
+        
+        .voice-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--accent), var(--accent-blue));
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .voice-btn:hover { transform: scale(1.05); }
+        .voice-btn.recording { background: var(--error); animation: pulse 0.5s infinite; }
+        .voice-btn.processing { animation: spin 1s linear infinite; }
+        
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .text-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .send-btn {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            border: none;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .send-btn:hover { background: #6d28d9; }
+        
+        /* Right Sidebar - Logs & Debug */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-panel);
+            overflow: hidden;
+        }
+        
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .sidebar-tab {
+            flex: 1;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        
+        .sidebar-tab.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
+        
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        /* Terminal Logs */
+        .terminal {
+            font-family: 'SF Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.5rem;
+            line-height: 1.5;
+        }
+        
+        .log-entry {
+            padding: 0.2rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .log-time {
+            color: var(--text-dim);
+        }
+        
+        .log-level {
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.2rem;
+            font-size: 0.6rem;
+            margin: 0 0.3rem;
+        }
+        
+        .log-level.info { background: var(--accent-blue); color: black; }
+        .log-level.debug { background: var(--text-dim); color: black; }
+        .log-level.warn { background: var(--warning); color: black; }
+        .log-level.error { background: var(--error); }
+        .log-level.api { background: var(--success); color: black; }
+        .log-level.llm { background: var(--accent); }
+        
+        /* Agent Panel */
+        .agent-panel {
+            padding: 0.75rem;
+        }
+        
+        .agent-card {
+            background: var(--bg-card);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .agent-name {
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .agent-status {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 1rem;
+            background: var(--success);
+            color: black;
+        }
+        
+        .agent-action {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        
+        /* Metrics Panel */
+        .metrics-panel {
+            padding: 0.75rem;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+        
+        .metric-value {
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+        
+        .metric-value.good { color: var(--success); }
+        .metric-value.warn { color: var(--warning); }
+        .metric-value.bad { color: var(--error); }
+        
+        /* Footer */
+        .footer {
+            grid-column: 1 / -1;
+            background: var(--bg-panel);
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            border-top: 1px solid var(--border);
+        }
+        
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-section">
+                <span class="logo">🍄</span>
+                <span class="title">MYCA Voice Debug Console</span>
+            </div>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-dot ok" id="statusMoshi"></div>
+                    <span>Moshi (8998)</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot ok" id="statusBridge"></div>
+                    <span>Bridge (8999)</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot ok" id="statusMAS"></div>
+                    <span>MAS VM (8001)</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot ok" id="statusRedis"></div>
+                    <span>Redis</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="conversation-panel">
+                <!-- Chat Area -->
+                <div class="chat-area">
+                    <div class="chat-header">
+                        <span>Conversation with MYCA</span>
+                        <span id="sessionId">Session: --</span>
+                    </div>
+                    
+                    <!-- Duplex Visualization -->
+                    <div style="padding: 0.75rem;">
+                        <div class="duplex-viz">
+                            <div class="duplex-header">
+                                <span>Full-Duplex Timeline</span>
+                                <span id="duplexStatus">Idle</span>
+                            </div>
+                            <div class="duplex-timeline" id="duplexTimeline">
+                                <div class="duplex-track user">
+                                    <span class="duplex-label">YOU</span>
+                                </div>
+                                <div class="duplex-track myca">
+                                    <span class="duplex-label">MYCA</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message assistant">
+                            <div>Hello! I'm MYCA - My Companion AI. I'm ready to help with Mycosoft, our science, agents, and systems. What would you like to discuss?</div>
+                            <div class="message-meta">
+                                <span>System initialized</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Flow Panel -->
+                <div class="flow-panel">
+                    <div class="flow-header">Service Call Flow</div>
+                    <div id="flowItems">
+                        <div class="flow-item service">
+                            <div class="flow-item-header">
+                                <span class="flow-item-type">INIT</span>
+                                <span class="flow-item-time">00:00:00</span>
+                            </div>
+                            <div class="flow-item-content">System initialized</div>
+                            <div class="flow-item-detail">PersonaPlex + MAS ready</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="mic-viz" id="micViz">
+                    <div class="mic-bar" style="height: 10px;"></div>
+                    <div class="mic-bar" style="height: 15px;"></div>
+                    <div class="mic-bar" style="height: 8px;"></div>
+                    <div class="mic-bar" style="height: 20px;"></div>
+                    <div class="mic-bar" style="height: 12px;"></div>
+                    <div class="mic-bar" style="height: 18px;"></div>
+                    <div class="mic-bar" style="height: 10px;"></div>
+                </div>
+                <button class="voice-btn" id="voiceBtn" title="Hold to speak">🎤</button>
+                <input type="text" class="text-input" id="textInput" placeholder="Type a message or hold mic button to speak...">
+                <button class="send-btn" id="sendBtn">Send</button>
+            </div>
+        </main>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" data-tab="logs">Terminal</button>
+                <button class="sidebar-tab" data-tab="agents">Agents</button>
+                <button class="sidebar-tab" data-tab="metrics">Metrics</button>
+            </div>
+            <div class="sidebar-content">
+                <!-- Terminal Logs -->
+                <div id="logsTab" class="terminal">
+                    <div class="log-entry">
+                        <span class="log-time">00:00:00.000</span>
+                        <span class="log-level info">INFO</span>
+                        <span>MYCA Voice Debug Console initialized</span>
+                    </div>
+                </div>
+                
+                <!-- Agents Tab -->
+                <div id="agentsTab" class="agent-panel" style="display: none;">
+                    <div class="agent-card">
+                        <div class="agent-header">
+                            <span class="agent-name">MYCA</span>
+                            <span class="agent-status">ACTIVE</span>
+                        </div>
+                        <div class="agent-action">Orchestrator - awaiting input</div>
+                    </div>
+                </div>
+                
+                <!-- Metrics Tab -->
+                <div id="metricsTab" class="metrics-panel" style="display: none;">
+                    <div class="metric-row">
+                        <span>Moshi Latency</span>
+                        <span class="metric-value good" id="metricMoshi">30ms</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>API Round-trip</span>
+                        <span class="metric-value" id="metricAPI">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Total Response</span>
+                        <span class="metric-value" id="metricTotal">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Conversation Turns</span>
+                        <span class="metric-value" id="metricTurns">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Memory Writes</span>
+                        <span class="metric-value" id="metricMemory">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Agent Calls</span>
+                        <span class="metric-value" id="metricAgents">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Tool Calls</span>
+                        <span class="metric-value" id="metricTools">0</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div>
+                <a href="http://localhost:8998" target="_blank">Moshi UI</a> |
+                <a href="http://192.168.0.188:5678" target="_blank">n8n</a> |
+                <a href="http://192.168.0.188:8001/docs" target="_blank">MAS API</a>
+            </div>
+            <div id="footerStatus">Ready</div>
+        </footer>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            MAS_URL: 'http://192.168.0.188:8001',
+            BRIDGE_URL: 'http://localhost:8999',
+            MOSHI_URL: 'http://localhost:8998',
+            MOSHI_WS: 'ws://localhost:8998/api/chat'
+        };
+        
+        // State
+        const state = {
+            sessionId: null,
+            conversationId: null,
+            turnCount: 0,
+            memoryWrites: 0,
+            agentCalls: 0,
+            toolCalls: 0,
+            isRecording: false,
+            duplexBars: [],
+            duplexStartTime: null,
+            mediaRecorder: null,
+            audioChunks: [],
+            audioContext: null,
+            analyser: null,
+            micStream: null
+        };
+        
+        // DOM Elements
+        const elements = {
+            voiceBtn: document.getElementById('voiceBtn'),
+            textInput: document.getElementById('textInput'),
+            sendBtn: document.getElementById('sendBtn'),
+            chatMessages: document.getElementById('chatMessages'),
+            flowItems: document.getElementById('flowItems'),
+            logsTab: document.getElementById('logsTab'),
+            agentsTab: document.getElementById('agentsTab'),
+            metricsTab: document.getElementById('metricsTab'),
+            micViz: document.getElementById('micViz'),
+            duplexTimeline: document.getElementById('duplexTimeline'),
+            duplexStatus: document.getElementById('duplexStatus'),
+            sessionId: document.getElementById('sessionId'),
+            footerStatus: document.getElementById('footerStatus')
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            state.sessionId = 'session_' + Date.now().toString(36);
+            elements.sessionId.textContent = 'Session: ' + state.sessionId.slice(-8);
+            
+            checkServices();
+            setInterval(checkServices, 30000);
+            
+            setupEventListeners();
+            log('INFO', 'Debug console ready');
+        });
+        
+        // Event Listeners
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.sidebar-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+            
+            // Voice button
+            elements.voiceBtn.addEventListener('mousedown', startRecording);
+            elements.voiceBtn.addEventListener('mouseup', stopRecording);
+            elements.voiceBtn.addEventListener('mouseleave', stopRecording);
+            
+            // Text input
+            elements.sendBtn.addEventListener('click', sendTextMessage);
+            elements.textInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') sendTextMessage();
+            });
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            document.getElementById('logsTab').style.display = tabName === 'logs' ? 'block' : 'none';
+            document.getElementById('agentsTab').style.display = tabName === 'agents' ? 'block' : 'none';
+            document.getElementById('metricsTab').style.display = tabName === 'metrics' ? 'block' : 'none';
+        }
+        
+        // Logging
+        function log(level, message, detail = null) {
+            const time = new Date().toISOString().split('T')[1].slice(0, 12);
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-level ${level.toLowerCase()}">${level}</span>
+                <span>${message}</span>
+                ${detail ? `<div style="color: #666; font-size: 0.65rem; margin-left: 90px;">${detail}</div>` : ''}
+            `;
+            elements.logsTab.appendChild(entry);
+            elements.logsTab.scrollTop = elements.logsTab.scrollHeight;
+        }
+        
+        // Flow Items
+        function addFlowItem(type, content, detail = '', duration = null) {
+            const time = new Date().toISOString().split('T')[1].slice(0, 8);
+            const item = document.createElement('div');
+            item.className = `flow-item ${type}`;
+            item.innerHTML = `
+                <div class="flow-item-header">
+                    <span class="flow-item-type">${type.toUpperCase()}</span>
+                    <span class="flow-item-time">${time}${duration ? ` (${duration}ms)` : ''}</span>
+                </div>
+                <div class="flow-item-content">${content}</div>
+                ${detail ? `<div class="flow-item-detail">${detail}</div>` : ''}
+            `;
+            elements.flowItems.insertBefore(item, elements.flowItems.firstChild.nextSibling);
+            
+            // Keep max 50 items
+            while (elements.flowItems.children.length > 51) {
+                elements.flowItems.removeChild(elements.flowItems.lastChild);
+            }
+        }
+        
+        // Duplex Visualization
+        function addDuplexBar(track, type, startPercent, widthPercent) {
+            const bar = document.createElement('div');
+            bar.className = `duplex-bar ${type}`;
+            bar.style.left = `${startPercent}%`;
+            bar.style.width = `${widthPercent}%`;
+            
+            const trackEl = elements.duplexTimeline.querySelector(`.duplex-track.${track}`);
+            trackEl.appendChild(bar);
+            state.duplexBars.push(bar);
+            
+            // Keep max 20 bars per track
+            const bars = trackEl.querySelectorAll('.duplex-bar');
+            if (bars.length > 20) {
+                bars[0].remove();
+            }
+        }
+        
+        function updateDuplexStatus(status) {
+            elements.duplexStatus.textContent = status;
+        }
+        
+        // Mic Visualization
+        function updateMicViz(levels) {
+            const bars = elements.micViz.querySelectorAll('.mic-bar');
+            levels.forEach((level, i) => {
+                if (bars[i]) {
+                    bars[i].style.height = `${Math.max(5, level * 35)}px`;
+                }
+            });
+        }
+        
+        // Service Health Check
+        async function checkServices() {
+            const checks = [
+                { id: 'statusMoshi', url: CONFIG.MOSHI_URL, name: 'Moshi' },
+                { id: 'statusBridge', url: CONFIG.BRIDGE_URL + '/health', name: 'Bridge' },
+                { id: 'statusMAS', url: CONFIG.MAS_URL + '/health', name: 'MAS' }
+            ];
+            
+            for (const check of checks) {
+                try {
+                    const res = await fetch(check.url, { method: 'GET', mode: 'cors' });
+                    document.getElementById(check.id).className = res.ok ? 'status-dot ok' : 'status-dot warn';
+                } catch {
+                    document.getElementById(check.id).className = 'status-dot error';
+                }
+            }
+        }
+        
+        // Recording
+        async function startRecording() {
+            if (state.isRecording) return;
+            
+            try {
+                state.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Set up audio analysis for visualization
+                state.audioContext = new AudioContext();
+                state.analyser = state.audioContext.createAnalyser();
+                const source = state.audioContext.createMediaStreamSource(state.micStream);
+                source.connect(state.analyser);
+                state.analyser.fftSize = 32;
+                
+                // Start visualization
+                visualizeMic();
+                
+                // Set up recording
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+                    ? 'audio/webm;codecs=opus' 
+                    : 'audio/webm';
+                state.mediaRecorder = new MediaRecorder(state.micStream, { mimeType });
+                state.audioChunks = [];
+                
+                state.mediaRecorder.ondataavailable = e => state.audioChunks.push(e.data);
+                state.mediaRecorder.onstop = () => processRecording();
+                
+                state.mediaRecorder.start();
+                state.isRecording = true;
+                state.duplexStartTime = Date.now();
+                
+                elements.voiceBtn.classList.add('recording');
+                elements.voiceBtn.textContent = '🔴';
+                updateDuplexStatus('Recording...');
+                log('INFO', 'Recording started');
+                addFlowItem('service', 'Microphone activated', 'Capturing audio input');
+                
+            } catch (err) {
+                log('ERROR', 'Microphone error', err.message);
+            }
+        }
+        
+        function stopRecording() {
+            if (!state.isRecording) return;
+            
+            state.isRecording = false;
+            state.mediaRecorder.stop();
+            state.micStream.getTracks().forEach(t => t.stop());
+            
+            elements.voiceBtn.classList.remove('recording');
+            elements.voiceBtn.textContent = '🎤';
+            updateDuplexStatus('Processing...');
+            
+            // Add user speaking bar to duplex viz
+            const duration = Date.now() - state.duplexStartTime;
+            addDuplexBar('user', 'speaking', 0, Math.min(50, duration / 100));
+            
+            log('INFO', `Recording stopped (${duration}ms)`);
+        }
+        
+        function visualizeMic() {
+            if (!state.isRecording || !state.analyser) return;
+            
+            const dataArray = new Uint8Array(state.analyser.frequencyBinCount);
+            state.analyser.getByteFrequencyData(dataArray);
+            
+            const levels = Array.from(dataArray.slice(0, 7)).map(v => v / 255);
+            updateMicViz(levels);
+            
+            requestAnimationFrame(visualizeMic);
+        }
+        
+        async function processRecording() {
+            elements.voiceBtn.classList.add('processing');
+            log('INFO', 'Processing audio...');
+            addFlowItem('service', 'Audio processing', 'Sending to transcription');
+            
+            const audioBlob = new Blob(state.audioChunks, { type: 'audio/webm' });
+            
+            // For now, show a prompt to use text input
+            // In full implementation, this would send to Whisper or Moshi
+            log('DEBUG', 'Audio blob created', `${(audioBlob.size / 1024).toFixed(1)} KB`);
+            
+            // Simulate transcription (replace with actual Whisper call)
+            setTimeout(() => {
+                elements.voiceBtn.classList.remove('processing');
+                log('WARN', 'Voice transcription requires Whisper service');
+                addFlowItem('service', 'Transcription pending', 'Use text input for now');
+                updateDuplexStatus('Ready');
+            }, 500);
+        }
+        
+        // Text Message
+        async function sendTextMessage() {
+            const message = elements.textInput.value.trim();
+            if (!message) return;
+            
+            elements.textInput.value = '';
+            const startTime = Date.now();
+            
+            // Add user message to chat
+            addChatMessage(message, 'user');
+            log('INFO', `User: ${message.slice(0, 50)}...`);
+            addFlowItem('service', 'User message received', message.slice(0, 80));
+            
+            // Add to duplex viz
+            addDuplexBar('user', 'speaking', 0, 30);
+            updateDuplexStatus('Sending to MYCA...');
+            
+            try {
+                // Call MAS Orchestrator
+                log('API', 'Calling MAS orchestrator...');
+                addFlowItem('api', 'POST /voice/orchestrator/chat', CONFIG.MAS_URL);
+                
+                const apiStart = Date.now();
+                const response = await fetch(`${CONFIG.MAS_URL}/voice/orchestrator/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_id: state.conversationId,
+                        session_id: state.sessionId,
+                        source: 'debug-console',
+                        modality: 'text'
+                    })
+                });
+                
+                const apiDuration = Date.now() - apiStart;
+                
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const totalDuration = Date.now() - startTime;
+                
+                // Update state
+                state.conversationId = data.conversation_id || state.conversationId;
+                state.turnCount++;
+                
+                // Log the response
+                log('API', `Response received (${apiDuration}ms)`, data.agent_name);
+                addFlowItem('llm', 'MYCA Response', data.response_text.slice(0, 80), apiDuration);
+                
+                // Check for actions taken
+                if (data.actions_taken && data.actions_taken.length > 0) {
+                    data.actions_taken.forEach(action => {
+                        if (action.type === 'memory_write') {
+                            state.memoryWrites++;
+                            addFlowItem('memory', 'Memory Write', action.detail.key || 'conversation');
+                            log('DEBUG', 'Memory write', action.detail.scope);
+                        } else if (action.type === 'workflow_executed') {
+                            addFlowItem('tool', 'Workflow Executed', action.detail.workflow);
+                            state.toolCalls++;
+                            log('LLM', 'Workflow called', action.detail.workflow);
+                        } else if (action.type === 'agent_routed') {
+                            state.agentCalls++;
+                            addFlowItem('agent', 'Agent Routed', action.detail.agent);
+                            updateAgentPanel(action.detail.agent);
+                        }
+                    });
+                }
+                
+                // Check session context
+                if (data.session_context) {
+                    if (data.session_context.active_agents && data.session_context.active_agents.length > 0) {
+                        data.session_context.active_agents.forEach(agent => {
+                            addFlowItem('agent', `Agent Active: ${agent}`, 'Processing request');
+                        });
+                    }
+                }
+                
+                // Add MYCA message to chat
+                addChatMessage(data.response_text, 'assistant', {
+                    latency: apiDuration,
+                    agent: data.agent_name
+                });
+                
+                // Add to duplex viz
+                addDuplexBar('myca', 'speaking', 35, 40);
+                updateDuplexStatus('Complete');
+                
+                // Update metrics
+                updateMetrics(apiDuration, totalDuration);
+                
+                log('INFO', `Turn ${state.turnCount} complete (${totalDuration}ms total)`);
+                elements.footerStatus.textContent = `Last response: ${apiDuration}ms`;
+                
+            } catch (err) {
+                log('ERROR', 'Request failed', err.message);
+                addFlowItem('service', 'Error', err.message);
+                addChatMessage("I'm having trouble connecting. Please check the services.", 'assistant');
+                updateDuplexStatus('Error');
+            }
+        }
+        
+        function addChatMessage(text, role, meta = {}) {
+            const msg = document.createElement('div');
+            msg.className = `message ${role}`;
+            
+            let metaHtml = '';
+            if (meta.latency) {
+                metaHtml = `<span class="message-latency">${meta.latency}ms</span>`;
+            }
+            if (meta.agent) {
+                metaHtml += `<span>${meta.agent}</span>`;
+            }
+            
+            msg.innerHTML = `
+                <div>${text}</div>
+                ${metaHtml ? `<div class="message-meta">${metaHtml}</div>` : ''}
+            `;
+            
+            elements.chatMessages.appendChild(msg);
+            elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+        }
+        
+        function updateAgentPanel(agentName) {
+            const panel = document.getElementById('agentsTab');
+            const card = document.createElement('div');
+            card.className = 'agent-card';
+            card.innerHTML = `
+                <div class="agent-header">
+                    <span class="agent-name">${agentName}</span>
+                    <span class="agent-status">CALLED</span>
+                </div>
+                <div class="agent-action">Processing request...</div>
+            `;
+            panel.insertBefore(card, panel.firstChild);
+        }
+        
+        function updateMetrics(apiLatency, totalLatency) {
+            document.getElementById('metricAPI').textContent = `${apiLatency}ms`;
+            document.getElementById('metricAPI').className = 'metric-value ' + 
+                (apiLatency < 300 ? 'good' : apiLatency < 1000 ? 'warn' : 'bad');
+            
+            document.getElementById('metricTotal').textContent = `${totalLatency}ms`;
+            document.getElementById('metricTotal').className = 'metric-value ' + 
+                (totalLatency < 500 ? 'good' : totalLatency < 1500 ? 'warn' : 'bad');
+            
+            document.getElementById('metricTurns').textContent = state.turnCount;
+            document.getElementById('metricMemory').textContent = state.memoryWrites;
+            document.getElementById('metricAgents').textContent = state.agentCalls;
+            document.getElementById('metricTools').textContent = state.toolCalls;
+        }
+    </script>
+</body>
+</html>
