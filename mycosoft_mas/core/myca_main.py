@@ -305,8 +305,8 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
         raise HTTPException(status_code=400, detail="Message is required")
 
     webhook_url = resolve_n8n_webhook_url()
-    if not webhook_url:
-        raise HTTPException(status_code=503, detail="N8N webhook URL not configured")
+        # if not webhook_url:
+        # N8N optional: raise HTTPException(status_code=503, detail="N8N webhook URL not configured")
 
     registry = get_agent_registry()
     matches = registry.find_by_voice_trigger(payload.message)
@@ -589,6 +589,7 @@ async def voice_feedback_recent(limit: int = 20) -> dict[str, Any]:
 @app.get("/voice/feedback/summary")
 async def voice_feedback_summary() -> dict[str, Any]:
     return {"status": "ok", "summary": _feedback_store.summary()}
+
 
 
 
