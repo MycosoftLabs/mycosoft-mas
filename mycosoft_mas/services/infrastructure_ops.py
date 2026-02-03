@@ -52,11 +52,24 @@ class InfrastructureOpsService:
         audit_log_file: str = "audit.jsonl"
     ):
         self.vault_addr = vault_addr
+        
+        # Use fallback path if NAS not available
+        if not os.path.exists("/mnt/mycosoft-nas"):
+            # Fall back to local logs directory
+            nas_logs_path = os.environ.get("MAS_LOGS_PATH", "/tmp/mas-logs")
+            logger.warning(f"NAS not mounted, using fallback logs path: {nas_logs_path}")
+        
         self.nas_logs_path = nas_logs_path
         self.audit_log_path = os.path.join(nas_logs_path, audit_log_file)
         
-        # Ensure logs directory exists
-        os.makedirs(nas_logs_path, exist_ok=True)
+        # Ensure logs directory exists (gracefully handle permission errors)
+        try:
+            os.makedirs(nas_logs_path, exist_ok=True)
+        except PermissionError:
+            logger.warning(f"Cannot create logs directory {nas_logs_path}, using /tmp/mas-logs")
+            self.nas_logs_path = "/tmp/mas-logs"
+            self.audit_log_path = os.path.join(self.nas_logs_path, audit_log_file)
+            os.makedirs(self.nas_logs_path, exist_ok=True)
     
     def _audit_log(self, action: str, status: str, details: Dict[str, Any]):
         """Write audit log entry"""
