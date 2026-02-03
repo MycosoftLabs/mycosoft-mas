@@ -49,12 +49,18 @@ MAS_TIMEOUT = float(os.getenv("MAS_TIMEOUT", "5"))
 MAS_EVENT_POLL_INTERVAL = float(os.getenv("MAS_EVENT_POLL_INTERVAL", "2.0"))  # Poll every 2s
 
 def load_myca_persona():
-    """Load MYCA persona for Moshi's internal LLM."""
+    """Load MYCA persona for Moshi's internal LLM (short version for URL params)."""
     try:
-        prompt_path = os.path.join(os.path.dirname(__file__), "../../config/myca_personaplex_prompt.txt")
+        # Use short prompt to avoid URL length limits
+        prompt_path = os.path.join(os.path.dirname(__file__), "../../config/myca_personaplex_prompt_short.txt")
         if os.path.exists(prompt_path):
             with open(prompt_path, "r") as f:
                 return f.read().strip()
+        # Fallback to long prompt
+        prompt_path = os.path.join(os.path.dirname(__file__), "../../config/myca_personaplex_prompt.txt")
+        if os.path.exists(prompt_path):
+            with open(prompt_path, "r") as f:
+                return f.read().strip()[:800]  # Truncate if needed
     except Exception as e:
         logger.warning(f"Could not load persona from file: {e}")
     
@@ -490,3 +496,4 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8999)
+
