@@ -734,19 +734,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -1085,19 +1072,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -1436,19 +1410,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -1787,19 +1748,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -2138,19 +2086,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -2489,19 +2424,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -2840,19 +2762,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -3191,19 +3100,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -3542,19 +3438,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -3893,19 +3776,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -4244,19 +4114,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -4595,19 +4452,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -4946,19 +4790,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -5297,19 +5128,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -5648,19 +5466,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -5999,19 +5804,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -6350,19 +6142,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -6701,19 +6480,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -7052,19 +6818,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -7403,19 +7156,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -7754,19 +7494,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -8105,19 +7832,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -8456,19 +8170,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -8807,19 +8508,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -9158,19 +8846,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -9509,19 +9184,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -9860,19 +9522,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -10211,19 +9860,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -10562,19 +10198,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -10913,19 +10536,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -11264,19 +10874,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -11615,19 +11212,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -11966,19 +11550,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -12317,19 +11888,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -12668,19 +12226,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -13019,19 +12564,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -13370,19 +12902,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -13721,19 +13240,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -14072,19 +13578,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -14423,19 +13916,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -14774,19 +14254,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -15125,19 +14592,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -15476,19 +14930,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -15827,19 +15268,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -16178,19 +15606,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -16529,19 +15944,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
@@ -16880,19 +16282,6 @@ class MINDEXDatabase:
                 conn.commit()
             
             return cursor.lastrowid
-
-                ORDER BY count DESC 
-                LIMIT 20
-            """)
-            stats["top_genera"] = [
-                {"genus": row["genus"], "count": row["count"]}
-                for row in cursor.fetchall()
-            ]
-            
-            # Database size
-            stats["db_size_mb"] = self.db_path.stat().st_size / (1024 * 1024)
-            
-            return stats
     
     def insert_species(self, species: Dict[str, Any]) -> int:
         """Insert or update a species record."""
