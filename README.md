@@ -1,10 +1,12 @@
-## Mycosoft MAS (Multi-Agent System)
+﻿## Mycosoft MAS (Multi-Agent System)
 
 Mycosoft MAS is a **distributed multi-agent system** (Python/FastAPI) plus a **web UI (Next.js "MYCA")** and an optional **observability stack** (PostgreSQL, Redis, Qdrant, Prometheus, Grafana).
 
 This repository is the **top-level MAS repo**. The previous root README content describing "ENVINT Platform" belongs in subsystem-specific docs and **is not the MAS README**.
 
-> **Latest Update (January 2026):** Major CREP Dashboard enhancements with full data pipelines for aviation, maritime, satellite, and environmental data. New geocoding services, containerized data collectors, and comprehensive documentation. See the [Website Repository](https://github.com/MycosoftLabs/website) for CREP dashboard details.
+> **Latest Update (January 2026):** Major CREP Dashboard enhancements with full data pipelines for aviation, maritime, satellite, and environmental data.
+
+> **Voice Update (February 2026):** MYCA Voice System with NVIDIA PersonaPlex full-duplex voice, PromptManager, Memory API with 5 scopes, RTF monitoring, and Single Brain Architecture. See docs/MYCA_ORCHESTRATOR_MEMORY_INTEGRATION_FEB03_2026.md New geocoding services, containerized data collectors, and comprehensive documentation. See the [Website Repository](https://github.com/MycosoftLabs/website) for CREP dashboard details.
 
 ---
 
@@ -24,6 +26,61 @@ This repository is the **top-level MAS repo**. The previous root README content 
 - [Troubleshooting](#troubleshooting)
 - [Repo layout](#repo-layout)
 
+
+---
+
+## MYCA Voice System (February 2026)
+
+The MYCA Voice System provides **full-duplex voice interaction** with the Multi-Agent System through NVIDIA PersonaPlex.
+
+### Architecture
+
+```
+Browser Voice -> PersonaPlex Bridge (8999) -> Moshi Server (8998)
+                        |
+                        v
+               MYCA Orchestrator (8001)
+                   /    |    \
+                  v     v     v
+             Memory   n8n   Agent Pool
+```
+
+### Core Components
+
+| Component | Port | Description |
+|-----------|------|-------------|
+| Moshi Server | 8998 | NVIDIA PersonaPlex 7B full-duplex voice |
+| PersonaPlex Bridge | 8999 | Pure I/O layer routing to orchestrator |
+| MYCA Orchestrator | 8001 | Single brain for all decisions |
+
+### Key Features
+
+- **Single Brain Architecture**: All decisions (tools, memory, workflows, routing) made by orchestrator
+- **PersonaPlex = Pure I/O**: Bridge only handles audio capture/playback, transcript streaming
+- **Memory API**: 5-scope namespaced memory (conversation, user, agent, system, ephemeral)
+- **RTF Monitoring**: Real-time factor tracking with HEALTHY/WARNING/CRITICAL states
+- **Voice Sessions as Topology Nodes**: Sessions appear as ephemeral agents
+
+### New Files (Feb 2026)
+
+- `mycosoft_mas/core/prompt_manager.py` - Manages 10k and 792 char prompts
+- `mycosoft_mas/core/routers/memory_api.py` - Namespace-based memory API
+- `mycosoft_mas/core/routers/voice_orchestrator_api.py` - Voice/chat endpoint
+- `mycosoft_mas/core/memory_summarization.py` - End-of-session archival
+- `services/personaplex-local/personaplex_bridge_nvidia.py` - Bridge v4.0.0
+
+### Quick Start
+
+```bash
+# Start Moshi server (requires GPU)
+python start_personaplex.py
+
+# Start PersonaPlex Bridge
+python services/personaplex-local/personaplex_bridge_nvidia.py
+
+# Access voice test page
+open http://localhost:3010/test-voice
+```
 ---
 
 ## What MAS is (in this repo)
@@ -36,7 +93,7 @@ This repository is the **top-level MAS repo**. The previous root README content 
   - Code: `mycosoft_mas/agents/*`
 - **Integrations**: clients + unified manager for MINDEX, NatureOS, website, Notion, n8n, Azure.
   - Code: `mycosoft_mas/integrations/*`
-- **Web UI (Next.js)**: the “MYCA” dashboard frontend.
+- **Web UI (Next.js)**: the â€œMYCAâ€ dashboard frontend.
   - Code: root `app/`, `components/`, `lib/`
 - **Observability stack (optional)**: Prometheus + Grafana + dashboards, plus Redis/Qdrant/Postgres used by the runtime.
   - Code/config: `docker-compose.yml`, `prometheus.yml`, `grafana/`
@@ -221,10 +278,10 @@ If these env vars are not set (or token is invalid), those endpoints will return
 
 - App: `mycosoft_mas.core.myca_main:app`
 - Key endpoints:
-  - `GET /` — basic status
-  - `GET /health` — MAS health (agents + services)
-  - `GET /metrics` — Prometheus metrics
-  - `/dashboard` — a mounted dashboard app plus an API router (see note below)
+  - `GET /` â€” basic status
+  - `GET /health` â€” MAS health (agents + services)
+  - `GET /metrics` â€” Prometheus metrics
+  - `/dashboard` â€” a mounted dashboard app plus an API router (see note below)
 
 **Note:** `mycosoft_mas/core/myca_main.py` both mounts a dashboard ASGI app at `/dashboard` and also includes an API router with prefix `/dashboard`. If you see unexpected routing behavior, check:
 
@@ -319,14 +376,14 @@ python scripts/verify_mas.py
 
 ## Repo layout
 
-- `mycosoft_mas/` — Python package (MAS runtime, API, agents, services, integrations)
-- `config/` — runtime config for the FastAPI app (`config/config.yaml`)
-- `config.yaml` — system/agent configuration used by `run_mas`
-- `docker-compose.yml`, `Dockerfile`, `Dockerfile.next` — containerized stack
-- `grafana/`, `prometheus/`, `prometheus.yml` — observability configuration
-- `app/`, `components/`, `lib/` — Next.js UI
-- `docs/` — repo documentation
-- `scripts/` — operational scripts and helpers
+- `mycosoft_mas/` â€” Python package (MAS runtime, API, agents, services, integrations)
+- `config/` â€” runtime config for the FastAPI app (`config/config.yaml`)
+- `config.yaml` â€” system/agent configuration used by `run_mas`
+- `docker-compose.yml`, `Dockerfile`, `Dockerfile.next` â€” containerized stack
+- `grafana/`, `prometheus/`, `prometheus.yml` â€” observability configuration
+- `app/`, `components/`, `lib/` â€” Next.js UI
+- `docs/` â€” repo documentation
+- `scripts/` â€” operational scripts and helpers
 
 ---
 
