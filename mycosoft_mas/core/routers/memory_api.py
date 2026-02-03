@@ -115,6 +115,8 @@ class NamespacedMemoryManager:
     
     def __init__(self):
         self._redis = None
+        self._redis_available = None  # None = not checked, True/False = checked
+        self._memory_store: Dict[str, str] = {}  # In-memory fallback
         self._mindex_url = os.getenv("MINDEX_URL", "http://mindex:8000")
         self._qdrant_url = os.getenv("QDRANT_URL", "http://qdrant:6333")
         self._audit_log: List[Dict[str, Any]] = []
@@ -129,12 +131,60 @@ class NamespacedMemoryManager:
         }
     
     async def _get_redis(self):
-        """Get or create Redis connection."""
+        """Get or create Redis connection, returns None if unavailable."""
+        if self._redis_available is False:
+            return None
         if self._redis is None:
-            import redis.asyncio as redis
-            redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
-            self._redis = redis.from_url(redis_url, decode_responses=True)
+            try:
+                import redis.asyncio as redis
+                redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
+                self._redis = redis.from_url(redis_url, decode_responses=True)
+                await self._redis.ping()
+                self._redis_available = True
+            except Exception as e:
+                logger.warning(f"Redis unavailable, using in-memory fallback: {e}")
+                self._redis_available = False
+                return None
         return self._redis
+    
+    async def _memory_set(self, key: str, value: str, ttl: int = None):
+        """Set value in Redis or in-memory fallback."""
+        redis = await self._get_redis()
+        if redis:
+            if ttl:
+                await redis.set(key, value, ex=ttl)
+            else:
+                await redis.set(key, value)
+        else:
+            self._memory_store[key] = value
+    
+    async def _memory_get(self, key: str) -> Optional[str]:
+        """Get value from Redis or in-memory fallback."""
+        redis = await self._get_redis()
+        if redis:
+            return await redis.get(key)
+        else:
+            return self._memory_store.get(key)
+    
+    async def _memory_delete(self, key: str) -> bool:
+        """Delete key from Redis or in-memory fallback."""
+        redis = await self._get_redis()
+        if redis:
+            return await redis.delete(key) > 0
+        else:
+            if key in self._memory_store:
+                del self._memory_store[key]
+                return True
+            return False
+    
+    async def _memory_keys(self, pattern: str) -> List[str]:
+        """Get keys matching pattern from Redis or in-memory fallback."""
+        redis = await self._get_redis()
+        if redis:
+            return await redis.keys(pattern)
+        else:
+            import fnmatch
+            return [k for k in self._memory_store.keys() if fnmatch.fnmatch(k, pattern)]
     
     def _build_key(self, scope: MemoryScope, namespace: str, key: str) -> str:
         """Build fully qualified key with namespace isolation."""
@@ -198,21 +248,9 @@ class NamespacedMemoryManager:
                 "key": key,
             }
             
-            # Store based on scope
-            if scope in [MemoryScope.CONVERSATION, MemoryScope.AGENT, MemoryScope.EPHEMERAL]:
-                # Use Redis for short-term storage
-                redis = await self._get_redis()
-                serialized = json.dumps(stored_value)
-                if ttl:
-                    await redis.set(full_key, serialized, ex=ttl)
-                else:
-                    await redis.set(full_key, serialized)
-            else:
-                # Use MINDEX for long-term storage
-                # TODO: Implement MINDEX write
-                redis = await self._get_redis()
-                serialized = json.dumps(stored_value)
-                await redis.set(full_key, serialized)
+            # Store using memory helper (Redis or in-memory fallback)
+            serialized = json.dumps(stored_value)
+            await self._memory_set(full_key, serialized, ttl)
             
             self._log_operation("write", scope, namespace, key, True)
             return True
@@ -245,8 +283,7 @@ class NamespacedMemoryManager:
             if key:
                 # Read specific key
                 full_key = self._build_key(scope, namespace, key)
-                redis = await self._get_redis()
-                stored = await redis.get(full_key)
+                stored = await self._memory_get(full_key)
                 
                 if stored:
                     data = json.loads(stored)
@@ -258,12 +295,11 @@ class NamespacedMemoryManager:
             else:
                 # Read all keys in namespace
                 pattern = self._build_key(scope, namespace, "*")
-                redis = await self._get_redis()
-                keys = await redis.keys(pattern)
+                keys = await self._memory_keys(pattern)
                 
                 results = {}
                 for k in keys:
-                    stored = await redis.get(k)
+                    stored = await self._memory_get(k)
                     if stored:
                         data = json.loads(stored)
                         # Extract the actual key from full key
@@ -299,8 +335,7 @@ class NamespacedMemoryManager:
         """
         try:
             full_key = self._build_key(scope, namespace, key)
-            redis = await self._get_redis()
-            result = await redis.delete(full_key)
+            result = await self._memory_delete(full_key)
             
             success = result > 0
             self._log_operation("delete", scope, namespace, key, success)
@@ -328,8 +363,7 @@ class NamespacedMemoryManager:
         """
         try:
             pattern = self._build_key(scope, namespace, "*")
-            redis = await self._get_redis()
-            keys = await redis.keys(pattern)
+            keys = await self._memory_keys(pattern)
             
             # Extract actual keys from full keys
             actual_keys = []
