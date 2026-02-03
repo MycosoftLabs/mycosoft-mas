@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""Update PersonaPlex Bridge to v7.0.0 with lower temperature"""
+
+BRIDGE_CODE = r'''#!/usr/bin/env python3
 """
 PersonaPlex NVIDIA Bridge v7.0.0 - February 3, 2026
 Full-Duplex Voice with MAS Tool Call Integration
@@ -327,3 +330,11 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8999)
+'''
+
+if __name__ == "__main__":
+    path = r"c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\services\personaplex-local\personaplex_bridge_nvidia.py"
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(BRIDGE_CODE)
+    print(f"Updated bridge to v7.0.0 with TEXT_TEMPERATURE=0.4")
+    print(f"Wrote {len(BRIDGE_CODE)} bytes to {path}")
