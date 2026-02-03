@@ -1,0 +1,145 @@
+{
+  "timestamp": "2026-02-03T09:38:39.613061+00:00",
+  "tests": [
+    {
+      "name": "MAS Health",
+      "status": "PASS",
+      "details": "Service: mas, Version: 0.1.0"
+    },
+    {
+      "name": "Memory Write API",
+      "status": "PASS",
+      "details": "Wrote to namespace test:11875c20"
+    },
+    {
+      "name": "Memory Read API",
+      "status": "PASS",
+      "details": "Read value: {'success': True, 'scope': 'user', 'namespace': 'test:11875c20', 'key': 'test_key', 'value': {'test'"
+    },
+    {
+      "name": "Scope: conversation",
+      "status": "PASS",
+      "details": "Write successful"
+    },
+    {
+      "name": "Scope: user",
+      "status": "PASS",
+      "details": "Write successful"
+    },
+    {
+      "name": "Scope: agent",
+      "status": "PASS",
+      "details": "Write successful"
+    },
+    {
+      "name": "Scope: system",
+      "status": "PASS",
+      "details": "Write successful"
+    },
+    {
+      "name": "Scope: ephemeral",
+      "status": "PASS",
+      "details": "Write successful"
+    },
+    {
+      "name": "Scope: device",
+      "status": "PASS",
+      "details": "Write successful"
+    },
+    {
+      "name": "Scope: experiment",
+      "status": "PASS",
+      "details": "Write successful"
+    },
+    {
+      "name": "Scope: workflow",
+      "status": "PASS",
+      "details": "Write successful"
+    },
+    {
+      "name": "Redis Backend",
+      "status": "PASS",
+      "details": "Memory service healthy (Redis integrated)"
+    },
+    {
+      "name": "PostgreSQL Backend",
+      "status": "PASS",
+      "details": "Memory service healthy"
+    },
+    {
+      "name": "Memory Persistence Write",
+      "status": "PASS",
+      "details": "Written"
+    },
+    {
+      "name": "Memory Persistence Read",
+      "status": "PASS",
+      "details": "Value persisted correctly"
+    },
+    {
+      "name": "Supabase Connection",
+      "status": "PASS",
+      "details": "Database reachable"
+    },
+    {
+      "name": "Supabase Table: memory_entries",
+      "status": "SKIP",
+      "details": "Table not found (may need migration)"
+    },
+    {
+      "name": "Supabase Table: voice_sessions",
+      "status": "SKIP",
+      "details": "Table not found (may need migration)"
+    },
+    {
+      "name": "Supabase Table: voice_turns",
+      "status": "SKIP",
+      "details": "Table not found (may need migration)"
+    },
+    {
+      "name": "Supabase Table: user_profiles",
+      "status": "SKIP",
+      "details": "Table not found (may need migration)"
+    },
+    {
+      "name": "Voice Session Create",
+      "status": "SKIP",
+      "details": "Endpoint not deployed yet"
+    },
+    {
+      "name": "MINDEX Health",
+      "status": "SKIP",
+      "details": "Endpoint not found (may need deployment)"
+    },
+    {
+      "name": "MINDEX Memory Bridge",
+      "status": "SKIP",
+      "details": "Endpoint not deployed"
+    },
+    {
+      "name": "NatureOS Telemetry Store",
+      "status": "SKIP",
+      "details": "Endpoint not deployed"
+    },
+    {
+      "name": "Workflow Memory Archive",
+      "status": "SKIP",
+      "details": "Endpoint not deployed"
+    },
+    {
+      "name": "Audit Log Write",
+      "status": "PASS",
+      "details": "Logged action for user 0d1d2cd8..."
+    },
+    {
+      "name": "Audit Log Query",
+      "status": "PASS",
+      "details": "Retrieved 3 entries"
+    }
+  ],
+  "summary": {
+    "passed": 18,
+    "failed": 0,
+    "skipped": 9
+  }
+}
