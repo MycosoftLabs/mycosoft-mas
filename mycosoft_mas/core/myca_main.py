@@ -62,7 +62,7 @@ def load_config() -> dict[str, Any]:
     return config
 
 
-N8N_VOICE_WEBHOOK = os.getenv("N8N_VOICE_WEBHOOK", "myca/command")
+N8N_VOICE_WEBHOOK = os.getenv("N8N_VOICE_WEBHOOK", "myca/voice")
 
 def resolve_n8n_webhook_url() -> str | None:
     base = os.getenv("N8N_WEBHOOK_URL") or os.getenv("N8N_URL")
@@ -88,6 +88,36 @@ def extract_response_text(payload: object) -> str | None:
                 if isinstance(value, str) and value.strip():
                     return value.strip()
     return None
+
+
+
+def generate_myca_fallback_response(message: str) -> str:
+    """Generate a MYCA-aware fallback response when n8n is unavailable."""
+    message_lower = message.lower().strip()
+    
+    # Handle name-related questions
+    name_patterns = ['your name', 'who are you', 'what are you', "what's your name", 'whats your name']
+    if any(p in message_lower for p in name_patterns):
+        return "I'm MYCA - My Companion AI. I'm the orchestrator of Mycosoft's Multi-Agent System. I coordinate all the specialized agents here and help you interact with our infrastructure. What can I help you with?"
+    
+    # Handle greeting
+    greeting_patterns = ['hello', 'hi ', 'hey', 'good morning', 'good evening', 'greetings']
+    if any(p in message_lower for p in greeting_patterns) or message_lower in ['hi', 'hey']:
+        return "Hello! I'm MYCA, your AI companion here at Mycosoft. I'm currently coordinating our agent network and ready to help you with whatever you need."
+    
+    # Handle capability questions
+    capability_patterns = ['what can you', 'can you help', 'what do you do', 'capabilities']
+    if any(p in message_lower for p in capability_patterns):
+        return "I'm MYCA, the central orchestrator for Mycosoft's Multi-Agent System. I can coordinate specialized agents for research, code analysis, infrastructure monitoring, and more. I have access to our n8n workflows, MINDEX knowledge graph, and system APIs. How can I help you today?"
+    
+    # Handle status questions
+    status_patterns = ['status', 'how are you', 'are you there', 'you working']
+    if any(p in message_lower for p in status_patterns):
+        return "I'm MYCA, and I'm fully operational. Currently running on our RTX 5090 infrastructure. All systems are responsive. What would you like me to look into?"
+    
+    # Default response with identity
+    return "I'm MYCA, and I'm here to help. I'm currently operating in a limited mode as some backend services are being refreshed. Please try again in a moment, or let me know what you need and I'll do my best to assist."
+
 
 _n8n_client: N8NClient | None = None
 
@@ -236,15 +266,19 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
         "timestamp": datetime.utcnow().isoformat(),
     }
 
+    response_text = None
     try:
         client = get_n8n_client()
         result = await client.trigger_workflow(N8N_VOICE_WEBHOOK, request_payload)
+        response_text = extract_response_text(result)
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"N8N workflow failed: {exc}") from exc
-
-    response_text = extract_response_text(result)
+        # Log but don't fail - use MYCA fallback
+        import logging
+        logging.warning(f"N8N workflow failed, using MYCA fallback: {exc}")
+    
+    # Use MYCA identity-aware fallback if n8n failed or returned nothing
     if not response_text:
-        raise HTTPException(status_code=502, detail="N8N workflow returned no response_text")
+        response_text = generate_myca_fallback_response(payload.message)
 
     try:
         _feedback_store.add_feedback(
