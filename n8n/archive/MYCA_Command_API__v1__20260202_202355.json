@@ -1,0 +1,456 @@
+{
+  "updatedAt": "2026-01-27T19:04:18.604Z",
+  "createdAt": "2026-01-27T06:10:57.105Z",
+  "id": "cHsJEUEhpedSOuk3",
+  "name": "MYCA Command API",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/command",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-command-entrypoint",
+      "name": "Webhook: POST /myca/command",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "myca-command-api"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate and normalize incoming command\nconst requiredFields = ['request_id', 'actor', 'action'];\nconst body = $input.item.json.body;\n\n// Validate required fields\nfor (const field of requiredFields) {\n  if (!body[field]) {\n    return [{\n      json: {\n        error: true,\n        status: 400,\n        message: `Missing required field: ${field}`,\n        request_id: body.request_id || 'unknown'\n      }\n    }];\n  }\n}\n\n// Normalize and enrich payload\nconst command = {\n  request_id: body.request_id,\n  actor: body.actor,\n  intent: body.intent || null,\n  integration: body.integration || null,\n  action: body.action,\n  params: body.params || {},\n  confirm: body.confirm === true,\n  correlation_id: body.correlation_id || body.request_id,\n  received_at: new Date().toISOString(),\n  execution_id: $execution.id,\n  workflow_name: $workflow.name\n};\n\nreturn [{ json: { error: false, command } }];"
+      },
+      "id": "validate-schema",
+      "name": "Validate & Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "check-valid",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": "={{ $json.status || 400 }}",
+        "responseBody": "={{ { error: $json.message, request_id: $json.request_id, timestamp: $now } }}"
+      },
+      "id": "error-response",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        880,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate environment variable before workflow execution\nconst workflowId = $env.WORKFLOW_ID_ROUTER;\n\nif (!workflowId || workflowId === '' || workflowId === 'undefined') {\n  return [{\n    json: {\n      error: true,\n      status: 500,\n      message: 'WORKFLOW_ID_ROUTER environment variable not configured. Set this to the numeric workflow ID of 02_router_integration_dispatch.',\n      request_id: $json.command?.request_id || 'unknown',\n      config_required: 'WORKFLOW_ID_ROUTER'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...$json,\n    _workflow_id: workflowId\n  }\n}];"
+      },
+      "id": "validate-router-id",
+      "name": "Validate Router Workflow ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "source": "parameter",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json._workflow_id }}"
+        }
+      },
+      "id": "call-router",
+      "name": "Call Integration Router",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        980,
+        180
+      ],
+      "notes": "Workflow ID validated by previous node. Set WORKFLOW_ID_ROUTER environment variable."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ $json }}"
+      },
+      "id": "success-response",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: POST /myca/command": {
+      "main": [
+        [
+          {
+            "node": "Validate & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Normalize": {
+      "main": [
+        [
+          {
+            "node": "Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid?": {
+      "main": [
+        [
+          {
+            "node": "Validate Router Workflow ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Router Workflow ID": {
+      "main": [
+        [
+          {
+            "node": "Call Integration Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Integration Router": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "1d0a1384-823f-4cdc-a168-686e927633d7",
+  "activeVersionId": "1d0a1384-823f-4cdc-a168-686e927633d7",
+  "versionCounter": 14,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:10:57.114Z",
+      "createdAt": "2026-01-27T06:10:57.114Z",
+      "role": "workflow:owner",
+      "workflowId": "cHsJEUEhpedSOuk3",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-12-17T00:00:00.000Z",
+      "createdAt": "2025-12-17T00:00:00.000Z",
+      "id": "myca-entrypoint",
+      "name": "MYCA Entrypoint"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-27T19:04:18.606Z",
+    "createdAt": "2026-01-27T19:04:18.606Z",
+    "versionId": "1d0a1384-823f-4cdc-a168-686e927633d7",
+    "workflowId": "cHsJEUEhpedSOuk3",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "myca/command",
+          "authentication": "none",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-command-entrypoint",
+        "name": "Webhook: POST /myca/command",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          240,
+          300
+        ],
+        "webhookId": "myca-command-api"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Validate and normalize incoming command\nconst requiredFields = ['request_id', 'actor', 'action'];\nconst body = $input.item.json.body;\n\n// Validate required fields\nfor (const field of requiredFields) {\n  if (!body[field]) {\n    return [{\n      json: {\n        error: true,\n        status: 400,\n        message: `Missing required field: ${field}`,\n        request_id: body.request_id || 'unknown'\n      }\n    }];\n  }\n}\n\n// Normalize and enrich payload\nconst command = {\n  request_id: body.request_id,\n  actor: body.actor,\n  intent: body.intent || null,\n  integration: body.integration || null,\n  action: body.action,\n  params: body.params || {},\n  confirm: body.confirm === true,\n  correlation_id: body.correlation_id || body.request_id,\n  received_at: new Date().toISOString(),\n  execution_id: $execution.id,\n  workflow_name: $workflow.name\n};\n\nreturn [{ json: { error: false, command } }];"
+        },
+        "id": "validate-schema",
+        "name": "Validate & Normalize",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          460,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "boolean": [
+              {
+                "value1": "={{ $json.error }}",
+                "value2": false
+              }
+            ]
+          }
+        },
+        "id": "check-valid",
+        "name": "Valid?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          680,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseCode": "={{ $json.status || 400 }}",
+          "responseBody": "={{ { error: $json.message, request_id: $json.request_id, timestamp: $now } }}"
+        },
+        "id": "error-response",
+        "name": "Return Error",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          880,
+          420
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Validate environment variable before workflow execution\nconst workflowId = $env.WORKFLOW_ID_ROUTER;\n\nif (!workflowId || workflowId === '' || workflowId === 'undefined') {\n  return [{\n    json: {\n      error: true,\n      status: 500,\n      message: 'WORKFLOW_ID_ROUTER environment variable not configured. Set this to the numeric workflow ID of 02_router_integration_dispatch.',\n      request_id: $json.command?.request_id || 'unknown',\n      config_required: 'WORKFLOW_ID_ROUTER'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ...$json,\n    _workflow_id: workflowId\n  }\n}];"
+        },
+        "id": "validate-router-id",
+        "name": "Validate Router Workflow ID",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          180
+        ]
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "source": "parameter",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $json._workflow_id }}"
+          }
+        },
+        "id": "call-router",
+        "name": "Call Integration Router",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.1,
+        "position": [
+          980,
+          180
+        ],
+        "notes": "Workflow ID validated by previous node. Set WORKFLOW_ID_ROUTER environment variable."
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseCode": 200,
+          "responseBody": "={{ $json }}"
+        },
+        "id": "success-response",
+        "name": "Return Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          1100,
+          180
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook: POST /myca/command": {
+        "main": [
+          [
+            {
+              "node": "Validate & Normalize",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate & Normalize": {
+        "main": [
+          [
+            {
+              "node": "Valid?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Valid?": {
+        "main": [
+          [
+            {
+              "node": "Validate Router Workflow ID",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Router Workflow ID": {
+        "main": [
+          [
+            {
+              "node": "Call Integration Router",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call Integration Router": {
+        "main": [
+          [
+            {
+              "node": "Return Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Morgan Mushroom",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-27T19:04:20.810Z",
+        "id": 41,
+        "workflowId": "cHsJEUEhpedSOuk3",
+        "versionId": "1d0a1384-823f-4cdc-a168-686e927633d7",
+        "event": "activated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      }
+    ]
+  }
+}

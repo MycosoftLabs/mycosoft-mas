@@ -100,22 +100,21 @@
             display: grid;
             grid-template-rows: 1fr auto;
             background: var(--bg-dark);
-            overflow: hidden;
         }
         
-        /* Conversation Panel */
         .conversation-panel {
             display: grid;
-            grid-template-columns: 1fr 300px;
+            grid-template-columns: 1fr 280px;
+            gap: 1px;
+            background: var(--border);
             overflow: hidden;
         }
         
         /* Chat Area */
         .chat-area {
+            background: var(--bg-panel);
             display: flex;
             flex-direction: column;
-            background: var(--bg-panel);
-            border-right: 1px solid var(--border);
         }
         
         .chat-header {
@@ -123,7 +122,6 @@
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
-            align-items: center;
             font-size: 0.8rem;
             color: var(--text-dim);
         }
@@ -132,28 +130,24 @@
             flex: 1;
             overflow-y: auto;
             padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
         }
         
         .message {
-            max-width: 80%;
             padding: 0.75rem 1rem;
-            border-radius: 1rem;
-            position: relative;
+            margin-bottom: 0.75rem;
+            border-radius: 0.75rem;
+            max-width: 85%;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
         
         .message.user {
             background: var(--user-msg);
-            align-self: flex-end;
-            border-bottom-right-radius: 0.25rem;
+            margin-left: auto;
         }
         
         .message.assistant {
             background: var(--myca-msg);
-            align-self: flex-start;
-            border-bottom-left-radius: 0.25rem;
         }
         
         .message-meta {
@@ -161,7 +155,7 @@
             color: rgba(255,255,255,0.5);
             margin-top: 0.5rem;
             display: flex;
-            gap: 0.5rem;
+            gap: 1rem;
         }
         
         .message-latency {
@@ -172,7 +166,7 @@
         .duplex-viz {
             background: var(--bg-card);
             border-radius: 0.5rem;
-            padding: 0.75rem;
+            padding: 0.5rem;
             margin-bottom: 0.5rem;
         }
         
@@ -180,78 +174,62 @@
             display: flex;
             justify-content: space-between;
             font-size: 0.7rem;
+            color: var(--text-dim);
             margin-bottom: 0.5rem;
         }
         
         .duplex-timeline {
-            height: 60px;
-            background: var(--bg-dark);
-            border-radius: 0.25rem;
-            position: relative;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
         
         .duplex-track {
-            position: absolute;
-            height: 25px;
-            left: 0;
-            right: 0;
+            height: 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 3px;
+            position: relative;
+            display: flex;
+            align-items: center;
         }
         
-        .duplex-track.user { top: 5px; }
-        .duplex-track.myca { bottom: 5px; }
+        .duplex-label {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            padding: 0 0.5rem;
+            width: 40px;
+        }
         
         .duplex-bar {
             position: absolute;
             height: 100%;
-            border-radius: 2px;
+            border-radius: 3px;
             opacity: 0.8;
         }
         
-        .duplex-bar.speaking { background: var(--success); }
+        .duplex-bar.speaking { background: var(--accent); }
         .duplex-bar.listening { background: var(--accent-blue); }
         .duplex-bar.processing { background: var(--warning); }
         
-        .duplex-label {
-            position: absolute;
-            left: 4px;
-            font-size: 0.6rem;
-            color: rgba(255,255,255,0.6);
-        }
-        
-        .duplex-track.user .duplex-label { top: 4px; }
-        .duplex-track.myca .duplex-label { top: 4px; }
-        
         /* Flow Panel */
         .flow-panel {
-            background: var(--bg-card);
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border);
             overflow-y: auto;
-            padding: 0.75rem;
         }
         
         .flow-header {
-            font-size: 0.75rem;
-            color: var(--accent-blue);
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.5rem;
+            padding: 0.75rem 1rem;
             border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            color: var(--text-dim);
         }
         
         .flow-item {
-            background: var(--bg-panel);
-            border-radius: 0.5rem;
             padding: 0.5rem 0.75rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.7rem;
-            border-left: 3px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
         }
-        
-        .flow-item.service { border-left-color: var(--accent-blue); }
-        .flow-item.llm { border-left-color: var(--accent); }
-        .flow-item.api { border-left-color: var(--success); }
-        .flow-item.agent { border-left-color: var(--warning); }
-        .flow-item.tool { border-left-color: #f472b6; }
-        .flow-item.memory { border-left-color: #a78bfa; }
         
         .flow-item-header {
             display: flex;
@@ -260,32 +238,39 @@
         }
         
         .flow-item-type {
+            font-weight: bold;
             text-transform: uppercase;
-            font-size: 0.6rem;
-            padding: 0.1rem 0.3rem;
-            border-radius: 0.2rem;
-            background: rgba(255,255,255,0.1);
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 3px;
         }
+        
+        .flow-item.service .flow-item-type { background: #1e3a5f; color: var(--accent-blue); }
+        .flow-item.api .flow-item-type { background: #1a4731; color: var(--success); }
+        .flow-item.llm .flow-item-type { background: #4a1d96; color: #a78bfa; }
+        .flow-item.memory .flow-item-type { background: #78350f; color: var(--warning); }
+        .flow-item.agent .flow-item-type { background: #134e4a; color: #5eead4; }
+        .flow-item.tool .flow-item-type { background: #701a75; color: #f0abfc; }
         
         .flow-item-time {
             color: var(--text-dim);
+            font-size: 0.65rem;
         }
         
         .flow-item-content {
             color: var(--text);
-            word-break: break-word;
         }
         
         .flow-item-detail {
             color: var(--text-dim);
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             margin-top: 0.25rem;
         }
         
         /* Input Area */
         .input-area {
-            background: var(--bg-panel);
             padding: 1rem;
+            background: var(--bg-panel);
             border-top: 1px solid var(--border);
             display: flex;
             gap: 0.75rem;
@@ -293,22 +278,18 @@
         }
         
         .mic-viz {
-            width: 60px;
-            height: 40px;
-            background: var(--bg-card);
-            border-radius: 0.5rem;
             display: flex;
-            align-items: center;
-            justify-content: center;
             gap: 2px;
+            align-items: center;
+            height: 35px;
+            padding: 0 0.5rem;
         }
         
         .mic-bar {
-            width: 3px;
+            width: 4px;
             background: var(--accent);
-            border-radius: 1px;
-            height: 10px;
-            transition: height 0.05s;
+            border-radius: 2px;
+            transition: height 0.1s ease;
         }
         
         .voice-btn {
@@ -316,18 +297,31 @@
             height: 50px;
             border-radius: 50%;
             border: none;
-            background: linear-gradient(135deg, var(--accent), var(--accent-blue));
+            background: var(--accent);
             color: white;
             font-size: 1.5rem;
             cursor: pointer;
             transition: all 0.2s;
         }
         
-        .voice-btn:hover { transform: scale(1.05); }
-        .voice-btn.recording { background: var(--error); animation: pulse 0.5s infinite; }
-        .voice-btn.processing { animation: spin 1s linear infinite; }
+        .voice-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+        }
         
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .voice-btn.recording {
+            background: var(--error);
+            animation: pulse 1s infinite;
+        }
+        
+        .voice-btn.processing {
+            background: var(--warning);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
         
         .text-input {
             flex: 1;
@@ -336,8 +330,8 @@
             border: 1px solid var(--border);
             background: var(--bg-card);
             color: var(--text);
-            font-family: inherit;
             font-size: 0.9rem;
+            font-family: inherit;
         }
         
         .text-input:focus {
@@ -346,23 +340,25 @@
         }
         
         .send-btn {
-            padding: 0.75rem 1.25rem;
+            padding: 0.75rem 1.5rem;
             border-radius: 0.5rem;
             border: none;
             background: var(--accent);
             color: white;
             cursor: pointer;
-            font-family: inherit;
+            font-size: 0.9rem;
         }
         
-        .send-btn:hover { background: #6d28d9; }
+        .send-btn:hover {
+            background: #6d28d9;
+        }
         
-        /* Right Sidebar - Logs & Debug */
+        /* Sidebar */
         .sidebar {
+            background: var(--bg-panel);
             display: flex;
             flex-direction: column;
-            background: var(--bg-panel);
-            overflow: hidden;
+            border-left: 1px solid var(--border);
         }
         
         .sidebar-tabs {
@@ -373,58 +369,83 @@
         .sidebar-tab {
             flex: 1;
             padding: 0.5rem;
-            text-align: center;
-            font-size: 0.7rem;
-            color: var(--text-dim);
-            cursor: pointer;
             border: none;
             background: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: inherit;
         }
         
         .sidebar-tab.active {
-            color: var(--accent);
+            color: var(--text);
             border-bottom: 2px solid var(--accent);
         }
         
         .sidebar-content {
             flex: 1;
-            overflow-y: auto;
+            overflow: hidden;
         }
         
-        /* Terminal Logs */
+        /* Terminal */
         .terminal {
-            font-family: 'SF Mono', monospace;
-            font-size: 0.7rem;
+            height: 100%;
+            overflow-y: auto;
             padding: 0.5rem;
-            line-height: 1.5;
+            font-size: 0.7rem;
         }
         
         .log-entry {
-            padding: 0.2rem 0;
+            padding: 0.25rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
         
         .log-time {
             color: var(--text-dim);
+            min-width: 80px;
         }
         
         .log-level {
-            padding: 0.1rem 0.3rem;
-            border-radius: 0.2rem;
-            font-size: 0.6rem;
-            margin: 0 0.3rem;
+            font-weight: bold;
+            min-width: 40px;
         }
         
-        .log-level.info { background: var(--accent-blue); color: black; }
-        .log-level.debug { background: var(--text-dim); color: black; }
-        .log-level.warn { background: var(--warning); color: black; }
-        .log-level.error { background: var(--error); }
-        .log-level.api { background: var(--success); color: black; }
-        .log-level.llm { background: var(--accent); }
+        .log-level.info { color: var(--accent-blue); }
+        .log-level.warn { color: var(--warning); }
+        .log-level.error { color: var(--error); }
+        .log-level.debug { color: var(--text-dim); }
+        .log-level.api { color: var(--success); }
+        .log-level.llm { color: #a78bfa; }
+        
+        /* Metrics Panel */
+        .metrics-panel {
+            padding: 0.75rem;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+        
+        .metric-value {
+            font-weight: bold;
+        }
+        
+        .metric-value.good { color: var(--success); }
+        .metric-value.warn { color: var(--warning); }
+        .metric-value.bad { color: var(--error); }
         
         /* Agent Panel */
         .agent-panel {
-            padding: 0.75rem;
+            padding: 0.5rem;
+            overflow-y: auto;
+            height: 100%;
         }
         
         .agent-card {
@@ -437,66 +458,125 @@
         .agent-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
             margin-bottom: 0.5rem;
         }
         
         .agent-name {
             font-weight: bold;
-            color: var(--accent);
+            font-size: 0.8rem;
         }
         
         .agent-status {
-            font-size: 0.6rem;
-            padding: 0.1rem 0.4rem;
-            border-radius: 1rem;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 3px;
             background: var(--success);
-            color: black;
+            color: #000;
         }
         
         .agent-action {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-dim);
         }
-        
-        /* Metrics Panel */
-        .metrics-panel {
-            padding: 0.75rem;
-        }
-        
-        .metric-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.4rem 0;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.75rem;
-        }
-        
-        .metric-value {
-            color: var(--accent-blue);
-            font-weight: bold;
-        }
-        
-        .metric-value.good { color: var(--success); }
-        .metric-value.warn { color: var(--warning); }
-        .metric-value.bad { color: var(--error); }
         
         /* Footer */
         .footer {
             grid-column: 1 / -1;
-            background: var(--bg-panel);
             padding: 0.5rem 1rem;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             font-size: 0.7rem;
             color: var(--text-dim);
-            border-top: 1px solid var(--border);
         }
         
         .footer a {
             color: var(--accent);
             text-decoration: none;
+            margin-right: 1rem;
         }
+        
+        /* Config Panel */
+        .config-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            z-index: 1000;
+            min-width: 400px;
+            display: none;
+        }
+        
+        .config-panel.show { display: block; }
+        
+        .config-panel h3 {
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+        
+        .config-row {
+            margin-bottom: 1rem;
+        }
+        
+        .config-row label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        .config-row input, .config-row select {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            font-family: inherit;
+        }
+        
+        .config-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .config-buttons button {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        .config-save {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .config-cancel {
+            background: var(--border);
+            color: var(--text);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .overlay.show { display: block; }
         
         /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
@@ -515,21 +595,22 @@
             </div>
             <div class="status-bar">
                 <div class="status-item">
-                    <div class="status-dot ok" id="statusMoshi"></div>
-                    <span>Moshi (8998)</span>
+                    <div class="status-dot" id="statusWhisper"></div>
+                    <span>Whisper</span>
                 </div>
                 <div class="status-item">
-                    <div class="status-dot ok" id="statusBridge"></div>
-                    <span>Bridge (8999)</span>
+                    <div class="status-dot" id="statusOllama"></div>
+                    <span>Ollama</span>
                 </div>
                 <div class="status-item">
-                    <div class="status-dot ok" id="statusMAS"></div>
-                    <span>MAS VM (8001)</span>
+                    <div class="status-dot" id="statusTTS"></div>
+                    <span>TTS</span>
                 </div>
                 <div class="status-item">
-                    <div class="status-dot ok" id="statusRedis"></div>
-                    <span>Redis</span>
+                    <div class="status-dot" id="statusMAS"></div>
+                    <span>MAS API</span>
                 </div>
+                <button style="background: var(--accent); border: none; padding: 4px 8px; border-radius: 4px; color: white; cursor: pointer; font-size: 0.7rem;" onclick="showConfig()">Config</button>
             </div>
         </header>
         
@@ -581,7 +662,7 @@
                                 <span class="flow-item-time">00:00:00</span>
                             </div>
                             <div class="flow-item-content">System initialized</div>
-                            <div class="flow-item-detail">PersonaPlex + MAS ready</div>
+                            <div class="flow-item-detail">Debug console ready</div>
                         </div>
                     </div>
                 </div>
@@ -601,6 +682,7 @@
                 <button class="voice-btn" id="voiceBtn" title="Hold to speak">🎤</button>
                 <input type="text" class="text-input" id="textInput" placeholder="Type a message or hold mic button to speak...">
                 <button class="send-btn" id="sendBtn">Send</button>
+                <audio id="audioPlayer" style="display: none;"></audio>
             </div>
         </main>
         
@@ -635,15 +717,19 @@
                 <!-- Metrics Tab -->
                 <div id="metricsTab" class="metrics-panel" style="display: none;">
                     <div class="metric-row">
-                        <span>Moshi Latency</span>
-                        <span class="metric-value good" id="metricMoshi">30ms</span>
+                        <span>STT Latency</span>
+                        <span class="metric-value" id="metricSTT">--</span>
                     </div>
                     <div class="metric-row">
-                        <span>API Round-trip</span>
-                        <span class="metric-value" id="metricAPI">--</span>
+                        <span>LLM Latency</span>
+                        <span class="metric-value" id="metricLLM">--</span>
                     </div>
                     <div class="metric-row">
-                        <span>Total Response</span>
+                        <span>TTS Latency</span>
+                        <span class="metric-value" id="metricTTS">--</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Total Round-trip</span>
                         <span class="metric-value" id="metricTotal">--</span>
                     </div>
                     <div class="metric-row">
@@ -658,10 +744,6 @@
                         <span>Agent Calls</span>
                         <span class="metric-value" id="metricAgents">0</span>
                     </div>
-                    <div class="metric-row">
-                        <span>Tool Calls</span>
-                        <span class="metric-value" id="metricTools">0</span>
-                    </div>
                 </div>
             </div>
         </aside>
@@ -669,21 +751,56 @@
         <!-- Footer -->
         <footer class="footer">
             <div>
-                <a href="http://localhost:8998" target="_blank">Moshi UI</a> |
-                <a href="http://192.168.0.188:5678" target="_blank">n8n</a> |
+                <a href="http://192.168.0.188:5678" target="_blank">n8n</a>
                 <a href="http://192.168.0.188:8001/docs" target="_blank">MAS API</a>
+                <a href="http://localhost:11434" target="_blank">Ollama</a>
             </div>
-            <div id="footerStatus">Ready</div>
+            <div id="footerStatus">Ready - Configure endpoints above</div>
         </footer>
+    </div>
+    
+    <!-- Config Panel -->
+    <div class="overlay" id="overlay"></div>
+    <div class="config-panel" id="configPanel">
+        <h3>🔧 API Configuration</h3>
+        <div class="config-row">
+            <label>Mode</label>
+            <select id="configMode">
+                <option value="local">Local (localhost)</option>
+                <option value="vm">MAS VM (192.168.0.188)</option>
+                <option value="custom">Custom</option>
+            </select>
+        </div>
+        <div class="config-row">
+            <label>Whisper STT URL</label>
+            <input type="text" id="configWhisper" placeholder="http://localhost:8080/v1/audio/transcriptions">
+        </div>
+        <div class="config-row">
+            <label>LLM Chat URL (Ollama)</label>
+            <input type="text" id="configLLM" placeholder="http://localhost:11434/api/chat">
+        </div>
+        <div class="config-row">
+            <label>TTS URL</label>
+            <input type="text" id="configTTS" placeholder="http://localhost:5002/v1/audio/speech">
+        </div>
+        <div class="config-row">
+            <label>LLM Model</label>
+            <input type="text" id="configModel" value="llama3.2:3b">
+        </div>
+        <div class="config-buttons">
+            <button class="config-cancel" onclick="hideConfig()">Cancel</button>
+            <button class="config-save" onclick="saveConfig()">Save & Test</button>
+        </div>
     </div>
 
     <script>
-        // Configuration
+        // Default Configuration - Try multiple endpoints
         const CONFIG = {
-            MAS_URL: 'http://192.168.0.188:8001',
-            BRIDGE_URL: 'http://localhost:8999',
-            MOSHI_URL: 'http://localhost:8998',
-            MOSHI_WS: 'ws://localhost:8998/api/chat'
+            WHISPER_URL: 'http://localhost:8080/v1/audio/transcriptions',
+            LLM_URL: 'http://localhost:11434/api/chat',
+            TTS_URL: 'http://localhost:5002/v1/audio/speech',
+            MODEL: 'llama3.2:3b',
+            MAS_URL: 'http://192.168.0.188:8001'
         };
         
         // State
@@ -693,7 +810,6 @@
             turnCount: 0,
             memoryWrites: 0,
             agentCalls: 0,
-            toolCalls: 0,
             isRecording: false,
             duplexBars: [],
             duplexStartTime: null,
@@ -701,7 +817,8 @@
             audioChunks: [],
             audioContext: null,
             analyser: null,
-            micStream: null
+            micStream: null,
+            conversationHistory: []
         };
         
         // DOM Elements
@@ -718,7 +835,8 @@
             duplexTimeline: document.getElementById('duplexTimeline'),
             duplexStatus: document.getElementById('duplexStatus'),
             sessionId: document.getElementById('sessionId'),
-            footerStatus: document.getElementById('footerStatus')
+            footerStatus: document.getElementById('footerStatus'),
+            audioPlayer: document.getElementById('audioPlayer')
         };
         
         // Initialize
@@ -726,11 +844,61 @@
             state.sessionId = 'session_' + Date.now().toString(36);
             elements.sessionId.textContent = 'Session: ' + state.sessionId.slice(-8);
             
+            loadConfig();
             checkServices();
             setInterval(checkServices, 30000);
             
             setupEventListeners();
             log('INFO', 'Debug console ready');
+        });
+        
+        // Config Panel
+        function showConfig() {
+            document.getElementById('overlay').classList.add('show');
+            document.getElementById('configPanel').classList.add('show');
+            document.getElementById('configWhisper').value = CONFIG.WHISPER_URL;
+            document.getElementById('configLLM').value = CONFIG.LLM_URL;
+            document.getElementById('configTTS').value = CONFIG.TTS_URL;
+            document.getElementById('configModel').value = CONFIG.MODEL;
+        }
+        
+        function hideConfig() {
+            document.getElementById('overlay').classList.remove('show');
+            document.getElementById('configPanel').classList.remove('show');
+        }
+        
+        function saveConfig() {
+            CONFIG.WHISPER_URL = document.getElementById('configWhisper').value;
+            CONFIG.LLM_URL = document.getElementById('configLLM').value;
+            CONFIG.TTS_URL = document.getElementById('configTTS').value;
+            CONFIG.MODEL = document.getElementById('configModel').value;
+            
+            localStorage.setItem('myca_debug_config', JSON.stringify(CONFIG));
+            log('INFO', 'Configuration saved');
+            hideConfig();
+            checkServices();
+        }
+        
+        function loadConfig() {
+            const saved = localStorage.getItem('myca_debug_config');
+            if (saved) {
+                const cfg = JSON.parse(saved);
+                Object.assign(CONFIG, cfg);
+                log('INFO', 'Loaded saved configuration');
+            }
+        }
+        
+        document.getElementById('configMode').addEventListener('change', (e) => {
+            const mode = e.target.value;
+            if (mode === 'local') {
+                document.getElementById('configWhisper').value = 'http://localhost:8080/v1/audio/transcriptions';
+                document.getElementById('configLLM').value = 'http://localhost:11434/api/chat';
+                document.getElementById('configTTS').value = 'http://localhost:5002/v1/audio/speech';
+            } else if (mode === 'vm') {
+                document.getElementById('configWhisper').value = 'http://192.168.0.188:8080/v1/audio/transcriptions';
+                document.getElementById('configLLM').value = 'http://192.168.0.188:11434/api/chat';
+                document.getElementById('configTTS').value = 'http://192.168.0.188:5002/v1/audio/speech';
+            }
         });
         
         // Event Listeners
@@ -744,6 +912,8 @@
             elements.voiceBtn.addEventListener('mousedown', startRecording);
             elements.voiceBtn.addEventListener('mouseup', stopRecording);
             elements.voiceBtn.addEventListener('mouseleave', stopRecording);
+            elements.voiceBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
+            elements.voiceBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
             
             // Text input
             elements.sendBtn.addEventListener('click', sendTextMessage);
@@ -791,7 +961,6 @@
             `;
             elements.flowItems.insertBefore(item, elements.flowItems.firstChild.nextSibling);
             
-            // Keep max 50 items
             while (elements.flowItems.children.length > 51) {
                 elements.flowItems.removeChild(elements.flowItems.lastChild);
             }
@@ -801,18 +970,14 @@
         function addDuplexBar(track, type, startPercent, widthPercent) {
             const bar = document.createElement('div');
             bar.className = `duplex-bar ${type}`;
-            bar.style.left = `${startPercent}%`;
+            bar.style.left = `${startPercent + 40}px`;
             bar.style.width = `${widthPercent}%`;
             
             const trackEl = elements.duplexTimeline.querySelector(`.duplex-track.${track}`);
             trackEl.appendChild(bar);
-            state.duplexBars.push(bar);
             
-            // Keep max 20 bars per track
             const bars = trackEl.querySelectorAll('.duplex-bar');
-            if (bars.length > 20) {
-                bars[0].remove();
-            }
+            if (bars.length > 20) bars[0].remove();
         }
         
         function updateDuplexStatus(status) {
@@ -832,14 +997,18 @@
         // Service Health Check
         async function checkServices() {
             const checks = [
-                { id: 'statusMoshi', url: CONFIG.MOSHI_URL, name: 'Moshi' },
-                { id: 'statusBridge', url: CONFIG.BRIDGE_URL + '/health', name: 'Bridge' },
+                { id: 'statusWhisper', url: CONFIG.WHISPER_URL.replace('/v1/audio/transcriptions', ''), name: 'Whisper' },
+                { id: 'statusOllama', url: CONFIG.LLM_URL.replace('/api/chat', '/api/tags'), name: 'Ollama' },
+                { id: 'statusTTS', url: CONFIG.TTS_URL.replace('/v1/audio/speech', ''), name: 'TTS' },
                 { id: 'statusMAS', url: CONFIG.MAS_URL + '/health', name: 'MAS' }
             ];
             
             for (const check of checks) {
                 try {
-                    const res = await fetch(check.url, { method: 'GET', mode: 'cors' });
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 3000);
+                    const res = await fetch(check.url, { method: 'GET', signal: controller.signal });
+                    clearTimeout(timeout);
                     document.getElementById(check.id).className = res.ok ? 'status-dot ok' : 'status-dot warn';
                 } catch {
                     document.getElementById(check.id).className = 'status-dot error';
@@ -861,13 +1030,12 @@
                 source.connect(state.analyser);
                 state.analyser.fftSize = 32;
                 
-                // Start visualization
                 visualizeMic();
                 
                 // Set up recording
                 const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
                     ? 'audio/webm;codecs=opus' 
-                    : 'audio/webm';
+                    : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
                 state.mediaRecorder = new MediaRecorder(state.micStream, { mimeType });
                 state.audioChunks = [];
                 
@@ -886,6 +1054,7 @@
                 
             } catch (err) {
                 log('ERROR', 'Microphone error', err.message);
+                addFlowItem('service', 'Mic Error', err.message);
             }
         }
         
@@ -893,14 +1062,17 @@
             if (!state.isRecording) return;
             
             state.isRecording = false;
-            state.mediaRecorder.stop();
-            state.micStream.getTracks().forEach(t => t.stop());
+            if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') {
+                state.mediaRecorder.stop();
+            }
+            if (state.micStream) {
+                state.micStream.getTracks().forEach(t => t.stop());
+            }
             
             elements.voiceBtn.classList.remove('recording');
             elements.voiceBtn.textContent = '🎤';
             updateDuplexStatus('Processing...');
             
-            // Add user speaking bar to duplex viz
             const duration = Date.now() - state.duplexStartTime;
             addDuplexBar('user', 'speaking', 0, Math.min(50, duration / 100));
             
@@ -922,124 +1094,186 @@
         async function processRecording() {
             elements.voiceBtn.classList.add('processing');
             log('INFO', 'Processing audio...');
-            addFlowItem('service', 'Audio processing', 'Sending to transcription');
+            addFlowItem('service', 'Audio processing', 'Sending to Whisper STT');
             
             const audioBlob = new Blob(state.audioChunks, { type: 'audio/webm' });
-            
-            // For now, show a prompt to use text input
-            // In full implementation, this would send to Whisper or Moshi
             log('DEBUG', 'Audio blob created', `${(audioBlob.size / 1024).toFixed(1)} KB`);
             
-            // Simulate transcription (replace with actual Whisper call)
-            setTimeout(() => {
+            const sttStart = Date.now();
+            
+            try {
+                // Transcribe with Whisper
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'audio.webm');
+                formData.append('model', 'Systran/faster-whisper-base.en');
+                formData.append('response_format', 'json');
+                
+                addFlowItem('api', 'POST Whisper STT', CONFIG.WHISPER_URL);
+                
+                const transcribeRes = await fetch(CONFIG.WHISPER_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const sttDuration = Date.now() - sttStart;
+                document.getElementById('metricSTT').textContent = `${sttDuration}ms`;
+                document.getElementById('metricSTT').className = 'metric-value ' + (sttDuration < 500 ? 'good' : sttDuration < 2000 ? 'warn' : 'bad');
+                
+                if (!transcribeRes.ok) {
+                    const errText = await transcribeRes.text().catch(() => '');
+                    throw new Error(`Whisper failed (${transcribeRes.status}): ${errText.slice(0, 100)}`);
+                }
+                
+                const transcript = await transcribeRes.json();
+                const userMessage = transcript.text;
+                
+                log('API', `Transcription complete (${sttDuration}ms)`, userMessage.slice(0, 50));
+                addFlowItem('api', 'STT Response', userMessage.slice(0, 60), sttDuration);
+                
+                addChatMessage(userMessage, 'user');
+                
+                // Send to LLM with audio response
+                await callLLMWithTTS(userMessage);
+                
+            } catch (err) {
+                log('ERROR', 'STT failed', err.message);
+                addFlowItem('service', 'STT Error', err.message);
+                addChatMessage('Voice transcription failed. Please try text input or check Whisper service.', 'assistant');
+                updateDuplexStatus('Error');
+            } finally {
                 elements.voiceBtn.classList.remove('processing');
-                log('WARN', 'Voice transcription requires Whisper service');
-                addFlowItem('service', 'Transcription pending', 'Use text input for now');
-                updateDuplexStatus('Ready');
-            }, 500);
+            }
         }
         
-        // Text Message
+        // Text Message (no TTS)
         async function sendTextMessage() {
             const message = elements.textInput.value.trim();
             if (!message) return;
             
             elements.textInput.value = '';
-            const startTime = Date.now();
-            
-            // Add user message to chat
             addChatMessage(message, 'user');
             log('INFO', `User: ${message.slice(0, 50)}...`);
             addFlowItem('service', 'User message received', message.slice(0, 80));
-            
-            // Add to duplex viz
             addDuplexBar('user', 'speaking', 0, 30);
             updateDuplexStatus('Sending to MYCA...');
             
+            await callLLM(message, false);
+        }
+        
+        // Call LLM (Ollama)
+        async function callLLM(message, withTTS = false) {
+            const startTime = Date.now();
+            
             try {
-                // Call MAS Orchestrator
-                log('API', 'Calling MAS orchestrator...');
-                addFlowItem('api', 'POST /voice/orchestrator/chat', CONFIG.MAS_URL);
+                // Build conversation history
+                state.conversationHistory.push({ role: 'user', content: message });
                 
-                const apiStart = Date.now();
-                const response = await fetch(`${CONFIG.MAS_URL}/voice/orchestrator/chat`, {
+                // Keep last 10 messages
+                if (state.conversationHistory.length > 10) {
+                    state.conversationHistory = state.conversationHistory.slice(-10);
+                }
+                
+                log('LLM', 'Calling Ollama...');
+                addFlowItem('llm', `POST ${CONFIG.MODEL}`, CONFIG.LLM_URL);
+                
+                const llmStart = Date.now();
+                const response = await fetch(CONFIG.LLM_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message: message,
-                        conversation_id: state.conversationId,
-                        session_id: state.sessionId,
-                        source: 'debug-console',
-                        modality: 'text'
+                        model: CONFIG.MODEL,
+                        messages: [
+                            { 
+                                role: 'system', 
+                                content: `You are MYCA (My Companion AI), the intelligent orchestrator for Mycosoft. You are helpful, knowledgeable about mycology, fungi, biotechnology, and Mycosoft's mission. Keep responses concise but informative.` 
+                            },
+                            ...state.conversationHistory
+                        ],
+                        stream: false
                     })
                 });
                 
-                const apiDuration = Date.now() - apiStart;
+                const llmDuration = Date.now() - llmStart;
+                document.getElementById('metricLLM').textContent = `${llmDuration}ms`;
+                document.getElementById('metricLLM').className = 'metric-value ' + (llmDuration < 1000 ? 'good' : llmDuration < 3000 ? 'warn' : 'bad');
                 
                 if (!response.ok) {
-                    throw new Error(`API error: ${response.status}`);
+                    throw new Error(`LLM error: ${response.status}`);
                 }
                 
                 const data = await response.json();
-                const totalDuration = Date.now() - startTime;
+                const assistantText = data?.message?.content ?? '(no response)';
                 
-                // Update state
-                state.conversationId = data.conversation_id || state.conversationId;
+                state.conversationHistory.push({ role: 'assistant', content: assistantText });
                 state.turnCount++;
                 
-                // Log the response
-                log('API', `Response received (${apiDuration}ms)`, data.agent_name);
-                addFlowItem('llm', 'MYCA Response', data.response_text.slice(0, 80), apiDuration);
+                log('LLM', `Response received (${llmDuration}ms)`, assistantText.slice(0, 50));
+                addFlowItem('llm', 'MYCA Response', assistantText.slice(0, 80), llmDuration);
                 
-                // Check for actions taken
-                if (data.actions_taken && data.actions_taken.length > 0) {
-                    data.actions_taken.forEach(action => {
-                        if (action.type === 'memory_write') {
-                            state.memoryWrites++;
-                            addFlowItem('memory', 'Memory Write', action.detail.key || 'conversation');
-                            log('DEBUG', 'Memory write', action.detail.scope);
-                        } else if (action.type === 'workflow_executed') {
-                            addFlowItem('tool', 'Workflow Executed', action.detail.workflow);
-                            state.toolCalls++;
-                            log('LLM', 'Workflow called', action.detail.workflow);
-                        } else if (action.type === 'agent_routed') {
-                            state.agentCalls++;
-                            addFlowItem('agent', 'Agent Routed', action.detail.agent);
-                            updateAgentPanel(action.detail.agent);
-                        }
-                    });
-                }
-                
-                // Check session context
-                if (data.session_context) {
-                    if (data.session_context.active_agents && data.session_context.active_agents.length > 0) {
-                        data.session_context.active_agents.forEach(agent => {
-                            addFlowItem('agent', `Agent Active: ${agent}`, 'Processing request');
-                        });
-                    }
-                }
-                
-                // Add MYCA message to chat
-                addChatMessage(data.response_text, 'assistant', {
-                    latency: apiDuration,
-                    agent: data.agent_name
-                });
-                
-                // Add to duplex viz
+                addChatMessage(assistantText, 'assistant', { latency: llmDuration, agent: 'MYCA' });
                 addDuplexBar('myca', 'speaking', 35, 40);
-                updateDuplexStatus('Complete');
                 
                 // Update metrics
-                updateMetrics(apiDuration, totalDuration);
+                const totalDuration = Date.now() - startTime;
+                document.getElementById('metricTotal').textContent = `${totalDuration}ms`;
+                document.getElementById('metricTotal').className = 'metric-value ' + (totalDuration < 2000 ? 'good' : totalDuration < 5000 ? 'warn' : 'bad');
+                document.getElementById('metricTurns').textContent = state.turnCount;
                 
-                log('INFO', `Turn ${state.turnCount} complete (${totalDuration}ms total)`);
-                elements.footerStatus.textContent = `Last response: ${apiDuration}ms`;
+                updateDuplexStatus('Complete');
+                elements.footerStatus.textContent = `Last response: ${llmDuration}ms`;
+                
+                // Generate TTS if requested
+                if (withTTS) {
+                    await generateTTS(assistantText);
+                }
                 
             } catch (err) {
-                log('ERROR', 'Request failed', err.message);
+                log('ERROR', 'LLM request failed', err.message);
                 addFlowItem('service', 'Error', err.message);
-                addChatMessage("I'm having trouble connecting. Please check the services.", 'assistant');
+                addChatMessage("I'm having trouble connecting to the LLM. Please check Ollama is running.", 'assistant');
                 updateDuplexStatus('Error');
+            }
+        }
+        
+        // Call LLM with TTS (for voice mode)
+        async function callLLMWithTTS(message) {
+            await callLLM(message, true);
+        }
+        
+        // Generate TTS
+        async function generateTTS(text) {
+            const ttsStart = Date.now();
+            log('API', 'Generating speech...');
+            addFlowItem('api', 'POST TTS', CONFIG.TTS_URL);
+            
+            try {
+                const response = await fetch(CONFIG.TTS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'tts-1',
+                        voice: 'alloy',
+                        input: text
+                    })
+                });
+                
+                const ttsDuration = Date.now() - ttsStart;
+                document.getElementById('metricTTS').textContent = `${ttsDuration}ms`;
+                document.getElementById('metricTTS').className = 'metric-value ' + (ttsDuration < 1000 ? 'good' : ttsDuration < 3000 ? 'warn' : 'bad');
+                
+                if (response.ok) {
+                    const audioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    elements.audioPlayer.src = audioUrl;
+                    elements.audioPlayer.play();
+                    
+                    log('API', `TTS complete (${ttsDuration}ms)`);
+                    addFlowItem('api', 'TTS Audio', `${(audioBlob.size / 1024).toFixed(1)} KB`, ttsDuration);
+                } else {
+                    log('WARN', 'TTS request failed', `Status: ${response.status}`);
+                }
+            } catch (err) {
+                log('WARN', 'TTS failed (service may not be running)', err.message);
             }
         }
         
@@ -1076,21 +1310,6 @@
                 <div class="agent-action">Processing request...</div>
             `;
             panel.insertBefore(card, panel.firstChild);
-        }
-        
-        function updateMetrics(apiLatency, totalLatency) {
-            document.getElementById('metricAPI').textContent = `${apiLatency}ms`;
-            document.getElementById('metricAPI').className = 'metric-value ' + 
-                (apiLatency < 300 ? 'good' : apiLatency < 1000 ? 'warn' : 'bad');
-            
-            document.getElementById('metricTotal').textContent = `${totalLatency}ms`;
-            document.getElementById('metricTotal').className = 'metric-value ' + 
-                (totalLatency < 500 ? 'good' : totalLatency < 1500 ? 'warn' : 'bad');
-            
-            document.getElementById('metricTurns').textContent = state.turnCount;
-            document.getElementById('metricMemory').textContent = state.memoryWrites;
-            document.getElementById('metricAgents').textContent = state.agentCalls;
-            document.getElementById('metricTools').textContent = state.toolCalls;
         }
     </script>
 </body>

@@ -1,0 +1,39 @@
+{
+  "run_at": "2026-02-03T07:09:00.987104+00:00",
+  "completed_at": "2026-02-03T07:09:01.485376+00:00",
+  "total": 5,
+  "passed": 3,
+  "failed": 2,
+  "results": [
+    {
+      "name": "PromptManager",
+      "passed": true,
+      "message": "All checks passed",
+      "duration_ms": 344.49
+    },
+    {
+      "name": "Memory API",
+      "passed": false,
+      "message": "No module named 'jose'",
+      "duration_ms": 4.37
+    },
+    {
+      "name": "Voice Session Manager",
+      "passed": true,
+      "message": "All checks passed",
+      "duration_ms": 144.53
+    },
+    {
+      "name": "Memory Summarization",
+      "passed": true,
+      "message": "All checks passed",
+      "duration_ms": 2.65
+    },
+    {
+      "name": "Orchestrator Chat",
+      "passed": false,
+      "message": "No module named 'jose'",
+      "duration_ms": 1.98
+    }
+  ]
+}

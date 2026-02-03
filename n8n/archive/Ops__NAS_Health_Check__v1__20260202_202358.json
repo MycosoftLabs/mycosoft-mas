@@ -1,0 +1,198 @@
+{
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "createdAt": "2026-01-27T06:12:53.732Z",
+  "id": "aO0OlAFSauCbj6oH",
+  "name": "Ops: NAS Health Check",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "nas-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse NAS health check command\nconst input = $input.item.json;\nconst command = input.command || {};\nconst action = command.action;\n\nconst actionMap = {\n  'health': { operation: 'test_write', risk: 'write' },\n  'read': { operation: 'read_test', risk: 'read' },\n  'backup_verify': { operation: 'verify', risk: 'read' },\n  'space_check': { operation: 'space', risk: 'read' }\n};\n\nconst actionConfig = actionMap[action] || { operation: 'health', risk: 'read' };\n\nreturn [{\n  json: {\n    operation: actionConfig.operation,\n    risk: actionConfig.risk,\n    action: action,\n    request_id: command.request_id,\n    nas_path: '/mnt/mycosoft-nas'\n  }\n}];"
+      },
+      "id": "parse-nas",
+      "name": "Parse NAS Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileName": "={{ $json.nas_path }}/health_check.txt",
+        "options": {}
+      },
+      "id": "read-test",
+      "name": "Read Test File",
+      "type": "n8n-nodes-base.fs",
+      "typeVersion": 1,
+      "position": [
+        680,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.nas_path }}/test_writes/n8n_health_{{ $now }}.txt",
+        "data": "MYCA n8n health check at {{ $now }}",
+        "options": {
+          "createIntermediateDirectories": true
+        }
+      },
+      "id": "write-test",
+      "name": "Write Test File",
+      "type": "n8n-nodes-base.fs",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check disk space using shell command (placeholder)\n// In production, you'd call a NAS API or use SSH\nconst request = $('Parse NAS Command').item.json;\n\nreturn [{\n  json: {\n    success: true,\n    request_id: request.request_id,\n    integration: 'mycosoft_nas',\n    action: request.action,\n    data: {\n      read_test: 'passed',\n      write_test: 'passed',\n      timestamp: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "aggregate-results",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        250
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse NAS Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse NAS Command": {
+      "main": [
+        [
+          {
+            "node": "Read Test File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Write Test File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Test File": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Test File": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "f70e3e4c-fcd6-4829-9a83-35e9e66d2f29",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:12:53.740Z",
+      "createdAt": "2026-01-27T06:12:53.740Z",
+      "role": "workflow:owner",
+      "workflowId": "aO0OlAFSauCbj6oH",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:12:43.674Z",
+      "createdAt": "2026-01-27T06:12:43.674Z",
+      "id": "myca-ops",
+      "name": "MYCA Ops"
+    }
+  ],
+  "activeVersion": null
+}

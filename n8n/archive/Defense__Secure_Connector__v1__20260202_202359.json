@@ -1,0 +1,131 @@
+{
+  "updatedAt": "2026-01-27T06:13:09.014Z",
+  "createdAt": "2026-01-27T06:13:09.014Z",
+  "id": "defense-connector",
+  "name": "Defense: Secure Connector",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "defense-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Security verification for defense integrations\nconst input = $input.item.json;\nconst platform = input.integration?.integration || input.platform || 'unknown';\nconst action = input.command?.action || input.action || 'status';\nconst params = input.command?.params || input.params || {};\nconst userContext = input.user_context || {};\n\n// Security classification levels\nconst platformClassifications = {\n  palantir: 'TOP SECRET//SCI',\n  anduril: 'SECRET//NOFORN',\n  platform_one: 'UNCLASSIFIED//FOUO',\n  tactical: 'SECRET//REL TO USA, FVEY'\n};\n\n// Validate clearance (in production, integrate with CAC/PKI)\nconst userClearance = userContext.clearance || 'UNCLASSIFIED';\nconst requiredClearance = platformClassifications[platform] || 'SECRET';\n\n// For demo purposes, allow access\nconst securityPassed = true;\n\nif (!securityPassed) {\n  return [{\n    json: {\n      success: false,\n      error: 'Security verification failed',\n      required_clearance: requiredClearance,\n      user_clearance: userClearance,\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\nreturn [{ \n  json: { \n    ...input, \n    platform: platform,\n    action: action,\n    params: params,\n    security: {\n      passed: securityPassed,\n      classification: requiredClearance,\n      user_clearance: userClearance,\n      cac_required: platform !== 'platform_one',\n      timestamp: new Date().toISOString()\n    }\n  } \n}];"
+      },
+      "id": "security-check",
+      "name": "Security Verification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific defense platform handler\nconst input = $input.item.json;\nconst platform = input.platform;\nconst action = input.action;\nconst params = input.params || {};\nconst security = input.security || {};\n\nlet result = null;\nlet error = null;\n\ntry {\n  switch(platform) {\n    // ========== PALANTIR FOUNDRY ==========\n    case 'palantir':\n      switch(action) {\n        case 'query_ontology':\n          result = {\n            platform: 'Palantir Foundry',\n            module: 'Ontology',\n            objects: [\n              { type: 'Person', count: 2847291, lastSync: '2 min ago' },\n              { type: 'Organization', count: 458721, lastSync: '5 min ago' },\n              { type: 'Location', count: 1284573, lastSync: '1 min ago' },\n              { type: 'Event', count: 847293, lastSync: '30 sec ago' },\n              { type: 'Vehicle', count: 328471, lastSync: '3 min ago' },\n              { type: 'Communication', count: 9847562, lastSync: '10 sec ago' }\n            ],\n            querySupported: true\n          };\n          break;\n        case 'list_datasets':\n          result = {\n            platform: 'Palantir Foundry',\n            module: 'Data Fusion',\n            datasets: [\n              { name: 'SIGINT_FEED_2024', records: 2847293, status: 'live' },\n              { name: 'GEOINT_IMAGERY', records: 847293, status: 'live' },\n              { name: 'HUMINT_REPORTS', records: 12847, status: 'syncing' },\n              { name: 'OSINT_AGGREGATOR', records: 9847562, status: 'live' },\n              { name: 'CYBER_THREAT_INTEL', records: 458721, status: 'live' }\n            ]\n          };\n          break;\n        case 'run_pipeline':\n          result = {\n            platform: 'Palantir Foundry',\n            module: 'Pipeline Builder',\n            pipelineId: 'PL-' + Date.now(),\n            status: 'running',\n            estimatedCompletion: new Date(Date.now() + 300000).toISOString()\n          };\n          break;\n        case 'open_quiver':\n          result = {\n            platform: 'Palantir Foundry',\n            module: 'Quiver',\n            mapLayers: ['SIGINT', 'GEOINT', 'Tracks', 'AOR'],\n            status: 'ready',\n            url: 'https://foundry.palantir.com/quiver'\n          };\n          break;\n        default:\n          result = {\n            platform: 'Palantir Foundry',\n            availableActions: ['query_ontology', 'list_datasets', 'run_pipeline', 'open_quiver', 'create_workbook'],\n            status: 'connected',\n            securityLevel: 'TOP SECRET//SCI'\n          };\n      }\n      break;\n\n    // ========== ANDURIL LATTICE ==========\n    case 'anduril':\n      switch(action) {\n        case 'list_assets':\n          result = {\n            platform: 'Anduril Lattice',\n            assets: [\n              { id: 'ST-ALPHA', name: 'Sentry Tower Alpha', type: 'Ground Sensor', status: 'online', battery: 98, lat: 33.5, lon: -117.2 },\n              { id: 'ST-BRAVO', name: 'Sentry Tower Bravo', type: 'Ground Sensor', status: 'online', battery: 87, lat: 33.6, lon: -117.3 },\n              { id: 'G40-001', name: 'Ghost 40 - Unit 1', type: 'UAS', status: 'mission', battery: 72, lat: 33.55, lon: -117.25 },\n              { id: 'G40-002', name: 'Ghost 40 - Unit 2', type: 'UAS', status: 'charging', battery: 45, lat: 33.48, lon: -117.18 },\n              { id: 'ANV-001', name: 'Anvil CUAS-1', type: 'Counter-UAS', status: 'online', battery: 100, lat: 33.52, lon: -117.22 },\n              { id: 'DLD-001', name: 'Dive-LD Alpha', type: 'AUV', status: 'standby', battery: 95, lat: 33.45, lon: -117.35 }\n            ],\n            totalAssets: 6,\n            online: 5\n          };\n          break;\n        case 'get_detections':\n          result = {\n            platform: 'Anduril Lattice',\n            detections: [\n              { id: 'DET-001', type: 'Vehicle', confidence: 94, grid: '4521', timestamp: new Date(Date.now() - 120000).toISOString() },\n              { id: 'DET-002', type: 'Person', confidence: 87, grid: '4522', timestamp: new Date(Date.now() - 300000).toISOString() },\n              { id: 'DET-003', type: 'Aircraft', confidence: 99, grid: '4518', timestamp: new Date(Date.now() - 720000).toISOString() },\n              { id: 'DET-004', type: 'Vessel', confidence: 76, grid: '4530', timestamp: new Date(Date.now() - 1080000).toISOString() }\n            ],\n            sensorFusion: true\n          };\n          break;\n        case 'track_target':\n          result = {\n            platform: 'Anduril Lattice',\n            trackId: 'TRK-' + Date.now(),\n            status: 'tracking',\n            assignedAssets: ['ST-ALPHA', 'G40-001'],\n            aiAssisted: true\n          };\n          break;\n        case 'deploy_asset':\n          result = {\n            platform: 'Anduril Lattice',\n            deploymentId: 'DEP-' + Date.now(),\n            assetId: params.asset_id || 'G40-001',\n            status: 'deploying',\n            eta: new Date(Date.now() + 120000).toISOString()\n          };\n          break;\n        default:\n          result = {\n            platform: 'Anduril Lattice',\n            availableActions: ['list_assets', 'get_detections', 'track_target', 'deploy_asset', 'threat_assessment'],\n            status: 'connected',\n            securityLevel: 'SECRET//NOFORN'\n          };\n      }\n      break;\n\n    // ========== PLATFORM ONE ==========\n    case 'platform_one':\n      switch(action) {\n        case 'list_deployments':\n          result = {\n            platform: 'Platform One',\n            ilLevel: 'IL4',\n            deployments: [\n              { name: 'mission-app-prod', namespace: 'mission', pods: '3/3', status: 'Running', cpu: '45%', memory: '62%' },\n              { name: 'analytics-svc', namespace: 'analytics', pods: '5/5', status: 'Running', cpu: '72%', memory: '81%' },\n              { name: 'intel-fusion', namespace: 'intel', pods: '2/3', status: 'Degraded', cpu: '89%', memory: '95%' },\n              { name: 'c2-gateway', namespace: 'command', pods: '4/4', status: 'Running', cpu: '23%', memory: '44%' }\n            ]\n          };\n          break;\n        case 'list_services':\n          result = {\n            platform: 'Platform One',\n            services: [\n              { name: 'Big Bang', status: 'healthy', version: '2.8.0', description: 'DevSecOps platform' },\n              { name: 'Iron Bank', status: 'healthy', version: '1.12.3', description: 'Hardened container registry' },\n              { name: 'Party Bus', status: 'healthy', version: '3.1.0', description: 'Service mesh' },\n              { name: 'Repo One', status: 'healthy', version: '15.4.2', description: 'Git hosting' },\n              { name: 'SSO/SAML', status: 'healthy', version: '2.0.1', description: 'CAC authentication' },\n              { name: 'Keycloak', status: 'warning', version: '22.0.1', description: 'Identity management' }\n            ]\n          };\n          break;\n        case 'get_iron_bank_images':\n          result = {\n            platform: 'Platform One - Iron Bank',\n            images: [\n              { name: 'registry1.dso.mil/ironbank/opensource/nginx', version: '1.25.3', approved: true, cveCount: 0 },\n              { name: 'registry1.dso.mil/ironbank/opensource/postgres', version: '15.4', approved: true, cveCount: 0 },\n              { name: 'registry1.dso.mil/ironbank/redhat/ubi', version: '8.9', approved: true, cveCount: 0 },\n              { name: 'registry1.dso.mil/ironbank/opensource/kubernetes/kubectl', version: '1.28.3', approved: true, cveCount: 0 }\n            ]\n          };\n          break;\n        case 'deploy':\n          result = {\n            platform: 'Platform One',\n            deploymentId: 'P1-DEP-' + Date.now(),\n            status: 'pending',\n            pipeline: 'created',\n            estimatedTime: '5-10 minutes'\n          };\n          break;\n        default:\n          result = {\n            platform: 'Platform One',\n            availableActions: ['list_deployments', 'list_services', 'get_iron_bank_images', 'deploy', 'trigger_scan'],\n            status: 'connected',\n            securityLevel: 'UNCLASSIFIED//FOUO'\n          };\n      }\n      break;\n\n    // ========== TACTICAL DATA LINKS ==========\n    case 'tactical':\n      switch(action) {\n        case 'list_links':\n          result = {\n            platform: 'Tactical Data Link Gateway',\n            networks: [\n              { name: 'Link 16', protocol: 'TADIL-J', status: 'active', messages: 12847, latency: '2ms' },\n              { name: 'Link 22', protocol: 'NATO NILE', status: 'active', messages: 8472, latency: '5ms' },\n              { name: 'SADL', protocol: 'USAF', status: 'standby', messages: 0, latency: '-' },\n              { name: 'VMF', protocol: 'USMC', status: 'active', messages: 3847, latency: '8ms' },\n              { name: 'JREAP', protocol: 'Joint', status: 'active', messages: 5821, latency: '12ms' }\n            ]\n          };\n          break;\n        case 'get_tracks':\n          result = {\n            platform: 'Tactical Data Link',\n            network: params.network || 'Link 16',\n            tracks: [\n              { tn: 'TN-0001', type: 'Friendly', platform: 'F-35A', callsign: 'VIPER01', lat: 33.5, lon: -117.2, alt: 35000, speed: 450 },\n              { tn: 'TN-0002', type: 'Unknown', platform: 'UNK', callsign: null, lat: 33.6, lon: -117.1, alt: 20000, speed: 380 },\n              { tn: 'TN-0003', type: 'Hostile', platform: 'Fighter', callsign: null, lat: 33.7, lon: -117.0, alt: 28000, speed: 520 }\n            ],\n            timestamp: new Date().toISOString()\n          };\n          break;\n        case 'send_message':\n          result = {\n            platform: 'Tactical Data Link',\n            messageId: 'MSG-' + Date.now(),\n            network: params.network || 'Link 16',\n            status: 'queued',\n            priority: params.priority || 'routine'\n          };\n          break;\n        default:\n          result = {\n            platform: 'Tactical Data Link Gateway',\n            availableActions: ['list_links', 'get_tracks', 'send_message'],\n            status: 'restricted',\n            securityLevel: 'SECRET//REL TO USA, FVEY',\n            note: 'CAC authentication required for full access'\n          };\n      }\n      break;\n\n    default:\n      error = `Unknown defense platform: ${platform}. Available: palantir, anduril, platform_one, tactical`;\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{\n  json: {\n    success: !error,\n    request_id: input.request_id,\n    platform: platform,\n    action: action,\n    category: 'defense',\n    security: security,\n    data: result,\n    error: error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "defense-handler",
+      "name": "Defense Platform Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Security Verification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Security Verification": {
+      "main": [
+        [
+          {
+            "node": "Defense Platform Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "d050ab88-219e-4568-b3e6-0dbfb7728882",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:13:09.024Z",
+      "createdAt": "2026-01-27T06:13:09.024Z",
+      "role": "workflow:owner",
+      "workflowId": "defense-connector",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

@@ -1,0 +1,131 @@
+{
+  "updatedAt": "2026-01-27T06:12:28.346Z",
+  "createdAt": "2026-01-27T06:12:28.346Z",
+  "id": "native-earth-science",
+  "name": "Native: Earth Science & Geophysics",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "earth-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific earth science integration\nconst input = $input.item.json;\nconst integrationName = input.integration?.integration || 'unknown';\nconst action = input.command?.action || 'default';\nconst params = input.command?.params || {};\n\nreturn [{ \n  json: { \n    ...input, \n    routing_node: integrationName,\n    action: action,\n    params: params\n  } \n}];"
+      },
+      "id": "earth-router",
+      "name": "Earth Science Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle earth science requests\nconst input = $input.item.json;\nconst integration = input.routing_node;\nconst action = input.action;\nconst params = input.params || {};\n\nlet result = null;\nlet error = null;\n\ntry {\n  switch(integration) {\n    case 'usgs_earthquake':\n      result = { source: 'USGS Earthquake', url: 'https://earthquake.usgs.gov/fdsnws/event/1', action, note: 'Global earthquake data' };\n      break;\n    case 'noaa_tides':\n      result = { source: 'NOAA Tides & Currents', url: 'https://api.tidesandcurrents.noaa.gov/api/prod', action, note: 'Tide predictions and observations' };\n      break;\n    case 'ndbc_buoy':\n      result = { source: 'NDBC Buoys', url: 'https://www.ndbc.noaa.gov/data', action, note: 'Marine weather buoy data' };\n      break;\n    case 'usace_water':\n      result = { source: 'USACE Water Management', url: 'https://water.usace.army.mil/a2w', action, note: 'Dam and reservoir data' };\n      break;\n    case 'nws_flood':\n      result = { source: 'NWS Flood', url: 'https://water.weather.gov/ahps', action, note: 'Flood forecasting data' };\n      break;\n    case 'usgs_water':\n      result = { source: 'USGS Water Services', url: 'https://waterservices.usgs.gov/nwis', action, note: 'Streamflow and groundwater data' };\n      break;\n    case 'iris_seismic':\n      result = { source: 'IRIS Seismic', url: 'https://service.iris.edu', action, note: 'Seismic waveform data' };\n      break;\n    case 'noaa_tsunami':\n      result = { source: 'NOAA Tsunami Warning', url: 'https://www.tsunami.gov', action, note: 'Tsunami alerts and data' };\n      break;\n    default:\n      error = `Unknown earth science integration: ${integration}`;\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{\n  json: {\n    success: !error,\n    request_id: input.request_id,\n    integration: integration,\n    category: 'earth_science',\n    action: action,\n    data: result,\n    error: error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "earth-handler",
+      "name": "Handle Earth Science Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Earth Science Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Earth Science Router": {
+      "main": [
+        [
+          {
+            "node": "Handle Earth Science Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "502d2030-6210-4142-8083-3ffa3bb9f179",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:12:28.357Z",
+      "createdAt": "2026-01-27T06:12:28.357Z",
+      "role": "workflow:owner",
+      "workflowId": "native-earth-science",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

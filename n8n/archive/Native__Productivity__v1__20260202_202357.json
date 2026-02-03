@@ -1,0 +1,368 @@
+{
+  "updatedAt": "2026-01-27T06:11:32.361Z",
+  "createdAt": "2026-01-27T06:11:32.361Z",
+  "id": "e3bzrDr1tGOSOczD",
+  "name": "Native: Productivity",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "prod-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific productivity integration\nconst input = $input.item.json;\nconst integrationName = input.integration.integration;\nreturn [{ json: { ...input, routing_node: integrationName } }];"
+      },
+      "id": "prod-router",
+      "name": "Productivity Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "notion",
+              "name": "=notion",
+              "value": "={{ $json.routing_node === 'notion' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "calendar",
+              "name": "=calendar",
+              "value": "={{ $json.routing_node === 'google_calendar' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "airtable",
+              "name": "=airtable",
+              "value": "={{ $json.routing_node === 'airtable' }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prod-flags",
+      "name": "Prepare Switch",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "boolean",
+        "value1": "={{ $json.notion }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": true,
+              "output": 0
+            },
+            {
+              "value2": "={{ $json.calendar }}",
+              "output": 1
+            },
+            {
+              "value2": "={{ $json.airtable }}",
+              "output": 2
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "prod-switch",
+      "name": "Switch: Productivity",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "operation": "create",
+        "title": "={{ $json.command.params.title || 'MYCA Note' }}",
+        "databaseId": "={{ $json.command.params.database_id || $env.NOTION_DEFAULT_DB }}"
+      },
+      "id": "notion-node",
+      "name": "Notion Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        80
+      ],
+      "credentials": {
+        "notionApi": {
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "calendar": "={{ $json.command.params.calendar || 'primary' }}",
+        "start": "={{ $json.command.params.start || new Date().toISOString() }}",
+        "end": "={{ $json.command.params.end || new Date(Date.now()+3600000).toISOString() }}",
+        "summary": "={{ $json.command.params.summary || 'MYCA Event' }}"
+      },
+      "id": "gcal-node",
+      "name": "Google Calendar Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 3.1,
+      "position": [
+        1120,
+        260
+      ],
+      "credentials": {
+        "googleApi": {
+          "name": "Google Calendar"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "application": "={{ $json.command.params.base || 'app' }}",
+        "table": "={{ $json.command.params.table || 'Table 1' }}",
+        "fields": "={{ $json.command.params.fields || '{\"Name\":\"MYCA\"}' }}"
+      },
+      "id": "airtable-node",
+      "name": "Airtable Create",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        440
+      ],
+      "credentials": {
+        "airtableApi": {
+          "name": "Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;return [{json:{error:true,message:`Integration ${input.integration.integration} not implemented in productivity native handler`,request_id:input.request_id}}];"
+      },
+      "id": "prod-fallback",
+      "name": "Productivity Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:input.integration.integration,action:input.command.action,result:result,timestamp:new Date().toISOString()}}];"
+      },
+      "id": "format-prod",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Productivity Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Productivity Router": {
+      "main": [
+        [
+          {
+            "node": "Prepare Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Switch": {
+      "main": [
+        [
+          {
+            "node": "Switch: Productivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Productivity": {
+      "main": [
+        [
+          {
+            "node": "Notion Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Calendar Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable Create",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Productivity Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion Page": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar Event": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable Create": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Productivity Fallback": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "aba409dc-2311-4522-8cd3-76427d680a1a",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:11:32.368Z",
+      "createdAt": "2026-01-27T06:11:32.368Z",
+      "role": "workflow:owner",
+      "workflowId": "e3bzrDr1tGOSOczD",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:11:07.277Z",
+      "createdAt": "2026-01-27T06:11:07.277Z",
+      "id": "myca-native",
+      "name": "MYCA Native"
+    }
+  ],
+  "activeVersion": null
+}

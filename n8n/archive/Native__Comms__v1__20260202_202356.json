@@ -1,0 +1,366 @@
+{
+  "updatedAt": "2026-01-27T06:11:12.194Z",
+  "createdAt": "2026-01-27T06:11:12.194Z",
+  "id": "s3tm7KQPmT7wlSHG",
+  "name": "Native: Comms",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "comms-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific communications integration\nconst input = $input.item.json;\nconst integrationName = input.integration.integration;\n\nreturn [{ json: { ...input, routing_node: integrationName } }];"
+      },
+      "id": "comms-router",
+      "name": "Comms Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "slack",
+              "name": "=slack",
+              "value": "={{ $json.routing_node === 'slack' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "telegram",
+              "name": "=telegram",
+              "value": "={{ $json.routing_node === 'telegram' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "email",
+              "name": "=email",
+              "value": "={{ ['sendgrid','gmail','outlook365','mailgun'].includes($json.routing_node) }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "comms-flags",
+      "name": "Prepare Switch",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "boolean",
+        "value1": "={{ $json.slack }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": true,
+              "output": 0
+            },
+            {
+              "value2": "={{ $json.telegram }}",
+              "output": 1
+            },
+            {
+              "value2": "={{ $json.email }}",
+              "output": 2
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "comms-switch",
+      "name": "Switch: Comms",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "={{ $json.command.params.channel || '#general' }}",
+        "text": "={{ $json.command.params.text || 'Hello from MYCA' }}"
+      },
+      "id": "slack-node",
+      "name": "Slack Message",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        80
+      ],
+      "credentials": {
+        "slackApi": {
+          "name": "Slack Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $json.command.params.chat_id || 'MYCA_CHAT' }}",
+        "text": "={{ $json.command.params.text || 'Hello from MYCA' }}"
+      },
+      "id": "telegram-node",
+      "name": "Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        260
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.command.params.from || $env.MYCA_DEFAULT_FROM || 'no-reply@myca.local' }}",
+        "toEmail": "={{ $json.command.params.to || 'ops@myca.local' }}",
+        "subject": "={{ $json.command.params.subject || 'MYCA Notification' }}",
+        "text": "={{ $json.command.params.text || 'Hello from MYCA' }}"
+      },
+      "id": "email-node",
+      "name": "Email (SendGrid)",
+      "type": "n8n-nodes-base.sendgrid",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        440
+      ],
+      "credentials": {
+        "sendGridApi": {
+          "name": "SendGrid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;return [{json:{error:true,message:`Integration ${input.integration.integration} not implemented in comms native handler`,request_id:input.request_id}}];"
+      },
+      "id": "comms-fallback",
+      "name": "Comms Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:input.integration.integration,action:input.command.action,result:result,timestamp:new Date().toISOString()}}];"
+      },
+      "id": "format-comms",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Comms Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comms Router": {
+      "main": [
+        [
+          {
+            "node": "Prepare Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Switch": {
+      "main": [
+        [
+          {
+            "node": "Switch: Comms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Comms": {
+      "main": [
+        [
+          {
+            "node": "Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email (SendGrid)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Comms Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email (SendGrid)": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comms Fallback": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "56b23bc1-223e-4034-9159-5a9938cea7bd",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:11:12.202Z",
+      "createdAt": "2026-01-27T06:11:12.202Z",
+      "role": "workflow:owner",
+      "workflowId": "s3tm7KQPmT7wlSHG",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:11:07.277Z",
+      "createdAt": "2026-01-27T06:11:07.277Z",
+      "id": "myca-native",
+      "name": "MYCA Native"
+    }
+  ],
+  "activeVersion": null
+}

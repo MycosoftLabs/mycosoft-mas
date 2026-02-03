@@ -1,0 +1,370 @@
+{
+  "updatedAt": "2026-01-27T06:11:42.476Z",
+  "createdAt": "2026-01-27T06:11:42.476Z",
+  "id": "66q7moIXNA4eZUs1",
+  "name": "Native: Security",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "sec-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to security integration\nconst input = $input.item.json;\nconst integrationName = input.integration.integration;\nreturn [{ json: { ...input, routing_node: integrationName } }];"
+      },
+      "id": "sec-router",
+      "name": "Security Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "splunk",
+              "name": "=splunk",
+              "value": "={{ $json.routing_node === 'splunk' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "okta",
+              "name": "=okta",
+              "value": "={{ $json.routing_node === 'okta' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "snyk",
+              "name": "=snyk",
+              "value": "={{ $json.routing_node === 'snyk' }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "sec-flags",
+      "name": "Prepare Switch",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "boolean",
+        "value1": "={{ $json.splunk }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": true,
+              "output": 0
+            },
+            {
+              "value2": "={{ $json.okta }}",
+              "output": 1
+            },
+            {
+              "value2": "={{ $json.snyk }}",
+              "output": 2
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "sec-switch",
+      "name": "Switch: Security",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.command.params.url || $json.integration.base_url || 'https://splunk.local/services/collector' }}",
+        "method": "POST",
+        "jsonParameters": true,
+        "sendBody": true,
+        "authentication": "none",
+        "bodyParametersJson": "={{ { event: $json.command.params.event || 'myca-test', fields: $json.command.params.fields || {} } }}",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "={{ 'Splunk ' + ($json.command.params.token || $env.SPLUNK_HEC_TOKEN || '') }}"
+          }
+        ]
+      },
+      "id": "splunk-node",
+      "name": "Splunk HEC",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "resource": "user",
+        "options": {
+          "limit": "={{ $json.command.params.limit || 10 }}"
+        }
+      },
+      "id": "okta-node",
+      "name": "Okta Users",
+      "type": "n8n-nodes-base.okta",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        260
+      ],
+      "credentials": {
+        "oktaApi": {
+          "name": "Okta"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "resource": "project",
+        "organizationSlug": "={{ $json.command.params.org || 'default' }}"
+      },
+      "id": "snyk-node",
+      "name": "Snyk Projects",
+      "type": "n8n-nodes-base.snyk",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        440
+      ],
+      "credentials": {
+        "snykApi": {
+          "name": "Snyk"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;return [{json:{error:true,message:`Integration ${input.integration.integration} not implemented in security native handler`,request_id:input.request_id}}];"
+      },
+      "id": "sec-fallback",
+      "name": "Security Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:input.integration.integration,action:input.command.action,result:result,timestamp:new Date().toISOString()}}];"
+      },
+      "id": "format-sec",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Security Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Security Router": {
+      "main": [
+        [
+          {
+            "node": "Prepare Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Switch": {
+      "main": [
+        [
+          {
+            "node": "Switch: Security",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Security": {
+      "main": [
+        [
+          {
+            "node": "Splunk HEC",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Okta Users",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Snyk Projects",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Security Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Splunk HEC": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Okta Users": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Snyk Projects": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Security Fallback": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "03d9cd95-80db-4191-84c3-a24cb95330b8",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:11:42.484Z",
+      "createdAt": "2026-01-27T06:11:42.484Z",
+      "role": "workflow:owner",
+      "workflowId": "66q7moIXNA4eZUs1",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:11:07.277Z",
+      "createdAt": "2026-01-27T06:11:07.277Z",
+      "id": "myca-native",
+      "name": "MYCA Native"
+    }
+  ],
+  "activeVersion": null
+}

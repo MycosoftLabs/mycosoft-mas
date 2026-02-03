@@ -1,0 +1,246 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MYCA Voice - Direct Connection</title>
+    <style>
+        body { font-family: system-ui; max-width: 900px; margin: 50px auto; padding: 20px; background: #0a0a1a; color: #fff; }
+        h1 { color: #4ade80; text-align: center; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+        .card { background: #1a1a2e; border-radius: 15px; padding: 25px; margin-bottom: 20px; }
+        #status { padding: 20px; border-radius: 10px; font-weight: bold; text-align: center; font-size: 18px; margin-bottom: 20px; }
+        .disconnected { background: #7f1d1d; }
+        .connecting { background: #854d0e; }
+        .connected { background: #166534; }
+        .controls { display: flex; gap: 15px; justify-content: center; margin: 20px 0; }
+        button { padding: 15px 40px; font-size: 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .connect-btn { background: #22c55e; color: #000; }
+        .disconnect-btn { background: #ef4444; color: #fff; }
+        select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #0f0f23; color: #fff; font-size: 14px; margin-bottom: 15px; }
+        textarea { height: 80px; resize: vertical; }
+        label { display: block; margin-bottom: 8px; color: #888; font-weight: 500; }
+        #log { background: #000; padding: 15px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; border-radius: 10px; }
+        .log-info { color: #60a5fa; }
+        .log-success { color: #4ade80; }
+        .log-error { color: #f87171; }
+        .log-audio { color: #fbbf24; }
+        .log-text { color: #e879f9; background: #1e1b4b; padding: 2px 6px; border-radius: 4px; }
+        .mic-indicator { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 20px 0; }
+        .mic-dot { width: 16px; height: 16px; border-radius: 50%; background: #333; }
+        .mic-dot.active { background: #ef4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+    <h1>MYCA Voice Interface</h1>
+    <p class="subtitle">Full-Duplex AI Voice powered by PersonaPlex on RTX 5090</p>
+    
+    <div class="card">
+        <label>AI Persona:</label>
+        <textarea id="prompt">You are MYCA, the Mycosoft Autonomous Cognitive Agent. You are a helpful, friendly, and professional AI assistant. You help manage infrastructure, monitor systems, and assist users with their tasks. Be concise and clear in your responses.</textarea>
+        
+        <label>Voice:</label>
+        <select id="voice">
+            <option value="NATF0.pt">NATURAL Female 0</option>
+            <option value="NATF1.pt">NATURAL Female 1</option>
+            <option value="NATF2.pt" selected>NATURAL Female 2 (Recommended)</option>
+            <option value="NATF3.pt">NATURAL Female 3</option>
+            <option value="NATM0.pt">NATURAL Male 0</option>
+            <option value="NATM1.pt">NATURAL Male 1</option>
+            <option value="NATM2.pt">NATURAL Male 2</option>
+            <option value="NATM3.pt">NATURAL Male 3</option>
+        </select>
+    </div>
+    
+    <div id="status" class="disconnected">Click Connect to Start</div>
+    
+    <div class="mic-indicator">
+        <div id="micDot" class="mic-dot"></div>
+        <span id="micText">Microphone inactive</span>
+    </div>
+    
+    <div class="controls">
+        <button id="connectBtn" class="connect-btn" onclick="connect()">Connect</button>
+        <button id="disconnectBtn" class="disconnect-btn" onclick="disconnect()" disabled>Disconnect</button>
+    </div>
+    
+    <div class="card">
+        <label>Activity Log:</label>
+        <div id="log"></div>
+    </div>
+
+<script>
+let ws = null;
+let audioContext = null;
+let mediaStream = null;
+let workletNode = null;
+let isConnected = false;
+
+function log(msg, type = 'info') {
+    const d = document.getElementById('log');
+    const t = new Date().toLocaleTimeString();
+    d.innerHTML += '<div class="log-' + type + '">[' + t + '] ' + msg + '</div>';
+    d.scrollTop = d.scrollHeight;
+    console.log('[' + type.toUpperCase() + '] ' + msg);
+}
+
+function setStatus(cls, text) {
+    const s = document.getElementById('status');
+    s.className = cls;
+    s.textContent = text;
+}
+
+function setMic(active) {
+    document.getElementById('micDot').className = 'mic-dot' + (active ? ' active' : '');
+    document.getElementById('micText').textContent = active ? 'LISTENING - Speak now!' : 'Microphone inactive';
+}
+
+async function connect() {
+    try {
+        document.getElementById('connectBtn').disabled = true;
+        setStatus('connecting', 'Connecting...');
+        
+        log('Creating AudioContext (24kHz)...', 'info');
+        audioContext = new AudioContext({ sampleRate: 24000 });
+        await audioContext.resume();
+        log('AudioContext ready: ' + audioContext.sampleRate + 'Hz', 'success');
+        
+        log('Requesting microphone access...', 'info');
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+            audio: { channelCount: 1, sampleRate: 24000, echoCancellation: true, noiseSuppression: true }
+        });
+        log('Microphone granted!', 'success');
+        
+        const voice = document.getElementById('voice').value;
+        const prompt = encodeURIComponent(document.getElementById('prompt').value);
+        const url = 'wss://localhost:8998/api/chat?text_prompt=' + prompt + '&voice_prompt=' + voice + '&audio_temperature=0.8&text_temperature=0.7&text_topk=25&audio_topk=250';
+        
+        log('Connecting to PersonaPlex server...', 'info');
+        ws = new WebSocket(url);
+        ws.binaryType = 'arraybuffer';
+        
+        ws.onopen = () => log('WebSocket connected!', 'success');
+        
+        ws.onmessage = async (e) => {
+            const data = new Uint8Array(e.data);
+            const kind = data[0];
+            
+            if (kind === 0) {
+                log('HANDSHAKE OK - Ready for full-duplex voice!', 'success');
+                setStatus('connected', 'CONNECTED - Speak now!');
+                setMic(true);
+                isConnected = true;
+                document.getElementById('disconnectBtn').disabled = false;
+                startSendingAudio();
+            } else if (kind === 1) {
+                // Audio response - would need Opus decoder to play
+                log('Received audio: ' + (data.length - 1) + ' bytes', 'audio');
+            } else if (kind === 2) {
+                const text = new TextDecoder().decode(data.slice(1));
+                log('MYCA: ' + text, 'text');
+            }
+        };
+        
+        ws.onerror = () => {
+            log('WebSocket error!', 'error');
+            cleanup();
+        };
+        
+        ws.onclose = () => {
+            log('Connection closed', 'info');
+            cleanup();
+        };
+        
+    } catch (e) {
+        log('Error: ' + e.message, 'error');
+        cleanup();
+    }
+}
+
+async function startSendingAudio() {
+    if (!audioContext || !mediaStream || !ws) return;
+    
+    try {
+        const source = audioContext.createMediaStreamSource(mediaStream);
+        
+        // Create audio worklet for processing
+        await audioContext.audioWorklet.addModule('data:text/javascript,' + encodeURIComponent(`
+            class Sender extends AudioWorkletProcessor {
+                process(inputs) {
+                    if (inputs[0] && inputs[0][0]) {
+                        this.port.postMessage(inputs[0][0]);
+                    }
+                    return true;
+                }
+            }
+            registerProcessor('sender', Sender);
+        `));
+        
+        workletNode = new AudioWorkletNode(audioContext, 'sender');
+        source.connect(workletNode);
+        
+        let buffer = new Float32Array(0);
+        
+        workletNode.port.onmessage = (e) => {
+            if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
+            
+            const newData = e.data;
+            const combined = new Float32Array(buffer.length + newData.length);
+            combined.set(buffer);
+            combined.set(newData, buffer.length);
+            buffer = combined;
+            
+            // Send 20ms chunks (480 samples at 24kHz)
+            while (buffer.length >= 480) {
+                const chunk = buffer.slice(0, 480);
+                buffer = buffer.slice(480);
+                
+                // Convert to 16-bit PCM for Opus encoding
+                const pcm16 = new Int16Array(chunk.length);
+                for (let i = 0; i < chunk.length; i++) {
+                    pcm16[i] = Math.max(-32768, Math.min(32767, Math.round(chunk[i] * 32767)));
+                }
+                
+                const msg = new Uint8Array(1 + pcm16.length * 2);
+                msg[0] = 1; // Audio message type
+                msg.set(new Uint8Array(pcm16.buffer), 1);
+                ws.send(msg);
+            }
+        };
+        
+        log('Audio streaming started!', 'success');
+    } catch (e) {
+        log('Audio worklet error: ' + e.message, 'error');
+    }
+}
+
+function disconnect() {
+    if (ws) ws.close();
+    cleanup();
+}
+
+function cleanup() {
+    isConnected = false;
+    setStatus('disconnected', 'Disconnected');
+    setMic(false);
+    document.getElementById('connectBtn').disabled = false;
+    document.getElementById('disconnectBtn').disabled = true;
+    
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+    }
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+    }
+    ws = null;
+    workletNode = null;
+}
+
+log('MYCA Voice Interface loaded. Click Connect to start.', 'info');
+log('Server: https://localhost:8998', 'info');
+</script>
+</body>
+</html>

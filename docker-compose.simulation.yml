@@ -1,0 +1,89 @@
+﻿# MYCA Simulation Services Docker Compose
+# Created: February 3, 2026
+
+version: "3.9"
+
+services:
+  alphafold-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulation
+    image: mycosoft/alphafold:latest
+    container_name: alphafold-service
+    ports:
+      - "8030:8000"
+    environment:
+      - MODEL_PATH=/models/alphafold
+      - MAX_SEQUENCE_LENGTH=2000
+    volumes:
+      - alphafold-models:/models
+      - alphafold-cache:/cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+  mycelium-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulation
+    image: mycosoft/mycelium-simulator:latest
+    container_name: mycelium-simulator
+    ports:
+      - "8031:8000"
+    environment:
+      - GRID_SIZE=1000
+      - MAX_TIME_STEPS=10000
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+  molecular-dynamics:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulation
+    image: mycosoft/molecular-dynamics:latest
+    container_name: molecular-dynamics
+    ports:
+      - "8032:8000"
+    environment:
+      - OPENMM_PLATFORM=CUDA
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - md-data:/app/data
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+  physics-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulation
+    image: mycosoft/physics-simulator:latest
+    container_name: physics-simulator
+    ports:
+      - "8033:8000"
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+networks:
+  mycosoft-network:
+    external: true
+
+volumes:
+  alphafold-models:
+  alphafold-cache:
+  md-data:

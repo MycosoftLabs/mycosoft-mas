@@ -1,0 +1,224 @@
+{
+  "updatedAt": "2024-12-30T09:00:00.000Z",
+  "createdAt": "2026-01-27T06:12:12.883Z",
+  "id": "UXayMktbPHy6OmuZ",
+  "name": "MycoBrain Telemetry Forwarder",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://mycobrain:8003/devices",
+        "options": {}
+      },
+      "id": "get-devices",
+      "name": "Get MycoBrain Devices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const devices = $input.all();\nconst results = [];\n\nfor (const device of devices) {\n  if (device.json.devices) {\n    for (const d of device.json.devices) {\n      if (d.status === 'connected') {\n        results.push({\n          device_id: d.device_id,\n          port: d.port,\n          connected_at: d.connected_at\n        });\n      }\n    }\n  }\n}\n\nreturn results.map(item => ({ json: item }));"
+      },
+      "id": "filter-connected",
+      "name": "Filter Connected Devices",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://mycobrain:8003/devices/{{ $json.device_id }}/command",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "command",
+              "value": "={ \"cmd\": \"status\" }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-telemetry",
+      "name": "Get Telemetry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://mindex:8000/api/mindex/telemetry",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "mycobrain"
+            },
+            {
+              "name": "device_id",
+              "value": "={{ $('Filter Connected Devices').item.json.device_id }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "data",
+              "value": "={{ $json.response }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "forward-to-mindex",
+      "name": "Forward to MINDEX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1050,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get MycoBrain Devices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get MycoBrain Devices": {
+      "main": [
+        [
+          {
+            "node": "Filter Connected Devices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Connected Devices": {
+      "main": [
+        [
+          {
+            "node": "Get Telemetry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Telemetry": {
+      "main": [
+        [
+          {
+            "node": "Forward to MINDEX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "ff3c98e0-eb42-4b3b-a3ac-afb6ce92da60",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:12:12.891Z",
+      "createdAt": "2026-01-27T06:12:12.891Z",
+      "role": "workflow:owner",
+      "workflowId": "UXayMktbPHy6OmuZ",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

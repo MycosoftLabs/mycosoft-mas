@@ -1,0 +1,350 @@
+{
+  "updatedAt": "2026-01-27T06:11:47.561Z",
+  "createdAt": "2026-01-27T06:11:47.561Z",
+  "id": "mindex-species-scraper",
+  "name": "MINDEX Species Scraper - Automated Data Collection",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily Scrape Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mindex:8000/api/mindex/sync",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"sources\": [\"iNaturalist\", \"GBIF\", \"MycoBank\", \"FungiDB\", \"GenBank\"],\n  \"limit\": 10000\n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "sync-all-sources",
+      "name": "Trigger Full Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "status-check",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "started",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-status",
+      "name": "Sync Started?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "id": "wait-for-sync",
+      "name": "Wait 30s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://mindex:8000/api/mindex/etl-status",
+        "options": {}
+      },
+      "id": "check-progress",
+      "name": "Check ETL Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://mindex:8000/api/mindex/stats",
+        "options": {}
+      },
+      "id": "get-final-stats",
+      "name": "Get Final Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mindex:8000/api/mindex/generate-master-list",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "100000"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "generate-master-list",
+      "name": "Generate Master Species List",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#mindex-updates",
+        "text": "=\ud83c\udf44 **MINDEX Daily Sync Complete**\n\n\ud83d\udcca **Stats:**\n- Total Species: {{ $json.total_species }}\n- Total Observations: {{ $json.total_observations }}\n- Total Images: {{ $json.total_images }}\n- Total Genetic Records: {{ $json.total_genetic_records }}\n- Database Size: {{ $json.db_size_mb }} MB\n\n\u2705 Master species list updated!",
+        "otherOptions": {}
+      },
+      "id": "notify-complete",
+      "name": "Notify Completion",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1600,
+        200
+      ],
+      "disabled": true,
+      "notes": "Enable and configure Slack credentials"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=MINDEX Sync Failed: {{ $json.error || 'Unknown error' }}"
+      },
+      "id": "error-handler",
+      "name": "Handle Error",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        800,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Daily Scrape Schedule": {
+      "main": [
+        [
+          {
+            "node": "Trigger Full Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Full Sync": {
+      "main": [
+        [
+          {
+            "node": "Sync Started?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync Started?": {
+      "main": [
+        [
+          {
+            "node": "Wait 30s",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 30s": {
+      "main": [
+        [
+          {
+            "node": "Check ETL Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check ETL Status": {
+      "main": [
+        [
+          {
+            "node": "Get Final Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Final Stats": {
+      "main": [
+        [
+          {
+            "node": "Generate Master Species List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Master Species List": {
+      "main": [
+        [
+          {
+            "node": "Notify Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "mycosoft-mindex"
+  },
+  "pinData": null,
+  "versionId": "81c29eeb-c618-47de-9873-0635cd4c6a0c",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:11:47.569Z",
+      "createdAt": "2026-01-27T06:11:47.569Z",
+      "role": "workflow:owner",
+      "workflowId": "mindex-species-scraper",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:11:47.591Z",
+      "createdAt": "2026-01-27T06:11:47.591Z",
+      "id": "3qtO7iLTJUg6v5NT",
+      "name": "automation"
+    },
+    {
+      "updatedAt": "2026-01-27T06:11:47.583Z",
+      "createdAt": "2026-01-27T06:11:47.583Z",
+      "id": "M4XwuKRdsubpjcZl",
+      "name": "mindex"
+    },
+    {
+      "updatedAt": "2026-01-27T06:11:47.588Z",
+      "createdAt": "2026-01-27T06:11:47.588Z",
+      "id": "ehesWi3tzS8ByTzH",
+      "name": "scraper"
+    }
+  ],
+  "activeVersion": null
+}

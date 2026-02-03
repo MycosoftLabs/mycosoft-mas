@@ -1,0 +1,892 @@
+{
+  "updatedAt": "2026-01-27T06:14:04.328Z",
+  "createdAt": "2026-01-27T06:14:04.328Z",
+  "id": "8d8cTLs1EcqHQMNj",
+  "name": "MYCA: Tools Hub",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/tools",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-tools",
+      "name": "Tools Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        100,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse incoming request and prepare for routing\nconst input = $input.first().json;\n\nconst action = input.action || 'unknown';\nconst message = input.message || '';\nconst sessionId = input.session_id || `tools_${Date.now()}`;\nlet entities = {};\n\ntry {\n  entities = typeof input.entities === 'string' ? JSON.parse(input.entities) : (input.entities || {});\n} catch (e) {\n  entities = {};\n}\n\n// Determine specific tool action\nconst toolActions = {\n  search: 'web_search',\n  weather: 'weather',\n  news: 'news',\n  calendar: 'calendar',\n  email: 'email',\n  notes: 'notes',\n  files: 'files',\n  code: 'code',\n  media: 'media',\n  api: 'api_call'\n};\n\nconst toolAction = toolActions[action] || 'general';\n\nreturn {\n  json: {\n    action: action,\n    tool_action: toolAction,\n    message: message,\n    session_id: sessionId,\n    entities: entities,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-request",
+      "name": "Parse Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "search",
+              "leftValue": "={{ $json.tool_action }}",
+              "rightValue": "web_search",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "weather",
+              "leftValue": "={{ $json.tool_action }}",
+              "rightValue": "weather",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "calendar",
+              "leftValue": "={{ $json.tool_action }}",
+              "rightValue": "calendar",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "email",
+              "leftValue": "={{ $json.tool_action }}",
+              "rightValue": "email",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "files",
+              "leftValue": "={{ $json.tool_action }}",
+              "rightValue": "files",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "code",
+              "leftValue": "={{ $json.tool_action }}",
+              "rightValue": "code",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "tool-router",
+      "name": "Tool Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        540,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Web Search Simulation (replace with actual search API)\nconst input = $input.first().json;\nconst query = input.message;\n\n// Extract search terms from message\nconst searchTerms = query.replace(/\\b(search|find|look up|what is|who is|where is|google)\\b/gi, '').trim();\n\n// Simulated search results - Replace with actual API (Google, Bing, SerpAPI)\nconst searchResults = {\n  query: searchTerms,\n  results: [\n    {\n      title: `Results for: ${searchTerms}`,\n      snippet: `This would contain actual search results for \"${searchTerms}\". Connect to a search API like SerpAPI, Brave Search, or Google Custom Search.`,\n      url: `https://www.google.com/search?q=${encodeURIComponent(searchTerms)}`\n    }\n  ],\n  suggestion: 'To enable real web search, add SerpAPI or Google Custom Search credentials in n8n.'\n};\n\nreturn {\n  json: {\n    result: `I searched for \"${searchTerms}\". ${searchResults.suggestion}`,\n    data: searchResults,\n    action: 'web_search'\n  }\n};"
+      },
+      "id": "web-search",
+      "name": "Web Search",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Weather API Integration\nconst input = $input.first().json;\nconst message = input.message;\n\n// Extract location from message\nlet location = 'local';\nconst locationMatch = message.match(/(?:weather|temperature|forecast).*?(?:in|at|for)\\s+([\\w\\s,]+)/i);\nif (locationMatch) {\n  location = locationMatch[1].trim();\n}\n\n// Weather API placeholder - Replace with OpenWeatherMap, WeatherAPI, etc.\nconst weatherData = {\n  location: location,\n  note: 'Configure OpenWeatherMap API credentials in n8n to get real weather data.',\n  suggestion: 'Add HTTP Request node with OpenWeatherMap API: https://api.openweathermap.org/data/2.5/weather'\n};\n\nreturn {\n  json: {\n    result: `Weather information for ${location}. ${weatherData.note}`,\n    data: weatherData,\n    action: 'weather'\n  }\n};"
+      },
+      "id": "weather",
+      "name": "Weather",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calendar Integration (Google Calendar / Outlook)\nconst input = $input.first().json;\nconst message = input.message;\nconst entities = input.entities || {};\n\n// Parse calendar intent\nlet calendarAction = 'list';\nif (/create|add|schedule|book/i.test(message)) calendarAction = 'create';\nelse if (/delete|remove|cancel/i.test(message)) calendarAction = 'delete';\nelse if (/update|change|modify|reschedule/i.test(message)) calendarAction = 'update';\n\n// Extract date/time from entities\nconst dates = entities.dates || [];\nconst times = entities.times || [];\n\nconst calendarData = {\n  action: calendarAction,\n  dates: dates,\n  times: times,\n  note: 'Connect Google Calendar or Microsoft Outlook credentials in n8n to manage calendar.',\n  suggestion: 'Add Google Calendar node with OAuth2 credentials.'\n};\n\nreturn {\n  json: {\n    result: `Calendar ${calendarAction} request processed. ${calendarData.note}`,\n    data: calendarData,\n    action: 'calendar'\n  }\n};"
+      },
+      "id": "calendar",
+      "name": "Calendar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Email Integration (Gmail / Outlook / SMTP)\nconst input = $input.first().json;\nconst message = input.message;\nconst entities = input.entities || {};\n\n// Parse email intent\nlet emailAction = 'read';\nif (/send|compose|write|reply/i.test(message)) emailAction = 'send';\nelse if (/read|check|inbox|unread/i.test(message)) emailAction = 'read';\nelse if (/search|find.*email/i.test(message)) emailAction = 'search';\n\n// Extract email addresses from entities\nconst emailAddresses = entities.emails || [];\n\nconst emailData = {\n  action: emailAction,\n  recipients: emailAddresses,\n  note: 'Connect Gmail or Microsoft Outlook credentials in n8n to manage email.',\n  suggestion: 'Add Gmail node with OAuth2 credentials.'\n};\n\nreturn {\n  json: {\n    result: `Email ${emailAction} request processed. ${emailData.note}`,\n    data: emailData,\n    action: 'email'\n  }\n};"
+      },
+      "id": "email",
+      "name": "Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// File Management\nconst input = $input.first().json;\nconst message = input.message;\n\n// Parse file intent\nlet fileAction = 'list';\nif (/create|new|make/i.test(message)) fileAction = 'create';\nelse if (/delete|remove/i.test(message)) fileAction = 'delete';\nelse if (/copy|duplicate/i.test(message)) fileAction = 'copy';\nelse if (/move|rename/i.test(message)) fileAction = 'move';\nelse if (/read|open|view|show/i.test(message)) fileAction = 'read';\nelse if (/list|find|search/i.test(message)) fileAction = 'list';\n\n// Extract path hints from message\nconst pathMatch = message.match(/[\\/\\\\][\\w\\-\\.\\/\\\\]+/g) || [];\n\nconst fileData = {\n  action: fileAction,\n  paths: pathMatch,\n  note: 'Configure file access through n8n local file nodes or NAS integration.',\n  suggestion: 'Add Read/Write File nodes or FTP/SFTP nodes for NAS access.'\n};\n\nreturn {\n  json: {\n    result: `File ${fileAction} request processed. ${fileData.note}`,\n    data: fileData,\n    action: 'files'\n  }\n};"
+      },
+      "id": "files",
+      "name": "Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code Execution / Development Tools\nconst input = $input.first().json;\nconst message = input.message;\n\n// Parse code intent\nlet codeAction = 'analyze';\nif (/run|execute|eval/i.test(message)) codeAction = 'execute';\nelse if (/debug|fix|error/i.test(message)) codeAction = 'debug';\nelse if (/deploy|push|release/i.test(message)) codeAction = 'deploy';\nelse if (/git|commit|branch/i.test(message)) codeAction = 'git';\nelse if (/generate|create.*code|write.*code/i.test(message)) codeAction = 'generate';\n\n// Extract code language hints\nlet language = 'python';\nif (/javascript|js|node/i.test(message)) language = 'javascript';\nelse if (/python|py/i.test(message)) language = 'python';\nelse if (/bash|shell|sh/i.test(message)) language = 'bash';\nelse if (/sql/i.test(message)) language = 'sql';\n\nconst codeData = {\n  action: codeAction,\n  language: language,\n  note: 'Code execution can be done through Execute Command node or remote API.',\n  suggestion: 'Add SSH node for remote execution or Execute Command for local scripts.'\n};\n\nreturn {\n  json: {\n    result: `Code ${codeAction} (${language}) request processed. ${codeData.note}`,\n    data: codeData,\n    action: 'code'\n  }\n};"
+      },
+      "id": "code",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// General fallback for unrouted requests\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    result: `Tool request received: ${input.action}. The specific tool is not yet configured.`,\n    data: input,\n    action: input.action || 'unknown'\n  }\n};"
+      },
+      "id": "fallback",
+      "name": "Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        940
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge all tool responses\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    tool: input.action,\n    result: input.result,\n    data: input.data,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "merge-response",
+      "name": "Merge Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1220,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Tools Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Request": {
+      "main": [
+        [
+          {
+            "node": "Tool Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool Router": {
+      "main": [
+        [
+          {
+            "node": "Web Search",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Weather",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Files",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Web Search": {
+      "main": [
+        [
+          {
+            "node": "Merge Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather": {
+      "main": [
+        [
+          {
+            "node": "Merge Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar": {
+      "main": [
+        [
+          {
+            "node": "Merge Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email": {
+      "main": [
+        [
+          {
+            "node": "Merge Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Files": {
+      "main": [
+        [
+          {
+            "node": "Merge Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fallback": {
+      "main": [
+        [
+          {
+            "node": "Merge Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "768bafcd-5876-4994-8c28-1f0f3698a14a",
+  "activeVersionId": "768bafcd-5876-4994-8c28-1f0f3698a14a",
+  "versionCounter": 7,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:14:04.336Z",
+      "createdAt": "2026-01-27T06:14:04.336Z",
+      "role": "workflow:owner",
+      "workflowId": "8d8cTLs1EcqHQMNj",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:14:04.346Z",
+      "createdAt": "2026-01-27T06:14:04.346Z",
+      "id": "ut65uWc3K5VOXfli",
+      "name": "MYCA Tools"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-27T06:14:04.353Z",
+    "createdAt": "2026-01-27T06:14:04.353Z",
+    "versionId": "768bafcd-5876-4994-8c28-1f0f3698a14a",
+    "workflowId": "8d8cTLs1EcqHQMNj",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "myca/tools",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-tools",
+        "name": "Tools Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          100,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Parse incoming request and prepare for routing\nconst input = $input.first().json;\n\nconst action = input.action || 'unknown';\nconst message = input.message || '';\nconst sessionId = input.session_id || `tools_${Date.now()}`;\nlet entities = {};\n\ntry {\n  entities = typeof input.entities === 'string' ? JSON.parse(input.entities) : (input.entities || {});\n} catch (e) {\n  entities = {};\n}\n\n// Determine specific tool action\nconst toolActions = {\n  search: 'web_search',\n  weather: 'weather',\n  news: 'news',\n  calendar: 'calendar',\n  email: 'email',\n  notes: 'notes',\n  files: 'files',\n  code: 'code',\n  media: 'media',\n  api: 'api_call'\n};\n\nconst toolAction = toolActions[action] || 'general';\n\nreturn {\n  json: {\n    action: action,\n    tool_action: toolAction,\n    message: message,\n    session_id: sessionId,\n    entities: entities,\n    timestamp: new Date().toISOString()\n  }\n};"
+        },
+        "id": "parse-request",
+        "name": "Parse Request",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          320,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "search",
+                "leftValue": "={{ $json.tool_action }}",
+                "rightValue": "web_search",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "weather",
+                "leftValue": "={{ $json.tool_action }}",
+                "rightValue": "weather",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "calendar",
+                "leftValue": "={{ $json.tool_action }}",
+                "rightValue": "calendar",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "email",
+                "leftValue": "={{ $json.tool_action }}",
+                "rightValue": "email",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "files",
+                "leftValue": "={{ $json.tool_action }}",
+                "rightValue": "files",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "code",
+                "leftValue": "={{ $json.tool_action }}",
+                "rightValue": "code",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          }
+        },
+        "id": "tool-router",
+        "name": "Tool Router",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3,
+        "position": [
+          540,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Web Search Simulation (replace with actual search API)\nconst input = $input.first().json;\nconst query = input.message;\n\n// Extract search terms from message\nconst searchTerms = query.replace(/\\b(search|find|look up|what is|who is|where is|google)\\b/gi, '').trim();\n\n// Simulated search results - Replace with actual API (Google, Bing, SerpAPI)\nconst searchResults = {\n  query: searchTerms,\n  results: [\n    {\n      title: `Results for: ${searchTerms}`,\n      snippet: `This would contain actual search results for \"${searchTerms}\". Connect to a search API like SerpAPI, Brave Search, or Google Custom Search.`,\n      url: `https://www.google.com/search?q=${encodeURIComponent(searchTerms)}`\n    }\n  ],\n  suggestion: 'To enable real web search, add SerpAPI or Google Custom Search credentials in n8n.'\n};\n\nreturn {\n  json: {\n    result: `I searched for \"${searchTerms}\". ${searchResults.suggestion}`,\n    data: searchResults,\n    action: 'web_search'\n  }\n};"
+        },
+        "id": "web-search",
+        "name": "Web Search",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Weather API Integration\nconst input = $input.first().json;\nconst message = input.message;\n\n// Extract location from message\nlet location = 'local';\nconst locationMatch = message.match(/(?:weather|temperature|forecast).*?(?:in|at|for)\\s+([\\w\\s,]+)/i);\nif (locationMatch) {\n  location = locationMatch[1].trim();\n}\n\n// Weather API placeholder - Replace with OpenWeatherMap, WeatherAPI, etc.\nconst weatherData = {\n  location: location,\n  note: 'Configure OpenWeatherMap API credentials in n8n to get real weather data.',\n  suggestion: 'Add HTTP Request node with OpenWeatherMap API: https://api.openweathermap.org/data/2.5/weather'\n};\n\nreturn {\n  json: {\n    result: `Weather information for ${location}. ${weatherData.note}`,\n    data: weatherData,\n    action: 'weather'\n  }\n};"
+        },
+        "id": "weather",
+        "name": "Weather",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          240
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Calendar Integration (Google Calendar / Outlook)\nconst input = $input.first().json;\nconst message = input.message;\nconst entities = input.entities || {};\n\n// Parse calendar intent\nlet calendarAction = 'list';\nif (/create|add|schedule|book/i.test(message)) calendarAction = 'create';\nelse if (/delete|remove|cancel/i.test(message)) calendarAction = 'delete';\nelse if (/update|change|modify|reschedule/i.test(message)) calendarAction = 'update';\n\n// Extract date/time from entities\nconst dates = entities.dates || [];\nconst times = entities.times || [];\n\nconst calendarData = {\n  action: calendarAction,\n  dates: dates,\n  times: times,\n  note: 'Connect Google Calendar or Microsoft Outlook credentials in n8n to manage calendar.',\n  suggestion: 'Add Google Calendar node with OAuth2 credentials.'\n};\n\nreturn {\n  json: {\n    result: `Calendar ${calendarAction} request processed. ${calendarData.note}`,\n    data: calendarData,\n    action: 'calendar'\n  }\n};"
+        },
+        "id": "calendar",
+        "name": "Calendar",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          380
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Email Integration (Gmail / Outlook / SMTP)\nconst input = $input.first().json;\nconst message = input.message;\nconst entities = input.entities || {};\n\n// Parse email intent\nlet emailAction = 'read';\nif (/send|compose|write|reply/i.test(message)) emailAction = 'send';\nelse if (/read|check|inbox|unread/i.test(message)) emailAction = 'read';\nelse if (/search|find.*email/i.test(message)) emailAction = 'search';\n\n// Extract email addresses from entities\nconst emailAddresses = entities.emails || [];\n\nconst emailData = {\n  action: emailAction,\n  recipients: emailAddresses,\n  note: 'Connect Gmail or Microsoft Outlook credentials in n8n to manage email.',\n  suggestion: 'Add Gmail node with OAuth2 credentials.'\n};\n\nreturn {\n  json: {\n    result: `Email ${emailAction} request processed. ${emailData.note}`,\n    data: emailData,\n    action: 'email'\n  }\n};"
+        },
+        "id": "email",
+        "name": "Email",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          520
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// File Management\nconst input = $input.first().json;\nconst message = input.message;\n\n// Parse file intent\nlet fileAction = 'list';\nif (/create|new|make/i.test(message)) fileAction = 'create';\nelse if (/delete|remove/i.test(message)) fileAction = 'delete';\nelse if (/copy|duplicate/i.test(message)) fileAction = 'copy';\nelse if (/move|rename/i.test(message)) fileAction = 'move';\nelse if (/read|open|view|show/i.test(message)) fileAction = 'read';\nelse if (/list|find|search/i.test(message)) fileAction = 'list';\n\n// Extract path hints from message\nconst pathMatch = message.match(/[\\/\\\\][\\w\\-\\.\\/\\\\]+/g) || [];\n\nconst fileData = {\n  action: fileAction,\n  paths: pathMatch,\n  note: 'Configure file access through n8n local file nodes or NAS integration.',\n  suggestion: 'Add Read/Write File nodes or FTP/SFTP nodes for NAS access.'\n};\n\nreturn {\n  json: {\n    result: `File ${fileAction} request processed. ${fileData.note}`,\n    data: fileData,\n    action: 'files'\n  }\n};"
+        },
+        "id": "files",
+        "name": "Files",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          660
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Code Execution / Development Tools\nconst input = $input.first().json;\nconst message = input.message;\n\n// Parse code intent\nlet codeAction = 'analyze';\nif (/run|execute|eval/i.test(message)) codeAction = 'execute';\nelse if (/debug|fix|error/i.test(message)) codeAction = 'debug';\nelse if (/deploy|push|release/i.test(message)) codeAction = 'deploy';\nelse if (/git|commit|branch/i.test(message)) codeAction = 'git';\nelse if (/generate|create.*code|write.*code/i.test(message)) codeAction = 'generate';\n\n// Extract code language hints\nlet language = 'python';\nif (/javascript|js|node/i.test(message)) language = 'javascript';\nelse if (/python|py/i.test(message)) language = 'python';\nelse if (/bash|shell|sh/i.test(message)) language = 'bash';\nelse if (/sql/i.test(message)) language = 'sql';\n\nconst codeData = {\n  action: codeAction,\n  language: language,\n  note: 'Code execution can be done through Execute Command node or remote API.',\n  suggestion: 'Add SSH node for remote execution or Execute Command for local scripts.'\n};\n\nreturn {\n  json: {\n    result: `Code ${codeAction} (${language}) request processed. ${codeData.note}`,\n    data: codeData,\n    action: 'code'\n  }\n};"
+        },
+        "id": "code",
+        "name": "Code",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          800
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// General fallback for unrouted requests\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    result: `Tool request received: ${input.action}. The specific tool is not yet configured.`,\n    data: input,\n    action: input.action || 'unknown'\n  }\n};"
+        },
+        "id": "fallback",
+        "name": "Fallback",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          940
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Merge all tool responses\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    tool: input.action,\n    result: input.result,\n    data: input.data,\n    timestamp: new Date().toISOString()\n  }\n};"
+        },
+        "id": "merge-response",
+        "name": "Merge Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {}
+        },
+        "id": "respond",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1220,
+          400
+        ]
+      }
+    ],
+    "connections": {
+      "Tools Webhook": {
+        "main": [
+          [
+            {
+              "node": "Parse Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse Request": {
+        "main": [
+          [
+            {
+              "node": "Tool Router",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tool Router": {
+        "main": [
+          [
+            {
+              "node": "Web Search",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Weather",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Calendar",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Email",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Files",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Code",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Fallback",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Web Search": {
+        "main": [
+          [
+            {
+              "node": "Merge Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Weather": {
+        "main": [
+          [
+            {
+              "node": "Merge Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calendar": {
+        "main": [
+          [
+            {
+              "node": "Merge Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Email": {
+        "main": [
+          [
+            {
+              "node": "Merge Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Files": {
+        "main": [
+          [
+            {
+              "node": "Merge Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code": {
+        "main": [
+          [
+            {
+              "node": "Merge Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fallback": {
+        "main": [
+          [
+            {
+              "node": "Merge Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge Response": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "import",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-27T18:33:33.505Z",
+        "id": 2,
+        "workflowId": "8d8cTLs1EcqHQMNj",
+        "versionId": "768bafcd-5876-4994-8c28-1f0f3698a14a",
+        "event": "activated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      },
+      {
+        "createdAt": "2026-01-27T18:49:58.804Z",
+        "id": 17,
+        "workflowId": "8d8cTLs1EcqHQMNj",
+        "versionId": "768bafcd-5876-4994-8c28-1f0f3698a14a",
+        "event": "activated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      },
+      {
+        "createdAt": "2026-01-27T18:49:56.672Z",
+        "id": 16,
+        "workflowId": "8d8cTLs1EcqHQMNj",
+        "versionId": "768bafcd-5876-4994-8c28-1f0f3698a14a",
+        "event": "deactivated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      }
+    ]
+  }
+}

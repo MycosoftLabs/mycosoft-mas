@@ -80,7 +80,6 @@ infra/
 grafana/
 prometheus/
 redis/
-n8n/
 migrations/
 models/
 contracts/

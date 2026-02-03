@@ -1,0 +1,420 @@
+{
+  "cHsJEUEhpedSOuk3": [
+    {
+      "workflow_id": "cHsJEUEhpedSOuk3",
+      "workflow_name": "MYCA Command API",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:55.773004",
+      "checksum": "272ff0218d9ebfb1a49fa41ba3b824de",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA_Command_API__v1__20260202_202355.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "ct6Ve7jLFTgWmHZe": [
+    {
+      "workflow_id": "ct6Ve7jLFTgWmHZe",
+      "workflow_name": "MYCA Event Intake",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:56.037460",
+      "checksum": "ac1977232802b70e047129ff5c9988ab",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA_Event_Intake__v1__20260202_202356.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "CohSBELtDt3nXeuE": [
+    {
+      "workflow_id": "CohSBELtDt3nXeuE",
+      "workflow_name": "Router: Integration Dispatch",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:56.249289",
+      "checksum": "101a2344a12fed4174e7852f34df8caf",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Router__Integration_Dispatch__v1__20260202_202356.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "bp5wi0akDB0E2FQ1": [
+    {
+      "workflow_id": "bp5wi0akDB0E2FQ1",
+      "workflow_name": "Native: AI",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:56.400693",
+      "checksum": "4bf34cf22604fd17bd4aa33baeb4e33b",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__AI__v1__20260202_202356.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "s3tm7KQPmT7wlSHG": [
+    {
+      "workflow_id": "s3tm7KQPmT7wlSHG",
+      "workflow_name": "Native: Comms",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:56.532128",
+      "checksum": "29f9aae349cd4c663c54f52c4f491cdd",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Comms__v1__20260202_202356.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "Nnf9GnA68cgZwV73": [
+    {
+      "workflow_id": "Nnf9GnA68cgZwV73",
+      "workflow_name": "Native: DevTools",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:56.694207",
+      "checksum": "4984b0e42485bf9049d3a86e48690ca2",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__DevTools__v1__20260202_202356.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "0u0hhhOFBR85JU8F": [
+    {
+      "workflow_id": "0u0hhhOFBR85JU8F",
+      "workflow_name": "Native: DataStorage",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:56.827860",
+      "checksum": "cde77839e0ef295aee0198a4132ad69c",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__DataStorage__v1__20260202_202356.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "sCZustsfnQvwAsdp": [
+    {
+      "workflow_id": "sCZustsfnQvwAsdp",
+      "workflow_name": "Native: Finance",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:56.952340",
+      "checksum": "b65fc945cf470d0a90e5a07ebe58ec7c",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Finance__v1__20260202_202356.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "e3bzrDr1tGOSOczD": [
+    {
+      "workflow_id": "e3bzrDr1tGOSOczD",
+      "workflow_name": "Native: Productivity",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:57.064999",
+      "checksum": "fc28660b94c9175c29d5221c474f51a2",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Productivity__v1__20260202_202357.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "byg2N8q86nVNHgu9": [
+    {
+      "workflow_id": "byg2N8q86nVNHgu9",
+      "workflow_name": "Native: Utility",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:57.188467",
+      "checksum": "6979ffd3dc65b42a0cd54ea360856e16",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Utility__v1__20260202_202357.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "66q7moIXNA4eZUs1": [
+    {
+      "workflow_id": "66q7moIXNA4eZUs1",
+      "workflow_name": "Native: Security",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:57.316524",
+      "checksum": "d188396f29fa2ce20eb5b6fa49628aff",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Security__v1__20260202_202357.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "mindex-species-scraper": [
+    {
+      "workflow_id": "mindex-species-scraper",
+      "workflow_name": "MINDEX Species Scraper - Automated Data Collection",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:57.432569",
+      "checksum": "38c030bc9fd98b4291d070432339f97f",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MINDEX_Species_Scraper_-_Automated_Data_Collection__v1__20260202_202357.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "native-space-weather": [
+    {
+      "workflow_id": "native-space-weather",
+      "workflow_name": "Native: Space & Weather",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:57.546570",
+      "checksum": "b0308b8017c781905b3595515588642e",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Space___Weather__v1__20260202_202357.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "mindex-image-scraper": [
+    {
+      "workflow_id": "mindex-image-scraper",
+      "workflow_name": "MINDEX Image Scraper - Training Data Collection",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:57.660932",
+      "checksum": "3e7a1f9b11f870ec1578a130552739fd",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MINDEX_Image_Scraper_-_Training_Data_Collection__v1__20260202_202357.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "native-environmental": [
+    {
+      "workflow_id": "native-environmental",
+      "workflow_name": "Native: Environmental Sensors",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:57.771588",
+      "checksum": "021328be1180767f177edcd809da2309",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Environmental_Sensors__v1__20260202_202357.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "udAK8ppLChNrw3kA": [
+    {
+      "workflow_id": "udAK8ppLChNrw3kA",
+      "workflow_name": "Generic Connector",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:57.886899",
+      "checksum": "f8d952778cde069226fe1e6d20c54779",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Generic_Connector__v1__20260202_202357.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "UXayMktbPHy6OmuZ": [
+    {
+      "workflow_id": "UXayMktbPHy6OmuZ",
+      "workflow_name": "MycoBrain Telemetry Forwarder",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:58.001806",
+      "checksum": "458980d1632190bf2c9c9f9a44f6fdee",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MycoBrain_Telemetry_Forwarder__v1__20260202_202358.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "6TlrCWgZSjVsFjmI": [
+    {
+      "workflow_id": "6TlrCWgZSjVsFjmI",
+      "workflow_name": "Audit Logger",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:58.118231",
+      "checksum": "d6211e5f76b026911bccfd2e184095e7",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Audit_Logger__v1__20260202_202358.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "3e13xyZfOBZC7ysu": [
+    {
+      "workflow_id": "3e13xyZfOBZC7ysu",
+      "workflow_name": "MycoBrain Optical/Acoustic Modem Control",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:58.228705",
+      "checksum": "144a974ee3c332c156d14f259dbbfadb",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MycoBrain_Optical_Acoustic_Modem_Control__v1__20260202_202358.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "native-earth-science": [
+    {
+      "workflow_id": "native-earth-science",
+      "workflow_name": "Native: Earth Science & Geophysics",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:58.353730",
+      "checksum": "d34337597e4b35d64f0579f26eb672c6",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Earth_Science___Geophysics__v1__20260202_202358.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "native-analytics": [
+    {
+      "workflow_id": "native-analytics",
+      "workflow_name": "Native: Analytics & Data Science",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:58.480306",
+      "checksum": "0b106ce621c70360682175db4684e680",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Analytics___Data_Science__v1__20260202_202358.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "native-automation": [
+    {
+      "workflow_id": "native-automation",
+      "workflow_name": "Native: Automation Platforms",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:58.601031",
+      "checksum": "07aedee40993b26041562901200292a6",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Native__Automation_Platforms__v1__20260202_202358.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "klo4dTK83v29gns1": [
+    {
+      "workflow_id": "klo4dTK83v29gns1",
+      "workflow_name": "Ops: Proxmox Control",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:58.716000",
+      "checksum": "ca664de58422fb1ba6511441ba4c44a2",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Ops__Proxmox_Control__v1__20260202_202358.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "baPWpnUMOoGdGAGT": [
+    {
+      "workflow_id": "baPWpnUMOoGdGAGT",
+      "workflow_name": "Ops: UniFi Control",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:58.837429",
+      "checksum": "4bb5e74c7800157d9042c9570c7695be",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Ops__UniFi_Control__v1__20260202_202358.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "aO0OlAFSauCbj6oH": [
+    {
+      "workflow_id": "aO0OlAFSauCbj6oH",
+      "workflow_name": "Ops: NAS Health Check",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:58.952424",
+      "checksum": "62eecf997def9a4f095129619300446f",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Ops__NAS_Health_Check__v1__20260202_202358.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "jsGYfsLFr5FcURyV": [
+    {
+      "workflow_id": "jsGYfsLFr5FcURyV",
+      "workflow_name": "Ops: GPU Job Runner",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:59.064100",
+      "checksum": "fb3b3bdd0633e4f5b1231f0386c2bb06",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Ops__GPU_Job_Runner__v1__20260202_202359.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "xFdiMVXlyw6h1Guy": [
+    {
+      "workflow_id": "xFdiMVXlyw6h1Guy",
+      "workflow_name": "Ops: UART Ingest Reader",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:59.174801",
+      "checksum": "c26c6e9425cae4d1de95a945b8d945e5",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Ops__UART_Ingest_Reader__v1__20260202_202359.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "defense-connector": [
+    {
+      "workflow_id": "defense-connector",
+      "workflow_name": "Defense: Secure Connector",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:59.294109",
+      "checksum": "fe92603413e7a9940b3941a303115888",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Defense__Secure_Connector__v1__20260202_202359.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "ABxL2tJ7YxYox2jE": [
+    {
+      "workflow_id": "ABxL2tJ7YxYox2jE",
+      "workflow_name": "MYCA Comprehensive Integration",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:59.418426",
+      "checksum": "84e4192a7cc655d9bda89dd851eeabdf",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA_Comprehensive_Integration__v1__20260202_202359.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "e9iIrAwH42bf4sJi": [
+    {
+      "workflow_id": "e9iIrAwH42bf4sJi",
+      "workflow_name": "Debug: Auto-Fix Monitor",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:59.528543",
+      "checksum": "c2458c3f533fe0ac7c262a733c3fc792",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\Debug__Auto-Fix_Monitor__v1__20260202_202359.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "YgAU5esbiUY4iCjI": [
+    {
+      "workflow_id": "YgAU5esbiUY4iCjI",
+      "workflow_name": "MYCA: Business Ops",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:59.815480",
+      "checksum": "80b52ea02da4c086b96afad889232074",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA__Business_Ops__v1__20260202_202359.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "8ikywVIGDnkOZdlN": [
+    {
+      "workflow_id": "8ikywVIGDnkOZdlN",
+      "workflow_name": "MYCA: Jarvis Unified Interface",
+      "version": 1,
+      "archived_at": "2026-02-02T20:23:59.931890",
+      "checksum": "25dab9d0473986ec584a4cb76bdd26e3",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA__Jarvis_Unified_Interface__v1__20260202_202359.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "NYJm3Tc8PbKVm0yX": [
+    {
+      "workflow_id": "NYJm3Tc8PbKVm0yX",
+      "workflow_name": "MYCA: Master Brain",
+      "version": 1,
+      "archived_at": "2026-02-02T20:24:00.050158",
+      "checksum": "067d06aaccb6cfd3f6258d63a20e7cd8",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA__Master_Brain__v1__20260202_202400.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "JItMOfaZ4l7cZfj4": [
+    {
+      "workflow_id": "JItMOfaZ4l7cZfj4",
+      "workflow_name": "MYCA Orchestrator",
+      "version": 1,
+      "archived_at": "2026-02-02T20:24:00.172933",
+      "checksum": "9823889a3fc14d30209376a811cadd9f",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA_Orchestrator__v1__20260202_202400.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "WGpXgSJ0KsPNOttR": [
+    {
+      "workflow_id": "WGpXgSJ0KsPNOttR",
+      "workflow_name": "MYCA: Proactive Monitor",
+      "version": 1,
+      "archived_at": "2026-02-02T20:24:00.335179",
+      "checksum": "8ea44fa2bac4d530cfe8c838c96d0969",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA__Proactive_Monitor__v1__20260202_202400.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "kzqcePJDjwyDwnqE": [
+    {
+      "workflow_id": "kzqcePJDjwyDwnqE",
+      "workflow_name": "MYCA Speech Complete",
+      "version": 1,
+      "archived_at": "2026-02-02T20:24:00.457159",
+      "checksum": "b43858b76501e5badacf8f1a3f3c0cca",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA_Speech_Complete__v1__20260202_202400.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "DVivKRtKUz2xynIQ": [
+    {
+      "workflow_id": "DVivKRtKUz2xynIQ",
+      "workflow_name": "MYCA: System Control",
+      "version": 1,
+      "archived_at": "2026-02-02T20:24:00.580576",
+      "checksum": "fc3a5c04a719b716f73651e91bb33c61",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA__System_Control__v1__20260202_202400.json",
+      "reason": "pre-update backup"
+    }
+  ],
+  "8d8cTLs1EcqHQMNj": [
+    {
+      "workflow_id": "8d8cTLs1EcqHQMNj",
+      "workflow_name": "MYCA: Tools Hub",
+      "version": 1,
+      "archived_at": "2026-02-02T20:24:00.706728",
+      "checksum": "860fea4203504b43feabae167ed7ef71",
+      "file_path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\n8n\\archive\\MYCA__Tools_Hub__v1__20260202_202400.json",
+      "reason": "pre-update backup"
+    }
+  ]
+}

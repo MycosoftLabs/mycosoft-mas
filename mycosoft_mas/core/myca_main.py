@@ -44,6 +44,13 @@ from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 
+# Voice tools router for PersonaPlex bridge
+try:
+    from mycosoft_mas.core.routers.voice_tools_api import router as voice_tools_router
+    VOICE_TOOLS_AVAILABLE = True
+except ImportError:
+    VOICE_TOOLS_AVAILABLE = False
+
 # N8N Client - use mycosoft_mas path
 try:
     from mycosoft_mas.integrations.n8n_client import N8NClient
@@ -247,6 +254,10 @@ app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
+
+# Voice tools for PersonaPlex bridge
+if VOICE_TOOLS_AVAILABLE:
+    app.include_router(voice_tools_router, tags=["voice-tools"])
 
 
 # ---------------------------------------------------------------------------
@@ -591,6 +602,8 @@ async def voice_feedback_recent(limit: int = 20) -> dict[str, Any]:
 @app.get("/voice/feedback/summary")
 async def voice_feedback_summary() -> dict[str, Any]:
     return {"status": "ok", "summary": _feedback_store.summary()}
+
+
 
 
 

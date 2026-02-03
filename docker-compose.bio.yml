@@ -1,0 +1,69 @@
+﻿# MYCA Biological Interface Services Docker Compose
+# Created: February 3, 2026
+
+version: "3.9"
+
+services:
+  fci-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.bio
+    image: mycosoft/fci-service:latest
+    container_name: fci-service
+    ports:
+      - "8020:8000"
+    environment:
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/bio
+      - SAMPLE_RATE_HZ=1000
+      - ELECTRODE_COUNT=64
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    privileged: true
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+  mycobrain-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.bio
+    image: mycosoft/mycobrain:latest
+    container_name: mycobrain-service
+    ports:
+      - "8021:8000"
+    environment:
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/bio
+      - COMPUTE_MODE=neuromorphic
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+  genomics-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.bio
+    image: mycosoft/genomics:latest
+    container_name: genomics-service
+    ports:
+      - "8022:8000"
+    environment:
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/bio
+    volumes:
+      - genomics-data:/app/data
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+networks:
+  mycosoft-network:
+    external: true
+
+volumes:
+  genomics-data:

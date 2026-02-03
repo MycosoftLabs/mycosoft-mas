@@ -1,0 +1,312 @@
+{
+  "updatedAt": "2026-01-27T06:11:57.872Z",
+  "createdAt": "2026-01-27T06:11:57.872Z",
+  "id": "mindex-image-scraper",
+  "name": "MINDEX Image Scraper - Training Data Collection",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 12
+            }
+          ]
+        }
+      },
+      "id": "schedule-images",
+      "name": "Twice Daily Image Scrape",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mindex:8000/api/mindex/sync/iNaturalist",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "5000"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "sync-inaturalist-images",
+      "name": "Sync iNaturalist Images",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mindex:8000/api/mindex/sync/GBIF",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "5000"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "sync-gbif-images",
+      "name": "Sync GBIF Images",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "merge-results",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://mindex:8000/api/mindex/images",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "is_training",
+              "value": "true"
+            },
+            {
+              "name": "per_page",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-training-images",
+      "name": "Get Training Images",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate image stats\nconst items = $input.all();\nconst data = items[0]?.json || {};\n\nconst totalImages = data.total || 0;\nconst imagesBySource = {};\n\n// Group by source\nfor (const img of data.images || []) {\n  const source = img.source || 'Unknown';\n  imagesBySource[source] = (imagesBySource[source] || 0) + 1;\n}\n\nreturn [{\n  json: {\n    total_training_images: totalImages,\n    images_by_source: imagesBySource,\n    sample_images: (data.images || []).slice(0, 5).map(i => ({\n      url: i.url,\n      species: i.species_name,\n      source: i.source\n    })),\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "process-stats",
+      "name": "Process Image Stats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mindex:8000/api/mindex/telemetry",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"source\": \"image-scraper-workflow\",\n  \"data\": {{ JSON.stringify($json) }}\n}",
+        "options": {}
+      },
+      "id": "log-to-mindex",
+      "name": "Log Stats to MINDEX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Twice Daily Image Scrape": {
+      "main": [
+        [
+          {
+            "node": "Sync iNaturalist Images",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sync GBIF Images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync iNaturalist Images": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync GBIF Images": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Get Training Images",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Training Images": {
+      "main": [
+        [
+          {
+            "node": "Process Image Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Image Stats": {
+      "main": [
+        [
+          {
+            "node": "Log Stats to MINDEX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "mycosoft-mindex"
+  },
+  "pinData": null,
+  "versionId": "8ae5d8af-d5e3-41fd-befb-0cb25ad6fa76",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:11:57.882Z",
+      "createdAt": "2026-01-27T06:11:57.882Z",
+      "role": "workflow:owner",
+      "workflowId": "mindex-image-scraper",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:11:57.896Z",
+      "createdAt": "2026-01-27T06:11:57.896Z",
+      "id": "FKMTiStACKBlQWg0",
+      "name": "images"
+    },
+    {
+      "updatedAt": "2026-01-27T06:11:47.583Z",
+      "createdAt": "2026-01-27T06:11:47.583Z",
+      "id": "M4XwuKRdsubpjcZl",
+      "name": "mindex"
+    },
+    {
+      "updatedAt": "2026-01-27T06:11:57.902Z",
+      "createdAt": "2026-01-27T06:11:57.902Z",
+      "id": "wZe179YGUWIbUE29",
+      "name": "training-data"
+    }
+  ],
+  "activeVersion": null
+}

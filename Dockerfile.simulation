@@ -1,0 +1,37 @@
+﻿# Dockerfile for Simulation Services
+# Created: February 3, 2026
+
+FROM nvidia/cuda:12.1-runtime-ubuntu22.04
+
+WORKDIR /app
+
+# Install Python and dependencies
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3-pip \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Install simulation-specific packages
+RUN pip3 install --no-cache-dir \
+    numpy \
+    scipy \
+    torch \
+    openmm
+
+# Copy application code
+COPY mycosoft_mas/ ./mycosoft_mas/
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Expose port
+EXPOSE 8000
+
+# Run the service
+CMD ["python3", "-m", "uvicorn", "mycosoft_mas.simulation:app", "--host", "0.0.0.0", "--port", "8000"]
