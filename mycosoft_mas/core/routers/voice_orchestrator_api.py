@@ -332,18 +332,41 @@ class MYCAOrchestrator:
         return None
     
     def _generate_local_response(self, message: str, intent: Dict[str, Any]) -> str:
-        """Generate a local response when n8n is unavailable."""
+        """Generate a MYCA identity-aware local response when n8n is unavailable."""
+        message_lower = message.lower().strip()
+        
+        # Handle name-related questions - MYCA MUST know her identity
+        name_patterns = ['your name', 'who are you', 'what are you', "what's your name", 'whats your name', 'name like']
+        if any(p in message_lower for p in name_patterns):
+            return "I'm MYCA - My Companion AI. I'm the orchestrator of Mycosoft's Multi-Agent System, coordinating all our specialized agents. I was created by Morgan, the founder of Mycosoft. What can I help you with today?"
+        
+        # Handle greetings
+        greeting_patterns = ['hello', 'hi ', 'hey', 'good morning', 'good evening', 'greetings']
+        if any(p in message_lower for p in greeting_patterns) or message_lower in ['hi', 'hey', 'hello']:
+            return "Hello! I'm MYCA, your AI companion and orchestrator here at Mycosoft. I'm coordinating our agent network and ready to help. What would you like to do?"
+        
+        # Handle confirmation requests
         if intent["requires_confirmation"]:
-            return f"I understand you want to {message.lower()}. This is a potentially destructive action. Please confirm by saying 'yes' or 'confirm'."
+            return f"I'm MYCA, and I understand you want to {message.lower()}. This is a potentially destructive action. Please confirm by saying 'yes' or 'confirm'."
+        
+        # Handle capability questions
+        capability_patterns = ['what can you', 'can you help', 'what do you do', 'capabilities', 'help me']
+        if any(p in message_lower for p in capability_patterns):
+            return "I'm MYCA, the central orchestrator for Mycosoft's Multi-Agent System. I coordinate 40+ specialized agents, monitor infrastructure, execute workflows, and help you interact with our systems. How can I help you today?"
+        
+        # Handle status questions
+        status_patterns = ['status', 'how are you', 'are you there', 'you working', 'agents']
+        if any(p in message_lower for p in status_patterns):
+            return "I'm MYCA, and I'm fully operational. I'm currently coordinating our agent network and all systems are responsive. What would you like me to check?"
         
         if intent["type"] == "query":
-            return "I'm processing your request. The n8n workflow system is currently unavailable, so I'm operating in degraded mode. Please try again in a moment."
+            return "I'm MYCA. I'm processing your request. The n8n workflow system is currently being refreshed, so I'm operating with limited capabilities. Please try again in a moment."
         
         if intent["type"] == "action":
-            return "I've received your action request. The workflow system is temporarily unavailable. I'll queue this for processing."
+            return "I'm MYCA. I've received your action request. The workflow system is temporarily being updated. I'll queue this for processing."
         
-        # Chitchat - use friendly response
-        return "Hello! I'm MYCA, the AI operator for Mycosoft's Multi-Agent System. I'm here to help you manage infrastructure, coordinate agents, and answer questions. What can I help you with?"
+        # Default chitchat response - always identify as MYCA
+        return "I'm MYCA, the AI orchestrator for Mycosoft's Multi-Agent System. I'm here to help you manage infrastructure, coordinate agents, and answer questions. What can I help you with?"
 
 
 # Singleton instance
