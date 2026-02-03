@@ -1,0 +1,364 @@
+{
+  "updatedAt": "2026-01-27T06:11:22.151Z",
+  "createdAt": "2026-01-27T06:11:22.151Z",
+  "id": "0u0hhhOFBR85JU8F",
+  "name": "Native: DataStorage",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "data-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific data/storage integration\nconst input = $input.item.json;\nconst integrationName = input.integration.integration;\nreturn [{ json: { ...input, routing_node: integrationName } }];"
+      },
+      "id": "data-router",
+      "name": "Data Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "postgres",
+              "name": "=postgres",
+              "value": "={{ $json.routing_node === 'postgres' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "mongodb",
+              "name": "=mongodb",
+              "value": "={{ $json.routing_node === 'mongodb' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "s3",
+              "name": "=s3",
+              "value": "={{ ['aws_s3','gcs'].includes($json.routing_node) }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "data-flags",
+      "name": "Prepare Switch",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "boolean",
+        "value1": "={{ $json.postgres }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": true,
+              "output": 0
+            },
+            {
+              "value2": "={{ $json.mongodb }}",
+              "output": 1
+            },
+            {
+              "value2": "={{ $json.s3 }}",
+              "output": 2
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "data-switch",
+      "name": "Switch: Data",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.command.params.query || 'SELECT 1' }}",
+        "additionalFields": {}
+      },
+      "id": "postgres-node",
+      "name": "Postgres Query",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        80
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "find",
+        "collection": "={{ $json.command.params.collection || 'items' }}",
+        "query": "={{ $json.command.params.filter || '{}' }}"
+      },
+      "id": "mongo-node",
+      "name": "MongoDB Find",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        260
+      ],
+      "credentials": {
+        "mongoDb": {
+          "name": "MongoDB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "resource": "bucket",
+        "bucketName": "={{ $json.command.params.bucket || 'myca-bucket' }}"
+      },
+      "id": "s3-node",
+      "name": "Object Storage List",
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        440
+      ],
+      "credentials": {
+        "aws": {
+          "name": "AWS S3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;return [{json:{error:true,message:`Integration ${input.integration.integration} not implemented in data native handler`,request_id:input.request_id}}];"
+      },
+      "id": "data-fallback",
+      "name": "Data Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:input.integration.integration,action:input.command.action,result:result,timestamp:new Date().toISOString()}}];"
+      },
+      "id": "format-data",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Data Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Router": {
+      "main": [
+        [
+          {
+            "node": "Prepare Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Switch": {
+      "main": [
+        [
+          {
+            "node": "Switch: Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Data": {
+      "main": [
+        [
+          {
+            "node": "Postgres Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MongoDB Find",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Object Storage List",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Data Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Query": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Find": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Object Storage List": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Fallback": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "6f09478d-2036-4c6a-941e-75b148c170f0",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:11:22.160Z",
+      "createdAt": "2026-01-27T06:11:22.160Z",
+      "role": "workflow:owner",
+      "workflowId": "0u0hhhOFBR85JU8F",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:11:07.277Z",
+      "createdAt": "2026-01-27T06:11:07.277Z",
+      "id": "myca-native",
+      "name": "MYCA Native"
+    }
+  ],
+  "activeVersion": null
+}

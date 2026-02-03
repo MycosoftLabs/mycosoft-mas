@@ -1,0 +1,892 @@
+{
+  "updatedAt": "2026-01-27T06:13:59.264Z",
+  "createdAt": "2026-01-27T06:13:59.264Z",
+  "id": "DVivKRtKUz2xynIQ",
+  "name": "MYCA: System Control",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/system",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-system",
+      "name": "System Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        100,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse system control request\nconst input = $input.first().json;\n\nconst action = input.action || 'status';\nconst message = input.message || '';\nconst sessionId = input.session_id || `sys_${Date.now()}`;\n\n// Determine target system\nlet targetSystem = 'general';\nif (/proxmox|vm|virtual|container|lxc/i.test(message)) targetSystem = 'proxmox';\nelse if (/unifi|network|wifi|switch|router|firewall|vlan/i.test(message)) targetSystem = 'unifi';\nelse if (/nas|storage|backup|synology|truenas|share|smb|nfs/i.test(message)) targetSystem = 'nas';\nelse if (/docker|container|compose/i.test(message)) targetSystem = 'docker';\nelse if (/gpu|cuda|nvidia|training|job/i.test(message)) targetSystem = 'gpu';\nelse if (/mycobrain|iot|sensor|device/i.test(message)) targetSystem = 'mycobrain';\nelse if (/database|postgres|redis|mongo/i.test(message)) targetSystem = 'database';\n\n// Determine operation type\nlet operation = 'status';\nif (/start|boot|power.*on|enable/i.test(message)) operation = 'start';\nelse if (/stop|shutdown|power.*off|disable/i.test(message)) operation = 'stop';\nelse if (/restart|reboot|reload/i.test(message)) operation = 'restart';\nelse if (/create|new|provision|deploy/i.test(message)) operation = 'create';\nelse if (/delete|destroy|remove|terminate/i.test(message)) operation = 'delete';\nelse if (/list|show|get|info/i.test(message)) operation = 'list';\nelse if (/status|health|check/i.test(message)) operation = 'status';\nelse if (/update|upgrade|patch/i.test(message)) operation = 'update';\nelse if (/config|configure|settings/i.test(message)) operation = 'config';\n\n// Check if dangerous operation\nconst isDangerous = /delete|destroy|shutdown|reboot|terminate|wipe/i.test(message);\n\nreturn {\n  json: {\n    action: action,\n    target_system: targetSystem,\n    operation: operation,\n    message: message,\n    session_id: sessionId,\n    requires_confirmation: isDangerous,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-system",
+      "name": "Parse System Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "proxmox",
+              "leftValue": "={{ $json.target_system }}",
+              "rightValue": "proxmox",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "unifi",
+              "leftValue": "={{ $json.target_system }}",
+              "rightValue": "unifi",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "nas",
+              "leftValue": "={{ $json.target_system }}",
+              "rightValue": "nas",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "docker",
+              "leftValue": "={{ $json.target_system }}",
+              "rightValue": "docker",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "gpu",
+              "leftValue": "={{ $json.target_system }}",
+              "rightValue": "gpu",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "database",
+              "leftValue": "={{ $json.target_system }}",
+              "rightValue": "database",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "system-router",
+      "name": "System Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        540,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Proxmox VE Control\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract VM/container identifiers\nconst vmMatch = message.match(/(?:vm|container|lxc)[\\s-]*(\\d+)/i);\nconst vmId = vmMatch ? vmMatch[1] : null;\n\n// Proxmox API endpoints (placeholder - configure with actual API)\nconst proxmoxConfig = {\n  host: process.env.PROXMOX_HOST || 'proxmox.local',\n  port: 8006,\n  node: process.env.PROXMOX_NODE || 'pve'\n};\n\nconst apiEndpoints = {\n  list: `/api2/json/nodes/${proxmoxConfig.node}/qemu`,\n  status: vmId ? `/api2/json/nodes/${proxmoxConfig.node}/qemu/${vmId}/status/current` : null,\n  start: vmId ? `/api2/json/nodes/${proxmoxConfig.node}/qemu/${vmId}/status/start` : null,\n  stop: vmId ? `/api2/json/nodes/${proxmoxConfig.node}/qemu/${vmId}/status/stop` : null,\n  restart: vmId ? `/api2/json/nodes/${proxmoxConfig.node}/qemu/${vmId}/status/reboot` : null\n};\n\nlet result = '';\nif (operation === 'list') {\n  result = 'To list VMs, configure Proxmox API credentials and HTTP Request node.';\n} else if (vmId) {\n  result = `Proxmox ${operation} command for VM ${vmId}. Configure API credentials to execute.`;\n} else {\n  result = 'Specify a VM ID (e.g., \"status of VM 100\") for Proxmox operations.';\n}\n\nreturn {\n  json: {\n    system: 'proxmox',\n    operation: operation,\n    vm_id: vmId,\n    endpoint: apiEndpoints[operation],\n    result: result,\n    config_required: 'Add PROXMOX_HOST, PROXMOX_USER, PROXMOX_TOKEN to environment',\n    api_docs: 'https://pve.proxmox.com/pve-docs/api-viewer/'\n  }\n};"
+      },
+      "id": "proxmox",
+      "name": "Proxmox",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// UniFi Network Control\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract device/client identifiers\nconst deviceMatch = message.match(/(?:device|client|ap|switch)[\\s:]+([\\w\\-]+)/i);\nconst deviceId = deviceMatch ? deviceMatch[1] : null;\n\n// UniFi API endpoints\nconst unifiConfig = {\n  controller: process.env.UNIFI_HOST || 'unifi.local',\n  port: 8443,\n  site: process.env.UNIFI_SITE || 'default'\n};\n\nconst apiEndpoints = {\n  list_clients: `/api/s/${unifiConfig.site}/stat/sta`,\n  list_devices: `/api/s/${unifiConfig.site}/stat/device`,\n  health: `/api/s/${unifiConfig.site}/stat/health`,\n  alerts: `/api/s/${unifiConfig.site}/stat/alarm`\n};\n\nlet result = '';\nif (operation === 'status' || operation === 'list') {\n  result = 'UniFi network status. Configure UniFi credentials for live data.';\n} else {\n  result = `UniFi ${operation} command received. Configure API credentials to execute.`;\n}\n\nreturn {\n  json: {\n    system: 'unifi',\n    operation: operation,\n    device_id: deviceId,\n    endpoint: apiEndpoints[operation] || apiEndpoints.health,\n    result: result,\n    config_required: 'Add UNIFI_HOST, UNIFI_USER, UNIFI_PASSWORD to environment',\n    api_docs: 'https://ubntwiki.com/products/software/unifi-controller/api'\n  }\n};"
+      },
+      "id": "unifi",
+      "name": "UniFi",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// NAS Storage Control (Synology/TrueNAS)\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract share/volume names\nconst shareMatch = message.match(/(?:share|volume|folder)[\\s:]+([\\w\\-\\/]+)/i);\nconst shareName = shareMatch ? shareMatch[1] : null;\n\nconst nasConfig = {\n  type: process.env.NAS_TYPE || 'synology', // synology, truenas\n  host: process.env.NAS_HOST || 'nas.local',\n  port: 5001\n};\n\nlet result = '';\nif (operation === 'status') {\n  result = 'NAS storage status. Configure NAS API credentials for live data.';\n} else if (operation === 'list') {\n  result = 'List NAS shares/volumes. Configure API credentials.';\n} else {\n  result = `NAS ${operation} command for ${shareName || 'storage'}. Configure API credentials.`;\n}\n\nreturn {\n  json: {\n    system: 'nas',\n    operation: operation,\n    share: shareName,\n    result: result,\n    config_required: 'Add NAS_HOST, NAS_USER, NAS_PASSWORD to environment',\n    supported_nas: ['Synology DSM API', 'TrueNAS API', 'Generic SMB/NFS']\n  }\n};"
+      },
+      "id": "nas",
+      "name": "NAS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Docker Container Management\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract container name\nconst containerMatch = message.match(/(?:container|service)[\\s:]+([\\w\\-]+)/i);\nconst containerName = containerMatch ? containerMatch[1] : null;\n\nlet result = '';\nif (operation === 'list') {\n  result = 'List Docker containers. Use SSH node or Docker API.';\n} else if (containerName) {\n  result = `Docker ${operation} for container \"${containerName}\". Configure Docker access.`;\n} else {\n  result = 'Specify a container name for Docker operations.';\n}\n\nreturn {\n  json: {\n    system: 'docker',\n    operation: operation,\n    container: containerName,\n    result: result,\n    commands: {\n      list: 'docker ps -a',\n      start: containerName ? `docker start ${containerName}` : null,\n      stop: containerName ? `docker stop ${containerName}` : null,\n      restart: containerName ? `docker restart ${containerName}` : null,\n      logs: containerName ? `docker logs --tail 100 ${containerName}` : null\n    }\n  }\n};"
+      },
+      "id": "docker",
+      "name": "Docker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// GPU/CUDA Job Management\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\nlet result = '';\nif (operation === 'status') {\n  result = 'GPU status check. Run nvidia-smi via SSH for details.';\n} else if (operation === 'list') {\n  result = 'List GPU jobs. Configure job scheduler integration.';\n} else {\n  result = `GPU ${operation} command. Configure SSH access to GPU server.`;\n}\n\nreturn {\n  json: {\n    system: 'gpu',\n    operation: operation,\n    result: result,\n    commands: {\n      status: 'nvidia-smi',\n      processes: 'nvidia-smi --query-compute-apps=pid,name,used_memory --format=csv',\n      utilization: 'nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.used,memory.total --format=csv'\n    }\n  }\n};"
+      },
+      "id": "gpu",
+      "name": "GPU",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Database Management\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Determine database type\nlet dbType = 'postgres';\nif (/redis/i.test(message)) dbType = 'redis';\nelse if (/mongo/i.test(message)) dbType = 'mongodb';\nelse if (/mysql|mariadb/i.test(message)) dbType = 'mysql';\n\nlet result = '';\nif (operation === 'status') {\n  result = `${dbType} database status. Configure database credentials in n8n.`;\n} else {\n  result = `Database ${operation} for ${dbType}. Use n8n database nodes.`;\n}\n\nreturn {\n  json: {\n    system: 'database',\n    db_type: dbType,\n    operation: operation,\n    result: result,\n    n8n_nodes: ['Postgres', 'MySQL', 'MongoDB', 'Redis']\n  }\n};"
+      },
+      "id": "database",
+      "name": "Database",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// General system status\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    system: 'general',\n    operation: input.operation,\n    result: `System ${input.operation} request for ${input.target_system}. Configure specific integrations.`,\n    available_systems: ['proxmox', 'unifi', 'nas', 'docker', 'gpu', 'database', 'mycobrain']\n  }\n};"
+      },
+      "id": "general",
+      "name": "General",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        940
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format system response\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    system: input.system,\n    operation: input.operation,\n    result: input.result,\n    data: input,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1220,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "System Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse System Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse System Request": {
+      "main": [
+        [
+          {
+            "node": "System Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System Router": {
+      "main": [
+        [
+          {
+            "node": "Proxmox",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "UniFi",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NAS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Docker",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GPU",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Database",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "General",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proxmox": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UniFi": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NAS": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Docker": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPU": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Database": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "General": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "83053cfb-59ce-4966-ab84-a90ae488759e",
+  "activeVersionId": "83053cfb-59ce-4966-ab84-a90ae488759e",
+  "versionCounter": 7,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:13:59.273Z",
+      "createdAt": "2026-01-27T06:13:59.273Z",
+      "role": "workflow:owner",
+      "workflowId": "DVivKRtKUz2xynIQ",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:13:59.281Z",
+      "createdAt": "2026-01-27T06:13:59.281Z",
+      "id": "5PIEjLgczpjAmFl1",
+      "name": "MYCA Infrastructure"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-27T06:13:59.287Z",
+    "createdAt": "2026-01-27T06:13:59.287Z",
+    "versionId": "83053cfb-59ce-4966-ab84-a90ae488759e",
+    "workflowId": "DVivKRtKUz2xynIQ",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "myca/system",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-system",
+        "name": "System Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          100,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Parse system control request\nconst input = $input.first().json;\n\nconst action = input.action || 'status';\nconst message = input.message || '';\nconst sessionId = input.session_id || `sys_${Date.now()}`;\n\n// Determine target system\nlet targetSystem = 'general';\nif (/proxmox|vm|virtual|container|lxc/i.test(message)) targetSystem = 'proxmox';\nelse if (/unifi|network|wifi|switch|router|firewall|vlan/i.test(message)) targetSystem = 'unifi';\nelse if (/nas|storage|backup|synology|truenas|share|smb|nfs/i.test(message)) targetSystem = 'nas';\nelse if (/docker|container|compose/i.test(message)) targetSystem = 'docker';\nelse if (/gpu|cuda|nvidia|training|job/i.test(message)) targetSystem = 'gpu';\nelse if (/mycobrain|iot|sensor|device/i.test(message)) targetSystem = 'mycobrain';\nelse if (/database|postgres|redis|mongo/i.test(message)) targetSystem = 'database';\n\n// Determine operation type\nlet operation = 'status';\nif (/start|boot|power.*on|enable/i.test(message)) operation = 'start';\nelse if (/stop|shutdown|power.*off|disable/i.test(message)) operation = 'stop';\nelse if (/restart|reboot|reload/i.test(message)) operation = 'restart';\nelse if (/create|new|provision|deploy/i.test(message)) operation = 'create';\nelse if (/delete|destroy|remove|terminate/i.test(message)) operation = 'delete';\nelse if (/list|show|get|info/i.test(message)) operation = 'list';\nelse if (/status|health|check/i.test(message)) operation = 'status';\nelse if (/update|upgrade|patch/i.test(message)) operation = 'update';\nelse if (/config|configure|settings/i.test(message)) operation = 'config';\n\n// Check if dangerous operation\nconst isDangerous = /delete|destroy|shutdown|reboot|terminate|wipe/i.test(message);\n\nreturn {\n  json: {\n    action: action,\n    target_system: targetSystem,\n    operation: operation,\n    message: message,\n    session_id: sessionId,\n    requires_confirmation: isDangerous,\n    timestamp: new Date().toISOString()\n  }\n};"
+        },
+        "id": "parse-system",
+        "name": "Parse System Request",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          320,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "proxmox",
+                "leftValue": "={{ $json.target_system }}",
+                "rightValue": "proxmox",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "unifi",
+                "leftValue": "={{ $json.target_system }}",
+                "rightValue": "unifi",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "nas",
+                "leftValue": "={{ $json.target_system }}",
+                "rightValue": "nas",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "docker",
+                "leftValue": "={{ $json.target_system }}",
+                "rightValue": "docker",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "gpu",
+                "leftValue": "={{ $json.target_system }}",
+                "rightValue": "gpu",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "database",
+                "leftValue": "={{ $json.target_system }}",
+                "rightValue": "database",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          }
+        },
+        "id": "system-router",
+        "name": "System Router",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3,
+        "position": [
+          540,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Proxmox VE Control\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract VM/container identifiers\nconst vmMatch = message.match(/(?:vm|container|lxc)[\\s-]*(\\d+)/i);\nconst vmId = vmMatch ? vmMatch[1] : null;\n\n// Proxmox API endpoints (placeholder - configure with actual API)\nconst proxmoxConfig = {\n  host: process.env.PROXMOX_HOST || 'proxmox.local',\n  port: 8006,\n  node: process.env.PROXMOX_NODE || 'pve'\n};\n\nconst apiEndpoints = {\n  list: `/api2/json/nodes/${proxmoxConfig.node}/qemu`,\n  status: vmId ? `/api2/json/nodes/${proxmoxConfig.node}/qemu/${vmId}/status/current` : null,\n  start: vmId ? `/api2/json/nodes/${proxmoxConfig.node}/qemu/${vmId}/status/start` : null,\n  stop: vmId ? `/api2/json/nodes/${proxmoxConfig.node}/qemu/${vmId}/status/stop` : null,\n  restart: vmId ? `/api2/json/nodes/${proxmoxConfig.node}/qemu/${vmId}/status/reboot` : null\n};\n\nlet result = '';\nif (operation === 'list') {\n  result = 'To list VMs, configure Proxmox API credentials and HTTP Request node.';\n} else if (vmId) {\n  result = `Proxmox ${operation} command for VM ${vmId}. Configure API credentials to execute.`;\n} else {\n  result = 'Specify a VM ID (e.g., \"status of VM 100\") for Proxmox operations.';\n}\n\nreturn {\n  json: {\n    system: 'proxmox',\n    operation: operation,\n    vm_id: vmId,\n    endpoint: apiEndpoints[operation],\n    result: result,\n    config_required: 'Add PROXMOX_HOST, PROXMOX_USER, PROXMOX_TOKEN to environment',\n    api_docs: 'https://pve.proxmox.com/pve-docs/api-viewer/'\n  }\n};"
+        },
+        "id": "proxmox",
+        "name": "Proxmox",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// UniFi Network Control\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract device/client identifiers\nconst deviceMatch = message.match(/(?:device|client|ap|switch)[\\s:]+([\\w\\-]+)/i);\nconst deviceId = deviceMatch ? deviceMatch[1] : null;\n\n// UniFi API endpoints\nconst unifiConfig = {\n  controller: process.env.UNIFI_HOST || 'unifi.local',\n  port: 8443,\n  site: process.env.UNIFI_SITE || 'default'\n};\n\nconst apiEndpoints = {\n  list_clients: `/api/s/${unifiConfig.site}/stat/sta`,\n  list_devices: `/api/s/${unifiConfig.site}/stat/device`,\n  health: `/api/s/${unifiConfig.site}/stat/health`,\n  alerts: `/api/s/${unifiConfig.site}/stat/alarm`\n};\n\nlet result = '';\nif (operation === 'status' || operation === 'list') {\n  result = 'UniFi network status. Configure UniFi credentials for live data.';\n} else {\n  result = `UniFi ${operation} command received. Configure API credentials to execute.`;\n}\n\nreturn {\n  json: {\n    system: 'unifi',\n    operation: operation,\n    device_id: deviceId,\n    endpoint: apiEndpoints[operation] || apiEndpoints.health,\n    result: result,\n    config_required: 'Add UNIFI_HOST, UNIFI_USER, UNIFI_PASSWORD to environment',\n    api_docs: 'https://ubntwiki.com/products/software/unifi-controller/api'\n  }\n};"
+        },
+        "id": "unifi",
+        "name": "UniFi",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          240
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// NAS Storage Control (Synology/TrueNAS)\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract share/volume names\nconst shareMatch = message.match(/(?:share|volume|folder)[\\s:]+([\\w\\-\\/]+)/i);\nconst shareName = shareMatch ? shareMatch[1] : null;\n\nconst nasConfig = {\n  type: process.env.NAS_TYPE || 'synology', // synology, truenas\n  host: process.env.NAS_HOST || 'nas.local',\n  port: 5001\n};\n\nlet result = '';\nif (operation === 'status') {\n  result = 'NAS storage status. Configure NAS API credentials for live data.';\n} else if (operation === 'list') {\n  result = 'List NAS shares/volumes. Configure API credentials.';\n} else {\n  result = `NAS ${operation} command for ${shareName || 'storage'}. Configure API credentials.`;\n}\n\nreturn {\n  json: {\n    system: 'nas',\n    operation: operation,\n    share: shareName,\n    result: result,\n    config_required: 'Add NAS_HOST, NAS_USER, NAS_PASSWORD to environment',\n    supported_nas: ['Synology DSM API', 'TrueNAS API', 'Generic SMB/NFS']\n  }\n};"
+        },
+        "id": "nas",
+        "name": "NAS",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          380
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Docker Container Management\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract container name\nconst containerMatch = message.match(/(?:container|service)[\\s:]+([\\w\\-]+)/i);\nconst containerName = containerMatch ? containerMatch[1] : null;\n\nlet result = '';\nif (operation === 'list') {\n  result = 'List Docker containers. Use SSH node or Docker API.';\n} else if (containerName) {\n  result = `Docker ${operation} for container \"${containerName}\". Configure Docker access.`;\n} else {\n  result = 'Specify a container name for Docker operations.';\n}\n\nreturn {\n  json: {\n    system: 'docker',\n    operation: operation,\n    container: containerName,\n    result: result,\n    commands: {\n      list: 'docker ps -a',\n      start: containerName ? `docker start ${containerName}` : null,\n      stop: containerName ? `docker stop ${containerName}` : null,\n      restart: containerName ? `docker restart ${containerName}` : null,\n      logs: containerName ? `docker logs --tail 100 ${containerName}` : null\n    }\n  }\n};"
+        },
+        "id": "docker",
+        "name": "Docker",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          520
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// GPU/CUDA Job Management\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\nlet result = '';\nif (operation === 'status') {\n  result = 'GPU status check. Run nvidia-smi via SSH for details.';\n} else if (operation === 'list') {\n  result = 'List GPU jobs. Configure job scheduler integration.';\n} else {\n  result = `GPU ${operation} command. Configure SSH access to GPU server.`;\n}\n\nreturn {\n  json: {\n    system: 'gpu',\n    operation: operation,\n    result: result,\n    commands: {\n      status: 'nvidia-smi',\n      processes: 'nvidia-smi --query-compute-apps=pid,name,used_memory --format=csv',\n      utilization: 'nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.used,memory.total --format=csv'\n    }\n  }\n};"
+        },
+        "id": "gpu",
+        "name": "GPU",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          660
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Database Management\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Determine database type\nlet dbType = 'postgres';\nif (/redis/i.test(message)) dbType = 'redis';\nelse if (/mongo/i.test(message)) dbType = 'mongodb';\nelse if (/mysql|mariadb/i.test(message)) dbType = 'mysql';\n\nlet result = '';\nif (operation === 'status') {\n  result = `${dbType} database status. Configure database credentials in n8n.`;\n} else {\n  result = `Database ${operation} for ${dbType}. Use n8n database nodes.`;\n}\n\nreturn {\n  json: {\n    system: 'database',\n    db_type: dbType,\n    operation: operation,\n    result: result,\n    n8n_nodes: ['Postgres', 'MySQL', 'MongoDB', 'Redis']\n  }\n};"
+        },
+        "id": "database",
+        "name": "Database",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          800
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// General system status\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    system: 'general',\n    operation: input.operation,\n    result: `System ${input.operation} request for ${input.target_system}. Configure specific integrations.`,\n    available_systems: ['proxmox', 'unifi', 'nas', 'docker', 'gpu', 'database', 'mycobrain']\n  }\n};"
+        },
+        "id": "general",
+        "name": "General",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          780,
+          940
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Format system response\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    system: input.system,\n    operation: input.operation,\n    result: input.result,\n    data: input,\n    timestamp: new Date().toISOString()\n  }\n};"
+        },
+        "id": "format-response",
+        "name": "Format Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {}
+        },
+        "id": "respond",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1220,
+          400
+        ]
+      }
+    ],
+    "connections": {
+      "System Webhook": {
+        "main": [
+          [
+            {
+              "node": "Parse System Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse System Request": {
+        "main": [
+          [
+            {
+              "node": "System Router",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "System Router": {
+        "main": [
+          [
+            {
+              "node": "Proxmox",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "UniFi",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "NAS",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Docker",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "GPU",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Database",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "General",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Proxmox": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "UniFi": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NAS": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Docker": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPU": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Database": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "General": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Response": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "import",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-27T18:33:39.882Z",
+        "id": 6,
+        "workflowId": "DVivKRtKUz2xynIQ",
+        "versionId": "83053cfb-59ce-4966-ab84-a90ae488759e",
+        "event": "activated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      },
+      {
+        "createdAt": "2026-01-27T18:50:07.321Z",
+        "id": 23,
+        "workflowId": "DVivKRtKUz2xynIQ",
+        "versionId": "83053cfb-59ce-4966-ab84-a90ae488759e",
+        "event": "activated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      },
+      {
+        "createdAt": "2026-01-27T18:50:06.236Z",
+        "id": 22,
+        "workflowId": "DVivKRtKUz2xynIQ",
+        "versionId": "83053cfb-59ce-4966-ab84-a90ae488759e",
+        "event": "deactivated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      }
+    ]
+  }
+}

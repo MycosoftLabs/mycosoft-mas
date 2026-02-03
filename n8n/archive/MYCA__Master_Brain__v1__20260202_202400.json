@@ -1,0 +1,968 @@
+{
+  "updatedAt": "2026-01-27T06:13:38.916Z",
+  "createdAt": "2026-01-27T06:13:38.916Z",
+  "id": "NYJm3Tc8PbKVm0yX",
+  "name": "MYCA: Master Brain",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/brain",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-brain",
+      "name": "Brain Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// MYCA Master Brain - Intent Classification & Context Management\nconst input = $input.first().json;\n\n// Extract request details\nconst message = input.message || input.text || input.transcript || '';\nconst actor = input.actor || 'user';\nconst sessionId = input.session_id || input.conversation_id || `session_${Date.now()}`;\nconst context = input.context || {};\n\n// Intent classification patterns\nconst intents = {\n  // System & Infrastructure\n  system_status: /\\b(status|health|check|how.*doing|running|online)\\b/i,\n  infrastructure: /\\b(proxmox|vm|virtual|server|container|docker|kubernetes)\\b/i,\n  network: /\\b(network|unifi|wifi|internet|connection|firewall|router|switch)\\b/i,\n  storage: /\\b(nas|storage|disk|backup|file.*server|synology|truenas)\\b/i,\n  \n  // Productivity & Business\n  calendar: /\\b(calendar|schedule|meeting|appointment|event|remind|tomorrow|today|week)\\b/i,\n  email: /\\b(email|mail|inbox|send.*message|reply|compose)\\b/i,\n  tasks: /\\b(task|todo|project|asana|deadline|assign|sprint|ticket)\\b/i,\n  notes: /\\b(note|notion|document|write.*down|remember|save.*this)\\b/i,\n  \n  // Information & Research\n  search: /\\b(search|find|look.*up|google|research|what.*is|who.*is|where.*is)\\b/i,\n  weather: /\\b(weather|temperature|forecast|rain|sunny|cold|hot)\\b/i,\n  news: /\\b(news|latest|headlines|updates|happening)\\b/i,\n  \n  // Code & Development\n  code: /\\b(code|script|program|python|javascript|debug|deploy|git|github)\\b/i,\n  database: /\\b(database|sql|query|data|postgres|redis|mongo)\\b/i,\n  api: /\\b(api|endpoint|request|webhook|integration)\\b/i,\n  \n  // Media & Files\n  files: /\\b(file|folder|download|upload|copy|move|delete|rename)\\b/i,\n  media: /\\b(play|music|video|spotify|youtube|stream|podcast)\\b/i,\n  \n  // Agents & AI\n  agents: /\\b(agent|mycology|research|financial|sales|dashboard|corporate)\\b/i,\n  ai: /\\b(generate|create|write|compose|draft|summarize|translate|analyze)\\b/i,\n  \n  // Control & Actions\n  control: /\\b(start|stop|restart|enable|disable|turn.*on|turn.*off|shutdown|reboot)\\b/i,\n  confirm: /\\b(yes|no|confirm|cancel|approve|deny|proceed|abort)\\b/i,\n  help: /\\b(help|how.*do|can.*you|what.*can|capabilities|commands)\\b/i,\n  \n  // Conversation\n  greeting: /\\b(hello|hi|hey|good.*morning|good.*evening|greetings)\\b/i,\n  farewell: /\\b(bye|goodbye|see.*you|later|exit|quit)\\b/i,\n  thanks: /\\b(thank|thanks|appreciate|grateful)\\b/i\n};\n\n// Classify intent\nlet detectedIntents = [];\nlet primaryIntent = 'general';\nlet confidence = 0.5;\n\nfor (const [intent, pattern] of Object.entries(intents)) {\n  if (pattern.test(message)) {\n    detectedIntents.push(intent);\n  }\n}\n\nif (detectedIntents.length > 0) {\n  primaryIntent = detectedIntents[0];\n  confidence = Math.min(0.95, 0.6 + (detectedIntents.length * 0.1));\n}\n\n// Determine target workflow/action\nconst routingMap = {\n  system_status: { target: 'system', action: 'status' },\n  infrastructure: { target: 'system', action: 'infra' },\n  network: { target: 'system', action: 'network' },\n  storage: { target: 'system', action: 'storage' },\n  calendar: { target: 'tools', action: 'calendar' },\n  email: { target: 'tools', action: 'email' },\n  tasks: { target: 'business', action: 'tasks' },\n  notes: { target: 'tools', action: 'notes' },\n  search: { target: 'tools', action: 'search' },\n  weather: { target: 'tools', action: 'weather' },\n  news: { target: 'tools', action: 'news' },\n  code: { target: 'tools', action: 'code' },\n  database: { target: 'system', action: 'database' },\n  api: { target: 'tools', action: 'api' },\n  files: { target: 'tools', action: 'files' },\n  media: { target: 'tools', action: 'media' },\n  agents: { target: 'agents', action: 'route' },\n  ai: { target: 'ai', action: 'generate' },\n  control: { target: 'system', action: 'control' },\n  confirm: { target: 'confirm', action: 'resolve' },\n  help: { target: 'help', action: 'list' },\n  greeting: { target: 'chat', action: 'greet' },\n  farewell: { target: 'chat', action: 'farewell' },\n  thanks: { target: 'chat', action: 'acknowledge' },\n  general: { target: 'chat', action: 'respond' }\n};\n\nconst routing = routingMap[primaryIntent] || routingMap.general;\n\n// Check for dangerous operations requiring confirmation\nconst dangerousPatterns = /\\b(delete|remove|shutdown|reboot|destroy|wipe|format|drop|truncate)\\b/i;\nconst requiresConfirmation = dangerousPatterns.test(message);\n\n// Extract entities (basic NER)\nconst entities = {\n  numbers: message.match(/\\d+/g) || [],\n  emails: message.match(/[\\w.-]+@[\\w.-]+\\.\\w+/g) || [],\n  urls: message.match(/https?:\\/\\/[^\\s]+/g) || [],\n  times: message.match(/\\d{1,2}:\\d{2}|\\d{1,2}\\s*(am|pm)/gi) || [],\n  dates: message.match(/\\d{1,2}[\\/\\-]\\d{1,2}[\\/\\-]\\d{2,4}|today|tomorrow|yesterday|monday|tuesday|wednesday|thursday|friday|saturday|sunday/gi) || []\n};\n\nreturn {\n  json: {\n    session_id: sessionId,\n    actor: actor,\n    message: message,\n    timestamp: new Date().toISOString(),\n    \n    // Intent classification\n    intent: {\n      primary: primaryIntent,\n      all: detectedIntents,\n      confidence: confidence\n    },\n    \n    // Routing decision\n    routing: {\n      target: routing.target,\n      action: routing.action,\n      requires_confirmation: requiresConfirmation\n    },\n    \n    // Extracted entities\n    entities: entities,\n    \n    // Context for downstream\n    context: {\n      ...context,\n      previous_intent: context.last_intent || null,\n      turn_count: (context.turn_count || 0) + 1\n    }\n  }\n};"
+      },
+      "id": "classify-intent",
+      "name": "Classify Intent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "route-system",
+              "leftValue": "={{ $json.routing.target }}",
+              "rightValue": "system",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-tools",
+              "leftValue": "={{ $json.routing.target }}",
+              "rightValue": "tools",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-business",
+              "leftValue": "={{ $json.routing.target }}",
+              "rightValue": "business",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-agents",
+              "leftValue": "={{ $json.routing.target }}",
+              "rightValue": "agents",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "route-confirm",
+              "leftValue": "={{ $json.routing.requires_confirmation }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "router",
+      "name": "Smart Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        540,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/myca/system",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "={{ $json.routing.action }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "session_id",
+              "value": "={{ $json.session_id }}"
+            },
+            {
+              "name": "entities",
+              "value": "={{ JSON.stringify($json.entities) }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "call-system",
+      "name": "System Control",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/myca/tools",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "={{ $json.routing.action }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "session_id",
+              "value": "={{ $json.session_id }}"
+            },
+            {
+              "name": "entities",
+              "value": "={{ JSON.stringify($json.entities) }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "call-tools",
+      "name": "Tools Hub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/myca/business",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "={{ $json.routing.action }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "session_id",
+              "value": "={{ $json.session_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "call-business",
+      "name": "Business Ops",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mas-orchestrator:8000/agents/registry/route/voice",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "transcript",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "actor",
+              "value": "={{ $json.actor }}"
+            },
+            {
+              "name": "session_id",
+              "value": "={{ $json.session_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "call-agents",
+      "name": "Agent Router",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mas-orchestrator:8000/voice/orchestrator/chat",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "conversation_id",
+              "value": "={{ $json.session_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "llm-chat",
+      "name": "LLM Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format final response\nconst input = $input.first().json;\nconst originalData = $('Classify Intent').first().json;\n\nlet responseText = '';\nlet responseData = {};\n\n// Extract response based on source\nif (input.response_text) {\n  responseText = input.response_text;\n  responseData = input;\n} else if (input.result) {\n  responseText = typeof input.result === 'string' ? input.result : JSON.stringify(input.result);\n  responseData = input;\n} else if (input.message) {\n  responseText = input.message;\n  responseData = input;\n} else {\n  responseText = 'I processed your request.';\n  responseData = input;\n}\n\nreturn {\n  json: {\n    status: 'success',\n    session_id: originalData.session_id,\n    intent: originalData.intent,\n    response_text: responseText,\n    data: responseData,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1220,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Brain Webhook": {
+      "main": [
+        [
+          {
+            "node": "Classify Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Intent": {
+      "main": [
+        [
+          {
+            "node": "Smart Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Smart Router": {
+      "main": [
+        [
+          {
+            "node": "System Control",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tools Hub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Business Ops",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agent Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LLM Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System Control": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tools Hub": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Ops": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent Router": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Chat": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "3ecc6771-ff74-4e37-b05a-abcf95d0ea60",
+  "activeVersionId": "3ecc6771-ff74-4e37-b05a-abcf95d0ea60",
+  "versionCounter": 7,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:13:38.925Z",
+      "createdAt": "2026-01-27T06:13:38.925Z",
+      "role": "workflow:owner",
+      "workflowId": "NYJm3Tc8PbKVm0yX",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-12-17T00:00:00.000Z",
+      "createdAt": "2025-12-17T00:00:00.000Z",
+      "id": "myca-core",
+      "name": "MYCA Core"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-27T06:13:38.929Z",
+    "createdAt": "2026-01-27T06:13:38.929Z",
+    "versionId": "3ecc6771-ff74-4e37-b05a-abcf95d0ea60",
+    "workflowId": "NYJm3Tc8PbKVm0yX",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "myca/brain",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-brain",
+        "name": "Brain Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          100,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// MYCA Master Brain - Intent Classification & Context Management\nconst input = $input.first().json;\n\n// Extract request details\nconst message = input.message || input.text || input.transcript || '';\nconst actor = input.actor || 'user';\nconst sessionId = input.session_id || input.conversation_id || `session_${Date.now()}`;\nconst context = input.context || {};\n\n// Intent classification patterns\nconst intents = {\n  // System & Infrastructure\n  system_status: /\\b(status|health|check|how.*doing|running|online)\\b/i,\n  infrastructure: /\\b(proxmox|vm|virtual|server|container|docker|kubernetes)\\b/i,\n  network: /\\b(network|unifi|wifi|internet|connection|firewall|router|switch)\\b/i,\n  storage: /\\b(nas|storage|disk|backup|file.*server|synology|truenas)\\b/i,\n  \n  // Productivity & Business\n  calendar: /\\b(calendar|schedule|meeting|appointment|event|remind|tomorrow|today|week)\\b/i,\n  email: /\\b(email|mail|inbox|send.*message|reply|compose)\\b/i,\n  tasks: /\\b(task|todo|project|asana|deadline|assign|sprint|ticket)\\b/i,\n  notes: /\\b(note|notion|document|write.*down|remember|save.*this)\\b/i,\n  \n  // Information & Research\n  search: /\\b(search|find|look.*up|google|research|what.*is|who.*is|where.*is)\\b/i,\n  weather: /\\b(weather|temperature|forecast|rain|sunny|cold|hot)\\b/i,\n  news: /\\b(news|latest|headlines|updates|happening)\\b/i,\n  \n  // Code & Development\n  code: /\\b(code|script|program|python|javascript|debug|deploy|git|github)\\b/i,\n  database: /\\b(database|sql|query|data|postgres|redis|mongo)\\b/i,\n  api: /\\b(api|endpoint|request|webhook|integration)\\b/i,\n  \n  // Media & Files\n  files: /\\b(file|folder|download|upload|copy|move|delete|rename)\\b/i,\n  media: /\\b(play|music|video|spotify|youtube|stream|podcast)\\b/i,\n  \n  // Agents & AI\n  agents: /\\b(agent|mycology|research|financial|sales|dashboard|corporate)\\b/i,\n  ai: /\\b(generate|create|write|compose|draft|summarize|translate|analyze)\\b/i,\n  \n  // Control & Actions\n  control: /\\b(start|stop|restart|enable|disable|turn.*on|turn.*off|shutdown|reboot)\\b/i,\n  confirm: /\\b(yes|no|confirm|cancel|approve|deny|proceed|abort)\\b/i,\n  help: /\\b(help|how.*do|can.*you|what.*can|capabilities|commands)\\b/i,\n  \n  // Conversation\n  greeting: /\\b(hello|hi|hey|good.*morning|good.*evening|greetings)\\b/i,\n  farewell: /\\b(bye|goodbye|see.*you|later|exit|quit)\\b/i,\n  thanks: /\\b(thank|thanks|appreciate|grateful)\\b/i\n};\n\n// Classify intent\nlet detectedIntents = [];\nlet primaryIntent = 'general';\nlet confidence = 0.5;\n\nfor (const [intent, pattern] of Object.entries(intents)) {\n  if (pattern.test(message)) {\n    detectedIntents.push(intent);\n  }\n}\n\nif (detectedIntents.length > 0) {\n  primaryIntent = detectedIntents[0];\n  confidence = Math.min(0.95, 0.6 + (detectedIntents.length * 0.1));\n}\n\n// Determine target workflow/action\nconst routingMap = {\n  system_status: { target: 'system', action: 'status' },\n  infrastructure: { target: 'system', action: 'infra' },\n  network: { target: 'system', action: 'network' },\n  storage: { target: 'system', action: 'storage' },\n  calendar: { target: 'tools', action: 'calendar' },\n  email: { target: 'tools', action: 'email' },\n  tasks: { target: 'business', action: 'tasks' },\n  notes: { target: 'tools', action: 'notes' },\n  search: { target: 'tools', action: 'search' },\n  weather: { target: 'tools', action: 'weather' },\n  news: { target: 'tools', action: 'news' },\n  code: { target: 'tools', action: 'code' },\n  database: { target: 'system', action: 'database' },\n  api: { target: 'tools', action: 'api' },\n  files: { target: 'tools', action: 'files' },\n  media: { target: 'tools', action: 'media' },\n  agents: { target: 'agents', action: 'route' },\n  ai: { target: 'ai', action: 'generate' },\n  control: { target: 'system', action: 'control' },\n  confirm: { target: 'confirm', action: 'resolve' },\n  help: { target: 'help', action: 'list' },\n  greeting: { target: 'chat', action: 'greet' },\n  farewell: { target: 'chat', action: 'farewell' },\n  thanks: { target: 'chat', action: 'acknowledge' },\n  general: { target: 'chat', action: 'respond' }\n};\n\nconst routing = routingMap[primaryIntent] || routingMap.general;\n\n// Check for dangerous operations requiring confirmation\nconst dangerousPatterns = /\\b(delete|remove|shutdown|reboot|destroy|wipe|format|drop|truncate)\\b/i;\nconst requiresConfirmation = dangerousPatterns.test(message);\n\n// Extract entities (basic NER)\nconst entities = {\n  numbers: message.match(/\\d+/g) || [],\n  emails: message.match(/[\\w.-]+@[\\w.-]+\\.\\w+/g) || [],\n  urls: message.match(/https?:\\/\\/[^\\s]+/g) || [],\n  times: message.match(/\\d{1,2}:\\d{2}|\\d{1,2}\\s*(am|pm)/gi) || [],\n  dates: message.match(/\\d{1,2}[\\/\\-]\\d{1,2}[\\/\\-]\\d{2,4}|today|tomorrow|yesterday|monday|tuesday|wednesday|thursday|friday|saturday|sunday/gi) || []\n};\n\nreturn {\n  json: {\n    session_id: sessionId,\n    actor: actor,\n    message: message,\n    timestamp: new Date().toISOString(),\n    \n    // Intent classification\n    intent: {\n      primary: primaryIntent,\n      all: detectedIntents,\n      confidence: confidence\n    },\n    \n    // Routing decision\n    routing: {\n      target: routing.target,\n      action: routing.action,\n      requires_confirmation: requiresConfirmation\n    },\n    \n    // Extracted entities\n    entities: entities,\n    \n    // Context for downstream\n    context: {\n      ...context,\n      previous_intent: context.last_intent || null,\n      turn_count: (context.turn_count || 0) + 1\n    }\n  }\n};"
+        },
+        "id": "classify-intent",
+        "name": "Classify Intent",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          320,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "route-system",
+                "leftValue": "={{ $json.routing.target }}",
+                "rightValue": "system",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "route-tools",
+                "leftValue": "={{ $json.routing.target }}",
+                "rightValue": "tools",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "route-business",
+                "leftValue": "={{ $json.routing.target }}",
+                "rightValue": "business",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "route-agents",
+                "leftValue": "={{ $json.routing.target }}",
+                "rightValue": "agents",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "route-confirm",
+                "leftValue": "={{ $json.routing.requires_confirmation }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          }
+        },
+        "id": "router",
+        "name": "Smart Router",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3,
+        "position": [
+          540,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:5678/webhook/myca/system",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "action",
+                "value": "={{ $json.routing.action }}"
+              },
+              {
+                "name": "message",
+                "value": "={{ $json.message }}"
+              },
+              {
+                "name": "session_id",
+                "value": "={{ $json.session_id }}"
+              },
+              {
+                "name": "entities",
+                "value": "={{ JSON.stringify($json.entities) }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "call-system",
+        "name": "System Control",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          780,
+          100
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:5678/webhook/myca/tools",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "action",
+                "value": "={{ $json.routing.action }}"
+              },
+              {
+                "name": "message",
+                "value": "={{ $json.message }}"
+              },
+              {
+                "name": "session_id",
+                "value": "={{ $json.session_id }}"
+              },
+              {
+                "name": "entities",
+                "value": "={{ JSON.stringify($json.entities) }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "id": "call-tools",
+        "name": "Tools Hub",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          780,
+          240
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://localhost:5678/webhook/myca/business",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "action",
+                "value": "={{ $json.routing.action }}"
+              },
+              {
+                "name": "message",
+                "value": "={{ $json.message }}"
+              },
+              {
+                "name": "session_id",
+                "value": "={{ $json.session_id }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "call-business",
+        "name": "Business Ops",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          780,
+          380
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://mas-orchestrator:8000/agents/registry/route/voice",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "transcript",
+                "value": "={{ $json.message }}"
+              },
+              {
+                "name": "actor",
+                "value": "={{ $json.actor }}"
+              },
+              {
+                "name": "session_id",
+                "value": "={{ $json.session_id }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "id": "call-agents",
+        "name": "Agent Router",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          780,
+          520
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://mas-orchestrator:8000/voice/orchestrator/chat",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "message",
+                "value": "={{ $json.message }}"
+              },
+              {
+                "name": "conversation_id",
+                "value": "={{ $json.session_id }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "id": "llm-chat",
+        "name": "LLM Chat",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          780,
+          660
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Format final response\nconst input = $input.first().json;\nconst originalData = $('Classify Intent').first().json;\n\nlet responseText = '';\nlet responseData = {};\n\n// Extract response based on source\nif (input.response_text) {\n  responseText = input.response_text;\n  responseData = input;\n} else if (input.result) {\n  responseText = typeof input.result === 'string' ? input.result : JSON.stringify(input.result);\n  responseData = input;\n} else if (input.message) {\n  responseText = input.message;\n  responseData = input;\n} else {\n  responseText = 'I processed your request.';\n  responseData = input;\n}\n\nreturn {\n  json: {\n    status: 'success',\n    session_id: originalData.session_id,\n    intent: originalData.intent,\n    response_text: responseText,\n    data: responseData,\n    timestamp: new Date().toISOString()\n  }\n};"
+        },
+        "id": "format-response",
+        "name": "Format Response",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1000,
+          300
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {}
+        },
+        "id": "respond",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          1220,
+          300
+        ]
+      }
+    ],
+    "connections": {
+      "Brain Webhook": {
+        "main": [
+          [
+            {
+              "node": "Classify Intent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Classify Intent": {
+        "main": [
+          [
+            {
+              "node": "Smart Router",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Smart Router": {
+        "main": [
+          [
+            {
+              "node": "System Control",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Tools Hub",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Business Ops",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Agent Router",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "LLM Chat",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "System Control": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tools Hub": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Business Ops": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Agent Router": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "LLM Chat": {
+        "main": [
+          [
+            {
+              "node": "Format Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Format Response": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "import",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-27T18:33:43.106Z",
+        "id": 8,
+        "workflowId": "NYJm3Tc8PbKVm0yX",
+        "versionId": "3ecc6771-ff74-4e37-b05a-abcf95d0ea60",
+        "event": "activated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      },
+      {
+        "createdAt": "2026-01-27T18:50:17.670Z",
+        "id": 27,
+        "workflowId": "NYJm3Tc8PbKVm0yX",
+        "versionId": "3ecc6771-ff74-4e37-b05a-abcf95d0ea60",
+        "event": "activated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      },
+      {
+        "createdAt": "2026-01-27T18:50:15.542Z",
+        "id": 26,
+        "workflowId": "NYJm3Tc8PbKVm0yX",
+        "versionId": "3ecc6771-ff74-4e37-b05a-abcf95d0ea60",
+        "event": "deactivated",
+        "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b"
+      }
+    ]
+  }
+}

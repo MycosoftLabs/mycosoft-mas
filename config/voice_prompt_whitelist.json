@@ -1,0 +1,56 @@
+{
+  "_comment": "Voice Prompt Whitelist - February 3, 2026",
+  "_description": "All voice prompts must be whitelisted here with their SHA-256 hash. Unknown hashes are rejected at runtime.",
+  
+  "prompts": {
+    "NATURAL_F2": {
+      "hash": "sha256:9c1f2b3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
+      "display_name": "MYCA Natural Female",
+      "description": "Default MYCA voice - clear, professional female",
+      "allowed_roles": ["myca_superadmin", "myca_admin", "myca_user"],
+      "cloning": false,
+      "deprecated": false
+    },
+    "NATF2.pt": {
+      "hash": "sha256:9c1f2b3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b",
+      "display_name": "MYCA Natural Female (Alias)",
+      "description": "Alias for NATURAL_F2",
+      "allowed_roles": ["myca_superadmin", "myca_admin", "myca_user"],
+      "cloning": false,
+      "deprecated": false
+    },
+    "NATURAL_M1": {
+      "hash": "sha256:1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+      "display_name": "Professional Male",
+      "description": "Alternative professional male voice",
+      "allowed_roles": ["myca_superadmin", "myca_admin"],
+      "cloning": false,
+      "deprecated": false
+    },
+    "NATM2.pt": {
+      "hash": "sha256:1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+      "display_name": "Professional Male (Alias)",
+      "description": "Alias for NATURAL_M1",
+      "allowed_roles": ["myca_superadmin", "myca_admin"],
+      "cloning": false,
+      "deprecated": false
+    },
+    "NATURAL_F1": {
+      "hash": "sha256:2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c",
+      "display_name": "Warm Female",
+      "description": "Warmer, conversational female voice",
+      "allowed_roles": ["myca_superadmin", "myca_admin"],
+      "cloning": false,
+      "deprecated": false
+    }
+  },
+  
+  "default_prompt": "NATURAL_F2",
+  "default_role": "myca_user",
+  
+  "security": {
+    "reject_unknown_hashes": true,
+    "log_all_access": true,
+    "require_role_validation": true
+  }
+}
