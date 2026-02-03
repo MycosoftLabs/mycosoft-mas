@@ -1,0 +1,131 @@
+{
+  "updatedAt": "2026-01-27T06:12:02.903Z",
+  "createdAt": "2026-01-27T06:12:02.903Z",
+  "id": "native-environmental",
+  "name": "Native: Environmental Sensors",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "env-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific environmental sensor integration\nconst input = $input.item.json;\nconst integrationName = input.integration?.integration || 'unknown';\nconst action = input.command?.action || 'default';\nconst params = input.command?.params || {};\n\nreturn [{ \n  json: { \n    ...input, \n    routing_node: integrationName,\n    action: action,\n    params: params\n  } \n}];"
+      },
+      "id": "env-router",
+      "name": "Environmental Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle environmental sensor requests\nconst input = $input.item.json;\nconst integration = input.routing_node;\nconst action = input.action;\nconst params = input.params || {};\n\nlet result = null;\nlet error = null;\n\ntry {\n  switch(integration) {\n    case 'openaq':\n      result = { source: 'OpenAQ', url: 'https://api.openaq.org/v2', action, note: 'Air quality data from global monitoring stations' };\n      break;\n    case 'epa_airnow':\n      result = { source: 'EPA AirNow', url: 'https://www.airnowapi.org', action, note: 'US EPA air quality data' };\n      break;\n    case 'purpleair':\n      result = { source: 'PurpleAir', url: 'https://api.purpleair.com/v1', action, note: 'Crowdsourced air quality sensors' };\n      break;\n    case 'iqair':\n      result = { source: 'IQAir', url: 'https://api.airvisual.com/v2', action, note: 'Global air quality platform' };\n      break;\n    case 'safecast':\n      result = { source: 'Safecast', url: 'https://api.safecast.org', action, note: 'Radiation monitoring network' };\n      break;\n    case 'breezometer':\n      result = { source: 'BreezoMeter', url: 'https://api.breezometer.com', action, note: 'Air quality and pollen data' };\n      break;\n    case 'ambee':\n      result = { source: 'Ambee', url: 'https://api.ambeedata.com', action, note: 'Environmental intelligence platform' };\n      break;\n    default:\n      error = `Unknown environmental integration: ${integration}`;\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{\n  json: {\n    success: !error,\n    request_id: input.request_id,\n    integration: integration,\n    category: 'environmental',\n    action: action,\n    data: result,\n    error: error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "env-handler",
+      "name": "Handle Environmental Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Environmental Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Environmental Router": {
+      "main": [
+        [
+          {
+            "node": "Handle Environmental Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "5e24b263-c0d1-4058-a5cc-2c4b369e3e1a",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:12:02.912Z",
+      "createdAt": "2026-01-27T06:12:02.912Z",
+      "role": "workflow:owner",
+      "workflowId": "native-environmental",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

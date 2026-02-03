@@ -1,0 +1,131 @@
+{
+  "updatedAt": "2026-01-27T06:12:38.541Z",
+  "createdAt": "2026-01-27T06:12:38.541Z",
+  "id": "native-automation",
+  "name": "Native: Automation Platforms",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "auto-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific automation platform\nconst input = $input.item.json;\nconst integrationName = input.integration?.integration || 'unknown';\nconst action = input.command?.action || 'default';\nconst params = input.command?.params || {};\n\nreturn [{ \n  json: { \n    ...input, \n    routing_node: integrationName,\n    action: action,\n    params: params\n  } \n}];"
+      },
+      "id": "auto-router",
+      "name": "Automation Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle automation platform webhook triggers\nconst input = $input.item.json;\nconst integration = input.routing_node;\nconst action = input.action;\nconst params = input.params || {};\n\nlet result = null;\nlet error = null;\n\ntry {\n  switch(integration) {\n    case 'zapier':\n      result = { source: 'Zapier', type: 'webhook', note: 'Trigger Zapier Zaps via webhook', webhook_url: params.webhook_url || 'Configure ZAPIER_WEBHOOK_URL' };\n      break;\n    case 'ifttt':\n      result = { source: 'IFTTT', type: 'webhook', note: 'Trigger IFTTT applets via Webhooks service', webhook_url: params.webhook_url || 'Configure IFTTT_WEBHOOK_URL' };\n      break;\n    case 'make':\n      result = { source: 'Make (Integromat)', type: 'webhook', note: 'Trigger Make scenarios via webhook', webhook_url: params.webhook_url || 'Configure MAKE_WEBHOOK_URL' };\n      break;\n    case 'pipedream':\n      result = { source: 'Pipedream', type: 'webhook', note: 'Trigger Pipedream workflows', webhook_url: params.webhook_url || 'Configure PIPEDREAM_WEBHOOK_URL' };\n      break;\n    case 'activepieces':\n      result = { source: 'Activepieces', type: 'webhook', note: 'Trigger Activepieces flows', webhook_url: params.webhook_url || 'Configure ACTIVEPIECES_WEBHOOK_URL' };\n      break;\n    default:\n      error = `Unknown automation integration: ${integration}`;\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{\n  json: {\n    success: !error,\n    request_id: input.request_id,\n    integration: integration,\n    category: 'automation',\n    action: action,\n    data: result,\n    error: error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "auto-handler",
+      "name": "Handle Automation Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Automation Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Automation Router": {
+      "main": [
+        [
+          {
+            "node": "Handle Automation Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "b2c513e7-b3d0-4f6d-b4d5-197ba145e792",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:12:38.550Z",
+      "createdAt": "2026-01-27T06:12:38.550Z",
+      "role": "workflow:owner",
+      "workflowId": "native-automation",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

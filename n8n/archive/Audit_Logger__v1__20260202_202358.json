@@ -1,0 +1,249 @@
+{
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "createdAt": "2026-01-27T06:12:18.048Z",
+  "id": "6TlrCWgZSjVsFjmI",
+  "name": "Audit Logger",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "audit-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare audit record\nconst crypto = require('crypto');\nconst input = $input.item.json;\n\n// Extract command data\nconst command = input.command || {};\nconst integration = input.integration || {};\nconst result = input.result || input;\n\n// Hash sensitive data\nconst paramsHash = crypto.createHash('sha256')\n  .update(JSON.stringify(command.params || {}))\n  .digest('hex');\n\nconst responseHash = crypto.createHash('sha256')\n  .update(JSON.stringify(result))\n  .digest('hex');\n\n// Determine status\nconst status = result.success === true ? 'success' : result.success === false ? 'error' : 'unknown';\n\nconst auditRecord = {\n  timestamp: new Date().toISOString(),\n  request_id: command.request_id || input.request_id || $execution.id,\n  actor: command.actor || 'system',\n  integration: integration.integration || integration || 'unknown',\n  action: command.action || 'unknown',\n  category: integration.category || null,\n  params_hash: paramsHash,\n  response_hash: responseHash,\n  status: status,\n  duration_ms: input.duration_ms || null,\n  error_message: result.error || result.message || null,\n  risk_level: integration.risk || input.risk_level || 'read_only',\n  confirmed: command.confirm === true,\n  correlation_id: command.correlation_id || command.request_id || $execution.id,\n  metadata: {\n    execution_id: $execution.id,\n    workflow_name: $workflow.name,\n    workflow_id: $workflow.id\n  }\n};\n\nreturn [{ json: auditRecord }];"
+      },
+      "id": "prepare-audit",
+      "name": "Prepare Audit Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "myca_audit",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.timestamp }}",
+            "request_id": "={{ $json.request_id }}",
+            "actor": "={{ $json.actor }}",
+            "integration": "={{ $json.integration }}",
+            "action": "={{ $json.action }}",
+            "category": "={{ $json.category }}",
+            "params_hash": "={{ $json.params_hash }}",
+            "response_hash": "={{ $json.response_hash }}",
+            "status": "={{ $json.status }}",
+            "duration_ms": "={{ $json.duration_ms }}",
+            "error_message": "={{ $json.error_message }}",
+            "risk_level": "={{ $json.risk_level }}",
+            "confirmed": "={{ $json.confirmed }}",
+            "correlation_id": "={{ $json.correlation_id }}",
+            "metadata": "={{ $json.metadata }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "write-postgres",
+      "name": "Write to Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        680,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "name": "MYCA Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "fileName": "/nas-logs/myca_audit.jsonl",
+        "data": "={{ JSON.stringify($json) + '\\n' }}",
+        "options": {
+          "createIntermediateDirectories": true
+        }
+      },
+      "id": "write-jsonl",
+      "name": "Write to JSONL File",
+      "type": "n8n-nodes-base.fs",
+      "typeVersion": 1,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll"
+      },
+      "id": "merge-audit",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return audit confirmation\nconst input = $('Execute Workflow Trigger').item.json;\nconst audit = $('Prepare Audit Record').item.json;\n\nreturn [{\n  json: {\n    ...input,\n    audit_logged: true,\n    audit_request_id: audit.request_id,\n    audit_timestamp: audit.timestamp\n  }\n}];"
+      },
+      "id": "return-result",
+      "name": "Return with Audit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare Audit Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Audit Record": {
+      "main": [
+        [
+          {
+            "node": "Write to Postgres",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Write to JSONL File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write to Postgres": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write to JSONL File": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Return with Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "f074f70f-bd09-454f-9472-ef4ae91c07d9",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:12:18.055Z",
+      "createdAt": "2026-01-27T06:12:18.055Z",
+      "role": "workflow:owner",
+      "workflowId": "6TlrCWgZSjVsFjmI",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-12-17T00:00:00.000Z",
+      "createdAt": "2025-12-17T00:00:00.000Z",
+      "id": "myca-core",
+      "name": "MYCA Core"
+    }
+  ],
+  "activeVersion": null
+}

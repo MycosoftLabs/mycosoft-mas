@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { Sidebar } from "./Sidebar";
@@ -19,6 +19,7 @@ import { DevicesView } from "./views/DevicesView";
 import { TrafficAnalysisView } from "./views/TrafficAnalysisView";
 import { DeviceHealthView } from "./views/DeviceHealthView";
 import { SecurityView } from "./views/SecurityView";
+import { WorkflowStudioView } from "./views/WorkflowStudioView";
 // 3D View disabled due to React Three Fiber version conflict - using enhanced 2D topology instead
 // import dynamic from "next/dynamic";
 // const Topology3DView = dynamic(() => import("./views/Topology3DView").then(mod => ({ default: mod.Topology3DView })), { ssr: false });
@@ -98,6 +99,8 @@ export function Dashboard() {
         return <SecurityView />;
       case "customize":
         return <CustomizableDashboard />;
+      case "workflows":
+        return <WorkflowStudioView />;
       default:
         return <DashboardMainView agents={agents} networkStats={networkStats} onAgentClick={setSelectedDevice} />;
     }
@@ -404,8 +407,8 @@ function MYCASidebar({ agents, networkStats, onViewChange }: MYCASidebarProps) {
             <div className="mb-2">
               <div className="text-xs text-gray-400">Activity</div>
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-cyan-500">↓ {networkStats.download.toFixed(1)} Kbps</span>
-                <span className="text-purple-500">↑ {networkStats.upload.toFixed(1)} Kbps</span>
+                <span className="text-cyan-500">â†“ {networkStats.download.toFixed(1)} Kbps</span>
+                <span className="text-purple-500">â†‘ {networkStats.upload.toFixed(1)} Kbps</span>
               </div>
             </div>
           </div>
@@ -486,7 +489,7 @@ function AgentDetailsSidebar({ agent, onClose, onViewLogs }: { agent: Agent; onC
     <div className="w-80 border-l border-gray-800 bg-[#1E293B] p-4 overflow-auto">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold">Agent Details</h2>
-        <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">×</button>
+        <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">Ã—</button>
       </div>
 
       <div className="text-center p-4 bg-[#0F172A] rounded-lg mb-4">
@@ -549,11 +552,11 @@ function AgentDetailsSidebar({ agent, onClose, onViewLogs }: { agent: Agent; onC
         </div>
         <div className="flex justify-between py-2 border-b border-gray-700">
           <span className="text-gray-400">Download</span>
-          <span className="text-cyan-400">↓ {agent.downloadSpeed.toFixed(1)} Kbps</span>
+          <span className="text-cyan-400">â†“ {agent.downloadSpeed.toFixed(1)} Kbps</span>
         </div>
         <div className="flex justify-between py-2 border-b border-gray-700">
           <span className="text-gray-400">Upload</span>
-          <span className="text-purple-400">↑ {agent.uploadSpeed.toFixed(1)} Kbps</span>
+          <span className="text-purple-400">â†‘ {agent.uploadSpeed.toFixed(1)} Kbps</span>
         </div>
       </div>
 
@@ -660,7 +663,7 @@ function DashboardMainView({ agents, networkStats, onAgentClick }: DashboardMain
         <div className="rounded-lg bg-[#1E293B] p-3 sm:p-4 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/10">
           <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Tasks/Hour</div>
           <div className="text-2xl sm:text-3xl font-bold">124</div>
-          <div className="text-[10px] sm:text-xs text-green-400">↑ 12% from yesterday</div>
+          <div className="text-[10px] sm:text-xs text-green-400">â†‘ 12% from yesterday</div>
         </div>
         <div className="rounded-lg bg-[#1E293B] p-3 sm:p-4 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/10">
           <div className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">Total Tasks</div>
@@ -833,3 +836,7 @@ function DashboardMainView({ agents, networkStats, onAgentClick }: DashboardMain
     </div>
   );
 }
+
+
+
+

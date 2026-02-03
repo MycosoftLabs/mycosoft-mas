@@ -1,0 +1,316 @@
+{
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "createdAt": "2026-01-27T06:12:07.891Z",
+  "id": "udAK8ppLChNrw3kA",
+  "name": "Generic Connector",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "generic-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare HTTP request from integration definition and command\nconst input = $input.item.json;\nconst integration = input.integration;\nconst command = input.command;\n\n// Build endpoint URL\nconst baseUrl = integration.base_url;\nconst endpoint = command.params.endpoint || '';\nconst fullUrl = baseUrl + endpoint;\n\n// Map action to HTTP method\nconst actionMethodMap = {\n  'read': 'GET',\n  'search': 'GET',\n  'create': 'POST',\n  'update': 'PUT',\n  'delete': 'DELETE',\n  'patch': 'PATCH',\n  'trigger': 'POST'\n};\n\nconst method = command.params.method || actionMethodMap[command.action] || 'GET';\n\n// Prepare query parameters\nconst queryParams = command.params.query || {};\n\n// Prepare body (for POST/PUT/PATCH)\nconst body = command.params.body || {};\n\n// Determine auth header name based on auth_type\nconst authHeaderMap = {\n  'api_key': 'Authorization',\n  'bearer': 'Authorization',\n  'oauth2': 'Authorization'\n};\n\nconst authHeader = authHeaderMap[integration.auth_type] || 'Authorization';\n\nreturn [{\n  json: {\n    url: fullUrl,\n    method: method,\n    queryParams: queryParams,\n    body: body,\n    authHeader: authHeader,\n    authType: integration.auth_type,\n    integration: integration.integration,\n    request_id: input.request_id\n  }\n}];"
+      },
+      "id": "prepare-request",
+      "name": "Prepare HTTP Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "={{ $json.method }}",
+        "url": "={{ $json.url }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": "={{ Object.entries($json.queryParams || {}).map(([name, value]) => ({name, value})) }}"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "User-Agent",
+              "value": "MYCA-n8n/1.0"
+            },
+            {
+              "name": "X-Request-ID",
+              "value": "={{ $json.request_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body || {}) }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 5
+            }
+          },
+          "timeout": 30000,
+          "retry": {
+            "retry": {
+              "maxRetries": 3,
+              "retryInterval": 1000,
+              "retryOnStatusCodes": "429,500,502,503,504"
+            }
+          }
+        }
+      },
+      "id": "http-request",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle HTTP response\nconst prepData = $('Prepare HTTP Request').item.json;\nconst response = $input.item.json;\n\n// Check for HTTP errors\nconst statusCode = response.statusCode || 200;\nconst isError = statusCode >= 400;\n\nreturn [{\n  json: {\n    success: !isError,\n    status_code: statusCode,\n    integration: prepData.integration,\n    request_id: prepData.request_id,\n    method: prepData.method,\n    url: prepData.url,\n    response: response,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "handle-response",
+      "name": "Handle Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-success",
+      "name": "Success?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format success response\nconst data = $input.item.json;\nreturn [{\n  json: {\n    success: true,\n    request_id: data.request_id,\n    integration: data.integration,\n    status_code: data.status_code,\n    data: data.response,\n    timestamp: data.timestamp\n  }\n}];"
+      },
+      "id": "format-success",
+      "name": "Format Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format error response\nconst data = $input.item.json;\nreturn [{\n  json: {\n    success: false,\n    request_id: data.request_id,\n    integration: data.integration,\n    status_code: data.status_code,\n    error: data.response.error || data.response.message || 'HTTP request failed',\n    timestamp: data.timestamp\n  }\n}];"
+      },
+      "id": "format-error",
+      "name": "Format Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll"
+      },
+      "id": "merge-result",
+      "name": "Merge Result",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1560,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Handle Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Response": {
+      "main": [
+        [
+          {
+            "node": "Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success?": {
+      "main": [
+        [
+          {
+            "node": "Format Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success": {
+      "main": [
+        [
+          {
+            "node": "Merge Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Result",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "31117057-e1c5-4311-adb1-d8cf34b1d61d",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:12:07.900Z",
+      "createdAt": "2026-01-27T06:12:07.900Z",
+      "role": "workflow:owner",
+      "workflowId": "udAK8ppLChNrw3kA",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-12-17T00:00:00.000Z",
+      "createdAt": "2025-12-17T00:00:00.000Z",
+      "id": "myca-core",
+      "name": "MYCA Core"
+    }
+  ],
+  "activeVersion": null
+}

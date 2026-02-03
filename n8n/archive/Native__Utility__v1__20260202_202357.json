@@ -1,0 +1,351 @@
+{
+  "updatedAt": "2026-01-27T06:11:37.363Z",
+  "createdAt": "2026-01-27T06:11:37.363Z",
+  "id": "byg2N8q86nVNHgu9",
+  "name": "Native: Utility",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "util-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to utility handler\nconst input = $input.item.json;\nconst integrationName = input.integration.integration;\nreturn [{ json: { ...input, routing_node: integrationName } }];"
+      },
+      "id": "util-router",
+      "name": "Utility Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "http",
+              "name": "=http",
+              "value": "={{ ['httpbin','webhook_proxy'].includes($json.routing_node) }}",
+              "type": "boolean"
+            },
+            {
+              "id": "code",
+              "name": "=code",
+              "value": "={{ $json.routing_node === 'code_runner' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "cron",
+              "name": "=cron",
+              "value": "={{ $json.routing_node === 'cron' }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "util-flags",
+      "name": "Prepare Switch",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "boolean",
+        "value1": "={{ $json.http }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": true,
+              "output": 0
+            },
+            {
+              "value2": "={{ $json.code }}",
+              "output": 1
+            },
+            {
+              "value2": "={{ $json.cron }}",
+              "output": 2
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "util-switch",
+      "name": "Switch: Utility",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.command.params.url || ($json.integration.base_url + ($json.command.params.endpoint || '/get')) }}",
+        "method": "={{ $json.command.params.method || 'GET' }}",
+        "sendBody": true,
+        "jsonParameters": true,
+        "options": {
+          "timeout": "={{ $json.command.params.timeout || 3000 }}"
+        },
+        "bodyParametersJson": "={{ $json.command.params.body || {} }}"
+      },
+      "id": "http-node",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const params = $json.command.params || {};const result = eval(params.code || '() => ({ok:true})');const output = typeof result === 'function' ? result(params.input || {}) : result;return [{json:{ok:true,output}}];"
+      },
+      "id": "code-node",
+      "name": "Code Runner",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "interval": 1,
+        "unit": "minutes"
+      },
+      "id": "cron-node",
+      "name": "Cron Trigger (utility)",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;return [{json:{error:true,message:`Integration ${input.integration.integration} not implemented in utility native handler`,request_id:input.request_id}}];"
+      },
+      "id": "util-fallback",
+      "name": "Utility Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:input.integration.integration,action:input.command.action,result:result,timestamp:new Date().toISOString()}}];"
+      },
+      "id": "format-util",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Utility Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Utility Router": {
+      "main": [
+        [
+          {
+            "node": "Prepare Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Switch": {
+      "main": [
+        [
+          {
+            "node": "Switch: Utility",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Utility": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code Runner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cron Trigger (utility)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Utility Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Runner": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cron Trigger (utility)": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Utility Fallback": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "8965ab5e-bce3-43c0-8181-d1234ff7aeaa",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:11:37.370Z",
+      "createdAt": "2026-01-27T06:11:37.370Z",
+      "role": "workflow:owner",
+      "workflowId": "byg2N8q86nVNHgu9",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-01-27T06:11:07.277Z",
+      "createdAt": "2026-01-27T06:11:07.277Z",
+      "id": "myca-native",
+      "name": "MYCA Native"
+    }
+  ],
+  "activeVersion": null
+}

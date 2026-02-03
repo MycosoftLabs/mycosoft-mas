@@ -1,0 +1,131 @@
+{
+  "updatedAt": "2026-01-27T06:11:52.778Z",
+  "createdAt": "2026-01-27T06:11:52.778Z",
+  "id": "native-space-weather",
+  "name": "Native: Space & Weather",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "space-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific space/weather integration\nconst input = $input.item.json;\nconst integrationName = input.integration?.integration || 'unknown';\nconst action = input.command?.action || 'default';\nconst params = input.command?.params || {};\n\nreturn [{ \n  json: { \n    ...input, \n    routing_node: integrationName,\n    action: action,\n    params: params\n  } \n}];"
+      },
+      "id": "space-router",
+      "name": "Space Weather Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fetch data based on integration type\nconst input = $input.item.json;\nconst integration = input.routing_node;\nconst action = input.action;\nconst params = input.params || {};\n\nlet result = null;\nlet error = null;\n\ntry {\n  switch(integration) {\n    case 'nasa_donki':\n      result = { source: 'NASA DONKI', url: 'https://api.nasa.gov/DONKI', action, note: 'Connect HTTP node for live data' };\n      break;\n    case 'nasa_neo':\n      result = { source: 'NASA NEO', url: 'https://api.nasa.gov/neo/rest/v1', action, note: 'Connect HTTP node for live data' };\n      break;\n    case 'noaa_swpc':\n      result = { source: 'NOAA SWPC', url: 'https://services.swpc.noaa.gov', action, note: 'Connect HTTP node for live data' };\n      break;\n    case 'noaa_weather':\n      result = { source: 'NOAA Weather', url: 'https://api.weather.gov', action, note: 'Connect HTTP node for live data' };\n      break;\n    case 'goes_satellite':\n      result = { source: 'GOES Satellite', url: 'https://services.swpc.noaa.gov/json/goes', action, note: 'Connect HTTP node for live data' };\n      break;\n    case 'ace_satellite':\n      result = { source: 'ACE Solar Wind', url: 'https://services.swpc.noaa.gov/products/ace', action, note: 'Connect HTTP node for live data' };\n      break;\n    case 'dscovr':\n      result = { source: 'DSCOVR', url: 'https://services.swpc.noaa.gov/products/dscovr', action, note: 'Connect HTTP node for live data' };\n      break;\n    default:\n      error = `Unknown space/weather integration: ${integration}`;\n  }\n} catch(e) {\n  error = e.message;\n}\n\nreturn [{\n  json: {\n    success: !error,\n    request_id: input.request_id,\n    integration: integration,\n    category: 'space_weather',\n    action: action,\n    data: result,\n    error: error,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "space-handler",
+      "name": "Handle Space Weather Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Space Weather Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Space Weather Router": {
+      "main": [
+        [
+          {
+            "node": "Handle Space Weather Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "e681e566-c8c2-485a-876d-d6ffa88b3a40",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-27T06:11:52.788Z",
+      "createdAt": "2026-01-27T06:11:52.788Z",
+      "role": "workflow:owner",
+      "workflowId": "native-space-weather",
+      "projectId": "UVnbpKaWHGjwcMgw",
+      "project": {
+        "updatedAt": "2026-01-27T18:06:19.407Z",
+        "createdAt": "2026-01-27T02:07:38.443Z",
+        "id": "UVnbpKaWHGjwcMgw",
+        "name": "Morgan Mushroom <morgan@mycosoft.org>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-01-27T02:07:38.443Z",
+            "createdAt": "2026-01-27T02:07:38.443Z",
+            "userId": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+            "projectId": "UVnbpKaWHGjwcMgw",
+            "user": {
+              "updatedAt": "2026-02-02T20:23:44.000Z",
+              "createdAt": "2026-01-27T02:07:37.832Z",
+              "id": "5a61112a-4aeb-40a2-a504-bd67afa8e55b",
+              "email": "morgan@mycosoft.org",
+              "firstName": "Morgan",
+              "lastName": "Mushroom",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-01-27T18:07:20.521Z",
+                "personalization_survey_n8n_version": "2.4.6"
+              },
+              "settings": {
+                "userActivated": false
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-02",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

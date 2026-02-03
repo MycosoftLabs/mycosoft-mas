@@ -1,0 +1,79 @@
+﻿# MYCA Scientific Services Docker Compose
+# Created: February 3, 2026
+
+version: "3.9"
+
+services:
+  natureos-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mycosoft/natureos:latest
+    container_name: natureos-platform
+    ports:
+      - "8010:8000"
+    environment:
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/natureos
+      - REDIS_URL=redis://redis:6379
+      - MAS_URL=http://mas-orchestrator:8001
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+  signal-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mycosoft/signal-processor:latest
+    container_name: signal-processor
+    ports:
+      - "8011:8000"
+    environment:
+      - PROCESSING_WORKERS=4
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+  device-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mycosoft/device-manager:latest
+    container_name: device-manager
+    ports:
+      - "8012:8000"
+    environment:
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/natureos
+      - MQTT_BROKER=mqtt://mqtt:1883
+    depends_on:
+      - postgres
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mqtt-data:/mosquitto/data
+      - mqtt-logs:/mosquitto/log
+    networks:
+      - mycosoft-network
+    restart: unless-stopped
+
+networks:
+  mycosoft-network:
+    external: true
+
+volumes:
+  mqtt-data:
+  mqtt-logs:

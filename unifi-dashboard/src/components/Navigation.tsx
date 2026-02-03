@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   LayoutDashboard,
@@ -14,6 +14,7 @@ import {
   Brain,
   Cpu,
   Box,
+  Zap,
 } from "lucide-react";
 
 interface NavigationProps {
@@ -28,6 +29,7 @@ export function Navigation({ currentView, onViewChange }: NavigationProps) {
     { icon: Box, id: "topology3d", label: "Mycelium View" },
     { icon: Cpu, id: "clients", label: "Agents" },
     { icon: Workflow, id: "flows", label: "Agent Flows" },
+    { icon: Zap, id: "workflows", label: "Workflow Studio" },
     { icon: HardDrive, id: "devices", label: "Services" },
     { icon: BarChart3, id: "insights", label: "Analytics" },
     { icon: Activity, id: "wifi", label: "Health" },
