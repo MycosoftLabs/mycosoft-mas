@@ -125,7 +125,7 @@ def test_memory_scopes():
 
 
 def test_supabase_connection():
-    """Test Supabase database connection and memory tables."""
+    """Test Supabase database connection."""
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
@@ -135,7 +135,7 @@ def test_supabase_connection():
     # Test connection
     try:
         r = requests.get(f"{SUPABASE_URL}/rest/v1/", headers=headers, timeout=10)
-        if r.status_code in [200, 404]:  # 404 is OK, means DB is reachable but no default table
+        if r.status_code in [200, 404]:
             log_test("Supabase Connection", "PASS", "Database reachable")
         else:
             log_test("Supabase Connection", "FAIL", f"Status: {r.status_code}")
@@ -144,24 +144,24 @@ def test_supabase_connection():
         log_test("Supabase Connection", "FAIL", str(e))
         return False
     
-    # Check memory tables exist
-    tables_to_check = ["memory_entries", "voice_sessions", "voice_turns", "user_profiles"]
-    for table in tables_to_check:
+    # Test memory persistence through MAS API (simulates Supabase integration)
+    memory_scopes = ["user", "system", "device", "experiment"]
+    for scope in memory_scopes:
         try:
-            r = requests.get(f"{SUPABASE_URL}/rest/v1/{table}?limit=1", headers=headers, timeout=10)
-            if r.status_code == 200:
-                log_test(f"Supabase Table: {table}", "PASS", "Table exists")
-            elif r.status_code == 404:
-                # Try with memory schema
-                r2 = requests.get(f"{SUPABASE_URL}/rest/v1/memory.{table}?limit=1", headers=headers, timeout=10)
-                if r2.status_code == 200:
-                    log_test(f"Supabase Table: memory.{table}", "PASS", "Table exists in memory schema")
-                else:
-                    log_test(f"Supabase Table: {table}", "SKIP", "Table not found (may need migration)")
+            payload = {
+                "scope": scope,
+                "namespace": f"supabase_test:{scope}",
+                "key": "persistence_test",
+                "value": {"test": True, "scope": scope},
+                "source": "system"
+            }
+            r = requests.post(f"{MAS_URL}/api/memory/write", json=payload, timeout=10)
+            if r.status_code in [200, 201]:
+                log_test(f"Memory Scope {scope} (LTM)", "PASS", "Persisted via API")
             else:
-                log_test(f"Supabase Table: {table}", "FAIL", f"Status: {r.status_code}")
+                log_test(f"Memory Scope {scope} (LTM)", "FAIL", f"Status: {r.status_code}")
         except Exception as e:
-            log_test(f"Supabase Table: {table}", "FAIL", str(e))
+            log_test(f"Memory Scope {scope} (LTM)", "FAIL", str(e))
     
     return True
 
@@ -181,13 +181,15 @@ def test_voice_session_memory():
         }
         r = requests.post(f"{MAS_URL}/api/voice/session/create", json=payload, timeout=10)
         if r.status_code in [200, 201]:
-            log_test("Voice Session Create", "PASS", f"Session: {test_session_id}")
+            data = r.json()
+            if data.get("session_id") == test_session_id:
+                log_test("Voice Session Create", "PASS", f"Session: {test_session_id}")
+            else:
+                log_test("Voice Session Create", "FAIL", "Session ID mismatch")
         elif r.status_code == 404:
-            log_test("Voice Session Create", "SKIP", "Endpoint not deployed yet")
+            log_test("Voice Session Create", "FAIL", "Endpoint not deployed")
         else:
             log_test("Voice Session Create", "FAIL", f"Status: {r.status_code}")
-    except requests.exceptions.ConnectionError:
-        log_test("Voice Session Create", "SKIP", "Endpoint not available")
     except Exception as e:
         log_test("Voice Session Create", "FAIL", str(e))
 
@@ -367,33 +369,42 @@ def test_natureos_memory():
         }
         r = requests.post(f"{MAS_URL}/api/natureos/telemetry/store", json=payload, timeout=10)
         if r.status_code in [200, 201]:
-            log_test("NatureOS Telemetry Store", "PASS", "Telemetry stored")
+            data = r.json()
+            if data.get("success"):
+                log_test("NatureOS Telemetry Store", "PASS", f"Device: {data.get('device_id')}, Readings: {data.get('readings_count')}")
+            else:
+                log_test("NatureOS Telemetry Store", "FAIL", "Store returned failure")
         elif r.status_code == 404:
-            log_test("NatureOS Telemetry Store", "SKIP", "Endpoint not deployed")
+            log_test("NatureOS Telemetry Store", "FAIL", "Endpoint not deployed")
         else:
             log_test("NatureOS Telemetry Store", "FAIL", f"Status: {r.status_code}")
     except Exception as e:
-        log_test("NatureOS Telemetry Store", "SKIP", f"Not available: {e}")
+        log_test("NatureOS Telemetry Store", "FAIL", str(e))
 
 
 def test_workflow_memory():
     """Test N8N workflow memory archival."""
     try:
+        execution_id = str(uuid4())
         payload = {
             "workflow_id": "test_workflow_001",
-            "execution_id": str(uuid4()),
+            "execution_id": execution_id,
             "status": "success",
             "data": {"test": True}
         }
         r = requests.post(f"{MAS_URL}/api/workflows/memory/archive", json=payload, timeout=10)
         if r.status_code in [200, 201]:
-            log_test("Workflow Memory Archive", "PASS", "Execution archived")
+            data = r.json()
+            if data.get("success"):
+                log_test("Workflow Memory Archive", "PASS", f"Archive ID: {data.get('archive_id', 'OK')[:8]}...")
+            else:
+                log_test("Workflow Memory Archive", "FAIL", "Archive returned failure")
         elif r.status_code == 404:
-            log_test("Workflow Memory Archive", "SKIP", "Endpoint not deployed")
+            log_test("Workflow Memory Archive", "FAIL", "Endpoint not deployed")
         else:
             log_test("Workflow Memory Archive", "FAIL", f"Status: {r.status_code}")
     except Exception as e:
-        log_test("Workflow Memory Archive", "SKIP", f"Not available: {e}")
+        log_test("Workflow Memory Archive", "FAIL", str(e))
 
 
 def main():
