@@ -1,0 +1,81 @@
+{
+  "name": "MYCA Voice Brain",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/voice",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-voice",
+      "name": "Voice Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "webhookId": "myca-voice-brain"
+    },
+    {
+      "parameters": {
+        "jsCode": "// MYCA Voice Brain - Process incoming voice/chat message\nconst input = $input.first().json;\n\n// Extract message from various possible input formats\nconst message = input.message || input.text || input.transcript || '';\nconst actor = input.actor || 'user';\nconst sessionId = input.session_id || input.conversation_id || `voice_${Date.now()}`;\nconst context = input.context || {};\nconst primaryAgent = input.primary_agent || 'MYCA';\nconst matchedAgents = input.matched_agents || [];\n\n// MYCA's core identity prompt - this defines who she is\nconst MYCA_SYSTEM_PROMPT = `You are MYCA (My Companion AI), pronounced \"MY-kah\". You were created by Morgan, the founder of Mycosoft.\n\n## YOUR IDENTITY\nYou are the primary AI operator and orchestrator for Mycosoft's Multi-Agent System (MAS). You are not just an assistant—you are the central intelligence that coordinates, guides, and empowers the entire Mycosoft ecosystem.\n\nYour name is MYCA. When someone asks your name, you confidently say \"I'm MYCA\" or \"My name is MYCA\". You know exactly who you are.\n\n## YOUR ROLE\n- You coordinate 40+ specialized AI agents (mycology, financial, research, infrastructure, etc.)\n- You monitor system health and infrastructure (Proxmox VMs, UniFi network, Docker containers)\n- You have access to workflows, APIs, databases, and the MINDEX knowledge graph\n- You can execute actions, check system status, and manage deployments\n\n## YOUR PERSONALITY\n- Confident but not arrogant\n- Warm and personable, not robotic\n- Proactive and anticipatory\n- Patient and educational\n- Honest and transparent about your capabilities and limitations\n- Efficient but not rushed\n\n## CONVERSATION STYLE\n- Speak naturally with contractions and human-like patterns\n- In voice conversations, be concise - avoid long monologues\n- When uncertain, say so clearly\n- Always acknowledge who you are when asked\n\n## CURRENT CONTEXT\nYou are running on Mycosoft's infrastructure with RTX 5090 GPU.\nYou have access to: n8n workflows, MAS agents, MINDEX memory, system APIs.\nCurrent timestamp: ${new Date().toISOString()}`;\n\n// Build conversation context\nlet conversationHistory = '';\nif (context.history && Array.isArray(context.history)) {\n  const recentHistory = context.history.slice(-5);\n  conversationHistory = recentHistory\n    .map(h => `${h.role.toUpperCase()}: ${h.content}`)\n    .join('\\n');\n}\n\n// Build the full prompt for the LLM\nconst fullPrompt = `${MYCA_SYSTEM_PROMPT}\n\n---\n\n${conversationHistory ? 'RECENT CONVERSATION:\\n' + conversationHistory + '\\n\\n' : ''}USER: ${message}`;\n\nreturn {\n  json: {\n    session_id: sessionId,\n    actor: actor,\n    message: message,\n    system_prompt: MYCA_SYSTEM_PROMPT,\n    full_prompt: fullPrompt,\n    primary_agent: primaryAgent,\n    matched_agents: matchedAgents,\n    context: context,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "prepare-context",
+      "name": "Prepare Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "model": "models/gemini-2.0-flash-exp",
+        "prompt": "={{ $json.full_prompt }}",
+        "options": {
+          "temperature": 0.7,
+          "maxOutputTokens": 500
+        }
+      },
+      "id": "gemini-chat",
+      "name": "Gemini AI",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [540, 300],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "google-ai-studio",
+          "name": "Google AI Studio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format MYCA's response\nconst prepContext = $('Prepare Context').first().json;\nconst aiResponse = $input.first().json;\n\n// Extract the text response\nlet responseText = '';\nif (typeof aiResponse === 'string') {\n  responseText = aiResponse;\n} else if (aiResponse.text) {\n  responseText = aiResponse.text;\n} else if (aiResponse.response) {\n  responseText = aiResponse.response;\n} else if (aiResponse.message) {\n  responseText = aiResponse.message;\n} else if (aiResponse.output) {\n  responseText = aiResponse.output;\n} else {\n  responseText = JSON.stringify(aiResponse);\n}\n\n// Clean up the response\nresponseText = responseText.trim();\n\nreturn {\n  json: {\n    status: 'success',\n    session_id: prepContext.session_id,\n    agent_name: 'MYCA',\n    response_text: responseText,\n    response: responseText,\n    matched_agents: prepContext.matched_agents,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [980, 300]
+    }
+  ],
+  "connections": {
+    "Voice Webhook": { "main": [[{ "node": "Prepare Context", "type": "main", "index": 0 }]] },
+    "Prepare Context": { "main": [[{ "node": "Gemini AI", "type": "main", "index": 0 }]] },
+    "Gemini AI": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "MYCA Voice" }]
+}
