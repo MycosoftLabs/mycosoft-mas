@@ -1,15 +1,12 @@
-﻿"""
-MYCA Voice Module - January 27, 2026
-Full-duplex voice integration with PersonaPlex and ElevenLabs fallback
+﻿"""Voice Module - February 3, 2026
+
+Voice session management and Supabase persistence.
 """
 
-from .personaplex_bridge import PersonaPlexBridge, DuplexSession
-from .session_manager import VoiceSessionManager
-from .intent_classifier import IntentClassifier
+from .supabase_client import VoiceSessionStore, get_voice_store, init_voice_store
 
 __all__ = [
-    "PersonaPlexBridge",
-    "DuplexSession",
-    "VoiceSessionManager",
-    "IntentClassifier",
+    "VoiceSessionStore",
+    "get_voice_store",
+    "init_voice_store",
 ]
