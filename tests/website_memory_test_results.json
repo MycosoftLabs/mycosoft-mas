@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-02-04T19:55:18.108902",
+  "website_url": "http://localhost:3010",
+  "mas_url": "http://192.168.0.188:8001",
+  "scope_results": {
+    "conversation": "PASS",
+    "user": "PASS",
+    "agent": "PASS",
+    "system": "PASS",
+    "ephemeral": "PASS",
+    "device": "PASS",
+    "experiment": "PASS",
+    "workflow": "PASS"
+  },
+  "tests_passed": 8
+}
