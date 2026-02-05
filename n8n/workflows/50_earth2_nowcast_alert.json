@@ -1,0 +1,150 @@
+{"name": "Earth-2 Nowcast Alert System",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "minutes", "minutesInterval": 30 }
+          ]
+        }
+      },
+      "id": "nowcast-schedule",
+      "name": "30-Minute Nowcast",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "earth2/nowcast/trigger",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "nowcast-webhook",
+      "name": "Nowcast Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 500],
+      "webhookId": "earth2-nowcast-trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Earth-2 Nowcast Alert System - February 4, 2026\n// Uses StormScope for 0-6 hour hazardous weather predictions\n\nconst nowcast_config = {\n  model: 'stormscope_goes_mrms',\n  forecast_hours: 6,\n  step_minutes: 10,\n  variables: ['radar_reflectivity', 'satellite_ir', 'lightning_density'],\n  regions: [\n    { name: 'Central_US', center_lat: 39.0, center_lon: -98.0, domain_size: 1000 },\n    { name: 'East_Coast', center_lat: 37.0, center_lon: -77.0, domain_size: 800 }\n  ],\n  alert_thresholds: {\n    reflectivity_dbz: 50,\n    lightning_strikes_per_hour: 100,\n    wind_gust_ms: 25,\n    hail_probability: 0.7\n  }\n};\n\nreturn {\n  json: {\n    trigger: 'nowcast',\n    timestamp: new Date().toISOString(),\n    config: nowcast_config,\n    execution_id: $execution.id\n  }\n};"
+      },
+      "id": "prepare-nowcast",
+      "name": "Prepare Nowcast Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/earth2/nowcast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ center_lat: $json.config.regions[0].center_lat, center_lon: $json.config.regions[0].center_lon, domain_size_km: $json.config.regions[0].domain_size, forecast_minutes: $json.config.forecast_hours * 60, step_minutes: $json.config.step_minutes, variables: $json.config.variables }) }}"
+      },
+      "id": "run-nowcast",
+      "name": "Run StormScope Nowcast",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process nowcast results and check for severe weather\nconst result = $input.first().json;\nconst config = $('Prepare Nowcast Config').first().json.config;\nconst thresholds = config.alert_thresholds;\n\nconst alerts = [];\n\n// Check for severe weather conditions\nif (result.max_reflectivity && result.max_reflectivity > thresholds.reflectivity_dbz) {\n  alerts.push({\n    type: 'severe_storm',\n    severity: result.max_reflectivity > 60 ? 'critical' : 'high',\n    message: `Severe storm detected: ${result.max_reflectivity} dBZ`,\n    location: result.storm_cells\n  });\n}\n\nif (result.tornado_probability && result.tornado_probability > 0.3) {\n  alerts.push({\n    type: 'tornado_warning',\n    severity: 'critical',\n    message: `Tornado probability: ${(result.tornado_probability * 100).toFixed(0)}%`,\n    location: result.tornado_location\n  });\n}\n\nif (result.hail_probability && result.hail_probability > thresholds.hail_probability) {\n  alerts.push({\n    type: 'hail_warning',\n    severity: 'high',\n    message: `Hail probability: ${(result.hail_probability * 100).toFixed(0)}%`,\n    size: result.hail_size\n  });\n}\n\nconst summary = {\n  run_id: result.run_id,\n  model: result.model,\n  region: result.region,\n  valid_time: result.valid_time,\n  max_reflectivity: result.max_reflectivity,\n  storm_count: result.storm_cells ? result.storm_cells.length : 0,\n  alerts_generated: alerts.length,\n  timestamp: new Date().toISOString()\n};\n\nreturn {\n  json: {\n    summary: summary,\n    alerts: alerts,\n    raw_result: result\n  }\n};"
+      },
+      "id": "process-nowcast",
+      "name": "Process Nowcast Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/mindex/events/batch",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ events: [{ event_type: 'earth2_nowcast', entity_id: $json.summary.run_id, collector: 'n8n_nowcast_automation', data: $json.summary }] }) }}"
+      },
+      "id": "store-mindex",
+      "name": "Store to MINDEX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{ $json.alerts.length }}", "operation": "isNotEmpty" }
+          ]
+        }
+      },
+      "id": "check-alerts",
+      "name": "Has Severe Weather?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1000, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/notifications/send",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'severe_weather', severity: 'critical', channel: 'emergency', title: 'SEVERE WEATHER ALERT', message: $json.alerts.map(a => a.message).join('; '), alerts: $json.alerts }) }}"
+      },
+      "id": "send-alert",
+      "name": "Send Emergency Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1220, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/earth2/layers",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ layer_type: 'nowcast_radar', run_id: $json.summary.run_id, refresh: true }) }}"
+      },
+      "id": "update-layers",
+      "name": "Update Radar Layers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1220, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, summary: $json.summary, alerts_sent: $json.alerts.length }) }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1440, 500]
+    }
+  ],
+  "connections": {
+    "30-Minute Nowcast": { "main": [[{ "node": "Prepare Nowcast Config", "type": "main", "index": 0 }]] },
+    "Nowcast Trigger": { "main": [[{ "node": "Prepare Nowcast Config", "type": "main", "index": 0 }]] },
+    "Prepare Nowcast Config": { "main": [[{ "node": "Run StormScope Nowcast", "type": "main", "index": 0 }]] },
+    "Run StormScope Nowcast": { "main": [[{ "node": "Process Nowcast Results", "type": "main", "index": 0 }]] },
+    "Process Nowcast Results": { "main": [[{ "node": "Store to MINDEX", "type": "main", "index": 0 }, { "node": "Has Severe Weather?", "type": "main", "index": 0 }]] },
+    "Has Severe Weather?": { "main": [[{ "node": "Send Emergency Alert", "type": "main", "index": 0 }], [{ "node": "Update Radar Layers", "type": "main", "index": 0 }]] },
+    "Store to MINDEX": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Send Emergency Alert": { "main": [[{ "node": "Update Radar Layers", "type": "main", "index": 0 }]] },
+    "Update Radar Layers": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateId": "earth2-nowcast-alert-feb2026"
+  }
+}
