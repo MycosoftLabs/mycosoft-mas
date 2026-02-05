@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA / MAS API entrypoint.
 
 This module intentionally stays lightweight: it exposes health/version endpoints,
@@ -44,12 +44,33 @@ from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 
+# Earth-2 AI Weather Integration
+try:
+    from mycosoft_mas.core.routers.earth2_api import router as earth2_router
+    EARTH2_API_AVAILABLE = True
+except ImportError:
+    EARTH2_API_AVAILABLE = False
+
+# MYCA Brain API for PersonaPlex integration
+try:
+    from mycosoft_mas.core.routers.brain_api import router as brain_router
+    BRAIN_API_AVAILABLE = True
+except ImportError:
+    BRAIN_API_AVAILABLE = False
+
 # Voice tools router for PersonaPlex bridge
 try:
     from mycosoft_mas.core.routers.voice_tools_api import router as voice_tools_router
     VOICE_TOOLS_AVAILABLE = True
 except ImportError:
     VOICE_TOOLS_AVAILABLE = False
+
+# MYCA Tools API for tool execution
+try:
+    from mycosoft_mas.core.routers.tools_api import router as tools_router
+    TOOLS_API_AVAILABLE = True
+except ImportError:
+    TOOLS_API_AVAILABLE = False
 
 # N8N Client - use mycosoft_mas path
 try:
@@ -255,9 +276,24 @@ app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
 
+# Earth-2 AI Weather API
+if EARTH2_API_AVAILABLE:
+    app.include_router(earth2_router, prefix="/api/earth2", tags=["earth2"])
+
 # Voice tools for PersonaPlex bridge
 if VOICE_TOOLS_AVAILABLE:
     app.include_router(voice_tools_router, tags=["voice-tools"])
+
+# MYCA Brain API
+if BRAIN_API_AVAILABLE:
+    app.include_router(brain_router, tags=["myca-brain"])
+
+# MYCA Tools API
+try:
+    if TOOLS_API_AVAILABLE:
+        app.include_router(tools_router, tags=["myca-tools"])
+except NameError:
+    pass
 
 
 # ---------------------------------------------------------------------------
