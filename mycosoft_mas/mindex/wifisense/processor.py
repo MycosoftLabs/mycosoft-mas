@@ -1,4 +1,4 @@
-﻿"""
+"""
 WiFiSense CSI Processor
 Phase 0: RSSI-based presence detection
 Phase 1: CSI amplitude variance for motion detection

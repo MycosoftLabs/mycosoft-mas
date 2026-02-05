@@ -1,4 +1,4 @@
-﻿"""
+"""
 WiFiSense Data Models
 Pydantic models for CSI data and sensing results
 """

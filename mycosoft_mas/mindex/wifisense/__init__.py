@@ -1,4 +1,4 @@
-﻿# WiFiSense CSI Processing Module
+# WiFiSense CSI Processing Module
 # MINDEX extension for WiFi Channel State Information (CSI) based sensing
 #
 # Phase 0: Presence detection using RSSI patterns

@@ -1,4 +1,4 @@
-﻿"""MINDEX Memory Bridge - February 3, 2026
+"""MINDEX Memory Bridge - February 3, 2026
 
 Bridges MINDEX taxonomic database with the unified memory system.
 Enables semantic search over species observations and research hypotheses.
