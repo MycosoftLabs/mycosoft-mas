@@ -1,0 +1,152 @@
+﻿# Mycosoft Proxmox Backup Jobs Configuration
+# Created: February 5, 2026
+# Apply via Proxmox UI or pvesh command
+
+# Backup Job Definitions
+backup_jobs:
+  # Daily MAS VM container snapshots
+  - id: daily-mas-containers
+    vmid: 188
+    schedule: "0 2 * * *"  # Daily at 2:00 AM
+    mode: snapshot
+    compress: zstd
+    storage: local
+    retention:
+      keep-daily: 7
+    notification:
+      email: alerts@mycosoft.com
+      on_failure: true
+
+  # Weekly full VM snapshots for MAS and Website
+  - id: weekly-full-vms
+    vmid: "188,103"
+    schedule: "0 3 * * 0"  # Weekly Sunday at 3:00 AM
+    mode: snapshot
+    compress: zstd
+    storage: nas-mycosoft
+    retention:
+      keep-weekly: 4
+    notification:
+      email: alerts@mycosoft.com
+      on_failure: true
+
+  # Daily MINDEX VM snapshots with DB dump
+  - id: daily-mindex
+    vmid: 189
+    schedule: "0 4 * * *"  # Daily at 4:00 AM
+    mode: snapshot
+    compress: zstd
+    storage: local
+    retention:
+      keep-daily: 14
+    pre_hook: "/opt/mycosoft/scripts/snapshot-schedule.sh mindex-daily"
+    notification:
+      email: alerts@mycosoft.com
+      on_failure: true
+
+  # Monthly full backups for all VMs
+  - id: monthly-full-backup
+    vmid: "188,103,189"
+    schedule: "0 5 1 * *"  # Monthly on 1st at 5:00 AM
+    mode: snapshot
+    compress: zstd
+    storage: nas-mycosoft
+    retention:
+      keep-monthly: 12
+    notification:
+      email: alerts@mycosoft.com
+      on_success: true
+      on_failure: true
+
+# VM Configuration Summary
+vms:
+  mas_vm:
+    vmid: 188
+    name: "mycosoft-mas"
+    ip: "192.168.0.188"
+    cpu: 16
+    memory: 64GB
+    disk: 98GB
+    snapshots:
+      - type: agent-state
+        trigger: after-critical-task
+        retention: 24h
+      - type: daily
+        schedule: "2:00 AM"
+        retention: 7d
+      - type: weekly
+        schedule: "Sunday 3:00 AM"
+        retention: 30d
+      - type: monthly
+        schedule: "1st 5:00 AM"
+        retention: 365d
+
+  website_sandbox:
+    vmid: 103
+    name: "mycosoft-sandbox"
+    ip: "192.168.0.187"
+    cpu: 16
+    memory: 62GB
+    disk: 2TB
+    snapshots:
+      - type: weekly
+        schedule: "Sunday 3:00 AM"
+        retention: 30d
+      - type: monthly
+        schedule: "1st 5:00 AM"
+        retention: 365d
+
+  mindex_vm:
+    vmid: 189
+    name: "MINDEX-VM"
+    ip: "192.168.0.189"
+    cpu: 4
+    memory: 8GB
+    disk: 100GB
+    snapshots:
+      - type: database-dump
+        schedule: "2:00 AM"
+        retention: 14d
+        destination: "NAS:/mindex/backups/"
+      - type: daily
+        schedule: "4:00 AM"
+        retention: 7d
+      - type: monthly
+        schedule: "1st 5:00 AM"
+        retention: 365d
+
+# Storage Targets
+storage:
+  local:
+    type: local-lvm
+    path: /var/lib/vz
+    max_usage: 80%
+
+  nas-mycosoft:
+    type: nfs
+    server: 192.168.0.105
+    export: /mycosoft.com
+    path: /mnt/pve/nas-mycosoft
+    max_usage: 90%
+
+# Notification Settings
+notifications:
+  email:
+    smtp_server: smtp.mycosoft.com
+    from: proxmox@mycosoft.com
+    to: 
+      - alerts@mycosoft.com
+      - admin@mycosoft.com
+  
+  webhook:
+    url: http://192.168.0.188:8001/api/system/backup-notification
+    method: POST
+    on_success: true
+    on_failure: true
+
+# Cron Entries (to add on Proxmox host)
+cron_entries:
+  - "0 2 * * * /opt/mycosoft/scripts/snapshot-schedule.sh daily"
+  - "0 3 * * 0 /opt/mycosoft/scripts/snapshot-schedule.sh weekly"
+  - "0 4 * * * /opt/mycosoft/scripts/snapshot-schedule.sh mindex-daily"
+  - "0 5 1 * * /opt/mycosoft/scripts/snapshot-schedule.sh monthly"
