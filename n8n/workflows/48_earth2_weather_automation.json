@@ -1,0 +1,135 @@
+{"name": "Earth-2 Weather Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "hours", "hoursInterval": 6 }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "earth2/weather/trigger",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "manual-trigger",
+      "name": "Manual Trigger Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 500],
+      "webhookId": "earth2-weather-trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Earth-2 Weather Automation - February 4, 2026\n// Runs scheduled forecasts and stores outputs to MINDEX\n\nconst regions = [\n  { name: 'CONUS', min_lat: 24, max_lat: 50, min_lon: -125, max_lon: -66 },\n  { name: 'Pacific_NW', min_lat: 42, max_lat: 49, min_lon: -125, max_lon: -116 },\n  { name: 'Gulf_Coast', min_lat: 25, max_lat: 31, min_lon: -98, max_lon: -80 }\n];\n\nconst forecast_config = {\n  models: ['atlas_era5'],\n  variables: ['t2m', 'u10', 'v10', 'tp', 'msl'],\n  ensemble_members: 5,\n  step_hours: 6,\n  forecast_days: 7\n};\n\nconst trigger_type = $input.first() ? 'manual' : 'scheduled';\n\nreturn {\n  json: {\n    trigger_type: trigger_type,\n    timestamp: new Date().toISOString(),\n    regions: regions,\n    config: forecast_config,\n    execution_id: $execution.id\n  }\n};"
+      },
+      "id": "prepare-forecast",
+      "name": "Prepare Forecast Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/earth2/forecast",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ start_time: new Date().toISOString(), step_hours: $json.config.step_hours, ensemble_members: $json.config.ensemble_members, variables: $json.config.variables }) }}"
+      },
+      "id": "call-earth2-api",
+      "name": "Call Earth-2 API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process Earth-2 forecast result\nconst result = $input.first().json;\n\nconst forecast_summary = {\n  run_id: result.run_id,\n  status: result.status,\n  model: result.model,\n  timestamp: new Date().toISOString(),\n  message: result.message\n};\n\n// Check for severe weather alerts\nconst alerts = [];\n// Placeholder for alert logic based on forecast data\n\nreturn {\n  json: {\n    forecast: forecast_summary,\n    alerts: alerts,\n    store_to_mindex: true\n  }\n};"
+      },
+      "id": "process-result",
+      "name": "Process Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/mindex/events/batch",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ events: [{ event_type: 'earth2_forecast', entity_id: $json.forecast.run_id, collector: 'n8n_earth2_automation', data: $json.forecast }] }) }}"
+      },
+      "id": "store-mindex",
+      "name": "Store to MINDEX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{ $json.alerts.length }}", "operation": "isNotEmpty" }
+          ]
+        }
+      },
+      "id": "check-alerts",
+      "name": "Check Alerts",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1000, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/notifications/send",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'weather_alert', severity: 'high', message: 'Severe weather detected', data: $json.alerts }) }}"
+      },
+      "id": "send-alerts",
+      "name": "Send Weather Alerts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1220, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, forecast: $json.forecast, alerts_sent: $json.alerts.length > 0 }) }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1220, 700]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": { "main": [[{ "node": "Prepare Forecast Config", "type": "main", "index": 0 }]] },
+    "Manual Trigger Webhook": { "main": [[{ "node": "Prepare Forecast Config", "type": "main", "index": 0 }]] },
+    "Prepare Forecast Config": { "main": [[{ "node": "Call Earth-2 API", "type": "main", "index": 0 }]] },
+    "Call Earth-2 API": { "main": [[{ "node": "Process Result", "type": "main", "index": 0 }]] },
+    "Process Result": { "main": [[{ "node": "Store to MINDEX", "type": "main", "index": 0 }, { "node": "Check Alerts", "type": "main", "index": 0 }]] },
+    "Check Alerts": { "main": [[{ "node": "Send Weather Alerts", "type": "main", "index": 0 }], [{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Store to MINDEX": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Send Weather Alerts": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateId": "earth2-weather-automation-feb2026"
+  }
+}
