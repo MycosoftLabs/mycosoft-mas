@@ -148,7 +148,7 @@ services:
       MINDEX_API_URL: http://mindex-api:8000
       MINDEX_API_KEY: local-dev-key
       # MAS & MycoBrain - Direct container access via shared network
-      MYCOBRAIN_SERVICE_URL: http://host.docker.internal:8003
+      MYCOBRAIN_SERVICE_URL: http://192.168.0.172:8765
       MAS_API_URL: http://mycosoft-mas-mas-orchestrator-1:8000
       # n8n - Direct container access via MAS network
       N8N_LOCAL_URL: http://mycosoft-mas-n8n-1:5678
