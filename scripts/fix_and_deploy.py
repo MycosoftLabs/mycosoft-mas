@@ -1,132 +1,159 @@
 #!/usr/bin/env python3
 """
-Fix git permissions and deploy website
+Fix permissions and deploy MYCA Voice System to Sandbox VM
+Created: February 4, 2026
+Updated: February 6, 2026 - Added Docker cache cleanup on every deploy
 """
-
 import paramiko
 import sys
 import time
-from datetime import datetime
 
-VM_IP = "192.168.0.187"
-VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_HOST = '192.168.0.187'
+VM_USER = 'mycosoft'
+VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
 
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+MAS_REPO = "/home/mycosoft/mycosoft/mas"
 
-def log(msg, level="INFO"):
-    ts = datetime.now().strftime("%H:%M:%S")
-    icons = {"INFO": "•", "OK": "✓", "WARN": "⚠", "ERROR": "✗", "HEAD": "▶"}
-    print(f"[{ts}] {icons.get(level, '•')} {msg}")
-
-def run_ssh_cmd(ssh, cmd, timeout=300):
-    log(f"Running: {cmd[:80]}...", "HEAD")
-    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=timeout)
-    out = stdout.read().decode('utf-8', errors='replace').strip()
-    err = stderr.read().decode('utf-8', errors='replace').strip()
+def run_command(client, cmd, timeout=120):
+    """Execute command and return output."""
+    print(f">>> {cmd}")
+    stdin, stdout, stderr = client.exec_command(cmd, timeout=timeout)
+    out = stdout.read().decode().strip()
+    err = stderr.read().decode().strip()
+    exit_code = stdout.channel.recv_exit_status()
     if out:
-        for line in out.split('\n')[:5]:
-            print(f"    {line}")
-    if err:
-        for line in err.split('\n')[:3]:
-            if 'warning' not in line.lower():
-                print(f"    [stderr] {line}")
-    return out, err
+        print(out)
+    if err and exit_code != 0:
+        print(f"STDERR: {err}")
+    return out, err, exit_code
 
 def main():
-    print("\n" + "="*60)
-    print("  FIX PERMISSIONS AND DEPLOY WEBSITE")
-    print("="*60 + "\n")
-    
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
     try:
-        log("Connecting to VM...", "HEAD")
-        ssh.connect(VM_IP, username=VM_USER, password=VM_PASSWORD, timeout=30)
-        log("Connected", "OK")
+        print("=" * 60)
+        print("MYCA Voice System - Fix & Deploy")
+        print("=" * 60)
+        print(f"\nConnecting to Sandbox VM ({VM_HOST})...")
+        client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
+        print("Connected!\n")
         
-        # Step 1: Fix git permissions
-        log("Fixing git permissions...", "HEAD")
-        run_ssh_cmd(ssh, "sudo chown -R mycosoft:mycosoft /home/mycosoft/mycosoft/website/.git")
-        run_ssh_cmd(ssh, "sudo chmod -R 755 /home/mycosoft/mycosoft/website/.git")
+        # Step 0: ALWAYS Clear Docker Cache First (prevents memory bloat)
+        print("=" * 60)
+        print("Step 0: Clearing Docker Cache (REQUIRED on every deploy)")
+        print("=" * 60)
+        print("This prevents memory bloat from old images/containers...")
+        run_command(client, "docker container prune -f", timeout=60)
+        run_command(client, "docker image prune -a -f", timeout=120)
+        run_command(client, "docker volume prune -f", timeout=60)
+        run_command(client, "docker builder prune -a -f", timeout=120)
+        run_command(client, "docker system prune -f", timeout=60)
+        print("Docker cache cleared!")
+        
+        # Step 1: Fix permissions on MAS repo
+        print("=" * 60)
+        print("Step 1: Fixing Permissions on MAS Repository")
+        print("=" * 60)
+        run_command(client, f"sudo chown -R mycosoft:mycosoft {MAS_REPO}")
+        run_command(client, f"sudo chmod -R 755 {MAS_REPO}")
         
         # Step 2: Pull latest code
-        log("Pulling latest code...", "HEAD")
-        run_ssh_cmd(ssh, "cd /home/mycosoft/mycosoft/website && git fetch origin && git reset --hard origin/main")
+        print("\n" + "=" * 60)
+        print("Step 2: Pulling Latest Code")
+        print("=" * 60)
+        run_command(client, f"cd {MAS_REPO} && git fetch origin")
+        run_command(client, f"cd {MAS_REPO} && git reset --hard origin/main")
+        run_command(client, f"cd {MAS_REPO} && git log --oneline -5")
         
-        # Check commit
-        out, _ = run_ssh_cmd(ssh, "cd /home/mycosoft/mycosoft/website && git log --oneline -1")
-        log(f"Current commit: {out}", "OK")
+        # Step 3: Find docker-compose files
+        print("\n" + "=" * 60)
+        print("Step 3: Finding Docker Compose Files")
+        print("=" * 60)
+        run_command(client, "find /opt/mycosoft -name 'docker-compose*.yml' 2>/dev/null | head -10")
+        run_command(client, "find /home/mycosoft -name 'docker-compose*.yml' 2>/dev/null | head -10")
         
-        # Step 3: Stop any website containers
-        log("Stopping current containers...", "HEAD")
-        run_ssh_cmd(ssh, "docker stop mycosoft-website 2>/dev/null || true")
-        run_ssh_cmd(ssh, "docker rm mycosoft-website 2>/dev/null || true")
-        run_ssh_cmd(ssh, "docker stop mycosoft-always-on-mycosoft-website-1 2>/dev/null || true")
-        run_ssh_cmd(ssh, "docker rm mycosoft-always-on-mycosoft-website-1 2>/dev/null || true")
+        # Step 4: Check for n8n container or image
+        print("\n" + "=" * 60)
+        print("Step 4: Checking n8n Status")
+        print("=" * 60)
+        run_command(client, "docker images | grep n8n")
+        run_command(client, "docker ps -a | grep n8n")
         
-        # Step 4: Build new image with docker compose
-        log("Building new Docker image (this takes 2-4 minutes)...", "HEAD")
-        out, err = run_ssh_cmd(ssh, """
-            cd /home/mycosoft/mycosoft/mas && \
-            docker compose -f docker-compose.always-on.yml build --no-cache mycosoft-website 2>&1
-        """, timeout=600)
+        # Step 5: Try to start n8n from various locations
+        print("\n" + "=" * 60)
+        print("Step 5: Starting n8n")
+        print("=" * 60)
         
-        # Step 5: Find the new image
-        log("Finding new image...", "HEAD")
-        out, _ = run_ssh_cmd(ssh, "docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' | grep mycosoft | head -3")
+        # Check if there's a stopped n8n container
+        out, _, _ = run_command(client, "docker ps -a --filter 'name=n8n' --format '{{.Names}}'")
+        if 'n8n' in out:
+            print("Found existing n8n container, starting it...")
+            run_command(client, "docker start n8n")
+        else:
+            # Try to run n8n directly
+            print("No existing n8n container. Checking for n8n compose files...")
+            
+            # Check in MAS repo
+            out, _, _ = run_command(client, f"ls {MAS_REPO}/docker-compose*.yml 2>/dev/null | head -5")
+            if out:
+                print(f"Found compose files in MAS repo")
+                # Try to start n8n from MAS repo docker-compose
+                run_command(client, f"cd {MAS_REPO} && docker compose up -d n8n 2>/dev/null || echo 'n8n not in this compose'")
         
-        # Step 6: Start container from existing image
-        log("Starting container...", "HEAD")
-        run_ssh_cmd(ssh, """
-            docker run -d \
-            --name mycosoft-website \
-            -p 3000:3000 \
-            --restart unless-stopped \
-            -v /opt/mycosoft/media:/app/public/media:ro \
-            -e NODE_ENV=production \
-            mycosoft-always-on-mycosoft-website:latest
-        """)
+        # Step 6: Check all running services
+        print("\n" + "=" * 60)
+        print("Step 6: Final Container Status")
+        print("=" * 60)
+        run_command(client, "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'")
         
-        # Step 7: Wait for healthy
-        log("Waiting for container to be healthy (60s)...", "HEAD")
-        for i in range(12):
-            time.sleep(5)
-            out, _ = run_ssh_cmd(ssh, "docker ps --filter name=mycosoft-website --format '{{.Status}}'")
-            if "Up" in out:
-                log(f"Container running: {out}", "OK")
-                break
-            if not out:
-                log("Container not started, checking logs...", "WARN")
-                run_ssh_cmd(ssh, "docker logs mycosoft-website --tail 10 2>&1")
+        # Step 7: Test all endpoints
+        print("\n" + "=" * 60)
+        print("Step 7: Testing All Endpoints")
+        print("=" * 60)
         
-        # Step 8: Test
-        log("Testing HTTP response...", "HEAD")
-        out, _ = run_ssh_cmd(ssh, "curl -s -o /dev/null -w '%{http_code}' http://localhost:3000")
-        log(f"HTTP: {out}", "OK" if out == "200" else "WARN")
+        endpoints = [
+            ("Website", "http://localhost:3000", 200),
+            ("MINDEX API", "http://localhost:8000", 200),
+            ("Mycorrhizae API", "http://localhost:8002", 200),
+            ("n8n", "http://localhost:5678", 200),
+        ]
         
-        # Step 9: Test MINDEX stats
-        log("Testing MINDEX stats...", "HEAD")
-        out, _ = run_ssh_cmd(ssh, "curl -s http://localhost:3000/api/natureos/mindex/stats | head -c 200")
-        log(f"Stats: {out[:100]}...", "OK" if "total_taxa" in out else "WARN")
+        results = []
+        for name, url, expected in endpoints:
+            out, _, _ = run_command(client, f"curl -s -o /dev/null -w '%{{http_code}}' {url} 2>/dev/null || echo '000'")
+            status = "OK" if out == str(expected) else "NOT OK"
+            results.append((name, status, out))
+            print(f"  {name}: {status} (HTTP {out})")
         
-        ssh.close()
+        # Step 8: Check disk space and memory
+        print("\n" + "=" * 60)
+        print("Step 8: System Resources")
+        print("=" * 60)
+        run_command(client, "df -h / | tail -1")
+        run_command(client, "free -h | grep Mem")
         
-        print("\n" + "="*60)
-        print("  DEPLOYMENT COMPLETE")
-        print("="*60)
-        print("\n  Remember to purge Cloudflare cache!")
-        print("  https://dash.cloudflare.com -> mycosoft.com -> Caching -> Purge")
-        print()
+        print("\n" + "=" * 60)
+        print("Deployment Summary")
+        print("=" * 60)
+        print("\nService Status:")
+        for name, status, code in results:
+            icon = "✓" if status == "OK" else "✗"
+            print(f"  {icon} {name}: {status}")
+        
+        print("\nTest URLs:")
+        print("  - https://sandbox.mycosoft.com")
+        print("  - https://sandbox.mycosoft.com/natureos")
+        print("  - http://192.168.0.187:8000/docs (MINDEX API)")
+        print("  - http://192.168.0.187:8002/docs (Mycorrhizae API)")
         
     except Exception as e:
-        log(f"Error: {e}", "ERROR")
+        print(f"\nError: {e}")
         import traceback
         traceback.print_exc()
-        return 1
-    
-    return 0
+        sys.exit(1)
+    finally:
+        client.close()
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
