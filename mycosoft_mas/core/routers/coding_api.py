@@ -205,3 +205,123 @@ async def get_operation_history(limit: int = 50) -> Dict[str, Any]:
         "total": len(history),
         "operations": history,
     }
+
+
+# ============================================================
+# Claude Code Integration Endpoints (MYCA Autonomous Coding)
+# Added: February 9, 2026
+# ============================================================
+
+
+class ClaudeCodeTaskRequest(BaseModel):
+    """Request to execute a coding task via Claude Code."""
+    task_type: str  # create_agent, fix_bug, create_endpoint, deploy, general_coding
+    description: str
+    target_repo: str = "mas"
+    target_files: Optional[List[str]] = None
+    max_turns: int = 20
+    max_budget_usd: float = 5.0
+    auto_deploy: bool = False
+    require_tests: bool = True
+
+
+class CreateAgentRequest(BaseModel):
+    """Request to create a new MAS agent via Claude Code."""
+    description: str
+    agent_name: Optional[str] = None
+    category: str = "general"
+
+
+class FixBugRequest(BaseModel):
+    """Request to fix a bug via Claude Code."""
+    error_description: str
+    target_files: Optional[List[str]] = None
+    stack_trace: Optional[str] = None
+
+
+class CreateEndpointRequest(BaseModel):
+    """Request to create a new API endpoint via Claude Code."""
+    description: str
+    prefix: Optional[str] = None
+    methods: List[str] = ["GET"]
+
+
+class DeployRequest(BaseModel):
+    """Request to deploy code changes."""
+    target_vm: str = "mas"  # mas, website, mindex
+
+
+@router.post("/claude/task")
+async def claude_code_task(request: ClaudeCodeTaskRequest) -> Dict[str, Any]:
+    """Submit a general coding task to Claude Code on the Sandbox VM."""
+    from mycosoft_mas.agents.coding_agent import get_coding_agent
+    agent = get_coding_agent()
+    result = await agent.invoke_claude_code(
+        task_description=request.description,
+        target_repo=request.target_repo,
+        max_turns=request.max_turns,
+        max_budget=request.max_budget_usd,
+    )
+    return {
+        "task_type": request.task_type,
+        "result": result,
+        "auto_deploy": request.auto_deploy,
+    }
+
+
+@router.post("/claude/create-agent")
+async def claude_create_agent(request: CreateAgentRequest) -> Dict[str, Any]:
+    """Create a new MAS agent using Claude Code."""
+    from mycosoft_mas.agents.coding_agent import get_coding_agent
+    agent = get_coding_agent()
+    result = await agent.create_agent_via_claude(request.description)
+    return {"task_type": "create_agent", "result": result}
+
+
+@router.post("/claude/fix-bug")
+async def claude_fix_bug(request: FixBugRequest) -> Dict[str, Any]:
+    """Fix a bug using Claude Code."""
+    from mycosoft_mas.agents.coding_agent import get_coding_agent
+    agent = get_coding_agent()
+    description = request.error_description
+    if request.stack_trace:
+        description += f"\n\nStack trace:\n{request.stack_trace}"
+    result = await agent.fix_bug_via_claude(description, request.target_files)
+    return {"task_type": "fix_bug", "result": result}
+
+
+@router.post("/claude/create-endpoint")
+async def claude_create_endpoint(request: CreateEndpointRequest) -> Dict[str, Any]:
+    """Create a new API endpoint using Claude Code."""
+    from mycosoft_mas.agents.coding_agent import get_coding_agent
+    agent = get_coding_agent()
+    result = await agent.create_endpoint_via_claude(request.description)
+    return {"task_type": "create_endpoint", "result": result}
+
+
+@router.post("/claude/deploy")
+async def claude_deploy(request: DeployRequest) -> Dict[str, Any]:
+    """Deploy code changes to a VM using Claude Code."""
+    from mycosoft_mas.agents.coding_agent import get_coding_agent
+    agent = get_coding_agent()
+    result = await agent.deploy_via_claude(request.target_vm)
+    return {"task_type": "deploy", "target_vm": request.target_vm, "result": result}
+
+
+@router.get("/claude/health")
+async def claude_code_health() -> Dict[str, Any]:
+    """Check if Claude Code is available on the Sandbox VM."""
+    import asyncio
+    try:
+        proc = await asyncio.create_subprocess_shell(
+            'ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 mycosoft@192.168.0.187 "claude --version"',
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=10)
+        version = stdout.decode().strip()
+        if proc.returncode == 0:
+            return {"status": "available", "version": version, "vm": "192.168.0.187"}
+        return {"status": "unavailable", "error": stderr.decode().strip()}
+    except Exception as e:
+        return {"status": "unavailable", "error": str(e)}
