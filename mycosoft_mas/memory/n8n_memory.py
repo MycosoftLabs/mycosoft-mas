@@ -1,4 +1,4 @@
-﻿"""
+"""
 n8n Workflow Memory System.
 Created: February 5, 2026
 

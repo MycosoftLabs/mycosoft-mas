@@ -10,11 +10,16 @@ PERFORMANCE CRITICAL:
 import sys
 import os
 
-# PERFORMANCE: Enable CUDA graphs and torch.compile for real-time speed
-# These are CRITICAL for RTX 5090 (sm_120) performance!
-os.environ['NO_TORCH_COMPILE'] = '0'  # Enable torch.compile
-os.environ['NO_CUDA_GRAPH'] = '0'     # Enable CUDA graphs (CRITICAL!)
-# os.environ['TORCHDYNAMO_DISABLE'] = '1'  # Disabled - let dynamo work
+# CUDA GRAPHS STATUS:
+# - CUDA graphs provide 30ms/step performance - REQUIRED for real-time voice
+# - NEVER disable CUDA graphs - they are vital for PersonaPlex/NVIDIA performance
+# - The brain engine handles intelligent responses via MYCA LLMs
+# - Moshi handles immediate/conversational responses
+#
+# PERFORMANCE MODE (CUDA graphs ENABLED - MANDATORY):
+os.environ['NO_TORCH_COMPILE'] = '0'  # Enable torch.compile for performance
+os.environ['NO_CUDA_GRAPH'] = '0'     # CUDA graphs ENABLED (0 = enabled!)
+os.environ['TORCHDYNAMO_DISABLE'] = '0'  # Enable dynamo for optimization
 
 # Set CUDA device
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -30,15 +35,17 @@ voice_prompt_dir = r"C:\Users\admin2\.cache\huggingface\hub\models--nvidia--pers
 os.chdir(personaplex_path)
 
 print("=" * 60)
-print("PersonaPlex Server Startup - RTX 5090 OPTIMIZED")
+print("PersonaPlex Server Startup - RTX 5090 PERFORMANCE MODE")
 print("=" * 60)
 print(f"CUDA_VISIBLE_DEVICES = {os.environ.get('CUDA_VISIBLE_DEVICES')}")
 print(f"NO_TORCH_COMPILE = {os.environ.get('NO_TORCH_COMPILE')} (0=enabled)")
-print(f"NO_CUDA_GRAPH = {os.environ.get('NO_CUDA_GRAPH')} (0=enabled, CRITICAL!)")
+print(f"NO_CUDA_GRAPH = {os.environ.get('NO_CUDA_GRAPH')} (0=enabled)")
 print(f"Working directory: {personaplex_path}")
 print(f"Voice prompts: {voice_prompt_dir}")
 print("=" * 60)
-print("CUDA graphs ENABLED - expect ~30ms/step (target: <80ms)")
+print("CUDA graphs ENABLED - 30ms/step (REQUIRED for real-time)")
+print("Brain Engine: MYCA LLMs handle intelligent responses")
+print("Moshi: Handles immediate conversational responses")
 print("Starting PersonaPlex on RTX 5090...")
 print("=" * 60)
 

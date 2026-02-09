@@ -1,4 +1,4 @@
-﻿"""NatureOS Telemetry Service - February 3, 2026"""
+"""NatureOS Telemetry Service - February 3, 2026"""
 import asyncio
 import logging
 from datetime import datetime, timezone

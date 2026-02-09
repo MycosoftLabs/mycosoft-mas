@@ -76,26 +76,9 @@ docker/
 docker-compose*.yml
 
 # Infrastructure
-infra/
-grafana/
-prometheus/
-redis/
-migrations/
-models/
-contracts/
-services/
-agents/
-plugins/
-secrets/
-speech/
-static/
+
 # firmware/ - temporarily enabled
 
-# Large Python packages
-mycosoft_mas/
-orchestrator-myca/
-unifi-dashboard/
-WEBSITE/
 
 # Cache directories
 .cache/
@@ -152,3 +135,12 @@ Cargo.lock
 comprehensive_test_report_*.json
 
 
+
+# Allow Cursor config directories (skills, agents, rules)
+!.cursor/
+!.cursor/agents/
+!.cursor/agents/**
+!.cursor/skills/
+!.cursor/skills/**
+!.cursor/rules/
+!.cursor/rules/**

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Protein Modeling Plugin
 AlphaFold and Rosetta integration for protein structure prediction.
 Created: February 3, 2026

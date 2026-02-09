@@ -1,4 +1,4 @@
-﻿"""Scientific Agent Memory Integration - February 3, 2026
+"""Scientific Agent Memory Integration - February 3, 2026
 
 Memory integration for scientific agents: experiments, hypotheses, results.
 """

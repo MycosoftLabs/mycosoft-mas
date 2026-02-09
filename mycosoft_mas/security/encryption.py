@@ -1,4 +1,4 @@
-﻿"""Encryption Service. Created: February 3, 2026"""
+"""Encryption Service. Created: February 3, 2026"""
 import base64
 import hashlib
 from typing import Optional
@@ -27,4 +27,4 @@ class EncryptionService:
     
     def verify_password(self, password: str, hashed: str) -> bool:
         import bcrypt
-        return bcrypt.checkpw(password.encode(), hashed.encode())
+        return bcrypt.checkpw(password.encode(), hashed.encode())

@@ -1,73 +1,87 @@
 #!/usr/bin/env python3
-"""Deploy to sandbox VM via SSH"""
+"""Quick deploy to sandbox VM - Feb 5, 2026"""
 import paramiko
-import sys
+import time
 
-def run_command(client, cmd):
+VM_HOST = '192.168.0.187'
+VM_USER = 'mycosoft'
+VM_PASS = 'Mushroom1!Mushroom1!'
+
+def run(client, cmd, timeout=300):
     print(f">>> {cmd}")
-    stdin, stdout, stderr = client.exec_command(cmd, timeout=120)
+    stdin, stdout, stderr = client.exec_command(cmd, timeout=timeout)
     out = stdout.read().decode().strip()
     err = stderr.read().decode().strip()
+    exit_code = stdout.channel.recv_exit_status()
     if out:
-        print(out)
-    if err:
-        print(f"STDERR: {err}")
-    return out, err
+        for line in out.split('\n')[:20]:
+            print(f"  {line}")
+        if len(out.split('\n')) > 20:
+            print(f"  ... ({len(out.split(chr(10)))} total lines)")
+    if err and exit_code != 0:
+        print(f"  [stderr] {err[:500]}")
+    return out, exit_code
 
 def main():
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
-    try:
-        print("Connecting to sandbox VM (192.168.0.187)...")
-        client.connect('192.168.0.187', username='mycosoft', password='Mushroom1!Mushroom1!', timeout=30)
-        print("Connected!")
-        
-        # Correct paths
-        website_repo = "/opt/mycosoft/website"
-        mas_repo = "/home/mycosoft/mycosoft/mas"
-        compose_dir = "/opt/mycosoft"
-        
-        # Pull MAS updates
-        print("\n=== Updating MAS repo ===")
-        run_command(client, f"cd {mas_repo} && git fetch origin")
-        run_command(client, f"cd {mas_repo} && git reset --hard origin/main")
-        run_command(client, f"cd {mas_repo} && git log --oneline -3")
-        
-        # Pull Website updates  
-        print("\n=== Updating Website repo ===")
-        run_command(client, f"cd {website_repo} && git fetch origin")
-        run_command(client, f"cd {website_repo} && git reset --hard origin/main")
-        run_command(client, f"cd {website_repo} && git log --oneline -3")
-        
-        # Rebuild image - code is baked into container
-        print("\n=== Rebuilding website image (this takes 2-5 minutes) ===")
-        # Use nohup to prevent timeout, then check status
-        stdin, stdout, stderr = client.exec_command(
-            f"cd {website_repo} && nohup docker build -t website-website:latest --no-cache . > /tmp/docker-build.log 2>&1 && echo BUILD_DONE || echo BUILD_FAILED",
-            timeout=600
-        )
-        result = stdout.read().decode().strip()
-        print(f"Build result: {result}")
-        
-        # Show last 20 lines of build log
-        run_command(client, "tail -20 /tmp/docker-build.log")
-        
-        # Restart container
-        print("\n=== Restarting website container ===")
-        run_command(client, f"cd {compose_dir} && docker compose restart mycosoft-website")
-        
-        # Check status
-        print("\n=== Container Status ===")
-        run_command(client, "docker ps --filter 'name=mycosoft' --format 'table {{.Names}}\t{{.Status}}'")
-        
-        print("\n=== Deployment Complete! ===")
-        
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-    finally:
-        client.close()
+    print("="*60)
+    print("Deploying MINDEX + Voice to Sandbox VM")
+    print("="*60)
+    
+    print(f"\nConnecting to {VM_HOST}...")
+    client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
+    print("Connected!\n")
+    
+    # Check current containers
+    print("Current containers:")
+    run(client, "docker ps --format 'table {{.Names}}\t{{.Status}}' | head -15")
+    
+    # Rebuild MINDEX API container
+    print("\n" + "="*60)
+    print("Rebuilding MINDEX API container...")
+    print("="*60)
+    
+    run(client, "cd /opt/mycosoft/mas && docker compose stop mindex-api 2>/dev/null || true")
+    run(client, "cd /opt/mycosoft/mas && docker compose rm -f mindex-api 2>/dev/null || true")
+    run(client, "cd /opt/mycosoft/mas && docker compose build --no-cache mindex-api 2>&1 | tail -30")
+    run(client, "cd /opt/mycosoft/mas && docker compose up -d mindex-api 2>&1")
+    
+    # Wait for container to start
+    print("\nWaiting for services...")
+    time.sleep(5)
+    
+    # Check container status
+    print("\n" + "="*60)
+    print("Final container status:")
+    print("="*60)
+    run(client, "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | head -20")
+    
+    # Test endpoints
+    print("\n" + "="*60)
+    print("Testing endpoints:")
+    print("="*60)
+    
+    endpoints = [
+        ("Website", "http://localhost:3000"),
+        ("MINDEX API", "http://localhost:8000"),
+        ("MINDEX Docs", "http://localhost:8000/docs"),
+    ]
+    
+    for name, url in endpoints:
+        out, _ = run(client, f"curl -s -o /dev/null -w '%{{http_code}}' {url} 2>/dev/null || echo '000'")
+        status = "OK" if out in ['200', '307'] else "FAIL"
+        print(f"  {name}: HTTP {out} [{status}]")
+    
+    print("\n" + "="*60)
+    print("Deployment Complete!")
+    print("="*60)
+    print("\nTest URLs:")
+    print("  - https://sandbox.mycosoft.com")
+    print("  - http://192.168.0.187:8000/docs (MINDEX API)")
+    
+    client.close()
 
 if __name__ == "__main__":
     main()

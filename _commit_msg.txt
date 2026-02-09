@@ -1,32 +1,19 @@
-feat(voice): add fully containerized voice interaction system with orchestrator integration
+feat: Docker cache cleanup on every deploy + VM memory management - Feb 6, 2026
 
-Added comprehensive voice interaction capabilities with local-first architecture:
+Changes:
+- scripts/fix_and_deploy.py: Added Step 0 to ALWAYS clear Docker cache before deploying
+  - docker container prune -f
+  - docker image prune -a -f
+  - docker volume prune -f
+  - docker builder prune -a -f
+  - docker system prune -f
+- docs/VM_MEMORY_MANAGEMENT_FEB06_2026.md: Memory allocation strategy doc
 
-Voice System:
-- Integrated faster-whisper-server (STT), Ollama (LLM), and openedai-speech (TTS) in docker-compose
-- Created voice UI with Nginx reverse proxy to resolve CORS issues
-- Added /voice/orchestrator/chat and /voice/orchestrator/speech endpoints to MAS orchestrator
-- Implemented conversation memory and multi-turn dialogue support
+Memory allocation for 62GB VM:
+- Website: 32GB max (primary frontend)
+- MINDEX: 16GB
+- MAS: 8GB
+- System: 6GB
 
-Infrastructure Integration:
-- Added Proxmox VE and UniFi Network integrations with client libraries
-- Created bootstrap scripts for automated infrastructure provisioning
-- Added network management tools for UniFi/Proxmox API access
-
-Agent Improvements (MYCA requested):
-- Added persistent feedback loop with SQLite store for agent/orchestrator learning
-- Implemented robust error handling with request IDs and global exception handler
-- Added concurrency controls and worker pools for multi-threaded voice processing
-- Created feedback API endpoints (POST /voice/feedback, GET /voice/feedback/recent, GET /voice/feedback/summary)
-
-n8n Integration:
-- Added n8n service with voice and text chat workflows
-- Created workflow templates for STT->LLM->TTS pipeline
-- Configured n8n with proper auth and encryption keys
-
-Dependencies:
-- Added python-multipart, jinja2, packaging, asyncpg to support voice/web features
-- Updated poetry.lock with all new dependencies
-- Set MAS_LIGHT_IMPORT mode to avoid loading heavyweight agent deps until needed
-
-All voice services run in containers on mas-network for secure, local-first operation.
+Also fixed:
+- MYCOBRAIN_SERVICE_URL updated to http://192.168.0.172:8765 (port 8765)

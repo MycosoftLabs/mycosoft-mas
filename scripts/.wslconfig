@@ -1,0 +1,14 @@
+# WSL2 memory and CPU limits - Feb 6, 2026
+# Copy this file to: C:\Users\<YourUser>\.wslconfig
+# Then run: wsl --shutdown
+# Restart WSL when needed. This prevents vmmem from using 50%+ of system RAM.
+
+[wsl2]
+# Cap memory so vmmem doesn't starve the rest of the system
+memory=4GB
+# Limit processors if you have many cores
+processors=4
+# Reduce swap (default 25% of RAM can be huge)
+swap=1GB
+
+# Copy to %USERPROFILE%\.wslconfig then run: wsl --shutdown

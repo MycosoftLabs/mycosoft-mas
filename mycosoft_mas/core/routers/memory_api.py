@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA Memory API - February 2026
 
 Namespace-based memory API for safe, scoped memory operations.
@@ -24,6 +24,14 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
+
+# Cryptographic Integrity Service import
+try:
+    from mycosoft_mas.security.integrity_service import hash_and_record, get_integrity_service
+    INTEGRITY_AVAILABLE = True
+except ImportError:
+    INTEGRITY_AVAILABLE = False
+    hash_and_record = None
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
@@ -251,6 +259,24 @@ class NamespacedMemoryManager:
             # Store using memory helper (Redis or in-memory fallback)
             serialized = json.dumps(stored_value)
             await self._memory_set(full_key, serialized, ttl)
+            
+            # Record in cryptographic ledger for integrity verification
+            if INTEGRITY_AVAILABLE and hash_and_record:
+                try:
+                    await hash_and_record(
+                        entry_type="memory_write",
+                        data=stored_value,
+                        metadata={
+                            "full_key": full_key,
+                            "scope": scope.value,
+                            "namespace": namespace,
+                            "key": key,
+                            "ttl": ttl,
+                        },
+                        with_signature=True,
+                    )
+                except Exception as e:
+                    logger.warning(f"Integrity service recording failed (non-blocking): {e}")
             
             self._log_operation("write", scope, namespace, key, True)
             return True
@@ -592,7 +618,7 @@ async def get_audit_log(limit: int = 100):
 @router.get("/health")
 async def memory_health():
     """
-    Check memory system health.
+    Check memory system health including integrity service.
     """
     manager = get_memory_manager()
     
@@ -604,9 +630,383 @@ async def memory_health():
     except Exception:
         pass
     
+    # Check integrity service status
+    integrity_status = {
+        "available": INTEGRITY_AVAILABLE,
+        "stats": None
+    }
+    if INTEGRITY_AVAILABLE:
+        try:
+            service = get_integrity_service()
+            integrity_status["stats"] = await service.get_stats()
+        except Exception as e:
+            integrity_status["error"] = str(e)
+    
     return {
         "status": "healthy" if redis_ok else "degraded",
         "redis": "connected" if redis_ok else "disconnected",
         "scopes": [s.value for s in MemoryScope],
         "audit_entries": len(manager._audit_log),
+        "integrity_service": integrity_status,
     }
+
+
+
+
+# ============================================================================
+# Memory Coordinator API - February 5, 2026
+# Integration with the unified 6-layer memory system
+# ============================================================================
+
+# MemoryCoordinator models
+class AgentRememberRequest(BaseModel):
+    """Request to store a memory via the coordinator."""
+    agent_id: str = Field(..., description="Agent or namespace identifier")
+    content: Dict[str, Any] = Field(..., description="Content to remember")
+    layer: str = Field("working", description="Memory layer: ephemeral, session, working, semantic, episodic, system")
+    importance: float = Field(0.5, ge=0.0, le=1.0, description="Importance score 0-1")
+    tags: Optional[List[str]] = Field(None, description="Tags for categorization")
+
+
+class AgentRecallRequest(BaseModel):
+    """Request to recall memories via the coordinator."""
+    agent_id: str = Field(..., description="Agent or namespace identifier")
+    query: Optional[str] = Field(None, description="Semantic search query")
+    layer: Optional[str] = Field(None, description="Filter by memory layer")
+    tags: Optional[List[str]] = Field(None, description="Filter by tags")
+    limit: int = Field(10, ge=1, le=100, description="Maximum results")
+
+
+class RecordEpisodeRequest(BaseModel):
+    """Request to record an episode."""
+    agent_id: str = Field(..., description="Agent identifier")
+    event_type: str = Field(..., description="Type of event")
+    description: str = Field(..., description="Event description")
+    participants: Optional[List[str]] = Field(None, description="Participant IDs")
+    context: Optional[Dict[str, Any]] = Field(None, description="Additional context")
+    outcome: Optional[str] = Field(None, description="Event outcome")
+    importance: float = Field(0.5, ge=0.0, le=1.0, description="Importance score")
+
+
+# Lazy coordinator initialization
+_coordinator = None
+
+
+async def _get_coordinator():
+    """Get or initialize the MemoryCoordinator singleton."""
+    global _coordinator
+    if _coordinator is None:
+        try:
+            from mycosoft_mas.memory import get_memory_coordinator
+            _coordinator = await get_memory_coordinator()
+            await _coordinator.initialize()
+        except Exception as e:
+            logger.warning(f"MemoryCoordinator not available: {e}")
+            return None
+    return _coordinator
+
+
+@router.post("/remember")
+async def remember_memory(request: AgentRememberRequest):
+    """
+    Store a memory via the MemoryCoordinator.
+    
+    Uses the 6-layer memory system for appropriate storage.
+    """
+    coordinator = await _get_coordinator()
+    if not coordinator:
+        raise HTTPException(status_code=503, detail="Memory coordinator not available")
+    
+    try:
+        memory_id = await coordinator.agent_remember(
+            agent_id=request.agent_id,
+            content=request.content,
+            layer=request.layer,
+            importance=request.importance,
+            tags=request.tags,
+        )
+        
+        return {
+            "success": True,
+            "id": str(memory_id) if memory_id else None,
+            "agent_id": request.agent_id,
+            "layer": request.layer,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Remember failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/recall")
+async def recall_memory(request: AgentRecallRequest):
+    """
+    Recall memories via the MemoryCoordinator.
+    
+    Supports semantic search and filtering by layer/tags.
+    """
+    coordinator = await _get_coordinator()
+    if not coordinator:
+        raise HTTPException(status_code=503, detail="Memory coordinator not available")
+    
+    try:
+        memories = await coordinator.agent_recall(
+            agent_id=request.agent_id,
+            query=request.query,
+            layer=request.layer,
+            tags=request.tags,
+            limit=request.limit,
+        )
+        
+        return {
+            "success": True,
+            "agent_id": request.agent_id,
+            "memories": memories,
+            "count": len(memories),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Recall failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/episode")
+async def record_episode(request: RecordEpisodeRequest):
+    """
+    Record an episodic event via the MemoryCoordinator.
+    """
+    coordinator = await _get_coordinator()
+    if not coordinator:
+        raise HTTPException(status_code=503, detail="Memory coordinator not available")
+    
+    try:
+        episode_id = await coordinator.record_episode(
+            agent_id=request.agent_id,
+            event_type=request.event_type,
+            description=request.description,
+            participants=request.participants,
+            context=request.context,
+            outcome=request.outcome,
+            importance=request.importance,
+        )
+        
+        return {
+            "success": True,
+            "id": str(episode_id) if episode_id else None,
+            "event_type": request.event_type,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Record episode failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/stats")
+async def memory_stats():
+    """
+    Get memory system statistics from the MemoryCoordinator.
+    """
+    coordinator = await _get_coordinator()
+    
+    # Basic stats even without coordinator
+    base_stats = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "coordinator": {
+            "initialized": coordinator is not None,
+            "active_conversations": 0,
+            "agent_namespaces": [],
+        },
+        "myca_memory": {
+            "total_memories": 0,
+            "layers": {},
+        },
+    }
+    
+    if not coordinator:
+        return base_stats
+    
+    try:
+        stats = await coordinator.get_stats()
+        return {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **stats,
+        }
+    except Exception as e:
+        logger.error(f"Stats failed: {e}")
+        base_stats["error"] = str(e)
+        return base_stats
+
+
+@router.get("/user/{user_id}/profile")
+async def get_user_profile(user_id: str):
+    """
+    Get user profile from cross-session memory.
+    """
+    coordinator = await _get_coordinator()
+    if not coordinator:
+        raise HTTPException(status_code=503, detail="Memory coordinator not available")
+    
+    try:
+        profile = await coordinator.get_user_profile(user_id)
+        return {
+            "success": True,
+            "user_id": user_id,
+            "profile": {
+                "user_id": profile.user_id,
+                "preferences": profile.preferences,
+                "context": profile.context,
+                "last_interaction": profile.last_interaction.isoformat() if profile.last_interaction else None,
+            },
+        }
+    except Exception as e:
+        logger.error(f"Get user profile failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# A2A Memory API - February 5, 2026
+# Agent-to-Agent Memory Sharing Endpoints
+# ============================================================================
+
+# Lazy A2A memory initialization
+_a2a_memory = None
+
+
+async def _get_a2a_memory():
+    """Get or initialize the A2A memory integration."""
+    global _a2a_memory
+    if _a2a_memory is None:
+        try:
+            from mycosoft_mas.memory.a2a_memory import get_a2a_memory
+            _a2a_memory = await get_a2a_memory()
+        except Exception as e:
+            logger.warning(f"A2A memory not available: {e}")
+            return None
+    return _a2a_memory
+
+
+class A2ABroadcastRequest(BaseModel):
+    """Request to broadcast a memory to other agents."""
+    sender_id: str = Field(..., description="Agent sending the memory")
+    content: Dict[str, Any] = Field(..., description="Content to share")
+    tags: Optional[List[str]] = Field(None, description="Tags for categorization")
+    importance: float = Field(0.5, ge=0.0, le=1.0, description="Importance score")
+    recipients: Optional[List[str]] = Field(None, description="Specific recipients (None = all)")
+
+
+class A2AQueryRequest(BaseModel):
+    """Request to query shared memories."""
+    requester_id: str = Field(..., description="Agent making the query")
+    query: str = Field(..., description="Search query")
+    tags: Optional[List[str]] = Field(None, description="Filter by tags")
+    timeout: float = Field(5.0, ge=0.1, le=30.0, description="Response timeout")
+
+
+@router.post("/a2a/broadcast")
+async def a2a_broadcast(request: A2ABroadcastRequest):
+    """
+    Broadcast a memory to other agents.
+    
+    Uses Redis Pub/Sub for real-time delivery and Stream for persistence.
+    """
+    a2a = await _get_a2a_memory()
+    if not a2a:
+        raise HTTPException(status_code=503, detail="A2A memory not available")
+    
+    try:
+        message_id = await a2a.broadcast_memory(
+            sender_id=request.sender_id,
+            content=request.content,
+            tags=request.tags,
+            importance=request.importance,
+            recipients=request.recipients
+        )
+        
+        return {
+            "success": True,
+            "message_id": message_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"A2A broadcast failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/a2a/query")
+async def a2a_query(request: A2AQueryRequest):
+    """
+    Query memories shared by other agents.
+    """
+    a2a = await _get_a2a_memory()
+    if not a2a:
+        raise HTTPException(status_code=503, detail="A2A memory not available")
+    
+    try:
+        results = await a2a.query_shared_memory(
+            requester_id=request.requester_id,
+            query=request.query,
+            tags=request.tags,
+            timeout=request.timeout
+        )
+        
+        return {
+            "success": True,
+            "results": results,
+            "count": len(results),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"A2A query failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/a2a/shared")
+async def get_shared_memories(limit: int = 50, since_id: Optional[str] = None):
+    """
+    Get shared memories from the A2A stream.
+    """
+    a2a = await _get_a2a_memory()
+    if not a2a:
+        raise HTTPException(status_code=503, detail="A2A memory not available")
+    
+    try:
+        memories = await a2a.get_shared_memories(limit=limit, since_id=since_id)
+        
+        return {
+            "success": True,
+            "memories": memories,
+            "count": len(memories),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    except Exception as e:
+        logger.error(f"Get shared memories failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/a2a/stats")
+async def a2a_stats():
+    """
+    Get A2A memory system statistics.
+    """
+    a2a = await _get_a2a_memory()
+    
+    if not a2a:
+        return {
+            "initialized": False,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    
+    try:
+        stats = await a2a.get_stats()
+        return {
+            "success": True,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **stats,
+        }
+    except Exception as e:
+        logger.error(f"A2A stats failed: {e}")
+        return {
+            "initialized": True,
+            "error": str(e),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }

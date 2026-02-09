@@ -1,4 +1,4 @@
-﻿"""Signal Encoding/Decoding for bio-digital conversion. Created: February 3, 2026"""
+"""Signal Encoding/Decoding for bio-digital conversion. Created: February 3, 2026"""
 import struct
 from typing import Any, Dict, List
 import base64

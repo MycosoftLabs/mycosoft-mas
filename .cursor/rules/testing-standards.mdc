@@ -1,0 +1,44 @@
+---
+description: Testing standards and patterns for the MAS test suite
+globs: "tests/**/*.py"
+alwaysApply: false
+---
+
+# Testing Standards
+
+## Framework
+
+- Use pytest with async support (`@pytest.mark.asyncio`)
+- Fixtures in `tests/conftest.py`
+- Run: `poetry run pytest tests/ -v`
+
+## Test Structure
+
+```python
+import pytest
+
+@pytest.mark.asyncio
+async def test_feature_happy_path():
+    """Test description."""
+    # Arrange
+    # Act
+    result = await function_under_test()
+    # Assert
+    assert result["status"] == "success"
+
+@pytest.mark.asyncio
+async def test_feature_error_case():
+    """Test error handling."""
+    with pytest.raises(ValueError):
+        await function_under_test(invalid_input)
+```
+
+## Rules
+
+- Test both happy path AND error cases
+- Use conftest fixtures for shared setup
+- Mock external HTTP calls (not internal services)
+- NEVER use mock data in production code -- tests may use test fixtures
+- Include type assertions in test validation
+- Name tests descriptively: `test_agent_processes_valid_task`
+- Group related tests in classes or modules

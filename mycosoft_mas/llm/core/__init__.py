@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA LLM Integration Layer
 Language model integration for MYCA scientific reasoning.
 Created: February 3, 2026

@@ -1,4 +1,4 @@
-﻿"""NLM Module - February 3, 2026
+"""NLM Module - February 3, 2026
 
 Nature Learning Model memory storage.
 """

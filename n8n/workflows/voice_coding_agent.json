@@ -1,0 +1,161 @@
+{
+  "name": "Voice Coding Agent Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice/code/fix",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-code-fix",
+      "name": "Voice Code Fix Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/llm/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "=Analyze and fix this bug:\n\nDescription: {{ $json.bug_description }}\nTarget files: {{ $json.target_files }}\n\nProvide:\n1. Root cause analysis\n2. Suggested fix\n3. Code changes needed as JSON array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "analyze-bug",
+      "name": "Analyze Bug",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/code/apply-fix",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "analysis",
+              "value": "={{ $json.response }}"
+            },
+            {
+              "name": "auto_commit",
+              "value": "={{ $('Voice Code Fix Webhook').item.json.auto_commit || false }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "apply-fix",
+      "name": "Apply Fix",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $('Voice Code Fix Webhook').item.json.create_pr }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "check-pr",
+      "name": "Create PR?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/github/create-pr",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "=Fix: {{ $('Voice Code Fix Webhook').item.json.bug_description }}"
+            },
+            {
+              "name": "body",
+              "value": "=Auto-generated fix via MYCA voice command"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-pr",
+      "name": "Create PR",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "url": "http://personaplex-bridge:8999/api/announce",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=I've fixed the bug and created a pull request. {{ $json.pr_url || 'Changes are ready for review.' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "announce-fix",
+      "name": "Announce Fix",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, changes: $json.changes_made, pr_url: $json.pr_url }) }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Voice Code Fix Webhook": {
+      "main": [[{"node": "Analyze Bug", "type": "main", "index": 0}]]
+    },
+    "Analyze Bug": {
+      "main": [[{"node": "Apply Fix", "type": "main", "index": 0}]]
+    },
+    "Apply Fix": {
+      "main": [[{"node": "Create PR?", "type": "main", "index": 0}]]
+    },
+    "Create PR?": {
+      "main": [
+        [{"node": "Create PR", "type": "main", "index": 0}],
+        [{"node": "Announce Fix", "type": "main", "index": 0}]
+      ]
+    },
+    "Create PR": {
+      "main": [[{"node": "Announce Fix", "type": "main", "index": 0}]]
+    },
+    "Announce Fix": {
+      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["voice", "coding", "github", "myca"]
+}

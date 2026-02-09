@@ -1,0 +1,32 @@
+---
+description: Dev machine slowness, GPU services, WSL/vmmem, and cleanup so all agents know.
+globs: 
+alwaysApply: true
+---
+
+# Dev Machine Performance (All Agents)
+
+## Why the machine gets slow
+- **npm run dev** (website) starts **GPU Services** in a **separate window** (PersonaPlex/Moshi, Bridge, Earth2). Those processes are **detached** and **keep running** after you close the terminal or Cursor.
+- Left running for days they use huge CPU/RAM and make Cursor + whole machine slow. Docker/WSL alone are not the cause; **accumulated GPU Python processes + vmmem** are.
+- **vmmem** = WSL2 VM (often used by Docker Desktop). It can use a lot of RAM; shutting it down when not needed frees memory.
+
+## Rules for agents
+1. **When suggesting or running the website dev server** and the user does NOT need voice or Earth2: use **npm run dev:next-only** (or **npm run dev:no-gpu**), NOT **npm run dev**, so GPU Services never start.
+2. **When the user reports slowness, lag, or "machine slow"**: remind them to run the cleanup script and optionally shut down WSL:
+   ```powershell
+   cd scripts
+   .\dev-machine-cleanup.ps1 -KillStaleGPU -ShutdownWSL
+   ```
+   Then restart Cursor if still slow. See `docs/WHY_DEV_MACHINE_SLOW_FEB06_2026.md` and `docs/WSL_VMMEM_DISABLE_FEB06_2026.md`.
+3. **When documenting or instructing** use of `npm run dev`: add that when done with GPU features they should **close the "GPU Services" window** or run `scripts\dev-machine-cleanup.ps1 -KillStaleGPU` so Python processes don't run for days.
+
+## Key paths
+- Cleanup script: `scripts/dev-machine-cleanup.ps1` (-KillStaleGPU, -ShutdownWSL)
+- WSL shutdown only: `scripts/shutdown-wsl-free-vmmem.ps1` or `wsl --shutdown`
+- Root cause doc: `docs/WHY_DEV_MACHINE_SLOW_FEB06_2026.md`
+- WSL/vmmem doc: `docs/WSL_VMMEM_DISABLE_FEB06_2026.md`
+
+## Website dev commands
+- **npm run dev** – starts Next.js + GPU Services (new window); GPU processes keep running after terminal close.
+- **npm run dev:next-only** or **npm run dev:no-gpu** – Next.js only on port 3010; no GPU Services. Prefer when voice/Earth2 not needed.

@@ -1,4 +1,4 @@
-﻿"""Knowledge graph memory. Created: February 3, 2026"""
+"""Knowledge graph memory. Created: February 3, 2026"""
 from typing import Any, Dict, List, Optional, Set, Tuple
 from uuid import UUID, uuid4
 

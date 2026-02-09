@@ -1,4 +1,4 @@
-﻿"""NLM Memory Store - February 3, 2026
+"""NLM Memory Store - February 3, 2026
 
 Stores Nature Learning Model training runs, checkpoints, and predictions
 in the unified memory system for versioning and analysis.

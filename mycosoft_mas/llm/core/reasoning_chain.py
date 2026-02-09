@@ -1,4 +1,4 @@
-﻿"""
+"""
 Reasoning Chain - Chain-of-Thought Scientific Reasoning
 Created: February 3, 2026
 """

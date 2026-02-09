@@ -1,4 +1,4 @@
-﻿"""
+"""
 MycoSpeak - Fungal Domain LLM
 Specialized language model for fungal biology and biosignal interpretation.
 Created: February 3, 2026

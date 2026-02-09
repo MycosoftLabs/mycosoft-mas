@@ -1,4 +1,4 @@
-﻿"""
+"""
 Agent Registry Service.
 Created: February 5, 2026
 
@@ -208,7 +208,7 @@ class AgentRegistry:
                 description=agent_def["description"],
                 module_path=agent_def["module"],
                 class_name=agent_def["class"],
-                status=AgentStatus.OFFLINE
+                status=AgentStatus.IDLE  # All agents idle (ready) 24/7
             )
             self._agents[agent.name] = agent
             

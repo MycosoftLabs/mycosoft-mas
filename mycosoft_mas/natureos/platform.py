@@ -1,4 +1,4 @@
-﻿"""
+"""
 NatureOS Platform Orchestration
 Core platform orchestration for the NatureOS environmental operating system.
 Created: February 3, 2026

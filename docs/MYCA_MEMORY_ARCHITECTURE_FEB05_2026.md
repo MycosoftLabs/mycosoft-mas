@@ -148,3 +148,16 @@ from mycosoft_mas.core.system_monitor import get_system_monitor
 monitor = await get_system_monitor()
 dashboard = await monitor.get_dashboard()
 ```
+
+---
+
+## Related Documents
+
+- **[MYCA_MEMORY_BRAIN_INTEGRATION_FEB05_2026.md](./MYCA_MEMORY_BRAIN_INTEGRATION_FEB05_2026.md)** - Brain-memory integration
+- **[MYCA_MEMORY_UI_MIGRATION_FEB05_2026.md](./MYCA_MEMORY_UI_MIGRATION_FEB05_2026.md)** - UI component migration
+- **[MYCA_MEMORY_INTEGRATION_PLAN_FEB05_2026.md](./MYCA_MEMORY_INTEGRATION_PLAN_FEB05_2026.md)** - Full integration plan
+- **[MEMORY_SYSTEM_COMPLETE_FEB05_2026.md](./MEMORY_SYSTEM_COMPLETE_FEB05_2026.md)** - Complete system reference
+
+---
+
+*Updated: February 5, 2026*

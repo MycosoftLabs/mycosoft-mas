@@ -1,4 +1,4 @@
-﻿"""
+"""
 MINDEX Query Router
 API endpoints for MINDEX database queries
 """

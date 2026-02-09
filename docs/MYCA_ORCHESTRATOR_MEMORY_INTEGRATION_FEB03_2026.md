@@ -1,6 +1,13 @@
-﻿# MYCA Orchestrator Memory Integration - Implementation Complete
+# MYCA Orchestrator Memory Integration - Implementation Complete
 
 **Date:** February 3, 2026
+
+> **⚠️ SUPERSEDED**: This document is historical. See updated documentation:
+> - **[MYCA_MEMORY_BRAIN_INTEGRATION_FEB05_2026.md](./MYCA_MEMORY_BRAIN_INTEGRATION_FEB05_2026.md)** - Brain-memory integration
+> - **[MYCA_MEMORY_INTEGRATION_PLAN_FEB05_2026.md](./MYCA_MEMORY_INTEGRATION_PLAN_FEB05_2026.md)** - Full integration plan
+> - **[MEMORY_SYSTEM_COMPLETE_FEB05_2026.md](./MEMORY_SYSTEM_COMPLETE_FEB05_2026.md)** - Complete reference
+
+---
 
 ## Summary
 

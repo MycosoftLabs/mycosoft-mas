@@ -1,4 +1,4 @@
-﻿"""IP-NFT Management. Created: February 3, 2026"""
+"""IP-NFT Management. Created: February 3, 2026"""
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 from datetime import datetime, timezone

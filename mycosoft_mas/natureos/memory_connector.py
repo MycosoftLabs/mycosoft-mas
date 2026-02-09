@@ -1,4 +1,4 @@
-﻿"""NatureOS Memory Connector - February 3, 2026
+"""NatureOS Memory Connector - February 3, 2026
 
 Connects NatureOS telemetry and device data to the unified memory system.
 Handles telemetry archival, environmental events, and device state sync.

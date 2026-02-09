@@ -1,4 +1,4 @@
-﻿"""
+"""
 N8N Workflow Management Engine - January 25, 2026
 
 Core automation engine for MYCA orchestrator to manage n8n workflows 24/7/365.

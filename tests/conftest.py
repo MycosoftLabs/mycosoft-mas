@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 # Stub out heavy optional dependencies to keep tests lightweight
 os.environ.setdefault("MAS_LIGHT_IMPORT", "1")
 
+# Note: 'requests' removed from stub list to allow test_n8n_earth2_workflows.py to work
 for _mod in [
     "spacy",
     "pyautogui",
@@ -16,7 +17,7 @@ for _mod in [
     "web3",
     "bitcoin",
     "eth_account",
-    "requests",
+    # "requests",  # Needed for n8n workflow tests
     "docx",
     "PyPDF2",
     "bs4",

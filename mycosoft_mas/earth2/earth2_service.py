@@ -1,6 +1,7 @@
-"""
+﻿"""
 Earth2Studio Service Wrapper
 February 4, 2026
+Updated: February 5, 2026 - Added Earth2 Memory integration
 
 Provides async wrapper around NVIDIA Earth2Studio for running AI weather models.
 Supports Atlas, StormScope, CorrDiff, and HealDA models.
@@ -80,6 +81,9 @@ class Earth2StudioService:
         # Track active runs
         self._active_runs: Dict[str, Earth2ModelRun] = {}
         
+        # Memory integration (Feb 5, 2026)
+        self._earth2_memory = None
+        
         # Ensure output directory exists
         Path(self.output_path).mkdir(parents=True, exist_ok=True)
         
@@ -89,6 +93,16 @@ class Earth2StudioService:
     def is_available(self) -> bool:
         """Check if Earth2Studio is available."""
         return EARTH2_AVAILABLE
+    
+    async def _ensure_memory(self) -> None:
+        """Ensure Earth2 memory is initialized."""
+        if self._earth2_memory is None:
+            try:
+                from mycosoft_mas.memory.earth2_memory import get_earth2_memory
+                self._earth2_memory = await get_earth2_memory()
+                logger.debug("Earth2 memory integration enabled")
+            except Exception as e:
+                logger.debug(f"Earth2 memory not available: {e}")
     
     async def get_status(self) -> Dict[str, Any]:
         """Get service status."""
@@ -212,6 +226,18 @@ class Earth2StudioService:
             model_run.output_path = str(output_dir)
             
             logger.info(f"Forecast completed: {run_id} in {compute_time:.2f}s")
+            
+            # Record to Earth2 memory (Feb 5, 2026)
+            await self._record_forecast_to_memory(
+                model=str(params.model.value if hasattr(params.model, 'value') else params.model),
+                location={"lat": (params.spatial_extent.min_lat + params.spatial_extent.max_lat) / 2,
+                          "lng": (params.spatial_extent.min_lon + params.spatial_extent.max_lon) / 2},
+                lead_time_hours=params.time_range.step_hours,
+                variables=[str(v.value if hasattr(v, 'value') else v) for v in params.variables],
+                inference_time_ms=int(compute_time * 1000),
+                source="api"
+            )
+            
             return result
             
         except Exception as e:
@@ -219,6 +245,10 @@ class Earth2StudioService:
             model_run.error_message = str(e)
             model_run.completed_at = datetime.utcnow()
             logger.error(f"Forecast failed: {run_id} - {e}")
+            
+            # Record error to memory
+            await self._record_model_error(str(params.model.value if hasattr(params.model, 'value') else params.model))
+            
             raise
         finally:
             # Keep in active runs for a while for status queries
@@ -577,6 +607,60 @@ class Earth2StudioService:
             runs = [r for r in runs if r.status == status]
         
         return sorted(runs, key=lambda r: r.request_timestamp, reverse=True)[:limit]
+
+
+    async def _record_forecast_to_memory(
+        self,
+        model: str,
+        location: Dict[str, float],
+        lead_time_hours: int,
+        variables: List[str],
+        inference_time_ms: int,
+        source: str = "api",
+        user_id: str = "system",
+        location_name: Optional[str] = None
+    ) -> None:
+        """Record a forecast to Earth2 memory."""
+        await self._ensure_memory()
+        if self._earth2_memory:
+            try:
+                await self._earth2_memory.record_forecast(
+                    user_id=user_id,
+                    model=model,
+                    location=location,
+                    lead_time_hours=lead_time_hours,
+                    variables=variables,
+                    inference_time_ms=inference_time_ms,
+                    source=source,
+                    location_name=location_name
+                )
+            except Exception as e:
+                logger.warning(f"Failed to record forecast to memory: {e}")
+    
+    async def _record_model_error(self, model: str) -> None:
+        """Record a model error to memory."""
+        await self._ensure_memory()
+        if self._earth2_memory:
+            try:
+                await self._earth2_memory.record_model_error(model)
+            except Exception as e:
+                logger.warning(f"Failed to record model error: {e}")
+    
+    async def get_user_weather_preferences(self, user_id: str) -> Dict[str, Any]:
+        """Get user weather preferences from memory."""
+        await self._ensure_memory()
+        if self._earth2_memory:
+            prefs = await self._earth2_memory.get_user_preferences(user_id)
+            return prefs.to_dict()
+        return {}
+    
+    async def get_user_forecast_history(self, user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get user forecast history from memory."""
+        await self._ensure_memory()
+        if self._earth2_memory:
+            forecasts = await self._earth2_memory.get_user_forecasts(user_id, limit=limit)
+            return [f.to_dict() for f in forecasts]
+        return []
 
 
 # Singleton instance

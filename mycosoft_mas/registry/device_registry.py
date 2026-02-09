@@ -1,4 +1,4 @@
-﻿"""
+"""
 Device Registry - February 4, 2026
 
 Tracks all MycoBrain devices including firmware versions,

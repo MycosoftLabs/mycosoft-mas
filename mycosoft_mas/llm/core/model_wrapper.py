@@ -1,4 +1,4 @@
-﻿"""
+"""
 LLM Model Wrappers
 Unified interface for various LLM providers.
 Created: February 3, 2026

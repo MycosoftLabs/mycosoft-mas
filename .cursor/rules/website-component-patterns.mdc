@@ -1,0 +1,53 @@
+---
+description: React component patterns for the Mycosoft website
+globs: "**/components/**/*.tsx"
+alwaysApply: false
+---
+
+# Website Component Patterns
+
+When creating or modifying React components in the website:
+
+## Rules
+
+- Functional components only (no classes)
+- Use TypeScript `interface` for props (not `type`)
+- Named exports (not default exports)
+- Use Shadcn UI + Radix UI primitives from `components/ui/`
+- Mobile-first Tailwind CSS (`base`, then `md:`, `lg:`)
+- Use `cn()` utility from `@/lib/utils` for conditional classNames
+- Minimize `use client` -- prefer React Server Components
+
+## Naming
+
+- Prop names: `isLoading`, `hasError`, `canSubmit` (auxiliary verbs)
+- Component files: `kebab-case.tsx`
+- Component names: `PascalCase`
+- Directories: `lowercase-with-dashes`
+
+## Pattern
+
+```typescript
+import { cn } from '@/lib/utils';
+
+interface MyComponentProps {
+  title: string;
+  isLoading?: boolean;
+  className?: string;
+}
+
+export function MyComponent({ title, isLoading = false, className }: MyComponentProps) {
+  if (isLoading) return <div className={cn("animate-pulse bg-muted rounded-lg h-32", className)} />;
+  return (
+    <div className={cn("rounded-lg border bg-card p-6", className)}>
+      <h3 className="text-lg font-semibold">{title}</h3>
+    </div>
+  );
+}
+```
+
+## Data
+
+- NEVER include mock/fake/placeholder data
+- Fetch from real APIs via hooks or server components
+- Show loading skeletons and empty states for missing data

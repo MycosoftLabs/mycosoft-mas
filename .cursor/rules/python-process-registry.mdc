@@ -1,0 +1,210 @@
+---
+description: Complete registry of all Python processes, ports, resource usage, and lifecycle management for all agents
+alwaysApply: true
+---
+
+# Python Process Registry (All Agents)
+
+## CRITICAL: Read this before starting or suggesting any Python process
+
+This registry tracks every Python process in the Mycosoft ecosystem. Before starting, stopping, or debugging any service, check here for port conflicts, resource issues, and lifecycle rules.
+
+---
+
+## 1. AUTOSTART SERVICES (must be running for dev system)
+
+These run in the background and should be restarted if found down. Managed by `scripts/autostart-healthcheck.ps1`.
+
+| Service | Script | Port | Resource Profile | Notes |
+|---------|--------|------|-----------------|-------|
+| Notion Docs Watcher | `scripts/notion_docs_watcher.py` | none | Low (~30MB RAM) | Auto-syncs .md files to Notion. Start: `.\scripts\notion-sync.ps1 watch-bg` |
+
+## 2. VM SERVICES (always-on, run on VMs not local)
+
+These run on VMs as systemd services or Docker containers. Do NOT start locally.
+
+| Service | VM | Port | Script/Entry | Notes |
+|---------|-----|------|-------------|-------|
+| MAS Orchestrator | 188 | 8001 | `mycosoft_mas/core/myca_main.py` | systemd service. Restart: `ssh 188; sudo systemctl restart mas-orchestrator` |
+| MINDEX API | 189 | 8000 | `mindex_api/main.py` | Database + vector store API |
+| Website Container | 187 | 3000 | Docker container | Next.js in Docker. Rebuild with `_rebuild_sandbox.py` |
+| n8n Workflows | 188 | 5678 | Docker container | Workflow automation |
+| PostgreSQL | 189 | 5432 | Docker container | Main database |
+| Redis | 189 | 6379 | Docker container | Cache |
+| Qdrant | 189 | 6333 | Docker container | Vector DB |
+| Ollama | 188 | 11434 | Docker container | LLM service |
+
+## 3. GPU SERVICES (resource-heavy, start ONLY when needed)
+
+**WARNING:** These use massive GPU VRAM and CPU. They persist after terminal close and make the machine slow. ALWAYS kill when done.
+
+| Service | Script | Port | VRAM | RAM | Kill Priority |
+|---------|--------|------|------|-----|--------------|
+| PersonaPlex/Moshi | `start_personaplex.py` | 8998 | ~23GB | ~4GB | HIGH - kills dev machine |
+| PersonaPlex Bridge | `services/personaplex-local/personaplex_bridge_nvidia.py` | 8999 | ~2GB | ~1GB | HIGH |
+| Earth2 API | `scripts/earth2_api_server.py` | 8220 | ~8GB | ~2GB | HIGH |
+| GPU Gateway | `scripts/local_gpu_services.py` | 8300 | varies | ~1GB | HIGH - manages 8998,8999,8220 |
+
+**Rules for GPU services:**
+- NEVER start with `npm run dev` - use `npm run dev:next-only` instead
+- If user does NOT need voice or Earth2, do NOT start these
+- After using, kill with: `scripts/dev-machine-cleanup.ps1 -KillStaleGPU`
+- If machine is slow, these are almost certainly the cause
+- `local_gpu_services.py` and `start_gateway_only.py` CONFLICT on port 8300
+
+## 4. OPTIONAL LOCAL SERVERS (start when actively developing that feature)
+
+| Service | Script | Port | Resource | Start When | Kill When |
+|---------|--------|------|----------|-----------|-----------|
+| MyceliumSeg API | `scripts/myceliumseg/serve_api.py` | 8010 | Low | Working on MyceliumSeg | Done with MyceliumSeg |
+| MycoBrain Service | `scripts/start_mycobrain_service.ps1` | 8003 | Low | Testing MycoBrain device | Done testing |
+| Smell Trainer | `smell_trainer_agent/app.py` | 8042 | Low | Training smell models | Done training |
+| Mycorrhizae API | `Mycorrhizae/mycorrhizae-protocol/api/main.py` | 8002 | Low | Working on Mycorrhizae | Done |
+| E2CC API Gateway | `WEBSITE/services/e2cc/api-gateway/server.py` | 8210 | Low | Working on E2CC | Done |
+| E2CC Stub | `WEBSITE/services/e2cc/stub/main.py` | 8211 | Low | CPU-only testing | Done |
+| Data Federation | `WEBSITE/services/data-federation/dfm_server.py` | 8310 | Low | Working on DFM | Done |
+| Threat Intel | `WEBSITE/services/security/threat_intel_service.py` | 8100 | Low | Security testing | Done |
+
+## 5. ONE-SHOT SCRIPTS (run and terminate, no port issues)
+
+### Deployment Scripts (safe, run as needed)
+- `_start_website.py` - Start website on VM 187
+- `_deploy_sandbox.py` - Deploy to sandbox VM
+- `_rebuild_mas_container.py` - Rebuild MAS on VM 188
+- `_update_notion.py` - Push memory docs to Notion
+- `scripts/notion_docs_sync.py` - Full Notion sync (all repos)
+- `scripts/force_deploy.py` - Force deploy to VM
+
+### Data Ingestion (CAUTION: creates data)
+- `scripts/ingest_myceliumseg.py` - Writes to MINDEX DB
+- `scripts/myceliumseg/run_validation_job.py` - Writes validation results to DB
+- `MINDEX/gbif_quick_sync.py` - Syncs GBIF data (can create GBs of data)
+- `MINDEX/gbif_alphabetical_sync.py` - Full alphabetical sync (LARGE data creation)
+- `MINDEX/scripts/full_fungi_sync.py` - Full fungi sync (VERY LARGE)
+
+### Diagnostic Scripts (safe, read-only)
+- `scripts/check_postgres.py` - Check Postgres config
+- `scripts/mas_vm_always_on.py` - Check VM ports
+- `scripts/verify_services.py` - Verify all services healthy
+
+---
+
+## 6. PORT CONFLICT MAP
+
+These scripts/services CANNOT run simultaneously:
+
+| Port | Conflicts | Resolution |
+|------|-----------|------------|
+| 8300 | `local_gpu_services.py` vs `start_gateway_only.py` vs `WEBSITE/earth2-inference/inference_server.py` | Only run ONE. Prefer `local_gpu_services.py` (manages all GPU) |
+| 8999 | Multiple PersonaPlex bridge versions (`bridge.py`, `bridge_api.py`, `bridge_api_v2.py`) | Only run ONE bridge version |
+| 8003/18003 | `start_mycobrain_service.ps1` vs `START_MYCOBRAIN_SERVICE.ps1` | Different ports but same service - pick one |
+| 8000 | `MINDEX API` (VM) vs local MINDEX dev | Don't run MINDEX locally if VM is up |
+| 8001 | `MAS Orchestrator` (VM) vs local orchestrator | Don't run locally if VM is up |
+
+## 7. RESOURCE WARNINGS
+
+### Data Creation Risks
+| Script | Risk | What it Creates |
+|--------|------|----------------|
+| `gbif_quick_sync.py` | HIGH | GBs of GBIF taxonomy data in PostgreSQL |
+| `full_fungi_sync.py` | VERY HIGH | Full fungi database (~50GB+) |
+| `notion_docs_sync.py` | LOW | JSON state file (~500KB) |
+| `notion_docs_watcher.py` | LOW | Log file (rotation recommended) |
+| `local_gpu_services.py` | MEDIUM | CUDA graph caches in temp dirs |
+| CREP collectors | MEDIUM | Cached API responses, sensor data |
+
+### Cache/Temp File Accumulation
+| Source | Location | Action |
+|--------|----------|--------|
+| CUDA graphs | `%TEMP%\torch_*`, `%LOCALAPPDATA%\torch\*` | Kill GPU services to free |
+| Moshi voice buffers | In-memory + temp files | Kill PersonaPlex to free |
+| Python `__pycache__` | Throughout all repos | Safe to delete periodically |
+| Notion sync state | `data/notion_sync_state.json` | Keep (tracks sync progress) |
+| Watcher logs | `data/notion_watcher.log` | Rotate if >50MB |
+
+### RAM/CPU Hogs (by severity)
+1. **PersonaPlex/Moshi** - 4GB+ RAM, high CPU during voice - KILL when not using voice
+2. **Earth2 API** - 2GB+ RAM, GPU compute spikes - KILL when not using Earth2
+3. **GPU Gateway** - 1GB+ RAM, manages GPU subprocesses - KILL with GPU services
+4. **CREP Collectors** (if all running) - 500MB+ combined - Only run needed collectors
+5. **Full fungi sync** - Spikes to 4GB+ during sync - Only run intentionally
+6. **vmmem (WSL2)** - 2-8GB RAM - `wsl --shutdown` when Docker not needed
+
+---
+
+## 8. AGENT DECISION MATRIX
+
+When user asks to... | Do this
+---|---
+"Run the website" | `npm run dev:next-only` on port 3010. Do NOT start GPU services.
+"Test voice" | Start PersonaPlex (8998) + Bridge (8999). Kill after testing.
+"Test Earth2" | Start Earth2 API (8220). Kill after testing.
+"Machine is slow" | Run `scripts/dev-machine-cleanup.ps1 -KillStaleGPU`. Check for zombie Python processes.
+"Deploy to sandbox" | Run `_deploy_sandbox.py`. One-shot, no cleanup needed.
+"Start all services" | DO NOT start everything. Ask which features they need. Start only those.
+"Run MINDEX locally" | Check if VM 189 is up first. If yes, use VM. If no, start local MINDEX API.
+"Sync docs to Notion" | `python scripts/notion_docs_sync.py`. One-shot, safe.
+"Run tests" | One-shot test scripts. Safe, no cleanup needed.
+"Debug port in use" | Check this registry. Run `netstat -ano | findstr :PORT` to find PID. Kill conflicting process.
+
+## 9. SPECIALIZED AGENTS FOR PROCESS MANAGEMENT
+
+Use these sub-agents for domain-specific process tasks:
+- `process-manager` -- GPU cleanup, port conflicts, resource monitoring, autostart health
+- `deploy-pipeline` -- Deployment process lifecycle (commit, build, restart, purge)
+- `earth2-ops` -- Earth2 GPU service lifecycle (start, test, kill)
+- `voice-engineer` -- PersonaPlex/Moshi GPU service lifecycle
+- `device-firmware` -- MycoBrain service (port 8003) lifecycle
+- `data-pipeline` -- MINDEX ETL process management
+- `notion-sync` -- Notion watcher daemon management
+- `backup-ops` -- Backup scheduled task verification
+- `crep-collector` -- CREP collector process management
+
+## 10. CLEANUP COMMANDS
+
+```powershell
+# Kill all GPU Python processes
+.\scripts\dev-machine-cleanup.ps1 -KillStaleGPU
+
+# Kill specific port holder
+$pid = (Get-NetTCPConnection -LocalPort 8998 -ErrorAction SilentlyContinue).OwningProcess
+if ($pid) { Stop-Process -Id $pid -Force }
+
+# Kill all Python processes (NUCLEAR - use carefully)
+Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# Free WSL/Docker memory
+wsl --shutdown
+
+# Check what's using ports
+netstat -ano | findstr "LISTENING" | findstr "800"
+
+# Check autostart services health
+.\scripts\autostart-healthcheck.ps1
+```
+
+## 11. FULL PORT ASSIGNMENT TABLE
+
+| Port | Service | Location | Always On? |
+|------|---------|----------|-----------|
+| 3000 | Website | VM 187 | Yes |
+| 3010 | Website Dev | Local | When developing |
+| 5432 | PostgreSQL | VM 189 | Yes |
+| 5678 | n8n | VM 188 | Yes |
+| 6333 | Qdrant | VM 189 | Yes |
+| 6379 | Redis | VM 189 | Yes |
+| 8000 | MINDEX API | VM 189 | Yes |
+| 8001 | MAS Orchestrator | VM 188 | Yes |
+| 8002 | Mycorrhizae/NatureOS | Local/VM | When needed |
+| 8003 | MycoBrain Service | Local | When testing devices |
+| 8010 | MyceliumSeg API | Local | When needed |
+| 8042 | Smell Trainer | Local | When training |
+| 8100 | Threat Intel | Local | When needed |
+| 8210 | E2CC Gateway | Local | When needed |
+| 8220 | Earth2 API | Local (GPU) | When needed - KILL after |
+| 8300 | GPU Gateway | Local (GPU) | When needed - KILL after |
+| 8765 | Whisper STT | VM 188 | When voice needed |
+| 8998 | Moshi/PersonaPlex | Local (GPU) | When needed - KILL after |
+| 8999 | PersonaPlex Bridge | Local (GPU) | When needed - KILL after |
+| 9090 | Prometheus | VM 188 | Yes |
+| 11434 | Ollama | VM 188 | Yes |

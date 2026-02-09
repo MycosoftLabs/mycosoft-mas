@@ -1,0 +1,25 @@
+---
+description: Agent creation patterns and checklist for MAS agents
+globs: "mycosoft_mas/agents/**/*.py"
+alwaysApply: false
+---
+
+# Agent Creation Patterns
+
+When creating or modifying agents in `mycosoft_mas/agents/`:
+
+## Required Pattern
+
+1. Inherit from `BaseAgent`
+2. Constructor: `__init__(self, agent_id: str, name: str, config: Dict[str, Any])`
+3. Call: `super().__init__(agent_id=agent_id, name=name, config=config)`
+4. Use async methods for task processing
+5. Include type hints on all methods
+
+## Checklist After Creating an Agent
+
+- [ ] Agent file created in `mycosoft_mas/agents/`
+- [ ] Import added to `mycosoft_mas/agents/__init__.py`
+- [ ] Class added to `__all__` list in `__init__.py`
+- [ ] Agent registered in `docs/SYSTEM_REGISTRY_FEB04_2026.md`
+- [ ] No mock data used -- real service connections only

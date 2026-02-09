@@ -1,4 +1,4 @@
-﻿"""Orchestrator Memory Logging - February 3, 2026
+"""Orchestrator Memory Logging - February 3, 2026
 
 Logs MYCA orchestrator decisions and routing to memory for analysis.
 """

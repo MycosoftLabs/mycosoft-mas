@@ -1,4 +1,4 @@
-﻿"""
+"""
 Graph Indexer - February 4, 2026
 
 Automatically builds the knowledge graph from registry data,

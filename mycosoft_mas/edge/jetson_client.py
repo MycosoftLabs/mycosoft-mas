@@ -1,4 +1,4 @@
-﻿"""Jetson AI Module Client"""
+"""Jetson AI Module Client"""
 import logging
 from typing import Any, Dict, Optional
 from uuid import UUID, uuid4

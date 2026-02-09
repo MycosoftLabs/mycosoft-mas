@@ -1,4 +1,4 @@
-﻿"""Closed-Loop Experimentation Engine. Created: February 3, 2026"""
+"""Closed-Loop Experimentation Engine. Created: February 3, 2026"""
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional

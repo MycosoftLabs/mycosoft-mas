@@ -1,4 +1,4 @@
-﻿"""
+"""
 Scientific WebSocket Server
 Unified real-time communication for all scientific operations
 """

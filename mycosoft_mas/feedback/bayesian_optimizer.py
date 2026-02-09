@@ -1,4 +1,4 @@
-﻿"""Bayesian Optimization for experiments. Created: February 3, 2026"""
+"""Bayesian Optimization for experiments. Created: February 3, 2026"""
 import logging
 from typing import Any, Dict, List, Tuple, Callable
 from uuid import uuid4

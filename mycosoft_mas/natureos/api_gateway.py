@@ -1,4 +1,4 @@
-﻿"""NatureOS API Gateway - February 3, 2026"""
+"""NatureOS API Gateway - February 3, 2026"""
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional

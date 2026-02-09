@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA Prompt Manager - February 2026
 
 Manages system prompts for the MYCA orchestrator with:

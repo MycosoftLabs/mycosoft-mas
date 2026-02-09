@@ -1,4 +1,4 @@
-﻿"""
+"""
 PersonaPlex Voice Memory System.
 Created: February 5, 2026
 

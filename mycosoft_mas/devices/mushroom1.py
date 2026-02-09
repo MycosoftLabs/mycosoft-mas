@@ -1,4 +1,4 @@
-﻿"""Mushroom1 - Environmental Fungal Computer Device"""
+"""Mushroom1 - Environmental Fungal Computer Device"""
 import asyncio
 from datetime import datetime, timezone
 from typing import Any, Dict, List

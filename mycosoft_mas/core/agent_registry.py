@@ -54,7 +54,7 @@ class AgentDefinition:
     keywords: List[str] = field(default_factory=list)
     voice_triggers: List[str] = field(default_factory=list)
     requires_confirmation: bool = False
-    is_active: bool = False
+    is_active: bool = True  # All agents are always active (idle until needed, 24/7)
     config_key: Optional[str] = None
 
 
@@ -648,10 +648,15 @@ class AgentRegistry:
             voice_triggers=["data analysis", "analyze data", "statistics"]
         ))
         
-        logger.info(f"Loaded {len(self._agents)} agent definitions into registry")
+        # All agents are ALWAYS active (idle until needed, 24/7 operation)
+        for agent in self._agents.values():
+            agent.is_active = True
+
+        logger.info(f"Loaded {len(self._agents)} agent definitions into registry (all active)")
     
     def register(self, agent_def: AgentDefinition) -> None:
-        """Register an agent definition."""
+        """Register an agent definition. Agents default to active."""
+        agent_def.is_active = True
         self._agents[agent_def.agent_id] = agent_def
         
     def get(self, agent_id: str) -> Optional[AgentDefinition]:

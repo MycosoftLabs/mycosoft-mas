@@ -1,5 +1,11 @@
 # Mycosoft MAS Memory System Upgrade - February 3, 2026
 
+> **⚠️ SUPERSEDED**: This document describes initial memory system upgrade. See current documentation:
+> - **[MEMORY_SYSTEM_COMPLETE_FEB05_2026.md](./MEMORY_SYSTEM_COMPLETE_FEB05_2026.md)** - Complete system reference
+> - **[MYCA_MEMORY_ARCHITECTURE_FEB05_2026.md](./MYCA_MEMORY_ARCHITECTURE_FEB05_2026.md)** - 6-layer architecture
+
+---
+
 ## Executive Summary
 
 Comprehensive tiered memory system upgrade completed for all Mycosoft MAS systems. The upgrade integrates NatureOS, PersonaPlex, MYCA Orchestrator, MINDEX, N8N workflows, devices, scientific agents, and the website dashboard through a unified Memory Service.

@@ -1,4 +1,4 @@
-﻿"""
+"""
 DNA Data Storage System
 Encode, store, and retrieve data using DNA synthesis
 """

@@ -1,4 +1,4 @@
-﻿"""TruffleBot - Autonomous Fungal Sampling Robot"""
+"""TruffleBot - Autonomous Fungal Sampling Robot"""
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 from uuid import uuid4

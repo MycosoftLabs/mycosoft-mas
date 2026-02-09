@@ -13,10 +13,15 @@ VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
 VM_PASS = "Mushroom1!Mushroom1!"
 
-COMPOSE_PATH = "/home/mycosoft/mycosoft/mas/docker-compose.always-on.yml"
+# Try both possible paths
+COMPOSE_PATHS = [
+    "/opt/mycosoft/docker-compose.always-on.yml",
+    "/home/mycosoft/mycosoft/mas/docker-compose.always-on.yml",
+]
 
 # Windows host running MycoBrain on LAN (update if your Windows IP changes)
-WINDOWS_MYCORBRAIN_URL = "http://192.168.0.172:8003"
+# Port 8765 is the current running service
+WINDOWS_MYCORBRAIN_URL = "http://192.168.0.172:8765"
 
 
 def run(ssh: paramiko.SSHClient, cmd: str) -> str:
@@ -37,12 +42,30 @@ def main() -> None:
     ssh.connect(VM_IP, username=VM_USER, password=VM_PASS, timeout=30)
 
     sftp = ssh.open_sftp()
+    
+    # Find the correct compose path
+    COMPOSE_PATH = None
+    for path in COMPOSE_PATHS:
+        try:
+            sftp.stat(path)
+            COMPOSE_PATH = path
+            print(f"[OK] Found compose at: {path}")
+            break
+        except FileNotFoundError:
+            print(f"[SKIP] Not found: {path}")
+            continue
+    
+    if not COMPOSE_PATH:
+        raise SystemExit("[ERROR] Could not find docker-compose.always-on.yml on VM")
+    
     with sftp.open(COMPOSE_PATH, "r") as f:
         raw = f.read().decode("utf-8", errors="replace")
 
     old_variants = [
         "MYCOBRAIN_SERVICE_URL: http://host.docker.internal:8003",
         "MYCOBRAIN_SERVICE_URL: http://192.168.0.172:8003",
+        "MYCOBRAIN_SERVICE_URL: http://localhost:8003",
+        "MYCOBRAIN_SERVICE_URL: http://mycobrain:8003",
     ]
     new_line = f"      MYCOBRAIN_SERVICE_URL: {WINDOWS_MYCORBRAIN_URL}"
 
@@ -65,10 +88,12 @@ def main() -> None:
         print("[OK] MYCOBRAIN_SERVICE_URL already correct.")
 
     # Recreate website container so env changes apply
+    compose_dir = COMPOSE_PATH.rsplit('/', 1)[0]
+    print(f"[INFO] Restarting website container from: {compose_dir}")
     print(
         run(
             ssh,
-            "cd /home/mycosoft/mycosoft/mas && docker compose -p mycosoft-always-on -f docker-compose.always-on.yml up -d --no-deps --force-recreate mycosoft-website",
+            f"cd {compose_dir} && docker compose -f docker-compose.always-on.yml up -d --no-deps --force-recreate mycosoft-website 2>&1",
         )
     )
 

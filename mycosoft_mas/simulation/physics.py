@@ -1,4 +1,4 @@
-﻿"""Physics Simulation Module. Created: February 3, 2026"""
+"""Physics Simulation Module. Created: February 3, 2026"""
 from typing import Any, Dict, List, Tuple
 from uuid import uuid4
 import math

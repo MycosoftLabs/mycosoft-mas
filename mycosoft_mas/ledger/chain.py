@@ -1,4 +1,4 @@
-﻿"""Blockchain Ledger Implementation. Created: February 3, 2026"""
+"""Blockchain Ledger Implementation. Created: February 3, 2026"""
 import hashlib
 import json
 from datetime import datetime, timezone

@@ -1,0 +1,105 @@
+---
+description: Complete cross-repo codebase map for all Mycosoft repositories
+alwaysApply: true
+---
+
+# Mycosoft Full Codebase Map (All Agents)
+
+## Workspace: Multi-Root (9 repos)
+
+Open via: `C:\Users\admin2\Desktop\MYCOSOFT\CODE\mycosoft.code-workspace`
+All repos live under: `C:\Users\admin2\Desktop\MYCOSOFT\CODE\`
+
+## Repository Inventory
+
+### 1. MAS (Python -- Multi-Agent System)
+- **Path**: `MAS/mycosoft-mas/`
+- **Language**: Python 3.13, FastAPI
+- **Entry**: `mycosoft_mas/core/myca_main.py` (port 8001)
+- **VM**: 192.168.0.188
+- **Key dirs**: `mycosoft_mas/agents/` (100+ agents), `core/routers/` (20+ routers), `memory/` (15+ modules), `integrations/` (20+ clients), `voice/`, `bio/`, `simulation/`, `security/`
+- **Docs**: 380+ in `docs/`
+- **.cursor/**: 13 rules, 28 agents, 17+ skills
+
+### 2. WEBSITE (TypeScript -- Next.js Website)
+- **Path**: `WEBSITE/website/`
+- **Language**: TypeScript, Next.js 15 App Router
+- **Entry**: `app/layout.tsx`, dev on port 3010, prod on port 3000
+- **VM**: 192.168.0.187 (Docker)
+- **Key dirs**: `app/` (100+ pages, 265+ API routes), `components/` (373+ files), `lib/` (267 files), `hooks/` (43 files), `services/` (77 Python files)
+- **Docs**: 186 in `docs/`
+- **.cursor/**: 5 rules, 1 agent, 6 skills (merged into MAS .cursor/)
+
+### 3. MINDEX (Python -- Database & ETL)
+- **Path**: `MINDEX/mindex/`
+- **Language**: Python 3.11, FastAPI, SQLAlchemy
+- **Entry**: `mindex_api/main.py` (port 8000)
+- **VM**: 192.168.0.189
+- **Key dirs**: `mindex_api/routers/` (12 routers), `mindex_etl/jobs/` (17 ETL jobs), `mindex_etl/sources/` (12 scrapers), `migrations/` (9 SQL files)
+- **Docs**: 16 in `docs/`
+
+### 4. MycoBrain (C++ -- ESP32 Firmware)
+- **Path**: `mycobrain/`
+- **Language**: C++ (PlatformIO/Arduino)
+- **Variants**: 7 firmware builds in `firmware/` (gateway, side_a, side_b, science_comms, etc.)
+- **Protocol**: MDP v1 in `firmware/common/`
+- **Tools**: `tools/python/` (serial monitor, MDP decoder)
+- **Docs**: 23 in `docs/`
+
+### 5. NatureOS (C# -- .NET Platform)
+- **Path**: `NATUREOS/NatureOS/`
+- **Language**: C# (.NET 8.0), TypeScript (frontend)
+- **Entry**: `src/core-api/Program.cs`
+- **Key dirs**: `src/core-api/Controllers/` (8 controllers), `src/core-api/Services/` (12 services), `src/core-api/Hubs/NatureOSHub.cs` (SignalR)
+- **Also**: Azure Functions in `src/ingestion/`, device firmware in `devices/mushroom1/`
+- **Docs**: 11 in `docs/`
+
+### 6. Mycorrhizae (Python -- Protocol)
+- **Path**: `Mycorrhizae/mycorrhizae-protocol/`
+- **Language**: Python 3.10, FastAPI
+- **Entry**: `api/main.py` (port 8002)
+- **Key dirs**: `mycorrhizae/` (protocol, broker, channels), `mycorrhizae/fci/` (Fungal Computer Interface), `mycorrhizae/hpl/` (Hypha Programming Language), `mycorrhizae/mwave/` (earthquake analyzer)
+- **API routers**: keys, channels, stream (SSE)
+
+### 7. MAS-NLM (Python -- Nature Learning Model)
+- **Path**: `MAS/NLM/`
+- **Deps**: pyproject.toml
+- **Docs**: 3 in `docs/`
+
+### 8. MAS-SDK (Python -- NatureOS SDK)
+- **Path**: `MAS/sdk/`
+- **Deps**: pyproject.toml
+- **Docs**: 3 in `docs/`
+
+### 9. Platform-Infra (YAML/Shell -- Infrastructure)
+- **Path**: `platform-infra/`
+- **Contains**: docker-compose files, Caddyfile, env templates
+
+## Cross-Repo Statistics
+
+| Metric | Count |
+|--------|-------|
+| Total repos | 9 |
+| Total files | ~5,000+ |
+| Languages | Python, TypeScript, C#, C++ |
+| API routers (MAS) | 20+ |
+| API routers (MINDEX) | 12 |
+| API routes (Website) | 265+ |
+| Website pages | 100+ |
+| Website components | 373+ |
+| MAS agents | 100+ |
+| ETL jobs | 17 |
+| Documentation files | 1,275+ |
+| Docker containers (prod) | 17+ |
+
+## Known Gaps (for code-auditor and plan-tracker agents)
+
+- 80+ TODOs/FIXMEs across MAS Python files
+- 50+ placeholder/stub implementations
+- 15 missing website pages (referenced but no page.tsx)
+- 7 API routes returning 501 "Not implemented"
+- 17 incomplete plans/roadmaps (6+ months of work)
+- Security flaw: base64 used instead of AES-GCM encryption
+- Voice system only 40% complete
+- Scientific dashboard has UI but no real backend data
+- WebSocket infrastructure needed by 5+ systems

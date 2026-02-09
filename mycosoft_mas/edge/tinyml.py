@@ -1,4 +1,4 @@
-﻿"""TinyML Model Manager for ESP32/microcontrollers"""
+"""TinyML Model Manager for ESP32/microcontrollers"""
 import logging
 from typing import Any, Dict, List
 from uuid import uuid4

@@ -312,9 +312,15 @@ async def claude_deploy(request: DeployRequest) -> Dict[str, Any]:
 async def claude_code_health() -> Dict[str, Any]:
     """Check if Claude Code is available on the Sandbox VM."""
     import asyncio
+    import os
     try:
+        key_path = os.environ.get("MAS_SSH_KEY_PATH")
+        if key_path and os.path.exists(key_path):
+            ssh_cmd = f'ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -o IdentitiesOnly=yes -i {key_path} mycosoft@192.168.0.187 "claude --version"'
+        else:
+            ssh_cmd = 'ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 mycosoft@192.168.0.187 "claude --version"'
         proc = await asyncio.create_subprocess_shell(
-            'ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 mycosoft@192.168.0.187 "claude --version"',
+            ssh_cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )

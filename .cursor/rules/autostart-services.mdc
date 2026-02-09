@@ -1,0 +1,63 @@
+---
+description: Autostart background services registry and protocol for all agents
+alwaysApply: true
+---
+
+# Autostart Services Registry (All Agents)
+
+## Registered Autostart Services
+
+These scripts/services must be running for the full Mycosoft development system to work. Agents should check and restart them when needed.
+
+| # | Service | Script | Purpose | Check Command | Start Command |
+|---|---------|--------|---------|---------------|---------------|
+| 1 | Notion Docs Watcher | `scripts/notion_docs_watcher.py` | Auto-syncs new/changed .md docs across all repos to Notion | `.\scripts\notion-sync.ps1 status` | `.\scripts\notion-sync.ps1 watch-bg` |
+| 2 | Cursor Chat Backup | `scripts/cursor-chat-backup.ps1` | Daily midnight backup of all chats, agents, plans, skills, rules | `schtasks /query /tn Mycosoft-CursorChatBackup` | `.\scripts\cursor-chat-backup.ps1 -Schedule` |
+
+*(More services will be added to this list over time)*
+
+## Agent Protocol
+
+### On session start
+- Periodically check that all registered autostart services are running.
+- If a service is down, restart it automatically and note it in your response.
+
+### When creating new background scripts
+- **Ask the user:** "Should this be added to the autostart services list?"
+- If yes, add it to the table above with: script path, purpose, check command, and start command.
+- Also add the health check to `scripts/autostart-healthcheck.ps1`.
+
+### Periodic health checks
+- When working on long tasks, check autostart services every ~30 minutes.
+- If a service crashed or is causing high CPU/memory, stop it, report to the user, and investigate.
+- Use `scripts/autostart-healthcheck.ps1` for a quick all-in-one check.
+
+### Performance awareness
+- Autostart services should be lightweight. If any service uses >200MB RAM or >5% sustained CPU, flag it.
+- Cross-reference with `dev-machine-performance.mdc` rules - do not let background services make the machine slow.
+- Cross-reference with `python-process-registry.mdc` for full process/port/resource map before starting anything.
+
+### Kill zombie processes
+- When checking autostart health, also look for zombie GPU processes (PersonaPlex, Earth2, Moshi) that should NOT be running and kill them.
+- Run `scripts/dev-machine-cleanup.ps1 -KillStaleGPU` if any GPU processes are found running without user request.
+
+### Specialized agents for service management
+Use these sub-agents for service-specific tasks:
+- `process-manager` -- GPU cleanup, port conflicts, resource issues
+- `deploy-pipeline` -- Deployment automation
+- `notion-sync` -- Notion watcher management
+- `backup-ops` -- Backup scheduled task verification
+- `infrastructure-ops` -- VM and Docker container health
+
+## Quick Reference
+
+```powershell
+# Check all autostart services
+.\scripts\autostart-healthcheck.ps1
+
+# Start all autostart services
+.\scripts\autostart-healthcheck.ps1 -StartMissing
+
+# Stop all autostart services
+.\scripts\autostart-healthcheck.ps1 -StopAll
+```

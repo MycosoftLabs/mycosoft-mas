@@ -1,4 +1,4 @@
-﻿"""
+"""
 Code Indexer - February 4, 2026
 
 Indexes all source code files across Mycosoft repositories,

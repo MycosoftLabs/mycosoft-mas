@@ -1,6 +1,12 @@
 # Memory System Verification Report
 ## February 3, 2026
 
+> **⚠️ SUPERSEDED**: This verification report is historical. See updated documentation:
+> - **[MEMORY_SYSTEM_COMPLETE_FEB05_2026.md](./MEMORY_SYSTEM_COMPLETE_FEB05_2026.md)** - Current system status
+> - **[MEMORY_SYSTEM_FULL_TEST_REPORT_FEB04_2026.md](./MEMORY_SYSTEM_FULL_TEST_REPORT_FEB04_2026.md)** - Full test results
+
+---
+
 ## Executive Summary
 
 Full verification of the tiered memory system completed successfully. **18 of 27 tests PASSED**, with 9 tests skipped (optional features requiring migrations or future deployment).

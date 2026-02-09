@@ -1,4 +1,4 @@
-﻿"""
+"""
 Voice Session Manager - February 2026 (Enhanced)
 
 Enhanced session management with:
@@ -432,4 +432,4 @@ async def init_session_manager() -> VoiceSessionManager:
     """Initialize and start the session manager."""
     manager = get_session_manager()
     await manager.start()
-    return manager
+    return manager

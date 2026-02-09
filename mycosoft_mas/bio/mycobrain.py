@@ -1,4 +1,4 @@
-﻿"""MycoBrain Neuromorphic Processor. Created: February 3, 2026"""
+"""MycoBrain Neuromorphic Processor. Created: February 3, 2026"""
 import logging
 from typing import Any, Dict, List, Optional
 from uuid import uuid4

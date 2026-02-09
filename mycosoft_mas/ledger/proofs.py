@@ -1,4 +1,4 @@
-﻿"""Cryptographic Proofs. Created: February 3, 2026"""
+"""Cryptographic Proofs. Created: February 3, 2026"""
 import hashlib
 import hmac
 from typing import Any, Dict

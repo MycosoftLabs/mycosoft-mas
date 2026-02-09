@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MyceliumSeg Scientific Validation</title>
+  <style>
+    :root { --bg: #0f1419; --surface: #1a2332; --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --success: #3fb950; --border: #30363d; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1rem; line-height: 1.5; }
+    h1 { font-size: 1.25rem; margin: 0 0 1rem; }
+    h2 { font-size: 1rem; margin: 1rem 0 0.5rem; color: var(--muted); }
+    section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
+    .row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.5rem; }
+    label { min-width: 80px; }
+    input, select, button { padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+    button { cursor: pointer; background: var(--accent); color: #fff; border-color: var(--accent); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #catalog-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; margin-top: 0.5rem; }
+    .catalog-item { padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; }
+    .catalog-item .id { font-weight: 600; }
+    .catalog-item .meta { color: var(--muted); font-size: 0.75rem; }
+    #job-status { margin-top: 0.5rem; padding: 0.5rem; border-radius: 6px; background: var(--bg); }
+    #job-status.completed { border-left: 4px solid var(--success); }
+    #job-status.failed { border-left: 4px solid #f85149; }
+    #metrics-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    #metrics-table th, #metrics-table td { text-align: left; padding: 0.4rem; border-bottom: 1px solid var(--border); }
+    #metrics-table th { color: var(--muted); font-weight: 500; }
+    .api-base { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .error { color: #f85149; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>MyceliumSeg Scientific Validation</h1>
+  <p class="api-base">API base: <input type="text" id="apiBase" value="http://localhost:8010/mindex/myceliumseg" style="width: 320px;" /></p>
+
+  <section>
+    <h2>Dataset browser</h2>
+    <div class="row">
+      <label>Species</label>
+      <select id="filterSpecies">
+        <option value="">All</option>
+        <option value="GL">GL</option>
+        <option value="GS">GS</option>
+        <option value="PO">PO</option>
+        <option value="TS">TS</option>
+      </select>
+      <label>Limit</label>
+      <input type="number" id="filterLimit" value="20" min="1" max="100" style="width: 60px;" />
+      <button type="button" id="btnLoadCatalog">Load catalog</button>
+    </div>
+    <div id="catalog-list"></div>
+    <div id="catalogError" class="error"></div>
+  </section>
+
+  <section>
+    <h2>Run validation (one click – full automation)</h2>
+    <div class="row">
+      <label>Sample limit</label>
+      <input type="number" id="sliceLimit" value="5" min="1" max="50" style="width: 60px;" />
+      <button type="button" id="btnRunValidation">Run validation now</button>
+    </div>
+    <p style="font-size: 0.85rem; color: var(--muted);">Submits job, runs metrics, and shows results automatically. No separate runner needed.</p>
+    <div id="job-status"></div>
+    <div id="jobError" class="error"></div>
+    <div id="metricsBlock" style="margin-top: 1rem; display: none;">
+      <h3>Aggregate metrics</h3>
+      <table id="metrics-table">
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody id="metricsBody"></tbody>
+      </table>
+      <h3>Per-sample</h3>
+      <div id="perSampleResults"></div>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      function base() { return document.getElementById('apiBase').value.replace(/\/$/, ''); }
+      function get(url) { return fetch(url).then(r => { if (!r.ok) throw new Error(r.status + ' ' + r.statusText); return r.json(); }); }
+      function post(url, body) { return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => { if (!r.ok) throw new Error(r.status + ' ' + r.statusText); return r.json(); }); }
+
+      document.getElementById('btnLoadCatalog').onclick = function () {
+        var list = document.getElementById('catalog-list');
+        var err = document.getElementById('catalogError');
+        list.innerHTML = '';
+        err.textContent = '';
+        var species = document.getElementById('filterSpecies').value;
+        var limit = document.getElementById('filterLimit').value;
+        var q = '?limit=' + limit;
+        if (species) q += '&species=' + encodeURIComponent(species);
+        get(base() + '/images' + q).then(function (data) {
+          data.items.forEach(function (item) {
+            var div = document.createElement('div');
+            div.className = 'catalog-item';
+            div.innerHTML = '<span class="id">' + (item.external_id || item.id) + '</span><br><span class="meta">' + (item.species || '') + ' ' + (item.medium || '') + ' ' + (item.temperature_c || '') + '°C</span>';
+            list.appendChild(div);
+          });
+          if (data.items.length === 0) list.innerHTML = '<span class="meta">No images. Run ingest with --fixture first.</span>';
+        }).catch(function (e) { err.textContent = e.message; });
+      };
+
+      document.getElementById('btnRunValidation').onclick = function () {
+        var status = document.getElementById('job-status');
+        var err = document.getElementById('jobError');
+        var limit = parseInt(document.getElementById('sliceLimit').value, 10) || 5;
+        status.textContent = 'Running validation…';
+        status.className = '';
+        err.textContent = '';
+        document.getElementById('metricsBlock').style.display = 'none';
+        post(base() + '/validation/run', { dataset_slice: { limit: limit } }).then(function (job) {
+          if (job.status === 'completed') {
+            status.textContent = 'Done.';
+            status.className = 'completed';
+            showResults(job);
+          } else if (job.status === 'failed') {
+            status.textContent = 'Failed: ' + (job.error_message || '');
+            status.className = 'failed';
+            err.textContent = job.error_message || '';
+          } else {
+            status.textContent = 'Status: ' + job.status;
+            showResults(job);
+          }
+        }).catch(function (e) { err.textContent = e.message; status.textContent = ''; });
+      };
+
+      function showResults(job) {
+        var block = document.getElementById('metricsBlock');
+        var tbody = document.getElementById('metricsBody');
+        var perSample = document.getElementById('perSampleResults');
+        block.style.display = 'block';
+        tbody.innerHTML = '';
+        if (job.aggregate) {
+          Object.keys(job.aggregate).forEach(function (k) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + k + '</td><td>' + job.aggregate[k] + '</td>';
+            tbody.appendChild(tr);
+          });
+        }
+        perSample.innerHTML = '';
+        if (job.results && job.results.length) {
+          job.results.forEach(function (r, i) {
+            var div = document.createElement('div');
+            div.className = 'catalog-item';
+            div.style.marginTop = '0.5rem';
+            var sm = r.sample_metrics || {};
+            div.innerHTML = 'Sample ' + (i + 1) + ' (image ' + (r.image_id || '').slice(0, 8) + '…): IoU=' + (sm.iou != null ? sm.iou : '-') + ', F1=' + (sm.f1 != null ? sm.f1 : '-') + ', Boundary IoU=' + (sm.boundary_iou != null ? sm.boundary_iou : '-') + ', HD95=' + (sm.hd95 != null ? sm.hd95 : '-') + ', ASSD=' + (sm.assd != null ? sm.assd : '-');
+            perSample.appendChild(div);
+          });
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

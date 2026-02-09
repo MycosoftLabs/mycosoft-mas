@@ -1,4 +1,4 @@
-﻿"""Code Sandboxing. Created: February 3, 2026"""
+"""Code Sandboxing. Created: February 3, 2026"""
 import asyncio
 from typing import Any, Dict
 

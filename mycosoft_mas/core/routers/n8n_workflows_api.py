@@ -1,4 +1,4 @@
-﻿"""
+"""
 N8N Workflow Management API Router - January 25, 2026
 
 FastAPI router for MYCA to manage n8n workflows via REST API.

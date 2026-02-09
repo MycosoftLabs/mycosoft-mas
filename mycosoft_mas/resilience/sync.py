@@ -1,4 +1,4 @@
-﻿"""Edge-Cloud Synchronization. Created: February 3, 2026"""
+"""Edge-Cloud Synchronization. Created: February 3, 2026"""
 from typing import Any, Dict, List
 from datetime import datetime, timezone
 from uuid import uuid4

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Hypothesis Generation Engine
 AI-powered scientific hypothesis generation and validation
 """

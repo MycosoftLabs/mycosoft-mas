@@ -1,4 +1,4 @@
-﻿"""
+"""
 MAS Voice Tool Call Handler - February 3, 2026
 
 This module provides tool execution endpoints for the PersonaPlex bridge.
@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import logging
+import os
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +89,8 @@ async def execute_tool(request: ToolCallRequest):
             return await _query_mindex(query)
         elif tool_name == "system_status":
             return await _get_system_status(query)
+        elif tool_name == "run_myceliumseg_validation":
+            return await _run_myceliumseg_validation(query)
         else:
             return ToolCallResponse(
                 success=False,
