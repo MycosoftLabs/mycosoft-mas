@@ -43,7 +43,8 @@ These run on VMs as systemd services or Docker containers. Do NOT start locally.
 | PersonaPlex/Moshi | `start_personaplex.py` | 8998 | ~23GB | ~4GB | HIGH - kills dev machine |
 | PersonaPlex Bridge | `services/personaplex-local/personaplex_bridge_nvidia.py` | 8999 | ~2GB | ~1GB | HIGH |
 | Earth2 API | `scripts/earth2_api_server.py` | 8220 | ~8GB | ~2GB | HIGH |
-| GPU Gateway | `scripts/local_gpu_services.py` | 8300 | varies | ~1GB | HIGH - manages 8998,8999,8220 |
+| PhysicsNeMo API | `scripts/start_physicsnemo.ps1` | 8400 | ~4-8GB | ~1.5GB | HIGH |
+| GPU Gateway | `scripts/local_gpu_services.py` | 8300 | varies | ~1GB | HIGH - manages 8998,8999,8220,8400 |
 
 **Rules for GPU services:**
 - NEVER start with `npm run dev` - use `npm run dev:next-only` instead
@@ -96,6 +97,7 @@ These scripts/services CANNOT run simultaneously:
 | Port | Conflicts | Resolution |
 |------|-----------|------------|
 | 8300 | `local_gpu_services.py` vs `start_gateway_only.py` vs `WEBSITE/earth2-inference/inference_server.py` | Only run ONE. Prefer `local_gpu_services.py` (manages all GPU) |
+| 8400 | PhysicsNeMo with PersonaPlex + Earth2 can exceed VRAM in heavy model mode | Prefer PhysicsNeMo + Earth2 mode with PersonaPlex off |
 | 8999 | Multiple PersonaPlex bridge versions (`bridge.py`, `bridge_api.py`, `bridge_api_v2.py`) | Only run ONE bridge version |
 | 8003/18003 | `start_mycobrain_service.ps1` vs `START_MYCOBRAIN_SERVICE.ps1` | Different ports but same service - pick one |
 | 8000 | `MINDEX API` (VM) vs local MINDEX dev | Don't run MINDEX locally if VM is up |
@@ -139,6 +141,7 @@ When user asks to... | Do this
 "Run the website" | `npm run dev:next-only` on port 3010. Do NOT start GPU services.
 "Test voice" | Start PersonaPlex (8998) + Bridge (8999). Kill after testing.
 "Test Earth2" | Start Earth2 API (8220). Kill after testing.
+"Test physics simulation" | Start PhysicsNeMo (`scripts/start_physicsnemo.ps1`, port 8400). Prefer running with Earth2, not PersonaPlex.
 "Machine is slow" | Run `scripts/dev-machine-cleanup.ps1 -KillStaleGPU`. Check for zombie Python processes.
 "Deploy to sandbox" | Run `_deploy_sandbox.py`. One-shot, no cleanup needed.
 "Start all services" | DO NOT start everything. Ask which features they need. Start only those.
@@ -203,6 +206,7 @@ netstat -ano | findstr "LISTENING" | findstr "800"
 | 8210 | E2CC Gateway | Local | When needed |
 | 8220 | Earth2 API | Local (GPU) | When needed - KILL after |
 | 8300 | GPU Gateway | Local (GPU) | When needed - KILL after |
+| 8400 | PhysicsNeMo API | Local (GPU) | When needed - KILL after |
 | 8765 | Whisper STT | VM 188 | When voice needed |
 | 8998 | Moshi/PersonaPlex | Local (GPU) | When needed - KILL after |
 | 8999 | PersonaPlex Bridge | Local (GPU) | When needed - KILL after |

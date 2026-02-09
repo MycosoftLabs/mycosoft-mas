@@ -1,4 +1,4 @@
-﻿# System Registry Documentation
+# System Registry Documentation
 ## Created: February 4, 2026
 
 ## Overview
@@ -285,3 +285,25 @@ System (MycoBrain) â”€â”€managesâ”€â”€> Device (SporeBase)
 - [API Catalog](./API_CATALOG_FEB04_2026.md)
 - [Memory Integration Guide](./MEMORY_INTEGRATION_GUIDE_FEB04_2026.md)
 - [Cryptographic Integrity](./CRYPTOGRAPHIC_INTEGRITY_FEB04_2026.md)
+
+---
+
+## PhysicsNeMo Integration (Feb 9, 2026)
+
+### Registered Service
+
+| Service | Host | Port | Type | Notes |
+|---------|------|------|------|-------|
+| PhysicsNeMo Local Service | Dev Machine | 8400 | GPU physics inference | On-demand container: `nvcr.io/nvidia/physicsnemo/physicsnemo:25.06` |
+
+### Registered Agent
+
+| Agent ID | Class | Category | Capabilities |
+|----------|-------|----------|--------------|
+| `physicsnemo-agent` | `PhysicsNeMoAgent` | scientific | `physics_simulation`, `neural_operator`, `pinn_solver`, `cfd_surrogate`, `gpu_status` |
+
+### Router
+
+| Router File | Prefix | Purpose |
+|-------------|--------|---------|
+| `mycosoft_mas/core/routers/physicsnemo_api.py` | `/api/physics` | MAS proxy for PhysicsNeMo simulation endpoints |

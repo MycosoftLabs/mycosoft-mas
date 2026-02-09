@@ -1,4 +1,4 @@
-﻿# API Catalog - Full Spectrum Memory Registry
+# API Catalog - Full Spectrum Memory Registry
 ## Created: February 4, 2026
 
 ## Overview
@@ -228,3 +228,36 @@ Most endpoints require authentication via:
 - [System Registry](./SYSTEM_REGISTRY_FEB04_2026.md)
 - [Memory Integration Guide](./MEMORY_INTEGRATION_GUIDE_FEB04_2026.md)
 - [Cryptographic Integrity](./CRYPTOGRAPHIC_INTEGRITY_FEB04_2026.md)
+
+---
+
+## Physics API Endpoints (Feb 9, 2026)
+
+### MAS Physics Proxy (`/api/physics/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/physics/health` | GET | PhysicsNeMo service health |
+| `/api/physics/gpu` | GET | GPU status for physics runtime |
+| `/api/physics/models` | GET | List loaded physics models |
+| `/api/physics/simulate` | POST | Generic simulation dispatch by type |
+| `/api/physics/diffusion` | POST | Diffusion simulation |
+| `/api/physics/fluid` | POST | Fluid flow simulation |
+| `/api/physics/heat` | POST | Heat transfer simulation |
+| `/api/physics/reaction` | POST | Reaction kinetics simulation |
+
+### Local PhysicsNeMo Service (`localhost:8400`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Service health |
+| `/gpu/status` | GET | CUDA/GPU memory status |
+| `/physics/models` | GET | List loaded models |
+| `/physics/models/load` | POST | Load model metadata entry |
+| `/physics/models/unload` | POST | Unload model metadata entry |
+| `/physics/diffusion` | POST | Finite-difference diffusion |
+| `/physics/heat-transfer` | POST | Heat transfer solver |
+| `/physics/fluid-flow` | POST | Viscous flow surrogate |
+| `/physics/reaction` | POST | Reaction/diffusion kinetics |
+| `/physics/neural-operator` | POST | Neural-operator style transformation |
+| `/physics/pinn` | POST | PINN-style equation solve endpoint |

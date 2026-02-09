@@ -36,6 +36,7 @@ PORTS = {
     "moshi": 8998,
     "bridge": 8999,
     "earth2": 8220,
+    "physicsnemo": 8400,
     "gateway": 8300,
 }
 
@@ -44,6 +45,8 @@ SCRIPTS = {
     "moshi": MAS_DIR / "start_personaplex.py",
     "bridge": MAS_DIR / "services" / "personaplex-local" / "personaplex_bridge_nvidia.py",
     "earth2": MAS_DIR / "scripts" / "earth2_api_server.py",
+    "physicsnemo_start": MAS_DIR / "scripts" / "start_physicsnemo.ps1",
+    "physicsnemo_stop": MAS_DIR / "scripts" / "stop_physicsnemo.ps1",
 }
 
 # Process handles
@@ -116,6 +119,17 @@ def stop_all():
             except:
                 pass
     processes.clear()
+    # Ensure containerized PhysicsNeMo service is also stopped.
+    stop_script = SCRIPTS.get("physicsnemo_stop")
+    if stop_script and stop_script.exists():
+        try:
+            subprocess.run(
+                ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(stop_script)],
+                cwd=str(MAS_DIR),
+                check=False,
+            )
+        except Exception:
+            pass
 
 
 # =============================================================================
@@ -200,6 +214,41 @@ def start_earth2():
     else:
         log("Earth2 API failed to start", "FAIL")
         return False
+
+
+def start_physicsnemo():
+    """Start PhysicsNeMo container service."""
+    if check_port(PORTS["physicsnemo"]):
+        log(f"PhysicsNeMo already running on port {PORTS['physicsnemo']}", "OK")
+        return True
+
+    start_script = SCRIPTS["physicsnemo_start"]
+    if not start_script.exists():
+        log(f"Missing PhysicsNeMo start script: {start_script}", "FAIL")
+        return False
+
+    log("Starting PhysicsNeMo service container...")
+    cmd = [
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        str(start_script),
+    ]
+    proc = subprocess.Popen(
+        cmd,
+        cwd=str(MAS_DIR),
+        creationflags=subprocess.CREATE_NEW_CONSOLE,
+    )
+    processes["physicsnemo"] = proc
+
+    if wait_for_port(PORTS["physicsnemo"], timeout=120):
+        log(f"PhysicsNeMo running on port {PORTS['physicsnemo']}", "OK")
+        return True
+
+    log("PhysicsNeMo failed to start", "FAIL")
+    return False
 
 
 # =============================================================================
@@ -470,6 +519,26 @@ def create_gateway():
                 return JSONResponse(content=resp.json(), status_code=resp.status_code)
             except Exception as e:
                 raise HTTPException(status_code=502, detail=str(e))
+
+    @app.api_route("/physics/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+    async def proxy_physics(path: str, request: Request):
+        """Proxy to PhysicsNeMo service."""
+        async with httpx.AsyncClient() as client:
+            try:
+                url = f"http://localhost:{PORTS['physicsnemo']}/{path}"
+                method = request.method.lower()
+
+                if method == "get":
+                    resp = await client.get(url, timeout=60.0)
+                elif method == "post":
+                    body = await request.body()
+                    resp = await client.post(url, content=body, timeout=120.0)
+                else:
+                    resp = await client.request(method, url, timeout=60.0)
+
+                return JSONResponse(content=resp.json(), status_code=resp.status_code)
+            except Exception as e:
+                raise HTTPException(status_code=502, detail=str(e))
     
     @app.api_route("/bridge/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
     async def proxy_voice_bridge(path: str, request: Request):
@@ -573,9 +642,14 @@ def main():
     log("PHASE 3: Earth2Studio Weather AI")
     results["earth2"] = start_earth2()
     
-    # 4. Gateway
+    # 4. PhysicsNeMo
     log("=" * 50)
-    log("PHASE 4: Unified GPU Gateway")
+    log("PHASE 4: PhysicsNeMo Physics Service")
+    results["physicsnemo"] = start_physicsnemo()
+
+    # 5. Gateway
+    log("=" * 50)
+    log("PHASE 5: Unified GPU Gateway")
     
     print()
     print("=" * 70)
@@ -603,10 +677,12 @@ def main():
     print(f"    LOCAL_MOSHI_URL=ws://localhost:{PORTS['moshi']}")
     print(f"    LOCAL_BRIDGE_URL=http://localhost:{PORTS['bridge']}")
     print(f"    LOCAL_EARTH2_URL=http://localhost:{PORTS['earth2']}")
+    print(f"    LOCAL_PHYSICSNEMO_URL=http://localhost:{PORTS['physicsnemo']}")
     print()
     print("  API Documentation:")
     print(f"    - Gateway:  http://localhost:{PORTS['gateway']}/docs")
     print(f"    - Earth2:   http://localhost:{PORTS['earth2']}/docs")
+    print(f"    - Physics:  http://localhost:{PORTS['physicsnemo']}/docs")
     print(f"    - Bridge:   http://localhost:{PORTS['bridge']}/health")
     print(f"    - Moshi UI: http://localhost:{PORTS['moshi']}")
     print()

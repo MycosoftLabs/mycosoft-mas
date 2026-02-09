@@ -8,6 +8,7 @@ from .voice_command_api import router as voice_command
 from .timeline_api import router as timeline
 from .prediction_api import router as prediction
 from .knowledge_graph_api import router as knowledge_graph
+from .physicsnemo_api import router as physicsnemo
 
 __all__ = [
     "agents",
@@ -20,4 +21,5 @@ __all__ = [
     "timeline",
     "prediction",
     "knowledge_graph",
+    "physicsnemo",
 ]

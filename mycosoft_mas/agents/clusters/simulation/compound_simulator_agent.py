@@ -16,6 +16,7 @@ from enum import Enum
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.enums import AgentStatus
+from mycosoft_mas.simulation.physics import PhysicsSimulator
 
 class CompoundType(Enum):
     """Enumeration of compound types."""
@@ -105,6 +106,7 @@ class CompoundSimulatorAgent(BaseAgent):
             "simulations_completed": 0,
             "interactions_analyzed": 0
         })
+        self.physics_simulator = PhysicsSimulator()
 
     async def initialize(self) -> bool:
         """Initialize the agent and its services."""
@@ -266,13 +268,67 @@ class CompoundSimulatorAgent(BaseAgent):
 
     async def _run_chemical_simulation(self, parameters: SimulationParameters) -> SimulationResult:
         """Run a chemical reaction simulation."""
-        # Implementation for running chemical simulation
-        return None
+        sim_id = f"sim_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        steps = max(1, min(parameters.time_steps, 500))
+        result = await self.physics_simulator.simulate_reaction_diffusion(
+            concentrations=parameters.initial_concentrations,
+            rate_constants=parameters.reaction_conditions.get("rate_constants", {}),
+            steps=steps,
+        )
+        history = result.get("history", {})
+        time_points = [i * (parameters.duration / max(steps, 1)) for i in range(steps + 1)]
+        simulated_reactions: List[Dict[str, Any]] = []
+        for reaction_id, reaction in self.reactions.items():
+            if any(reactant in parameters.compounds for reactant in reaction.reactants):
+                simulated_reactions.append(
+                    {
+                        "reaction_id": reaction_id,
+                        "name": reaction.name,
+                        "reactants": reaction.reactants,
+                        "products": reaction.products,
+                    }
+                )
+
+        return SimulationResult(
+            simulation_id=sim_id,
+            parameters=parameters,
+            time_points=time_points,
+            concentrations=history if history else {k: [v] for k, v in parameters.initial_concentrations.items()},
+            reactions=simulated_reactions,
+            metadata={"engine": "physicsnemo", "status": result.get("status", "completed")},
+            created_at=datetime.utcnow(),
+        )
 
     async def _analyze_compound_interactions(self, compound: Compound) -> Dict[str, Any]:
         """Analyze interactions for a compound."""
-        # Implementation for analyzing interactions
-        return {}
+        input_vector = [
+            float(compound.molecular_weight),
+            float(compound.properties.get("polarity", 0.0)),
+            float(compound.properties.get("solubility", 0.0)),
+        ]
+        weight_matrix = [
+            [0.8, 0.1, 0.1],
+            [0.2, 0.7, 0.1],
+            [0.3, 0.2, 0.5],
+        ]
+        neural_result = await self.physics_simulator._post(
+            "/physics/neural-operator",
+            {
+                "input_vector": input_vector,
+                "weight_matrix": weight_matrix,
+                "activation": "tanh",
+            },
+        )
+        output_vector = neural_result.get("output_vector", [0.0, 0.0, 0.0])
+        interaction_score = float(np.mean(np.abs(np.array(output_vector, dtype=np.float32))))
+        return {
+            "compound_id": compound.id,
+            "compound_name": compound.name,
+            "interaction_score": interaction_score,
+            "interaction_vector": output_vector,
+            "known_interactions": compound.interactions,
+            "engine": "physicsnemo",
+        }
 
     async def _process_compound_queue(self):
         """Process the compound queue."""

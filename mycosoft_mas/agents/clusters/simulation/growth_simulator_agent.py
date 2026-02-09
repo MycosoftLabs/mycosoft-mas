@@ -18,6 +18,7 @@ from pathlib import Path
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.enums import AgentStatus, TaskType, TaskStatus, TaskPriority
+from mycosoft_mas.simulation.physics import PhysicsSimulator
 
 class GrowthPhase(Enum):
     """Growth phases in mushroom development"""
@@ -117,6 +118,7 @@ class GrowthSimulatorAgent(BaseAgent):
             "parameters_updated": 0,
             "simulation_errors": 0
         })
+        self.physics_simulator = PhysicsSimulator()
 
     async def initialize(self) -> bool:
         """Initialize the agent and its services."""
@@ -356,10 +358,21 @@ class GrowthSimulatorAgent(BaseAgent):
                 parameters.optimal_conditions.humidity,
                 parameters.tolerance_ranges["humidity"]
             )
+            thermal_result = await self.physics_simulator.simulate_heat_transfer(
+                geometry={"width": 12, "height": 12, "thermal_diffusivity": 0.01},
+                boundary_conditions={"ambient": current_conditions.temperature},
+                time_seconds=20.0,
+            )
+            thermal_factor = 1.0
+            max_temperature = float(thermal_result.get("max_temperature", current_conditions.temperature))
+            if max_temperature > parameters.optimal_conditions.temperature + 8:
+                thermal_factor = 0.75
+            elif max_temperature < parameters.optimal_conditions.temperature - 8:
+                thermal_factor = 0.80
             
             # Update biomass and colony size
             time_delta = (datetime.utcnow() - simulation.updated_at).total_seconds() / 86400  # Convert to days
-            growth_factor = temperature_factor * humidity_factor
+            growth_factor = temperature_factor * humidity_factor * thermal_factor
             
             simulation.biomass += parameters.growth_rate * growth_factor * time_delta
             simulation.colony_size += parameters.colonization_rate * growth_factor * time_delta
