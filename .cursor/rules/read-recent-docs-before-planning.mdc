@@ -1,0 +1,84 @@
+# Read Recent Docs Before Planning (All Agents)
+
+## MANDATORY: Context Loading Before Any Plan, Task, or Implementation
+
+Before ANY agent creates a plan, writes new code, makes architectural decisions, or starts a new task in any Mycosoft repository, it MUST first load recent documentation context.
+
+---
+
+## Required Steps (in order)
+
+### 1. Read the Master Document Index
+- Read `docs/MASTER_DOCUMENT_INDEX.md` to get the full table of contents.
+
+### 2. Identify All Docs from the Last 4 Weeks
+- Scan `docs/` for all `.md` files with dates in the last 4 weeks (28 days from today).
+- Date format in filenames: `*_MMMDD_YYYY.md` (e.g., `STATUS_FEB09_2026.md`).
+- Sort by date, newest first.
+
+### 3. Read the Newest Docs First
+- Read **all** docs from the last 7 days in full.
+- Read **titles and first 20 lines** of docs from days 8-28 to get context.
+- Pay special attention to:
+  - Status documents (current system state)
+  - Security documents (active vulnerabilities, fixes)
+  - Architecture documents (system structure)
+  - Deployment documents (what's running where)
+  - Bug fix documents (known issues and resolutions)
+
+### 4. Read Key Registries
+Always read these before any work:
+- `docs/MASTER_DOCUMENT_INDEX.md` -- Table of contents
+- `docs/SYSTEM_REGISTRY_FEB04_2026.md` -- Systems, APIs, agents, services, devices
+- `docs/API_CATALOG_FEB04_2026.md` -- API catalog
+- `docs/system_map.md` -- System map
+
+### 5. Check the Prioritization Document
+- Read `docs/Code and System Prioritization.docx.md` for current priorities, execution order, and what has been planned vs implemented.
+
+---
+
+## Why This Rule Exists
+
+- The Mycosoft ecosystem has 500,000+ files across 9 repos.
+- Over 240 documentation files have been created in the last 4 weeks alone.
+- Agents that skip context loading create duplicate work, conflicting implementations, and miss critical security or architectural decisions.
+- This rule prevents "rabbit holes" where agents build from ignorance.
+
+---
+
+## When to Apply
+
+| Scenario | Required? |
+|----------|-----------|
+| Creating a new plan | YES -- full context load |
+| Starting a new coding task | YES -- at minimum read last 7 days |
+| Fixing a bug | YES -- read related docs |
+| Answering a question about the system | YES -- read relevant registries |
+| Continuing work from a previous session | YES -- read docs created since last session |
+| Simple file edit (typo fix, comment update) | NO -- skip if trivially scoped |
+
+---
+
+## How to Do This Efficiently
+
+1. Use the `explore` subagent to scan `docs/` directories across all repos in parallel.
+2. Use `Glob` to find `docs/*_FEB*_2026.md` and similar patterns for recent months.
+3. Read document titles and first lines to triage relevance before deep-reading.
+4. Cache context: once loaded in a session, you do not need to reload unless the user mentions new docs were created.
+
+---
+
+## Enforcement
+
+- If an agent is found to have created a plan or made architectural changes without reading recent docs, the plan should be invalidated and redone with proper context.
+- All plans must include a "Context Sources" section listing which docs were read.
+- The `plan-tracker` agent should verify context loading on new plans.
+
+---
+
+## Cross-Reference
+
+- `mycosoft-full-context-and-registries.mdc` -- Full registry and index locations
+- `mycosoft-full-codebase-map.mdc` -- Complete repo map
+- `docs/Code and System Prioritization.docx.md` -- Master prioritization document

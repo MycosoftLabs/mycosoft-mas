@@ -10,7 +10,7 @@
     "mindex-db": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@bytebase/dbhub", "--dsn", "postgresql://mycosoft:mycosoft@192.168.0.189:5432/mindex"]
+      "args": ["-y", "@bytebase/dbhub", "--dsn", "${MINDEX_DATABASE_URL}"]
     }
   }
 }

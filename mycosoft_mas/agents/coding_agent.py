@@ -18,6 +18,7 @@ from datetime import datetime
 import json
 import os as os_module
 import subprocess
+import shlex
 
 logger = logging.getLogger(__name__)
 
@@ -433,20 +434,27 @@ Provide:
         }
         repo_path = repo_paths.get(target_repo, repo_paths["mas"])
 
-        # Build the claude -p command
-        escaped_desc = task_description.replace('"', '\\"').replace("'", "'\\''")
+        # Build the claude -p command with proper shell escaping
+        # Note: --dangerously-skip-permissions is intentional for MYCA autonomous operation
+        # but assumes trusted task descriptions from voice/orchestrator only
+        escaped_desc = shlex.quote(task_description)
         claude_cmd = (
-            f"cd {repo_path} && "
-            f"claude -p '{escaped_desc}' "
+            f"cd {shlex.quote(repo_path)} && "
+            f"claude -p {escaped_desc} "
             f"--output-format json "
             f"--max-turns {max_turns} "
             f"--max-budget-usd {max_budget} "
-            f'--allowedTools "{allowed_tools}" '
+            f"--allowedTools {shlex.quote(allowed_tools)} "
             f"--dangerously-skip-permissions "
             f"2>/dev/null"
         )
 
-        ssh_cmd = f'ssh -o StrictHostKeyChecking=no mycosoft@{sandbox_host} "{claude_cmd}"'
+        # Optional SSH key for container -> 187 (MAS_SSH_KEY_PATH)
+        key_path = os_module.environ.get("MAS_SSH_KEY_PATH")
+        if key_path and os_module.path.exists(key_path):
+            ssh_cmd = f'ssh -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -i {key_path} mycosoft@{sandbox_host} "{claude_cmd}"'
+        else:
+            ssh_cmd = f'ssh -o StrictHostKeyChecking=no mycosoft@{sandbox_host} "{claude_cmd}"'
 
         logger.info(f"Invoking Claude Code: {task_description[:100]}...")
 
@@ -471,9 +479,17 @@ Provide:
                     "output": output,
                 }
 
-            # Try to parse JSON response
+            # Try to parse and validate JSON response
             try:
                 result = json.loads(output)
+                # Validate that result is a dict
+                if not isinstance(result, dict):
+                    logger.warning(f"Claude Code returned non-dict JSON: {type(result)}")
+                    return {
+                        "success": False,
+                        "error": "Invalid JSON structure (expected object)",
+                        "output": output,
+                    }
                 return {
                     "success": True,
                     "result": result.get("result", output),
@@ -481,7 +497,10 @@ Provide:
                     "cost": result.get("cost_usd"),
                     "num_turns": result.get("num_turns"),
                 }
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
+                logger.warning(f"Claude Code returned invalid JSON: {e}")
+                # Treat unparseable output as raw text result (success)
+                # since Claude Code might return valid but non-JSON output
                 return {
                     "success": True,
                     "result": output,

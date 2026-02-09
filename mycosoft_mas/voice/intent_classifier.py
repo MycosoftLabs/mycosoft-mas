@@ -196,16 +196,26 @@ class IntentClassifier:
             
             patterns = self.compiled_patterns.get(category, [])
             for pattern in patterns:
-                if pattern.search(transcript):
+                if pattern.search(transcript_lower):
                     score += 0.7
                     break
             
             scores[category] = score
         
-        best_category = max(scores.keys(), key=lambda k: scores[k])
-        best_score = scores[best_category]
+        # Guard against empty intents
+        if not scores:
+            best_category = "system"
+            best_score = 0.0
+        else:
+            best_category = max(scores.keys(), key=lambda k: scores[k])
+            best_score = scores[best_category]
         
         if best_score < 0.2:
+            best_category = "system"
+            best_score = 0.3
+        
+        # Validate category exists before accessing
+        if best_category not in self.intents:
             best_category = "system"
             best_score = 0.3
         
