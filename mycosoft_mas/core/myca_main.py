@@ -45,6 +45,7 @@ from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.timeline_api import router as timeline_router
+from mycosoft_mas.core.routers.visualization_api import router as visualization_router
 from mycosoft_mas.monitoring.health_check import get_health_checker
 from mycosoft_mas.monitoring.metrics import get_metrics
 from mycosoft_mas.realtime.pubsub import get_hub
@@ -284,6 +285,7 @@ app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
 app.include_router(timeline_router, tags=["timeline"])
+app.include_router(visualization_router, tags=["visualization"])
 
 # Earth-2 AI Weather API
 if EARTH2_API_AVAILABLE:
