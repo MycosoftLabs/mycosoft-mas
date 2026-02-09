@@ -1,4 +1,4 @@
-﻿"""
+"""
 Platform API Router
 Multi-tenant organization management, federation, and audit logging
 """

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Database Query Plugin
 MINDEX and external database integration.
 Created: February 3, 2026

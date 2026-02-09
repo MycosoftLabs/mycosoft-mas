@@ -1,0 +1,152 @@
+---
+description: Mycosoft work affects many systems; agents must use full context and registries before any plan or code. No building from ignorance.
+globs: 
+alwaysApply: true
+---
+
+# Mycosoft Full Context and Registries (All Agents)
+
+## Scope: work affects multiple systems
+
+All Mycosoft work can impact many systems. Agents must treat the following as in scope and consult registries/indexes before making plans, tasks, or code.
+
+**Front-end:** Website, apps, security UI, MAS UI, memory UI, CREP, OEI, FUSARIUM, Earth Simulator, Petri Dish Simulator, Devices, About Us, ToS, Privacy Policy, Sitemap, robots, SEO, SOP, NatureOS dashboard and apps, search, search+AI+MINDEX.
+
+**Middle:** Supabase (auth/data), Mycosoft Multi-Agent System (MYCA), ETL/scraping to MINDEX, services (e.g. MycoBrain service, device manager).
+
+**Back-end:** FUSARIUM, MINDEX, protocols, routes, memory/MINDEX, NatureOS, APIs, services, Supabase, Cloudflare, Proxmox, Ubiquity, clouds, LLM models and APIs, databases, device firmware.
+
+**And more:** Any other system referenced in docs or registries. The codebase is 500,000+ files across multiple repos; changes must be consistent with the full picture.
+
+---
+
+## Mandatory before any new plan, task, or implementation
+
+**When a new agent is spun up, or a new plan/task is created, or before implementing code:**
+
+1. **Read and use registries and indexes** so the full system is known. Do not build from ignorance or "rabbit holes."
+2. **Consult (at minimum):**
+   - **docs/MASTER_DOCUMENT_INDEX.md** – table of contents for all docs
+   - **docs/SYSTEM_REGISTRY_FEB04_2026.md** – systems, APIs, agents, services, devices (and API endpoints for registry)
+   - **docs/API_CATALOG_FEB04_2026.md** – API catalog
+   - **docs/system_map.md** – system map
+   - **docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md** – memory system (when relevant)
+   - **Docs dated in the last 2 weeks** – list from `docs/` sorted by date (latest first) and read newest first for current state
+3. **Align with:** sitemap, pages, apps, APIs, services, integrations, device lists, agent lists, routes, schema. If a registry or list exists for it, use it before adding or changing.
+4. **When introducing new code** that adds or changes: pages, apps, APIs, routes, services, devices, agents, or schema – **update the relevant registries, indexes, and docs** (including MASTER_DOCUMENT_INDEX if new docs are created). Keep sitemap, API catalog, and system registry in sync with reality.
+
+---
+
+## Rule of thumb
+
+- **Full context first:** Read and use the full index/registries so the entire system is known (or as much as is relevant to the task).
+- **Then plan/code:** Only after that, make plans, ideas, or implementations. This avoids chaos and duplicate or conflicting work across 500k+ files and multiple repos.
+- **Index rapidly:** Use table-of-contents style indexing and existing registries so context can be loaded quickly by any agent. Prefer updating existing registries over creating scattered new lists.
+
+---
+
+## Where key indexes and registries live (MAS repo)
+
+| Purpose | Location |
+|--------|----------|
+| Master doc index | docs/MASTER_DOCUMENT_INDEX.md |
+| System registry (systems, APIs, agents, services, devices) | docs/SYSTEM_REGISTRY_FEB04_2026.md |
+| API catalog | docs/API_CATALOG_FEB04_2026.md |
+| System map | docs/system_map.md |
+| Memory docs index | docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md |
+| Recent docs | docs/*.md – sort by date, read last 2 weeks first |
+
+Website repo and other repos may have their own sitemaps, app lists, and API lists; when working there, discover and use those too.
+
+---
+
+## Multi-Root Workspace
+
+All repos are in one workspace: `C:\Users\admin2\Desktop\MYCOSOFT\CODE\mycosoft.code-workspace`
+Open via: File > Open Workspace from File. See `.cursor/rules/mycosoft-full-codebase-map.mdc` for complete repo map.
+
+---
+
+## 28 Specialized Sub-Agents
+
+Use the right agent for the right task. All agents live in `.cursor/agents/`.
+
+### Development Agents
+| Agent | Use For |
+|-------|---------|
+| `backend-dev` | Python/FastAPI backend, MAS agents, API endpoints, integrations |
+| `website-dev` | Next.js pages, React components, Tailwind, API routes |
+| `database-engineer` | PostgreSQL, Redis, Qdrant, migrations, pgvector |
+| `memory-engineer` | 6-layer memory, MINDEX backend, context injection |
+| `device-firmware` | MycoBrain ESP32, sensors, MDP protocol, serial |
+| `websocket-engineer` | WebSocket, SSE, SignalR, real-time data |
+
+### Operations Agents
+| Agent | Use For |
+|-------|---------|
+| `deploy-pipeline` | Commit, push, Docker build, VM restart, Cloudflare purge |
+| `devops-engineer` | CI/CD, GitHub Actions, Docker, environment management |
+| `infrastructure-ops` | VM management, Docker containers, SSH, NAS, Proxmox |
+| `process-manager` | GPU cleanup, port conflicts, zombie processes, autostart |
+| `backup-ops` | Cursor chat backup, Proxmox snapshots, DB backups |
+
+### Quality/Audit Agents
+| Agent | Use For |
+|-------|---------|
+| `code-auditor` | Find TODOs, FIXMEs, stubs, dead code across all repos |
+| `plan-tracker` | Track 650+ plans, 17+ roadmaps, find stale/abandoned work |
+| `route-validator` | Find missing pages, broken links, 501 API routes |
+| `stub-implementer` | Replace placeholders with real implementations |
+| `regression-guard` | Pre-deploy validation, health checks, build verification |
+| `test-engineer` | Unit tests, integration tests, API smoke tests |
+| `security-auditor` | Secret detection, RBAC, vulnerability scanning |
+
+### Domain Agents
+| Agent | Use For |
+|-------|---------|
+| `scientific-systems` | Lab monitoring, experiments, FCI, MycoBrain compute, DNA storage |
+| `voice-engineer` | PersonaPlex, Moshi, intent classification, GPU voice services |
+| `earth2-ops` | Earth2 simulation, prediction engine, weather models |
+| `crep-collector` | Aviation, maritime, satellite, weather data collection |
+| `data-pipeline` | MINDEX ETL, scrapers, GBIF, blob storage, NAS |
+| `n8n-workflow` | n8n workflow automation, webhooks, triggers |
+| `integration-hub` | External API clients, API keys, rate limits |
+| `notion-sync` | Notion doc sync, watcher daemon, categorization |
+| `documentation-manager` | Dated docs, registry updates, MASTER_DOCUMENT_INDEX |
+
+### Autonomous
+| Agent | Use For |
+|-------|---------|
+| `myca-autonomous-operator` | Auto-fix, auto-deploy, auto-maintain across all systems |
+
+---
+
+## 23 Skills Available
+
+MAS skills in `.cursor/skills/`:
+- `create-api-endpoint`, `create-mas-agent`, `create-integration-client`
+- `database-migration`, `deploy-mas-service`, `deploy-mindex`
+- `docker-troubleshoot`, `run-system-tests`, `security-audit`
+- `update-registries`, `vm-health-check`
+
+Website skills (merged from website repo):
+- `create-api-route`, `create-nextjs-page`, `create-react-component`
+- `deploy-website-sandbox`, `setup-env-vars`, `start-dev-website`
+
+Cursor-level skills in `~/.cursor/skills-cursor/`:
+- `create-rule`, `create-skill`, `create-subagent`, `migrate-to-skills`, `update-cursor-settings`
+
+---
+
+## Known System Gaps (tracked by code-auditor and plan-tracker)
+
+| Category | Count | Priority |
+|----------|-------|----------|
+| TODOs/FIXMEs in code | 80+ | Medium-High |
+| Placeholder/stub implementations | 50+ | Medium-High |
+| Missing website pages | 15 | High |
+| Broken API routes (501) | 7 | High |
+| Incomplete plans/roadmaps | 17 | Track |
+| Security flaw (base64 encryption) | 1 | Critical |
+| Voice system completion | 40% done | High |
+| WebSocket infrastructure | Not built | Medium |

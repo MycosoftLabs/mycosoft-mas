@@ -161,3 +161,15 @@ MYCA uses awareness for:
 - Alerting on critical issues
 - Learning from patterns
 - Providing proactive suggestions
+
+---
+
+## Related Documents
+
+- **[MYCA_MEMORY_BRAIN_INTEGRATION_FEB05_2026.md](./MYCA_MEMORY_BRAIN_INTEGRATION_FEB05_2026.md)** - Brain-memory integration
+- **[MYCA_MEMORY_ARCHITECTURE_FEB05_2026.md](./MYCA_MEMORY_ARCHITECTURE_FEB05_2026.md)** - 6-layer architecture
+- **[MEMORY_SYSTEM_COMPLETE_FEB05_2026.md](./MEMORY_SYSTEM_COMPLETE_FEB05_2026.md)** - Complete system reference
+
+---
+
+*Updated: February 5, 2026*

@@ -1,111 +1,74 @@
 #!/usr/bin/env python3
-"""Rebuild MAS container on VM."""
-
+"""Rebuild MAS container with Earth-2 integration."""
 import paramiko
 import time
 
-def run_ssh_command(host, user, password, command, timeout=600):
-    try:
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(host, username=user, password=password, timeout=30)
-        stdin, stdout, stderr = client.exec_command(command, timeout=timeout)
-        out = stdout.read().decode()
-        err = stderr.read().decode()
-        exit_code = stdout.channel.recv_exit_status()
-        client.close()
-        return exit_code == 0, out + err
-    except Exception as e:
-        return False, str(e)
+ssh = paramiko.SSHClient()
+ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=10)
 
-password = "REDACTED_VM_SSH_PASSWORD"
+print('=== Step 1: Check current container ===')
+stdin, stdout, stderr = ssh.exec_command('docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" | grep myca', timeout=10)
+print(stdout.read().decode())
 
-print("=" * 60)
-print("Rebuilding MAS Container on VM (192.168.0.188)")
-print("=" * 60)
+print('\n=== Step 2: Check Dockerfile location ===')
+stdin, stdout, stderr = ssh.exec_command('ls -la /home/mycosoft/mycosoft/mas/Dockerfile* 2>&1', timeout=10)
+print(stdout.read().decode())
 
-# Stop the failing container
-print("\n1. Stopping failing container...")
-success, output = run_ssh_command(
-    "192.168.0.188",
-    "mycosoft",
-    password,
-    "docker stop myca-orchestrator 2>/dev/null; docker rm myca-orchestrator 2>/dev/null; echo 'Container removed'"
-)
-print(output)
+print('\n=== Step 3: Stop the current container ===')
+stdin, stdout, stderr = ssh.exec_command('docker stop myca-orchestrator-new', timeout=30)
+print(f'OUT: {stdout.read().decode()}')
+print(f'ERR: {stderr.read().decode()}')
 
-# Check for docker-compose file
-print("\n2. Checking build configuration...")
-success, output = run_ssh_command(
-    "192.168.0.188",
-    "mycosoft",
-    password,
-    "ls -la /home/mycosoft/mycosoft/mas/docker-compose*.yml | head -5"
-)
-print(output)
+print('\n=== Step 4: Build new image ===')
+cmd = 'cd /home/mycosoft/mycosoft/mas && docker build -t mycosoft/mas-agent:latest --no-cache . 2>&1'
+print(f'Running: {cmd}')
+stdin, stdout, stderr = ssh.exec_command(cmd, timeout=600)  # 10 min timeout for build
+output = stdout.read().decode()
+print(output[-3000:] if len(output) > 3000 else output)  # Last 3000 chars
 
-# Rebuild using docker-compose
-print("\n3. Rebuilding Docker image (this may take several minutes)...")
-success, output = run_ssh_command(
-    "192.168.0.188",
-    "mycosoft",
-    password,
-    "cd /home/mycosoft/mycosoft/mas && docker build -t mycosoft/mas-agent:latest -f Dockerfile . 2>&1 | tail -30",
-    timeout=600
-)
-print(output[-2000:] if output else "No output")
+print('\n=== Step 5: Remove old container ===')
+stdin, stdout, stderr = ssh.exec_command('docker rm myca-orchestrator-new', timeout=30)
+print(f'OUT: {stdout.read().decode()}')
 
-if not success:
-    print("\nBuild may have failed. Trying alternative approach...")
-    # Try using the simpler approach - just volume mount
-    print("\n4. Trying volume mount approach...")
-    success, output = run_ssh_command(
-        "192.168.0.188",
-        "mycosoft",
-        password,
-        """docker run -d --name myca-orchestrator \
-           -p 8001:8001 \
-           -v /home/mycosoft/mycosoft/mas:/app/mas \
-           -e PYTHONPATH=/app/mas \
-           --restart unless-stopped \
-           --network bridge \
-           python:3.11-slim \
-           bash -c "pip install fastapi uvicorn pydantic redis && cd /app/mas && python -m uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8001"
-        """
-    )
-    print(output)
+print('\n=== Step 6: Start new container ===')
+# Optional: mount SSH key for container -> 187 (coding API)
+key_on_188 = '/home/mycosoft/.ssh/mas_to_sandbox'
+stdin, stdout, stderr = ssh.exec_command(f'test -f {key_on_188} && echo exists', timeout=5)
+key_exists = 'exists' in stdout.read().decode()
+if key_exists:
+    cmd = f'''docker run -d --name myca-orchestrator-new \\
+  --restart unless-stopped \\
+  -p 8001:8000 \\
+  -e REDIS_URL=redis://192.168.0.188:6379/0 \\
+  -e DATABASE_URL=postgresql://mycosoft:mycosoft@192.168.0.188:5432/mindex \\
+  -e N8N_URL=http://192.168.0.188:5678 \\
+  -e MAS_SSH_KEY_PATH=/run/secrets/mas_ssh_key \\
+  -v {key_on_188}:/run/secrets/mas_ssh_key:ro \\
+  mycosoft/mas-agent:latest'''
 else:
-    # Start the rebuilt container
-    print("\n4. Starting rebuilt container...")
-    success, output = run_ssh_command(
-        "192.168.0.188",
-        "mycosoft",
-        password,
-        "cd /home/mycosoft/mycosoft/mas && docker compose up -d myca-orchestrator 2>&1 || docker run -d --name myca-orchestrator -p 8001:8001 --restart unless-stopped mycosoft/mas-agent:latest"
-    )
-    print(output)
+    cmd = '''docker run -d --name myca-orchestrator-new \\
+  --restart unless-stopped \\
+  -p 8001:8000 \\
+  -e REDIS_URL=redis://192.168.0.188:6379/0 \\
+  -e DATABASE_URL=postgresql://mycosoft:mycosoft@192.168.0.188:5432/mindex \\
+  -e N8N_URL=http://192.168.0.188:5678 \\
+  mycosoft/mas-agent:latest'''
+print(f'Running: {cmd}')
+stdin, stdout, stderr = ssh.exec_command(cmd, timeout=60)
+print(f'OUT: {stdout.read().decode()}')
+print(f'ERR: {stderr.read().decode()}')
 
-# Wait and check status
-print("\n5. Waiting for container to start...")
+print('\n=== Step 7: Wait for startup ===')
 time.sleep(10)
 
-success, output = run_ssh_command(
-    "192.168.0.188",
-    "mycosoft",
-    password,
-    "docker ps --filter 'name=myca-orchestrator' --format 'table {{.Names}}\t{{.Status}}'"
-)
-print(output)
+print('\n=== Step 8: Verify Earth-2 API ===')
+stdin, stdout, stderr = ssh.exec_command('curl -s http://localhost:8001/api/earth2/health', timeout=30)
+print(f'Health check: {stdout.read().decode()}')
 
-success, output = run_ssh_command(
-    "192.168.0.188",
-    "mycosoft",
-    password,
-    "docker logs myca-orchestrator --tail 20 2>&1"
-)
-print("\nRecent logs:")
-print(output[-1500:] if output else "No logs")
+print('\n=== Step 9: Check container logs ===')
+stdin, stdout, stderr = ssh.exec_command('docker logs myca-orchestrator-new --tail 20 2>&1', timeout=30)
+print(stdout.read().decode())
 
-print("\n" + "=" * 60)
-print("Rebuild complete!")
-print("=" * 60)
+ssh.close()
+print('\n=== Rebuild complete! ===')

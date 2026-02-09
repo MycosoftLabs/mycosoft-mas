@@ -1,4 +1,4 @@
-﻿"""Memory Export/Import - February 3, 2026
+"""Memory Export/Import - February 3, 2026
 
 Export and import memory data for backup and portability.
 """

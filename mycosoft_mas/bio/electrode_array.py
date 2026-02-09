@@ -1,4 +1,4 @@
-﻿"""Electrode Array Management. Created: February 3, 2026"""
+"""Electrode Array Management. Created: February 3, 2026"""
 from typing import Any, Dict, List
 from uuid import uuid4
 

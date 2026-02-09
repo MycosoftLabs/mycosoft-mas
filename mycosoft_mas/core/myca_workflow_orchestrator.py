@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA Workflow Orchestration Integration - January 25, 2026
 
 This module integrates the n8n workflow engine with the MYCA orchestrator,

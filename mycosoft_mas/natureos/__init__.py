@@ -1,4 +1,4 @@
-﻿# NatureOS - Environmental Operating System for Biological Signal Processing
+# NatureOS - Environmental Operating System for Biological Signal Processing
 
 from .platform import NatureOSPlatform
 from .signal_processor import SignalProcessor

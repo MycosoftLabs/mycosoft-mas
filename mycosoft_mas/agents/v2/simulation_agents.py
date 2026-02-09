@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA Simulation Agents
 Agents for scientific simulations and computational experiments.
 Created: February 3, 2026

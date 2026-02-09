@@ -1,4 +1,4 @@
-﻿"""
+"""
 API Indexer - February 4, 2026
 
 Automatically discovers and indexes all FastAPI routes across

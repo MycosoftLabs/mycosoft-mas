@@ -1,0 +1,170 @@
+{
+  "name": "Voice Corporate Agents Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice/corporate/command",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-corporate",
+      "name": "Corporate Command Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.agent_type }}",
+              "value2": "ceo"
+            }
+          ]
+        }
+      },
+      "id": "route-agent",
+      "name": "Route to Agent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/agents/ceo/execute",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "command",
+              "value": "={{ $json.command }}"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $json.user_id }}"
+            },
+            {
+              "name": "confirmation_id",
+              "value": "={{ $json.confirmation_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ceo-agent",
+      "name": "CEO Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 150]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/agents/secretary/execute",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "command",
+              "value": "={{ $json.command }}"
+            },
+            {
+              "name": "calendar_action",
+              "value": "={{ $json.calendar_action }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "secretary-agent",
+      "name": "Secretary Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/agents/financial/execute",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "command",
+              "value": "={{ $json.command }}"
+            },
+            {
+              "name": "report_type",
+              "value": "={{ $json.report_type }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "financial-agent",
+      "name": "Financial Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 450]
+    },
+    {
+      "parameters": {
+        "url": "http://personaplex-bridge:8999/api/announce",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.response || $json.result }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "announce-result",
+      "name": "Announce Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, agent: $('Corporate Command Webhook').item.json.agent_type, result: $json }) }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1150, 300]
+    }
+  ],
+  "connections": {
+    "Corporate Command Webhook": {
+      "main": [[{"node": "Route to Agent", "type": "main", "index": 0}]]
+    },
+    "Route to Agent": {
+      "main": [
+        [{"node": "CEO Agent", "type": "main", "index": 0}],
+        [{"node": "Secretary Agent", "type": "main", "index": 0}],
+        [{"node": "Financial Agent", "type": "main", "index": 0}]
+      ]
+    },
+    "CEO Agent": {
+      "main": [[{"node": "Announce Result", "type": "main", "index": 0}]]
+    },
+    "Secretary Agent": {
+      "main": [[{"node": "Announce Result", "type": "main", "index": 0}]]
+    },
+    "Financial Agent": {
+      "main": [[{"node": "Announce Result", "type": "main", "index": 0}]]
+    },
+    "Announce Result": {
+      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["voice", "corporate", "ceo", "secretary", "financial", "myca"]
+}

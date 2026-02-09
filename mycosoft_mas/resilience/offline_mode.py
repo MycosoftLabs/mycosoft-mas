@@ -1,4 +1,4 @@
-﻿"""Offline Mode Support. Created: February 3, 2026"""
+"""Offline Mode Support. Created: February 3, 2026"""
 from typing import Any, Dict, List
 from datetime import datetime, timezone
 

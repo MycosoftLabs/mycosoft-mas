@@ -1,4 +1,4 @@
-﻿"""Audit Logging. Created: February 3, 2026"""
+"""Audit Logging. Created: February 3, 2026"""
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 from uuid import UUID, uuid4
@@ -33,4 +33,4 @@ class AuditLogger:
             results = [e for e in results if e.action == action]
         if start_time:
             results = [e for e in results if e.timestamp >= start_time]
-        return results
+        return results

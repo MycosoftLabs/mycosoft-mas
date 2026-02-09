@@ -1,12 +1,47 @@
-﻿"""Voice Module - February 3, 2026
+"""
+MYCA Voice System Module
+Created: February 4, 2026
 
-Voice session management and Supabase persistence.
+Core voice processing components for the MYCA AI system.
 """
 
-from .supabase_client import VoiceSessionStore, get_voice_store, init_voice_store
+from mycosoft_mas.voice.intent_classifier import (
+    IntentClassifier,
+    ClassifiedIntent,
+    ExtractedEntity,
+    IntentPriority,
+    ConfirmationLevel,
+    get_intent_classifier,
+    classify_voice_command,
+    INTENT_CATEGORIES,
+)
+
+from mycosoft_mas.voice.command_registry import (
+    VoiceCommandRegistry,
+    RegisteredCommand,
+    CommandHandler,
+    CommandMatch,
+    CommandType,
+    ExecutionMode,
+    get_command_registry,
+)
 
 __all__ = [
-    "VoiceSessionStore",
-    "get_voice_store",
-    "init_voice_store",
+    # Intent Classification
+    "IntentClassifier",
+    "ClassifiedIntent",
+    "ExtractedEntity",
+    "IntentPriority",
+    "ConfirmationLevel",
+    "get_intent_classifier",
+    "classify_voice_command",
+    "INTENT_CATEGORIES",
+    # Command Registry
+    "VoiceCommandRegistry",
+    "RegisteredCommand",
+    "CommandHandler",
+    "CommandMatch",
+    "CommandType",
+    "ExecutionMode",
+    "get_command_registry",
 ]

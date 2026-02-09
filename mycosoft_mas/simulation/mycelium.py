@@ -1,4 +1,4 @@
-﻿"""Mycelium Network Simulator v18. Created: February 3, 2026"""
+"""Mycelium Network Simulator v18. Created: February 3, 2026"""
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4

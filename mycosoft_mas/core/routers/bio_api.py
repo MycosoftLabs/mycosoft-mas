@@ -1,4 +1,4 @@
-﻿"""
+"""
 Bio-Computing API Router
 REST endpoints for MycoBrain production and DNA storage
 """

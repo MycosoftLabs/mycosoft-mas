@@ -1,4 +1,4 @@
-﻿"""NatureOS Signal Processor - February 3, 2026"""
+"""NatureOS Signal Processor - February 3, 2026"""
 import asyncio
 import logging
 import numpy as np

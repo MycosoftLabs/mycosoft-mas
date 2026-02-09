@@ -1,4 +1,5 @@
 from typing import Dict, List, Any, Set, Optional
+import os
 import uuid
 from datetime import datetime, timedelta
 import jwt
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class SecurityService:
     def __init__(self):
-        self.secret_key = "your-secret-key"  # In production, use a secure key
+        self.secret_key = os.getenv("SECRET_KEY", "CHANGE-ME-set-SECRET_KEY-env-var")
         self.token_expiry = timedelta(hours=1)
         self.revoked_tokens: set[str] = set()
         self.access_controls: Dict[str, Dict[str, Set[str]]] = {}  # resource -> {agent_id -> permissions}

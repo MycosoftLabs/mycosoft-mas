@@ -1,53 +1,48 @@
-﻿"""MYCA Memory System - February 3, 2026
+﻿"""
+Memory Module - February 6, 2026
 
-Unified memory architecture for all MAS components:
-- Short-term: Redis-backed conversational context
-- Long-term: PostgreSQL-backed persistent facts
-- Vector: Qdrant-backed semantic embeddings
-- Graph: PostgreSQL-backed knowledge relationships
-- Unified Service: Central coordinator with scope routing
+CREP Memory System Components.
 """
 
-from .short_term import ShortTermMemory
-from .long_term import LongTermMemory
-from .vector_memory import VectorMemory
-from .graph_memory import GraphMemory
-from .service import (
-    UnifiedMemoryService,
-    MemoryEntry,
-    MemoryScope,
-    MemorySource,
-    MemoryRelationship,
-    UserProfile,
-    get_memory_service,
-    init_memory_service,
+from .graph_schema import (
+    NodeType,
+    EdgeType,
+    KnowledgeNode,
+    KnowledgeEdge,
+    GraphSearchResult,
+    GraphTraversalResult,
+    SemanticSearchResult,
 )
-from .cleanup import MemoryCleanupService, get_cleanup_service
-from .analytics import MemoryAnalytics, get_analytics
-from .export import MemoryExporter, get_exporter
+from .mindex_graph import MindexGraph, get_graph
+from .embeddings import BaseEmbedder, get_embedder
+from .vector_memory import VectorMemory, get_vector_memory
+from .user_context import UserContext, UserContextManager, get_context_manager
+from .session_memory import SessionMemory, SessionMemoryManager, get_session_manager
 
 __all__ = [
-    # Core memory types
-    "ShortTermMemory",
-    "LongTermMemory",
+    # Schema
+    "NodeType",
+    "EdgeType",
+    "KnowledgeNode",
+    "KnowledgeEdge",
+    "GraphSearchResult",
+    "GraphTraversalResult",
+    "SemanticSearchResult",
+    # Graph
+    "MindexGraph",
+    "get_graph",
+    # Embeddings
+    "BaseEmbedder",
+    "get_embedder",
+    # Vector Memory
     "VectorMemory",
-    "GraphMemory",
-    # Unified service
-    "UnifiedMemoryService",
-    "MemoryEntry",
-    "MemoryScope",
-    "MemorySource",
-    "MemoryRelationship",
-    "UserProfile",
-    "get_memory_service",
-    "init_memory_service",
-    # Cleanup
-    "MemoryCleanupService",
-    "get_cleanup_service",
-    # Analytics
-    "MemoryAnalytics",
-    "get_analytics",
-    # Export
-    "MemoryExporter",
-    "get_exporter",
+    "get_vector_memory",
+    # User Context
+    "UserContext",
+    "UserContextManager",
+    "get_context_manager",
+    # Session Memory
+    "SessionMemory",
+    "SessionMemoryManager",
+    "get_session_manager",
 ]

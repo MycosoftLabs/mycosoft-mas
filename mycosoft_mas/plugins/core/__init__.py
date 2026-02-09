@@ -1,4 +1,4 @@
-﻿"""
+"""
 Mycorrhizae Protocol Plugin System
 Extensible plugin architecture for MYCA tools and integrations.
 Created: February 3, 2026

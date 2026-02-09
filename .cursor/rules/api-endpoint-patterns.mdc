@@ -1,0 +1,25 @@
+---
+description: API endpoint creation patterns for FastAPI routers
+globs: "mycosoft_mas/core/routers/**/*.py"
+alwaysApply: false
+---
+
+# API Endpoint Patterns
+
+When creating or modifying routers in `mycosoft_mas/core/routers/`:
+
+## Required Pattern
+
+1. Use `APIRouter(prefix="/api/domain", tags=["domain"])`
+2. Include a `/health` endpoint per router
+3. Use Pydantic models for request/response validation
+4. Handle errors with `HTTPException` and proper status codes
+5. Use async endpoints
+
+## Checklist After Creating Endpoints
+
+- [ ] Router file created in `mycosoft_mas/core/routers/`
+- [ ] Router imported and included in `mycosoft_mas/core/myca_main.py`
+- [ ] Health check endpoint included
+- [ ] Endpoints documented in `docs/API_CATALOG_FEB04_2026.md`
+- [ ] No mock data -- real service connections only

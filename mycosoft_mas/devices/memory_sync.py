@@ -1,4 +1,4 @@
-﻿"""Device State Memory Sync - February 3, 2026
+"""Device State Memory Sync - February 3, 2026
 
 Synchronizes device state with the unified memory system.
 Periodic snapshots and change detection for all NatureOS devices.

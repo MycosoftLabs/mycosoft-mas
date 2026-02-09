@@ -1,0 +1,222 @@
+﻿# MINDEX VM Docker Compose - February 4, 2026
+# Memory Index, Knowledge Graph, and Cryptographic Ledger Service
+
+version: "3.9"
+
+services:
+  # ==========================================================================
+  # PostgreSQL - Primary persistent storage for memory, ledger, and graph
+  # ==========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: mindex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mycosoft
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-REDACTED_DB_PASSWORD}
+      POSTGRES_DB: mindex
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - /data/postgres:/var/lib/postgresql/data
+      - ./init-postgres.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mycosoft -d mindex"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mindex-network
+
+  # ==========================================================================
+  # Redis - Fast cache and short-term memory storage
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: mindex-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    volumes:
+      - /data/redis:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mindex-network
+
+  # ==========================================================================
+  # Qdrant - Vector database for semantic memory search
+  # ==========================================================================
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: mindex-qdrant
+    restart: unless-stopped
+    volumes:
+      - /data/qdrant:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mindex-network
+
+  # ==========================================================================
+  # MINDEX API - Memory Index and Knowledge Graph Service
+  # ==========================================================================
+  mindex-api:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    image: mycosoft/mindex-api:latest
+    container_name: mindex-api
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://mycosoft:${POSTGRES_PASSWORD:-REDACTED_DB_PASSWORD}@postgres:5432/mindex
+      - REDIS_URL=redis://redis:6379/0
+      - QDRANT_URL=http://qdrant:6333
+      - LEDGER_FILE_PATH=/opt/mycosoft/ledger/chain.jsonl
+      - INTEGRITY_HMAC_SECRET=${INTEGRITY_HMAC_SECRET:-mycosoft-mindex-integrity-2026}
+      - MAS_ENV=production
+      - LOG_LEVEL=INFO
+    volumes:
+      - /opt/mycosoft/ledger:/opt/mycosoft/ledger
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mindex-network
+
+  # ==========================================================================
+  # Ledger Service - Dedicated cryptographic ledger management
+  # ==========================================================================
+  ledger-service:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    image: mycosoft/ledger-service:latest
+    container_name: mindex-ledger
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://mycosoft:${POSTGRES_PASSWORD:-REDACTED_DB_PASSWORD}@postgres:5432/mindex
+      - LEDGER_FILE_PATH=/opt/mycosoft/ledger/chain.jsonl
+      - INTEGRITY_HMAC_SECRET=${INTEGRITY_HMAC_SECRET:-mycosoft-mindex-integrity-2026}
+      - BLOCK_COMMIT_INTERVAL=300
+      - AUTO_COMMIT_THRESHOLD=100
+    volumes:
+      - /opt/mycosoft/ledger:/opt/mycosoft/ledger
+    ports:
+      - "8100:8100"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mindex-network
+
+  # ==========================================================================
+  # Registry Service - System registry for APIs, agents, and services
+  # ==========================================================================
+  registry-service:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    image: mycosoft/registry-service:latest
+    container_name: mindex-registry
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://mycosoft:${POSTGRES_PASSWORD:-REDACTED_DB_PASSWORD}@postgres:5432/mindex
+      - REDIS_URL=redis://redis:6379/1
+      - MAS_URL=http://192.168.0.188:8001
+      - WEBSITE_URL=http://192.168.0.187:3000
+      - INDEX_INTERVAL=3600
+    ports:
+      - "8200:8200"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8200/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - mindex-network
+
+  # ==========================================================================
+  # Prometheus - Metrics collection
+  # ==========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mindex-prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - /data/prometheus:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - mindex-network
+
+  # ==========================================================================
+  # PGAdmin - PostgreSQL management UI (optional, for debugging)
+  # ==========================================================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: mindex-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mycosoft.com
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-mycosoft2026}
+    volumes:
+      - /data/pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - mindex-network
+    profiles:
+      - debug
+
+networks:
+  mindex-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+volumes:
+  postgres-data:
+  redis-data:
+  qdrant-data:
+  prometheus-data:

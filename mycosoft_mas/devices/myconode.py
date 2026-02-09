@@ -1,4 +1,4 @@
-﻿"""MycoNode - In-Situ Fungal Soil Probe"""
+"""MycoNode - In-Situ Fungal Soil Probe"""
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 from uuid import uuid4

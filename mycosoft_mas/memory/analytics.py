@@ -1,4 +1,4 @@
-﻿"""Memory Analytics - February 3, 2026
+"""Memory Analytics - February 3, 2026
 
 Analytics for memory system usage, patterns, and performance.
 """

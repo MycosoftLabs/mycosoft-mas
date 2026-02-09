@@ -1,4 +1,4 @@
-﻿"""Fungal Computer Interface (FCI) - Bio-digital signal conversion. Created: February 3, 2026"""
+"""Fungal Computer Interface (FCI) - Bio-digital signal conversion. Created: February 3, 2026"""
 import asyncio
 import logging
 from datetime import datetime, timezone

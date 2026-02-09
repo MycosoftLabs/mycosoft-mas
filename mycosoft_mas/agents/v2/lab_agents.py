@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA Lab Automation Agents
 Agents for laboratory instrument control and automation.
 Created: February 3, 2026

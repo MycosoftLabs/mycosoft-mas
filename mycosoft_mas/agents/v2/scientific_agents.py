@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA Scientific Domain Agents
 Agents for autonomous scientific research and experimentation.
 Created: February 3, 2026

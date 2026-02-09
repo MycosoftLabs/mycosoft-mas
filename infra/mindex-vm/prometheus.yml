@@ -1,0 +1,40 @@
+﻿# Prometheus Configuration for MINDEX VM
+# Created: February 4, 2026
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # MINDEX API metrics
+  - job_name: 'mindex-api'
+    static_configs:
+      - targets: ['mindex-api:8000']
+    metrics_path: /metrics
+
+  # Ledger Service metrics
+  - job_name: 'ledger-service'
+    static_configs:
+      - targets: ['ledger-service:8100']
+    metrics_path: /metrics
+
+  # Registry Service metrics
+  - job_name: 'registry-service'
+    static_configs:
+      - targets: ['registry-service:8200']
+    metrics_path: /metrics
+
+  # PostgreSQL exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:9187']
+
+  # Redis exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:9121']
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Persistent Knowledge Graph - February 4, 2026
 
 PostgreSQL-backed knowledge graph for system relationships,

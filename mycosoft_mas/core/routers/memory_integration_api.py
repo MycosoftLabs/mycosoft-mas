@@ -1,4 +1,4 @@
-﻿"""
+"""
 Memory Integration API - February 3, 2026
 
 Endpoints for Voice Sessions, NatureOS Telemetry, MINDEX Bridge, and Workflow Memory.

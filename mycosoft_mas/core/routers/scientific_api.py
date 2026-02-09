@@ -1,4 +1,4 @@
-﻿"""
+"""
 Scientific API Router
 REST endpoints for all scientific operations
 """

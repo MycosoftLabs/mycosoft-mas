@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA Memory Summarization Service - February 2026
 
 End-of-session memory archival with:

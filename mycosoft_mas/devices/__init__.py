@@ -1,4 +1,4 @@
-﻿"""Devices Module - February 3, 2026
+"""Devices Module - February 3, 2026
 
 Device state synchronization with memory system.
 """

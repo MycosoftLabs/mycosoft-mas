@@ -1,0 +1,29 @@
+---
+description: Local dev = Next.js 3010 only (no Docker). Deploy = GitHub → VM Docker build → Cloudflare purge.
+globs: 
+alwaysApply: true
+---
+
+# Dev and Deploy Pipeline (All Agents)
+
+## Local development (website)
+- **Dev site** = Next.js dev server on **port 3010 only**. No Docker required. Hot reload as user edits in Cursor.
+- **Website repo:** `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website`
+- **Start dev:** In website repo run `npm run dev:next-only` (or `npm run dev` if GPU/voice needed). Or run `scripts/start-dev.ps1` to free port 3010 and start.
+- **URL:** http://localhost:3010
+- **Local Docker** (website docker-compose) is optional and for full-stack testing only. Do not require or assume local Docker for "running the dev site."
+- **Backends on VMs:** Dev website can use **MAS VM (192.168.0.188:8001)** and **MINDEX VM (192.168.0.189:8000)** so database and agents run on VMs, not locally. Set `MAS_API_URL`, `MINDEX_API_URL` in website `.env.local`. VMs can call back to local dev at `http://YOUR_PC_LAN_IP:3010`. See `docs/VM_LAYOUT_AND_DEV_REMOTE_SERVICES_FEB06_2026.md`.
+
+## Deploy to sandbox
+- Code must be in **GitHub**. Then on Sandbox VM (192.168.0.187): pull code, **rebuild** Docker image, restart website container, then **purge Cloudflare** cache.
+- Website on VM: path `/opt/mycosoft/website`, image `mycosoft-always-on-mycosoft-website:latest`, container name `mycosoft-website`, port 3000. **Always** include NAS volume mount for media: `-v /opt/mycosoft/media/website/assets:/app/public/assets:ro`.
+- Scripts: `WEBSITE/website/_rebuild_sandbox.py` (full rebuild + run), `_deploy_sandbox.py` (restart only). After deploy: **Purge Everything** in Cloudflare.
+
+## Pipeline summary
+| Phase     | What                    | Where     | Port / URL              |
+|----------|--------------------------|-----------|--------------------------|
+| Dev      | Next.js dev server       | Local PC  | http://localhost:3010   |
+| Sandbox  | Website Docker container | VM 187    | sandbox.mycosoft.com    |
+
+- **CI/CD:** Use GitHub Actions for lint/test/build; add or use deploy job that SSHs to VM, pulls, builds image, runs container, then Cloudflare purge.
+- Full pipeline doc: `docs/DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md`.

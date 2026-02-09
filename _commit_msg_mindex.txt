@@ -1,0 +1,27 @@
+feat: MINDEX Sole Database System + Voice Map Control - Feb 5, 2026
+
+MINDEX Implementation:
+- Created 7 data scrapers (iNaturalist, GBIF, MycoBank, Index Fungorum, GenBank, PubMed, PubChem/ChEMBL)
+- Added blob storage system for images, DNA sequences, PDFs on NAS
+- Created comprehensive MINDEX API endpoints for species, sequences, research, compounds
+- Built MYCA integration client for exclusive MINDEX data access
+- Initial sync: 35,000 species, 423 DNA sequences, 4,157 genera
+
+Voice-to-Map Control:
+- earth2_voice_handler.py - Weather forecast voice commands
+- map_voice_handler.py - Map navigation/zoom/pan/layer commands
+- voice_command_router.py - Unified routing for Earth2, Map, CREP domains
+- All commands generate frontend_command for MapLibre GL
+
+New Files:
+- mycosoft_mas/mindex/blob_manager.py
+- mycosoft_mas/mindex/myca_integration.py
+- mycosoft_mas/mindex/full_sync.py
+- mycosoft_mas/mindex/scrapers/chemistry_scraper.py
+- mycosoft_mas/mindex/scrapers/pubmed_scraper.py
+- mycosoft_mas/mindex/scrapers/index_fungorum_scraper.py
+- mycosoft_mas/core/routers/mindex_species_api.py
+- migrations/019_mindex_blobs.sql
+- scripts/earth2_voice_handler.py
+- scripts/map_voice_handler.py
+- scripts/voice_command_router.py

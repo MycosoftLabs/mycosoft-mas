@@ -1,4 +1,4 @@
-﻿"""N8N Workflow Memory Archival - February 3, 2026
+"""N8N Workflow Memory Archival - February 3, 2026
 
 Archives n8n workflow executions to memory for analytics and history.
 """

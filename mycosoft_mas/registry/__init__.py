@@ -1,1 +1,1 @@
-﻿# Registry module
+# Registry module

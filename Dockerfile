@@ -46,13 +46,14 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/lib/python3.13/site-packages:$PATH"
 
-# Install runtime system dependencies
+# Install runtime system dependencies (openssh-client for MAS coding SSH to Sandbox 187)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         netcat-openbsd \
         postgresql-client \
         curl \
         libpq5 \
+        openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory

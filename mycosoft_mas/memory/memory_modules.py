@@ -1,4 +1,4 @@
-﻿"""
+"""
 Additional Memory Modules for MYCA Memory System.
 Created: February 5, 2026
 

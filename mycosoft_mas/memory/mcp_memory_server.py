@@ -1,4 +1,4 @@
-﻿"""
+"""
 MCP Memory Server for Claude Integration.
 Created: February 5, 2026
 

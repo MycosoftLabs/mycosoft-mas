@@ -1,6 +1,7 @@
 ﻿"""
 MYCA 6-Layer Memory Architecture.
 Created: February 5, 2026
+Updated: February 5, 2026 - MINDEX as sole storage backend
 
 Implements a comprehensive memory system for MYCA with six distinct layers:
 1. Ephemeral Memory - Transient working data (minutes)
@@ -202,7 +203,7 @@ class PostgresBackend(MemoryBackend):
         try:
             async with self._pool.acquire() as conn:
                 await conn.execute("""
-                    INSERT INTO memory.entries (id, layer, content, metadata, created_at, 
+                    INSERT INTO mindex.memory_entries (id, layer, content, metadata, created_at, 
                         accessed_at, access_count, importance, status, tags, hash)
                     VALUES ($1, $2, $3::jsonb, $4::jsonb, $5, $6, $7, $8, $9, $10, $11)
                     ON CONFLICT (id) DO UPDATE SET
@@ -228,7 +229,7 @@ class PostgresBackend(MemoryBackend):
         try:
             async with self._pool.acquire() as conn:
                 row = await conn.fetchrow("""
-                    UPDATE memory.entries SET accessed_at = NOW(), access_count = access_count + 1
+                    UPDATE mindex.memory_entries SET accessed_at = NOW(), access_count = access_count + 1
                     WHERE id = $1 RETURNING *
                 """, str(entry_id))
                 
@@ -257,7 +258,7 @@ class PostgresBackend(MemoryBackend):
         results = []
         try:
             async with self._pool.acquire() as conn:
-                sql = "SELECT * FROM memory.entries WHERE importance >= $1"
+                sql = "SELECT * FROM mindex.memory_entries WHERE importance >= $1"
                 params = [query.min_importance]
                 param_idx = 2
                 
@@ -314,7 +315,7 @@ class PostgresBackend(MemoryBackend):
                         params.append(value)
                 
                 params.append(str(entry_id))
-                sql = f"UPDATE memory.entries SET {', '.join(set_clauses)} WHERE id = ${len(params)}"
+                sql = f"UPDATE mindex.memory_entries SET {', '.join(set_clauses)} WHERE id = ${len(params)}"
                 await conn.execute(sql, *params)
             return True
         except Exception as e:
@@ -327,7 +328,7 @@ class PostgresBackend(MemoryBackend):
         
         try:
             async with self._pool.acquire() as conn:
-                await conn.execute("DELETE FROM memory.entries WHERE id = $1", str(entry_id))
+                await conn.execute("DELETE FROM mindex.memory_entries WHERE id = $1", str(entry_id))
             return True
         except Exception as e:
             logger.error(f"Failed to delete memory: {e}")

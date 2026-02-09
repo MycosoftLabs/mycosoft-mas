@@ -1,4 +1,4 @@
-﻿"""
+"""
 Autonomous Research API Router
 REST endpoints for autonomous experiments and hypothesis generation
 """

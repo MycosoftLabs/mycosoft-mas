@@ -1,36 +1,77 @@
 #!/usr/bin/env python3
-"""Start website container directly"""
+"""Start website after reboot - Feb 6, 2026"""
 import paramiko
+import time
+import requests
 import sys
 import io
-
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-client = paramiko.SSHClient()
-client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+VM_IP = "192.168.0.187"
+VM_USER = "mycosoft"
+VM_PASS = "REDACTED_VM_SSH_PASSWORD"
 
-# Run website container directly
-print('=== Starting website container directly ===')
-cmd = """docker run -d --name mycosoft-website \
-  --restart unless-stopped \
-  -p 3000:3000 \
-  -v /opt/mycosoft/media/website/assets:/app/public/assets \
-  -e NODE_ENV=production \
-  --network mycosoft-production_mycosoft-network \
-  website-website:latest"""
+ssh = paramiko.SSHClient()
+ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+print(f"Connecting to {VM_IP}...")
+ssh.connect(VM_IP, username=VM_USER, password=VM_PASS, timeout=30)
+print("Connected!\n")
 
-stdin, stdout, stderr = client.exec_command(cmd, timeout=30)
-print(stdout.read().decode('utf-8', errors='replace'))
-print(stderr.read().decode('utf-8', errors='replace'))
+def run(cmd, timeout=60):
+    print(f"[CMD] {cmd}")
+    stdin, stdout, stderr = ssh.exec_command(cmd, timeout=timeout)
+    stdout.channel.settimeout(timeout)
+    try:
+        out = stdout.read().decode('utf-8', errors='replace')
+        if out.strip():
+            print(out[:500])
+        return out
+    except:
+        print("(timeout)")
+        return ""
 
-print('\n=== Container Status ===')
-stdin, stdout, stderr = client.exec_command("docker ps --filter 'name=mycosoft-website' --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}'", timeout=30)
-print(stdout.read().decode('utf-8', errors='replace'))
+# Check Docker
+print("=== Checking Docker ===")
+result = run("docker ps")
 
-print('\n=== Testing website ===')
-stdin, stdout, stderr = client.exec_command('sleep 5 && curl -s http://localhost:3000/ | head -20', timeout=30)
-print(stdout.read().decode('utf-8', errors='replace'))
+if "CONTAINER ID" not in result:
+    print("Docker not ready, waiting 30s...")
+    time.sleep(30)
+    result = run("docker ps")
 
-client.close()
-print('\nDone!')
+# Check memory
+print("\n=== Memory Status ===")
+run("free -h")
+
+# Pull latest code
+print("\n=== Pulling Latest Code ===")
+run("cd /home/mycosoft/mycosoft/mas && git fetch origin && git reset --hard origin/main", timeout=120)
+
+# Start website
+print("\n=== Starting Website ===")
+result = run("cd /home/mycosoft/mycosoft/mas && docker compose -f docker-compose.always-on.yml up -d mycosoft-website 2>&1", timeout=300)
+
+ssh.close()
+
+# Wait for container to start
+print("\n=== Waiting 90 seconds for website to start ===")
+time.sleep(90)
+
+# Test
+print("\n=== Testing Endpoints ===")
+tests = [
+    'https://sandbox.mycosoft.com/api/mycobrain/health',
+    'https://sandbox.mycosoft.com/api/health',
+    'https://sandbox.mycosoft.com/'
+]
+
+for url in tests:
+    try:
+        r = requests.get(url, timeout=30)
+        print(f"{url}: {r.status_code}")
+        if r.status_code == 200 and 'mycobrain' in url:
+            print(f"  Response: {r.json()}")
+    except Exception as e:
+        print(f"{url}: Error - {e}")
+
+print("\nDone!")

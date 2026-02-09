@@ -1,4 +1,4 @@
-﻿"""
+"""
 Autonomous Experiment Engine
 AI-driven closed-loop experimentation system
 """

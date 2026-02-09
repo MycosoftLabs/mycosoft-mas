@@ -1,5 +1,16 @@
 # Memory Dashboard UI Components - February 3, 2026
 
+> **⚠️ SUPERSEDED**: This document has been updated. The UI components described here were migrated to the main website repository. See the latest version:
+> - **[MYCA_MEMORY_UI_MIGRATION_FEB05_2026.md](./MYCA_MEMORY_UI_MIGRATION_FEB05_2026.md)** - Complete UI migration details
+> - **[MEMORY_SYSTEM_COMPLETE_FEB05_2026.md](./MEMORY_SYSTEM_COMPLETE_FEB05_2026.md)** - Full system reference
+>
+> **New Component Locations (as of February 5, 2026):**
+> - `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\components\memory\`
+> - `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\app\api\memory\`
+> - `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\hooks\use-memory.ts`
+
+---
+
 ## Summary
 
 Created comprehensive memory monitoring and management UI components for the AI Studio Agent Topology dashboard.

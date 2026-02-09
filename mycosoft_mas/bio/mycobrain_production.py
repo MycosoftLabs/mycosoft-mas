@@ -1,4 +1,4 @@
-﻿"""
+"""
 MycoBrain Production System
 Production-ready biological computing infrastructure
 """

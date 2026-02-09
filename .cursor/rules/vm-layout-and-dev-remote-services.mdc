@@ -1,0 +1,61 @@
+---
+description: VM layout (Sandbox, MAS, MINDEX), dev website using remote VMs, VM-to-VM and VM-to-local. All agents must use this.
+globs: 
+alwaysApply: true
+---
+
+# VM Layout and Dev Using Remote Services (All Agents)
+
+## VM layout (canonical)
+
+| VM | IP | Role | Key ports |
+|----|-----|------|-----------|
+| **Sandbox** | 192.168.0.187 | Website (Docker), optional services | Website 3000, Mycorrhizae 8002?, n8n 5678?, Redis 6379? |
+| **MAS** | 192.168.0.188 | Multi-Agent System, orchestrator | **8001** (orchestrator), n8n 5678 |
+| **MINDEX** | 192.168.0.189 | Database + vector store | Postgres 5432, Redis 6379, Qdrant 6333, **MINDEX API 8000** (if deployed there) |
+
+- **MAS Orchestrator** is a systemd service on MAS VM (188); always on. Health: `http://192.168.0.188:8001/health`.
+- **MINDEX API** may be on 189:8000, or on 187/188 until deployed on MINDEX VM. Use the host where it actually runs in env.
+
+## Local dev website using VMs (no local DB/agents)
+
+- **Goal:** Run only Next.js dev server (port 3010) on the dev PC; website calls **MAS** and **MINDEX** on VMs.
+- **Website repo:** `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website`
+- **In website `.env.local`** set at least:
+  - `MAS_API_URL=http://192.168.0.188:8001`
+  - `NEXT_PUBLIC_MAS_API_URL=http://192.168.0.188:8001`
+  - `MINDEX_API_URL=http://192.168.0.189:8000` (or 187/188 if API runs there)
+  - `MINDEX_API_BASE_URL` same as MINDEX_API_URL
+  - Optional: `MYCORRHIZAE_API_URL=http://192.168.0.187:8002`, `REDIS_URL=redis://192.168.0.187:6379`, `N8N_URL=http://192.168.0.188:5678`
+- **Start dev:** In website repo run `npm run dev:next-only`. URL: http://localhost:3010. No local Docker or local Postgres/agents required.
+
+## VM-to-VM connectivity
+
+All VMs are on 192.168.0.x. They call each other by IP, e.g.:
+- Sandbox (187) → MAS `http://192.168.0.188:8001`, MINDEX `http://192.168.0.189:8000`
+- MAS (188) → MINDEX `http://192.168.0.189:8000`, Sandbox website `http://192.168.0.187:3000`
+- MINDEX (189) → MAS `http://192.168.0.188:8001`, Sandbox `http://192.168.0.187:3000`
+
+When configuring services on any VM, use these URLs so VMs talk to the correct host.
+
+## VMs calling back to local dev website
+
+When MAS/MINDEX or another VM must call the **local dev site** (webhooks, callbacks):
+- Local dev must be reachable at the dev PC’s **LAN IP** and port **3010**, e.g. `http://192.168.0.YOUR_PC_IP:3010`.
+- Next.js dev server binds to all interfaces by default, so it’s reachable on the LAN. Ensure Windows firewall allows inbound TCP 3010 from 192.168.0.0/24 (or at least 187, 188, 189).
+- On the VM, set webhook/callback URLs to `http://DEV_PC_LAN_IP:3010/...` (e.g. `http://192.168.0.172:3010/api/webhooks/...`). In website `.env.local`, `NEXT_PUBLIC_BASE_URL` can be set to that URL when testing callbacks from VMs.
+
+## Deploy / update flows
+
+- **Update MAS:** SSH to 192.168.0.188, pull code, `sudo systemctl restart mas-orchestrator`. Local dev site keeps using 188:8001.
+- **Update MINDEX:** SSH to 192.168.0.189 (or wherever MINDEX API runs), pull, restart API container/service. Point website `.env.local` at that host.
+- **Deploy website to Sandbox:** Push to GitHub, on 187 pull, build image, run container with NAS mount; then purge Cloudflare. See `docs/DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md`.
+
+## Reference docs
+
+- Full detail: `docs/VM_LAYOUT_AND_DEV_REMOTE_SERVICES_FEB06_2026.md`
+- MAS service: `docs/MAS_ORCHESTRATOR_SERVICE_FEB06_2026.md`
+- MINDEX VM: `docs/MINDEX_VM_DEPLOYMENT_STATUS_FEB04_2026.md`
+- Dev/deploy pipeline: `docs/DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md`
+
+All agents: use the VM IPs and env vars above when suggesting config, debugging connectivity, or documenting how the dev site and VMs interact.

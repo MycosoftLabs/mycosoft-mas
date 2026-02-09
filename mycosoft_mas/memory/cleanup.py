@@ -1,4 +1,4 @@
-﻿"""Memory Cleanup Service - February 3, 2026
+"""Memory Cleanup Service - February 3, 2026
 
 Manages memory lifecycle: decay, compression, archival, and cleanup.
 Runs as a background service to maintain memory health.

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unified Memory Service - February 3, 2026
 
 Central coordinator for all memory operations across the Mycosoft MAS.

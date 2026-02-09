@@ -1,0 +1,14 @@
+        totalNodes:n.length,
+        totalConnections:(d.connections??[]).length,
+        healthy:d.summary?.healthy??0,
+        degraded:d.summary?.degraded??0,
+        error:d.summary?.error??0,
+        lastUpdated:d.lastUpdated??new Date().toISOString()})
+    }
+    return NextResponse.json(d)
+  }catch(e){
+    return NextResponse.json(
+      {error:e instanceof Error?e.message:"Pipeline status unavailable"},
+      {status:503})
+  }
+}

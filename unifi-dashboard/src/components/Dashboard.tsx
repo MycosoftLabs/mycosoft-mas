@@ -32,6 +32,7 @@ import { AgentCreator } from "./AgentCreator";
 import { useTheme } from "@/lib/theme-provider";
 import { ChevronRight, Sun, Moon, Mic, Activity, Menu, X, Plus } from "lucide-react";
 import { Toaster } from "sonner";
+import { MemoryHealthWidget } from "./widgets/memory";
 
 export function Dashboard() {
   const [currentView, setCurrentView] = useState("dashboard");
@@ -778,7 +779,7 @@ function DashboardMainView({ agents, networkStats, onAgentClick }: DashboardMain
       </div>
 
       {/* Bottom Section */}
-      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="mt-4 sm:mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <div className="rounded-lg bg-[#1E293B] p-4 sm:p-6 transition-all hover:shadow-lg hover:shadow-purple-500/10">
           <h3 className="mb-3 sm:mb-4 text-xs sm:text-sm font-semibold">Agent Summary</h3>
           <div className="flex items-center gap-4 sm:gap-8">
@@ -809,7 +810,7 @@ function DashboardMainView({ agents, networkStats, onAgentClick }: DashboardMain
           </div>
         </div>
 
-        <div className="rounded-lg bg-[#1E293B] p-4 sm:p-6 sm:col-span-2 lg:col-span-1 transition-all hover:shadow-lg hover:shadow-blue-500/10">
+        <div className="rounded-lg bg-[#1E293B] p-4 sm:p-6 transition-all hover:shadow-lg hover:shadow-blue-500/10">
           <h3 className="mb-3 sm:mb-4 text-xs sm:text-sm font-semibold">System Resources</h3>
           <div className="space-y-2 sm:space-y-3">
             <div>
@@ -832,6 +833,9 @@ function DashboardMainView({ agents, networkStats, onAgentClick }: DashboardMain
             </div>
           </div>
         </div>
+
+        {/* Memory & Brain Health */}
+        <MemoryHealthWidget />
       </div>
     </div>
   );

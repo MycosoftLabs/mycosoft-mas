@@ -1,4 +1,4 @@
-﻿"""
+"""
 Mem0 Adapter - LoCoMo-style Fact Extraction and Three-Layer Architecture.
 Created: February 5, 2026
 

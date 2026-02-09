@@ -1,4 +1,4 @@
-"""
+﻿"""
 MINDEX (Mycological Index Database) Integration Client
 
 This module provides integration with the MINDEX database system (https://github.com/MycosoftLabs/mindex).

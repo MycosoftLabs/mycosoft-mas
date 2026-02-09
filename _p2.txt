@@ -1,0 +1,3 @@
+} else if (command.includes("show memory") || command.includes("show activity") || command.includes("show workflows")) {
+---
+} else if (command.includes("show memory") || command.includes("show activity") || command.includes("show workflows") || command.includes("show pipeline") || command.includes("show system status") || command.includes("open activity")) {

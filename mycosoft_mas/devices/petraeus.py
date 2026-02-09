@@ -1,4 +1,4 @@
-﻿"""Petraeus - HDMEA Dish Biocomputer"""
+"""Petraeus - HDMEA Dish Biocomputer"""
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 from uuid import uuid4

@@ -1,4 +1,4 @@
-﻿"""Active Learning for efficient experimentation. Created: February 3, 2026"""
+"""Active Learning for efficient experimentation. Created: February 3, 2026"""
 import logging
 from typing import Any, Dict, List, Optional
 from uuid import uuid4

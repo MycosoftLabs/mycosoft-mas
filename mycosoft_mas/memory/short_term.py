@@ -1,4 +1,4 @@
-﻿"""Short-term conversational memory. Created: February 3, 2026"""
+"""Short-term conversational memory. Created: February 3, 2026"""
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4

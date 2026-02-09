@@ -1,13 +1,16 @@
 ﻿"""
-Enhanced Orchestrator with Health Polling, Failover, and Recovery.
+Enhanced Orchestrator with Health Polling, Failover, Recovery, and Memory Integration.
 Created: February 5, 2026
+Updated: February 5, 2026 - Added MemoryCoordinator integration
 
 Provides robust service orchestration for the Mycosoft MAS:
 - Service health polling and monitoring
 - Automatic failover when services fail
-- Recovery state restoration
+- Recovery state restoration via memory system
 - Circuit breaker pattern
 - Retry with exponential backoff
+- Health event logging to episodic memory
+- State persistence in system memory
 """
 
 import asyncio
@@ -35,9 +38,9 @@ class ServiceState(str, Enum):
 
 class CircuitState(str, Enum):
     """Circuit breaker state."""
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"          # Failing, reject calls
-    HALF_OPEN = "half_open"  # Testing if service recovered
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
 
 
 @dataclass
@@ -50,14 +53,14 @@ class ServiceConfig:
     port: Optional[int] = None
     start_command: Optional[str] = None
     stop_command: Optional[str] = None
-    health_check_interval: int = 30  # seconds
-    health_check_timeout: int = 5    # seconds
-    failure_threshold: int = 3       # failures before unhealthy
-    recovery_threshold: int = 2      # successes before healthy
-    retry_delay: int = 5             # seconds between retries
+    health_check_interval: int = 30
+    health_check_timeout: int = 5
+    failure_threshold: int = 3
+    recovery_threshold: int = 2
+    retry_delay: int = 5
     max_retries: int = 3
-    is_critical: bool = False        # If critical, affects overall system
-    fallback_service_id: Optional[str] = None  # ID of fallback service
+    is_critical: bool = False
+    fallback_service_id: Optional[str] = None
 
 
 @dataclass
@@ -107,12 +110,10 @@ class CircuitBreaker:
         self.half_open_calls = 0
     
     def can_execute(self) -> bool:
-        """Check if execution is allowed."""
         if self.state == CircuitState.CLOSED:
             return True
         
         if self.state == CircuitState.OPEN:
-            # Check if recovery timeout has passed
             if self.last_failure_time:
                 elapsed = (datetime.now(timezone.utc) - self.last_failure_time).total_seconds()
                 if elapsed >= self.recovery_timeout:
@@ -127,18 +128,16 @@ class CircuitBreaker:
         return False
     
     def record_success(self) -> None:
-        """Record a successful execution."""
         self.failure_count = 0
         self.success_count += 1
         
         if self.state == CircuitState.HALF_OPEN:
             self.half_open_calls += 1
-            if self.success_count >= 2:  # Require 2 successes to close
+            if self.success_count >= 2:
                 self.state = CircuitState.CLOSED
                 self.success_count = 0
     
     def record_failure(self) -> None:
-        """Record a failed execution."""
         self.failure_count += 1
         self.success_count = 0
         self.last_failure_time = datetime.now(timezone.utc)
@@ -151,14 +150,15 @@ class CircuitBreaker:
 
 class Orchestrator:
     """
-    Enhanced orchestrator with health polling, failover, and recovery.
+    Enhanced orchestrator with health polling, failover, recovery, and memory integration.
     
     Features:
     - Service health monitoring
     - Automatic failover to backup services
     - Circuit breaker pattern
-    - Recovery state management
-    - Retry with exponential backoff
+    - Recovery state management via MemoryCoordinator
+    - Health event logging to episodic memory
+    - State persistence in system memory
     """
     
     def __init__(self):
@@ -169,6 +169,122 @@ class Orchestrator:
         self._health_task: Optional[asyncio.Task] = None
         self._running = False
         self._event_handlers: Dict[str, List[Callable]] = {}
+        
+        # Memory integration
+        self._memory = None
+        self._memory_initialized = False
+    
+    async def _init_memory(self) -> None:
+        """Initialize memory coordinator for the orchestrator."""
+        if self._memory_initialized:
+            return
+        
+        try:
+            from mycosoft_mas.memory import get_memory_coordinator
+            self._memory = await get_memory_coordinator()
+            self._memory_initialized = True
+            logger.info("Orchestrator memory integration initialized")
+        except Exception as e:
+            logger.warning(f"Memory integration not available: {e}")
+    
+    async def _record_health_event(
+        self,
+        service_id: str,
+        state: str,
+        error: Optional[str] = None
+    ) -> None:
+        """Record health events in episodic memory."""
+        if not self._memory:
+            return
+        
+        try:
+            await self._memory.record_episode(
+                agent_id="orchestrator",
+                event_type="observation",
+                description=f"Service {service_id} state: {state}" + (f" - {error}" if error else ""),
+                context={
+                    "service_id": service_id,
+                    "state": state,
+                    "error": error,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                },
+                importance=0.7 if state in ["unhealthy", "failed"] else 0.3
+            )
+        except Exception as e:
+            logger.debug(f"Failed to record health event: {e}")
+    
+    async def _save_recovery_state_to_memory(self, service_id: str) -> None:
+        """Save recovery state to system memory for persistence."""
+        if not self._memory:
+            return
+        
+        try:
+            status = self._status.get(service_id)
+            if not status:
+                return
+            
+            recovery_data = {
+                "service_id": service_id,
+                "saved_at": datetime.now(timezone.utc).isoformat(),
+                "state": status.state.value,
+                "circuit_state": status.circuit_state.value,
+                "last_healthy": status.last_healthy.isoformat() if status.last_healthy else None,
+                "last_error": status.last_error,
+                "recovery_attempts": status.recovery_attempts
+            }
+            
+            await self._memory.agent_remember(
+                agent_id="orchestrator",
+                content={
+                    "type": "recovery_state",
+                    "service_id": service_id,
+                    "data": recovery_data
+                },
+                layer="system",
+                importance=1.0,
+                tags=["recovery", "service_state", service_id]
+            )
+            
+            logger.debug(f"Saved recovery state for {service_id} to memory")
+        except Exception as e:
+            logger.debug(f"Failed to save recovery state: {e}")
+    
+    async def _load_previous_states(self) -> None:
+        """Load previous service states from memory on startup."""
+        if not self._memory:
+            return
+        
+        try:
+            # Query previous recovery states
+            results = await self._memory.agent_recall(
+                agent_id="orchestrator",
+                tags=["recovery", "service_state"],
+                layer="system",
+                limit=50
+            )
+            
+            loaded_count = 0
+            for result in results:
+                content = result.get("content", {})
+                if content.get("type") == "recovery_state":
+                    service_id = content.get("service_id")
+                    data = content.get("data", {})
+                    
+                    if service_id and service_id in self._status:
+                        # Restore previous state info for context
+                        self._recovery_states[service_id] = RecoveryState(
+                            service_id=service_id,
+                            saved_at=datetime.fromisoformat(data.get("saved_at", datetime.now(timezone.utc).isoformat())),
+                            state_data=data,
+                            context={"restored_from_memory": True}
+                        )
+                        loaded_count += 1
+            
+            if loaded_count > 0:
+                logger.info(f"Loaded {loaded_count} previous service states from memory")
+                
+        except Exception as e:
+            logger.debug(f"Failed to load previous states: {e}")
     
     def register_service(self, config: ServiceConfig) -> None:
         """Register a service for orchestration."""
@@ -191,7 +307,7 @@ class Orchestrator:
             ServiceConfig(
                 id="personaplex",
                 name="PersonaPlex Voice",
-                health_url="http://localhost:8999/v1/health",
+                health_url="http://localhost:8999/health",
                 fallback_service_id="moshi_direct"
             ),
             ServiceConfig(
@@ -218,17 +334,51 @@ class Orchestrator:
             self.register_service(config)
     
     async def start(self) -> None:
-        """Start the orchestrator."""
+        """Start the orchestrator with memory integration."""
         if self._running:
             return
         
         self._running = True
+        
+        # Initialize memory coordinator
+        await self._init_memory()
+        
+        # Register default services
         self.register_default_services()
+        
+        # Load previous states from memory
+        await self._load_previous_states()
+        
+        # Record orchestrator start in memory
+        if self._memory:
+            try:
+                await self._memory.agent_remember(
+                    agent_id="orchestrator",
+                    content={
+                        "event": "orchestrator_started",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "services": list(self._services.keys()),
+                        "memory_enabled": True
+                    },
+                    layer="system",
+                    importance=0.8,
+                    tags=["startup", "orchestrator"]
+                )
+                
+                await self._memory.record_episode(
+                    agent_id="orchestrator",
+                    event_type="decision",
+                    description="Orchestrator started with memory integration",
+                    context={"services": list(self._services.keys())},
+                    importance=0.6
+                )
+            except Exception as e:
+                logger.debug(f"Failed to record startup: {e}")
         
         # Start health polling
         self._health_task = asyncio.create_task(self._health_polling_loop())
         
-        logger.info("Orchestrator started")
+        logger.info("Orchestrator started with memory integration")
     
     async def stop(self) -> None:
         """Stop the orchestrator."""
@@ -241,9 +391,21 @@ class Orchestrator:
             except asyncio.CancelledError:
                 pass
         
-        # Save recovery states
+        # Save all recovery states to memory
         for service_id in self._services:
-            await self._save_recovery_state(service_id)
+            await self._save_recovery_state_to_memory(service_id)
+        
+        # Record shutdown
+        if self._memory:
+            try:
+                await self._memory.record_episode(
+                    agent_id="orchestrator",
+                    event_type="decision",
+                    description="Orchestrator shutdown - states saved to memory",
+                    importance=0.6
+                )
+            except:
+                pass
         
         logger.info("Orchestrator stopped")
     
@@ -251,10 +413,10 @@ class Orchestrator:
         """Main health polling loop."""
         while self._running:
             try:
-                for service_id, config in self._services.items():
+                for service_id in self._services:
                     await self._check_service_health(service_id)
                 
-                await asyncio.sleep(10)  # Poll every 10 seconds
+                await asyncio.sleep(10)
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -270,7 +432,6 @@ class Orchestrator:
         if not config or not status or not breaker:
             return status
         
-        # Check circuit breaker
         if not breaker.can_execute():
             status.state = ServiceState.FAILED
             return status
@@ -279,7 +440,6 @@ class Orchestrator:
         
         try:
             if config.health_url:
-                # HTTP health check
                 import aiohttp
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
@@ -292,10 +452,9 @@ class Orchestrator:
                         if resp.status == 200:
                             self._record_success(service_id)
                         else:
-                            self._record_failure(service_id, f"HTTP {resp.status}")
+                            await self._record_failure(service_id, f"HTTP {resp.status}")
             
             elif config.host and config.port:
-                # TCP health check
                 try:
                     reader, writer = await asyncio.wait_for(
                         asyncio.open_connection(config.host, config.port),
@@ -308,10 +467,10 @@ class Orchestrator:
                     status.response_time_ms = (end_time - start_time).total_seconds() * 1000
                     self._record_success(service_id)
                 except (asyncio.TimeoutError, ConnectionRefusedError, OSError) as e:
-                    self._record_failure(service_id, str(e))
+                    await self._record_failure(service_id, str(e))
         
         except Exception as e:
-            self._record_failure(service_id, str(e))
+            await self._record_failure(service_id, str(e))
         
         status.last_check = datetime.now(timezone.utc)
         return status
@@ -330,7 +489,6 @@ class Orchestrator:
         
         breaker.record_success()
         
-        # Transition to healthy
         if status.state in [ServiceState.DEGRADED, ServiceState.RECOVERING]:
             config = self._services.get(service_id)
             if config and status.consecutive_successes >= config.recovery_threshold:
@@ -338,12 +496,14 @@ class Orchestrator:
                 status.state = ServiceState.HEALTHY
                 status.recovery_attempts = 0
                 self._emit_event("service_recovered", service_id, old_state)
+                # Record recovery in memory
+                asyncio.create_task(self._record_health_event(service_id, "recovered"))
         elif status.state == ServiceState.STARTING:
             status.state = ServiceState.HEALTHY
             status.uptime_start = datetime.now(timezone.utc)
             self._emit_event("service_started", service_id)
     
-    def _record_failure(self, service_id: str, error: str) -> None:
+    async def _record_failure(self, service_id: str, error: str) -> None:
         """Record failed health check."""
         status = self._status.get(service_id)
         breaker = self._circuit_breakers.get(service_id)
@@ -359,19 +519,21 @@ class Orchestrator:
         
         breaker.record_failure()
         
-        # Transition based on failure count
         old_state = status.state
         
         if status.consecutive_failures >= config.failure_threshold:
             status.state = ServiceState.UNHEALTHY
             
-            # Trigger failover if configured
+            # Record in memory
+            await self._record_health_event(service_id, "unhealthy", error)
+            
             if config.fallback_service_id:
                 asyncio.create_task(self._trigger_failover(service_id))
             
             self._emit_event("service_unhealthy", service_id, error)
         elif status.consecutive_failures >= config.failure_threshold // 2:
             status.state = ServiceState.DEGRADED
+            await self._record_health_event(service_id, "degraded", error)
             self._emit_event("service_degraded", service_id, error)
     
     async def _trigger_failover(self, failed_service_id: str) -> None:
@@ -387,17 +549,27 @@ class Orchestrator:
         
         logger.info(f"Triggering failover from {failed_service_id} to {config.fallback_service_id}")
         
-        # Save recovery state
-        await self._save_recovery_state(failed_service_id)
+        # Save recovery state to memory
+        await self._save_recovery_state_to_memory(failed_service_id)
         
-        # Notify of failover
+        # Record failover in memory
+        if self._memory:
+            await self._memory.record_episode(
+                agent_id="orchestrator",
+                event_type="decision",
+                description=f"Failover triggered from {failed_service_id} to {config.fallback_service_id}",
+                context={
+                    "failed_service": failed_service_id,
+                    "fallback_service": config.fallback_service_id
+                },
+                importance=0.9
+            )
+        
         self._emit_event("failover_triggered", failed_service_id, config.fallback_service_id)
-        
-        # Start recovery attempts
         asyncio.create_task(self._attempt_recovery(failed_service_id))
     
     async def _attempt_recovery(self, service_id: str) -> None:
-        """Attempt to recover a failed service."""
+        """Attempt to recover a failed service with memory-based state restoration."""
         config = self._services.get(service_id)
         status = self._status.get(service_id)
         
@@ -406,30 +578,57 @@ class Orchestrator:
         
         status.state = ServiceState.RECOVERING
         
+        # Query previous successful configurations from memory
+        if self._memory:
+            try:
+                history = await self._memory.agent_recall(
+                    agent_id="orchestrator",
+                    tags=["recovery", service_id],
+                    layer="system",
+                    limit=5
+                )
+                
+                if history:
+                    logger.info(f"Found {len(history)} recovery records for {service_id} in memory")
+            except:
+                pass
+        
         for attempt in range(config.max_retries):
             status.recovery_attempts = attempt + 1
             
             logger.info(f"Recovery attempt {attempt + 1}/{config.max_retries} for {service_id}")
             
-            # Wait with exponential backoff
             delay = config.retry_delay * (2 ** attempt)
             await asyncio.sleep(delay)
             
-            # Check health
             result = await self._check_service_health(service_id)
             
             if result.state == ServiceState.HEALTHY:
-                # Restore recovery state
-                await self._restore_recovery_state(service_id)
+                if self._memory:
+                    await self._memory.record_episode(
+                        agent_id="orchestrator",
+                        event_type="task_completion",
+                        description=f"Service {service_id} recovered after {attempt + 1} attempts",
+                        outcome="success",
+                        importance=0.8
+                    )
                 logger.info(f"Service {service_id} recovered successfully")
                 return
         
-        # Recovery failed
         status.state = ServiceState.FAILED
         self._emit_event("recovery_failed", service_id, status.recovery_attempts)
+        
+        if self._memory:
+            await self._memory.record_episode(
+                agent_id="orchestrator",
+                event_type="error",
+                description=f"Service {service_id} recovery failed after {status.recovery_attempts} attempts",
+                outcome="failure",
+                importance=0.9
+            )
     
     async def _save_recovery_state(self, service_id: str) -> None:
-        """Save state for recovery."""
+        """Save state for recovery (legacy + memory)."""
         recovery = RecoveryState(
             service_id=service_id,
             saved_at=datetime.now(timezone.utc),
@@ -437,6 +636,10 @@ class Orchestrator:
             context={"reason": "failover"}
         )
         self._recovery_states[service_id] = recovery
+        
+        # Also save to memory system
+        await self._save_recovery_state_to_memory(service_id)
+        
         logger.debug(f"Saved recovery state for {service_id}")
     
     async def _restore_recovery_state(self, service_id: str) -> None:
@@ -480,7 +683,6 @@ class Orchestrator:
                 }
             return {}
         
-        # Return all statuses
         return {
             sid: {
                 "state": s.state.value,
@@ -508,7 +710,8 @@ class Orchestrator:
             "health_percentage": round(healthy / total * 100, 1) if total else 0,
             "critical_services_healthy": critical_healthy,
             "critical_services_total": critical_total,
-            "running": self._running
+            "running": self._running,
+            "memory_enabled": self._memory_initialized
         }
 
 

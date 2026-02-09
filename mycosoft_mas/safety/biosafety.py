@@ -1,4 +1,4 @@
-﻿"""Biosafety Monitor. Created: February 3, 2026"""
+"""Biosafety Monitor. Created: February 3, 2026"""
 from typing import Any, Dict, List
 from enum import Enum
 

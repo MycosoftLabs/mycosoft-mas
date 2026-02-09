@@ -27,6 +27,7 @@ from mycosoft_mas.core.voice_feedback_store import VoiceFeedbackStore
 from mycosoft_mas.core.routes_infrastructure import router as infrastructure_router
 from mycosoft_mas.core.routers.agent_registry_api import get_agent_registry
 from mycosoft_mas.core.routers.agent_registry_api import router as agent_registry_router
+from mycosoft_mas.core.routers.orchestrator_api import router as orchestrator_api_router
 from mycosoft_mas.core.routers.agent_runner_api import router as agent_runner_router
 from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
@@ -43,6 +44,12 @@ from mycosoft_mas.core.routers.bio_api import router as bio_router
 from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
+from mycosoft_mas.core.routers.timeline_api import router as timeline_router
+from mycosoft_mas.monitoring.health_check import get_health_checker
+from mycosoft_mas.monitoring.metrics import get_metrics
+from mycosoft_mas.realtime.pubsub import get_hub
+from fastapi import WebSocket
+from fastapi.responses import PlainTextResponse
 
 # Earth-2 AI Weather Integration
 try:
@@ -258,6 +265,7 @@ app.add_middleware(RateLimitMiddleware)
 # ---------------------------------------------------------------------------
 
 app.include_router(agent_registry_router)
+app.include_router(orchestrator_api_router)
 app.include_router(agent_runner_router)
 app.include_router(coding_router)
 app.include_router(integrations_router)
@@ -275,6 +283,7 @@ app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
+app.include_router(timeline_router, tags=["timeline"])
 
 # Earth-2 AI Weather API
 if EARTH2_API_AVAILABLE:
@@ -303,18 +312,52 @@ except NameError:
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    return {
-        "status": "ok",
-        "service": "mas",
-        "version": __version__,
-        "git_sha": _get_git_sha(),
-        "services": {
-            # Keep shape stable for UIs that expect a nested object.
-            "api": "ok",
-        },
-        # Optional: can be populated later with real agent runner state.
-        "agents": [],
-    }
+    checker = get_health_checker()
+    result = await checker.check_all()
+    result["service"] = "mas"
+    result["version"] = __version__
+    result["git_sha"] = _get_git_sha()
+    result.setdefault("services", {})["api"] = "ok"
+    result.setdefault("agents", [])
+    return result
+
+
+@app.get("/ready")
+async def ready() -> dict[str, Any]:
+    """Kubernetes liveness/readiness."""
+    checker = get_health_checker()
+    return await checker.readiness()
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+async def metrics():
+    """Prometheus metrics scrape endpoint."""
+    return get_metrics().to_prometheus()
+
+
+@app.websocket("/ws/realtime")
+async def websocket_realtime(websocket: WebSocket):
+    """WebSocket for real-time pub/sub (aircraft:global, vessels:global, etc)."""
+    import uuid
+    hub = get_hub()
+    await hub.initialize()
+    conn_id = str(uuid.uuid4())
+    await hub.connect(websocket, conn_id)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            if data.get("type") == "subscribe":
+                chans = data.get("channels", [])
+                if chans:
+                    await hub.subscribe(conn_id, chans)
+                await websocket.send_json({"type": "subscribed", "channels": chans})
+            elif data.get("type") == "unsubscribe":
+                for ch in data.get("channels", []):
+                    await hub.unsubscribe(conn_id, ch)
+                await websocket.send_json({"type": "unsubscribed"})
+    except Exception:
+        await hub.disconnect(conn_id)
+        raise
 
 
 @app.get("/version")
@@ -640,6 +683,34 @@ async def voice_feedback_summary() -> dict[str, Any]:
     return {"status": "ok", "summary": _feedback_store.summary()}
 
 
+# ---------------------------------------------------------------------------
+# Startup - Initialize agent registry (all agents active 24/7)
+# ---------------------------------------------------------------------------
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize all agents as active and ready 24/7."""
+    import logging
+    logger = logging.getLogger("MAS_Startup")
+    
+    # Get agent registry - this loads all 42+ agents and marks them active
+    registry = get_agent_registry()
+    all_agents = registry.list_all()
+    active_agents = registry.list_active()
+    
+    logger.info(f"🚀 MAS Orchestrator starting...")
+    logger.info(f"✓ Agent registry loaded: {len(all_agents)} total agents")
+    logger.info(f"✓ Active agents (24/7): {len(active_agents)}")
+    logger.info(f"✓ All agents are idle and ready to process tasks")
+    
+    # Log category breakdown
+    from mycosoft_mas.core.agent_registry import AgentCategory
+    for category in AgentCategory:
+        cat_agents = registry.list_by_category(category)
+        if cat_agents:
+            logger.info(f"  - {category.value}: {len(cat_agents)} agents")
+    
+    logger.info("✓ MAS ready - all agents operational 24/7")
 
 
 

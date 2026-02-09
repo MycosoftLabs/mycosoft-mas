@@ -101,13 +101,17 @@ curl -X POST http://192.168.0.188:8001/coding/claude/create-agent \
 ### Self-Improvement
 System Monitor detects recurring error -> Orchestrator submits fix_bug task -> CodingAgent invokes Claude Code -> Bug fixed automatically.
 
-## VM Setup Required
+## Prerequisites / VM setup
 
-On Sandbox VM (192.168.0.187):
-1. Claude Code installed (already done)
-2. Set `ANTHROPIC_API_KEY` environment variable
-3. Push MAS repo code so CLAUDE.md and .claude/ are available
-4. Test: `claude -p "What is this project?" --output-format json`
+**VM 187 (Sandbox):**
+- Git clone of MAS at `/opt/mycosoft/mas` (or the path used by CodingAgent; deploy script can clone if the directory is empty).
+- Claude Code CLI installed and in PATH.
+- `ANTHROPIC_API_KEY` set (e.g. in `~/.bashrc`) so it is available for non-interactive SSH sessions; use `bash -lc` when invoking over SSH so `.bashrc` is sourced.
+- Test: `claude -p "What is this project?" --output-format json`.
+
+**VM 188 (MAS):**
+- MAS Docker image includes **openssh-client** so the container can run `ssh` to 187.
+- Optional: for passwordless SSH from container to 187, set up key-based auth: generate a key pair, add the public key to 187’s `~mycosoft/.ssh/authorized_keys`, place the private key on 188 at `/home/mycosoft/.ssh/mas_to_sandbox`, and run the container with `-e MAS_SSH_KEY_PATH=/run/secrets/mas_ssh_key` and `-v /home/mycosoft/.ssh/mas_to_sandbox:/run/secrets/mas_ssh_key:ro`. The deploy script and `_rebuild_mas_container.py` add these when that key file exists on 188.
 
 ## Related Documents
 

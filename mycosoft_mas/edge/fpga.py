@@ -1,4 +1,4 @@
-﻿"""FPGA Controller for signal processing"""
+"""FPGA Controller for signal processing"""
 import logging
 from typing import Any, Dict
 

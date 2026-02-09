@@ -1,4 +1,4 @@
-﻿"""Base Device Class for all NatureOS hardware devices."""
+"""Base Device Class for all NatureOS hardware devices."""
 import asyncio
 import logging
 from abc import ABC, abstractmethod

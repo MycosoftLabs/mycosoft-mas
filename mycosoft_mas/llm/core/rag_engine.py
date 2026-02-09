@@ -1,4 +1,4 @@
-﻿"""
+"""
 RAG Engine - Retrieval Augmented Generation
 For MYCA scientific knowledge retrieval and generation.
 Created: February 3, 2026

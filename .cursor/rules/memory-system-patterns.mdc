@@ -1,0 +1,35 @@
+---
+description: Memory system coding patterns for the 6-layer MYCA memory architecture
+globs: "mycosoft_mas/memory/**/*.py"
+alwaysApply: false
+---
+
+# Memory System Patterns
+
+## 6-Layer Architecture
+
+| Layer | Scope | Key |
+|-------|-------|-----|
+| Ephemeral | Single request | Seconds retention |
+| Session | Conversation | Hours retention |
+| Working | Active task | Days retention |
+| Semantic | Knowledge | Permanent |
+| Episodic | Experiences | Permanent |
+| System | Platform | Permanent |
+
+## Required Patterns
+
+- Always specify memory scope when writing
+- Use proper retention policies per layer
+- Connect to MINDEX (192.168.0.189) for persistence
+- Use Qdrant for vector/embedding storage
+- Use Redis for caching and session state
+- Never use mock data -- all memory operations must use real storage
+
+## Context Injection
+
+When injecting memory into LLM prompts, retrieve relevant memories from appropriate layers and format as structured context.
+
+## After Changes
+
+Update `docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md` with any new memory components or API changes.

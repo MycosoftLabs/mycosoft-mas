@@ -1,4 +1,4 @@
-﻿"""
+"""
 System Monitor for MYCA Awareness.
 Created: February 5, 2026
 

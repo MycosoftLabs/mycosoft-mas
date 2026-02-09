@@ -1,4 +1,4 @@
-﻿"""
+"""
 Chemistry Simulation Plugin
 RDKit and DeepChem integration for molecular analysis.
 Created: February 3, 2026

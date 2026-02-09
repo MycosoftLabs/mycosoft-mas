@@ -1,70 +1,83 @@
 #!/usr/bin/env python3
-"""Check PostgreSQL configuration"""
-import requests
-import urllib3
+"""
+Check postgres configuration and fix n8n
+Created: February 4, 2026
+"""
+import paramiko
 import time
-import base64
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+VM_HOST = '192.168.0.187'
+VM_USER = 'mycosoft'
+VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
 
-PROXMOX_HOST = "https://192.168.0.202:8006"
-PROXMOX_TOKEN = "root@pam!cursor_agent=bc1c9dc7-6fca-4e89-8a1d-557a9d117a3e"
-VM_ID = 103
-NODE = "pve"
+def run_command(client, cmd, timeout=120):
+    """Execute command and return output."""
+    print(f">>> {cmd}")
+    stdin, stdout, stderr = client.exec_command(cmd, timeout=timeout)
+    out = stdout.read().decode('utf-8', errors='replace').strip()
+    err = stderr.read().decode('utf-8', errors='replace').strip()
+    out_safe = out.encode('ascii', errors='replace').decode('ascii')
+    err_safe = err.encode('ascii', errors='replace').decode('ascii')
+    if out_safe:
+        print(out_safe)
+    if err_safe:
+        print(f"STDERR: {err_safe}")
+    return out
 
-headers = {"Authorization": f"PVEAPIToken={PROXMOX_TOKEN}"}
-
-def exec_cmd(cmd, timeout=60):
-    url = f"{PROXMOX_HOST}/api2/json/nodes/{NODE}/qemu/{VM_ID}/agent/exec"
+def main():
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    
     try:
-        data = {"command": "/bin/bash", "input-data": cmd}
-        r = requests.post(url, headers=headers, data=data, verify=False, timeout=10)
-        if not r.ok:
-            return f"Exec failed: {r.status_code}"
+        print("=" * 60)
+        print("Check Postgres and Fix n8n")
+        print("=" * 60)
+        client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
+        print("Connected!\n")
         
-        pid = r.json().get("data", {}).get("pid")
-        if not pid:
-            return "No PID"
+        # Check postgres environment and users
+        print("Checking postgres container environment...")
+        run_command(client, "docker exec mycosoft-postgres env | grep -i postgres")
         
-        status_url = f"{PROXMOX_HOST}/api2/json/nodes/{NODE}/qemu/{VM_ID}/agent/exec-status"
-        start = time.time()
+        # List postgres users
+        print("\nListing postgres users...")
+        run_command(client, """docker exec mycosoft-postgres psql -U mycosoft -c "\\du" """)
         
-        while time.time() - start < timeout:
-            time.sleep(2)
-            s = requests.get(status_url, headers=headers, params={"pid": pid}, verify=False, timeout=5)
-            if s.ok:
-                data = s.json().get("data", {})
-                if data.get("exited"):
-                    out_b64 = data.get("out-data", "")
-                    err_b64 = data.get("err-data", "")
-                    try:
-                        out = base64.b64decode(out_b64).decode() if out_b64 else ""
-                    except:
-                        out = out_b64
-                    try:
-                        err = base64.b64decode(err_b64).decode() if err_b64 else ""
-                    except:
-                        err = err_b64
-                    return out or err or "Command completed"
-        return "Timeout"
+        # Try with mycosoft user
+        print("\nCreating n8n database and user with mycosoft admin...")
+        run_command(client, """docker exec mycosoft-postgres psql -U mycosoft -c "CREATE DATABASE n8n;" 2>/dev/null || echo 'DB exists'""")
+        run_command(client, """docker exec mycosoft-postgres psql -U mycosoft -c "CREATE USER n8n WITH PASSWORD 'n8npassword';" 2>/dev/null || echo 'User exists'""")
+        run_command(client, """docker exec mycosoft-postgres psql -U mycosoft -c "ALTER USER n8n WITH PASSWORD 'n8npassword';" """)
+        run_command(client, """docker exec mycosoft-postgres psql -U mycosoft -c "GRANT ALL PRIVILEGES ON DATABASE n8n TO n8n;" """)
+        run_command(client, """docker exec mycosoft-postgres psql -U mycosoft -d n8n -c "GRANT ALL ON SCHEMA public TO n8n;" """)
+        
+        # Restart n8n
+        print("\nRestarting n8n...")
+        run_command(client, "docker restart myca-n8n")
+        
+        print("\nWaiting 25 seconds...")
+        time.sleep(25)
+        
+        # Check logs
+        print("\nn8n logs:")
+        run_command(client, "docker logs myca-n8n --tail 20 2>&1")
+        
+        # Test endpoint
+        print("\n" + "=" * 60)
+        print("Testing n8n")
+        print("=" * 60)
+        out = run_command(client, "curl -s -o /dev/null -w '%{http_code}' http://localhost:5678 2>/dev/null || echo '000'")
+        if out == '200':
+            print("\n[SUCCESS] n8n is running at http://192.168.0.187:5678")
+        else:
+            print(f"\n[PENDING] HTTP {out} - may need more time")
+        
     except Exception as e:
-        return str(e)
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        client.close()
 
-print("Checking PostgreSQL configuration on VM...")
-print("-" * 60)
-
-print("\n1. Check docker-compose environment for postgres...")
-result = exec_cmd("grep -A 10 'mycosoft-postgres' /home/mycosoft/mycosoft/mas/docker-compose.always-on.yml 2>&1 | head -20")
-print(result)
-
-print("\n2. Check POSTGRES_USER in .env...")
-result = exec_cmd("grep -i postgres /home/mycosoft/mycosoft/mas/.env 2>&1")
-print(result)
-
-print("\n3. List databases using postgres user...")
-result = exec_cmd("docker exec mycosoft-postgres psql -U postgres -c '\\l' 2>&1")
-print(result)
-
-print("\n4. List roles...")
-result = exec_cmd("docker exec mycosoft-postgres psql -U postgres -c '\\du' 2>&1")
-print(result)
+if __name__ == "__main__":
+    main()

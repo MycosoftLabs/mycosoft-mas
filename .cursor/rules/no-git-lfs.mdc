@@ -1,0 +1,25 @@
+# No Git LFS (All Agents) - CRITICAL
+
+## What happened
+
+On Feb 6, 2026, Git LFS destroyed the dev machine: PersonaPlex model files in `models/personaplex-7b-v1/` had a HuggingFace `.gitattributes` with `filter=lfs` rules. Cursor's background git integration spawned git-lfs processes in an infinite loop, each failed download leaving 7-15 GB temp files. 1,572 failures = **1.74 TB of garbage** that filled the 8TB drive and destroyed all Cursor chat history.
+
+## Rules for ALL agents
+
+1. **NEVER enable Git LFS** in any Mycosoft repo. Do not add `filter=lfs` to any `.gitattributes` file. Do not run `git lfs install` or `git lfs track`.
+
+2. **If you see `.gitattributes` with `filter=lfs`** (e.g. from a HuggingFace clone or submodule), **remove those rules immediately** and flag it in your response.
+
+3. **Large files (models, datasets, binaries >50MB):**
+   - Add to `.gitignore` — never commit to git
+   - Store on NAS (`\\192.168.0.105\mycosoft.com\...`), HuggingFace Hub, or cloud storage
+   - Document download URL in README
+   - Mount at runtime via Docker volume or symlink
+
+4. **If you see `git-lfs` in any process list, script, or config:** flag it as a critical issue. It should never be running on any Mycosoft dev machine.
+
+5. **If disk space is running low or the user reports slowness:** check `.git/lfs/` folder size and run `scripts/prevent-lfs-bloat.ps1`.
+
+## Reference
+
+Full incident report: `docs/PERSONAPLEX_LFS_INCIDENT_AND_PREVENTION_FEB06_2026.md`

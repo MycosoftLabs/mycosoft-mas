@@ -1,4 +1,4 @@
-﻿## Mycosoft MAS (Multi-Agent System)
+## Mycosoft MAS (Multi-Agent System)
 
 Mycosoft MAS is a **distributed multi-agent system** (Python/FastAPI) plus a **web UI (Next.js "MYCA")** and an optional **observability stack** (PostgreSQL, Redis, Qdrant, Prometheus, Grafana).
 
@@ -382,7 +382,7 @@ python scripts/verify_mas.py
 - `docker-compose.yml`, `Dockerfile`, `Dockerfile.next` â€” containerized stack
 - `grafana/`, `prometheus/`, `prometheus.yml` â€” observability configuration
 - `app/`, `components/`, `lib/` â€” Next.js UI
-- `docs/` â€” repo documentation
+- `docs/` â€” repo documentation ([Master Document Index](docs/MASTER_DOCUMENT_INDEX.md), [MyceliumSeg Integration Plan](docs/MYCELIUMSEG_INTEGRATION_PLAN_FEB06_2026.md))
 - `scripts/` â€” operational scripts and helpers
 
 ---
