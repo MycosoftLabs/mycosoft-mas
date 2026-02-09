@@ -44,8 +44,6 @@ from mycosoft_mas.core.routers.bio_api import router as bio_router
 from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
-from mycosoft_mas.core.routers.timeline_api import router as timeline_router
-from mycosoft_mas.core.routers.visualization_api import router as visualization_router
 from mycosoft_mas.monitoring.health_check import get_health_checker
 from mycosoft_mas.monitoring.metrics import get_metrics
 from mycosoft_mas.realtime.pubsub import get_hub
@@ -58,6 +56,13 @@ try:
     EARTH2_API_AVAILABLE = True
 except ImportError:
     EARTH2_API_AVAILABLE = False
+
+# PhysicsNeMo Integration
+try:
+    from mycosoft_mas.core.routers.physicsnemo_api import router as physicsnemo_router
+    PHYSICSNEMO_API_AVAILABLE = True
+except ImportError:
+    PHYSICSNEMO_API_AVAILABLE = False
 
 # MYCA Brain API for PersonaPlex integration
 try:
@@ -284,12 +289,13 @@ app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
-app.include_router(timeline_router, tags=["timeline"])
-app.include_router(visualization_router, tags=["visualization"])
 
 # Earth-2 AI Weather API
 if EARTH2_API_AVAILABLE:
     app.include_router(earth2_router, prefix="/api/earth2", tags=["earth2"])
+
+if PHYSICSNEMO_API_AVAILABLE:
+    app.include_router(physicsnemo_router)
 
 # Voice tools for PersonaPlex bridge
 if VOICE_TOOLS_AVAILABLE:
@@ -712,6 +718,22 @@ async def startup_event():
         if cat_agents:
             logger.info(f"  - {category.value}: {len(cat_agents)} agents")
     
+    # Auto-load active core agents into 24/7 runner
+    try:
+        from mycosoft_mas.core.runner_agent_loader import restart_runner_with_core_agents
+
+        runner_result = await restart_runner_with_core_agents()
+        runner_info = runner_result.get("runner", {})
+        load_info = runner_result.get("load", {})
+        logger.info(
+            "✓ Runner loaded: agents=%s (native=%s, fallback=%s)",
+            runner_info.get("agents", 0),
+            load_info.get("native_loaded", 0),
+            load_info.get("fallback_loaded", 0),
+        )
+    except Exception as exc:
+        logger.warning(f"Runner auto-load failed on startup: {exc}")
+
     logger.info("✓ MAS ready - all agents operational 24/7")
 
 

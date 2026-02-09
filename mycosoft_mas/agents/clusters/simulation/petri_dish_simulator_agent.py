@@ -9,13 +9,14 @@ import asyncio
 import logging
 import json
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.enums import AgentStatus
+from mycosoft_mas.simulation.physics import PhysicsSimulator
 
 class GrowthPhase(Enum):
     """Enumeration of fungal growth phases."""
@@ -85,6 +86,7 @@ class PetriDishSimulatorAgent(BaseAgent):
             "simulations_failed": 0,
             "parameters_updated": 0
         })
+        self.physics_simulator = PhysicsSimulator()
 
     async def initialize(self) -> bool:
         """Initialize the agent and its services."""
@@ -226,18 +228,80 @@ class PetriDishSimulatorAgent(BaseAgent):
 
     async def _run_growth_simulation(self, parameters: GrowthParameters) -> SimulationResult:
         """Run a growth simulation with given parameters."""
-        # Implementation for running growth simulation
-        return None
+        simulation_id = f"petri_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        time_points: List[datetime] = []
+        biomass_values: List[float] = []
+        environmental_data: List[EnvironmentalConditions] = []
+        growth_phases: List[Tuple[datetime, GrowthPhase]] = []
+
+        nutrient_grid = {(x, y): 1.0 for x in range(8) for y in range(8)}
+        biomass = max(parameters.initial_biomass, 0.001)
+        now = datetime.utcnow()
+        for step in range(max(1, min(parameters.time_steps, 120))):
+            diffusion = await self.physics_simulator.simulate_growth_physics(
+                nutrient_field=nutrient_grid,
+                diffusion_coefficient=0.02,
+            )
+            final_field = diffusion.get("final_field", [])
+            mean_nutrient = 1.0
+            if final_field and isinstance(final_field, list):
+                try:
+                    mean_nutrient = float(np.mean(np.array(final_field, dtype=np.float32)))
+                except Exception:
+                    mean_nutrient = 1.0
+
+            growth_factor = max(0.05, min(2.5, mean_nutrient))
+            biomass += parameters.growth_rate * growth_factor * (parameters.duration / max(parameters.time_steps, 1))
+
+            point_time = now + timedelta(hours=step)
+            time_points.append(point_time)
+            biomass_values.append(float(biomass))
+            env = EnvironmentalConditions(
+                temperature=float(parameters.reaction_conditions.get("temperature", 24.0)),
+                humidity=float(parameters.reaction_conditions.get("humidity", 80.0)),
+                ph=float(parameters.reaction_conditions.get("ph", 6.0)),
+                light_intensity=float(parameters.reaction_conditions.get("light_intensity", 0.0)),
+                co2_level=float(parameters.reaction_conditions.get("co2_level", 500.0)),
+                nutrients={"mean_nutrient": mean_nutrient},
+                timestamp=point_time,
+            )
+            environmental_data.append(env)
+            phase = GrowthPhase.EXPONENTIAL if biomass > parameters.initial_biomass * 1.2 else GrowthPhase.LAG
+            growth_phases.append((point_time, phase))
+
+        return SimulationResult(
+            simulation_id=simulation_id,
+            parameters=parameters,
+            time_points=time_points,
+            biomass_values=biomass_values,
+            environmental_data=environmental_data,
+            growth_phases=growth_phases,
+            metadata={"engine": "physicsnemo"},
+            created_at=datetime.utcnow(),
+        )
 
     async def _process_environmental_conditions(self, data: EnvironmentalConditions) -> Dict[str, Any]:
         """Process environmental conditions data."""
-        # Implementation for processing environmental data
-        return {}
+        heat = await self.physics_simulator.simulate_heat_transfer(
+            geometry={"width": 16, "height": 16, "thermal_diffusivity": 0.02},
+            boundary_conditions={"ambient": data.temperature},
+            time_seconds=30.0,
+        )
+        max_temp = float(heat.get("max_temperature", data.temperature))
+        return {
+            "status": "processed",
+            "max_temperature": max_temp,
+            "humidity": data.humidity,
+            "co2_level": data.co2_level,
+            "engine": "physicsnemo",
+        }
 
     async def _update_simulations_with_environment(self, data: EnvironmentalConditions):
         """Update simulations with new environmental data."""
-        # Implementation for updating simulations
-        pass
+        for simulation_id, simulation in self.simulations.items():
+            if simulation.environmental_data:
+                simulation.environmental_data[-1] = data
+                simulation.metadata["last_environment_update"] = datetime.utcnow().isoformat()
 
     async def _process_simulation_queue(self):
         """Process the simulation queue."""
