@@ -96,6 +96,13 @@ try:
 except ImportError:
     TOOLS_API_AVAILABLE = False
 
+# MYCA Consciousness API - unified entry point for all chat/voice
+try:
+    from mycosoft_mas.core.routers.consciousness_api import router as consciousness_router
+    CONSCIOUSNESS_API_AVAILABLE = True
+except ImportError:
+    CONSCIOUSNESS_API_AVAILABLE = False
+
 # N8N Client - use mycosoft_mas path
 try:
     from mycosoft_mas.integrations.n8n_client import N8NClient
@@ -325,6 +332,13 @@ if BRAIN_API_AVAILABLE:
 try:
     if TOOLS_API_AVAILABLE:
         app.include_router(tools_router, tags=["myca-tools"])
+except NameError:
+    pass
+
+# MYCA Consciousness API - unified entry point for all chat/voice
+try:
+    if CONSCIOUSNESS_API_AVAILABLE:
+        app.include_router(consciousness_router, tags=["myca-consciousness"])
 except NameError:
     pass
 
