@@ -1,4 +1,4 @@
-﻿"""
+"""
 Mycosoft Multi-Agent System (MAS) - Base Agent
 Updated: February 5, 2026 - Added AgentMemoryMixin for memory integration
 
@@ -476,3 +476,193 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin):
     async def _handle_notification(self, notification: Dict[str, Any]):
         """Handle notifications from the queue."""
         self.logger.info(f"Agent notification: {notification}")
+    
+    # ==================== SELF-HEALING CODE MODIFICATION ====================
+    
+    async def request_code_change(
+        self,
+        description: str,
+        reason: str,
+        target_files: Optional[List[str]] = None,
+        priority: int = 5,
+    ) -> Dict[str, Any]:
+        """
+        Request a code change through the CodeModificationService.
+        
+        Any agent can request code changes, which will be:
+        1. Reviewed by SecurityCodeReviewer
+        2. Executed by CodingAgent
+        3. Monitored for vulnerabilities
+        
+        Args:
+            description: What code change to make
+            reason: Why this change is needed
+            target_files: Optional list of files to modify
+            priority: 1-10, higher = more urgent
+            
+        Returns:
+            Dict with change_id, status, and message
+        """
+        self.logger.info(f"Agent {self.agent_id} requesting code change: {description[:50]}...")
+        
+        try:
+            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+            
+            code_service = await get_code_modification_service()
+            result = await code_service.request_code_change(
+                requester_id=self.agent_id,
+                change_type="update_code",
+                description=description,
+                target_files=target_files,
+                priority=priority,
+                context={"reason": reason, "agent_name": self.name},
+            )
+            
+            # Record this request in memory
+            if hasattr(self, '_memory_initialized') and self._memory_initialized:
+                await self.remember(
+                    content=f"Requested code change: {description}",
+                    tags=["code_change", "self_healing"],
+                    metadata={
+                        "change_id": result.get("change_id"),
+                        "reason": reason,
+                        "status": result.get("status"),
+                    }
+                )
+            
+            self.logger.info(f"Code change request submitted: {result.get('change_id')}")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Failed to request code change: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "change_id": None,
+            }
+    
+    async def request_self_improvement(
+        self,
+        improvement_description: str,
+        priority: int = 3,
+    ) -> Dict[str, Any]:
+        """
+        Request an improvement to this agent's own code.
+        
+        The agent can identify ways to improve itself and submit
+        requests through the CodeModificationService.
+        
+        Args:
+            improvement_description: What improvement to make
+            priority: 1-10, higher = more urgent (default low priority)
+            
+        Returns:
+            Dict with change_id, status, and message
+        """
+        self.logger.info(f"Agent {self.agent_id} requesting self-improvement...")
+        
+        # Determine the agent's file path
+        agent_file = f"mycosoft_mas/agents/{self.agent_id}.py"
+        
+        try:
+            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+            
+            code_service = await get_code_modification_service()
+            result = await code_service.request_code_change(
+                requester_id=self.agent_id,
+                change_type="self_improve",
+                description=f"Self-improvement for {self.name} ({self.agent_id}): {improvement_description}",
+                target_files=[agent_file],
+                priority=priority,
+                context={
+                    "agent_id": self.agent_id,
+                    "agent_name": self.name,
+                    "capabilities": list(self.capabilities),
+                    "improvement_type": "self_requested",
+                },
+            )
+            
+            # Record this in memory
+            if hasattr(self, '_memory_initialized') and self._memory_initialized:
+                await self.remember(
+                    content=f"Requested self-improvement: {improvement_description}",
+                    tags=["self_improvement", "evolution"],
+                    metadata={
+                        "change_id": result.get("change_id"),
+                        "status": result.get("status"),
+                    }
+                )
+            
+            self.logger.info(f"Self-improvement request submitted: {result.get('change_id')}")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Failed to request self-improvement: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "change_id": None,
+            }
+    
+    async def report_bug_for_fix(
+        self,
+        error_message: str,
+        stack_trace: Optional[str] = None,
+        affected_files: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Report a bug encountered during operation for automatic fixing.
+        
+        When an agent encounters an error, it can report it to the
+        self-healing system for automatic analysis and fixing.
+        
+        Args:
+            error_message: The error that occurred
+            stack_trace: Optional stack trace
+            affected_files: Optional list of files involved
+            
+        Returns:
+            Dict with change_id and status
+        """
+        self.logger.info(f"Agent {self.agent_id} reporting bug for fix: {error_message[:50]}...")
+        
+        try:
+            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+            
+            code_service = await get_code_modification_service()
+            result = await code_service.request_code_change(
+                requester_id=self.agent_id,
+                change_type="fix_bug",
+                description=f"Bug fix for error in {self.name}: {error_message}",
+                target_files=affected_files,
+                priority=7,  # Higher priority for bug fixes
+                context={
+                    "error_message": error_message,
+                    "stack_trace": stack_trace,
+                    "agent_id": self.agent_id,
+                    "agent_name": self.name,
+                    "auto_reported": True,
+                },
+            )
+            
+            # Record the bug report in memory
+            if hasattr(self, '_memory_initialized') and self._memory_initialized:
+                await self.record_error(
+                    error_message,
+                    {
+                        "stack_trace": stack_trace,
+                        "change_id": result.get("change_id"),
+                        "fix_requested": True,
+                    }
+                )
+            
+            self.logger.info(f"Bug fix request submitted: {result.get('change_id')}")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Failed to report bug for fix: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "change_id": None,
+            }

@@ -1,5 +1,8 @@
 # Master Document Index
 
+## Self-Healing MAS Infrastructure (Feb 9, 2026)
+- `docs/SELF_HEALING_MAS_INFRASTRUCTURE_FEB09_2026.md` – **Complete self-healing system**: Orchestrator can tell agents to write code, agents can request code changes, SecurityCodeReviewer gates all modifications, VulnerabilityScanner detects CVEs/OWASP patterns, SelfHealingMonitor auto-triggers fixes. Includes CodeModificationService, /api/code/* endpoints, BaseAgent integration with request_code_change()/request_self_improvement()/report_bug_for_fix() methods.
+
 ## MycoBrain Device Setup (Feb 9, 2026)
 - `docs/MYCOBRAIN_BETO_SETUP_GUIDE_FEB09_2026.md` – **Complete setup guide for Beto**: Arduino IDE setup, ESP32-S3 board support, firmware upload with boot mode procedure, MycoBrain service startup, Device Manager integration, and troubleshooting. Also references the new skill (`.cursor/skills/mycobrain-setup/`) and subagent (`.cursor/agents/device-firmware.md`).
 
