@@ -349,18 +349,31 @@ Respond thoughtfully and helpfully, staying true to your identity and purpose.""
         
         # Try to use the frontier router if available
         try:
-            from mycosoft_mas.llm.frontier_router import FrontierLLMRouter
+            from mycosoft_mas.llm.frontier_router import FrontierLLMRouter, ConversationContext
+            import uuid
+            
             router = FrontierLLMRouter()
             
+            # Override the persona with our system prompt for this session
+            router.persona = system_prompt
+            
+            # Create a conversation context
+            ctx = ConversationContext(
+                session_id=str(uuid.uuid4()),
+                conversation_id=str(uuid.uuid4()),
+                user_id="morgan",
+                turn_count=1,
+                history=[],  # Empty history for new conversation
+            )
+            
             async for token in router.stream_response(
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ]
+                message=user_prompt,
+                context=ctx,
             ):
                 yield token
-        except ImportError:
+        except ImportError as e:
             # Fallback to basic response
+            logger.warning(f"Could not import FrontierLLMRouter: {e}")
             yield "I understand your message. Let me think about this carefully... "
             yield f"Based on the context I have, I can help you with that. {input_content[:100]}"
         except Exception as e:
