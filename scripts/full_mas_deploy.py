@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""
+Full MAS Deployment Script - Deploys latest code to VM 188 and restarts MAS orchestrator.
+FEB 10, 2026
+"""
+
+import subprocess
+import sys
+import time
+
+# Paramiko for SSH
+try:
+    import paramiko
+except ImportError:
+    print("Installing paramiko...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "paramiko", "-q"])
+    import paramiko
+
+# VM Configuration
+VM_188 = "192.168.0.188"
+SSH_USER = "mycosoft"
+SSH_PASS = "Mushroom1!Mushroom1!"
+
+# Mycorrhizae API Key for MAS
+MAS_MYCORRHIZAE_KEY = "myco_mas_kck8lD0E8sPvfob_EQS4xnuuj5h1WB7Ss72Y8xoz9QQ"
+
+
+def ssh_exec(host: str, cmd: str, timeout: int = 120) -> tuple:
+    """Execute SSH command and return (stdout, stderr, exit_code)"""
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        client.connect(host, username=SSH_USER, password=SSH_PASS, timeout=30)
+        stdin, stdout, stderr = client.exec_command(cmd, timeout=timeout)
+        out = stdout.read().decode('utf-8', errors='replace')
+        err = stderr.read().decode('utf-8', errors='replace')
+        code = stdout.channel.recv_exit_status()
+        return out, err, code
+    finally:
+        client.close()
+
+
+def main():
+    print("=" * 60)
+    print("FULL MAS DEPLOYMENT TO VM 188")
+    print("=" * 60)
+    
+    # Step 1: Check if git is clean on VM and pull latest
+    print("\n[1/5] Pulling latest code on VM 188...")
+    out, err, code = ssh_exec(VM_188, """
+cd /home/mycosoft/mycosoft/mas
+git fetch origin
+git reset --hard origin/main
+git log -1 --oneline
+""")
+    print(out)
+    if code != 0:
+        print(f"[WARN] Git pull had issues: {err}")
+    
+    # Step 2: Verify critical file exists
+    print("\n[2/5] Verifying iot_envelope_api.py exists...")
+    out, err, code = ssh_exec(VM_188, """
+ls -la /home/mycosoft/mycosoft/mas/mycosoft_mas/core/routers/iot_envelope_api.py 2>/dev/null || echo "FILE_NOT_FOUND"
+""")
+    if "FILE_NOT_FOUND" in out:
+        print("[ERROR] iot_envelope_api.py not found after pull!")
+        print("The file may not be pushed to GitHub yet.")
+        print("Please run: git add . && git commit -m 'Add IoT envelope API' && git push")
+        sys.exit(1)
+    print(out.strip())
+    print("[OK] Critical file exists")
+    
+    # Step 3: Stop current MAS container
+    print("\n[3/5] Stopping current MAS container...")
+    out, err, code = ssh_exec(VM_188, """
+docker stop myca-orchestrator-new 2>/dev/null || true
+docker rm myca-orchestrator-new 2>/dev/null || true
+docker ps -a | grep myca
+""")
+    print(out if out.strip() else "Container stopped/removed")
+    
+    # Step 4: Rebuild Docker image
+    print("\n[4/5] Rebuilding MAS Docker image (this takes a few minutes)...")
+    out, err, code = ssh_exec(VM_188, """
+cd /home/mycosoft/mycosoft/mas
+docker build -t mycosoft/mas-agent:latest --no-cache . 2>&1 | tail -20
+""", timeout=600)  # 10 minute timeout for build
+    print(out)
+    if code != 0:
+        print(f"[ERROR] Docker build failed: {err}")
+        sys.exit(1)
+    print("[OK] Docker image rebuilt")
+    
+    # Step 5: Start MAS with Mycorrhizae configuration
+    print("\n[5/5] Starting MAS container with Mycorrhizae API configuration...")
+    out, err, code = ssh_exec(VM_188, f"""
+docker run -d --name myca-orchestrator-new \\
+  --restart unless-stopped \\
+  --network host \\
+  -e MYCORRHIZAE_API_URL=http://127.0.0.1:8002 \\
+  -e MYCORRHIZAE_API_KEY={MAS_MYCORRHIZAE_KEY} \\
+  -e DATABASE_URL=postgresql://mycosoft:mycosoft_mindex_2026@192.168.0.189:5432/mindex \\
+  -e REDIS_URL=redis://192.168.0.189:6379/0 \\
+  -e N8N_URL=http://192.168.0.188:5678 \\
+  mycosoft/mas-agent:latest
+
+sleep 3
+docker ps | grep myca
+""")
+    print(out)
+    if "myca-orchestrator-new" not in out:
+        print(f"[ERROR] Container failed to start: {err}")
+        out2, _, _ = ssh_exec(VM_188, "docker logs myca-orchestrator-new 2>&1 | tail -30")
+        print("Recent logs:")
+        print(out2)
+        sys.exit(1)
+    
+    # Wait for health check
+    print("\n[+] Waiting for MAS to become healthy...")
+    for i in range(10):
+        time.sleep(3)
+        out, err, code = ssh_exec(VM_188, "curl -s http://127.0.0.1:8001/health 2>/dev/null || echo 'NOT_READY'")
+        if "NOT_READY" not in out and "error" not in out.lower():
+            print(f"[OK] MAS is healthy: {out.strip()}")
+            break
+        print(f"  Attempt {i+1}/10: {out.strip()[:50]}...")
+    else:
+        print("[WARN] MAS health check still failing after 30 seconds")
+        out, _, _ = ssh_exec(VM_188, "docker logs myca-orchestrator-new 2>&1 | tail -50")
+        print("Recent logs:")
+        print(out)
+    
+    # Final verification
+    print("\n" + "=" * 60)
+    print("DEPLOYMENT SUMMARY")
+    print("=" * 60)
+    out, err, code = ssh_exec(VM_188, """
+echo "MAS Container Status:"
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -E 'NAMES|myca'
+
+echo ""
+echo "Mycorrhizae Container Status:"
+docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -E 'NAMES|mycorrhizae'
+
+echo ""
+echo "Health Check Results:"
+echo "  MAS:         $(curl -s http://127.0.0.1:8001/health 2>/dev/null | head -c 100 || echo 'FAILED')"
+echo "  Mycorrhizae: $(curl -s http://127.0.0.1:8002/health 2>/dev/null | head -c 100 || echo 'FAILED')"
+""")
+    print(out)
+    
+    print("\n[DONE] Full MAS deployment complete!")
+    print(f"\nMAS API: http://192.168.0.188:8001")
+    print(f"Mycorrhizae API: http://192.168.0.188:8002")
+
+
+if __name__ == "__main__":
+    main()
