@@ -46,13 +46,7 @@ So: **turning off LFS to protect the PC is exactly what made GitHub push stop wo
 - **`.lfsconfig`** was updated to use **`concurrenttransfers = 1`** (minimum value that allows LFS uploads) while keeping **`fetchexclude = *`** so Cursor still does **not** download LFS files on this PC.
 - This matches the fix in `docs/GIT_CRISIS_AND_COMPREHENSIVE_FIX_FEB10_2026.md`.
 
-After that change, run:
-
-```bash
-git add .lfsconfig
-git commit -m "fix: allow LFS push with concurrenttransfers=1, keep fetchexclude to protect PC"
-git push origin main
-```
+After that change, the push was run again. **Result: push succeeded** (`9e0491c77..17443f20c  main -> main` in under 5 seconds). So the root cause is confirmed: `concurrenttransfers = 0` was breaking push; `concurrenttransfers = 1` fixes it.
 
 ---
 
