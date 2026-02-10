@@ -1,5 +1,11 @@
 # Master Document Index
 
+## Mycorrhizae and MAS Deployment (Feb 10, 2026)
+- `docs/MYCORRHIZAE_AND_MAS_DEPLOYMENT_COMPLETE_FEB10_2026.md` – **Complete deployment**: Mycorrhizae Protocol API deployed on VM 188 (port 8002), MAS Orchestrator configured with API key authentication, all services healthy. Includes API keys created (admin + MAS service), container configurations, database schema (api_keys, api_key_usage, api_key_audit), health check URLs, troubleshooting guide, and deployment scripts.
+
+## System Execution Report (Feb 9, 2026)
+- `docs/SYSTEM_EXECUTION_REPORT_FEB09_2026.md` – **Automated execution report**: Cloudflare purge working (credentials configured, tested, automated), website on GitHub (pushed successfully), MAS push blocked by 4 GB repo bloat (needs .gitignore cleanup), VM health (188 OK, 187 timeout), connectivity tests, and fix instructions.
+
 ## Self-Healing MAS Infrastructure (Feb 9, 2026)
 - `docs/SELF_HEALING_MAS_INFRASTRUCTURE_FEB09_2026.md` – **Complete self-healing system**: Orchestrator can tell agents to write code, agents can request code changes, SecurityCodeReviewer gates all modifications, VulnerabilityScanner detects CVEs/OWASP patterns, SelfHealingMonitor auto-triggers fixes. Includes CodeModificationService, /api/code/* endpoints, BaseAgent integration with request_code_change()/request_self_improvement()/report_bug_for_fix() methods.
 
@@ -13,8 +19,9 @@
 ## System Status, Purge, GitHub Path (Feb 9, 2026)
 - `docs/SYSTEM_STATUS_AND_PURGE_FEB09_2026.md` – **Status and purge**: What’s done, what can be done, Cloudflare purge (credentials in .env.local or “agents cat”), GitHub-as-source-of-truth for MAS and website, and “always read latest docs” rule for agents.
 
-## Phase 1 Agent Runtime (Feb 9, 2026)
-- `docs/PHASE1_AGENT_RUNTIME_EXECUTION_REPORT_FEB09_2026.md` – Phase 1 execution report: core 42 runtime, runner loader/startup, optional iot_envelope, Batch 1 (orchestration + utility) real agents, v2 package resilient imports, VM compatibility.
+## Phase 1 Agent Runtime (Feb 9–10, 2026)
+- `docs/PHASE1_AGENT_RUNTIME_EXECUTION_REPORT_FEB09_2026.md` – Phase 1 execution report: all 42 AGENT_CATALOG agents implemented (orchestration, utility, workflow, integration, voice, memory, NatureOS, MycoBrain, financial), runner loader/startup, optional iot_envelope, v2 resilient imports, VM compatibility.
+- `docs/PHASE1_COMPLETION_LOG_FEB10_2026.md` – **Completion log**: What was implemented, committed (f70d25b), push status, deployment procedure for MAS VM 192.168.0.188, verification steps (health, runner/status, agents, cycles), and summary table.
 
 ## PhysicsNeMo Integration (Feb 9, 2026)
 - `docs/PHYSICSNEMO_INTEGRATION_FEB09_2026.md` - PhysicsNeMo container/runtime integration across MAS + Earth2 + CREP, including new `/api/physics/*` proxy endpoints and GPU service lifecycle scripts.
