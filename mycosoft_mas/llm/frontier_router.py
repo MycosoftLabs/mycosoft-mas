@@ -191,8 +191,9 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                 self.provider_health[provider]["healthy"] = False
     
     async def _stream_gemini(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
-        """Stream from Gemini."""
+        """Stream from Gemini with fast failure."""
         import httpx
+        import json
         
         # Convert messages to Gemini format
         contents = []
@@ -221,25 +222,41 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key={self.gemini_api_key}&alt=sse"
         
-        async with httpx.AsyncClient(timeout=60) as client:
-            async with client.stream("POST", url, json=payload) as response:
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        import json
-                        try:
-                            data = json.loads(line[6:])
-                            if "candidates" in data:
-                                for candidate in data["candidates"]:
-                                    if "content" in candidate:
-                                        for part in candidate["content"].get("parts", []):
-                                            if "text" in part:
-                                                yield part["text"]
-                        except json.JSONDecodeError:
-                            continue
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                async with client.stream("POST", url, json=payload) as response:
+                    # Check for error status codes immediately
+                    if response.status_code != 200:
+                        body = await response.aread()
+                        logger.error(f"Gemini API error {response.status_code}: {body[:200]}")
+                        self._mark_provider_failure("gemini")
+                        return
+                    
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            try:
+                                data = json.loads(line[6:])
+                                # Check for error response
+                                if "error" in data:
+                                    logger.error(f"Gemini error: {data['error']}")
+                                    self._mark_provider_failure("gemini")
+                                    return
+                                if "candidates" in data:
+                                    for candidate in data["candidates"]:
+                                        if "content" in candidate:
+                                            for part in candidate["content"].get("parts", []):
+                                                if "text" in part:
+                                                    yield part["text"]
+                            except json.JSONDecodeError:
+                                continue
+        except Exception as e:
+            logger.error(f"Gemini stream error: {e}")
+            self._mark_provider_failure("gemini")
     
     async def _stream_claude(self, messages: List[Dict], system: str) -> AsyncGenerator[str, None]:
-        """Stream from Claude."""
+        """Stream from Claude with fast failure."""
         import httpx
+        import json
         
         # Convert to Claude format
         claude_messages = [m for m in messages if m["role"] != "system"]
@@ -258,28 +275,44 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
             "content-type": "application/json"
         }
         
-        async with httpx.AsyncClient(timeout=60) as client:
-            async with client.stream(
-                "POST",
-                "https://api.anthropic.com/v1/messages",
-                json=payload,
-                headers=headers
-            ) as response:
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        import json
-                        try:
-                            data = json.loads(line[6:])
-                            if data.get("type") == "content_block_delta":
-                                delta = data.get("delta", {})
-                                if "text" in delta:
-                                    yield delta["text"]
-                        except json.JSONDecodeError:
-                            continue
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                async with client.stream(
+                    "POST",
+                    "https://api.anthropic.com/v1/messages",
+                    json=payload,
+                    headers=headers
+                ) as response:
+                    # Check for error status codes immediately
+                    if response.status_code != 200:
+                        body = await response.aread()
+                        logger.error(f"Claude API error {response.status_code}: {body[:200]}")
+                        self._mark_provider_failure("claude")
+                        return
+                    
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            try:
+                                data = json.loads(line[6:])
+                                # Check for error response
+                                if data.get("type") == "error":
+                                    logger.error(f"Claude error: {data}")
+                                    self._mark_provider_failure("claude")
+                                    return
+                                if data.get("type") == "content_block_delta":
+                                    delta = data.get("delta", {})
+                                    if "text" in delta:
+                                        yield delta["text"]
+                            except json.JSONDecodeError:
+                                continue
+        except Exception as e:
+            logger.error(f"Claude stream error: {e}")
+            self._mark_provider_failure("claude")
     
     async def _stream_openai(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
-        """Stream from OpenAI."""
+        """Stream from OpenAI with fast failure."""
         import httpx
+        import json
         
         payload = {
             "model": "gpt-4-turbo-preview",
@@ -293,24 +326,39 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
             "Content-Type": "application/json"
         }
         
-        async with httpx.AsyncClient(timeout=60) as client:
-            async with client.stream(
-                "POST",
-                "https://api.openai.com/v1/chat/completions",
-                json=payload,
-                headers=headers
-            ) as response:
-                async for line in response.aiter_lines():
-                    if line.startswith("data: ") and line != "data: [DONE]":
-                        import json
-                        try:
-                            data = json.loads(line[6:])
-                            if "choices" in data:
-                                delta = data["choices"][0].get("delta", {})
-                                if "content" in delta:
-                                    yield delta["content"]
-                        except json.JSONDecodeError:
-                            continue
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                async with client.stream(
+                    "POST",
+                    "https://api.openai.com/v1/chat/completions",
+                    json=payload,
+                    headers=headers
+                ) as response:
+                    # Check for error status codes immediately
+                    if response.status_code != 200:
+                        body = await response.aread()
+                        logger.error(f"OpenAI API error {response.status_code}: {body[:200]}")
+                        self._mark_provider_failure("openai")
+                        return
+                    
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: ") and line != "data: [DONE]":
+                            try:
+                                data = json.loads(line[6:])
+                                # Check for error response
+                                if "error" in data:
+                                    logger.error(f"OpenAI error: {data['error']}")
+                                    self._mark_provider_failure("openai")
+                                    return
+                                if "choices" in data:
+                                    delta = data["choices"][0].get("delta", {})
+                                    if "content" in delta:
+                                        yield delta["content"]
+                            except json.JSONDecodeError:
+                                continue
+        except Exception as e:
+            logger.error(f"OpenAI stream error: {e}")
+            self._mark_provider_failure("openai")
 
 
 # Singleton instance
