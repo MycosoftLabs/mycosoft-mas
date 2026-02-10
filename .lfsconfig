@@ -1,9 +1,6 @@
-# LFS FULLY DISABLED - Feb 6, 2026 (NEVER CHANGE THIS)
-# Cursor's git integration spawns git-lfs in the background repeatedly.
-# Each failed LFS download leaves a 7-15 GB temp file in .git/lfs/tmp/.
-# Over days this filled the entire 8TB drive with 1.74TB of garbage.
-# This config prevents LFS from doing ANYTHING.
-# See: docs/PERSONAPLEX_LFS_INCIDENT_AND_PREVENTION_FEB06_2026.md
+# LFS: fetchexclude = * prevents Cursor from downloading (avoids 1.74TB bug).
+# concurrenttransfers = 1 is minimum safe value so PUSH works (0 breaks push with HTTP 500).
+# See: docs/PERSONAPLEX_LFS_INCIDENT_AND_PREVENTION_FEB06_2026.md, docs/GIT_CRISIS_AND_COMPREHENSIVE_FIX_FEB10_2026.md
 [lfs]
 	fetchexclude = *
-	concurrenttransfers = 0
+	concurrenttransfers = 1
