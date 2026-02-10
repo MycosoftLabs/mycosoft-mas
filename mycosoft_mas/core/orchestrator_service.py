@@ -401,6 +401,181 @@ class OrchestratorService:
             "pending_tasks": len(self.pending_tasks),
             "message_broker_connected": self.message_broker is not None,
         }
+    
+    # ==================== SELF-HEALING CODE MODIFICATION ====================
+    
+    async def request_code_fix(
+        self,
+        description: str,
+        target_files: Optional[List[str]] = None,
+        priority: int = 5,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Request a code fix through the CodeModificationService.
+        
+        This is the orchestrator's way to trigger code changes.
+        All requests go through security review before execution.
+        
+        Args:
+            description: What code change to make
+            target_files: Optional list of files to modify
+            priority: 1-10, higher = more urgent
+            context: Additional context (error messages, stack traces, etc.)
+            
+        Returns:
+            Dict with change_id, status, and message
+        """
+        logger.info(f"Orchestrator requesting code fix: {description[:50]}...")
+        
+        try:
+            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+            
+            code_service = await get_code_modification_service()
+            result = await code_service.request_code_change(
+                requester_id="orchestrator",
+                change_type="fix_bug",
+                description=description,
+                target_files=target_files,
+                priority=priority,
+                context=context,
+            )
+            
+            logger.info(f"Code fix request submitted: {result.get('change_id')}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Failed to request code fix: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "change_id": None,
+            }
+    
+    async def tell_agent_to_code(
+        self,
+        agent_id: str,
+        coding_task: str,
+        target_files: Optional[List[str]] = None,
+        priority: int = 5,
+    ) -> Dict[str, Any]:
+        """
+        Tell a specific agent to perform a coding task.
+        
+        The orchestrator can direct any agent to make code changes.
+        The request is routed through CodeModificationService for security.
+        
+        Args:
+            agent_id: The agent to direct
+            coding_task: What the agent should code
+            target_files: Optional files to target
+            priority: Task priority
+            
+        Returns:
+            Dict with change_id and status
+        """
+        logger.info(f"Orchestrator telling {agent_id} to code: {coding_task[:50]}...")
+        
+        try:
+            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+            
+            code_service = await get_code_modification_service()
+            result = await code_service.request_code_change(
+                requester_id=f"orchestrator_via_{agent_id}",
+                change_type="update_code",
+                description=f"Agent {agent_id} task: {coding_task}",
+                target_files=target_files,
+                priority=priority,
+                context={"directed_agent": agent_id},
+            )
+            
+            # Also send a message to the agent about this task
+            if self.message_broker:
+                message = AgentMessage(
+                    from_agent="orchestrator",
+                    to_agent=agent_id,
+                    message_type=MessageType.REQUEST,
+                    payload={
+                        "task_type": "coding_assignment",
+                        "coding_task": coding_task,
+                        "change_id": result.get("change_id"),
+                        "target_files": target_files,
+                    },
+                    priority=TaskPriority(priority),
+                )
+                await self.message_broker.publish(f"agent:{agent_id}", message.to_json())
+            
+            logger.info(f"Coding task assigned to {agent_id}: {result.get('change_id')}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Failed to tell agent to code: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "agent_id": agent_id,
+            }
+    
+    async def get_code_change_status(self, change_id: str) -> Dict[str, Any]:
+        """
+        Get the status of a code change request.
+        
+        Args:
+            change_id: The change ID to query
+            
+        Returns:
+            Dict with change status details
+        """
+        try:
+            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+            
+            code_service = await get_code_modification_service()
+            return await code_service.get_change_status(change_id)
+            
+        except Exception as e:
+            logger.error(f"Failed to get code change status: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "change_id": change_id,
+            }
+    
+    async def halt_all_code_changes(self) -> Dict[str, Any]:
+        """
+        Emergency halt all pending code changes.
+        
+        Use this when something goes wrong and all automated
+        code modifications need to stop immediately.
+        """
+        logger.warning("EMERGENCY: Halting all code changes")
+        
+        try:
+            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+            
+            code_service = await get_code_modification_service()
+            result = await code_service.halt_all_changes()
+            
+            # Notify all agents
+            if self.message_broker:
+                event = AgentMessage(
+                    from_agent="orchestrator",
+                    to_agent="broadcast",
+                    message_type=MessageType.EVENT,
+                    payload={
+                        "event": "code_changes_halted",
+                        "reason": "Emergency halt by orchestrator",
+                    },
+                )
+                await self.message_broker.publish("mas:broadcast", event.to_json())
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Failed to halt code changes: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+            }
 
 
 # Create FastAPI app
@@ -574,6 +749,57 @@ async def detect_gaps():
     gaps = await orchestrator.detect_gaps()
     return {"gaps": gaps}
 
+
+# ==================== SELF-HEALING CODE MODIFICATION API ====================
+
+class CodeFixRequest(BaseModel):
+    description: str
+    target_files: Optional[List[str]] = None
+    priority: int = 5
+    context: Optional[Dict[str, Any]] = None
+
+
+class TellAgentToCodeRequest(BaseModel):
+    agent_id: str
+    coding_task: str
+    target_files: Optional[List[str]] = None
+    priority: int = 5
+
+
+@app.post("/code/fix")
+async def request_code_fix(request: CodeFixRequest):
+    """Request a code fix through the orchestrator"""
+    result = await orchestrator.request_code_fix(
+        description=request.description,
+        target_files=request.target_files,
+        priority=request.priority,
+        context=request.context,
+    )
+    return result
+
+
+@app.post("/code/tell-agent")
+async def tell_agent_to_code(request: TellAgentToCodeRequest):
+    """Tell a specific agent to perform a coding task"""
+    result = await orchestrator.tell_agent_to_code(
+        agent_id=request.agent_id,
+        coding_task=request.coding_task,
+        target_files=request.target_files,
+        priority=request.priority,
+    )
+    return result
+
+
+@app.get("/code/status/{change_id}")
+async def get_code_change_status(change_id: str):
+    """Get the status of a code change request"""
+    return await orchestrator.get_code_change_status(change_id)
+
+
+@app.post("/code/halt")
+async def halt_all_code_changes():
+    """Emergency halt all pending code changes"""
+    return await orchestrator.halt_all_code_changes()
 
 
 # ==================== CONNECTION MANAGEMENT ====================
