@@ -1,5 +1,47 @@
+# Auto-detect text files and normalize line endings to LF in repository
+* text=auto eol=lf
+
+# Explicitly declare text files
+*.md text eol=lf
+*.py text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.txt text eol=lf
 *.sh text eol=lf
 *.bash text eol=lf
+Dockerfile text eol=lf
+Makefile text eol=lf
 
-# Keep PowerShell scripts native on Windows
+# Windows-specific files must have CRLF
 *.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.tgz binary
+*.safetensors binary
+*.pt binary
+*.pth binary
+*.db binary
+*.sqlite binary
+*.dll binary
+*.exe binary
+*.so binary
+*.dylib binary

@@ -1,8 +1,9 @@
-# LFS DISABLED - Feb 6, 2026
+# LFS CONFIGURED FOR PUSH SUPPORT - Feb 10, 2026
 # Cursor's git integration spawns git-lfs in the background repeatedly.
 # Each failed LFS download leaves a 7-15 GB temp file in .git/lfs/tmp/.
 # Over days this filled the entire 8TB drive with 1.74TB of garbage.
-# This config prevents LFS from fetching anything.
+# fetchexclude = * prevents Cursor from auto-downloading large files.
+# concurrenttransfers = 1 is minimum safe value to allow pushes while limiting download parallelism.
 [lfs]
 	fetchexclude = *
-	concurrenttransfers = 0
+	concurrenttransfers = 1
