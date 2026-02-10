@@ -44,8 +44,19 @@ from mycosoft_mas.core.routers.bio_api import router as bio_router
 from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
+from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
+try:
+    from mycosoft_mas.core.routers.iot_envelope_api import router as iot_router
+    IOT_ENVELOPE_AVAILABLE = True
+except ImportError:
+    iot_router = None
+    IOT_ENVELOPE_AVAILABLE = False
 from mycosoft_mas.monitoring.health_check import get_health_checker
-from mycosoft_mas.monitoring.metrics import get_metrics
+try:
+    from mycosoft_mas.monitoring.metrics import get_metrics  # type: ignore
+except Exception:  # noqa: BLE001
+    def get_metrics():  # type: ignore[no-redef]
+        return ""
 from mycosoft_mas.realtime.pubsub import get_hub
 from fastapi import WebSocket
 from fastapi.responses import PlainTextResponse
@@ -289,6 +300,11 @@ app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
+if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
+    app.include_router(iot_router, tags=["iot"])
+
+# Device Registry API for network MycoBrain devices
+app.include_router(device_registry_router, tags=["device-registry"])
 
 # Earth-2 AI Weather API
 if EARTH2_API_AVAILABLE:

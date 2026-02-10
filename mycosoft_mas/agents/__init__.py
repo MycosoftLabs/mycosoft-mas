@@ -132,13 +132,8 @@ _legacy_missing_stubs = {
 }
 
 # AGENT_CATALOG entries that do not yet have physical modules.
+# Batch 1 (orchestration + utility) now have real modules; removed from stubs.
 _catalog_missing_stubs = {
-    "mycosoft_mas.agents.v2.myca_agent": "MYCAAgent",
-    "mycosoft_mas.agents.v2.supervisor_agent": "SupervisorAgent",
-    "mycosoft_mas.agents.v2.coordinator_agent": "CoordinatorAgent",
-    "mycosoft_mas.agents.v2.registry_agent": "RegistryAgent",
-    "mycosoft_mas.agents.v2.planner_agent": "PlannerAgent",
-    "mycosoft_mas.agents.v2.executor_agent": "ExecutorAgent",
     "mycosoft_mas.agents.speech_agent": "SpeechAgent",
     "mycosoft_mas.agents.tts_agent": "TTSAgent",
     "mycosoft_mas.agents.stt_agent": "STTAgent",
@@ -171,10 +166,6 @@ _catalog_missing_stubs = {
     "mycosoft_mas.agents.integration.webhook_agent": "WebhookAgent",
     "mycosoft_mas.agents.integration.mcp_bridge_agent": "MCPBridgeAgent",
     "mycosoft_mas.agents.integration.database_agent": "DatabaseAgent",
-    "mycosoft_mas.agents.utility.health_check_agent": "HealthCheckAgent",
-    "mycosoft_mas.agents.utility.log_agent": "LogAgent",
-    "mycosoft_mas.agents.utility.backup_agent": "BackupAgent",
-    "mycosoft_mas.agents.utility.cleanup_agent": "CleanupAgent",
 }
 
 _register_stub_modules(_legacy_missing_stubs, relative_to_agents_pkg=True)
