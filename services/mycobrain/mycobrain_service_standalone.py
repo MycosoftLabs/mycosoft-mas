@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""MycoBrain Service - Full Implementation with Proper Command Mapping"""
+"""MycoBrain Service - Full Implementation with Proper Command Mapping and Network Heartbeat"""
 import os
 import sys
 import json
 import time
 import logging
 import threading
+import asyncio
+import httpx
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from fastapi import FastAPI, HTTPException, Query, Body, Depends
@@ -21,10 +23,36 @@ except ImportError:
     AUTH_ENABLED = False
     def verify_api_key():
         return "no-auth"
+
+# Import Tailscale utilities (optional)
+try:
+    from tailscale_utils import get_reachable_address, get_tailscale_ip
+    TAILSCALE_UTILS_AVAILABLE = True
+except ImportError:
+    TAILSCALE_UTILS_AVAILABLE = False
+    def get_reachable_address(public_host=None, port=8003):
+        import socket
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            return ip, "lan"
+        except:
+            return "127.0.0.1", "lan"
+
 import uvicorn
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# === Heartbeat Configuration ===
+MAS_REGISTRY_URL = os.getenv("MAS_REGISTRY_URL", "http://192.168.0.188:8001")
+DEVICE_NAME = os.getenv("MYCOBRAIN_DEVICE_NAME", "Local MycoBrain")
+DEVICE_LOCATION = os.getenv("MYCOBRAIN_DEVICE_LOCATION", "Unknown")
+PUBLIC_HOST = os.getenv("MYCOBRAIN_PUBLIC_HOST")  # Optional: explicit host/URL
+HEARTBEAT_INTERVAL = int(os.getenv("MYCOBRAIN_HEARTBEAT_INTERVAL", "30"))  # seconds
+HEARTBEAT_ENABLED = os.getenv("MYCOBRAIN_HEARTBEAT_ENABLED", "true").lower() == "true"
 
 app = FastAPI(title="MycoBrain Service", version="2.2.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
@@ -306,6 +334,125 @@ async def clear_locks(api_key: str = Depends(verify_api_key)):
         except:
             pass
     return {"status": "ok", "disconnected": disconnected}
+
+
+# === Heartbeat System ===
+
+async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port: int, connection_type: str):
+    """Send a heartbeat registration to the MAS device registry."""
+    try:
+        # Build heartbeat payload
+        payload = {
+            "device_id": device_id,
+            "device_name": DEVICE_NAME,
+            "host": host,
+            "port": port,
+            "firmware_version": device.get("info", {}).get("firmware", "unknown"),
+            "board_type": device.get("info", {}).get("board", "ESP32-S3"),
+            "sensors": ["bme688_a", "bme688_b"],  # Default sensors
+            "capabilities": ["led", "buzzer", "i2c"],  # Default capabilities
+            "location": DEVICE_LOCATION,
+            "connection_type": connection_type,
+            "extra": {
+                "protocol": device.get("protocol", "MDP v1"),
+                "port_name": device.get("port", ""),
+                "service_version": "2.2.0",
+            }
+        }
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"{MAS_REGISTRY_URL}/api/devices/register",
+                json=payload,
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                status = result.get("status", "unknown")
+                if status == "registered":
+                    logger.info(f"Device {device_id} registered with MAS")
+                else:
+                    logger.debug(f"Device {device_id} heartbeat sent: {status}")
+            else:
+                logger.warning(f"Heartbeat failed for {device_id}: {response.status_code}")
+                
+    except httpx.ConnectError:
+        logger.debug(f"Cannot connect to MAS registry at {MAS_REGISTRY_URL}")
+    except Exception as e:
+        logger.warning(f"Heartbeat error for {device_id}: {e}")
+
+
+async def heartbeat_loop():
+    """Background task that sends heartbeats for all connected devices."""
+    logger.info(f"Heartbeat loop started (interval: {HEARTBEAT_INTERVAL}s, registry: {MAS_REGISTRY_URL})")
+    
+    port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))
+    
+    while True:
+        try:
+            # Get reachable address
+            host, connection_type = get_reachable_address(PUBLIC_HOST, port)
+            
+            # Send heartbeat for each connected device
+            for device_id, device in list(devices.items()):
+                if device.get("status") == "connected":
+                    await send_heartbeat(device_id, device, host, port, connection_type)
+            
+            # If no devices connected, still send a service heartbeat
+            if not devices:
+                # Register the service itself as available
+                service_payload = {
+                    "device_id": f"mycobrain-service-{host.replace('.', '-')}",
+                    "device_name": f"{DEVICE_NAME} (No Devices)",
+                    "host": host,
+                    "port": port,
+                    "firmware_version": "service-only",
+                    "board_type": "service",
+                    "sensors": [],
+                    "capabilities": ["service"],
+                    "location": DEVICE_LOCATION,
+                    "connection_type": connection_type,
+                    "extra": {"service_version": "2.2.0", "status": "waiting_for_device"}
+                }
+                try:
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        await client.post(f"{MAS_REGISTRY_URL}/api/devices/register", json=service_payload)
+                except:
+                    pass
+                    
+        except Exception as e:
+            logger.error(f"Heartbeat loop error: {e}")
+        
+        await asyncio.sleep(HEARTBEAT_INTERVAL)
+
+
+_heartbeat_task: Optional[asyncio.Task] = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Start the heartbeat loop on service startup."""
+    global _heartbeat_task
+    
+    if HEARTBEAT_ENABLED:
+        _heartbeat_task = asyncio.create_task(heartbeat_loop())
+        logger.info("Heartbeat system enabled")
+    else:
+        logger.info("Heartbeat system disabled (set MYCOBRAIN_HEARTBEAT_ENABLED=true to enable)")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop the heartbeat loop on service shutdown."""
+    global _heartbeat_task
+    
+    if _heartbeat_task:
+        _heartbeat_task.cancel()
+        try:
+            await _heartbeat_task
+        except asyncio.CancelledError:
+            pass
+        logger.info("Heartbeat loop stopped")
+
 
 if __name__ == "__main__":
     port = int(os.getenv("MYCOBRAIN_SERVICE_PORT", "8003"))

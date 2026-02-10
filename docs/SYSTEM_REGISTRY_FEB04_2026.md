@@ -83,6 +83,39 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 | `/api/registry/devices/initialize` | POST | Init known devices |
 | `/api/registry/devices/{id}/status` | POST | Update status |
 
+**IoT signing key note (FEB09 2026):**
+- Device Ed25519 public keys are expected to be stored as base64 in a registry-accessible location.
+- Current contract key: `publicKeyB64` (32-byte Ed25519 public key, base64) in `telemetry.device.metadata` (MINDEX) and/or `registry.devices.metadata`.
+
+### Network Device Registry (Feb 9, 2026)
+
+This new API provides heartbeat-based registration for remote MycoBrain devices.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/devices/register` | POST | Register device via heartbeat |
+| `/api/devices` | GET | List all network-registered devices |
+| `/api/devices/{device_id}` | GET | Get specific device info |
+| `/api/devices/{device_id}` | DELETE | Unregister device |
+| `/api/devices/{device_id}/command` | POST | Forward command to remote device |
+| `/api/devices/{device_id}/telemetry` | GET | Fetch telemetry from remote device |
+| `/api/devices/health` | GET | Device registry health check |
+
+**Router**: `mycosoft_mas/core/routers/device_registry_api.py`
+**Registered in**: `mycosoft_mas/core/myca_main.py`
+
+### Network Device Service
+
+| Service | Host | Port | Description |
+|---------|------|------|-------------|
+| MycoBrain Remote Service | Remote machines | 8003 | Local device manager with heartbeat |
+
+**Heartbeat System**:
+- Devices send heartbeats every 30 seconds (configurable)
+- Heartbeats include: device_id, host, port, status, connection_type
+- Connection types: `tailscale`, `cloudflare`, `lan`
+- Devices auto-detected via Tailscale IP or manual configuration
+
 ### Code Files
 
 | Endpoint | Method | Description |
