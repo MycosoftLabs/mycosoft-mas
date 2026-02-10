@@ -1,10 +1,17 @@
 # Master Document Index
 
+## Deploy and Test MYCA (Feb 10, 2026)
+- `docs/DEPLOY_AND_TEST_MYCA_FEB10_2026.md` – **Deploy and test checklist**: Push to GitHub, run consciousness tests, deploy MAS VM (188) and Sandbox (187), MINDEX (no schema changes needed), full MYCA integration test script (`scripts/test_myca_consciousness_full.py`), endpoint reference, and sandbox/local verification.
+
 ## MYCA Consciousness Architecture (Feb 10, 2026)
 - `docs/MYCA_CONSCIOUSNESS_ARCHITECTURE_FEB10_2026.md` – **Complete MYCA consciousness system**: Digital consciousness architecture with Conscious Layer (AttentionController, WorkingMemory, DeliberateReasoning, VoiceInterface), Subconscious Layer (IntuitionEngine, DreamState, WorldModel with 5 sensors), Soul Layer (Identity, Beliefs, Purpose, CreativityEngine, EmotionalState), and Substrate Abstraction (Digital/Wetware/Hybrid for future mycelium integration). Unified API at `/api/myca/` with chat, voice, status, world perception, and personality endpoints. 30+ new Python files, comprehensive test suite.
 
-## Fungi Compute Application (Feb 9, 2026)
+## Fungal Electrical Signaling Science (Feb 10, 2026)
+- `docs/FUNGI_ELECTRICAL_SIGNALING_SCIENCE_FEB10_2026.md` – **Scientific foundation for FCI**: Comprehensive reference from peer-reviewed literature (Adamatzky 2022, Buffi et al. 2025, Fukasawa et al. 2024, Olsson & Hansson 1995). Voltage ranges (nV-mV by species), frequency bands (0.0001-8 Hz), STFT/PSD/Transfer Entropy methodologies, spike detection algorithms, 8 species profiles, measurement techniques, artifacts to avoid, research questions. THE scientific basis for all Mycosoft FCI work.
+
+## Fungi Compute Application (Feb 9-10, 2026)
 - `docs/FUNGI_COMPUTE_APP_FEB09_2026.md` – **Complete Fungi Compute implementation**: NatureOS app for biological computing visualization with real-time oscilloscope, spectrum analyzer, signal fingerprint, event mempool, SDR filter controls, bi-directional stimulation, NLM integration, device map, Petri Dish sync, and Earth2/CREP correlation. Full WebSocket streaming, 20+ React components with glass material Tron-inspired design, Python SDR pipeline, and Next.js API routes.
+- **[NEW] Scientific Integration**: Added STFT spectrogram (Buffi method), spike train linguistic analyzer (Adamatzky method), causality network graph (Fukasawa method), species database (8 fungi from literature), experiment designer, µV-scale oscilloscope, pattern classification library. App now implements every major analysis technique from published fungal electrophysiology research.
 
 ## FCI Implementation Complete (Feb 10, 2026)
 - `docs/FCI_IMPLEMENTATION_COMPLETE_FEB10_2026.md` – **Complete FCI implementation**: MycoBrain FCI firmware (ESP32-S3, ADS1115 ADC, bioelectric signal acquisition, DSP, GFST pattern detection), Mycorrhizae Protocol specification (novel biological computing protocol with Ed25519 signatures, semantic translation), HPL Signal Pattern Language, MINDEX schema (10 tables including fci_devices, fci_readings, fci_patterns, pgvector embeddings), MAS FCI API router, website FCI API routes, CREP visualization widgets (FCISignalWidget, FCIPatternChart), MycoBrain FCI integration page. 27 files created, 7 files modified.

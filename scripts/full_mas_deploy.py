@@ -24,6 +24,18 @@ SSH_PASS = "REDACTED_VM_SSH_PASSWORD"
 # Mycorrhizae API Key for MAS
 MAS_MYCORRHIZAE_KEY = "myco_mas_kck8lD0E8sPvfob_EQS4xnuuj5h1WB7Ss72Y8xoz9QQ"
 
+# LLM API Keys for MYCA Consciousness - loaded from environment variables
+# Set these in your environment before running this script:
+#   ANTHROPIC_API_KEY, OPENAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, XAI_API_KEY
+import os
+LLM_API_KEYS = {
+    "ANTHROPIC_API_KEY": os.environ.get("ANTHROPIC_API_KEY", ""),
+    "OPENAI_API_KEY": os.environ.get("OPENAI_API_KEY", ""),
+    "GROQ_API_KEY": os.environ.get("GROQ_API_KEY", ""),
+    "GEMINI_API_KEY": os.environ.get("GEMINI_API_KEY", ""),
+    "XAI_API_KEY": os.environ.get("XAI_API_KEY", ""),
+}
+
 
 def ssh_exec(host: str, cmd: str, timeout: int = 120) -> tuple:
     """Execute SSH command and return (stdout, stderr, exit_code)"""
@@ -91,8 +103,12 @@ docker build -t mycosoft/mas-agent:latest --no-cache . 2>&1 | tail -20
         sys.exit(1)
     print("[OK] Docker image rebuilt")
     
-    # Step 5: Start MAS with Mycorrhizae configuration
-    print("\n[5/5] Starting MAS container with Mycorrhizae API configuration...")
+    # Step 5: Start MAS with Mycorrhizae configuration and LLM keys
+    print("\n[5/5] Starting MAS container with Mycorrhizae API and LLM keys...")
+    
+    # Build environment variable arguments for LLM keys
+    llm_env_args = " \\\n  ".join([f"-e {k}={v}" for k, v in LLM_API_KEYS.items()])
+    
     out, err, code = ssh_exec(VM_188, f"""
 docker run -d --name myca-orchestrator-new \\
   --restart unless-stopped \\
@@ -102,6 +118,12 @@ docker run -d --name myca-orchestrator-new \\
   -e DATABASE_URL=postgresql://mycosoft:REDACTED_DB_PASSWORD@192.168.0.189:5432/mindex \\
   -e REDIS_URL=redis://192.168.0.189:6379/0 \\
   -e N8N_URL=http://192.168.0.188:5678 \\
+  -e MINDEX_API_URL=http://192.168.0.189:8000 \\
+  -e ANTHROPIC_API_KEY={LLM_API_KEYS['ANTHROPIC_API_KEY']} \\
+  -e OPENAI_API_KEY={LLM_API_KEYS['OPENAI_API_KEY']} \\
+  -e GROQ_API_KEY={LLM_API_KEYS['GROQ_API_KEY']} \\
+  -e GEMINI_API_KEY={LLM_API_KEYS['GEMINI_API_KEY']} \\
+  -e XAI_API_KEY={LLM_API_KEYS['XAI_API_KEY']} \\
   mycosoft/mas-agent:latest
 
 sleep 3
@@ -115,11 +137,11 @@ docker ps | grep myca
         print(out2)
         sys.exit(1)
     
-    # Wait for health check
+    # Wait for health check (port 8000 with --network host)
     print("\n[+] Waiting for MAS to become healthy...")
     for i in range(10):
         time.sleep(3)
-        out, err, code = ssh_exec(VM_188, "curl -s http://127.0.0.1:8001/health 2>/dev/null || echo 'NOT_READY'")
+        out, err, code = ssh_exec(VM_188, "curl -s http://127.0.0.1:8000/health 2>/dev/null || echo 'NOT_READY'")
         if "NOT_READY" not in out and "error" not in out.lower():
             print(f"[OK] MAS is healthy: {out.strip()}")
             break
@@ -144,14 +166,18 @@ docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' | grep -E 'NAMES|
 
 echo ""
 echo "Health Check Results:"
-echo "  MAS:         $(curl -s http://127.0.0.1:8001/health 2>/dev/null | head -c 100 || echo 'FAILED')"
+echo "  MAS:         $(curl -s http://127.0.0.1:8000/health 2>/dev/null | head -c 100 || echo 'FAILED')"
 echo "  Mycorrhizae: $(curl -s http://127.0.0.1:8002/health 2>/dev/null | head -c 100 || echo 'FAILED')"
+echo ""
+echo "MYCA Consciousness Status:"
+curl -s http://127.0.0.1:8000/api/myca/status 2>/dev/null | head -c 200 || echo 'NOT AVAILABLE'
 """)
     print(out)
     
     print("\n[DONE] Full MAS deployment complete!")
-    print(f"\nMAS API: http://192.168.0.188:8001")
+    print(f"\nMAS API: http://192.168.0.188:8000 (internal: 127.0.0.1:8000)")
     print(f"Mycorrhizae API: http://192.168.0.188:8002")
+    print(f"MYCA Consciousness: http://192.168.0.188:8000/api/myca/*")
 
 
 if __name__ == "__main__":
