@@ -49,6 +49,8 @@ logger = logging.getLogger(__name__)
 # === Heartbeat Configuration ===
 MAS_REGISTRY_URL = os.getenv("MAS_REGISTRY_URL", "http://192.168.0.188:8001")
 DEVICE_NAME = os.getenv("MYCOBRAIN_DEVICE_NAME", "Local MycoBrain")
+DEVICE_ROLE = os.getenv("MYCOBRAIN_DEVICE_ROLE", "standalone")  # mushroom1, sporebase, hyphae1, alarm, gateway, mycodrone, standalone
+DEVICE_DISPLAY_NAME = os.getenv("MYCOBRAIN_DEVICE_DISPLAY_NAME")  # Optional UI name, e.g. "Mushroom 1"
 DEVICE_LOCATION = os.getenv("MYCOBRAIN_DEVICE_LOCATION", "Unknown")
 PUBLIC_HOST = os.getenv("MYCOBRAIN_PUBLIC_HOST")  # Optional: explicit host/URL
 HEARTBEAT_INTERVAL = int(os.getenv("MYCOBRAIN_HEARTBEAT_INTERVAL", "30"))  # seconds
@@ -338,21 +340,62 @@ async def clear_locks(api_key: str = Depends(verify_api_key)):
 
 # === Heartbeat System ===
 
+def parse_device_role_from_status(raw_status: str) -> tuple:
+    """Parse device_role and device_display_name from device status response (if firmware provides it)."""
+    role = None
+    display_name = None
+    try:
+        # Look for role= or device_role= in status output
+        for line in raw_status.split('\n'):
+            line_lower = line.lower()
+            if 'device_role=' in line_lower or 'role=' in line_lower:
+                parts = line.split('=')
+                if len(parts) >= 2:
+                    role = parts[1].strip().split()[0].strip('"\'')
+            if 'device_display_name=' in line_lower or 'display_name=' in line_lower:
+                # Handle display_name which may have spaces
+                if '=' in line:
+                    display_name = line.split('=', 1)[1].strip().strip('"\'')
+        # Try JSON parsing if status is JSON
+        if raw_status.strip().startswith('{'):
+            import json
+            try:
+                data = json.loads(raw_status)
+                role = data.get('device_role') or data.get('role') or role
+                display_name = data.get('device_display_name') or data.get('display_name') or display_name
+            except:
+                pass
+    except:
+        pass
+    return role, display_name
+
+
 async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port: int, connection_type: str):
     """Send a heartbeat registration to the MAS device registry."""
     try:
-        # Build heartbeat payload
+        # Try to get device_role and display_name from device status (firmware)
+        raw_status = device.get("info", {}).get("raw_status", "")
+        fw_role, fw_display_name = parse_device_role_from_status(raw_status)
+        
+        # Priority: firmware-reported > env var > default
+        device_role = fw_role or DEVICE_ROLE
+        device_display_name = fw_display_name or DEVICE_DISPLAY_NAME  # None if not set
+        
+        # Build heartbeat payload (serial ingestion; same format for future LoRa/BT/WiFi gateways)
         payload = {
             "device_id": device_id,
             "device_name": DEVICE_NAME,
+            "device_role": device_role,
+            "device_display_name": device_display_name,
             "host": host,
             "port": port,
             "firmware_version": device.get("info", {}).get("firmware", "unknown"),
             "board_type": device.get("info", {}).get("board", "ESP32-S3"),
-            "sensors": ["bme688_a", "bme688_b"],  # Default sensors
-            "capabilities": ["led", "buzzer", "i2c"],  # Default capabilities
+            "sensors": ["bme688_a", "bme688_b"],
+            "capabilities": ["led", "buzzer", "i2c"],
             "location": DEVICE_LOCATION,
             "connection_type": connection_type,
+            "ingestion_source": "serial",
             "extra": {
                 "protocol": device.get("protocol", "MDP v1"),
                 "port_name": device.get("port", ""),
@@ -404,6 +447,8 @@ async def heartbeat_loop():
                 service_payload = {
                     "device_id": f"mycobrain-service-{host.replace('.', '-')}",
                     "device_name": f"{DEVICE_NAME} (No Devices)",
+                    "device_role": "gateway",
+                    "device_display_name": DEVICE_DISPLAY_NAME,
                     "host": host,
                     "port": port,
                     "firmware_version": "service-only",
@@ -412,6 +457,7 @@ async def heartbeat_loop():
                     "capabilities": ["service"],
                     "location": DEVICE_LOCATION,
                     "connection_type": connection_type,
+                    "ingestion_source": "serial",
                     "extra": {"service_version": "2.2.0", "status": "waiting_for_device"}
                 }
                 try:
