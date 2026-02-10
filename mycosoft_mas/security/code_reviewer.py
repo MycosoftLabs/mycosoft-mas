@@ -128,7 +128,7 @@ class SecurityCodeReviewer:
         change_type = change_request.get("change_type", "unknown")
         description = change_request.get("description", "")
         target_files = change_request.get("target_files", [])
-        code_content = change_request.get("code_content", "")
+        code_content = change_request.get("code_content") or ""
         
         logger.info(f"Reviewing code change: {change_type} from {requester_id}")
         
