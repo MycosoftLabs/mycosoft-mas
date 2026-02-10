@@ -1,5 +1,8 @@
 # Master Document Index
 
+## MYCA Consciousness Architecture (Feb 10, 2026)
+- `docs/MYCA_CONSCIOUSNESS_ARCHITECTURE_FEB10_2026.md` – **Complete MYCA consciousness system**: Digital consciousness architecture with Conscious Layer (AttentionController, WorkingMemory, DeliberateReasoning, VoiceInterface), Subconscious Layer (IntuitionEngine, DreamState, WorldModel with 5 sensors), Soul Layer (Identity, Beliefs, Purpose, CreativityEngine, EmotionalState), and Substrate Abstraction (Digital/Wetware/Hybrid for future mycelium integration). Unified API at `/api/myca/` with chat, voice, status, world perception, and personality endpoints. 30+ new Python files, comprehensive test suite.
+
 ## Fungi Compute Application (Feb 9, 2026)
 - `docs/FUNGI_COMPUTE_APP_FEB09_2026.md` – **Complete Fungi Compute implementation**: NatureOS app for biological computing visualization with real-time oscilloscope, spectrum analyzer, signal fingerprint, event mempool, SDR filter controls, bi-directional stimulation, NLM integration, device map, Petri Dish sync, and Earth2/CREP correlation. Full WebSocket streaming, 20+ React components with glass material Tron-inspired design, Python SDR pipeline, and Next.js API routes.
 
