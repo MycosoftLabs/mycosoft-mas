@@ -63,7 +63,20 @@ All committed locally on branch `main`; 12 commits ahead of `origin/main` until 
 - **Commits to push:** Local is **ahead 12** of `origin/main`. Latest commits include: Phase 1 completion log + master index (76855ad), LFS/config fixes (65986cf, dea1438), Phase 1 agents (f70d25b), self-healing infra, IoT envelope, and others.
 - **Observed:** Repo uses Git LFS; large or LFS-heavy pushes can trigger GitHub 500. Retry later or from a stable network.
 
-**Action for user:** From MAS repo root run `git push origin main` and allow it to finish. If HTTP 500 persists: retry after some minutes; check [GitHub Status](https://www.githubstatus.com/); optionally increase buffer: `git config http.postBuffer 524288000` then push again. After push succeeds, follow §4 to deploy to VM.
+**Action for user:** From MAS repo root run `git push origin main` and allow it to finish. After push succeeds, follow §4 to deploy to VM.
+
+**Push attempts (full run):** The following were all attempted; GitHub returned **HTTP 500** or **Broken pipe** in every case.
+- Set `http.postBuffer` to 524288000 (500MB) — done.
+- Checked [GitHub Status](https://www.githubstatus.com/): Git Operations operational (Feb 9 incidents resolved).
+- Pushed with larger buffer — failed (Broken pipe / remote hung up).
+- Ran `git lfs push origin main` — completed successfully (no LFS objects or already synced).
+- Pushed `main` again after LFS — HTTP 500.
+- Pushed same commits to branch `phase1-feb10` — HTTP 500.
+- Pushed 5-commit chunk to `phase1-chunk1` — HTTP 500.
+- Pushed single commit to `single-commit-test` — HTTP 500.
+- Tried SSH push — failed with "Host key verification failed" (SSH not configured for this host).
+
+**Conclusion:** Failure appears to be server-side (GitHub or repo config). Retry push later; if the repo uses GitHub Actions or webhooks, a temporary outage can cause 500s. Alternatively use SSH after fixing host key verification: `git remote set-url origin git@github.com:MycosoftLabs/mycosoft-mas.git` then `git push origin main`.
 
 ---
 

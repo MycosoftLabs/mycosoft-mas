@@ -1,5 +1,12 @@
 # Master Document Index
 
+## Fungi Compute Application (Feb 9, 2026)
+- `docs/FUNGI_COMPUTE_APP_FEB09_2026.md` – **Complete Fungi Compute implementation**: NatureOS app for biological computing visualization with real-time oscilloscope, spectrum analyzer, signal fingerprint, event mempool, SDR filter controls, bi-directional stimulation, NLM integration, device map, Petri Dish sync, and Earth2/CREP correlation. Full WebSocket streaming, 20+ React components with glass material Tron-inspired design, Python SDR pipeline, and Next.js API routes.
+
+## FCI Implementation Complete (Feb 10, 2026)
+- `docs/FCI_IMPLEMENTATION_COMPLETE_FEB10_2026.md` – **Complete FCI implementation**: MycoBrain FCI firmware (ESP32-S3, ADS1115 ADC, bioelectric signal acquisition, DSP, GFST pattern detection), Mycorrhizae Protocol specification (novel biological computing protocol with Ed25519 signatures, semantic translation), HPL Signal Pattern Language, MINDEX schema (10 tables including fci_devices, fci_readings, fci_patterns, pgvector embeddings), MAS FCI API router, website FCI API routes, CREP visualization widgets (FCISignalWidget, FCIPatternChart), MycoBrain FCI integration page. 27 files created, 7 files modified.
+- `Mycorrhizae/mycorrhizae-protocol/docs/MYCORRHIZAE_PROTOCOL_SPECIFICATION_FEB10_2026.md` – **Novel protocol specification**: 1,000+ line comprehensive spec covering 5 protocol layers (Physical, Signal, Transport, Semantic, Application), message types (fci_telemetry, pattern_event, stimulus_command), GFST pattern library (11 biologically-grounded patterns), physics/chemistry/biology basis, transport options (WebSocket, MQTT, CoAP, Serial), Ed25519 security.
+
 ## Device Manager and Gateway Architecture (Feb 10, 2026)
 - `docs/DEVICE_MANAGER_AND_GATEWAY_ARCHITECTURE_FEB10_2026.md` – **Gateway and multi-transport**: PC as gateway for serial (COM7) + future LoRa/BT/WiFi; heartbeat to MAS Device Registry; COM7 visible to entire network; ingestion_source (serial|lora|bluetooth|wifi|gateway); data flow and component locations.
 

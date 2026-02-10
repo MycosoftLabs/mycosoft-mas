@@ -85,17 +85,20 @@ DEVICE_STALE_SECONDS = int(os.getenv("DEVICE_STALE_SECONDS", "60"))  # 1 minute 
 
 
 class DeviceHeartbeat(BaseModel):
-    """Schema for device heartbeat/registration."""
+    """Schema for device heartbeat/registration (serial, LoRa, Bluetooth, WiFi gateways)."""
     device_id: str = Field(..., description="Unique device identifier")
-    device_name: str = Field(..., description="Human-friendly device name")
-    host: str = Field(..., description="Reachable IP or URL (Tailscale IP or public URL)")
-    port: int = Field(default=8003, description="MycoBrain service port")
+    device_name: str = Field(default="MycoBrain", description="Human-friendly device name")
+    device_role: str = Field(default="standalone", description="Device role: mushroom1, sporebase, hyphae1, alarm, gateway, mycodrone, standalone")
+    device_display_name: Optional[str] = Field(default=None, description="UI display name (e.g. 'Mushroom 1', 'SporeBase Alpha')")
+    host: str = Field(..., description="Reachable IP or URL (gateway/server reachable from MAS)")
+    port: int = Field(default=8003, description="MycoBrain service or gateway port")
     firmware_version: str = Field(default="unknown")
-    board_type: str = Field(default="esp32s3", description="Board type: esp32s3, esp32, etc.")
+    board_type: str = Field(default="esp32s3", description="Board type: esp32s3, esp32, service, etc.")
     sensors: List[str] = Field(default_factory=list, description="Connected sensors")
     capabilities: List[str] = Field(default_factory=list, description="Device capabilities")
     location: Optional[str] = Field(default=None, description="Physical location")
-    connection_type: str = Field(default="tailscale", description="tailscale, cloudflare, or lan")
+    connection_type: str = Field(default="lan", description="lan, tailscale, cloudflare")
+    ingestion_source: str = Field(default="serial", description="serial, lora, bluetooth, wifi, gateway")
     extra: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
@@ -103,6 +106,8 @@ class DeviceInfo(BaseModel):
     """Full device information returned by registry."""
     device_id: str
     device_name: str
+    device_role: str = "standalone"
+    device_display_name: Optional[str] = None
     host: str
     port: int
     firmware_version: str
@@ -111,6 +116,7 @@ class DeviceInfo(BaseModel):
     capabilities: List[str]
     location: Optional[str]
     connection_type: str
+    ingestion_source: str = "serial"
     status: str  # online, stale, offline
     last_seen: str
     registered_at: str
@@ -181,10 +187,12 @@ async def register_device(heartbeat: DeviceHeartbeat):
         }
         logger.info(f"New device registered: {device_id} ({heartbeat.device_name}) from {heartbeat.host}:{heartbeat.port}")
     
-    # Update device info
+    # Update device info (supports serial + LoRa/BT/WiFi ingestion + device role/identity)
     _device_registry[device_id].update({
         "device_id": device_id,
         "device_name": heartbeat.device_name,
+        "device_role": heartbeat.device_role,
+        "device_display_name": heartbeat.device_display_name,
         "host": heartbeat.host,
         "port": heartbeat.port,
         "firmware_version": heartbeat.firmware_version,
@@ -193,6 +201,7 @@ async def register_device(heartbeat: DeviceHeartbeat):
         "capabilities": heartbeat.capabilities,
         "location": heartbeat.location,
         "connection_type": heartbeat.connection_type,
+        "ingestion_source": heartbeat.ingestion_source,
         "extra": heartbeat.extra,
         "last_seen": now.isoformat(),
     })
@@ -213,40 +222,38 @@ async def register_device(heartbeat: DeviceHeartbeat):
     }
 
 
+async def _list_devices_impl(
+    status: Optional[str] = None,
+    include_offline: bool = False,
+):
+    """Shared implementation for list devices (used by both / and empty path)."""
+    _cleanup_expired_devices()
+    devices_out = []
+    for device_id, device in _device_registry.items():
+        device_status = _get_device_status(device_id)
+        if status and device_status != status:
+            continue
+        if not include_offline and device_status == "offline":
+            continue
+        devices_out.append({**device, "status": device_status})
+    return {
+        "devices": devices_out,
+        "count": len(devices_out),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@router.get("")
 @router.get("/")
 async def list_devices(
     status: Optional[str] = Query(None, description="Filter by status: online, stale, offline"),
     include_offline: bool = Query(False, description="Include offline devices"),
 ):
     """
-    List all registered devices.
-    
+    List all registered devices (serial, LoRa, Bluetooth, WiFi gateways).
     Returns devices with their current status based on last heartbeat.
     """
-    _cleanup_expired_devices()
-    
-    devices = []
-    for device_id, device in _device_registry.items():
-        device_status = _get_device_status(device_id)
-        
-        # Apply status filter
-        if status and device_status != status:
-            continue
-        
-        # Skip offline unless requested
-        if not include_offline and device_status == "offline":
-            continue
-        
-        devices.append({
-            **device,
-            "status": device_status,
-        })
-    
-    return {
-        "devices": devices,
-        "count": len(devices),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+    return await _list_devices_impl(status=status, include_offline=include_offline)
 
 
 @router.get("/{device_id}")
