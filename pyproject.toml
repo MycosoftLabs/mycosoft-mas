@@ -37,6 +37,7 @@ sqlalchemy = "^2.0.0"
 bcrypt = "^5.0.0"
 networkx = "^3.6.0"
 websockets = "^15.0.0"
+sse-starlette = "^2.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.0"
