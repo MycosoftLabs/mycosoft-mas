@@ -12,6 +12,7 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | MAS | http://192.168.0.188:8001 | 80+ | Multi-Agent System Orchestrator |
 | Website | http://192.168.0.187:3000 | 40+ | Next.js Dashboard & Website |
 | MINDEX | http://192.168.0.189:8000 | 50+ | Memory Index & Knowledge Graph |
+| Mycorrhizae | http://192.168.0.188:8002 | 20+ | Protocol API: channels/streams, envelope verification + dedupe, replay ACK publish |
 | NatureOS | http://192.168.0.188:5000 | 30+ | Nature Operating System |
 | MycoBrain | http://192.168.0.188:8080 | 20+ | IoT Device Management |
 | NLM | http://192.168.0.188:8200 | 15+ | Nature Learning Models |
@@ -116,12 +117,86 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/natureos/telemetry` | POST | Device telemetry |
 | `/api/natureos/health` | GET | NatureOS health |
 
+### IoT Envelope API (`/api/iot/*`) (FEB09 2026)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/iot/envelope/ingest` | POST | Forward unified envelope into Mycorrhizae |
+| `/api/iot/replay/ack` | POST | Proxy replay ACK to Mycorrhizae |
+
+### Network Device Registry API (`/api/devices/*`) (FEB09 2026)
+
+This API provides heartbeat-based registration and management for remote MycoBrain devices connected via Tailscale, Cloudflare Tunnel, or LAN.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/devices/register` | POST | Register device via heartbeat (called by remote MycoBrain services) |
+| `/api/devices` | GET | List all network-registered devices (supports `status`, `include_offline` params) |
+| `/api/devices/{device_id}` | GET | Get specific device info |
+| `/api/devices/{device_id}` | DELETE | Unregister device from registry |
+| `/api/devices/{device_id}/command` | POST | Forward command to remote device via HTTP |
+| `/api/devices/{device_id}/telemetry` | GET | Fetch telemetry from remote device |
+| `/api/devices/health` | GET | Device registry health check |
+
+**Router**: `mycosoft_mas/core/routers/device_registry_api.py`
+
+**Heartbeat Payload**:
+```json
+{
+  "device_id": "mycobrain-COM3",
+  "device_name": "Beto-MycoBrain",
+  "host": "100.x.x.x",
+  "port": 8003,
+  "connection_type": "tailscale",
+  "firmware_version": "2.0.0",
+  "capabilities": ["led", "buzzer", "sensors"],
+  "location": "Remote-Beto"
+}
+```
+
 ### Workflow API (`/api/workflow/*`)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/workflow/trigger` | POST | Trigger workflow |
 | `/api/workflow/status/{id}` | GET | Get status |
+
+---
+
+## Mycorrhizae API Endpoints (Protocol)
+
+### Health & Info
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/api/info` | GET | Protocol info + stats |
+| `/api/stats` | GET | Protocol stats |
+
+### Channels API (`/api/channels/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/channels` | GET | List channels |
+| `/api/channels` | POST | Create channel |
+| `/api/channels/{channel}` | GET | Get channel info |
+| `/api/channels/{channel}/publish` | POST | Publish message (envelope verification + dedupe path) |
+
+### Streaming API (`/api/stream/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/stream/replay/ack` | POST | Publish replay ACK events to device ACK channel |
+
+### API Keys (`/api/keys/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/keys/bootstrap` | POST | One-time mint of first admin key (guarded by bootstrap token; only when zero keys exist) |
+| `/api/keys` | GET, POST | List/create keys (admin) |
+| `/api/keys/{key_id}` | GET, DELETE | Get/revoke key (admin) |
+| `/api/keys/{key_id}/rotate` | POST | Rotate key (admin) |
+| `/api/keys/validate` | POST | Validate a key (self-validate) |
 
 ---
 
@@ -133,6 +208,18 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 |----------|--------|-------------|
 | `/health` | GET | Health check |
 | `/metrics` | GET | Prometheus metrics |
+
+### Telemetry API (`/api/telemetry/*`) (FEB09 2026)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/telemetry/envelope` | POST | Ingest envelope and expand into samples (dedupe) |
+| `/api/telemetry/samples` | GET | Query unified telemetry samples (includes verified flags) |
+| `/api/telemetry/replay/start` | POST | Start replay session |
+| `/api/telemetry/replay/{session_id}` | GET, PATCH, DELETE | Get/update/stop replay session |
+| `/api/telemetry/health` | POST | Record device health state |
+| `/api/telemetry/health/{device_slug}` | GET | Get device health history |
+| `/api/telemetry/health/summary` | GET | 24h health summary |
 
 ### Memory API
 
@@ -172,6 +259,8 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/natureos/telemetry` | POST | Telemetry |
 | `/api/scientific/experiments` | GET, POST | Experiments |
 | `/api/bio/sensors` | GET | Biosensor data |
+| `/api/mindex/telemetry` | GET, POST | MINDEX telemetry proxy + envelope ingest |
+| `/api/mindex/telemetry/samples` | GET | MINDEX samples proxy (verified flags) |
 
 ---
 

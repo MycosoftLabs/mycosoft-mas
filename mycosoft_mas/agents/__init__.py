@@ -132,40 +132,10 @@ _legacy_missing_stubs = {
 }
 
 # AGENT_CATALOG entries that do not yet have physical modules.
-# Batch 1 (orchestration + utility) now have real modules; removed from stubs.
+# Phase 1 complete: All batches (orchestration, utility, workflow, integration,
+# voice, memory, natureos, mycobrain, financial) now have real modules.
 _catalog_missing_stubs = {
-    "mycosoft_mas.agents.speech_agent": "SpeechAgent",
-    "mycosoft_mas.agents.tts_agent": "TTSAgent",
-    "mycosoft_mas.agents.stt_agent": "STTAgent",
-    "mycosoft_mas.agents.voice_bridge_agent": "VoiceBridgeAgent",
-    "mycosoft_mas.agents.dialog_agent": "DialogAgent",
-    "mycosoft_mas.agents.intent_agent": "IntentAgent",
-    "mycosoft_mas.agents.mycobrain.firmware_update_agent": "FirmwareUpdateAgent",
-    "mycosoft_mas.agents.mycobrain.nfc_agent": "NFCAgent",
-    "mycosoft_mas.agents.mycobrain.sensor_agent": "SensorAgent",
-    "mycosoft_mas.agents.mycobrain.camera_agent": "CameraAgent",
-    "mycosoft_mas.agents.mycobrain.grow_controller_agent": "GrowControllerAgent",
-    "mycosoft_mas.agents.natureos.device_registry_agent": "DeviceRegistryAgent",
-    "mycosoft_mas.agents.natureos.environment_agent": "EnvironmentAgent",
-    "mycosoft_mas.agents.natureos.data_pipeline_agent": "DataPipelineAgent",
-    "mycosoft_mas.agents.natureos.edge_compute_agent": "EdgeComputeAgent",
-    "mycosoft_mas.agents.trading_agent": "TradingAgent",
-    "mycosoft_mas.agents.market_analysis_agent": "MarketAnalysisAgent",
-    "mycosoft_mas.agents.portfolio_agent": "PortfolioAgent",
-    "mycosoft_mas.agents.opportunity_scout_agent": "OpportunityScoutAgent",
-    "mycosoft_mas.agents.memory.memory_manager_agent": "MemoryManagerAgent",
-    "mycosoft_mas.agents.memory.graph_memory_agent": "GraphMemoryAgent",
-    "mycosoft_mas.agents.memory.vector_memory_agent": "VectorMemoryAgent",
-    "mycosoft_mas.agents.memory.session_memory_agent": "SessionMemoryAgent",
-    "mycosoft_mas.agents.memory.long_term_memory_agent": "LongTermMemoryAgent",
-    "mycosoft_mas.agents.workflow.n8n_workflow_agent": "N8NWorkflowAgent",
-    "mycosoft_mas.agents.workflow.trigger_agent": "TriggerAgent",
-    "mycosoft_mas.agents.workflow.scheduler_agent": "SchedulerAgent",
-    "mycosoft_mas.agents.workflow.notification_agent": "NotificationAgent",
-    "mycosoft_mas.agents.integration.api_gateway_agent": "APIGatewayAgent",
-    "mycosoft_mas.agents.integration.webhook_agent": "WebhookAgent",
-    "mycosoft_mas.agents.integration.mcp_bridge_agent": "MCPBridgeAgent",
-    "mycosoft_mas.agents.integration.database_agent": "DatabaseAgent",
+    # All AGENT_CATALOG stubs now implemented - Feb 9, 2026
 }
 
 _register_stub_modules(_legacy_missing_stubs, relative_to_agents_pkg=True)

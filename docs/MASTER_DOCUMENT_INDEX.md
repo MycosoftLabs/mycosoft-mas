@@ -3,8 +3,12 @@
 ## Self-Healing MAS Infrastructure (Feb 9, 2026)
 - `docs/SELF_HEALING_MAS_INFRASTRUCTURE_FEB09_2026.md` – **Complete self-healing system**: Orchestrator can tell agents to write code, agents can request code changes, SecurityCodeReviewer gates all modifications, VulnerabilityScanner detects CVEs/OWASP patterns, SelfHealingMonitor auto-triggers fixes. Includes CodeModificationService, /api/code/* endpoints, BaseAgent integration with request_code_change()/request_self_improvement()/report_bug_for_fix() methods.
 
-## MycoBrain Device Setup (Feb 9, 2026)
-- `docs/MYCOBRAIN_BETO_SETUP_GUIDE_FEB09_2026.md` – **Complete setup guide for Beto**: Arduino IDE setup, ESP32-S3 board support, firmware upload with boot mode procedure, MycoBrain service startup, Device Manager integration, and troubleshooting. Also references the new skill (`.cursor/skills/mycobrain-setup/`) and subagent (`.cursor/agents/device-firmware.md`).
+## MycoBrain Device Setup and Network Integration (Feb 9, 2026)
+- `docs/MYCOBRAIN_BETO_SETUP_GUIDE_FEB09_2026.md` – **Complete setup guide for Beto**: Arduino IDE setup, ESP32-S3 board support, firmware upload with boot mode procedure, MycoBrain service startup, Device Manager integration, network heartbeat registration, and troubleshooting. Also references the new skill (`.cursor/skills/mycobrain-setup/`) and subagent (`.cursor/agents/device-firmware.md`).
+- `docs/TAILSCALE_REMOTE_DEVICE_GUIDE_FEB09_2026.md` – **Tailscale VPN setup for remote devices**: Install Tailscale, join Mycosoft tailnet, configure heartbeat environment variables, auto-IP detection via `tailscale_utils.py`, verify device appears in Network tab. Also covers Cloudflare Tunnel alternative.
+- `scripts/mycobrain-remote-setup.ps1` – **Automated remote setup script**: Install Tailscale, clone repo, install dependencies, configure environment, start service.
+- `mycosoft_mas/core/routers/device_registry_api.py` – **Device Registry API**: Heartbeat registration, device listing, command forwarding, telemetry fetching for network-connected MycoBrain devices.
+- `services/mycobrain/tailscale_utils.py` – **Tailscale utilities**: Auto-detect Tailscale IP, fallback to LAN IP, connection type detection.
 
 ## System Status, Purge, GitHub Path (Feb 9, 2026)
 - `docs/SYSTEM_STATUS_AND_PURGE_FEB09_2026.md` – **Status and purge**: What’s done, what can be done, Cloudflare purge (credentials in .env.local or “agents cat”), GitHub-as-source-of-truth for MAS and website, and “always read latest docs” rule for agents.
