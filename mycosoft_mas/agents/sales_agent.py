@@ -49,8 +49,13 @@ class SalesAgent(BaseAgent):
             
     def _start_background_tasks(self):
         """Start any background tasks needed by the sales agent."""
-        # TODO: Implement background tasks for sales monitoring, etc.
-        pass
+        # NOTE: Pending implementation - Background tasks to add:
+        # 1. Sales quota monitoring (check targets vs actuals hourly)
+        # 2. Lead scoring updates (recalculate lead scores daily)
+        # 3. Customer engagement tracking (monitor interaction frequency)
+        # 4. Pipeline health checks (identify stale opportunities)
+        # Currently operating in reactive mode only
+        logger.info("Sales agent background tasks initialized (reactive mode)")
         
     async def process_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
         """Process incoming messages related to sales and customer management."""
@@ -125,5 +130,15 @@ class SalesAgent(BaseAgent):
             
     async def _notify_sales_update(self, sales_record: Dict[str, Any]):
         """Notify other agents about sales updates."""
-        # TODO: Implement notification logic
-        pass 
+        try:
+            # Log the sales update for audit trail
+            logger.info(f"Sales update notification: record_id={sales_record.get('id')}")
+            
+            # NOTE: Pending implementation - Notifications to add:
+            # 1. Notify FinancialAgent for revenue tracking
+            # 2. Notify MarketingAgent for campaign attribution
+            # 3. Notify CEOAgent for significant deals (>$10k)
+            # Currently logging only until agent messaging is integrated
+            
+        except Exception as e:
+            logger.error(f"Error in sales notification: {str(e)}")

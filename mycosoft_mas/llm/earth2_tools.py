@@ -129,10 +129,18 @@ async def execute_earth2_forecast(args: Dict[str, Any]) -> Dict[str, Any]:
     
     service = get_earth2_service()
     
+    # Accept multiple legacy schemas (tests pass `location` as a string and
+    # provide `latitude`/`longitude` + `forecast_days`).
     location = args.get("location", {})
-    lat = location.get("lat", 47.6)
-    lon = location.get("lon", -122.3)
-    days = args.get("days", 7)
+    if isinstance(location, dict):
+        lat = location.get("lat")
+        lon = location.get("lon")
+    else:
+        lat = None
+        lon = None
+    lat = float(args.get("latitude", lat if lat is not None else 47.6))
+    lon = float(args.get("longitude", lon if lon is not None else -122.3))
+    days = int(args.get("forecast_days", args.get("days", 7)))
     
     # Create small extent around point
     extent = SpatialExtent(
@@ -147,10 +155,7 @@ async def execute_earth2_forecast(args: Dict[str, Any]) -> Dict[str, Any]:
         end=datetime.utcnow() + timedelta(days=days),
     )
     
-    params = ForecastParams(
-        spatial_extent=extent,
-        time_range=time_range,
-    )
+    params = ForecastParams(spatial_extent=extent, time_range=time_range)
     
     result = await service.run_forecast(params)
     
@@ -179,17 +184,23 @@ async def execute_earth2_nowcast(args: Dict[str, Any]) -> Dict[str, Any]:
     service = get_earth2_service()
     
     region = args.get("region", {})
+    if not isinstance(region, dict):
+        region = {}
+
+    # Tests pass a center point + forecast_hours. Build a small domain.
+    center_lat = float(args.get("latitude", region.get("center_lat", 39.0)))
+    center_lon = float(args.get("longitude", region.get("center_lon", -98.0)))
+    domain_km = float(args.get("domain_size_km", region.get("domain_size_km", 500)))
+    half_lat = (domain_km / 2.0) / 111.0
     extent = SpatialExtent(
-        min_lat=region.get("min_lat", 30),
-        max_lat=region.get("max_lat", 45),
-        min_lon=region.get("min_lon", -100),
-        max_lon=region.get("max_lon", -80),
+        min_lat=center_lat - half_lat,
+        max_lat=center_lat + half_lat,
+        min_lon=center_lon - half_lat,
+        max_lon=center_lon + half_lat,
     )
     
-    params = NowcastParams(
-        spatial_extent=extent,
-        lead_time_hours=args.get("lead_time_hours", 6),
-    )
+    lead_time_hours = int(args.get("forecast_hours", args.get("lead_time_hours", 6)))
+    params = NowcastParams(spatial_extent=extent, lead_time_hours=lead_time_hours)
     
     result = await service.run_nowcast(params)
     
@@ -210,23 +221,32 @@ async def execute_earth2_spore_dispersal(args: Dict[str, Any]) -> Dict[str, Any]
     service = get_earth2_service()
     
     region = args.get("region", {})
+    if not isinstance(region, dict):
+        region = {}
+
+    origin_lat = float(args.get("origin_lat", args.get("latitude", 41.5)))
+    origin_lon = float(args.get("origin_lon", args.get("longitude", -93.0)))
     extent = SpatialExtent(
-        min_lat=region.get("min_lat", 35),
-        max_lat=region.get("max_lat", 45),
-        min_lon=region.get("min_lon", -95),
-        max_lon=region.get("max_lon", -75),
+        min_lat=region.get("min_lat", origin_lat - 2.0),
+        max_lat=region.get("max_lat", origin_lat + 2.0),
+        min_lon=region.get("min_lon", origin_lon - 2.0),
+        max_lon=region.get("max_lon", origin_lon + 2.0),
     )
-    
-    days = args.get("days", 3)
+
+    days = int(args.get("days", max(1, int(float(args.get("forecast_hours", 72)) / 24.0))))
     time_range = TimeRange(
         start=datetime.utcnow(),
         end=datetime.utcnow() + timedelta(days=days),
     )
     
+    species = args.get("species")
     params = SporeDispersalParams(
         spatial_extent=extent,
         time_range=time_range,
-        species_filter=args.get("species_filter"),
+        species_filter=args.get("species_filter") or ([species] if isinstance(species, str) and species else None),
+        origin_lat=origin_lat,
+        origin_lon=origin_lon,
+        origin_concentration=float(args.get("origin_concentration", args.get("concentration", 0)) or 0),
     )
     
     result = await service.run_spore_dispersal(params)

@@ -5,12 +5,16 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Union, Callable
 from decimal import Decimal
-import pandas as pd
 import numpy as np
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.messaging.message_broker import MessageBroker
 from mycosoft_mas.agents.messaging.communication_service import CommunicationService
 from mycosoft_mas.agents.messaging.error_logging_service import ErrorLoggingService
+
+try:
+    import pandas as pd  # type: ignore
+except ImportError:  # pragma: no cover
+    pd = None
 
 # Configure logging
 logging.basicConfig(
@@ -35,7 +39,12 @@ class FinanceAdminAgent(BaseAgent):
         Args:
             config: Agent configuration
         """
-        super().__init__(config)
+        agent_id = str(config.get("agent_id") or "finance_admin")
+        name = str(config.get("name") or "Finance Admin Agent")
+        super().__init__(agent_id=agent_id, name=name, config=config)
+
+        # Some legacy agent implementations use `self.id`; keep it as an alias.
+        self.id = self.agent_id
         
         # Initialize financial data
         self.financial_data = {

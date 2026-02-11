@@ -37,10 +37,14 @@ class MINDEXSensor(BaseSensor):
     MINDEX_API_BASE = "http://192.168.0.189:8000"
     FALLBACK_API_BASE = "http://192.168.0.188:8001/api/mindex"
     
-    def __init__(self, world_model: "WorldModel"):
+    def __init__(self, world_model: Optional["WorldModel"] = None):
         super().__init__(world_model, "mindex")
         self._client: Optional[httpx.AsyncClient] = None
         self._api_base = self.MINDEX_API_BASE
+
+    async def search(self, query: str) -> Dict[str, Any]:
+        """Legacy alias used by unit tests."""
+        return await self.query(query)
     
     async def connect(self) -> bool:
         """Connect to the MINDEX API."""

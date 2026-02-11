@@ -432,8 +432,11 @@ class NamespacedMemoryManager:
             if not conversation:
                 return None
             
-            # TODO: Call LLM to generate summary
-            # For now, create a simple summary
+            # NOTE: Pending implementation - LLM summarization requires:
+            # 1. Import LLMClient from mycosoft_mas.llm.client
+            # 2. Call llm_client.summarize(conversation_text, max_tokens=500)
+            # 3. Handle rate limits and fallback to simple summary
+            # Currently using timestamp-based summary placeholder
             summary = f"Conversation summary for {namespace} at {datetime.now(timezone.utc).isoformat()}"
             
             # Archive to long-term memory

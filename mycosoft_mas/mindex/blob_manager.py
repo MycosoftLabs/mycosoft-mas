@@ -1,4 +1,4 @@
-﻿"""
+r"""
 MINDEX Blob Manager - Feb 5, 2026
 Manages binary large objects (images, DNA sequences, PDFs) stored on NAS.
 
@@ -7,21 +7,22 @@ Windows Path: \\192.168.0.105\mycosoft\mindex\ (when mounted)
 
 Directory structure:
 /mnt/nas/mycosoft/mindex/
-â”œâ”€â”€ images/
-â”‚   â”œâ”€â”€ species/           # Species/taxon images
-â”‚   â”‚   â”œâ”€â”€ by_id/         # Organized by taxon ID
-â”‚   â”‚   â””â”€â”€ by_name/       # Organized by genus/species
-â”‚   â””â”€â”€ observations/      # Individual observation photos
-â”œâ”€â”€ sequences/
-â”‚   â”œâ”€â”€ fasta/             # FASTA files
-â”‚   â””â”€â”€ genbank/           # GenBank format files
-â”œâ”€â”€ research/
-â”‚   â”œâ”€â”€ pdfs/              # Research paper PDFs
-â”‚   â””â”€â”€ supplementary/     # Supplementary data files
-â”œâ”€â”€ compounds/
-â”‚   â”œâ”€â”€ structures/        # 2D/3D structure images
-â”‚   â””â”€â”€ spectra/           # Spectral data
-â””â”€â”€ temp/                  # Temporary downloads
+/mnt/nas/mycosoft/mindex/
+|-- images/
+|   |-- species/           # Species/taxon images
+|   |   |-- by_id/         # Organized by taxon ID
+|   |   `-- by_name/       # Organized by genus/species
+|   `-- observations/      # Individual observation photos
+|-- sequences/
+|   |-- fasta/             # FASTA files
+|   `-- genbank/           # GenBank format files
+|-- research/
+|   |-- pdfs/              # Research paper PDFs
+|   `-- supplementary/     # Supplementary data files
+|-- compounds/
+|   |-- structures/        # 2D/3D structure images
+|   `-- spectra/           # Spectral data
+`-- temp/                  # Temporary downloads
 """
 
 import asyncio

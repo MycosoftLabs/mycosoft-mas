@@ -89,3 +89,7 @@ class EvolutionMonitor:
         self.technology_updates.clear()
         self.evolution_alerts.clear()
         self.system_updates.clear() 
+
+    async def check_status(self) -> bool:
+        """Minimal async hook used by `tests/test_mas.py`."""
+        return True

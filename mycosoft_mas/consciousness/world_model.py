@@ -58,23 +58,23 @@ class WorldState:
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     
     # CREP data
-    crep_data: Optional[Dict[str, Any]] = None
+    crep_data: Dict[str, Any] = field(default_factory=dict)
     crep_freshness: DataFreshness = DataFreshness.UNAVAILABLE
     
     # Earth2 predictions
-    predictions: Optional[Dict[str, Any]] = None
+    predictions: Dict[str, Any] = field(default_factory=dict)
     predictions_freshness: DataFreshness = DataFreshness.UNAVAILABLE
     
     # NatureOS status
-    ecosystem_status: Optional[Dict[str, Any]] = None
+    ecosystem_status: Dict[str, Any] = field(default_factory=dict)
     ecosystem_freshness: DataFreshness = DataFreshness.UNAVAILABLE
     
     # MINDEX knowledge
     knowledge_available: bool = False
-    knowledge_stats: Optional[Dict[str, Any]] = None
+    knowledge_stats: Dict[str, Any] = field(default_factory=dict)
     
     # Device telemetry
-    device_telemetry: Optional[Dict[str, Any]] = None
+    device_telemetry: Dict[str, Any] = field(default_factory=dict)
     device_freshness: DataFreshness = DataFreshness.UNAVAILABLE
     
     # Aggregated metrics
@@ -83,6 +83,23 @@ class WorldState:
     total_satellites: int = 0
     active_devices: int = 0
     pending_alerts: int = 0
+
+    # Legacy field names used by the unit tests
+    @property
+    def earth2_data(self) -> Dict[str, Any]:
+        return self.predictions or {}
+
+    @property
+    def natureos_data(self) -> Dict[str, Any]:
+        return self.ecosystem_status or {}
+
+    @property
+    def mindex_data(self) -> Dict[str, Any]:
+        return self.knowledge_stats or {}
+
+    @property
+    def mycobrain_data(self) -> Dict[str, Any]:
+        return self.device_telemetry or {}
     
     def to_summary(self) -> str:
         """Generate a natural language summary of world state."""
@@ -123,11 +140,27 @@ class WorldModel:
     ECOSYSTEM_UPDATE_INTERVAL = 60
     DEVICE_UPDATE_INTERVAL = 10
     
-    def __init__(self, consciousness: "MYCAConsciousness"):
+    def __init__(self, consciousness: Optional["MYCAConsciousness"] = None):
         self._consciousness = consciousness
         self._current_state = WorldState()
         self._history: List[WorldState] = []
         self._max_history = 100
+
+        # Legacy/test compatibility: simple sensor registry.
+        self._sensors: Dict[str, Any] = {}
+        try:
+            from mycosoft_mas.consciousness.sensors import (
+                CREPSensor, Earth2Sensor, NatureOSSensor, MINDEXSensor, MycoBrainSensor
+            )
+            self._sensors = {
+                "crep": CREPSensor(self),
+                "earth2": Earth2Sensor(self),
+                "natureos": NatureOSSensor(self),
+                "mindex": MINDEXSensor(self),
+                "mycobrain": MycoBrainSensor(self),
+            }
+        except Exception:
+            self._sensors = {}
         
         # Sensors (lazy-loaded)
         self._crep_sensor: Optional["CREPSensor"] = None
@@ -161,6 +194,48 @@ class WorldModel:
             logger.info("World sensors initialized")
         except ImportError as e:
             logger.warning(f"Could not initialize some sensors: {e}")
+
+    async def initialize(self) -> None:
+        """Legacy init: connect all sensors."""
+        for sensor in self._sensors.values():
+            connect = getattr(sensor, "connect", None)
+            if asyncio.iscoroutinefunction(connect):
+                await connect()  # type: ignore[misc]
+
+    async def update_all(self) -> None:
+        """Legacy update: read from all sensors and update state."""
+        for name, sensor in self._sensors.items():
+            read = getattr(sensor, "read", None)
+            if not asyncio.iscoroutinefunction(read):
+                continue
+            reading = await read()  # type: ignore[misc]
+            data: Dict[str, Any] = {}
+            if isinstance(reading, SensorReading):
+                data = reading.data
+            elif isinstance(reading, dict):
+                data = reading
+            if name == "crep":
+                self._current_state.crep_data = data
+            elif name == "earth2":
+                self._current_state.predictions = data
+            elif name == "natureos":
+                self._current_state.ecosystem_status = data
+            elif name == "mindex":
+                self._current_state.knowledge_stats = data
+            elif name == "mycobrain":
+                self._current_state.device_telemetry = data
+
+    def get_current_state(self) -> WorldState:
+        """Legacy getter for tests."""
+        return self._current_state
+
+    @property
+    def sensor_status(self) -> Dict[str, Any]:
+        """Legacy sensor status map used by tests."""
+        out: Dict[str, Any] = {}
+        for name, sensor in self._sensors.items():
+            out[name] = getattr(sensor, "status", None)
+        return out
     
     async def update(self) -> None:
         """Update the world model from all sensors."""

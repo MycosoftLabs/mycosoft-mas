@@ -42,11 +42,11 @@ class EventIngestionService:
         }
 
         # Add event node
-        await self.knowledge_graph.add_agent(event["id"], metadata)
+        self.knowledge_graph.add_agent(event["id"], metadata)
 
         # Link to source if provided
         source = event.get("source")
         if source:
             if source not in self.knowledge_graph.graph:
-                await self.knowledge_graph.add_agent(source, {"type": "source"})
-            await self.knowledge_graph.add_relationship(source, event["id"], "generated")
+                self.knowledge_graph.add_agent(source, {"type": "source"})
+            self.knowledge_graph.add_relationship(source, event["id"], "generated")

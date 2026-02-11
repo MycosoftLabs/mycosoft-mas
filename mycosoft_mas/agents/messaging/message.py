@@ -1,10 +1,14 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 from enum import Enum
 
 class MessageType(Enum):
     """Types of messages that can be sent between agents."""
+    # Legacy/general message types used by older agents/tests.
+    TASK = "task"
+    BROWSER = "browser"
+    DESKTOP = "desktop"
     COMMAND = "command"
     RESPONSE = "response"
     ERROR = "error"
@@ -26,17 +30,87 @@ class MessagePriority(Enum):
     HIGH = "high"
     CRITICAL = "critical"
 
-@dataclass
+@dataclass(init=False)
 class Message:
-    """Base message class for agent communication."""
+    """
+    Base message class for agent communication.
+
+    Compatibility:
+    - Some legacy tests/paths construct Message with keywords: `type`, `sender`,
+      `receiver`, `content`. Support these as aliases for:
+      - message_type, sender_id, recipient_id, content
+    """
+
     message_id: str
     sender_id: str
     recipient_id: str
     message_type: MessageType
     content: Dict[str, Any]
-    timestamp: datetime = datetime.now()
+    timestamp: datetime = field(default_factory=datetime.now)
     priority: MessagePriority = MessagePriority.MEDIUM
     metadata: Optional[Dict[str, Any]] = None
+
+    def __init__(
+        self,
+        message_id: str = "",
+        sender_id: Optional[str] = None,
+        recipient_id: Optional[str] = None,
+        message_type: Optional[Union[MessageType, str]] = None,
+        content: Optional[Dict[str, Any]] = None,
+        timestamp: Optional[datetime] = None,
+        priority: MessagePriority = MessagePriority.MEDIUM,
+        metadata: Optional[Dict[str, Any]] = None,
+        **legacy: Any,
+    ):
+        # Legacy aliases:
+        # - type: MessageType | str
+        # - sender: str
+        # - receiver: str
+        if message_type is None and "type" in legacy:
+            message_type = legacy["type"]
+        if sender_id is None and "sender" in legacy:
+            sender_id = legacy["sender"]
+        if recipient_id is None and "receiver" in legacy:
+            recipient_id = legacy["receiver"]
+        if content is None and "content" in legacy:
+            content = legacy["content"]
+
+        # Compatibility: some unit tests construct Messages without sender/recipient.
+        if sender_id is None:
+            sender_id = "unknown"
+        if recipient_id is None:
+            recipient_id = "unknown"
+        if message_type is None:
+            raise TypeError("message_type (or legacy type) is required")
+
+        if isinstance(message_type, str):
+            message_type = MessageType(message_type)
+
+        self.message_id = message_id
+        self.sender_id = str(sender_id)
+        self.recipient_id = str(recipient_id)
+        self.message_type = message_type
+        self.content = content or {}
+        self.timestamp = timestamp or datetime.now()
+        self.priority = priority
+        self.metadata = metadata
+
+    # Legacy attribute aliases (used across parts of the repo + tests).
+    @property
+    def id(self) -> str:
+        return self.message_id
+
+    @property
+    def type(self) -> MessageType:
+        return self.message_type
+
+    @property
+    def sender(self) -> str:
+        return self.sender_id
+
+    @property
+    def receiver(self) -> str:
+        return self.recipient_id
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert message to dictionary format."""

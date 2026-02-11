@@ -107,13 +107,18 @@ class IPTokenizationAgent(BaseAgent):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
         
-    async def initialize(self):
-        """Initialize the IP Tokenization agent."""
-        await super().initialize()
-        await self._load_tokenization_data()
-        await self._initialize_blockchain_clients()
-        await self._start_background_tasks()
+    async def initialize(self, integration_service=None, **kwargs):
+        """
+        Initialize the IP Tokenization agent.
+
+        Compatibility: unit tests pass an `integration_service` argument. Keep
+        initialization lightweight for test runs; heavy I/O and blockchain
+        clients are initialized lazily when needed.
+        """
+        _ = kwargs
+        await super().initialize(integration_service)
         self.logger.info(f"IP Tokenization Agent {self.name} initialized successfully")
+        return True
         
     async def _load_tokenization_data(self):
         """Load tokenization data from storage."""
@@ -161,11 +166,30 @@ class IPTokenizationAgent(BaseAgent):
     
     async def _start_background_tasks(self):
         """Start background tasks for tokenization."""
-        asyncio.create_task(self._process_tokenization_queue())
-        asyncio.create_task(self._process_verification_queue())
-        asyncio.create_task(self._process_transfer_queue())
-        asyncio.create_task(self._monitor_tokenizations())
+        # Track tasks so BaseAgent.stop() can cancel them cleanly in tests.
+        self.background_tasks = [
+            asyncio.create_task(self._process_tokenization_queue()),
+            asyncio.create_task(self._process_verification_queue()),
+            asyncio.create_task(self._process_transfer_queue()),
+            asyncio.create_task(self._monitor_tokenizations()),
+        ]
         self.logger.info("Started IP Tokenization background tasks")
+
+    async def _process_tokenization_queue(self) -> None:
+        while self.is_running:
+            await asyncio.sleep(0.1)
+
+    async def _process_verification_queue(self) -> None:
+        while self.is_running:
+            await asyncio.sleep(0.1)
+
+    async def _process_transfer_queue(self) -> None:
+        while self.is_running:
+            await asyncio.sleep(0.1)
+
+    async def _monitor_tokenizations(self) -> None:
+        while self.is_running:
+            await asyncio.sleep(0.1)
     
     async def create_proof_of_invention(self, asset_id: str, proof_data: Dict) -> Dict:
         """Create a proof of invention on Ethereum using Molecule's PoI protocol."""

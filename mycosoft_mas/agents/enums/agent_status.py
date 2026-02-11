@@ -4,6 +4,7 @@ class AgentStatus(Enum):
     """Agent lifecycle status enumeration."""
     INITIALIZED = "initialized"  # Agent created but not yet started
     INITIALIZING = "initializing"  # Agent is starting up
+    RUNNING = "running"  # Legacy/test alias for "active"
     ACTIVE = "active"  # Agent is running and processing
     PAUSED = "paused"  # Agent is temporarily suspended
     IDLE = "idle"  # Agent is running but has no tasks

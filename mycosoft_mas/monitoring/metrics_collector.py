@@ -1,30 +1,75 @@
 from typing import Dict, Any, List
 import logging
 from datetime import datetime
-from prometheus_client import Counter, Gauge, Histogram, Summary
+from mycosoft_mas.monitoring.prometheus_utils import (
+    get_counter,
+    get_gauge,
+    get_histogram,
+    get_summary,
+)
 
 # Dependency Metrics
-dependency_conflicts = Counter('dependency_conflicts_total', 'Total number of dependency conflicts', ['service', 'conflict_type'])
-dependency_resolution_time = Histogram('dependency_resolution_time_seconds', 'Time taken to resolve dependency conflicts', ['service'])
+dependency_conflicts = get_counter(
+    "dependency_conflicts_total",
+    "Total number of dependency conflicts",
+    labelnames=["service", "conflict_type"],
+)
+dependency_resolution_time = get_histogram(
+    "dependency_resolution_time_seconds",
+    "Time taken to resolve dependency conflicts",
+    labelnames=["service"],
+)
 
 # Integration Metrics
-integration_failures = Counter('integration_failures_total', 'Total number of integration failures', ['service', 'integration_type'])
-integration_latency = Histogram('integration_latency_seconds', 'Integration operation latency', ['service', 'operation'])
+integration_failures = get_counter(
+    "integration_failures_total",
+    "Total number of integration failures",
+    labelnames=["service", "integration_type"],
+)
+integration_latency = get_histogram(
+    "integration_latency_seconds",
+    "Integration operation latency",
+    labelnames=["service", "operation"],
+)
 
 # Task Metrics
-task_execution_time = Histogram('task_execution_time_seconds', 'Task execution time', ['service', 'task_type'])
-task_success_rate = Gauge('task_success_rate', 'Task success rate', ['service'])
-task_queue_length = Gauge('task_queue_length', 'Number of tasks in queue', ['service'])
+task_execution_time = get_histogram(
+    "task_execution_time_seconds",
+    "Task execution time",
+    labelnames=["service", "task_type"],
+)
+task_success_rate = get_gauge("task_success_rate", "Task success rate", labelnames=["service"])
+task_queue_length = get_gauge("task_queue_length", "Number of tasks in queue", labelnames=["service"])
 
 # Security Metrics
-security_vulnerability_severity = Gauge('security_vulnerability_severity', 'Security vulnerability severity level', ['service', 'vulnerability_id'])
-security_scan_duration = Histogram('security_scan_duration_seconds', 'Duration of security scans', ['service'])
-security_patch_time = Histogram('security_patch_time_seconds', 'Time taken to apply security patches', ['service'])
+security_vulnerability_severity = get_gauge(
+    "security_vulnerability_severity",
+    "Security vulnerability severity level",
+    labelnames=["service", "vulnerability_id"],
+)
+security_scan_duration = get_histogram(
+    "security_scan_duration_seconds",
+    "Duration of security scans",
+    labelnames=["service"],
+)
+security_patch_time = get_histogram(
+    "security_patch_time_seconds",
+    "Time taken to apply security patches",
+    labelnames=["service"],
+)
 
 # Technology Metrics
-technology_update_impact = Gauge('technology_update_impact_score', 'Impact score of technology updates', ['service', 'update_type'])
-technology_compatibility = Gauge('technology_compatibility_score', 'Technology compatibility score', ['service', 'technology'])
-technology_adoption_rate = Gauge('technology_adoption_rate', 'Rate of technology adoption', ['service'])
+technology_update_impact = get_gauge(
+    "technology_update_impact_score",
+    "Impact score of technology updates",
+    labelnames=["service", "update_type"],
+)
+technology_compatibility = get_gauge(
+    "technology_compatibility_score",
+    "Technology compatibility score",
+    labelnames=["service", "technology"],
+)
+technology_adoption_rate = get_gauge("technology_adoption_rate", "Rate of technology adoption", labelnames=["service"])
 
 class MetricsCollector:
     def __init__(self, service_name: str):

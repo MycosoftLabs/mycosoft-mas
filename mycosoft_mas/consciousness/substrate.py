@@ -242,7 +242,7 @@ class DigitalSubstrate(BaseSubstrate):
         This dispatches to appropriate handlers based on computation type.
         """
         if not self._initialized:
-            return {"error": "Substrate not initialized"}
+            return {"status": "error", "error": "Substrate not initialized"}
         
         comp_type = computation.get("type", "unknown")
         
@@ -257,17 +257,17 @@ class DigitalSubstrate(BaseSubstrate):
             
             if operation == "store":
                 success = await self.store(key, computation.get("data"))
-                return {"success": success}
+                return {"status": "ok" if success else "error", "success": success}
             elif operation == "retrieve":
                 data = await self.retrieve(key)
-                return {"data": data}
+                return {"status": "ok", "data": data}
         
         elif comp_type == "sensor_read":
             # Sensor reads go through world model
             return {"status": "delegated", "handler": "world_model"}
         
         else:
-            return {"error": f"Unknown computation type: {comp_type}"}
+            return {"status": "error", "error": f"Unknown computation type: {comp_type}"}
     
     async def store(self, key: str, data: Any) -> bool:
         """Store in digital memory."""

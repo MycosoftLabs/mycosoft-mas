@@ -4,15 +4,35 @@ from datetime import datetime
 import psutil
 import redis
 import requests
-from prometheus_client import Gauge, Counter, Histogram
+from mycosoft_mas.monitoring.prometheus_utils import get_gauge, get_histogram
 
 # Prometheus metrics
-service_health = Gauge('service_health', 'Service health status (1=healthy, 0=unhealthy)', ['service'])
-service_uptime = Gauge('service_uptime_seconds', 'Service uptime in seconds', ['service'])
-service_memory_usage = Gauge('service_memory_usage_bytes', 'Service memory usage in bytes', ['service'])
-service_cpu_usage = Gauge('service_cpu_usage_percent', 'Service CPU usage percentage', ['service'])
-service_dependencies_health = Gauge('service_dependencies_health', 'Service dependencies health status', ['service', 'dependency'])
-service_response_time = Histogram('service_response_time_seconds', 'Service response time in seconds', ['service', 'endpoint'])
+service_health = get_gauge(
+    "service_health",
+    "Service health status (1=healthy, 0=unhealthy)",
+    labelnames=["service"],
+)
+service_uptime = get_gauge("service_uptime_seconds", "Service uptime in seconds", labelnames=["service"])
+service_memory_usage = get_gauge(
+    "service_memory_usage_bytes",
+    "Service memory usage in bytes",
+    labelnames=["service"],
+)
+service_cpu_usage = get_gauge(
+    "service_cpu_usage_percent",
+    "Service CPU usage percentage",
+    labelnames=["service"],
+)
+service_dependencies_health = get_gauge(
+    "service_dependencies_health",
+    "Service dependencies health status",
+    labelnames=["service", "dependency"],
+)
+service_response_time = get_histogram(
+    "service_response_time_seconds",
+    "Service response time in seconds",
+    labelnames=["service", "endpoint"],
+)
 
 class HealthCheck:
     def __init__(self, service_name: str, redis_host: str = 'localhost', redis_port: int = 6379):

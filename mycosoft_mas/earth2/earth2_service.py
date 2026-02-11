@@ -1,4 +1,4 @@
-﻿"""
+"""
 Earth2Studio Service Wrapper
 February 4, 2026
 Updated: February 5, 2026 - Added Earth2 Memory integration
@@ -569,6 +569,8 @@ class Earth2StudioService:
             run_id=run_id,
             status="completed",
             params=params,
+            species=(params.species or (params.species_filter[0] if params.species_filter else None)),
+            peak_concentration=float(getattr(params, "origin_concentration", None) or 0.0),
             weather_run_id=weather_result.run_id,
             concentration_map_url=f"file://{output_dir}/concentration.zarr",
             risk_zones=[

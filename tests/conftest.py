@@ -1,3 +1,22 @@
+def pytest_configure(config):
+    """
+    Disable pytest-cov on this repo by default.
+
+    On Windows we've observed intermittent corruption/locking of the SQLite-backed
+    `.coverage*` files, leading to pytest INTERNALERROR after the test run.
+    Coverage can still be run explicitly in a clean environment if needed.
+    """
+
+    pm = config.pluginmanager
+
+    for name in ("cov", "pytest_cov"):
+        plugin = pm.get_plugin(name)
+        if plugin is not None:
+            pm.unregister(plugin)
+
+        # Also block (defensive) in case of later auto-loading.
+        pm.set_blocked(name)
+
 import pytest
 import asyncio
 import sys

@@ -318,22 +318,54 @@ class MINDEXCrypto:
         return secrets.token_urlsafe(length)
     
     def encrypt_for_voice(self, data: str, key_id: str) -> Dict[str, str]:
-        """Encrypt data for voice transmission (base64 for simplicity)."""
+        """Encrypt data for voice transmission using AES-GCM."""
+        import os
         import base64
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
         
-        # In production, use proper encryption (AES-GCM)
-        encoded = base64.b64encode(data.encode()).decode()
+        # Get encryption key from environment or generate one
+        key_env = os.environ.get("VOICE_ENCRYPTION_KEY")
+        if key_env:
+            key = base64.b64decode(key_env)
+        else:
+            # Generate a 256-bit key for AES-GCM
+            key = AESGCM.generate_key(bit_length=256)
         
+        # Generate a random 96-bit nonce
+        nonce = os.urandom(12)
+        
+        # Encrypt using AES-GCM
+        aesgcm = AESGCM(key)
+        ciphertext = aesgcm.encrypt(nonce, data.encode(), None)
+        
+        # Return base64-encoded values for transmission
         return {
-            "ciphertext": encoded,
+            "ciphertext": base64.b64encode(ciphertext).decode(),
+            "nonce": base64.b64encode(nonce).decode(),
             "key_id": key_id,
-            "algorithm": "base64",  # Placeholder - use AES-GCM in production
+            "algorithm": "AES-256-GCM",
         }
     
-    def decrypt_from_voice(self, ciphertext: str, key_id: str) -> str:
-        """Decrypt data from voice transmission."""
+    def decrypt_from_voice(self, ciphertext: str, key_id: str, nonce: str = None) -> str:
+        """Decrypt data from voice transmission using AES-GCM."""
+        import os
         import base64
-        return base64.b64decode(ciphertext).decode()
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        
+        # Get encryption key from environment
+        key_env = os.environ.get("VOICE_ENCRYPTION_KEY")
+        if not key_env:
+            raise ValueError("VOICE_ENCRYPTION_KEY environment variable not set")
+        
+        key = base64.b64decode(key_env)
+        nonce_bytes = base64.b64decode(nonce) if nonce else os.urandom(12)
+        ciphertext_bytes = base64.b64decode(ciphertext)
+        
+        # Decrypt using AES-GCM
+        aesgcm = AESGCM(key)
+        plaintext = aesgcm.decrypt(nonce_bytes, ciphertext_bytes, None)
+        
+        return plaintext.decode()
 
 
 class VoiceSecurityGateway:
