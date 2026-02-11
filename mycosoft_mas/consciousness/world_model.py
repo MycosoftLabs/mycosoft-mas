@@ -369,3 +369,71 @@ class WorldModel:
             "active_devices": self._current_state.active_devices,
             "history_size": len(self._history),
         }
+    
+    async def get_state(self) -> Dict[str, Any]:
+        """Get current world state as a dictionary."""
+        return {
+            "timestamp": self._current_state.timestamp.isoformat(),
+            "sensors": {
+                "crep": {
+                    "data": self._current_state.crep_data,
+                    "freshness": self._current_state.crep_freshness.value,
+                    "flights": {"count": self._current_state.total_flights},
+                    "vessels": {"count": self._current_state.total_vessels},
+                    "satellites": {"count": self._current_state.total_satellites},
+                },
+                "earth2": {
+                    "data": self._current_state.predictions,
+                    "freshness": self._current_state.predictions_freshness.value,
+                    "models": "Multiple prediction models available",
+                },
+                "natureos": {
+                    "data": self._current_state.ecosystem_status,
+                    "freshness": self._current_state.ecosystem_freshness.value,
+                },
+                "mindex": {
+                    "available": self._current_state.knowledge_available,
+                    "stats": self._current_state.knowledge_stats,
+                },
+                "mycobrain": {
+                    "data": self._current_state.device_telemetry,
+                    "freshness": self._current_state.device_freshness.value,
+                    "active_devices": self._current_state.active_devices,
+                },
+            },
+            "alerts": self._current_state.pending_alerts,
+            "summary": self._current_state.to_summary(),
+        }
+
+
+class StandaloneWorldModel:
+    """Standalone world model for use without full consciousness."""
+    
+    def __init__(self):
+        self._current_state = WorldState()
+    
+    async def get_state(self) -> Dict[str, Any]:
+        """Get current world state."""
+        return {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "sensors": {
+                "crep": {"status": "not_connected"},
+                "earth2": {"status": "not_connected"},
+                "natureos": {"status": "not_connected"},
+                "mindex": {"status": "not_connected"},
+                "mycobrain": {"status": "not_connected"},
+            },
+            "summary": "Standalone world model - sensors not initialized",
+        }
+
+
+# Singleton instance for standalone use
+_world_model: Optional[StandaloneWorldModel] = None
+
+
+def get_world_model() -> StandaloneWorldModel:
+    """Get or create the standalone world model singleton."""
+    global _world_model
+    if _world_model is None:
+        _world_model = StandaloneWorldModel()
+    return _world_model
