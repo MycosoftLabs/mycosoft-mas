@@ -29,6 +29,7 @@ from mycosoft_mas.core.routers.agent_registry_api import get_agent_registry
 from mycosoft_mas.core.routers.agent_registry_api import router as agent_registry_router
 from mycosoft_mas.core.routers.orchestrator_api import router as orchestrator_api_router
 from mycosoft_mas.core.routers.agent_runner_api import router as agent_runner_router
+from mycosoft_mas.core.routers.gap_api import router as gap_api_router
 from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
@@ -120,6 +121,20 @@ try:
     N8N_WEBHOOKS_API_AVAILABLE = True
 except ImportError:
     N8N_WEBHOOKS_API_AVAILABLE = False
+
+# NLM API - Nature Learning Model
+try:
+    from mycosoft_mas.core.routers.nlm_api import router as nlm_router
+    NLM_API_AVAILABLE = True
+except ImportError:
+    NLM_API_AVAILABLE = False
+
+# MYCA Intention API - tracks user context for intelligent suggestions
+try:
+    from mycosoft_mas.core.routers.intention_api import router as intention_router
+    INTENTION_API_AVAILABLE = True
+except ImportError:
+    INTENTION_API_AVAILABLE = False
 
 # N8N Client - use mycosoft_mas path
 try:
@@ -309,6 +324,7 @@ app.add_middleware(RateLimitMiddleware)
 app.include_router(agent_registry_router)
 app.include_router(orchestrator_api_router)
 app.include_router(agent_runner_router)
+app.include_router(gap_api_router)
 app.include_router(coding_router)
 app.include_router(integrations_router)
 app.include_router(notifications_router)
@@ -375,6 +391,20 @@ except NameError:
 try:
     if N8N_WEBHOOKS_API_AVAILABLE:
         app.include_router(n8n_webhooks_router, tags=["n8n-webhooks"])
+except NameError:
+    pass
+
+# NLM API - Nature Learning Model for mycology/natural sciences
+try:
+    if NLM_API_AVAILABLE:
+        app.include_router(nlm_router, tags=["nlm"])
+except NameError:
+    pass
+
+# MYCA Intention API - tracks user context for intelligent suggestions
+try:
+    if INTENTION_API_AVAILABLE:
+        app.include_router(intention_router, tags=["myca-intention"])
 except NameError:
     pass
 
