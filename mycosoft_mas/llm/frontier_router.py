@@ -223,7 +223,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key={self.gemini_api_key}&alt=sse"
         
         try:
-            async with httpx.AsyncClient(timeout=15) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 async with client.stream("POST", url, json=payload) as response:
                     # Check for error status codes immediately
                     if response.status_code != 200:
@@ -276,7 +276,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         }
         
         try:
-            async with httpx.AsyncClient(timeout=15) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 async with client.stream(
                     "POST",
                     "https://api.anthropic.com/v1/messages",
@@ -327,7 +327,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         }
         
         try:
-            async with httpx.AsyncClient(timeout=15) as client:
+            async with httpx.AsyncClient(timeout=30) as client:
                 async with client.stream(
                     "POST",
                     "https://api.openai.com/v1/chat/completions",

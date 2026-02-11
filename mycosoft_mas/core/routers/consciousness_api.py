@@ -183,8 +183,8 @@ async def chat(request: ChatRequest):
             ):
                 response_parts.append(chunk)
         
-        # 30 second timeout for the full response
-        await asyncio.wait_for(collect_response(), timeout=30)
+        # 60 second timeout for the full response (now with parallel processing)
+        await asyncio.wait_for(collect_response(), timeout=60)
         
     except asyncio.TimeoutError:
         logger.error("Chat response timed out, using fallback")
