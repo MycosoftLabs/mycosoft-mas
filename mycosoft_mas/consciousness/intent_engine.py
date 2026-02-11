@@ -169,7 +169,7 @@ Respond with JSON only:
         if context.get("conversation_history"):
             user_prompt += f"\n\nRecent context: {context['conversation_history'][-3:]}"
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_api_key}"
         
         payload = {
             "contents": [
@@ -190,12 +190,34 @@ Respond with JSON only:
             data = response.json()
             text = data["candidates"][0]["content"]["parts"][0]["text"]
             
-            # Extract JSON from response
-            json_match = re.search(r'\{[^{}]*\}', text, re.DOTALL)
-            if not json_match:
+            # Extract JSON from response - handle nested braces
+            # First try to find JSON block between ```json and ``` if present
+            json_block = re.search(r'```json\s*([\s\S]*?)\s*```', text)
+            if json_block:
+                json_str = json_block.group(1).strip()
+            else:
+                # Try to find JSON object by matching balanced braces
+                start = text.find('{')
+                if start == -1:
+                    raise Exception("No JSON found in response")
+                
+                brace_count = 0
+                end = start
+                for i, char in enumerate(text[start:], start):
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            end = i + 1
+                            break
+                
+                json_str = text[start:end]
+            
+            if not json_str:
                 raise Exception("No JSON found in response")
             
-            result = json.loads(json_match.group())
+            result = json.loads(json_str)
             
             intent_type = IntentType(result.get("intent_type", "unknown"))
             

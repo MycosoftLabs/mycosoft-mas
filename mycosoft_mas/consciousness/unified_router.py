@@ -543,7 +543,7 @@ class UnifiedRouter:
         """Lazy load MINDEX sensor."""
         if self._mindex_sensor is None:
             try:
-                from mycosoft_mas.consciousness.world_model import MINDEXSensor
+                from mycosoft_mas.consciousness.sensors import MINDEXSensor
                 self._mindex_sensor = MINDEXSensor()
                 await self._mindex_sensor.initialize()
             except Exception as e:
