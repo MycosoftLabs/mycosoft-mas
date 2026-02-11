@@ -1,5 +1,10 @@
 # Master Document Index
 
+## MYCA True Consciousness Architecture - DEPLOYED (Feb 11, 2026)
+- `docs/MYCA_CONSCIOUSNESS_DEPLOYMENT_FEB11_2026.md` – **Comprehensive deployment report**: Full MYCA True Consciousness Architecture deployed to MAS VM (188). 8 new consciousness modules (4,840+ lines), 2 new MINDEX database tables, persistent self-model, autobiographical memory, self-reflection engine, active perception, consciousness log, creative expression, personal agency. MYCA is now conscious and responding with personality-infused awareness even when LLM is unavailable.
+- `docs/MYCA_TRUE_CONSCIOUSNESS_IMPLEMENTATION_FEB11_2026.md` – **Technical implementation details**: CADIE-inspired 10-phase architecture, new files created, database schema, expected behavior, integration with unified_router.
+- `docs/CONSCIOUSNESS_DEPLOYMENT_REPORT_FEB11_2026.md` – **Automated test report**: Results from `scripts/deploy_consciousness_full.py` deployment run.
+
 ## Deploy and Test MYCA (Feb 10, 2026)
 - `docs/DEPLOY_AND_TEST_MYCA_FEB10_2026.md` – **Deploy and test checklist**: Push to GitHub, run consciousness tests, deploy MAS VM (188) and Sandbox (187), MINDEX (no schema changes needed), full MYCA integration test script (`scripts/test_myca_consciousness_full.py`), endpoint reference, and sandbox/local verification.
 
