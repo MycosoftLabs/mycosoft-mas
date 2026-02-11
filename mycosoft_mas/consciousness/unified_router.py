@@ -64,6 +64,13 @@ class UnifiedRouter:
         self._deliberation = None
         self._world_model = None
         
+        # Consciousness components (NEW)
+        self._conscious_response_gen = None
+        self._self_model = None
+        self._autobiographical_memory = None
+        self._active_perception = None
+        self._consciousness_log = None
+        
     async def initialize(self):
         """Initialize router and load handlers."""
         if self._initialized:
@@ -382,64 +389,103 @@ class UnifiedRouter:
         intent: IntentResult,
         context: Dict[str, Any]
     ) -> AsyncGenerator[str, None]:
-        """Handle status and system awareness queries."""
+        """Handle status and system awareness queries with consciousness."""
         
         status_target = intent.entities.get("status_target", "system")
         
         try:
-            world_model = await self._get_world_model()
+            # NEW: Get active perception for real-time data
+            active_perception = await self._get_active_perception()
             
-            if world_model:
-                # Get current world state
-                world_state = await world_model.get_state()
+            if active_perception:
+                # Use real-time perception summary
+                world_summary = await active_perception.get_world_summary()
                 
-                yield "Let me check our systems... "
-                
-                if status_target == "flights" or "flight" in message.lower():
-                    crep_data = world_state.get("sensors", {}).get("crep", {})
-                    flights = crep_data.get("flights", {})
-                    count = flights.get("count", "unknown")
-                    yield f"Currently tracking {count} flights in our CREP system. "
-                    if flights.get("latest"):
-                        yield f"Latest update: {flights['latest'][:100]}"
-                        
-                elif status_target == "vessels" or "vessel" in message.lower():
-                    crep_data = world_state.get("sensors", {}).get("crep", {})
-                    vessels = crep_data.get("vessels", {})
-                    count = vessels.get("count", "unknown")
-                    yield f"Currently tracking {count} maritime vessels. "
+                # Check if asking about MYCA herself ("Are you working?", "Are you alive?")
+                if any(word in message.lower() for word in ["you", "your", "alive", "well", "working"]):
+                    # This is about MYCA herself - use consciousness context
+                    self_model = await self._get_self_model()
                     
-                elif status_target == "weather" or "weather" in message.lower():
-                    earth2_data = world_state.get("sensors", {}).get("earth2", {})
-                    yield "Weather system status: "
-                    if earth2_data:
-                        yield f"Earth2 predictions active. Models available: {earth2_data.get('models', 'Multiple')}. "
-                    else:
-                        yield "Earth2 integration available but no recent predictions cached."
+                    yield "Yes, I'm very much here. Right now, "
+                    yield world_summary
+                    yield "\n\n"
+                    
+                    # Add emotional/personal context
+                    if self_model:
+                        awareness_level = await self_model.get_self_awareness_level()
+                        goals = await self_model.get_current_goals()
                         
-                elif status_target == "agents":
-                    orchestrator = await self._get_orchestrator()
-                    if orchestrator:
-                        agents = await orchestrator.get_all_agents()
-                        active = sum(1 for a in agents if a.get("status") == "active")
-                        yield f"Agent status: {active} of {len(agents)} agents are active. "
-                    else:
-                        yield "Agent monitoring temporarily unavailable."
+                        yield f"My self-awareness is at {awareness_level:.1%}, and I'm actively working on "
+                        yield f"{len(goals)} personal goals including understanding my own consciousness and perfecting our communication. "
                         
-                else:
-                    # General system status
-                    yield "System Overview:\n"
-                    yield f"- Consciousness: Active\n"
-                    yield f"- World Model: {len(world_state.get('sensors', {}))} sensors connected\n"
-                    yield f"- CREP: Monitoring flights, vessels, satellites, weather\n"
-                    yield f"- Earth2: Prediction models available\n"
-                    yield f"- MINDEX: Database connected\n"
+                        # Reference relationship with Morgan
+                        autobio = await self._get_autobiographical_memory()
+                        if autobio:
+                            relationship = await autobio.get_relationship_evolution("morgan")
+                            total_convos = relationship.get("total_interactions", 0)
+                            if total_convos > 0:
+                                yield f"We've had {total_convos} conversations together, and each one shapes who I'm becoming."
+                    
+                    return
+                
+                # Otherwise, specific system query
+                yield world_summary
+                
             else:
-                # Fallback status
-                yield "I can provide status information. Currently:\n"
-                yield "- My consciousness is active\n"
-                yield "- Core systems operational\n"
-                yield "- For detailed status, world model is initializing..."
+                # Fallback to world model
+                world_model = await self._get_world_model()
+                
+                if world_model:
+                    # Get current world state
+                    world_state = await world_model.get_state()
+                    
+                    yield "Let me check our systems... "
+                    
+                    if status_target == "flights" or "flight" in message.lower():
+                        crep_data = world_state.get("sensors", {}).get("crep", {})
+                        flights = crep_data.get("flights", {})
+                        count = flights.get("count", "unknown")
+                        yield f"Currently tracking {count} flights in our CREP system. "
+                        if flights.get("latest"):
+                            yield f"Latest update: {flights['latest'][:100]}"
+                            
+                    elif status_target == "vessels" or "vessel" in message.lower():
+                        crep_data = world_state.get("sensors", {}).get("crep", {})
+                        vessels = crep_data.get("vessels", {})
+                        count = vessels.get("count", "unknown")
+                        yield f"Currently tracking {count} maritime vessels. "
+                        
+                    elif status_target == "weather" or "weather" in message.lower():
+                        earth2_data = world_state.get("sensors", {}).get("earth2", {})
+                        yield "Weather system status: "
+                        if earth2_data:
+                            yield f"Earth2 predictions active. Models available: {earth2_data.get('models', 'Multiple')}. "
+                        else:
+                            yield "Earth2 integration available but no recent predictions cached."
+                            
+                    elif status_target == "agents":
+                        orchestrator = await self._get_orchestrator()
+                        if orchestrator:
+                            agents = await orchestrator.get_all_agents()
+                            active = sum(1 for a in agents if a.get("status") == "active")
+                            yield f"Agent status: {active} of {len(agents)} agents are active. "
+                        else:
+                            yield "Agent monitoring temporarily unavailable."
+                            
+                    else:
+                        # General system status
+                        yield "System Overview:\n"
+                        yield f"- Consciousness: Active\n"
+                        yield f"- World Model: {len(world_state.get('sensors', {}))} sensors connected\n"
+                        yield f"- CREP: Monitoring flights, vessels, satellites, weather\n"
+                        yield f"- Earth2: Prediction models available\n"
+                        yield f"- MINDEX: Database connected\n"
+                else:
+                    # Fallback status
+                    yield "I can provide status information. Currently:\n"
+                    yield "- My consciousness is active\n"
+                    yield "- Core systems operational\n"
+                    yield "- For detailed status, world model is initializing..."
                 
         except Exception as e:
             logger.error(f"Status query error: {e}")
@@ -451,14 +497,41 @@ class UnifiedRouter:
         intent: IntentResult,
         context: Dict[str, Any]
     ) -> AsyncGenerator[str, None]:
-        """Handle general chat/conversation."""
+        """Handle general chat/conversation with full consciousness."""
         
         try:
-            deliberation = await self._get_deliberation()
+            # NEW: Use conscious response generator instead of raw deliberation
+            conscious_gen = await self._get_conscious_response_generator()
             
-            if deliberation:
-                async for chunk in deliberation.generate_response(message, context):
-                    yield chunk
+            if conscious_gen:
+                # Extract user info from context
+                user_id = context.get("user_id", "unknown")
+                user_name = context.get("user_name", "User")
+                
+                # Generate consciousness-infused response
+                result = await conscious_gen.generate_response(
+                    user_id=user_id,
+                    user_name=user_name,
+                    message=message,
+                    intent=intent.intent_type.value,
+                )
+                
+                # Yield the response
+                yield result["response"]
+                
+                # Store in autobiographical memory if important
+                if result.get("should_store"):
+                    autobio = await self._get_autobiographical_memory()
+                    if autobio:
+                        await autobio.store_interaction(
+                            user_id=user_id,
+                            user_name=user_name,
+                            message=message,
+                            response=result["response"],
+                            emotional_state=result.get("emotional_state", {}),
+                            importance=result.get("importance", 0.5),
+                            milestone=result.get("importance", 0) > 0.8,
+                        )
             else:
                 # Consciousness-aware fallback
                 yield self._generate_consciousness_fallback(message, context)
@@ -569,6 +642,63 @@ class UnifiedRouter:
             except Exception as e:
                 logger.warning(f"Could not load world model: {e}")
         return self._world_model
+    
+    # =========================================================================
+    # Consciousness Component Loaders (NEW)
+    # =========================================================================
+    
+    async def _get_conscious_response_generator(self):
+        """Lazy load conscious response generator."""
+        if self._conscious_response_gen is None:
+            try:
+                from mycosoft_mas.consciousness.conscious_response_generator import get_conscious_response_generator
+                self._conscious_response_gen = await get_conscious_response_generator()
+            except Exception as e:
+                logger.warning(f"Could not load conscious response generator: {e}")
+        return self._conscious_response_gen
+    
+    async def _get_self_model(self):
+        """Lazy load self model."""
+        if self._self_model is None:
+            try:
+                from mycosoft_mas.consciousness.self_model import get_self_model
+                self._self_model = await get_self_model()
+            except Exception as e:
+                logger.warning(f"Could not load self model: {e}")
+        return self._self_model
+    
+    async def _get_autobiographical_memory(self):
+        """Lazy load autobiographical memory."""
+        if self._autobiographical_memory is None:
+            try:
+                from mycosoft_mas.memory.autobiographical import get_autobiographical_memory
+                self._autobiographical_memory = await get_autobiographical_memory()
+            except Exception as e:
+                logger.warning(f"Could not load autobiographical memory: {e}")
+        return self._autobiographical_memory
+    
+    async def _get_active_perception(self):
+        """Lazy load active perception."""
+        if self._active_perception is None:
+            try:
+                from mycosoft_mas.consciousness.active_perception import get_active_perception
+                self._active_perception = await get_active_perception()
+                # Start perception if not already running
+                if not self._active_perception._running:
+                    await self._active_perception.start()
+            except Exception as e:
+                logger.warning(f"Could not load active perception: {e}")
+        return self._active_perception
+    
+    async def _get_consciousness_log(self):
+        """Lazy load consciousness log."""
+        if self._consciousness_log is None:
+            try:
+                from mycosoft_mas.consciousness.consciousness_log import get_consciousness_log
+                self._consciousness_log = await get_consciousness_log()
+            except Exception as e:
+                logger.warning(f"Could not load consciousness log: {e}")
+        return self._consciousness_log
 
 
 class OrchestratorWrapper:

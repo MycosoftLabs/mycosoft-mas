@@ -39,6 +39,9 @@
 ## System Status, Purge, GitHub Path (Feb 9, 2026)
 - `docs/SYSTEM_STATUS_AND_PURGE_FEB09_2026.md` – **Status and purge**: What’s done, what can be done, Cloudflare purge (credentials in .env.local or “agents cat”), GitHub-as-source-of-truth for MAS and website, and “always read latest docs” rule for agents.
 
+## Gap Agent (Feb 10, 2026)
+- `docs/GAP_AGENT_FEB10_2026.md` – **Cross-repo gap agent**: Finds gaps between repos and agents (TODOs, FIXMEs, stubs, 501 routes, bridge/integration gaps); suggests plans; runs in 24/7 runner; API at `/agents/gap/scan`, `/agents/gap/plans`, `/agents/gap/summary`. Use when multiple agents work on multiple projects and a “third” connection or bridge might be missing.
+
 ## GitHub Push HTTP 500 — Root Cause (Feb 10, 2026)
 - `docs/GITHUB_PUSH_500_ROOT_CAUSE_FEB10_2026.md` – **Why push failed on this machine**: LFS was fully disabled (`.lfsconfig` `concurrenttransfers = 0`) after the PersonaPlex 1.74 TB incident; that same setting broke push and caused GitHub HTTP 500. Fix: `concurrenttransfers = 1` with `fetchexclude = *` (push works, PC still doesn’t download LFS). Push verified successful after fix.
 
