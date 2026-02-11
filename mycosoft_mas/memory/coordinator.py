@@ -1,4 +1,4 @@
-﻿"""
+"""
 Memory Coordinator - Central Memory Hub for MYCA.
 Created: February 5, 2026
 
@@ -745,6 +745,114 @@ class MemoryCoordinator:
             return {"database_connected": False}
         
         return await memory.get_workflow_health()
+    
+    # =========================================================================
+    # Semantic Search Operations (RAG Integration)
+    # =========================================================================
+    
+    async def semantic_search(
+        self,
+        query: str,
+        limit: int = 5,
+        collections: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Perform semantic search across memory systems and MINDEX.
+        
+        This method is used for RAG (Retrieval Augmented Generation) to find
+        relevant context for LLM responses.
+        
+        Args:
+            query: Search query text
+            limit: Maximum results to return
+            collections: Optional list of collections to search
+                        (e.g., ["fungi", "devices", "conversations"])
+            
+        Returns:
+            List of relevant documents with content and metadata
+        """
+        results = []
+        collections = collections or ["fungi", "devices"]
+        
+        # Try MINDEX sensor for knowledge base search
+        try:
+            from mycosoft_mas.consciousness.sensors import MINDEXSensor
+            mindex = MINDEXSensor()
+            await mindex.initialize()
+            
+            for collection in collections:
+                if collection in ["fungi", "compounds", "devices"]:
+                    mindex_results = await mindex.semantic_search(
+                        query=query,
+                        limit=limit,
+                        collection=collection
+                    )
+                    results.extend(mindex_results)
+                    
+        except Exception as e:
+            logger.warning(f"MINDEX semantic search failed: {e}")
+        
+        # Also search local memory if available
+        if self._myca_memory and hasattr(self._myca_memory, "search"):
+            try:
+                memory_results = await self._myca_memory.search(
+                    query=query,
+                    limit=limit
+                )
+                if memory_results:
+                    results.extend([
+                        {
+                            "content": r.get("content", str(r)),
+                            "source": "myca_memory",
+                            "layer": r.get("layer", "unknown"),
+                            "score": r.get("score", 0.5)
+                        }
+                        for r in memory_results
+                    ])
+            except Exception as e:
+                logger.debug(f"Local memory search failed: {e}")
+        
+        # Sort by score and limit
+        results.sort(key=lambda x: x.get("score", 0), reverse=True)
+        return results[:limit]
+    
+    async def search_conversations(
+        self,
+        query: str,
+        user_id: Optional[str] = None,
+        limit: int = 5
+    ) -> List[Dict[str, Any]]:
+        """
+        Search past conversations for relevant context.
+        
+        Args:
+            query: Search query
+            user_id: Optional user ID to filter by
+            limit: Maximum results
+            
+        Returns:
+            List of relevant conversation snippets
+        """
+        results = []
+        
+        # Search across all conversation memories
+        for session_id, memory in self._conversation_memories.items():
+            try:
+                if hasattr(memory, "search"):
+                    session_results = await memory.search(query, limit=2)
+                    results.extend([
+                        {
+                            "content": r.get("message", str(r)),
+                            "session_id": session_id,
+                            "role": r.get("role", "unknown"),
+                            "timestamp": r.get("timestamp")
+                        }
+                        for r in session_results
+                    ])
+            except Exception:
+                pass
+        
+        return results[:limit]
 
 
 # Singleton instance

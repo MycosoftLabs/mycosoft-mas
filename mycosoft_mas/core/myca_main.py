@@ -34,6 +34,10 @@ from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.documents import router as documents_router
 
+# FCI (Fungal Computer Interface) routers
+from mycosoft_mas.core.routers import fci as fci_router
+from mycosoft_mas.core.routers import fci_websocket as fci_websocket_router
+
 # Scientific platform routers
 from mycosoft_mas.core.routers.scientific_api import router as scientific_router
 from mycosoft_mas.core.routers.scientific_ws import router as scientific_ws_router
@@ -102,6 +106,20 @@ try:
     CONSCIOUSNESS_API_AVAILABLE = True
 except ImportError:
     CONSCIOUSNESS_API_AVAILABLE = False
+
+# System Status API - unified status for all systems
+try:
+    from mycosoft_mas.core.routers.system_status_api import router as system_status_router
+    SYSTEM_STATUS_API_AVAILABLE = True
+except ImportError:
+    SYSTEM_STATUS_API_AVAILABLE = False
+
+# N8N Webhooks API - webhook handlers for N8N workflows
+try:
+    from mycosoft_mas.core.routers.n8n_webhooks_api import router as n8n_webhooks_router
+    N8N_WEBHOOKS_API_AVAILABLE = True
+except ImportError:
+    N8N_WEBHOOKS_API_AVAILABLE = False
 
 # N8N Client - use mycosoft_mas path
 try:
@@ -313,6 +331,10 @@ if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
 
+# FCI (Fungal Computer Interface) - REST and WebSocket for real-time bioelectric signals
+app.include_router(fci_router, tags=["fci"])
+app.include_router(fci_websocket_router, tags=["fci-websocket"])
+
 # Earth-2 AI Weather API
 if EARTH2_API_AVAILABLE:
     app.include_router(earth2_router, prefix="/api/earth2", tags=["earth2"])
@@ -339,6 +361,20 @@ except NameError:
 try:
     if CONSCIOUSNESS_API_AVAILABLE:
         app.include_router(consciousness_router, tags=["myca-consciousness"])
+except NameError:
+    pass
+
+# System Status API - unified status for all systems
+try:
+    if SYSTEM_STATUS_API_AVAILABLE:
+        app.include_router(system_status_router, prefix="/api", tags=["system-status"])
+except NameError:
+    pass
+
+# N8N Webhooks API - webhook handlers for N8N workflows
+try:
+    if N8N_WEBHOOKS_API_AVAILABLE:
+        app.include_router(n8n_webhooks_router, tags=["n8n-webhooks"])
 except NameError:
     pass
 

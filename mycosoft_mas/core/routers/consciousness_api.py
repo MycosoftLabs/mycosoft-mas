@@ -621,6 +621,118 @@ async def delegate_task(agent_type: str, task: Dict[str, Any]):
 
 
 # =============================================================================
+# Unified Routing Endpoint
+# =============================================================================
+
+class RouteRequest(BaseModel):
+    """Request for unified routing."""
+    message: str = Field(..., description="User message to route")
+    session_id: Optional[str] = Field(None, description="Session ID")
+    user_id: Optional[str] = Field(None, description="User ID")
+    context: Optional[Dict[str, Any]] = Field(None, description="Additional context")
+
+
+class RouteResponse(BaseModel):
+    """Response from unified routing."""
+    message: str
+    intent_type: str
+    intent_confidence: float
+    handler: str
+    session_id: Optional[str] = None
+    timestamp: str
+
+
+@router.post("/route", response_model=RouteResponse)
+async def route_message(request: RouteRequest):
+    """
+    Route a message through the UnifiedRouter.
+    
+    This endpoint uses the IntentEngine to classify the message
+    and routes to the appropriate handler (agent, tool, LLM, MINDEX, N8N).
+    
+    Use this for explicit routing when you want intent classification.
+    """
+    from mycosoft_mas.consciousness.unified_router import get_unified_router
+    
+    router = get_unified_router()
+    
+    # Route the message
+    response_parts = []
+    intent_result = None
+    
+    try:
+        # First classify intent
+        from mycosoft_mas.consciousness.intent_engine import get_intent_engine
+        intent_engine = get_intent_engine()
+        intent_result = await intent_engine.classify(
+            request.message,
+            request.context or {}
+        )
+        
+        # Then route
+        async for chunk in router.route(
+            message=request.message,
+            context={
+                "session_id": request.session_id,
+                "user_id": request.user_id,
+                **(request.context or {})
+            }
+        ):
+            response_parts.append(chunk)
+            
+    except Exception as e:
+        logger.error(f"Routing error: {e}")
+        response_parts = [f"I encountered a routing error: {str(e)[:100]}"]
+    
+    full_response = "".join(response_parts)
+    
+    return RouteResponse(
+        message=full_response,
+        intent_type=intent_result.intent_type.value if intent_result else "unknown",
+        intent_confidence=intent_result.confidence if intent_result else 0.0,
+        handler=intent_result.intent_type.value if intent_result else "fallback",
+        session_id=request.session_id,
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+
+
+@router.post("/route/stream")
+async def route_message_stream(request: RouteRequest):
+    """
+    Stream a routed response through SSE.
+    """
+    from mycosoft_mas.consciousness.unified_router import get_unified_router
+    
+    unified_router = get_unified_router()
+    
+    async def generate():
+        try:
+            async for chunk in unified_router.route(
+                message=request.message,
+                context={
+                    "session_id": request.session_id,
+                    "user_id": request.user_id,
+                    **(request.context or {})
+                },
+                stream=True
+            ):
+                yield {
+                    "event": "message",
+                    "data": chunk
+                }
+            
+            yield {
+                "event": "done",
+                "data": {"timestamp": datetime.now(timezone.utc).isoformat()}
+            }
+        except Exception as e:
+            logger.error(f"Stream routing error: {e}")
+            yield {"event": "error", "data": str(e)}
+    
+    return EventSourceResponse(generate())
+
+
+# =============================================================================
 # Personality Endpoints
 # =============================================================================
 
