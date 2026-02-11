@@ -108,8 +108,8 @@ class DroneMissionPlannerAgent:
         """
         # Get device location (from MINDEX device table)
         async with httpx.AsyncClient() as client:
-            # TODO: Get device location from device registry
-            # For now, assume we have last known location
+            # NOTE: Device location retrieved from MINDEX /devices/{id} endpoint
+            # Returns last_known_location from device heartbeat data
             device_response = await client.get(
                 f"{self.mindex_base_url}/devices/{device_id}",
                 headers={"X-API-Key": self.mindex_api_key},

@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 import psycopg2
 from psycopg2.extras import Json
-from prometheus_client import Counter
+from mycosoft_mas.monitoring.prometheus_utils import get_counter
 
 from .models import ToolAction
 
@@ -25,7 +25,11 @@ class ApprovalPolicy:
 
 
 class ActionAuditLogger:
-    ACTION_COUNTER = Counter("tool_action_events_total", "Tool action audit events", ["status", "category"])
+    ACTION_COUNTER = get_counter(
+        "tool_action_events_total",
+        "Tool action audit events",
+        labelnames=["status", "category"],
+    )
 
     def __init__(self, database_url: Optional[str], policy: ApprovalPolicy):
         self.database_url = database_url

@@ -337,6 +337,19 @@ class AgentRegistry:
         ))
         
         self.register(AgentDefinition(
+            agent_id="gap_agent",
+            name="GapAgent",
+            display_name="Gap Agent",
+            description="Finds gaps between repos: missing connections, TODOs, stubs, bridge work; suggests plans to fill gaps",
+            category=AgentCategory.CORE,
+            capabilities=[AgentCapability.READ, AgentCapability.ANALYZE],
+            module_path="mycosoft_mas.agents.gap_agent",
+            class_name="GapAgent",
+            keywords=["gap", "todo", "fixme", "stub", "bridge", "cross-repo", "integration", "missing", "plan"],
+            voice_triggers=["gap", "find gaps", "missing connections", "todo", "what needs to be done", "bridge"]
+        ))
+        
+        self.register(AgentDefinition(
             agent_id="desktop_automation",
             name="DesktopAutomationAgent",
             display_name="Desktop Automation Agent",

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Metrics Module - February 6, 2026
 
 Prometheus metrics for monitoring.
@@ -118,17 +118,18 @@ class MetricsRegistry:
             lines.append(f"{base_name}_sum{labels} {stats['sum']}")
         
         return "\n".join(lines)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Export metrics as dictionary."""
         return {
             "counters": dict(self.counters),
             "gauges": dict(self.gauges),
-            "histograms": {
-                k: self.get_histogram_stats(k.split("{")[0])
-                for k in self.histograms
-            }
+            "histograms": {k: self.get_histogram_stats(k.split("{")[0]) for k in self.histograms},
         }
+
+
+# Backwards-compatible alias (older code/tests expect MetricsCollector)
+MetricsCollector = MetricsRegistry
 
 
 # Global registry

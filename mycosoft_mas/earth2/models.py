@@ -6,9 +6,10 @@ Defines all data models for Earth-2 model inputs and outputs.
 """
 
 from enum import Enum
+import math
 from typing import Optional, List, Dict, Any, Union, Tuple
-from datetime import datetime
-from pydantic import BaseModel, Field
+from datetime import datetime, timedelta
+from pydantic import BaseModel, Field, model_validator
 import uuid
 
 
@@ -112,7 +113,11 @@ class ForecastParams(BaseModel):
     """Parameters for medium-range weather forecast (Atlas model)."""
     model: Earth2Model = Field(default=Earth2Model.ATLAS_ERA5)
     spatial_extent: Optional[SpatialExtent] = None
-    time_range: TimeRange
+    time_range: Optional[TimeRange] = None
+    # Legacy convenience inputs used by the unit tests.
+    start_time: Optional[datetime] = None
+    forecast_hours: int = Field(default=168, ge=1, le=24 * 15)
+    step_hours: int = Field(default=6, ge=1, le=24)
     variables: List[WeatherVariable] = Field(default=[WeatherVariable.T2M, WeatherVariable.U10, WeatherVariable.V10, WeatherVariable.TP])
     pressure_levels: List[PressureLevel] = Field(default=[PressureLevel.L850, PressureLevel.L500])
     ensemble_members: int = Field(default=1, ge=1, le=50)
@@ -120,6 +125,17 @@ class ForecastParams(BaseModel):
     
     class Config:
         use_enum_values = True
+
+    @model_validator(mode="after")
+    def _fill_time_and_extent(self) -> "ForecastParams":
+        if self.time_range is None:
+            start = self.start_time or datetime.utcnow()
+            end = start + timedelta(hours=int(self.forecast_hours))
+            self.time_range = TimeRange(start=start, end=end, step_hours=int(self.step_hours))
+        if self.spatial_extent is None:
+            # Neutral default: global extent.
+            self.spatial_extent = SpatialExtent(min_lat=-90, max_lat=90, min_lon=-180, max_lon=180)
+        return self
 
 
 class ForecastOutput(BaseModel):
@@ -154,14 +170,42 @@ class ForecastResult(BaseModel):
 class NowcastParams(BaseModel):
     """Parameters for short-range nowcasting (StormScope model)."""
     model: Earth2Model = Field(default=Earth2Model.STORMSCOPE_GOES_MRMS)
-    spatial_extent: SpatialExtent
-    lead_time_hours: int = Field(default=6, ge=1, le=24)
-    time_step_minutes: int = Field(default=10, ge=5, le=60)
+    spatial_extent: Optional[SpatialExtent] = None
+    lead_time_hours: Optional[int] = Field(default=None, ge=1, le=24)
+    time_step_minutes: Optional[int] = Field(default=None, ge=5, le=60)
     include_satellite: bool = True
     include_radar: bool = True
+    # Legacy convenience inputs used by the unit tests.
+    center_lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    center_lon: Optional[float] = Field(default=None, ge=-180, le=180)
+    domain_size_km: int = Field(default=500, ge=10, le=5000)
+    forecast_minutes: int = Field(default=180, ge=5, le=24 * 60)
+    step_minutes: int = Field(default=10, ge=5, le=60)
+    variables: Optional[List[WeatherVariable]] = None
     
     class Config:
         use_enum_values = True
+
+    @model_validator(mode="after")
+    def _fill_extent_and_time(self) -> "NowcastParams":
+        if self.spatial_extent is None:
+            lat = float(self.center_lat or 0.0)
+            lon = float(self.center_lon or 0.0)
+            half_lat = (self.domain_size_km / 2.0) / 111.0
+            # Avoid divide by zero near poles.
+            denom = max(0.2, abs(math.cos(lat * math.pi / 180.0)))
+            half_lon = (self.domain_size_km / 2.0) / (111.0 * denom)
+            self.spatial_extent = SpatialExtent(
+                min_lat=lat - half_lat,
+                max_lat=lat + half_lat,
+                min_lon=lon - half_lon,
+                max_lon=lon + half_lon,
+            )
+        if self.lead_time_hours is None:
+            self.lead_time_hours = max(1, int((self.forecast_minutes + 59) // 60))
+        if self.time_step_minutes is None:
+            self.time_step_minutes = int(self.step_minutes)
+        return self
 
 
 class NowcastOutput(BaseModel):
@@ -301,13 +345,43 @@ class Earth2ModelRun(BaseModel):
 
 class SporeDispersalParams(BaseModel):
     """Parameters for spore dispersal forecast combining Earth-2 + MINDEX."""
-    spatial_extent: SpatialExtent
-    time_range: TimeRange
+    spatial_extent: Optional[SpatialExtent] = None
+    time_range: Optional[TimeRange] = None
     species_filter: Optional[List[str]] = None
     source_locations: Optional[List[Tuple[float, float]]] = None
     wind_model: Earth2Model = Field(default=Earth2Model.ATLAS_ERA5)
     include_precipitation: bool = True
     include_humidity: bool = True
+    # Legacy convenience inputs used by the unit tests.
+    species: Optional[str] = None
+    origin_lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    origin_lon: Optional[float] = Field(default=None, ge=-180, le=180)
+    origin_concentration: Optional[float] = Field(default=None, ge=0)
+    forecast_hours: int = Field(default=48, ge=1, le=24 * 15)
+
+    @model_validator(mode="after")
+    def _fill_derived(self) -> "SporeDispersalParams":
+        if self.species and not self.species_filter:
+            self.species_filter = [self.species]
+        if self.origin_lat is not None and self.origin_lon is not None and not self.source_locations:
+            self.source_locations = [(float(self.origin_lat), float(self.origin_lon))]
+        if self.spatial_extent is None:
+            if self.origin_lat is not None and self.origin_lon is not None:
+                lat = float(self.origin_lat)
+                lon = float(self.origin_lon)
+                self.spatial_extent = SpatialExtent(
+                    min_lat=lat - 2.0,
+                    max_lat=lat + 2.0,
+                    min_lon=lon - 2.0,
+                    max_lon=lon + 2.0,
+                )
+            else:
+                self.spatial_extent = SpatialExtent(min_lat=-90, max_lat=90, min_lon=-180, max_lon=180)
+        if self.time_range is None:
+            start = datetime.utcnow()
+            end = start + timedelta(hours=int(self.forecast_hours))
+            self.time_range = TimeRange(start=start, end=end, step_hours=6)
+        return self
 
 
 class SporeDispersalResult(BaseModel):
@@ -315,6 +389,9 @@ class SporeDispersalResult(BaseModel):
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: str = Field(default="completed")
     params: SporeDispersalParams
+    # Legacy fields expected by tests.
+    species: Optional[str] = None
+    peak_concentration: Optional[float] = None
     weather_run_id: str
     concentration_map_url: str
     risk_zones: List[Dict[str, Any]] = Field(default_factory=list)

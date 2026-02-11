@@ -162,6 +162,7 @@ class AgentRegistry:
         
         # ===== Utility Agents =====
         {"name": "health_check_agent", "category": "utility", "module": "mycosoft_mas.agents.utility.health_check_agent", "class": "HealthCheckAgent", "description": "System health monitoring"},
+        {"name": "gap_agent", "category": "utility", "module": "mycosoft_mas.agents.gap_agent", "class": "GapAgent", "description": "Cross-repo gap detection: TODOs, stubs, missing connections, bridge gaps; suggests plans"},
         {"name": "log_agent", "category": "utility", "module": "mycosoft_mas.agents.utility.log_agent", "class": "LogAgent", "description": "Log aggregation and analysis"},
         {"name": "backup_agent", "category": "utility", "module": "mycosoft_mas.agents.utility.backup_agent", "class": "BackupAgent", "description": "Data backup operations"},
         {"name": "cleanup_agent", "category": "utility", "module": "mycosoft_mas.agents.utility.cleanup_agent", "class": "CleanupAgent", "description": "Resource cleanup"},

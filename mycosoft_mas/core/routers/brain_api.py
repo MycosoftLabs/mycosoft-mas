@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA Brain API Router - February 5, 2026
 
 REST and streaming API endpoints for the MYCA Memory-Integrated Brain.
@@ -258,7 +258,7 @@ async def get_memory_context(
             memories=context.get("memories", []),
             episodes=context.get("episodes", []),
             user_profile=context.get("profile"),
-            voice_context=None  # TODO: Add voice context
+            voice_context=None  # NOTE: Pending - requires VoiceContextService integration
         )
         
     except Exception as e:

@@ -15,12 +15,22 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-# Module under test - we'll mock dependencies
 import sys
-sys.modules['mycosoft_mas.memory'] = MagicMock()
-sys.modules['mycosoft_mas.memory.memory_coordinator'] = MagicMock()
-sys.modules['mycosoft_mas.core.orchestrator_service'] = MagicMock()
-sys.modules['mycosoft_mas.core.registry'] = MagicMock()
+
+
+@pytest.fixture(autouse=True)
+def _mock_consciousness_deps(monkeypatch: pytest.MonkeyPatch):
+    """
+    Avoid importing heavy dependencies when loading consciousness modules.
+
+    IMPORTANT: Use `monkeypatch` so these mocks are reverted after each test,
+    otherwise they contaminate unrelated test modules (e.g. memory integration).
+    """
+    monkeypatch.setitem(sys.modules, "mycosoft_mas.memory", MagicMock())
+    monkeypatch.setitem(sys.modules, "mycosoft_mas.memory.memory_coordinator", MagicMock())
+    monkeypatch.setitem(sys.modules, "mycosoft_mas.core.orchestrator_service", MagicMock())
+    monkeypatch.setitem(sys.modules, "mycosoft_mas.core.registry", MagicMock())
+    yield
 
 
 class TestMYCAConsciousnessSingleton:

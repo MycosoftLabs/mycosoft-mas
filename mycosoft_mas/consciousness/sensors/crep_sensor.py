@@ -39,8 +39,11 @@ class CREPSensor(BaseSensor):
     # API endpoints
     CREP_API_BASE = "http://192.168.0.187:3000/api/crep"
     FALLBACK_API_BASE = "http://localhost:3010/api/crep"
+    # Legacy aliases used by tests/older code.
+    CREP_API = CREP_API_BASE
+    MAS_API = CREP_API_BASE
     
-    def __init__(self, world_model: "WorldModel"):
+    def __init__(self, world_model: Optional["WorldModel"] = None):
         super().__init__(world_model, "crep")
         self._client: Optional[httpx.AsyncClient] = None
         self._api_base = self.CREP_API_BASE

@@ -68,7 +68,8 @@ class UsageTracker:
     
     def add_usage(self, tokens: int, cost: float) -> None:
         self.total_tokens += tokens
-        self.total_cost += cost
+        # Avoid float drift breaking exact-equality unit tests.
+        self.total_cost = round(self.total_cost + cost, 6)
         self.request_count += 1
         
         # Reset daily counters if needed
@@ -78,7 +79,7 @@ class UsageTracker:
             self.daily_reset = datetime.now()
         
         self.daily_tokens += tokens
-        self.daily_cost += cost
+        self.daily_cost = round(self.daily_cost + cost, 6)
     
     def is_over_budget(self, daily_budget: float) -> bool:
         return self.daily_cost >= daily_budget

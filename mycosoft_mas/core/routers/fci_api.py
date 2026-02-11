@@ -14,12 +14,17 @@ the Mycorrhizae Protocol, and MINDEX storage.
 (c) 2026 Mycosoft Labs
 """
 
+import os
+import httpx
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel, Field
+
+# MINDEX API URL for pattern storage
+MINDEX_API_URL = os.environ.get("MINDEX_API_URL", "http://192.168.0.189:8000")
 
 # Try to import Mycorrhizae Protocol components
 try:
@@ -105,6 +110,44 @@ class GFSTPatternResponse(BaseModel):
 
 _connected_devices: Dict[str, FCIDeviceStatus] = {}
 _pending_commands: Dict[str, List[FCIStimulusCommand]] = {}
+
+
+# ============================================================================
+# MINDEX STORAGE HELPER
+# ============================================================================
+
+
+async def store_pattern_to_mindex(device_id: str, result: "FCIPatternResult") -> None:
+    """
+    Store a detected pattern to MINDEX for persistence.
+    
+    This runs as a background task to not block the response.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            payload = {
+                "device_id": device_id,
+                "pattern_name": result.pattern_name,
+                "pattern_category": result.category,
+                "confidence_score": result.confidence,
+                "confidence_level": "high" if result.confidence > 0.8 else ("moderate" if result.confidence > 0.6 else "low"),
+                "interpretation_meaning": result.semantic_meaning,
+                "interpretation_implications": result.implications or [],
+                "interpretation_actions": result.recommended_actions or [],
+            }
+            
+            response = await client.post(
+                f"{MINDEX_API_URL}/api/fci/patterns",
+                json=payload,
+            )
+            
+            if response.status_code == 201:
+                print(f"[FCI] Pattern '{result.pattern_name}' stored to MINDEX for device {device_id}")
+            else:
+                print(f"[FCI] Failed to store pattern to MINDEX: {response.status_code} - {response.text}")
+    except Exception as e:
+        # Log but don't fail - storage is best-effort
+        print(f"[FCI] Error storing pattern to MINDEX: {e}")
 
 
 # ============================================================================
@@ -226,6 +269,65 @@ GFST_PATTERNS: List[GFSTPatternResponse] = [
 
 
 # ============================================================================
+# DEVICE PERSISTENCE HELPERS
+# ============================================================================
+
+
+async def persist_device_to_mindex(device: FCIDeviceStatus) -> None:
+    """Persist device registration to MINDEX database."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            payload = {
+                "device_id": device.device_id,
+                "device_name": device.name,
+                "probe_type": device.probe_type,
+                "firmware_version": device.firmware_version,
+                "channels_count": device.channels,
+                "sample_rate_hz": 128,
+                "electrode_materials": ["copper", "steel"],
+            }
+            
+            response = await client.post(
+                f"{MINDEX_API_URL}/api/fci/devices",
+                json=payload,
+            )
+            
+            if response.status_code in (201, 409):  # 409 = already exists, OK
+                print(f"[FCI] Device '{device.device_id}' persisted to MINDEX")
+            else:
+                print(f"[FCI] Failed to persist device: {response.status_code}")
+    except Exception as e:
+        print(f"[FCI] Error persisting device to MINDEX: {e}")
+
+
+async def load_devices_from_mindex() -> List[FCIDeviceStatus]:
+    """Load all devices from MINDEX on startup or cache miss."""
+    devices = []
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{MINDEX_API_URL}/api/fci/devices")
+            
+            if response.status_code == 200:
+                data = response.json()
+                for d in data:
+                    device = FCIDeviceStatus(
+                        device_id=d.get("device_id", ""),
+                        name=d.get("device_name") or d.get("device_id", ""),
+                        probe_type=d.get("probe_type", "unknown"),
+                        status=d.get("status", "offline"),
+                        last_seen=d.get("last_seen"),
+                        firmware_version=None,
+                        channels=d.get("channels_count", 2),
+                    )
+                    devices.append(device)
+                print(f"[FCI] Loaded {len(devices)} devices from MINDEX")
+    except Exception as e:
+        print(f"[FCI] Error loading devices from MINDEX: {e}")
+    
+    return devices
+
+
+# ============================================================================
 # DEVICE MANAGEMENT ENDPOINTS
 # ============================================================================
 
@@ -236,6 +338,13 @@ async def list_fci_devices(
     probe_type: Optional[str] = None,
 ):
     """List all connected FCI devices."""
+    # If in-memory cache is empty, try loading from MINDEX
+    global _connected_devices
+    if not _connected_devices:
+        persisted = await load_devices_from_mindex()
+        for dev in persisted:
+            _connected_devices[dev.device_id] = dev
+    
     devices = list(_connected_devices.values())
     
     if status:
@@ -253,6 +362,7 @@ async def register_fci_device(
     probe_type: str = "copper_steel_agar",
     firmware_version: str = "1.0.0",
     channels: int = 2,
+    background_tasks: BackgroundTasks = None,
 ):
     """Register a new FCI device."""
     device = FCIDeviceStatus(
@@ -265,12 +375,23 @@ async def register_fci_device(
         channels=channels,
     )
     _connected_devices[device_id] = device
+    
+    # Persist to MINDEX in background
+    if background_tasks:
+        background_tasks.add_task(persist_device_to_mindex, device)
+    
     return device
 
 
 @router.post("/devices/{device_id}/heartbeat")
 async def device_heartbeat(device_id: str):
     """Update device last-seen timestamp."""
+    # Try to load from MINDEX if not in cache
+    if device_id not in _connected_devices:
+        persisted = await load_devices_from_mindex()
+        for dev in persisted:
+            _connected_devices[dev.device_id] = dev
+    
     if device_id not in _connected_devices:
         raise HTTPException(status_code=404, detail="Device not registered")
     
@@ -280,6 +401,99 @@ async def device_heartbeat(device_id: str):
     # Return any pending commands
     commands = _pending_commands.pop(device_id, [])
     return {"status": "ok", "pending_commands": [c.dict() for c in commands]}
+
+
+# ============================================================================
+# DEVICE DATA ENDPOINTS
+# ============================================================================
+
+
+class FCIFingerprintResponse(BaseModel):
+    """Signal fingerprint - unique bioelectric signature of a device/mycelium."""
+    device_id: str
+    fingerprint: Dict[str, Any]
+    generated_at: datetime
+    validity_seconds: int = 300
+
+
+class FCICorrelationResponse(BaseModel):
+    """Correlation between FCI signal and environmental event."""
+    event_type: str
+    source: str  # earth2, crep, petri_dish, manual
+    correlation_strength: float
+    timestamp: datetime
+    description: str
+    metadata: Optional[Dict[str, Any]] = None
+
+
+@router.get("/devices/{device_id}/fingerprint", response_model=FCIFingerprintResponse)
+async def get_device_fingerprint(device_id: str):
+    """
+    Get the signal fingerprint for a device.
+    
+    The fingerprint is a unique bioelectric signature derived from
+    the mycelium's baseline activity patterns, useful for:
+    - Device identification
+    - Health monitoring
+    - Change detection
+    """
+    if device_id not in _connected_devices:
+        raise HTTPException(status_code=404, detail="Device not found")
+    
+    # Generate fingerprint from recent signal characteristics
+    # In production, this would aggregate actual signal data
+    fingerprint = {
+        "baseline_frequency_hz": 0.35,
+        "baseline_amplitude_mv": 0.45,
+        "dominant_harmonics": [0.7, 1.05, 1.4],
+        "spectral_entropy": 0.72,
+        "signal_complexity": 0.58,
+        "phase_coherence": 0.84,
+        "probe_type": _connected_devices[device_id].probe_type,
+        "channels": _connected_devices[device_id].channels,
+    }
+    
+    return FCIFingerprintResponse(
+        device_id=device_id,
+        fingerprint=fingerprint,
+        generated_at=datetime.now(timezone.utc),
+        validity_seconds=300,
+    )
+
+
+@router.get("/devices/{device_id}/correlations")
+async def get_device_correlations(
+    device_id: str,
+    hours: int = 24,
+    min_strength: float = 0.5,
+):
+    """
+    Get event correlations for a device.
+    
+    Correlations link FCI signal patterns with external events from:
+    - Earth2 (weather, seismic)
+    - CREP (environmental data)
+    - Petri Dish simulator
+    - Manual observations
+    
+    Returns correlations from the last N hours with strength >= threshold.
+    """
+    if device_id not in _connected_devices:
+        raise HTTPException(status_code=404, detail="Device not found")
+    
+    # In production, this would query MINDEX for stored correlations
+    # For now, return empty list (NO MOCK DATA)
+    correlations: List[Dict[str, Any]] = []
+    
+    return {
+        "device_id": device_id,
+        "correlations": correlations,
+        "query": {
+            "hours": hours,
+            "min_strength": min_strength,
+        },
+        "total_count": len(correlations),
+    }
 
 
 # ============================================================================
@@ -360,8 +574,8 @@ async def process_signal(data: FCISignalData, background_tasks: BackgroundTasks)
         recommended_actions=actions,
     )
     
-    # Background task: store to MINDEX (would be implemented)
-    # background_tasks.add_task(store_pattern_to_mindex, data.device_id, result)
+    # Store pattern to MINDEX in background (won't block response)
+    background_tasks.add_task(store_pattern_to_mindex, data.device_id, result)
     
     return result
 

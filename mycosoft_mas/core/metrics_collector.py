@@ -10,18 +10,18 @@ import asyncio
 from datetime import datetime
 from typing import Dict, Any, List
 import logging
-from prometheus_client import Counter, Gauge, Histogram
+from mycosoft_mas.monitoring.prometheus_utils import get_counter, get_gauge, get_histogram
 
 logger = logging.getLogger(__name__)
 
 # Prometheus metrics
-AGENT_COUNT = Gauge('mas_agent_count', 'Number of active agents')
-TASK_COUNT = Counter('mas_task_count', 'Total number of tasks processed')
-ERROR_COUNT = Counter('mas_error_count', 'Total number of errors')
-API_CALLS = Counter('mas_api_calls', 'Total number of API calls')
-CPU_USAGE = Gauge('mas_cpu_usage', 'System CPU usage')
-MEMORY_USAGE = Gauge('mas_memory_usage', 'System memory usage')
-TASK_DURATION = Histogram('mas_task_duration_seconds', 'Task execution duration')
+AGENT_COUNT = get_gauge("mas_agent_count", "Number of active agents")
+TASK_COUNT = get_counter("mas_task_count", "Total number of tasks processed")
+ERROR_COUNT = get_counter("mas_error_count", "Total number of errors")
+API_CALLS = get_counter("mas_api_calls", "Total number of API calls")
+CPU_USAGE = get_gauge("mas_cpu_usage", "System CPU usage")
+MEMORY_USAGE = get_gauge("mas_memory_usage", "System memory usage")
+TASK_DURATION = get_histogram("mas_task_duration_seconds", "Task execution duration")
 
 class MetricsCollector:
     """Collects and manages system-wide metrics."""

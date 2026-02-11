@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import aiohttp
-from prometheus_client import Counter, Histogram
+from mycosoft_mas.monitoring.prometheus_utils import get_counter, get_histogram
 
 from mycosoft_mas.config.runtime_settings import RuntimeSettings
 
@@ -141,8 +141,16 @@ class LLMRouter:
     Supports basic fallback to the configured fallback_model role.
     """
 
-    REQUEST_COUNT = Counter("llm_requests_total", "LLM chat requests", ["provider", "model", "status"])
-    REQUEST_LATENCY = Histogram("llm_request_duration_seconds", "LLM chat latency seconds", ["provider", "model"])
+    REQUEST_COUNT = get_counter(
+        "llm_requests_total",
+        "LLM chat requests",
+        labelnames=["provider", "model", "status"],
+    )
+    REQUEST_LATENCY = get_histogram(
+        "llm_request_duration_seconds",
+        "LLM chat latency seconds",
+        labelnames=["provider", "model"],
+    )
 
     def __init__(self, settings: RuntimeSettings):
         self.settings = settings

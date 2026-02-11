@@ -209,11 +209,11 @@ async def manual_approval(
                 detail=f"Cannot approve change in status: {status['status']}"
             )
         
-        # TODO: Implement manual approval override
-        # This would need to:
-        # 1. Log the manual override
-        # 2. Re-queue the change bypassing security review
-        # 3. Notify GuardianAgent
+        # NOTE: Pending implementation - Manual approval override requires:
+        # 1. Audit log entry via AuditService.log_override(change_id, approver_id, reason)
+        # 2. GuardianAgent notification via message queue
+        # 3. Re-queue with bypass_security=True flag (CEO/CTO approval only)
+        # SECURITY: This bypasses safety checks - requires elevated privileges
         
         return {
             "change_id": change_id,

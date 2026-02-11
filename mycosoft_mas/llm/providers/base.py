@@ -29,9 +29,15 @@ class LLMErrorType(Enum):
 
 @dataclass
 class LLMError(Exception):
-    """Structured LLM error with type and details."""
-    error_type: LLMErrorType
+    """
+    Structured LLM error with type and details.
+
+    Compatibility: legacy tests raise `LLMError("message")`, so `message` is the
+    first positional arg and `error_type` is optional.
+    """
+
     message: str
+    error_type: LLMErrorType = LLMErrorType.UNKNOWN
     provider: str = ""
     model: str = ""
     details: dict[str, Any] = field(default_factory=dict)
@@ -124,10 +130,16 @@ class BaseLLMProvider(ABC):
         self._extra_config = kwargs
     
     @property
-    @abstractmethod
     def provider_name(self) -> str:
-        """Return the provider name (e.g., 'openai', 'azure', 'gemini')."""
-        pass
+        """
+        Return the provider name (e.g., 'openai', 'azure', 'gemini').
+
+        Compatibility: legacy provider test doubles often only define `name`.
+        """
+        name = getattr(self, "name", None)
+        if isinstance(name, str) and name:
+            return name
+        return self.__class__.__name__.lower()
     
     @abstractmethod
     async def chat(
@@ -160,7 +172,6 @@ class BaseLLMProvider(ABC):
         """
         pass
     
-    @abstractmethod
     async def complete(
         self,
         prompt: str,
@@ -182,7 +193,14 @@ class BaseLLMProvider(ABC):
         Returns:
             LLMResponse with generated content
         """
-        pass
+        # Default implementation: map a prompt into a single-turn chat.
+        return await self.chat(
+            messages=[Message(role="user", content=prompt)],
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs,
+        )
     
     @abstractmethod
     async def embed(

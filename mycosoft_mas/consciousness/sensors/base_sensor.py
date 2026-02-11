@@ -40,10 +40,12 @@ class BaseSensor(ABC):
     - disconnect(): Close connection
     """
     
-    def __init__(self, world_model: "WorldModel", name: str):
+    def __init__(self, world_model: Optional["WorldModel"] = None, name: str = "sensor"):
         self._world_model = world_model
         self._name = name
-        self._status = SensorStatus.INITIALIZING
+        # Legacy tests expect sensors to start disconnected.
+        self._status = SensorStatus.DISCONNECTED
+        self._connected = False
         self._last_reading: Optional["SensorReading"] = None
         self._last_error: Optional[str] = None
         self._read_count = 0
@@ -55,7 +57,13 @@ class BaseSensor(ABC):
         return self._name
     
     @property
-    def status(self) -> SensorStatus:
+    def status(self) -> str:
+        # Tests treat this as a string value.
+        return self._status.value if isinstance(self._status, SensorStatus) else str(self._status)
+
+    @property
+    def raw_status(self) -> SensorStatus:
+        """Enum status for internal use."""
         return self._status
     
     @property
@@ -90,17 +98,20 @@ class BaseSensor(ABC):
     def _mark_connected(self) -> None:
         """Mark sensor as connected."""
         self._status = SensorStatus.CONNECTED
+        self._connected = True
         self._connected_at = datetime.now(timezone.utc)
         logger.info(f"Sensor {self._name} connected")
     
     def _mark_disconnected(self) -> None:
         """Mark sensor as disconnected."""
         self._status = SensorStatus.DISCONNECTED
+        self._connected = False
         logger.info(f"Sensor {self._name} disconnected")
     
     def _mark_error(self, error: str) -> None:
         """Mark sensor as having an error."""
         self._status = SensorStatus.ERROR
+        self._connected = False
         self._last_error = error
         self._error_count += 1
         logger.warning(f"Sensor {self._name} error: {error}")

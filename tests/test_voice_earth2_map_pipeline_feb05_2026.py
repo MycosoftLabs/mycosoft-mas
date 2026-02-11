@@ -16,6 +16,7 @@ Or standalone: python tests/test_voice_earth2_map_pipeline_feb05_2026.py
 import asyncio
 import sys
 import os
+import pytest
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, List
@@ -396,6 +397,7 @@ def test_vram_manager():
 # Test: Async Voice Routing
 # =============================================================================
 
+@pytest.mark.asyncio
 async def test_async_voice_routing():
     """Test async voice command routing."""
     section("Async Voice Routing Tests")

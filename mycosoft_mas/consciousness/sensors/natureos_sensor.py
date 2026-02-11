@@ -36,7 +36,7 @@ class NatureOSSensor(BaseSensor):
     # API endpoints
     NATUREOS_API_BASE = "http://192.168.0.188:8001/api/natureos"
     
-    def __init__(self, world_model: "WorldModel"):
+    def __init__(self, world_model: Optional["WorldModel"] = None):
         super().__init__(world_model, "natureos")
         self._client: Optional[httpx.AsyncClient] = None
     

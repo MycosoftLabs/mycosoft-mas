@@ -25,6 +25,8 @@ class ForecastRequest(BaseModel):
     """Request for medium-range forecast."""
     start_time: Optional[str] = None
     end_time: Optional[str] = None
+    forecast_hours: Optional[int] = Field(default=None, ge=1, le=24 * 15)
+    forecast_days: Optional[int] = Field(default=None, ge=1, le=15)
     step_hours: int = Field(default=6, ge=1, le=24)
     variables: List[str] = Field(default=["t2m", "u10", "v10", "tp"])
     pressure_levels: List[int] = Field(default=[850, 500])
@@ -38,10 +40,19 @@ class ForecastRequest(BaseModel):
 
 class NowcastRequest(BaseModel):
     """Request for short-range nowcast."""
-    min_lat: float = Field(..., ge=-90, le=90)
-    max_lat: float = Field(..., ge=-90, le=90)
-    min_lon: float = Field(..., ge=-180, le=180)
-    max_lon: float = Field(..., ge=-180, le=180)
+    # Bounding box (preferred when available)
+    min_lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    max_lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    min_lon: Optional[float] = Field(default=None, ge=-180, le=180)
+    max_lon: Optional[float] = Field(default=None, ge=-180, le=180)
+    # Legacy center-point schema used in unit tests
+    center_lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    center_lon: Optional[float] = Field(default=None, ge=-180, le=180)
+    domain_size_km: int = Field(default=500, ge=10, le=5000)
+    forecast_minutes: int = Field(default=180, ge=5, le=24 * 60)
+    step_minutes: int = Field(default=10, ge=5, le=60)
+    variables: List[str] = Field(default=["radar_reflectivity"])
+
     lead_time_hours: int = Field(default=6, ge=1, le=24)
     time_step_minutes: int = Field(default=10, ge=5, le=60)
     include_satellite: bool = True
@@ -62,12 +73,19 @@ class DownscaleRequest(BaseModel):
 
 class SporeDispersalRequest(BaseModel):
     """Request for spore dispersal forecast."""
-    min_lat: float = Field(..., ge=-90, le=90)
-    max_lat: float = Field(..., ge=-90, le=90)
-    min_lon: float = Field(..., ge=-180, le=180)
-    max_lon: float = Field(..., ge=-180, le=180)
+    # Bounding box (preferred when available)
+    min_lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    max_lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    min_lon: Optional[float] = Field(default=None, ge=-180, le=180)
+    max_lon: Optional[float] = Field(default=None, ge=-180, le=180)
     start_time: Optional[str] = None
     end_time: Optional[str] = None
+    forecast_hours: Optional[int] = Field(default=None, ge=1, le=24 * 15)
+    # Legacy origin schema used in unit tests
+    species: Optional[str] = None
+    origin_lat: Optional[float] = Field(default=None, ge=-90, le=90)
+    origin_lon: Optional[float] = Field(default=None, ge=-180, le=180)
+    origin_concentration: Optional[float] = Field(default=None, ge=0)
     species_filter: Optional[List[str]] = None
     include_precipitation: bool = True
     include_humidity: bool = True
@@ -111,6 +129,7 @@ async def health_check() -> Dict[str, Any]:
             "status": "healthy",
             "service": "earth2",
             "available": status["available"],
+            "models_available": status["available"],
             "gpu_device": status["gpu_device"],
             "active_runs": status["active_runs"],
             "loaded_models": status["loaded_models"],
@@ -199,7 +218,14 @@ async def submit_forecast(
     
     # Parse time range
     start = datetime.fromisoformat(request.start_time) if request.start_time else datetime.utcnow()
-    end = datetime.fromisoformat(request.end_time) if request.end_time else start + timedelta(days=7)
+    if request.end_time:
+        end = datetime.fromisoformat(request.end_time)
+    elif request.forecast_hours:
+        end = start + timedelta(hours=int(request.forecast_hours))
+    elif request.forecast_days:
+        end = start + timedelta(days=int(request.forecast_days))
+    else:
+        end = start + timedelta(days=7)
     
     time_range = TimeRange(start=start, end=end, step_hours=request.step_hours)
     
@@ -273,17 +299,29 @@ async def submit_nowcast(request: NowcastRequest) -> ModelRunResponse:
     
     service = get_earth2_service()
     
-    spatial_extent = SpatialExtent(
-        min_lat=request.min_lat,
-        max_lat=request.max_lat,
-        min_lon=request.min_lon,
-        max_lon=request.max_lon,
-    )
+    if all(v is not None for v in [request.min_lat, request.max_lat, request.min_lon, request.max_lon]):
+        spatial_extent = SpatialExtent(
+            min_lat=float(request.min_lat),
+            max_lat=float(request.max_lat),
+            min_lon=float(request.min_lon),
+            max_lon=float(request.max_lon),
+        )
+    else:
+        center_lat = float(request.center_lat or 0.0)
+        center_lon = float(request.center_lon or 0.0)
+        half_lat = (float(request.domain_size_km) / 2.0) / 111.0
+        spatial_extent = SpatialExtent(
+            min_lat=center_lat - half_lat,
+            max_lat=center_lat + half_lat,
+            min_lon=center_lon - half_lat,
+            max_lon=center_lon + half_lat,
+        )
     
+    lead_time_hours = max(1, int((request.forecast_minutes + 59) // 60))
     params = NowcastParams(
         spatial_extent=spatial_extent,
-        lead_time_hours=request.lead_time_hours,
-        time_step_minutes=request.time_step_minutes,
+        lead_time_hours=lead_time_hours,
+        time_step_minutes=request.step_minutes,
         include_satellite=request.include_satellite,
         include_radar=request.include_radar,
     )
@@ -362,22 +400,40 @@ async def submit_spore_dispersal(request: SporeDispersalRequest) -> ModelRunResp
     
     service = get_earth2_service()
     
-    spatial_extent = SpatialExtent(
-        min_lat=request.min_lat,
-        max_lat=request.max_lat,
-        min_lon=request.min_lon,
-        max_lon=request.max_lon,
-    )
+    if all(v is not None for v in [request.min_lat, request.max_lat, request.min_lon, request.max_lon]):
+        spatial_extent = SpatialExtent(
+            min_lat=float(request.min_lat),
+            max_lat=float(request.max_lat),
+            min_lon=float(request.min_lon),
+            max_lon=float(request.max_lon),
+        )
+    elif request.origin_lat is not None and request.origin_lon is not None:
+        spatial_extent = SpatialExtent(
+            min_lat=float(request.origin_lat) - 2.0,
+            max_lat=float(request.origin_lat) + 2.0,
+            min_lon=float(request.origin_lon) - 2.0,
+            max_lon=float(request.origin_lon) + 2.0,
+        )
+    else:
+        spatial_extent = SpatialExtent(min_lat=-90, max_lat=90, min_lon=-180, max_lon=180)
     
     start = datetime.fromisoformat(request.start_time) if request.start_time else datetime.utcnow()
-    end = datetime.fromisoformat(request.end_time) if request.end_time else start + timedelta(days=3)
+    if request.end_time:
+        end = datetime.fromisoformat(request.end_time)
+    elif request.forecast_hours:
+        end = start + timedelta(hours=int(request.forecast_hours))
+    else:
+        end = start + timedelta(days=3)
     
     time_range = TimeRange(start=start, end=end)
     
     params = SporeDispersalParams(
         spatial_extent=spatial_extent,
         time_range=time_range,
-        species_filter=request.species_filter,
+        species_filter=request.species_filter or ([request.species] if request.species else None),
+        origin_lat=request.origin_lat,
+        origin_lon=request.origin_lon,
+        origin_concentration=request.origin_concentration,
         include_precipitation=request.include_precipitation,
         include_humidity=request.include_humidity,
     )

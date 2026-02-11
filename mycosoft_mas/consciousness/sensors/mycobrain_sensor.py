@@ -37,7 +37,7 @@ class MycoBrainSensor(BaseSensor):
     MYCOBRAIN_API_BASE = "http://192.168.0.188:8001/api/mycobrain"
     LOCAL_SERVICE = "http://localhost:8003"  # Local MycoBrain service
     
-    def __init__(self, world_model: "WorldModel"):
+    def __init__(self, world_model: Optional["WorldModel"] = None):
         super().__init__(world_model, "mycobrain")
         self._client: Optional[httpx.AsyncClient] = None
         self._api_base = self.MYCOBRAIN_API_BASE
