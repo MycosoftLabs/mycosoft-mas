@@ -265,6 +265,17 @@ class WorldModel:
         """Get a natural language summary of world state."""
         return self._current_state.to_summary()
     
+    def get_cached_context(self) -> Dict[str, Any]:
+        """
+        Get a fast cached version of world context without any async operations.
+        Used as fallback when get_relevant_context times out.
+        """
+        return {
+            "timestamp": self._current_state.timestamp.isoformat(),
+            "summary": self._current_state.to_summary(),
+            "cached": True,
+        }
+    
     async def get_relevant_context(
         self,
         focus: "AttentionFocus"

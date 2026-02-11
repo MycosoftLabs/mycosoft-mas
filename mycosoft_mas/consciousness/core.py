@@ -380,26 +380,65 @@ class MYCAConsciousness:
         self._metrics.state = ConsciousnessState.FOCUSED
         
         try:
-            # 1. Attention: Focus on the input
+            # 1. Attention: Focus on the input (fast, <100ms)
             focus = await self._attention.focus_on(content, source, context)
             self._metrics.attention_focus = focus.summary
             
-            # 2. Working Memory: Load relevant context
-            working_context = await self._working_memory.load_context(
-                focus, session_id, user_id
-            )
-            
-            # 3. World Model: Get relevant world state
-            world_context = await self._world_model.get_relevant_context(focus)
-            
-            # 4. Memory: Recall related memories
-            memories = []
-            if self._memory_coordinator:
-                memories = await self._recall_relevant_memories(content, focus)
-                self._metrics.memories_recalled += len(memories)
-            
-            # 5. Soul: Get personality context
+            # 5. Soul: Get personality context (fast, synchronous)
             soul_context = self._get_soul_context()
+            
+            # 2-4. PARALLEL: Load context, world, and memories with timeouts
+            # This runs all slow operations in parallel instead of sequential
+            async def safe_working_context():
+                try:
+                    return await asyncio.wait_for(
+                        self._working_memory.load_context(focus, session_id, user_id),
+                        timeout=2.0
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning("Working context timed out, using minimal")
+                    return {"minimal": True}
+                except Exception as e:
+                    logger.warning(f"Working context error: {e}")
+                    return {}
+            
+            async def safe_world_context():
+                try:
+                    return await asyncio.wait_for(
+                        self._world_model.get_relevant_context(focus),
+                        timeout=2.0
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning("World context timed out, using cached")
+                    return self._world_model.get_cached_context()
+                except Exception as e:
+                    logger.warning(f"World context error: {e}")
+                    return {}
+            
+            async def safe_memories():
+                try:
+                    if self._memory_coordinator:
+                        memories = await asyncio.wait_for(
+                            self._recall_relevant_memories(content, focus),
+                            timeout=3.0
+                        )
+                        self._metrics.memories_recalled += len(memories)
+                        return memories
+                    return []
+                except asyncio.TimeoutError:
+                    logger.warning("Memory recall timed out, proceeding without memories")
+                    return []
+                except Exception as e:
+                    logger.warning(f"Memory recall error: {e}")
+                    return []
+            
+            # Run context gathering in parallel (total time = slowest, not sum)
+            working_context, world_context, memories = await asyncio.gather(
+                safe_working_context(),
+                safe_world_context(),
+                safe_memories(),
+                return_exceptions=False
+            )
             
             # 6. Intuition: Check for fast-path response
             intuitive_response = await self._intuition.quick_response(
@@ -407,12 +446,17 @@ class MYCAConsciousness:
             )
             
             if intuitive_response and intuitive_response.confidence > 0.9:
-                # High-confidence intuitive response - use it
+                # High-confidence intuitive response - use it immediately
                 yield intuitive_response.response
                 self._metrics.thoughts_processed += 1
+                
+                # Update state in background (don't block)
+                asyncio.create_task(self._emotions.process_interaction(content, source))
+                asyncio.create_task(self._store_interaction(content, source, session_id, user_id))
                 return
             
             # 7. Deliberation: Deep thinking with full context
+            # This streams tokens as they arrive from the LLM
             async for token in self._deliberation.think(
                 input_content=content,
                 focus=focus,
@@ -426,12 +470,12 @@ class MYCAConsciousness:
             
             self._metrics.thoughts_processed += 1
             
-            # 8. Update emotional state based on interaction
-            await self._emotions.process_interaction(content, source)
-            self._metrics.emotional_valence = self._emotions.valence
+            # 8-9. Update state in background (fire-and-forget, don't block)
+            asyncio.create_task(self._emotions.process_interaction(content, source))
+            asyncio.create_task(self._store_interaction(content, source, session_id, user_id))
             
-            # 9. Store the interaction in memory
-            await self._store_interaction(content, source, session_id, user_id)
+            # Update metrics synchronously
+            self._metrics.emotional_valence = self._emotions.valence
             
         finally:
             self._state = ConsciousnessState.CONSCIOUS
