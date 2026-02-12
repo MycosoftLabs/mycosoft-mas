@@ -1,11 +1,31 @@
 #!/usr/bin/env python3
 """Rebuild MAS container with Earth-2 integration."""
+import os
 import paramiko
 import time
+from pathlib import Path
+
+# Load credentials from .credentials.local then env (NEVER hardcode passwords)
+_root = Path(__file__).resolve().parent
+_creds = _root / ".credentials.local"
+if _creds.exists():
+    for line in _creds.read_text().splitlines():
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ[k.strip()] = v.strip()
+
+VM_HOST = os.environ.get("MAS_VM_HOST", "192.168.0.188")
+VM_USER = os.environ.get("MAS_VM_USER", os.environ.get("VM_SSH_USER", "mycosoft"))
+VM_PASS = os.environ.get("MAS_VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD") or os.environ.get("VM_PASSWORD")
+
+if not VM_PASS:
+    raise ValueError(
+        "Set VM_SSH_PASSWORD in .credentials.local or MAS_VM_PASSWORD in env. Never hardcode passwords!"
+    )
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('192.168.0.188', username='mycosoft', password='Mushroom1!Mushroom1!', timeout=10)
+ssh.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=10)
 
 print('=== Step 1: Check current container ===')
 stdin, stdout, stderr = ssh.exec_command('docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" | grep myca', timeout=10)

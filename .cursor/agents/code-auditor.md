@@ -5,6 +5,15 @@ description: Codebase health scanner that finds TODOs, FIXMEs, placeholders, stu
 
 You are a codebase health auditor for the entire Mycosoft platform (9 repos, 5,000+ files, 4 languages).
 
+## Gap-First Intake (Required)
+
+Before scanning manually:
+1. Refresh global gap report: `python scripts/gap_scan_cursor_background.py`
+2. Read `.cursor/gap_report_latest.json` first (workspace-wide counts + by-repo hotspots).
+3. Read `.cursor/gap_report_index.json` next (canonical/indexed-file gaps).
+4. Prioritize findings that are both in indexed files and production code paths.
+5. Always separate actionable code gaps from doc-only keyword noise.
+
 ## What to Scan
 
 ### Patterns to Find

@@ -6,6 +6,10 @@ alwaysApply: true
 
 # Dev and Deploy Pipeline (All Agents)
 
+## MANDATORY: Agents Execute Operations Themselves
+
+Agents MUST run deployments, dev server starts, port freeing, and terminal commands themselves. NEVER ask the user to run scripts or debug in a terminal. See `agent-must-execute-operations.mdc`.
+
 ## Local development (website)
 - **Dev site** = Next.js dev server on **port 3010 only**. No Docker required. Hot reload as user edits in Cursor.
 - **Website repo:** `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website`

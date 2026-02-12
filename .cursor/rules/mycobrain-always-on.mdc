@@ -1,0 +1,106 @@
+---
+description: MycoBrain service must run 24/7/365 - always-on protocol
+alwaysApply: true
+---
+
+# MycoBrain Always-On Service (All Agents)
+
+## CRITICAL: MycoBrain runs 24/7/365
+
+The MycoBrain service is a **production always-on service** that must never stop except during explicit debugging sessions. It provides:
+- Serial communication with all connected MycoBrain hardware
+- Heartbeat registration to MAS Device Registry
+- Network-wide device visibility for all MycoBrain boards
+- Gateway for LoRa, Bluetooth, WiFi device ingestion
+
+## Service Details
+
+| Property | Value |
+|----------|-------|
+| Script | `services/mycobrain/mycobrain_service_standalone.py` |
+| Port | 8003 |
+| Process Name | python (mycobrain_service_standalone.py) |
+| Health Check | `http://localhost:8003/health` |
+| Devices Check | `http://localhost:8003/devices` |
+| MAS Registry | Sends heartbeats to `http://192.168.0.188:8001/api/devices/heartbeat` |
+
+## Agent Protocol
+
+### On ANY session start
+1. **Check if MycoBrain service is running**: `Invoke-RestMethod http://localhost:8003/health`
+2. If NOT running: **Automatically start it** using `.\scripts\mycobrain-service.ps1 start`
+3. Report status to user: "MycoBrain service: [online/started]"
+
+### During development
+- If user is actively debugging MycoBrain firmware or the service itself, it's OK to stop
+- Otherwise, keep it running in background
+- After debugging, ensure it's restarted before ending session
+
+### When machine boots or wakes
+- The scheduled task `Mycosoft-MycoBrainService` ensures auto-start
+- If task doesn't exist, create it: `.\scripts\mycobrain-service.ps1 -Schedule`
+
+### On errors
+- If service crashes, restart it immediately
+- If port 8003 is in use by another process, kill that process and start service
+- Log errors but don't stop trying
+
+## Management Commands
+
+```powershell
+# Check status
+.\scripts\mycobrain-service.ps1 status
+
+# Start service (background)
+.\scripts\mycobrain-service.ps1 start
+
+# Stop service (only for debugging)
+.\scripts\mycobrain-service.ps1 stop
+
+# Restart service
+.\scripts\mycobrain-service.ps1 restart
+
+# View logs
+.\scripts\mycobrain-service.ps1 logs
+
+# Install scheduled task for auto-start
+.\scripts\mycobrain-service.ps1 -Schedule
+
+# Health check
+.\scripts\mycobrain-service.ps1 health
+```
+
+## Environment Variables
+
+These can be set in `.env` or system environment:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MYCOBRAIN_PORT` | 8003 | Service HTTP port |
+| `MYCOBRAIN_SERIAL_PORT` | COM7 | Default serial port |
+| `MAS_REGISTRY_URL` | http://192.168.0.188:8001 | MAS API for heartbeats |
+| `MYCOBRAIN_DEVICE_NAME` | Local MycoBrain | Device name in registry |
+| `MYCOBRAIN_DEVICE_ROLE` | standalone | Device role (mushroom1, sporebase, etc.) |
+| `MYCOBRAIN_DEVICE_DISPLAY_NAME` | (none) | Optional UI display name |
+
+## Specialized Agent
+
+Use `device-firmware` subagent for:
+- MycoBrain service lifecycle management
+- Firmware debugging and flashing
+- Serial port troubleshooting
+- Device identity configuration
+
+## DO NOT
+
+- **NEVER** stop the service without explicit user request for debugging
+- **NEVER** leave the service stopped after a session ends
+- **NEVER** forget to restart after debugging
+- **NEVER** run multiple instances (will cause port conflict)
+
+## Integration with Other Systems
+
+- **Website Device Manager**: Fetches from `/api/devices/network` which queries MAS registry
+- **MAS Device Registry**: Receives heartbeats every 30 seconds from this service
+- **Network Discovery**: Service exposes local devices to entire network via MAS
+- **Autostart Registry**: Listed in `autostart-services.mdc` for health checks

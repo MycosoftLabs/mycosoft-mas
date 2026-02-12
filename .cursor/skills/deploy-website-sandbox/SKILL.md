@@ -5,6 +5,10 @@ description: Deploy the Mycosoft website to the Sandbox VM (192.168.0.187). Use 
 
 # Deploy Website to Sandbox VM
 
+## CRITICAL: Execute Deployment Yourself
+
+**NEVER ask the user to run these steps.** You MUST execute the deployment yourself via run_terminal_cmd (SSH, or deploy scripts like `_rebuild_sandbox.py`). Load credentials from `.credentials.local` before SSH. See rule `agent-must-execute-operations.mdc`.
+
 ## Prerequisites
 
 - Code committed and pushed to GitHub (main branch)

@@ -435,10 +435,11 @@ _monitor_instance: Optional[SelfHealingMonitor] = None
 
 
 async def get_self_healing_monitor() -> SelfHealingMonitor:
-    """Get the global SelfHealingMonitor instance."""
+    """Get the global SelfHealingMonitor instance (initialized with CodeModificationService)."""
     global _monitor_instance
     if _monitor_instance is None:
         _monitor_instance = SelfHealingMonitor()
+        await _monitor_instance.initialize()
     return _monitor_instance
 
 

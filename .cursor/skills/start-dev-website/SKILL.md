@@ -5,6 +5,10 @@ description: Start the Mycosoft website dev server on port 3010. Use when the us
 
 # Start Website Dev Server
 
+## CRITICAL: Execute Yourself
+
+**NEVER ask the user to run these commands.** You MUST execute them yourself via run_terminal_cmd. See `agent-must-execute-operations.mdc`.
+
 ## Quick Start
 
 The dev server MUST run on port 3010. Use `dev:next-only` to avoid starting GPU services.

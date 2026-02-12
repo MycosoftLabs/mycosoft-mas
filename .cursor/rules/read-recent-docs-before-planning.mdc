@@ -8,8 +8,10 @@ Before ANY agent creates a plan, writes new code, makes architectural decisions,
 
 ## Required Steps (in order)
 
-### 1. Read the Master Document Index
-- Read `docs/MASTER_DOCUMENT_INDEX.md` to get the full table of contents.
+### 1. Read the Cursor Docs Index (vital/current first)
+- Read **`.cursor/CURSOR_DOCS_INDEX.md`** first – canonical list of vital and current docs for Cursor. New docs replace old in that list.
+- Then read `docs/MASTER_DOCUMENT_INDEX.md` for the full table of contents.
+- For full discovery of all docs (2000+), use `.cursor/docs_manifest.json` (run `python scripts/build_docs_manifest.py` to regenerate). Cursor does not auto-load every doc; Notion is a one-way sync for humans – Cursor only sees local files. See `.cursor/rules/cursor-docs-indexing.mdc`.
 
 ### 2. Identify All Docs from the Last 4 Weeks
 - Scan `docs/` for all `.md` files with dates in the last 4 weeks (28 days from today).
@@ -35,6 +37,21 @@ Always read these before any work:
 
 ### 5. Check the Prioritization Document
 - Read `docs/Code and System Prioritization.docx.md` for current priorities, execution order, and what has been planned vs implemented.
+
+### 6. Check Gap Reports
+
+Before any plan or implementation, check for known gaps:
+
+- **`.cursor/gap_report_index.json`** -- Gaps in indexed files (high-priority items from MASTER_DOCUMENT_INDEX)
+- **`.cursor/gap_report_latest.json`** -- Repo-wide gaps (TODOs, stubs, 501 routes, bridge gaps)
+
+Use these to:
+1. Avoid duplicating work on items already being tracked
+2. Identify dependencies or blockers for your current task
+3. Prioritize closing gaps related to your work area
+4. Understand the current state of incomplete features
+
+Regenerate gap reports if they're stale: `python scripts/gap_scan_cursor_index.py`
 
 ---
 

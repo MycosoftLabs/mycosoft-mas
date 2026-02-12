@@ -26,7 +26,9 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
 
 1. **Read and use registries and indexes** so the full system is known. Do not build from ignorance or "rabbit holes."
 2. **Consult (at minimum):**
+   - **.cursor/CURSOR_DOCS_INDEX.md** – vital/current docs only (Cursor internal reference; new replaces old)
    - **docs/MASTER_DOCUMENT_INDEX.md** – table of contents for all docs
+   - **.cursor/docs_manifest.json** – full list of all docs (path, title, repo) for discovery; regenerate with `python scripts/build_docs_manifest.py`. Cursor does not auto-read 2000+ docs or Notion; see `.cursor/rules/cursor-docs-indexing.mdc`.
    - **docs/SYSTEM_REGISTRY_FEB04_2026.md** – systems, APIs, agents, services, devices (and API endpoints for registry)
    - **docs/API_CATALOG_FEB04_2026.md** – API catalog
    - **docs/system_map.md** – system map
@@ -39,6 +41,7 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
 
 ## Rule of thumb
 
+- **Execute operations yourself:** NEVER ask the user to run deployment scripts, terminal commands, or debug in a terminal. You have terminal access—use run_terminal_cmd. Load credentials from `.credentials.local` when needed. See `.cursor/rules/agent-must-execute-operations.mdc`.
 - **Full context first:** Read and use the full index/registries so the entire system is known (or as much as is relevant to the task).
 - **Then plan/code:** Only after that, make plans, ideas, or implementations. This avoids chaos and duplicate or conflicting work across 500k+ files and multiple repos.
 - **Index rapidly:** Use table-of-contents style indexing and existing registries so context can be loaded quickly by any agent. Prefer updating existing registries over creating scattered new lists.
@@ -49,6 +52,7 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
 
 | Purpose | Location |
 |--------|----------|
+| Cursor docs index (vital/current) | .cursor/CURSOR_DOCS_INDEX.md |
 | Master doc index | docs/MASTER_DOCUMENT_INDEX.md |
 | System registry (systems, APIs, agents, services, devices) | docs/SYSTEM_REGISTRY_FEB04_2026.md |
 | API catalog | docs/API_CATALOG_FEB04_2026.md |
@@ -67,7 +71,7 @@ Open via: File > Open Workspace from File. See `.cursor/rules/mycosoft-full-code
 
 ---
 
-## 28 Specialized Sub-Agents
+## 32 Specialized Sub-Agents
 
 Use the right agent for the right task. All agents live in `.cursor/agents/`.
 
@@ -76,6 +80,7 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 |-------|---------|
 | `backend-dev` | Python/FastAPI backend, MAS agents, API endpoints, integrations |
 | `website-dev` | Next.js pages, React components, Tailwind, API routes |
+| `dev-server-guardian` | Ensure dev server on 3010 when in Cursor; no duplicate npm servers; use `dev:next-only` only |
 | `database-engineer` | PostgreSQL, Redis, Qdrant, migrations, pgvector |
 | `memory-engineer` | 6-layer memory, MINDEX backend, context injection |
 | `device-firmware` | MycoBrain ESP32, sensors, MDP protocol, serial |
@@ -86,6 +91,7 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 |-------|---------|
 | `deploy-pipeline` | Commit, push, Docker build, VM restart, Cloudflare purge |
 | `devops-engineer` | CI/CD, GitHub Actions, Docker, environment management |
+| `docker-ops` | **Docker Desktop resource management**, container cleanup, image pruning, MAS integration, vmmem control, local-to-VM coordination |
 | `infrastructure-ops` | VM management, Docker containers, SSH, NAS, Proxmox |
 | `process-manager` | GPU cleanup, port conflicts, zombie processes, autostart |
 | `backup-ops` | Cursor chat backup, Proxmox snapshots, DB backups |
@@ -94,6 +100,7 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 | Agent | Use For |
 |-------|---------|
 | `code-auditor` | Find TODOs, FIXMEs, stubs, dead code across all repos |
+| `gap-agent` | Cross-repo gaps, missing connections, bridge gaps; suggests plans; use when two projects need a third connection |
 | `plan-tracker` | Track 650+ plans, 17+ roadmaps, find stale/abandoned work |
 | `route-validator` | Find missing pages, broken links, 501 API routes |
 | `stub-implementer` | Replace placeholders with real implementations |
@@ -110,6 +117,7 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 | `crep-collector` | Aviation, maritime, satellite, weather data collection |
 | `data-pipeline` | MINDEX ETL, scrapers, GBIF, blob storage, NAS |
 | `n8n-workflow` | n8n workflow automation, webhooks, triggers |
+| `n8n-ops` | n8n instance on MAS VM, workflows, health, credentials |
 | `integration-hub` | External API clients, API keys, rate limits |
 | `notion-sync` | Notion doc sync, watcher daemon, categorization |
 | `documentation-manager` | Dated docs, registry updates, MASTER_DOCUMENT_INDEX |
@@ -118,6 +126,8 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 | Agent | Use For |
 |-------|---------|
 | `myca-autonomous-operator` | Auto-fix, auto-deploy, auto-maintain across all systems |
+
+**MCPs and extensions:** Use the right MCP (GitHub, Supabase, Context7, Cloudflare, cursor-ide-browser, mindex-db) for the task and @-invoke the right sub-agent. See `docs/CURSOR_MCP_AND_EXTENSIONS_FEB12_2026.md`.
 
 ---
 

@@ -56,7 +56,7 @@ The website calls backend VMs -- NOT local services:
 2. **Create component**: `src/components/[name]/` with TypeScript interface, named export
 3. **Create API route**: `src/app/api/[route]/route.ts` with proper error handling
 4. **Add widget**: `src/components/widgets/[domain]/` with real data from API
-5. **Dev server**: `npm run dev:next-only` (NO GPU services unless voice/Earth2 needed)
+5. **Dev server**: Use **only** `npm run dev:next-only` on **port 3010**. To ensure it's running (e.g. after Cursor restart): run `.\scripts\ensure-dev-server.ps1` or `.\scripts\start-dev.ps1` in the website repo. Never start a second server; see `dev-server-guardian` agent and `dev-server-3010.mdc` rule. Do NOT use `npm run dev` unless user needs voice/Earth2.
 6. **Build test**: `npm run build` to catch SSR/type errors before deploy
 7. **Deploy**: Commit, push, SSH to VM 187, rebuild Docker, purge Cloudflare
 

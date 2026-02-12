@@ -1,9 +1,16 @@
 """Check MINDEX VM state -- SSH in and report on services, database, data."""
+import os
+import sys
 import paramiko
 
-HOST = "192.168.0.189"
-USER = "mycosoft"
-PASS = "Mushroom1!Mushroom1!"
+# Load credentials from environment - NEVER hardcode passwords
+HOST = os.environ.get("MINDEX_VM_HOST", "192.168.0.189")
+USER = os.environ.get("VM_USER", "mycosoft")
+PASS = os.environ.get("VM_PASSWORD")
+
+if not PASS:
+    print("ERROR: Set VM_PASSWORD environment variable. Never hardcode passwords!")
+    sys.exit(1)
 
 def run(ssh, cmd):
     stdin, stdout, stderr = ssh.exec_command(cmd, timeout=15)
@@ -37,27 +44,29 @@ try:
     out, _ = run(ssh, "ss -tlnp | grep -E '5432|6333|6379|8000'")
     print(f"\n[LISTENING PORTS]\n{out or 'None on expected ports'}")
 
-    # Check MINDEX database tables
-    out, err = run(ssh, "PGPASSWORD='Mushroom1!Mushroom1!' psql -U mycosoft -d mindex -h localhost -c \"SELECT schemaname, tablename FROM pg_tables WHERE schemaname NOT IN ('pg_catalog','information_schema') ORDER BY schemaname, tablename;\" 2>/dev/null")
+    # Check MINDEX database tables - use environment variable for password
+    db_pass = os.environ.get("MINDEX_DB_PASSWORD", "")
+    db_pass_cmd = f"PGPASSWORD='{db_pass}'" if db_pass else ""
+    out, err = run(ssh, f"{db_pass_cmd} psql -U mycosoft -d mindex -h localhost -c \"SELECT schemaname, tablename FROM pg_tables WHERE schemaname NOT IN ('pg_catalog','information_schema') ORDER BY schemaname, tablename;\" 2>/dev/null")
     if not out:
         out, err = run(ssh, "sudo -u postgres psql -d mindex -c \"SELECT schemaname, tablename FROM pg_tables WHERE schemaname NOT IN ('pg_catalog','information_schema') ORDER BY schemaname, tablename;\" 2>/dev/null")
     print(f"\n[MINDEX TABLES]\n{out or err or 'Could not query'}")
 
     # Check taxa count
-    out, err = run(ssh, "PGPASSWORD='Mushroom1!Mushroom1!' psql -U mycosoft -d mindex -h localhost -c \"SELECT COUNT(*) as taxa_count FROM taxa;\" 2>/dev/null")
+    out, err = run(ssh, f"{db_pass_cmd} psql -U mycosoft -d mindex -h localhost -c \"SELECT COUNT(*) as taxa_count FROM taxa;\" 2>/dev/null")
     if not out:
         out, err = run(ssh, "sudo -u postgres psql -d mindex -c \"SELECT COUNT(*) as taxa_count FROM taxa;\" 2>/dev/null")
     print(f"\n[TAXA COUNT]\n{out or err or 'Could not query'}")
 
     # Check sample taxa data
-    out, err = run(ssh, "PGPASSWORD='Mushroom1!Mushroom1!' psql -U mycosoft -d mindex -h localhost -c \"SELECT id, scientific_name, common_name, rank, source, image_url IS NOT NULL as has_image FROM taxa LIMIT 10;\" 2>/dev/null")
+    out, err = run(ssh, f"{db_pass_cmd} psql -U mycosoft -d mindex -h localhost -c \"SELECT id, scientific_name, common_name, rank, source, image_url IS NOT NULL as has_image FROM taxa LIMIT 10;\" 2>/dev/null")
     if not out:
         out, err = run(ssh, "sudo -u postgres psql -d mindex -c \"SELECT id, scientific_name, common_name, rank, source, image_url IS NOT NULL as has_image FROM taxa LIMIT 10;\" 2>/dev/null")
     print(f"\n[SAMPLE TAXA]\n{out or err or 'Could not query'}")
 
     # Check counts of other tables
     for table in ["observations", "compounds", "genomes", "traits", "external_ids", "synonyms"]:
-        out, _ = run(ssh, f"PGPASSWORD='Mushroom1!Mushroom1!' psql -U mycosoft -d mindex -h localhost -c \"SELECT COUNT(*) FROM {table};\" 2>/dev/null")
+        out, _ = run(ssh, f"{db_pass_cmd} psql -U mycosoft -d mindex -h localhost -c \"SELECT COUNT(*) FROM {table};\" 2>/dev/null")
         if not out:
             out, _ = run(ssh, f"sudo -u postgres psql -d mindex -c \"SELECT COUNT(*) FROM {table};\" 2>/dev/null")
         count = out.split('\n')[2].strip() if out and len(out.split('\n')) > 2 else "N/A"

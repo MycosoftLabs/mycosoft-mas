@@ -3,8 +3,21 @@
 import paramiko
 import time
 import sys
+import os
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+
+# Load credentials from environment
+VM = os.environ.get("MAS_VM_IP", "192.168.0.188")
+VM_USER = os.environ.get("VM_USER", "mycosoft")
+VM_PASS = os.environ.get("VM_PASSWORD")
+
+if not VM_PASS:
+    print("ERROR: VM_PASSWORD environment variable is not set.")
+    print("Please set it before running this script:")
+    print("  $env:VM_PASSWORD = 'your-password'  # PowerShell")
+    print("  export VM_PASSWORD='your-password'  # Bash")
+    sys.exit(1)
 
 print("=" * 60)
 print("MYCA Orchestrator - Full Deploy with Code Pull")
@@ -13,8 +26,8 @@ print("=" * 60)
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-print("\nConnecting to MAS VM (192.168.0.188)...")
-ssh.connect('192.168.0.188', username='mycosoft', password='Mushroom1!Mushroom1!', timeout=30)
+print(f"\nConnecting to MAS VM ({VM})...")
+ssh.connect(VM, username=VM_USER, password=VM_PASS, timeout=30)
 print("Connected!")
 
 def run_command(cmd, ignore_error=False, timeout=300):

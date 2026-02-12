@@ -5,9 +5,14 @@ description: Deploy or restart the MINDEX API service on VM 192.168.0.189. Use w
 
 # Deploy MINDEX API Service
 
+## CRITICAL: Execute Deployment Yourself
+
+**NEVER ask the user to run these steps or set VM_PASSWORD.** You MUST execute the deployment yourself. Load credentials: `Get-Content ".credentials.local" | ForEach-Object { if ($_ -match "^([^#=]+)=(.*)$") { [Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim(), "Process") } }` then run `python _deploy_mindex.py` from MINDEX/mindex. Credentials live in MAS repo `.credentials.local`. See rule `agent-must-execute-operations.mdc`.
+
 ## Prerequisites
 
 - SSH access to MINDEX VM at 192.168.0.189
+- MINDEX code path on VM: `/home/mycosoft/mindex` (NOT /home/mycosoft/mas)
 
 ## Deployment Steps
 
@@ -29,7 +34,7 @@ ssh mycosoft@192.168.0.189
 ### Step 2: Pull latest code
 
 ```bash
-cd /opt/mycosoft/mas
+cd /home/mycosoft/mindex
 git fetch origin
 git reset --hard origin/main
 ```

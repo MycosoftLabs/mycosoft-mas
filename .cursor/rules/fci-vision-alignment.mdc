@@ -1,0 +1,38 @@
+---
+description: When touching FCI, HPL, or Mycorrhizae protocol — align with vision and science. No building from ignorance.
+globs: 
+  - "**/mycorrhizae/**"
+  - "**/fci/**"
+  - "**/hpl/**"
+  - "**/bio/**"
+  - "**/FCI*.md"
+  - "**/HPL*.md"
+  - "**/MYCORRHIZAE*.md"
+alwaysApply: false
+---
+
+# FCI / HPL / Mycorrhizae Vision Alignment
+
+## When this rule applies
+
+You are editing or planning work that touches:
+
+- **FCI** (Fungal Computer Interface): electrodes, bioelectric signals, fungal probes, signal processing, MycoBrain FCI firmware
+- **HPL** (Hypha Programming Language): signal patterns, device modules, DSL, Mycorrhizae protocol message types
+- **Mycorrhizae protocol**: transport, semantic layer, GFST patterns, stimulus commands, bridges to insights
+
+## Before implementing or designing
+
+1. **Read the vision–implementation gap** so you don’t build in ignorance of the stated vision:
+   - `docs/VISION_VS_IMPLEMENTATION_GAP_ANALYSIS_FEB10_2026.md`
+2. **Read the scientific basis** for fungal electrical signaling (ranges, methods, species):
+   - `docs/FUNGI_ELECTRICAL_SIGNALING_SCIENCE_FEB10_2026.md`
+3. **Align with existing specs** where they exist:
+   - Mycorrhizae: `Mycorrhizae/mycorrhizae-protocol/docs/MYCORRHIZAE_PROTOCOL_SPECIFICATION_FEB10_2026.md`
+   - FCI implementation: `docs/FCI_IMPLEMENTATION_COMPLETE_FEB10_2026.md`
+
+## Rule of thumb
+
+- Vision: two-way fungal communication, biological computation, mycological index, GFST validation.
+- Current: data structures, routing, minimal DSL, PostgreSQL.
+- When adding features in FCI/HPL/Mycorrhizae space, prefer steps that close the gap (e.g. real signal acquisition, pattern library, HPL patterns) over more routing-only work, unless the task is explicitly scoped to routing/infra.

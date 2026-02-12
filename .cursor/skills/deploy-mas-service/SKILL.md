@@ -5,6 +5,10 @@ description: Deploy or restart the MAS orchestrator service on VM 192.168.0.188.
 
 # Deploy MAS Orchestrator Service
 
+## CRITICAL: Execute Deployment Yourself
+
+**NEVER ask the user to run these steps.** You MUST execute the deployment yourself via run_terminal_cmd (SSH or `_rebuild_mas_container.py`). Load credentials from `.credentials.local` before SSH. See rule `agent-must-execute-operations.mdc`.
+
 ## Prerequisites
 
 - Code committed and pushed to GitHub

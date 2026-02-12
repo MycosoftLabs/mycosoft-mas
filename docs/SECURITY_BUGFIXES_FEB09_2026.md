@@ -232,9 +232,9 @@ ssh mycosoft@192.168.0.189 "cd /opt/mycosoft/mindex && docker compose ..."
 - [ ] Review all other config files for hardcoded secrets
 
 #### Short Term
-- [ ] Implement secret scanning in CI/CD (detect-secrets, truffleHog, or GitHub secret scanning)
-- [ ] Add pre-commit hooks to block credential commits
-- [ ] Document secure credential management practices
+- [x] Implement secret scanning in CI/CD (detect-secrets, truffleHog, or GitHub secret scanning) - *Added detect-secrets pre-commit hook (Feb 09)*
+- [x] Add pre-commit hooks to block credential commits - *Created `.pre-commit-config.yaml` with detect-secrets and detect-private-key hooks (Feb 09)*
+- [x] Document secure credential management practices - *Created `docs/CREDENTIAL_MANAGEMENT_BEST_PRACTICES_FEB09_2026.md` (Feb 09)*
 - [ ] Migrate to proper secret management (Azure Key Vault, HashiCorp Vault, or Docker secrets)
 
 #### Long Term

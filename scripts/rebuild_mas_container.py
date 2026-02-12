@@ -4,6 +4,7 @@ Rebuild and restart MAS Docker container on VM 192.168.0.188
 """
 import sys
 import time
+import os
 
 try:
     import paramiko
@@ -12,9 +13,17 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "paramiko", "-q"])
     import paramiko
 
-MAS_VM_IP = "192.168.0.188"
-MAS_VM_USER = "mycosoft"
-MAS_VM_PASS = "Mushroom1!Mushroom1!"
+# Load credentials from environment
+MAS_VM_IP = os.environ.get("MAS_VM_IP", "192.168.0.188")
+MAS_VM_USER = os.environ.get("VM_USER", "mycosoft")
+MAS_VM_PASS = os.environ.get("VM_PASSWORD")
+
+if not MAS_VM_PASS:
+    print("ERROR: VM_PASSWORD environment variable is not set.")
+    print("Please set it before running this script:")
+    print("  $env:VM_PASSWORD = 'your-password'  # PowerShell")
+    print("  export VM_PASSWORD='your-password'  # Bash")
+    sys.exit(1)
 
 def log(msg, level="INFO"):
     ts = time.strftime("%H:%M:%S")

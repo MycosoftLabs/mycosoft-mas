@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
 """
-Verify all services are running
-Created: February 4, 2026
+Verify all services are running on Sandbox (187).
+Loads credentials from .credentials.local (VM_SSH_PASSWORD). Created: February 4, 2026
 """
-import paramiko
-import time
+import os
+import sys
+from pathlib import Path
 
-VM_HOST = '192.168.0.187'
-VM_USER = 'mycosoft'
-VM_PASS = 'Mushroom1!Mushroom1!'
+import paramiko
+
+# Load .credentials.local from repo root
+_root = Path(__file__).resolve().parent.parent
+_creds = _root / ".credentials.local"
+if _creds.exists():
+    for line in _creds.read_text().splitlines():
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ[k.strip()] = v.strip()
+
+VM_HOST = os.environ.get("VM_SANDBOX_HOST", "192.168.0.187")
+VM_USER = os.environ.get("VM_SSH_USER", "mycosoft")
+VM_PASS = os.environ.get("VM_SSH_PASSWORD") or os.environ.get("VM_PASSWORD")
+if not VM_PASS:
+    print("Set VM_SSH_PASSWORD in .credentials.local")
+    sys.exit(1)
 
 def run_command(client, cmd, timeout=60):
     """Execute command and return output."""
