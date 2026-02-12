@@ -47,6 +47,8 @@ from mycosoft_mas.core.routers.mindex_query import router as mindex_router
 from mycosoft_mas.core.routers.platform_api import router as platform_router
 from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
 from mycosoft_mas.core.routers.bio_api import router as bio_router
+from mycosoft_mas.core.routers.fusarium_api import router as fusarium_router
+from mycosoft_mas.core.routers.redteam_api import router as redteam_router
 from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
@@ -57,6 +59,7 @@ from mycosoft_mas.core.routers.scientific_stream import router as scientific_str
 from mycosoft_mas.core.routers.topology_stream import router as topology_stream_router
 from mycosoft_mas.core.routers.crep_stream import router as crep_stream_router
 from mycosoft_mas.core.routers.devices_stream import router as devices_stream_router
+from mycosoft_mas.core.routers.security_stream import router as security_stream_router
 try:
     from mycosoft_mas.core.routers.iot_envelope_api import router as iot_router
     IOT_ENVELOPE_AVAILABLE = True
@@ -346,6 +349,8 @@ app.include_router(mindex_router, prefix="/mindex", tags=["mindex"])
 app.include_router(platform_router, prefix="/platform", tags=["platform"])
 app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
 app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
+app.include_router(fusarium_router, prefix="/api/fusarium", tags=["fusarium"])
+app.include_router(redteam_router, tags=["redteam"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
@@ -364,6 +369,7 @@ app.include_router(scientific_stream_router, tags=["scientific-stream"])
 app.include_router(topology_stream_router, tags=["topology-stream"])
 app.include_router(crep_stream_router, tags=["crep-stream"])
 app.include_router(devices_stream_router, tags=["devices-stream"])
+app.include_router(security_stream_router, tags=["security-stream"])
 
 # Earth-2 AI Weather API
 if EARTH2_API_AVAILABLE:
