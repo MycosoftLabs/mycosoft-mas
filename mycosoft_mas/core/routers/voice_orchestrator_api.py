@@ -1,4 +1,4 @@
-﻿"""
+"""
 MYCA Voice Orchestrator API - February 5, 2026
 
 Single decision point for all voice/chat interactions.
@@ -65,6 +65,40 @@ class SessionContext(BaseModel):
     history_loaded_from_db: bool = False
 
 
+class ToolCallInfo(BaseModel):
+    """Tool call information for frontend debug panels."""
+    tool: str = Field(..., description="Tool name")
+    query: Optional[str] = Field(None, description="Query passed to tool")
+    status: str = Field("success", description="Tool call status")
+    result: Optional[str] = Field(None, description="Tool result")
+    duration: Optional[int] = Field(None, description="Duration in ms")
+    inject_to_moshi: bool = Field(False, description="Whether to inject result to Moshi")
+
+
+class AgentInvocation(BaseModel):
+    """Agent invocation information for frontend debug panels."""
+    id: str = Field(..., description="Agent ID")
+    name: str = Field(..., description="Agent name")
+    action: str = Field(..., description="Action performed")
+    status: str = Field("completed", description="Agent status")
+    feedback: Optional[str] = Field(None, description="Agent feedback")
+    inject_to_moshi: bool = Field(False, description="Whether to inject feedback to Moshi")
+
+
+class MemoryStats(BaseModel):
+    """Memory statistics for frontend debug panels."""
+    reads: int = Field(0, description="Number of memory reads")
+    writes: int = Field(0, description="Number of memory writes")
+    context_injected: bool = Field(False, description="Whether context was injected")
+    turns_in_session: int = Field(0, description="Number of turns in session")
+
+
+class InjectionInfo(BaseModel):
+    """Injection info for frontend feedback system."""
+    type: str = Field(..., description="Injection type: tool_result, agent_update, system_alert")
+    content: str = Field(..., description="Content to inject")
+
+
 class VoiceOrchestratorResponse(BaseModel):
     """Structured response from the MYCA voice orchestrator."""
     response_text: str = Field(..., description="MYCA's response text")
@@ -73,6 +107,11 @@ class VoiceOrchestratorResponse(BaseModel):
     session_context: Optional[SessionContext] = None
     source: str = Field("myca-orchestrator", description="Response source")
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    # Frontend debug panel fields
+    tool_calls: List[ToolCallInfo] = Field(default_factory=list, description="Tool calls for debug panel")
+    agents_invoked: List[AgentInvocation] = Field(default_factory=list, description="Agent invocations for debug panel")
+    memory_stats: Optional[MemoryStats] = Field(None, description="Memory statistics for debug panel")
+    injection: Optional[InjectionInfo] = Field(None, description="Feedback injection info")
 
 
 # ============================================================================
@@ -377,11 +416,54 @@ class MYCAOrchestrator:
             history_loaded_from_db=history_loaded_from_db,
         )
         
+        # Build debug panel data from actions_taken
+        tool_calls: List[ToolCallInfo] = []
+        agents_invoked: List[AgentInvocation] = []
+        memory_reads = 0
+        memory_writes = 0
+        context_injected = False
+        
+        for action in actions_taken:
+            if action.type == "tool_called":
+                tool_calls.append(ToolCallInfo(
+                    tool=action.detail.get("tool_name", "unknown"),
+                    query=action.detail.get("query"),
+                    status=action.detail.get("status", "success"),
+                    result=action.detail.get("result"),
+                    duration=action.detail.get("duration_ms"),
+                    inject_to_moshi=action.detail.get("inject_to_moshi", False),
+                ))
+            elif action.type == "agent_routed":
+                agents_invoked.append(AgentInvocation(
+                    id=action.detail.get("agent_id", "unknown"),
+                    name=action.detail.get("agent_name", "unknown"),
+                    action=action.detail.get("action", "invoked"),
+                    status=action.detail.get("status", "completed"),
+                    feedback=action.detail.get("feedback"),
+                    inject_to_moshi=action.detail.get("inject_to_moshi", False),
+                ))
+            elif action.type == "memory_write":
+                memory_writes += 1
+            elif action.type in ("memory_restore", "memory_read", "user_profile_loaded"):
+                memory_reads += 1
+                if action.type == "memory_restore":
+                    context_injected = True
+        
+        memory_stats = MemoryStats(
+            reads=memory_reads,
+            writes=memory_writes,
+            context_injected=context_injected,
+            turns_in_session=conv_context["turn_count"],
+        )
+        
         return VoiceOrchestratorResponse(
             response_text=response_text,
             response=response_text,
             actions_taken=actions_taken,
             session_context=session_context,
+            tool_calls=tool_calls,
+            agents_invoked=agents_invoked,
+            memory_stats=memory_stats,
         )
     
     def _analyze_intent(self, message: str) -> Dict[str, Any]:
