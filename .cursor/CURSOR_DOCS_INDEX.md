@@ -36,6 +36,7 @@
 |-----|---------|
 | `docs/MASTER_ARCHITECTURE_FEB09_2026.md` | Full ecosystem, VMs, memory, agents |
 | `docs/ALWAYS_ON_SERVICES_FEB12_2026.md` | Local vs VM always-on services, health checks |
+| `docs/REDIS_PUBSUB_USAGE_FEB12_2026.md` | **Real-time messaging**: Redis pub/sub on VM 189, 4 channels (devices, agents, experiments, CREP), RedisPubSubClient, auto-reconnection, NO MOCK DATA |
 | `docs/PRODUCTION_MIGRATION_RUNBOOK_FEB09_2026.md` | VM deploy, rollback, backups |
 | `docs/TERMINAL_AND_PYTHON_OPERATIONS_GUIDE_FEB12_2026.md` | Autostart, GPU cleanup, process registry |
 | `docs/VM_LAYOUT_AND_DEV_REMOTE_SERVICES_FEB06_2026.md` | VM layout, dev using remote services |

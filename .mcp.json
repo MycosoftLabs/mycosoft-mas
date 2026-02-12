@@ -11,6 +11,40 @@
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@bytebase/dbhub", "--dsn", "${MINDEX_DATABASE_URL}"]
+    },
+    "mycosoft-memory": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mycosoft_mas.memory.mcp_memory_server"],
+      "env": {
+        "MINDEX_DATABASE_URL": "${MINDEX_DATABASE_URL}"
+      }
+    },
+    "mycosoft-tasks": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mycosoft_mas.mcp.task_management_server"],
+      "env": {
+        "CURSOR_PLANS_DIR": "C:/Users/admin2/.cursor/plans"
+      }
+    },
+    "mycosoft-orchestrator": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mycosoft_mas.mcp.orchestrator_server"],
+      "env": {
+        "MAS_API_URL": "http://192.168.0.188:8001",
+        "MINDEX_API_URL": "http://192.168.0.189:8000",
+        "N8N_URL": "http://192.168.0.188:5678"
+      }
+    },
+    "mycosoft-registry": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mycosoft_mas.mcp.registry_server"],
+      "env": {
+        "WORKSPACE_ROOT": "c:/Users/admin2/Desktop/MYCOSOFT/CODE/MAS/mycosoft-mas"
+      }
     }
   }
 }

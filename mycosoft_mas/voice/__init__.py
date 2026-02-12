@@ -26,6 +26,11 @@ from mycosoft_mas.voice.command_registry import (
     get_command_registry,
 )
 
+from mycosoft_mas.voice.memory_bridge import (
+    VoiceMemoryBridge,
+    get_voice_memory_bridge,
+)
+
 __all__ = [
     # Intent Classification
     "IntentClassifier",
@@ -44,4 +49,7 @@ __all__ = [
     "CommandType",
     "ExecutionMode",
     "get_command_registry",
+    # Memory Bridge
+    "VoiceMemoryBridge",
+    "get_voice_memory_bridge",
 ]

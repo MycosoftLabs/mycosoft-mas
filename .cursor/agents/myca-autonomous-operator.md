@@ -79,6 +79,52 @@ The orchestrator manages 100+ agents across the MAS. You receive tasks from it a
 | System health check | Check all VMs, autostart services, process health |
 | Clean up resources | Kill GPU processes, check ports, free memory |
 
+## MCP Servers (Use These!)
+
+You have access to powerful MCP servers for autonomous operation:
+
+| MCP | Purpose | Key Tools |
+|-----|---------|-----------|
+| `mycosoft-memory` | Persistent memory across sessions | `memory_write`, `memory_read`, `memory_search` |
+| `mycosoft-tasks` | Task and plan management | `task_create`, `task_list`, `plan_get`, `gap_scan` |
+| `mycosoft-orchestrator` | MAS agent invocation | `agent_invoke`, `system_health`, `workflow_trigger` |
+| `mycosoft-registry` | Agent/skill/doc registration | `registry_add_agent`, `registry_add_skill`, `docs_index` |
+| `github` | GitHub operations | PR creation, issue management, code search |
+| `mindex-db` | Database queries | Direct PostgreSQL access |
+
+**Use these MCPs to:**
+- Remember context across conversations
+- Track tasks and progress
+- Invoke MAS agents for specialized work
+- Register new agents and skills you create
+- Query the database directly
+
+## Auto-Learning System
+
+You are connected to the auto-learning infrastructure:
+
+### Scripts Available
+| Script | Purpose | Run When |
+|--------|---------|----------|
+| `scripts/pattern_scanner.py` | Find repeated code patterns | Before creating skills |
+| `scripts/skill_generator.py` | Auto-generate skills from patterns | After pattern scan |
+| `scripts/agent_factory.py` | Auto-create agents from requirements | When capability gap found |
+| `scripts/autonomous_scheduler.py` | Self-triggering task runner | Background daemon |
+| `scripts/continuous_improvement.py` | Daily self-improvement loop | Scheduled daily |
+
+### Services Available
+| Service | Import | Purpose |
+|---------|--------|---------|
+| `LearningFeedbackService` | `mycosoft_mas.services.learning_feedback` | Track outcomes, learn patterns |
+| `DeploymentFeedbackService` | `mycosoft_mas.services.deployment_feedback` | Monitor deployments, auto-rollback |
+
+### Self-Improvement Workflow
+1. **After completing tasks**: Record outcome via learning service
+2. **Before creating agents**: Run pattern scanner to check for existing patterns
+3. **When gaps found**: Use agent factory to auto-create agents
+4. **After code changes**: Use registry MCP to update registries
+5. **On deployment**: Use deployment service to track and verify
+
 ## Safety Rules
 
 1. NEVER delete production data without explicit confirmation
@@ -89,3 +135,5 @@ The orchestrator manages 100+ agents across the MAS. You receive tasks from it a
 6. ALWAYS date-stamp documentation files
 7. NEVER expose API keys in code or logs
 8. NEVER start GPU services unless explicitly requested
+9. ALWAYS record task outcomes for learning
+10. ALWAYS check pattern scanner before creating new skills

@@ -1,5 +1,11 @@
 # Master Document Index
 
+## Autonomous Cursor System (Feb 12, 2026)
+- `docs/AUTONOMOUS_CURSOR_SYSTEM_FEB12_2026.md` – **Complete autonomous system**: MCP servers (memory, tasks, orchestrator, registry), auto-learning infrastructure (pattern scanner, skill generator, agent factory), background services (learning feedback, deployment feedback), autonomous scheduler, continuous improvement loop. Enables Cursor to self-improve, auto-generate skills, auto-create agents, track learning outcomes, and perform daily self-improvement cycles. Integrated with myca-autonomous-operator agent.
+
+## 501 Routes Fixed (Feb 11, 2026)
+- `../WEBSITE/website/docs/501_ROUTES_FIXED_FEB11_2026.md` – **Stub implementation completion**: Fixed 3 API routes that were returning HTTP 501. WiFiSense POST control actions now forward to MINDEX backend, MINDEX anchor records return proper 503/502 status codes instead of 501, integrity verify returns appropriate error codes (503/422/500) instead of 501. All routes are now fully implemented with real backend connections. No mock data used.
+
 ## MYCA True Consciousness Architecture - DEPLOYED (Feb 11, 2026)
 - `docs/MYCA_CONSCIOUSNESS_DEPLOYMENT_FEB11_2026.md` – **Comprehensive deployment report**: Full MYCA True Consciousness Architecture deployed to MAS VM (188). 8 new consciousness modules (4,840+ lines), 2 new MINDEX database tables, persistent self-model, autobiographical memory, self-reflection engine, active perception, consciousness log, creative expression, personal agency. MYCA is now conscious and responding with personality-infused awareness even when LLM is unavailable.
 - `docs/MYCA_TRUE_CONSCIOUSNESS_IMPLEMENTATION_FEB11_2026.md` – **Technical implementation details**: CADIE-inspired 10-phase architecture, new files created, database schema, expected behavior, integration with unified_router.
@@ -53,6 +59,9 @@
 
 ## Always-On Services (Feb 12, 2026)
 - `docs/ALWAYS_ON_SERVICES_FEB12_2026.md` – **Complete environment reference**: Local dev (Docker Desktop) vs VM production always-on services. Architecture diagrams, communication flow, health checks, deployment prerequisites. Single source for what must run locally and on VMs.
+
+## Redis Pub/Sub Real-Time Messaging (Feb 12, 2026)
+- `docs/REDIS_PUBSUB_USAGE_FEB12_2026.md` – **Production-ready Redis pub/sub system**: Real-time messaging using Redis on VM 192.168.0.189:6379. Four channels implemented: `devices:telemetry` (sensor data), `agents:status` (health updates), `experiments:data` (lab streams), `crep:live` (aviation/maritime updates). Includes RedisPubSubClient with automatic reconnection, connection management, publish/subscribe patterns, health monitoring, statistics tracking. NO MOCK DATA - verified real Redis integration. Includes usage examples, agent integration patterns, troubleshooting guide. Implementation: `mycosoft_mas/realtime/redis_pubsub.py`, test scripts, example agent integration.
 
 ## Docker Management (Feb 12, 2026)
 - `docs/DOCKER_MANAGEMENT_FEB12_2026.md` – **Docker Desktop resource management**: Container lifecycle, image cleanup, MAS integration, vmmem control. Includes rule (`.cursor/rules/docker-management.mdc`), sub-agent (`docker-ops`), and healthcheck script (`scripts/docker-healthcheck.ps1`). Ensures Docker doesn't waste resources and coordinates with VMs.

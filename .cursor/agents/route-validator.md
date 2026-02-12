@@ -38,7 +38,7 @@ Before route checks:
 
 | Route | Method | Issue |
 |-------|--------|-------|
-| `/api/mindex/wifisense` | GET, POST | Returns 501 "Not implemented" |
+| `/api/mindex/wifisense` | POST | Returns 501 "Not implemented" (GET implemented Feb 12, 2026) |
 | `/api/mindex/agents/anomalies` | GET | Returns 501 "Not implemented" |
 | `/api/docker/containers` | POST (clone, backup) | Returns 501 "Not implemented" |
 

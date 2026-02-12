@@ -34,6 +34,7 @@ from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.documents import router as documents_router
+from mycosoft_mas.core.routers.agents import router as agents_router
 
 # FCI (Fungal Computer Interface) routers
 from mycosoft_mas.core.routers import fci as fci_router
@@ -50,6 +51,12 @@ from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
+
+# Real-time streaming routers (Redis pub/sub)
+from mycosoft_mas.core.routers.scientific_stream import router as scientific_stream_router
+from mycosoft_mas.core.routers.topology_stream import router as topology_stream_router
+from mycosoft_mas.core.routers.crep_stream import router as crep_stream_router
+from mycosoft_mas.core.routers.devices_stream import router as devices_stream_router
 try:
     from mycosoft_mas.core.routers.iot_envelope_api import router as iot_router
     IOT_ENVELOPE_AVAILABLE = True
@@ -324,6 +331,7 @@ app.add_middleware(RateLimitMiddleware)
 app.include_router(agent_registry_router)
 app.include_router(orchestrator_api_router)
 app.include_router(agent_runner_router)
+app.include_router(agents_router)
 app.include_router(gap_api_router)
 app.include_router(coding_router)
 app.include_router(integrations_router)
@@ -350,6 +358,12 @@ app.include_router(device_registry_router, tags=["device-registry"])
 # FCI (Fungal Computer Interface) - REST and WebSocket for real-time bioelectric signals
 app.include_router(fci_router, tags=["fci"])
 app.include_router(fci_websocket_router, tags=["fci-websocket"])
+
+# Real-time streaming routers (Redis pub/sub) - February 12, 2026
+app.include_router(scientific_stream_router, tags=["scientific-stream"])
+app.include_router(topology_stream_router, tags=["topology-stream"])
+app.include_router(crep_stream_router, tags=["crep-stream"])
+app.include_router(devices_stream_router, tags=["devices-stream"])
 
 # Earth-2 AI Weather API
 if EARTH2_API_AVAILABLE:

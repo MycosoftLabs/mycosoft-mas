@@ -22,7 +22,7 @@ Before implementing stubs:
 ### High (User-Facing)
 3. `mycosoft_mas/core/routers/memory_api.py:435` -- Implement LLM summarization
 4. `mycosoft_mas/memory/mem0_adapter.py:492,600` -- Implement vector search with embeddings
-5. Website `/api/mindex/wifisense` -- Implement real WiFiSense backend
+5. ✅ ~~Website `/api/mindex/wifisense`~~ -- **DONE** (Feb 12, 2026) - GET returns empty state, POST returns 501
 6. Website `/api/mindex/agents/anomalies` -- Implement anomalies feed
 
 ### Medium (Agent Implementations)

@@ -48,7 +48,7 @@ Before scanning manually:
 3. **Research**: `agents/research_agent.py` -- all task handlers are TODO
 4. **Task Manager**: `core/task_manager.py` -- orchestrator client, monitoring, restart all TODO
 5. **Memory**: `memory/mem0_adapter.py` -- vector search not implemented
-6. **Website API**: `/api/mindex/wifisense`, `/api/mindex/agents/anomalies` -- return 501
+6. **Website API**: `/api/mindex/wifisense` POST, `/api/mindex/agents/anomalies` -- return 501 (GET implemented for wifisense)
 
 ## Scan Commands
 

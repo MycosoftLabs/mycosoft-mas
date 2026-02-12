@@ -64,6 +64,11 @@ class FCIDriverBase(ABC):
     async def get_sample(self) -> FCISample:
         """Get a single sample from all channels."""
         pass
+
+    @abstractmethod
+    async def send_stimulation(self, command: Dict[str, Any]) -> Dict[str, Any]:
+        """Dispatch a stimulation command to the active signal source."""
+        pass
     
     @abstractmethod
     def set_pattern(self, pattern: str) -> None:
@@ -217,6 +222,18 @@ class FCISimulatorDriver(FCIDriverBase):
             quality_score=0.85 + random.uniform(0, 0.15),
         )
 
+    async def send_stimulation(self, command: Dict[str, Any]) -> Dict[str, Any]:
+        """Acknowledge stimulation in simulator mode for closed-loop testing."""
+        logger.info(
+            f"[FCI Simulator] Stimulation command accepted for {self.device_id}: {command}"
+        )
+        return {
+            "status": "simulated",
+            "device_id": self.device_id,
+            "mode": self.mode.value,
+            "command": command,
+        }
+
 
 class MycoBrainFCIDriver(FCIDriverBase):
     """
@@ -336,6 +353,48 @@ class MycoBrainFCIDriver(FCIDriverBase):
             # Hardware stalled, use fallback
             logger.warning(f"[FCI Hardware] Sample timeout, falling back to simulator")
             return await self._fallback.get_sample()
+
+    async def send_stimulation(self, command: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Dispatch stimulation to MycoBrain firmware when available.
+        Falls back to simulator acknowledgement when hardware is unavailable.
+        """
+        if not self.mycobrain_host or not self._connected:
+            simulated = await self._fallback.send_stimulation(command)
+            return {
+                **simulated,
+                "status": "fallback",
+                "reason": "hardware_unavailable",
+            }
+
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.post(
+                    f"http://{self.mycobrain_host}:{self.mycobrain_port}/api/fci/stimulate",
+                    json=command,
+                )
+            if response.status_code >= 400:
+                return {
+                    "status": "error",
+                    "device_id": self.device_id,
+                    "mode": self.mode.value,
+                    "error": response.text,
+                }
+            data = response.json() if response.content else {}
+            return {
+                "status": "dispatched",
+                "device_id": self.device_id,
+                "mode": self.mode.value,
+                "response": data,
+            }
+        except Exception as exc:
+            logger.error(f"[FCI Hardware] Stimulation dispatch failed: {exc}")
+            return {
+                "status": "error",
+                "device_id": self.device_id,
+                "mode": self.mode.value,
+                "error": str(exc),
+            }
     
     async def _connect_websocket(self) -> bool:
         """Establish WebSocket connection to MycoBrain."""

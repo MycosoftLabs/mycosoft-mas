@@ -1,21 +1,31 @@
 # Mycosoft System Status - Current
-**Date**: January 16, 2026, 5:22 PM PST  
+**Date**: February 12, 2026  
 **Status**: ✅ OPERATIONAL  
 
 ## Primary URLs
 
+| Service | URL | Status | Notes |
+|---------|-----|--------|-------|
+| **Website Dev** | http://localhost:3010 | ✅ Active | Dev server - ONLY port for dev |
+| **Website Prod** | http://sandbox.mycosoft.com | ✅ Active | VM 187, port 3000 |
+| **CREP Dashboard** | http://localhost:3010/dashboard/crep | ✅ Active | Part of website |
+| **NatureOS** | http://localhost:3010/natureos | ✅ Active | Part of website |
+| **AI Studio** | http://localhost:3010/natureos/ai-studio | ✅ Active | MYCA interface |
+| **Test Voice** | http://localhost:3010/test-voice | ✅ Active | Voice testing |
+| **MAS Orchestrator** | http://192.168.0.188:8001 | ✅ Running | VM 188 |
+| **MINDEX API** | http://192.168.0.189:8000 | ✅ Running | VM 189 |
+| **MycoBrain Service** | http://localhost:8003 | ✅ Running | Local service |
+| **n8n Workflows** | http://192.168.0.188:5678 | ✅ Running | VM 188 |
+
+## DEPRECATED - DO NOT USE
+
 | Service | URL | Status |
 |---------|-----|--------|
-| **Mycosoft Website** | http://localhost:3000 | ✅ Running |
-| **CREP Dashboard** | http://localhost:3000/dashboard/crep | ✅ Active |
-| **NatureOS** | http://localhost:3000/natureos | ✅ Active |
-| **Device Manager** | http://localhost:3000/natureos/devices | ✅ Active |
-| **MAS Orchestrator** | http://localhost:8001 | ✅ Running |
-| **MINDEX** | http://localhost:8000 | ✅ Healthy |
-| **MycoBrain Service** | http://localhost:8003 | ✅ Running |
-| **MYCA UniFi Dashboard** | http://localhost:3100 | ✅ Running |
-| **Grafana** | http://localhost:3002 | ✅ Running |
-| **n8n Workflows** | http://localhost:5678 | ✅ Running |
+| ~~MAS Dashboard~~ | ~~http://localhost:3001~~ | ❌ DEPRECATED |
+| ~~MYCA UniFi Dashboard~~ | ~~http://localhost:3100~~ | ❌ DEPRECATED |
+| ~~unifi-dashboard/~~ | ~~MAS/mycosoft-mas/unifi-dashboard/~~ | ❌ DEPRECATED |
+
+**WARNING**: The `unifi-dashboard` directory in MAS repo is deprecated. All website work must be done in `WEBSITE/website/` repo only.
 
 ## CREP Dashboard Features
 
@@ -76,15 +86,20 @@ Controls:
 ## Port Assignments
 
 ### Core Services
-| Port | Service | Description |
-|------|---------|-------------|
-| **3000** | **Website** | Mycosoft Next.js website (RESERVED) |
-| **3001** | **MYCA App** | MAS Dashboard (DEPRECATED) |
-| **3002** | **Grafana** | Monitoring dashboards |
-| **3100** | **MYCA UniFi** | Voice integration dashboard |
-| **8000** | **MINDEX** | Fungal database API |
-| **8001** | **MAS Orchestrator** | FastAPI orchestrator |
-| **8003** | **MycoBrain** | Device management API |
+| Port | Service | Description | Location |
+|------|---------|-------------|----------|
+| **3010** | **Website Dev** | Next.js dev server (LOCAL ONLY) | Local PC |
+| **3000** | **Website Prod** | Next.js production container | VM 187 |
+| **8000** | **MINDEX API** | Fungal database API | VM 189 |
+| **8001** | **MAS Orchestrator** | FastAPI orchestrator | VM 188 |
+| **8003** | **MycoBrain** | Device management API | Local |
+| **3002** | **Grafana** | Monitoring dashboards | Local/VM |
+
+### DEPRECATED Ports (DO NOT USE)
+| Port | Service | Status |
+|------|---------|--------|
+| ~~3001~~ | ~~MAS Dashboard~~ | ❌ DEPRECATED |
+| ~~3100~~ | ~~MYCA UniFi~~ | ❌ DEPRECATED |
 
 ### Infrastructure
 | Port | Service |
@@ -111,28 +126,37 @@ CREP Dashboard (localhost:3000/dashboard/crep)
 
 ## Quick Start Commands
 
-### Start Website (if not running)
+### Start Website Dev Server (CORRECT WAY)
 ```powershell
-cd C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas
-npm run dev
+cd C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website
+npm run dev:next-only
+# URL: http://localhost:3010
 ```
+
+**WARNING**: NEVER run `npm run dev` from the MAS repo. The `unifi-dashboard/` is DEPRECATED.
 
 ### Start MycoBrain Service
 ```powershell
-cd services\mycobrain
+cd C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\services\mycobrain
 python mycobrain_service_standalone.py
+# Or use: .\scripts\mycobrain-service.ps1 start
 ```
 
-### Start Docker Services
-```powershell
-docker-compose -f docker-compose.always-on.yml up -d
+### Access Main Pages (Dev)
+```
+Website Home:      http://localhost:3010
+CREP Dashboard:    http://localhost:3010/dashboard/crep
+Device Manager:    http://localhost:3010/natureos/devices
+NatureOS:          http://localhost:3010/natureos
+AI Studio:         http://localhost:3010/natureos/ai-studio
+Test Voice:        http://localhost:3010/test-voice
 ```
 
-### Access Main Dashboards
+### VM Services (Production)
 ```
-CREP Dashboard:    http://localhost:3000/dashboard/crep
-Device Manager:    http://localhost:3000/natureos/devices
-NatureOS:          http://localhost:3000/natureos
+Website (Sandbox): http://sandbox.mycosoft.com (VM 187:3000)
+MAS API:           http://192.168.0.188:8001
+MINDEX API:        http://192.168.0.189:8000
 ```
 
 ## System Health Indicators
@@ -145,4 +169,19 @@ NatureOS:          http://localhost:3000/natureos
 
 ---
 
-**Last Updated**: January 16, 2026 @ 5:22 PM PST
+## IMPORTANT: Website Development
+
+**The website is in a SEPARATE repo from MAS:**
+
+| Purpose | Repo Path |
+|---------|-----------|
+| **Website (Next.js)** | `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\` |
+| **MAS (Python Backend)** | `C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\` |
+
+- All UI pages, components, and frontend work must be done in the **WEBSITE repo**
+- The `unifi-dashboard/` directory in MAS repo is **DEPRECATED** and must never be used
+- Dev server always runs on port **3010** from the website repo
+
+---
+
+**Last Updated**: February 12, 2026
