@@ -96,6 +96,19 @@ except Exception as e:
     OpenAIAgent = AnthropicAgent = GeminiAgent = GrokAgent = None  # type: ignore[misc, assignment]
     SupabaseAgent = NotionAgent = WebsiteAgent = None  # type: ignore[misc, assignment]
 
+try:
+    from .security_agents import (
+        GuardianAgentV2,
+        SecurityMonitorAgentV2,
+        ThreatResponseAgentV2,
+        RiskLevel,
+        ThreatCategory,
+    )
+except Exception as e:
+    _log.warning("v2 security_agents unavailable: %s", e)
+    GuardianAgentV2 = SecurityMonitorAgentV2 = ThreatResponseAgentV2 = None  # type: ignore[misc, assignment]
+    RiskLevel = ThreatCategory = None  # type: ignore[misc, assignment]
+
 
 __all__ = [
     # Base
@@ -145,6 +158,12 @@ __all__ = [
     "SupabaseAgent",
     "NotionAgent",
     "WebsiteAgent",
+    # Security
+    "GuardianAgentV2",
+    "SecurityMonitorAgentV2",
+    "ThreatResponseAgentV2",
+    "RiskLevel",
+    "ThreatCategory",
 ]
 
 
@@ -161,6 +180,8 @@ def _build_registry():
         reg.update({"mindex-agent": MindexAgent, "etl-agent": ETLAgent, "search-agent": SearchAgent})
     if N8NAgent is not None:
         reg.update({"n8n-agent": N8NAgent, "elevenlabs-agent": ElevenLabsAgent, "zapier-agent": ZapierAgent, "ifttt-agent": IFTTTAgent, "openai-agent": OpenAIAgent, "anthropic-agent": AnthropicAgent, "gemini-agent": GeminiAgent, "grok-agent": GrokAgent, "supabase-agent": SupabaseAgent, "notion-agent": NotionAgent, "website-agent": WebsiteAgent})
+    if GuardianAgentV2 is not None:
+        reg.update({"guardian-agent-v2": GuardianAgentV2, "security-monitor-agent-v2": SecurityMonitorAgentV2, "threat-response-agent-v2": ThreatResponseAgentV2})
     return reg
 
 
@@ -185,5 +206,6 @@ def count_agents_by_category():
         "device": 7,
         "data": 3,
         "integration": 11,
-        "total": 38,
+        "security": 3,
+        "total": 41,
     }

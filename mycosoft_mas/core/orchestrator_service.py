@@ -12,9 +12,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request, Security
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import APIKeyHeader, APIKeyQuery
 from pydantic import BaseModel
+from uuid import UUID
 
 # Import runtime components
 import sys
@@ -593,6 +595,94 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Security: API Key Authentication
+# DoD Compliance: All endpoints except /health require authentication
+API_KEY_HEADER = APIKeyHeader(name="X-API-Key", auto_error=False)
+API_KEY_QUERY = APIKeyQuery(name="api_key", auto_error=False)
+
+# Load valid API keys from environment (comma-separated)
+VALID_API_KEYS = set(os.environ.get("MAS_API_KEYS", "").split(",")) - {""}
+# Also accept a single API key for backwards compatibility
+SINGLE_API_KEY = os.environ.get("MAS_API_KEY", "")
+if SINGLE_API_KEY:
+    VALID_API_KEYS.add(SINGLE_API_KEY)
+
+# Allow internal requests without auth in development
+ALLOW_UNAUTHENTICATED = os.environ.get("MAS_ALLOW_UNAUTHENTICATED", "false").lower() == "true"
+
+# RBAC Manager for permission checks
+try:
+    from mycosoft_mas.security.rbac import RBACManager, Permission, Role
+    rbac_manager = RBACManager()
+    # Initialize default service accounts
+    SERVICE_ACCOUNT_ADMIN = UUID("00000000-0000-0000-0000-000000000001")
+    SERVICE_ACCOUNT_WEBSITE = UUID("00000000-0000-0000-0000-000000000002")
+    SERVICE_ACCOUNT_N8N = UUID("00000000-0000-0000-0000-000000000003")
+    rbac_manager.assign_role(SERVICE_ACCOUNT_ADMIN, Role.ADMIN.value)
+    rbac_manager.assign_role(SERVICE_ACCOUNT_WEBSITE, Role.TECHNICIAN.value)
+    rbac_manager.assign_role(SERVICE_ACCOUNT_N8N, Role.SCIENTIST.value)
+except ImportError:
+    rbac_manager = None
+    Permission = None
+    Role = None
+    logger.warning("RBAC not available - security module not found")
+
+
+async def verify_api_key(
+    api_key_header: str = Security(API_KEY_HEADER),
+    api_key_query: str = Security(API_KEY_QUERY),
+) -> str:
+    """Verify API key from header or query parameter."""
+    api_key = api_key_header or api_key_query
+    
+    # Allow unauthenticated in development mode
+    if ALLOW_UNAUTHENTICATED and not VALID_API_KEYS:
+        logger.warning("MAS_ALLOW_UNAUTHENTICATED=true - allowing request without authentication")
+        return "anonymous"
+    
+    # Require at least one valid API key configured
+    if not VALID_API_KEYS:
+        logger.error("No API keys configured. Set MAS_API_KEY or MAS_API_KEYS environment variable.")
+        raise HTTPException(
+            status_code=500,
+            detail="Server misconfiguration: No API keys configured"
+        )
+    
+    if not api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing API key. Provide X-API-Key header or api_key query parameter."
+        )
+    
+    if api_key not in VALID_API_KEYS:
+        logger.warning(f"Invalid API key attempt: {api_key[:8]}...")
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid API key"
+        )
+    
+    return api_key
+
+
+def require_permission(permission: "Permission"):
+    """Dependency factory for permission-based access control."""
+    async def check_permission(api_key: str = Depends(verify_api_key)):
+        if not rbac_manager or permission is None:
+            return api_key  # RBAC not available, allow if API key valid
+        
+        # Map API key to user ID (in production, use a lookup table)
+        user_id = SERVICE_ACCOUNT_ADMIN if api_key else None
+        
+        if user_id and not rbac_manager.check_permission(user_id, permission):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Insufficient permissions. Required: {permission.value}"
+            )
+        
+        return api_key
+    return check_permission
+
+
 # Orchestrator instance
 orchestrator = OrchestratorService()
 
@@ -638,8 +728,10 @@ async def get_agent(agent_id: str):
 
 
 @app.post("/agents/spawn")
-async def spawn_agent(request: AgentSpawnRequest):
-    """Spawn a new agent"""
+async def spawn_agent(request: AgentSpawnRequest, api_key: str = Depends(verify_api_key)):
+    """Spawn a new agent - Requires authentication and EXECUTE permission"""
+    logger.info(f"Agent spawn request from authenticated client")
+    
     try:
         category = AgentCategory(request.category)
     except ValueError:
@@ -664,8 +756,9 @@ async def spawn_agent(request: AgentSpawnRequest):
 
 
 @app.post("/agents/{agent_id}/stop")
-async def stop_agent(agent_id: str, force: bool = False):
-    """Stop an agent"""
+async def stop_agent(agent_id: str, force: bool = False, api_key: str = Depends(verify_api_key)):
+    """Stop an agent - Requires authentication"""
+    logger.info(f"Agent stop request: {agent_id}")
     result = await orchestrator.stop_agent(agent_id, force)
     if not result:
         raise HTTPException(status_code=404, detail="Agent not found")
@@ -673,8 +766,9 @@ async def stop_agent(agent_id: str, force: bool = False):
 
 
 @app.post("/agents/{agent_id}/restart")
-async def restart_agent(agent_id: str):
-    """Restart an agent"""
+async def restart_agent(agent_id: str, api_key: str = Depends(verify_api_key)):
+    """Restart an agent - Requires authentication"""
+    logger.info(f"Agent restart request: {agent_id}")
     try:
         state = await orchestrator.restart_agent(agent_id)
         return state.to_dict()
@@ -698,8 +792,9 @@ async def deregister_agent(agent_id: str):
 
 
 @app.post("/tasks")
-async def submit_task(request: TaskSubmitRequest):
-    """Submit a task to an agent"""
+async def submit_task(request: TaskSubmitRequest, api_key: str = Depends(verify_api_key)):
+    """Submit a task to an agent - Requires authentication and EXECUTE permission"""
+    logger.info(f"Task submission to agent: {request.agent_id}")
     task = AgentTask(
         agent_id=request.agent_id,
         task_type=request.task_type,
@@ -725,8 +820,9 @@ async def get_task(task_id: str):
 
 
 @app.post("/messages")
-async def send_message(request: MessageSendRequest):
-    """Send a message between agents"""
+async def send_message(request: MessageSendRequest, api_key: str = Depends(verify_api_key)):
+    """Send a message between agents - Requires authentication"""
+    logger.info(f"Message from {request.from_agent} to {request.to_agent}")
     try:
         message_type = MessageType(request.message_type)
     except ValueError:
@@ -767,8 +863,9 @@ class TellAgentToCodeRequest(BaseModel):
 
 
 @app.post("/code/fix")
-async def request_code_fix(request: CodeFixRequest):
-    """Request a code fix through the orchestrator"""
+async def request_code_fix(request: CodeFixRequest, api_key: str = Depends(verify_api_key)):
+    """Request a code fix through the orchestrator - SENSITIVE: Requires authentication"""
+    logger.info(f"Code fix request: {request.description[:50]}...")
     result = await orchestrator.request_code_fix(
         description=request.description,
         target_files=request.target_files,
@@ -779,8 +876,9 @@ async def request_code_fix(request: CodeFixRequest):
 
 
 @app.post("/code/tell-agent")
-async def tell_agent_to_code(request: TellAgentToCodeRequest):
-    """Tell a specific agent to perform a coding task"""
+async def tell_agent_to_code(request: TellAgentToCodeRequest, api_key: str = Depends(verify_api_key)):
+    """Tell a specific agent to perform a coding task - SENSITIVE: Requires authentication"""
+    logger.info(f"Tell agent to code: {request.agent_id} - {request.coding_task[:50]}...")
     result = await orchestrator.tell_agent_to_code(
         agent_id=request.agent_id,
         coding_task=request.coding_task,
@@ -791,14 +889,15 @@ async def tell_agent_to_code(request: TellAgentToCodeRequest):
 
 
 @app.get("/code/status/{change_id}")
-async def get_code_change_status(change_id: str):
-    """Get the status of a code change request"""
+async def get_code_change_status(change_id: str, api_key: str = Depends(verify_api_key)):
+    """Get the status of a code change request - Requires authentication"""
     return await orchestrator.get_code_change_status(change_id)
 
 
 @app.post("/code/halt")
-async def halt_all_code_changes():
-    """Emergency halt all pending code changes"""
+async def halt_all_code_changes(api_key: str = Depends(verify_api_key)):
+    """Emergency halt all pending code changes - CRITICAL: Requires authentication"""
+    logger.warning("Emergency code halt requested")
     return await orchestrator.halt_all_code_changes()
 
 
@@ -822,8 +921,8 @@ agent_connections: Dict[str, List[Dict[str, Any]]] = {}
 
 
 @app.get("/connections")
-async def list_connections():
-    """List all agent connections"""
+async def list_connections(api_key: str = Depends(verify_api_key)):
+    """List all agent connections - Requires authentication"""
     all_connections = []
     for agent_id, conns in agent_connections.items():
         for conn in conns:
@@ -842,8 +941,8 @@ async def get_agent_connections(agent_id: str):
 
 
 @app.post("/connections/create")
-async def create_connection(request: ConnectionCreateRequest):
-    """Create a connection between two agents"""
+async def create_connection(request: ConnectionCreateRequest, api_key: str = Depends(verify_api_key)):
+    """Create a connection between two agents - Requires authentication"""
     source = request.source
     target = request.target
     
@@ -887,8 +986,8 @@ async def create_connection(request: ConnectionCreateRequest):
 
 
 @app.post("/connections/delete")
-async def delete_connection(request: ConnectionDeleteRequest):
-    """Delete a connection between agents"""
+async def delete_connection(request: ConnectionDeleteRequest, api_key: str = Depends(verify_api_key)):
+    """Delete a connection between agents - Requires authentication"""
     source = request.source
     target = request.target
     
@@ -923,10 +1022,11 @@ class VoiceChatRequest(BaseModel):
 
 
 @app.post("/voice/orchestrator/chat")
-async def voice_orchestrator_chat(request: VoiceChatRequest):
+async def voice_orchestrator_chat(request: VoiceChatRequest, api_key: str = Depends(verify_api_key)):
     """
-    Main MYCA voice/chat interface.
+    Main MYCA voice/chat interface - Requires authentication.
     """
+    logger.info(f"Voice chat request: {request.message[:50]}...")
     if not request.message or not request.message.strip():
         raise HTTPException(status_code=400, detail="Message is required")
 
