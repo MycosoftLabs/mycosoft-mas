@@ -44,6 +44,31 @@
 ## System Status, Purge, GitHub Path (Feb 9, 2026)
 - `docs/SYSTEM_STATUS_AND_PURGE_FEB09_2026.md` – **Status and purge**: What’s done, what can be done, Cloudflare purge (credentials in .env.local or “agents cat”), GitHub-as-source-of-truth for MAS and website, and “always read latest docs” rule for agents.
 
+## Cursor Suite Audit (Feb 12, 2026)
+- `docs/CURSOR_SUITE_AUDIT_FEB12_2026.md` – **Rules, agents, indexing, interaction**: Single reference for all 25 rules, 32 sub-agents, index flow (CURSOR_DOCS_INDEX → MASTER_DOCUMENT_INDEX → docs_manifest / gap reports), and re-audit checklist. Use when verifying or updating the Cursor suite.
+- `docs/CURSOR_MCP_AND_EXTENSIONS_FEB12_2026.md` – **MCPs, extensions, sub-agent usage**: Which MCPs Cursor uses (.mcp.json: github, mindex-db; plus Supabase, Context7, Cloudflare, cursor-ide-browser when enabled). Which sub-agents to use for which tasks; MCP-by-task table; extensions note.
+
+## Cursor Docs Indexing and Notion (Feb 12, 2026)
+- `docs/CURSOR_DOCS_INDEXING_AND_NOTION_FEB12_2026.md` – **Why Cursor doesn’t see 2000+ docs / Notion**: Context limits, no auto-load of every file; Notion is one-way sync for humans. Use `.cursor/CURSOR_DOCS_INDEX.md` (vital/current), `.cursor/docs_manifest.json` (full discovery), and `docs/MASTER_DOCUMENT_INDEX.md`. New docs replace old in CURSOR_DOCS_INDEX.
+
+## Always-On Services (Feb 12, 2026)
+- `docs/ALWAYS_ON_SERVICES_FEB12_2026.md` – **Complete environment reference**: Local dev (Docker Desktop) vs VM production always-on services. Architecture diagrams, communication flow, health checks, deployment prerequisites. Single source for what must run locally and on VMs.
+
+## Docker Management (Feb 12, 2026)
+- `docs/DOCKER_MANAGEMENT_FEB12_2026.md` – **Docker Desktop resource management**: Container lifecycle, image cleanup, MAS integration, vmmem control. Includes rule (`.cursor/rules/docker-management.mdc`), sub-agent (`docker-ops`), and healthcheck script (`scripts/docker-healthcheck.ps1`). Ensures Docker doesn't waste resources and coordinates with VMs.
+
+## Terminal and Python Operations (Feb 12, 2026)
+- `docs/TERMINAL_AND_PYTHON_OPERATIONS_GUIDE_FEB12_2026.md` – **Operations guide**: What must run for MYCA/Search/multi-agent, autostart services, processes to kill (zombies, GPU), sub-agent execution rules. Single reference for terminal and Python process management.
+
+## Cursor System Registration (Feb 10, 2026)
+- `docs/CURSOR_SYSTEM_REGISTRATION_AUDIT_FEB10_2026.md` – **Audit and implementation**: Rules, agents, and skills are registered in the Cursor system via `scripts/sync_cursor_system.py`. Always-apply rule `.cursor/rules/cursor-system-registration.mdc` requires running the sync after creating or updating any rule, agent, or skill so they work globally in Cursor, not only in the workspace.
+
+## System Gaps and Remaining Work (Feb 10, 2026)
+- `docs/SYSTEM_GAPS_AND_REMAINING_WORK_FEB10_2026.md` – **Single reference for remaining work**: Summary counts (TODOs, stubs, 501 routes, indexed gaps), critical/high items, index-based missing work, suggested plans. Maintained via gap reports and `scripts/gap_scan_cursor_background.py`. Quality agents use gap reports as gap-first intake.
+
+## Work, To-Dos, Gaps, Missing Agents/Rules (Feb 10, 2026)
+- `docs/WORK_TODOS_GAPS_AND_MISSING_AGENTS_RULES_FEB10_2026.md` – **Run-through**: Current work streams, incomplete plans, vision vs implementation gaps, Cursor vs project alignment (see `docs/CURSOR_SUITE_AUDIT_FEB12_2026.md` for current counts: 32 agents, 25 rules), missing sub-agents/rules, and recommended additions. New rule: `.cursor/rules/fci-vision-alignment.mdc` for FCI/HPL/Mycorrhizae vision alignment.
+
 ## Gap Agent (Feb 10, 2026)
 - `docs/GAP_AGENT_FEB10_2026.md` – **Cross-repo gap agent**: Finds gaps between repos and agents (TODOs, FIXMEs, stubs, 501 routes, bridge/integration gaps); suggests plans; runs in 24/7 runner; API at `/agents/gap/scan`, `/agents/gap/plans`, `/agents/gap/summary`. Use when multiple agents work on multiple projects and a “third” connection or bridge might be missing.
 
@@ -74,6 +99,7 @@
 
 ## Security Hardening (Feb 9, 2026)
 - `docs/SECRET_MANAGEMENT_POLICY_FEB09_2026.md` – **Secret management policy**: No secrets in code, .env.example pattern for all repos, quarterly rotation schedule, CI/CD secrets via GitHub Actions, audit procedures, git-filter-repo for history remediation, current findings (30+ hardcoded secrets in scripts/, 12 credential-containing defaults in library code), remediation priority and pre-commit hook setup.
+- `docs/CREDENTIAL_MANAGEMENT_BEST_PRACTICES_FEB09_2026.md` – **Credential best practices**: Pre-commit hooks with detect-secrets, .env patterns, what to do after credential exposure, rotation checklists, tools (detect-secrets, truffleHog, GitHub Secret Scanning).
 
 ## Status, MYCA coding, and VM layout (Feb 9, 2026)
 - `docs/AGENT_REGISTRY_FULL_FEB09_2026.md` – **Full agent registry**: why counts differ (223+ vs 42+), canonical numbers, full list of agents, core vs Cursor vs runtime; recommendations so one registry and “all running” are possible.

@@ -1,0 +1,65 @@
+---
+description: Register new rules, agents, and skills in the Cursor system so they work globally, not only in the workspace.
+alwaysApply: true
+---
+
+# Cursor System Registration (Rules, Agents, Skills)
+
+When you **create or update** any of the following in ANY workspace repo, they must be **registered in the Cursor system** so Cursor (and commands) use them globally, not only when this workspace is open:
+
+- **Rules** (`.cursor/rules/*.mdc`)
+- **Agents** (`.cursor/agents/*.md`)
+- **Skills** (`.cursor/skills/<name>/SKILL.md`)
+- **Commands** (covered by rules/agents/skills that define or invoke them)
+
+## Automatic syncing (recommended)
+
+The **Cursor System Sync** autostart service runs continuously and syncs every 30 seconds from ALL repos (MAS, WEBSITE, MINDEX, MycoBrain, NatureOS, Mycorrhizae, NLM, SDK, platform-infra) to the user Cursor directory.
+
+Start it with:
+
+```powershell
+python scripts/sync_cursor_system.py --watch
+```
+
+Or use the autostart healthcheck:
+
+```powershell
+.\scripts\autostart-healthcheck.ps1 -StartMissing
+```
+
+## Manual sync (one-time)
+
+Run the sync script from the **MAS repo root** (mycosoft-mas):
+
+```bash
+python scripts/sync_cursor_system.py
+```
+
+This scans ALL repos for `.cursor/rules`, `.cursor/agents`, and `.cursor/skills` and merges them into the user Cursor directory (`%USERPROFILE%\.cursor`), so all rules, agents, and skills are available in Cursor itself.
+
+## What this enables
+
+- **All agents can talk to all sub-agents**: Every agent definition from every repo is in Cursor
+- **All rules apply**: Every coding standard, pattern, and context rule is loaded
+- **All skills are available**: Every skill from MAS and WEBSITE repos is accessible
+- **Full context**: Agents have visibility into the entire Mycosoft platform
+
+## Current counts (after sync)
+
+| Type | Count | Source |
+|------|-------|--------|
+| Rules | 26+ | MAS, WEBSITE |
+| Agents | 30+ | MAS, WEBSITE |
+| Skills | 22+ | MAS, WEBSITE |
+
+## When to run manually
+
+- After creating or updating any file in `.cursor/rules/`, `.cursor/agents/`, or `.cursor/skills/`
+- When the user asks that new rules/agents/commands be "fully implemented with the Cursor itself"
+- If the autostart watcher is not running
+
+## Optional env
+
+- `CURSOR_USER_DIR` — Override user `.cursor` directory (default: `%USERPROFILE%\.cursor`)
+- `CODE_ROOT` — Override Mycosoft CODE root (default: auto-detect from script path)

@@ -1,0 +1,26 @@
+# PersonaPlex Bridge Dependencies
+# Created: February 11, 2026
+
+# Web framework
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+websockets==12.0
+
+# HTTP client
+httpx==0.26.0
+aiohttp==3.9.3
+
+# Audio processing
+numpy==1.26.4
+scipy==1.12.0
+soundfile==0.12.1
+librosa==0.10.1
+
+# Real-time communication
+python-multipart==0.0.9
+python-socketio==5.11.1
+
+# Utilities
+python-dotenv==1.0.1
+pydantic==2.6.1
+pydantic-settings==2.1.0

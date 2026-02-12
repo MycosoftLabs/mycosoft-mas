@@ -1,0 +1,207 @@
+---
+description: Docker Desktop resource management, container lifecycle, and MAS integration for all agents
+alwaysApply: true
+---
+
+# Docker Management (All Agents)
+
+Docker Desktop must run efficiently with Cursor - no redundant containers, no wasted memory, required services always available. This rule applies to ALL agents working with Docker locally or on VMs.
+
+## Local Docker Environment
+
+You have a full local development stack on Docker Desktop with compose projects:
+- `mycosoft-mas` - MAS orchestrator, n8n, Ollama, voice services, databases
+- `mycosoft-always-on` - Website, MINDEX API, MINDEX ETL
+- Individual containers: `mycosoft-redis`, `mycosoft-postgres`, `mas-postgres`
+
+### Known Container Prefixes
+
+These prefixes are recognized as valid Mycosoft containers:
+- `mycosoft-*`
+- `mas-*`
+- `myca-*`
+
+### Critical Containers (MUST be running)
+
+| Container | Purpose | Port |
+|-----------|---------|------|
+| `mycosoft-mas-n8n-1` or `mycosoft-n8n` | Workflow automation | 5678 |
+
+### Development Stack (expected running)
+
+| Container | Purpose |
+|-----------|---------|
+| `mycosoft-mas-mas-orchestrator-1` | MAS orchestrator |
+| `mycosoft-mas-ollama-1` | Local LLM |
+| `mycosoft-mas-qdrant-1` | Vector DB |
+| `mycosoft-mas-redis-1` | Redis cache |
+| `mycosoft-always-on-mycosoft-website-1` | Website dev |
+| `mycosoft-always-on-mindex-api-1` | MINDEX API |
+| `mycosoft-always-on-mindex-postgres-1` | MINDEX DB |
+
+**Note:** VMs also run these services for production. Local Docker is for development/testing.
+
+## VM Docker Containers (Reference)
+
+| VM | Container | Port | Purpose |
+|----|-----------|------|---------|
+| 187 | `mycosoft-website` | 3000 | Production website |
+| 187 | `mycorrhizae-api` | 8002 | Mycorrhizae protocol |
+| 188 | `n8n` | 5678 | Production workflows |
+| 188 | `ollama` | 11434 | LLM inference |
+| 188 | `prometheus` | 9090 | Monitoring |
+| 189 | `mindex-postgres` | 5432 | PostgreSQL |
+| 189 | `mindex-redis` | 6379 | Redis cache |
+| 189 | `mindex-qdrant` | 6333 | Vector DB |
+| 189 | `mindex-api` | 8000 | MINDEX API |
+
+## Agent Protocol
+
+### On Session Start
+
+1. **Check if Docker is needed** - If the task involves n8n, local Docker testing, or container work, Docker must run.
+2. **Run Docker healthcheck** - `.\scripts\docker-healthcheck.ps1 -Quick`
+3. **Report issues** - If Docker is wasting resources or has zombie containers, clean up.
+
+### Cleanup Rules (ALWAYS ENFORCE)
+
+| Condition | Action |
+|-----------|--------|
+| Stopped containers older than 24h | Remove with `docker container prune` |
+| Dangling images (no tag) | Remove with `docker image prune` |
+| Unused volumes | Remove with `docker volume prune` |
+| Build cache > 5GB | Prune with `docker builder prune` |
+| vmmem using > 4GB | Consider `wsl --shutdown` if Docker not needed |
+| Containers NOT in required list | Investigate and remove if unnecessary |
+
+### Before Starting Docker
+
+Check if Docker Desktop is actually needed:
+
+```powershell
+# If user just needs website dev (no n8n/Docker features):
+npm run dev:next-only  # Does NOT require Docker
+
+# If user needs n8n or full-stack local testing:
+.\scripts\start-dev-environment.ps1  # Starts Docker + n8n
+```
+
+### When Machine is Slow
+
+Docker/WSL2 can use excessive memory. Check and fix:
+
+```powershell
+# Check vmmem memory usage
+Get-Process vmmem -ErrorAction SilentlyContinue | Select-Object Name, @{N='MB';E={[math]::Round($_.WorkingSet64/1MB)}}
+
+# If > 4GB and Docker not actively needed:
+wsl --shutdown
+
+# Full Docker cleanup:
+.\scripts\docker-healthcheck.ps1 -Cleanup
+```
+
+## MAS Integration
+
+### Local Testing with Live Sandbox
+
+When local testing needs to work with the live sandbox (VM 187):
+
+1. **Local dev server** connects to VMs via `.env.local`:
+   ```env
+   MAS_API_URL=http://192.168.0.188:8001
+   MINDEX_API_URL=http://192.168.0.189:8000
+   ```
+
+2. **VMs can call back** to local dev at `http://YOUR_PC_LAN_IP:3010`
+
+3. **n8n workflows** can trigger both local and VM endpoints
+
+4. **To notify MAS** of local Docker state, use the MAS API:
+   ```powershell
+   # Report local Docker health to MAS
+   $health = .\scripts\docker-healthcheck.ps1 -Json
+   Invoke-RestMethod -Uri "http://192.168.0.188:8001/api/infrastructure/docker-health" -Method POST -Body $health -ContentType "application/json"
+   ```
+
+### Deployment Workflow (Local to Sandbox)
+
+1. Test locally on port 3010 (no Docker needed for website dev)
+2. Commit and push to GitHub
+3. SSH to VM 187, pull, rebuild Docker image, restart container
+4. Purge Cloudflare cache
+
+See `docs/ALWAYS_ON_SERVICES_FEB12_2026.md` for full deployment workflow.
+
+## Health Check Commands
+
+```powershell
+# Quick Docker health check
+.\scripts\docker-healthcheck.ps1
+
+# Full cleanup (removes unused containers, images, volumes)
+.\scripts\docker-healthcheck.ps1 -Cleanup
+
+# Report as JSON (for MAS integration)
+.\scripts\docker-healthcheck.ps1 -Json
+
+# Start Docker Desktop if not running
+.\scripts\docker-healthcheck.ps1 -StartDocker
+```
+
+## Periodic Maintenance
+
+### Automatic (runs via autostart-healthcheck)
+
+- Check every 30 minutes during active session
+- Clean stopped containers older than 24h
+- Report anomalies to user
+
+### Weekly (manual or scheduled)
+
+```powershell
+# Full Docker system cleanup
+docker system prune -a --volumes -f
+
+# Reclaim all unused space
+docker builder prune -a -f
+```
+
+## Resource Limits
+
+| Resource | Limit | Action if Exceeded |
+|----------|-------|---------------------|
+| Docker Desktop memory | 4GB | Reduce in Docker settings or shut down |
+| vmmem (WSL2) | 4GB | `wsl --shutdown` when not needed |
+| Total images | 20 | Prune old/unused images |
+| Total containers (including stopped) | 10 | Remove stopped containers |
+| Build cache | 5GB | `docker builder prune` |
+
+## Specialized Agent
+
+Use `docker-ops` sub-agent for:
+- Docker troubleshooting
+- Container lifecycle management
+- Image cleanup and optimization
+- MAS infrastructure reporting
+- Local-to-VM coordination
+
+## Quick Reference
+
+```powershell
+# Check Docker status
+.\scripts\docker-healthcheck.ps1 -Quick
+
+# Start required local containers
+.\scripts\start-dev-environment.ps1
+
+# Stop all local Docker (free resources)
+docker stop $(docker ps -q)
+wsl --shutdown
+
+# Full cleanup
+.\scripts\docker-healthcheck.ps1 -Cleanup
+
+# Check all environments (local + VMs)
+.\scripts\check-all-environments.ps1
+```

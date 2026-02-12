@@ -107,13 +107,16 @@ When 1–4 are done, the MYCA coding flow (SSH to 187 → `claude -p`) can run s
 
 ## 5. Short Checklist
 
+**SSH from dev machine (Feb 12, 2026):** Agents use `.credentials.local` (VM_SSH_PASSWORD); `python scripts/vm_verify_and_cleanup.py` runs successfully. All three VMs reachable via SSH. VM connectivity verified: 187 (Docker + /opt/mycosoft/mas ok), 188 (MAS API healthy, container up), 189 (PostgreSQL, Redis, Qdrant up). Website container on 187 (port 3000) was not running at last verification—start with deploy script or `docker run` if needed.
+
 - [ ] **187:** `/opt/mycosoft/mas` is a git repo (clone or fix; deploy script can clone if dir is empty).
 - [ ] **187:** `git pull` (or fetch/reset) so CLAUDE.md and `.claude/` are up to date.
 - [ ] **187:** `claude --version` and `claude -p "What is this project?"` work (with `ANTHROPIC_API_KEY` set).
-- [ ] **188:** MAS image includes **openssh-client** (done in Dockerfile). Deploy and coding API live.
+- [x] **188:** MAS image includes **openssh-client** (done in Dockerfile). Deploy and coding API live. *(Verified: MAS API healthy on 188:8001)*
 - [ ] **188 → 187 SSH key:** Generate key pair, add pubkey to 187 `authorized_keys`, place private key at `/home/mycosoft/.ssh/mas_to_sandbox` on 188; deploy script / _rebuild_mas_container add volume and `MAS_SSH_KEY_PATH` when key exists.
-- [ ] **189:** Do not run Claude Code; use only for MINDEX (done).
-- [ ] **Integration test:** Run one coding task via API (and optionally voice) after 187 and SSH key are ready.
+- [x] **189:** Do not run Claude Code; use only for MINDEX (done). *(Verified: PostgreSQL on 189:5432 healthy)*
+- [ ] **Integration test:** Run one coding task via API (and optionally voice) after 187 and SSH key are ready. *(Blocked by SSH key setup)*
+- [ ] **187 website:** If `mycosoft-website` container not running, start it (see deploy-pipeline agent; include NAS mount `-v /opt/mycosoft/media/website/assets:/app/public/assets:ro`).
 
 ---
 

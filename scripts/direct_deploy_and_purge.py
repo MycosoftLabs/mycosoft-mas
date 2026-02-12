@@ -2,21 +2,31 @@
 """
 Direct SSH Deployment + Cloudflare Purge
 Uses Paramiko for reliable SSH connection, bypassing Proxmox API
+Requires: VM_PASSWORD and CF_API_TOKEN environment variables
 """
 
+import os
 import paramiko
 import requests
 import time
 import sys
 
-# VM Configuration
-VM_HOST = "192.168.0.187"
-VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+# Load credentials from environment - NEVER hardcode passwords or API tokens
+VM_HOST = os.environ.get("SANDBOX_VM_HOST", "192.168.0.187")
+VM_USER = os.environ.get("VM_USER", "mycosoft")
+VM_PASS = os.environ.get("VM_PASSWORD")
 
-# Cloudflare Configuration
-CF_ZONE_ID = "af274016182495aeac049ac2c1f07b6d"
-CF_API_TOKEN = "BdvbQeLwi_yxOBUpJJIGF8eWmGKX-HQFKzn_aLkb"  # Updated Feb 2, 2026
+# Cloudflare Configuration - load from environment
+CF_ZONE_ID = os.environ.get("CF_ZONE_ID", "af274016182495aeac049ac2c1f07b6d")
+CF_API_TOKEN = os.environ.get("CF_API_TOKEN")
+
+if not VM_PASS:
+    print("ERROR: Set VM_PASSWORD environment variable. Never hardcode passwords!")
+    sys.exit(1)
+
+if not CF_API_TOKEN:
+    print("ERROR: Set CF_API_TOKEN environment variable. Never hardcode API tokens!")
+    sys.exit(1)
 
 # Paths
 WEBSITE_PATH = "/home/mycosoft/mycosoft/website"

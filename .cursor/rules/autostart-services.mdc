@@ -11,10 +11,37 @@ These scripts/services must be running for the full Mycosoft development system 
 
 | # | Service | Script | Purpose | Check Command | Start Command |
 |---|---------|--------|---------|---------------|---------------|
-| 1 | Notion Docs Watcher | `scripts/notion_docs_watcher.py` | Auto-syncs new/changed .md docs across all repos to Notion | `.\scripts\notion-sync.ps1 status` | `.\scripts\notion-sync.ps1 watch-bg` |
-| 2 | Cursor Chat Backup | `scripts/cursor-chat-backup.ps1` | Daily midnight backup of all chats, agents, plans, skills, rules | `schtasks /query /tn Mycosoft-CursorChatBackup` | `.\scripts\cursor-chat-backup.ps1 -Schedule` |
+| 1 | **MycoBrain Service** | `services/mycobrain/mycobrain_service_standalone.py` | **24/7/365 ALWAYS-ON** - Serial comms, MAS heartbeats, network device visibility | `.\scripts\mycobrain-service.ps1 health` | `.\scripts\mycobrain-service.ps1 start` |
+| 2 | Notion Docs Watcher | `scripts/notion_docs_watcher.py` | Auto-syncs new/changed .md docs across all repos to Notion | `.\scripts\notion-sync.ps1 status` | `.\scripts\notion-sync.ps1 watch-bg` |
+| 3 | Cursor Chat Backup | `scripts/cursor-chat-backup.ps1` | Daily midnight backup of all chats, agents, plans, skills, rules | `schtasks /query /tn Mycosoft-CursorChatBackup` | `.\scripts\cursor-chat-backup.ps1 -Schedule` |
+| 4 | **Cursor System Sync** | `scripts/sync_cursor_system.py` | Syncs rules/agents/skills from ALL repos to user Cursor system every 30s so all agents can talk to sub-agents, use all rules, and have context | `Get-Process python \| Where-Object {$_.CommandLine -like '*sync_cursor_system*'}` | `python scripts/sync_cursor_system.py --watch` |
+| 5 | **n8n Local (Docker)** | Docker container `mycosoft-n8n` | **CRITICAL** - Workflow automation, webhooks, MAS integrations. Requires Docker Desktop running. | `.\scripts\n8n-healthcheck.ps1` | `.\scripts\n8n-healthcheck.ps1 -StartDocker -StartLocal` |
+| 6 | **Docker Healthcheck** | `scripts/docker-healthcheck.ps1` | Periodic Docker cleanup - removes stopped containers, dangling images, unused volumes. Reports to MAS. | `.\scripts\docker-healthcheck.ps1 -Quick` | `.\scripts\docker-healthcheck.ps1 -Cleanup` |
 
-*(More services will be added to this list over time)*
+**CRITICAL:** MycoBrain Service (#1) and n8n (#5) must ALWAYS be running. If down, restart immediately.
+**CRITICAL:** n8n requires Docker Desktop. If Docker is not running, start it first with `.\scripts\docker-healthcheck.ps1 -StartDocker`.
+**PERIODIC:** Docker Healthcheck (#6) should run every 30 minutes during active sessions to prevent resource waste.
+
+## Optional GPU Voice Services (Start when voice features needed)
+
+These services require GPU and should ONLY be started when voice features are actively being used. Kill them when done to free resources.
+
+| # | Service | Port | Script | Purpose | Check Command | Start Command |
+|---|---------|------|--------|---------|---------------|---------------|
+| 4 | Moshi TTS/STT Server | 8998 | `scripts/start_moshi_server.py` | Native voice TTS/STT with GPU acceleration | `curl -s http://localhost:8998/health` | `python scripts/start_moshi_server.py` |
+| 5 | PersonaPlex Bridge | 8999 | `services/personaplex-local/personaplex_bridge_nvidia.py` | Bridges Moshi to WebSocket for browser | `curl -s http://localhost:8999/health` | `python services/personaplex-local/personaplex_bridge_nvidia.py` |
+
+**WARNING:** GPU services use ~23GB+ VRAM combined. Only start when needed and KILL when done using `scripts/dev-machine-cleanup.ps1 -KillStaleGPU`.
+
+## Optional: Gap Report for Cursor (all chats)
+
+Refreshes `.cursor/gap_report_latest.json` so the Gap Agent rule and @gap-agent have a recent scan in every chat without calling MAS every time.
+
+| # | Service | Script | Purpose | Check Command | Start Command |
+|---|---------|--------|---------|---------------|---------------|
+| 6 | Gap Scan (Cursor) | `scripts/gap_scan_cursor_background.py` | Writes latest gap report for Cursor gap-agent rule | Test: file exists `.cursor/gap_report_latest.json` | `python scripts/gap_scan_cursor_background.py` (run every 15–30 min via Task Scheduler or manually) |
+
+To run in background on a schedule: create a Windows Task or run `python scripts/gap_scan_cursor_background.py` periodically. Optional; if not run, Cursor will use MAS API or local scan when gap-agent is invoked.
 
 ## Agent Protocol
 
@@ -43,11 +70,21 @@ These scripts/services must be running for the full Mycosoft development system 
 
 ### Specialized agents for service management
 Use these sub-agents for service-specific tasks:
+- `device-firmware` -- **MycoBrain service lifecycle, firmware, serial ports**
+- `n8n-ops` -- **n8n health, Docker Desktop, local/VM sync, workflow automation**
+- `docker-ops` -- **Docker Desktop resource management, container cleanup, image pruning, MAS integration**
 - `process-manager` -- GPU cleanup, port conflicts, resource issues
 - `deploy-pipeline` -- Deployment automation
 - `notion-sync` -- Notion watcher management
 - `backup-ops` -- Backup scheduled task verification
 - `infrastructure-ops` -- VM and Docker container health
+
+### MycoBrain Service Priority
+The MycoBrain service is **Priority 1** - it must run 24/7/365:
+1. Check it FIRST on every session start
+2. If down, start it BEFORE any other work
+3. After debugging firmware/service, ALWAYS restart it
+4. Use scheduled task for boot auto-start: `.\scripts\mycobrain-service.ps1 -Schedule`
 
 ## Quick Reference
 

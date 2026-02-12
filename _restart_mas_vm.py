@@ -5,10 +5,19 @@ Restart MAS Orchestrator on VM - February 3, 2026
 import paramiko
 import time
 import sys
+import os
 
-VM_HOST = "192.168.0.188"
-VM_USER = "mycosoft"
-VM_PASS = "Mushroom1!"
+# Load credentials from environment
+VM_HOST = os.environ.get("MAS_VM_IP", "192.168.0.188")
+VM_USER = os.environ.get("VM_USER", "mycosoft")
+VM_PASS = os.environ.get("VM_PASSWORD")
+
+if not VM_PASS:
+    print("ERROR: VM_PASSWORD environment variable is not set.")
+    print("Please set it before running this script:")
+    print("  $env:VM_PASSWORD = 'your-password'  # PowerShell")
+    print("  export VM_PASSWORD='your-password'  # Bash")
+    sys.exit(1)
 
 def main():
     print("=" * 60)

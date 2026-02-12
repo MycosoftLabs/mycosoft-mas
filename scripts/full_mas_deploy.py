@@ -7,6 +7,7 @@ FEB 10, 2026
 import subprocess
 import sys
 import time
+import os
 
 # Paramiko for SSH
 try:
@@ -16,10 +17,17 @@ except ImportError:
     subprocess.run([sys.executable, "-m", "pip", "install", "paramiko", "-q"])
     import paramiko
 
-# VM Configuration
-VM_188 = "192.168.0.188"
-SSH_USER = "mycosoft"
-SSH_PASS = "REDACTED_VM_SSH_PASSWORD"
+# VM Configuration - Load credentials from environment
+VM_188 = os.environ.get("MAS_VM_IP", "192.168.0.188")
+SSH_USER = os.environ.get("VM_USER", "mycosoft")
+SSH_PASS = os.environ.get("VM_PASSWORD")
+
+if not SSH_PASS:
+    print("ERROR: VM_PASSWORD environment variable is not set.")
+    print("Please set it before running this script:")
+    print("  $env:VM_PASSWORD = 'your-password'  # PowerShell")
+    print("  export VM_PASSWORD='your-password'  # Bash")
+    sys.exit(1)
 
 # Mycorrhizae API Key for MAS
 MAS_MYCORRHIZAE_KEY = "myco_mas_kck8lD0E8sPvfob_EQS4xnuuj5h1WB7Ss72Y8xoz9QQ"

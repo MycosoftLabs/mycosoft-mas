@@ -17,7 +17,12 @@ These run in the background and should be restarted if found down. Managed by `s
 
 | Service | Script | Port | Resource Profile | Notes |
 |---------|--------|------|-----------------|-------|
+| **MycoBrain Service** | `services/mycobrain/mycobrain_service_standalone.py` | 8003 | Low (~100MB RAM) | **24/7/365 ALWAYS-ON** - Serial comms, MAS heartbeats, network visibility. Start: `.\scripts\mycobrain-service.ps1 start` |
 | Notion Docs Watcher | `scripts/notion_docs_watcher.py` | none | Low (~30MB RAM) | Auto-syncs .md files to Notion. Start: `.\scripts\notion-sync.ps1 watch-bg` |
+| **Cursor System Sync** | `scripts/sync_cursor_system.py --watch` | none | Low (~15MB RAM) | Syncs rules/agents/skills from ALL repos to Cursor system every 30s. Start: `python scripts/sync_cursor_system.py --watch` |
+
+**CRITICAL:** MycoBrain Service is Priority 1. Check and start it FIRST on every session.
+**CRITICAL:** Cursor Sync must run for agents to talk to sub-agents, use all rules, and have context.
 
 ## 2. VM SERVICES (always-on, run on VMs not local)
 
@@ -58,7 +63,6 @@ These run on VMs as systemd services or Docker containers. Do NOT start locally.
 | Service | Script | Port | Resource | Start When | Kill When |
 |---------|--------|------|----------|-----------|-----------|
 | MyceliumSeg API | `scripts/myceliumseg/serve_api.py` | 8010 | Low | Working on MyceliumSeg | Done with MyceliumSeg |
-| MycoBrain Service | `scripts/start_mycobrain_service.ps1` | 8003 | Low | Testing MycoBrain device | Done testing |
 | Smell Trainer | `smell_trainer_agent/app.py` | 8042 | Low | Training smell models | Done training |
 | Mycorrhizae API | `Mycorrhizae/mycorrhizae-protocol/api/main.py` | 8002 | Low | Working on Mycorrhizae | Done |
 | E2CC API Gateway | `WEBSITE/services/e2cc/api-gateway/server.py` | 8210 | Low | Working on E2CC | Done |
@@ -136,24 +140,30 @@ These scripts/services CANNOT run simultaneously:
 
 ## 8. AGENT DECISION MATRIX
 
-When user asks to... | Do this
+**CRITICAL: Execute ALL of these yourself via run_terminal_cmd. NEVER ask the user to run commands.** See `agent-must-execute-operations.mdc`.
+
+When user asks to... | Do this (you execute it)
 ---|---
-"Run the website" | `npm run dev:next-only` on port 3010. Do NOT start GPU services.
+"Run the website" | Run `npm run dev:next-only` on port 3010. Do NOT start GPU services.
+"Dev server stopped / ensure 3010" | In WEBSITE/website run `.\scripts\start-dev.ps1` or free port + `npm run dev:next-only`. Execute yourself.
 "Test voice" | Start PersonaPlex (8998) + Bridge (8999). Kill after testing.
 "Test Earth2" | Start Earth2 API (8220). Kill after testing.
 "Test physics simulation" | Start PhysicsNeMo (`scripts/start_physicsnemo.ps1`, port 8400). Prefer running with Earth2, not PersonaPlex.
-"Machine is slow" | Run `scripts/dev-machine-cleanup.ps1 -KillStaleGPU`. Check for zombie Python processes.
-"Deploy to sandbox" | Run `_deploy_sandbox.py`. One-shot, no cleanup needed.
+"Machine is slow" | Run `scripts/dev-machine-cleanup.ps1 -KillStaleGPU`. Execute yourself.
+"Deploy to sandbox" | Load creds from .credentials.local, run deploy script. Execute yourself.
 "Start all services" | DO NOT start everything. Ask which features they need. Start only those.
+"Deploy MINDEX" | Load creds, run `_deploy_mindex.py` from MINDEX repo. Execute yourself.
+"Deploy MAS" | Load creds, run `_rebuild_mas_container.py` or SSH. Execute yourself.
 "Run MINDEX locally" | Check if VM 189 is up first. If yes, use VM. If no, start local MINDEX API.
-"Sync docs to Notion" | `python scripts/notion_docs_sync.py`. One-shot, safe.
-"Run tests" | One-shot test scripts. Safe, no cleanup needed.
-"Debug port in use" | Check this registry. Run `netstat -ano | findstr :PORT` to find PID. Kill conflicting process.
+"Sync docs to Notion" | Run `python scripts/notion_docs_sync.py`. One-shot, safe.
+"Run tests" | Run test scripts. Execute yourself.
+"Debug port in use" | Run `netstat -ano | findstr :PORT`, find PID, kill process. Execute yourself.
 
 ## 9. SPECIALIZED AGENTS FOR PROCESS MANAGEMENT
 
 Use these sub-agents for domain-specific process tasks:
 - `process-manager` -- GPU cleanup, port conflicts, resource monitoring, autostart health
+- `dev-server-guardian` -- Ensure single website dev server on 3010 when in Cursor; no duplicate npm servers; use ensure-dev-server.ps1 / start-dev.ps1
 - `deploy-pipeline` -- Deployment process lifecycle (commit, build, restart, purge)
 - `earth2-ops` -- Earth2 GPU service lifecycle (start, test, kill)
 - `voice-engineer` -- PersonaPlex/Moshi GPU service lifecycle
@@ -163,15 +173,53 @@ Use these sub-agents for domain-specific process tasks:
 - `backup-ops` -- Backup scheduled task verification
 - `crep-collector` -- CREP collector process management
 
-## 10. CLEANUP COMMANDS
+## 10. ZOMBIE PROCESS DETECTION (KILL THESE)
+
+One-shot scripts that should terminate but are still running are ZOMBIES. Kill them immediately.
+
+### Known zombie patterns (scripts that should have exited):
+
+| Pattern | Script | Action |
+|---------|--------|--------|
+| `deploy_*.py` | Any deployment script | Kill - should finish in <5 min |
+| `chat_with_*.py` | Chat scripts | Kill - should finish after user closes |
+| `_deploy_*.py` | Deployment prefixed scripts | Kill - one-shot |
+| `claude-code-*.py` | Old Claude Code experiment | Kill - deprecated |
+| Inline `paramiko` or `ssh` | One-time SSH commands | Kill - should finish immediately |
+| Duplicate autostart services | e.g. two `sync_cursor_system --watch` | Kill duplicates, keep one |
+
+### Detection command:
+
+```powershell
+# Find zombie one-shot scripts (running >10 min with known one-shot patterns)
+Get-CimInstance Win32_Process -Filter "Name = 'python.exe'" | 
+    Where-Object { 
+        $_.CommandLine -match '(deploy_|chat_with_|_deploy_|claude-code-|paramiko)' 
+    } | 
+    Select-Object ProcessId, CommandLine
+```
+
+### Automatic cleanup rule:
+
+When any agent starts a session, run this check:
+1. List all Python processes with `Get-CimInstance Win32_Process -Filter "Name = 'python.exe'"`
+2. Identify zombies using patterns above
+3. Kill zombies with `Stop-Process -Id <PID> -Force`
+4. Verify autostart services are running (MycoBrain, Notion watcher, Cursor sync)
+
+## 11. CLEANUP COMMANDS
 
 ```powershell
 # Kill all GPU Python processes
 .\scripts\dev-machine-cleanup.ps1 -KillStaleGPU
 
+# Kill zombie one-shot scripts
+$zombies = Get-CimInstance Win32_Process -Filter "Name = 'python.exe'" | Where-Object { $_.CommandLine -match '(deploy_|chat_with_|_deploy_|claude-code-)' }
+$zombies | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+
 # Kill specific port holder
-$pid = (Get-NetTCPConnection -LocalPort 8998 -ErrorAction SilentlyContinue).OwningProcess
-if ($pid) { Stop-Process -Id $pid -Force }
+$portPid = (Get-NetTCPConnection -LocalPort 8998 -ErrorAction SilentlyContinue).OwningProcess
+if ($portPid) { Stop-Process -Id $portPid -Force }
 
 # Kill all Python processes (NUCLEAR - use carefully)
 Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force

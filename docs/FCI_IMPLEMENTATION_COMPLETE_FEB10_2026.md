@@ -184,7 +184,7 @@ MAS orchestration layer for FCI operations.
 - Signal processing and pattern detection
 - Stimulation command queueing
 - GFST pattern library access
-- HPL program execution (stub)
+- HPL program execution (implemented in `Mycorrhizae/mycorrhizae-protocol/mycorrhizae/hpl/interpreter.py`)
 
 ---
 

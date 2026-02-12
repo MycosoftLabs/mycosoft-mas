@@ -23,3 +23,5 @@ When creating or modifying agents in `mycosoft_mas/agents/`:
 - [ ] Class added to `__all__` list in `__init__.py`
 - [ ] Agent registered in `docs/SYSTEM_REGISTRY_FEB04_2026.md`
 - [ ] No mock data used -- real service connections only
+
+If you create or update a **Cursor agent** (`.cursor/agents/*.md`), run `python scripts/sync_cursor_system.py` so it is registered in the Cursor system (see `.cursor/rules/cursor-system-registration.mdc`).

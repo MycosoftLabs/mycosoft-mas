@@ -1,0 +1,113 @@
+# PersonaPlex Docker Container with CUDA Support
+# Created: February 11, 2026
+# 
+# This Dockerfile builds a GPU-enabled container for PersonaPlex voice system:
+# - Moshi server (STT/TTS with GPU acceleration)
+# - PersonaPlex Bridge (MAS integration)
+# 
+# Requirements:
+# - NVIDIA GPU with CUDA support
+# - Docker with nvidia-container-toolkit
+# - At least 16GB VRAM for Moshi-7B model
+
+FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3.11 \
+    python3.11-dev \
+    python3-pip \
+    git \
+    wget \
+    curl \
+    libsndfile1 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.11 as default
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+# Set working directory
+WORKDIR /app
+
+# Install PyTorch with CUDA support
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Install Moshi dependencies
+RUN pip install \
+    moshi==0.1.4 \
+    sphn==0.1.3 \
+    sentencepiece==0.2.0 \
+    rustymoshi==0.2.1 \
+    encodec==0.1.1
+
+# Install PersonaPlex Bridge dependencies
+COPY requirements-personaplex.txt .
+RUN pip install -r requirements-personaplex.txt
+
+# Copy PersonaPlex Bridge code
+COPY personaplex_bridge_nvidia.py .
+COPY personaplex_client.py .
+
+# Create directories for models and cache
+RUN mkdir -p /root/.cache/moshi /app/models
+
+# Download Moshi model (7B parameter model, ~16GB)
+# This happens at build time to avoid downloading on every container start
+RUN python3 -c "from moshi.models import loaders; loaders.get_moshi_lm('kyutai/moshiko-pytorch-bf16', device='cpu')"
+
+# Environment variables
+ENV MOSHI_HOST=0.0.0.0
+ENV MOSHI_PORT=8998
+ENV BRIDGE_HOST=0.0.0.0
+ENV BRIDGE_PORT=8999
+ENV MAS_ORCHESTRATOR_URL=http://192.168.0.188:8001
+ENV CUDA_VISIBLE_DEVICES=0
+ENV TORCH_HOME=/root/.cache/torch
+
+# Expose ports
+EXPOSE 8998 8999
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8999/health || exit 1
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Starting PersonaPlex with CUDA support..."\n\
+echo "CUDA devices: $CUDA_VISIBLE_DEVICES"\n\
+python3 -c "import torch; print(f\"PyTorch CUDA available: {torch.cuda.is_available()}\")"\n\
+python3 -c "import torch; print(f\"CUDA device count: {torch.cuda.device_count()}\") if torch.cuda.is_available() else None"\n\
+\n\
+# Start Moshi server in background\n\
+echo "Starting Moshi server on port $MOSHI_PORT..."\n\
+python3 -m moshi.server --host $MOSHI_HOST --port $MOSHI_PORT &\n\
+MOSHI_PID=$!\n\
+\n\
+# Wait for Moshi to be ready\n\
+echo "Waiting for Moshi server to be ready..."\n\
+for i in {1..60}; do\n\
+    if curl -s http://localhost:$MOSHI_PORT/health > /dev/null 2>&1; then\n\
+        echo "Moshi server is ready!"\n\
+        break\n\
+    fi\n\
+    echo "Waiting for Moshi... ($i/60)"\n\
+    sleep 2\n\
+done\n\
+\n\
+# Start PersonaPlex Bridge\n\
+echo "Starting PersonaPlex Bridge on port $BRIDGE_PORT..."\n\
+python3 personaplex_bridge_nvidia.py\n\
+' > /app/start.sh && chmod +x /app/start.sh
+
+# Run the startup script
+CMD ["/app/start.sh"]

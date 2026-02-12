@@ -75,11 +75,11 @@ DATABASE_URL=postgresql://user:password@host:5432/dbname
 |------------|---------------|--------|
 | MAS (`mycosoft-mas`) | `.env.example` | Created Feb 9, 2026 |
 | Website | `env.local.example` | Exists |
-| MINDEX | `.env.example` | TODO |
+| MINDEX | `.env.example` | Created (verified Feb 9) |
 | MycoBrain | N/A (firmware) | N/A |
-| NatureOS | `.env.example` | TODO |
-| Mycorrhizae | `.env.example` | TODO |
-| Platform-Infra | `.env.example` | TODO |
+| NatureOS | `.env.example` | Created (verified Feb 9) |
+| Mycorrhizae | `.env.example` | Created (verified Feb 9) |
+| Platform-Infra | `.env.example` | Created Feb 9, 2026 |
 
 ---
 

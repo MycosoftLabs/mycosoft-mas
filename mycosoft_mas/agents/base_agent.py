@@ -174,6 +174,109 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin):
             "timestamp": datetime.now().isoformat(),
         }
 
+    # ==================== SELF-HEALING CODE MODIFICATION ====================
+
+    async def request_code_change(
+        self,
+        description: str,
+        reason: str,
+        target_files: Optional[List[str]] = None,
+        change_type: str = "update_code",
+        priority: int = 5,
+    ) -> Dict[str, Any]:
+        """
+        Request a code change through the CodeModificationService.
+
+        Any agent can request code modifications. All requests are gated
+        by SecurityCodeReviewer before execution.
+
+        Args:
+            description: What code change to make
+            reason: Why this change is needed
+            target_files: Optional list of files to modify
+            change_type: fix_bug, create_agent, update_code, add_feature, etc.
+            priority: 1-10, higher = more urgent
+
+        Returns:
+            Dict with change_id, status, and message
+        """
+        try:
+            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+
+            code_service = await get_code_modification_service()
+            result = await code_service.request_code_change(
+                requester_id=self.agent_id,
+                change_type=change_type,
+                description=description,
+                target_files=target_files or [],
+                priority=priority,
+                context={"reason": reason, "agent_name": self.name},
+            )
+            self.logger.info(f"Code change requested: {result.get('change_id')}")
+            return result
+        except Exception as e:
+            self.logger.error(f"Failed to request code change: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "change_id": None,
+            }
+
+    async def request_self_improvement(
+        self,
+        improvement_description: str,
+        target_files: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Request an improvement to this agent's own code or behavior.
+
+        Routes through CodeModificationService and SecurityCodeReviewer.
+
+        Args:
+            improvement_description: What to improve and how
+            target_files: Optional specific files (e.g. this agent's module)
+
+        Returns:
+            Dict with change_id, status, and message
+        """
+        return await self.request_code_change(
+            description=improvement_description,
+            reason="self_improvement",
+            target_files=target_files,
+            change_type="self_improve",
+            priority=5,
+        )
+
+    async def report_bug_for_fix(
+        self,
+        bug_description: str,
+        error_message: Optional[str] = None,
+        affected_files: Optional[List[str]] = None,
+        priority: int = 7,
+    ) -> Dict[str, Any]:
+        """
+        Report a bug so that the self-healing system can trigger a fix.
+
+        Args:
+            bug_description: What is broken and expected behavior
+            error_message: Optional error or stack trace
+            affected_files: Optional files where the bug occurs
+            priority: 1-10 (default 7 for bugs)
+
+        Returns:
+            Dict with change_id, status, and message
+        """
+        description = bug_description
+        if error_message:
+            description = f"{bug_description}\n\nError: {error_message}"
+        return await self.request_code_change(
+            description=description,
+            reason="bug_report",
+            target_files=affected_files or [],
+            change_type="fix_bug",
+            priority=priority,
+        )
+
     async def initialize(self, integration_service: Any = None, **_: Any) -> bool:
         """
         Initialize the agent and its components including memory.

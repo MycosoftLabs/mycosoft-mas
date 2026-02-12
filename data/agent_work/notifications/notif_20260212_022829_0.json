@@ -1,0 +1,11 @@
+{
+  "notification_id": "notif_20260212_022829_0",
+  "timestamp": "2026-02-12T02:28:29.459220",
+  "type": "system",
+  "title": "MYCA System Online",
+  "message": "24/7 Agent Runner started with 43 agents. All systems operational.",
+  "agent": "MYCA",
+  "priority": "high",
+  "requires_action": false,
+  "data": {}
+}

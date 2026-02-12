@@ -1,0 +1,45 @@
+# Gap Agent — Background Awareness in All Chats
+
+## Scope: Every chat, every agent
+
+In **every** Cursor chat, the model is expected to keep **cross-repo and cross-agent gaps** in mind. This is the same behavior as the Gap Agent: missing connections, TODOs, stubs, and the "third agent or bridge" that was never added when two projects are worked on by two agents.
+
+---
+
+## Mandatory awareness
+
+1. **When planning or implementing across repos** (e.g. Website + MAS, MAS + MINDEX, MycoBrain + MAS):
+   - Ask: *Is there a missing connection, API route, or bridge service?*
+   - If yes, mention it and suggest the missing piece (e.g. "Add MAS endpoint X and call it from the Website component").
+
+2. **When the user asks** "what's missing", "find gaps", "what do I need to connect", "what else should be done", or similar:
+   - **Index-based missing work first:** If `.cursor/gap_report_index.json` exists, read it and summarize missing work in *indexed* files (files referenced in docs/MASTER_DOCUMENT_INDEX.md). This is the GAP equivalent for Cursor development: work that the project has deemed important but not completed.
+   - Then run a gap pass: check for TODOs/FIXMEs in relevant code, 501 or "Not implemented" routes, and docs that mention integration/bridge but no implementation.
+   - If `.cursor/gap_report_latest.json` exists, read it (and its `index_gaps` key if present) and summarize open gaps and suggested plans.
+   - If MAS is reachable, consider calling `GET http://192.168.0.188:8001/agents/gap/scan` or `/agents/gap/plans` and use the result.
+
+3. **When touching code in multiple repos in one task**:
+   - Briefly consider whether a bridge or shared API is needed and mention it if relevant.
+
+---
+
+## Gap report files (background refresh)
+
+- **Full workspace scan:** Run `python scripts/gap_scan_cursor_background.py` from the MAS repo. This scans all known repos (MAS, WEBSITE, MINDEX, MycoBrain, NatureOS, Mycorrhizae, NLM, SDK, platform-infra), writes `.cursor/gap_report_latest.json`, and optionally runs the index scan and merges MAS gap API results.
+- **Index-based (Cursor development):** `.cursor/gap_report_index.json` — Missing work in files referenced in docs/MASTER_DOCUMENT_INDEX.md (and other indexes). Run `python scripts/gap_scan_cursor_index.py` to refresh. Use this first when the user asks "what's missing" during development.
+- **Workspace-wide:** `.cursor/gap_report_latest.json` — Latest gap scan: todos_fixmes, stubs, routes_501, bridge_gaps, suggested_plans, by_repo counts; may include `index_gaps` from the index scan. Produced by `scripts/gap_scan_cursor_background.py` or merged with MAS `/agents/gap/scan`.
+- **Usage:** At the start of a significant task or when the user asks for gaps, read the index report first, then the latest report. Quality agents (code-auditor, route-validator, plan-tracker, stub-implementer, regression-guard, test-engineer) must use these reports as their gap-first intake before scanning manually.
+
+---
+
+## Invoking the Gap Agent
+
+- **Cursor agent:** In any chat, the user or the model can @-invoke **gap-agent** (`.cursor/agents/gap-agent.md`) for a dedicated gap scan and plan suggestions.
+- **MAS API:** `GET http://192.168.0.188:8001/agents/gap/scan` and `/agents/gap/plans` when MAS is available.
+
+---
+
+## Do not
+
+- Do not spam every message with gap comments; only mention gaps when they are relevant to the current task or question.
+- Do not invent gaps; base comments on actual code (TODOs, 501, stubs) or on the gap report / MAS API result.

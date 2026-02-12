@@ -1,0 +1,288 @@
+{
+  "index_sources": [
+    "docs\\MASTER_DOCUMENT_INDEX.md",
+    "docs\\MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md",
+    "docs\\SYSTEM_REGISTRY_FEB04_2026.md"
+  ],
+  "referenced_paths_count": 65,
+  "files_checked": 46,
+  "files_excluded": 8,
+  "files_with_gaps": 8,
+  "referenced_files_with_gaps": [
+    {
+      "path": ".cursor\\CURSOR_DOCS_INDEX.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\.cursor\\CURSOR_DOCS_INDEX.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 30,
+          "snippet": "| `docs/WORK_TODOS_GAPS_AND_MISSING_AGENTS_RULES_FEB10_2026.md` | Work streams, vision gaps, agents/rules |"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": ".cursor\\docs_manifest.json",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\.cursor\\docs_manifest.json",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 2159,
+          "snippet": "\"path\": \"docs\\\\WORK_TODOS_GAPS_AND_MISSING_AGENTS_RULES_FEB10_2026.md\","
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\CREDENTIAL_MANAGEMENT_BEST_PRACTICES_FEB09_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\CREDENTIAL_MANAGEMENT_BEST_PRACTICES_FEB09_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 68,
+          "snippet": "API_KEY=sk-ant-api03-xxxxxxxxxxxxx"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 97,
+          "snippet": "- [ ] PostgreSQL passwords on VMs 187, 188, 189"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 98,
+          "snippet": "- [ ] Update `.env` files on all VMs"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 99,
+          "snippet": "- [ ] Update any CI/CD secrets"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 100,
+          "snippet": "- [ ] Verify services still work after rotation"
+        },
+        {
+          "kind": "stub",
+          "line_no": 55,
+          "snippet": "# Placeholder that's obviously fake"
+        },
+        {
+          "kind": "stub",
+          "line_no": 59,
+          "snippet": "# Empty placeholder"
+        }
+      ],
+      "gap_count": 7
+    },
+    {
+      "path": "docs\\DATA_LOSS_AND_DRIVE_FULL_RECOVERY_FEB06_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\DATA_LOSS_AND_DRIVE_FULL_RECOVERY_FEB06_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 127,
+          "snippet": "- [ ] Optional: Schedule cleanup script hourly via Task Scheduler"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 128,
+          "snippet": "- [ ] Optional: Back up `%APPDATA%\\Cursor\\User\\workspaceStorage` regularly"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 129,
+          "snippet": "- [ ] Optional: Try shadow copy recovery for old chats"
+        }
+      ],
+      "gap_count": 3
+    },
+    {
+      "path": "docs\\MASTER_DOCUMENT_INDEX.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MASTER_DOCUMENT_INDEX.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 60,
+          "snippet": "- `docs/WORK_TODOS_GAPS_AND_MISSING_AGENTS_RULES_FEB10_2026.md` \u2013 **Run-through**: Current work streams, incomplete plan"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\SECURITY_BUGFIXES_FEB09_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\SECURITY_BUGFIXES_FEB09_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 228,
+          "snippet": "- [ ] Rotate all exposed database passwords:"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 231,
+          "snippet": "- [ ] Audit git history for credential exposure"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 232,
+          "snippet": "- [ ] Review all other config files for hardcoded secrets"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 238,
+          "snippet": "- [ ] Migrate to proper secret management (Azure Key Vault, HashiCorp Vault, or Docker secrets)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 241,
+          "snippet": "- [ ] Regular security audits (quarterly)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 242,
+          "snippet": "- [ ] Penetration testing of autonomous coding system"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 243,
+          "snippet": "- [ ] Implement least-privilege access for database users"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 244,
+          "snippet": "- [ ] Consider using managed identity/IAM for database access"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 294,
+          "snippet": "- [ ] All agent code should undergo security review"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 295,
+          "snippet": "- [ ] Focus on shell command construction and credential handling"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 296,
+          "snippet": "- [ ] Document security assumptions (like `--dangerously-skip-permissions`)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 299,
+          "snippet": "- [ ] Add alerting for failed authentication attempts to databases"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 300,
+          "snippet": "- [ ] Monitor for unusual coding agent activity"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 301,
+          "snippet": "- [ ] Track all shell commands executed by agents"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 304,
+          "snippet": "- [ ] Update security guidelines for agent development"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 305,
+          "snippet": "- [ ] Create credential management best practices doc"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 306,
+          "snippet": "- [ ] Document threat model for autonomous agents"
+        }
+      ],
+      "gap_count": 17
+    },
+    {
+      "path": "docs\\STATUS_AND_NEXT_STEPS_FEB09_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\STATUS_AND_NEXT_STEPS_FEB09_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 112,
+          "snippet": "- [ ] **187:** `/opt/mycosoft/mas` is a git repo (clone or fix; deploy script can clone if dir is empty)."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 113,
+          "snippet": "- [ ] **187:** `git pull` (or fetch/reset) so CLAUDE.md and `.claude/` are up to date."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 114,
+          "snippet": "- [ ] **187:** `claude --version` and `claude -p \"What is this project?\"` work (with `ANTHROPIC_API_KEY` set)."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 116,
+          "snippet": "- [ ] **188 \u2192 187 SSH key:** Generate key pair, add pubkey to 187 `authorized_keys`, place private key at `/home/mycosof"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 118,
+          "snippet": "- [ ] **Integration test:** Run one coding task via API (and optionally voice) after 187 and SSH key are ready. *(Blocke"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 119,
+          "snippet": "- [ ] **187 website:** If `mycosoft-website` container not running, start it (see deploy-pipeline agent; include NAS mou"
+        }
+      ],
+      "gap_count": 6
+    },
+    {
+      "path": "docs\\SYSTEM_EXECUTION_REPORT_FEB09_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\SYSTEM_EXECUTION_REPORT_FEB09_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 201,
+          "snippet": "- [ ] MAS `.gitignore` cleaned and repo <100 MB *(Working dir ~18GB due to personaplex-repo submodule; git pack ~960MB -"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 204,
+          "snippet": "- [ ] 187\u2192188 connectivity: `curl http://192.168.0.188:8001/health` from 187 returns OK *(Can test via SSH: `python scri"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 206,
+          "snippet": "- [ ] Cloudflare purged after website deploy (automatic via `.env.local`) *(Verify on next deploy)*"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 207,
+          "snippet": "- [ ] Sandbox CREP Earth2 status: check `https://sandbox.mycosoft.com/crep` or API endpoints *(Requires browser check)*"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 208,
+          "snippet": "- [ ] `MASTER_DOCUMENT_INDEX.md` reflects latest docs *(Will update in Phase 8)*"
+        }
+      ],
+      "gap_count": 5
+    }
+  ],
+  "suggested_plans": [
+    {
+      "title": "Complete indexed work",
+      "description": "8 indexed files have TODO/FIXME/501/pending work. Prioritize docs and code referenced in MASTER_DOCUMENT_INDEX.",
+      "priority": "high"
+    }
+  ],
+  "summary": {
+    "index_gaps_total": 41,
+    "files_with_gaps": 8,
+    "files_excluded_as_meta_docs": 8
+  },
+  "source": "cursor_index_scan",
+  "note": "Files describing gaps (GAP_AGENT_, PHASE1_, etc.) are excluded. Line-level false positives filtered."
+}

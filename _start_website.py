@@ -5,11 +5,21 @@ import time
 import requests
 import sys
 import io
+import os
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-VM_IP = "192.168.0.187"
-VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+# Load credentials from environment
+VM_IP = os.environ.get("SANDBOX_VM_IP", "192.168.0.187")
+VM_USER = os.environ.get("VM_USER", "mycosoft")
+VM_PASS = os.environ.get("VM_PASSWORD")
+
+if not VM_PASS:
+    print("ERROR: VM_PASSWORD environment variable is not set.")
+    print("Please set it before running this script:")
+    print("  $env:VM_PASSWORD = 'your-password'  # PowerShell")
+    print("  export VM_PASSWORD='your-password'  # Bash")
+    sys.exit(1)
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

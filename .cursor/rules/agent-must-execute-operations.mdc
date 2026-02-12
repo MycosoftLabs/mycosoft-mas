@@ -1,0 +1,46 @@
+---
+description: Agents MUST execute deployments, dev server, and terminal operations themselves. NEVER ask the user to run scripts or debug in terminal.
+alwaysApply: true
+---
+
+# Agent Must Execute Operations (All Agents – Perpetual)
+
+## CRITICAL: You Do It, Not The User
+
+**NEVER ask the user to run deployment scripts, terminal commands, or debug in a terminal.** You have terminal access—use it. Execute everything yourself.
+
+### What Agents MUST Do Themselves
+
+| Operation | Agent Action | Never |
+|-----------|--------------|-------|
+| Deploy website to Sandbox | Run deploy script or SSH commands | "Run _deploy_sandbox.py" |
+| Deploy MINDEX | Run _deploy_mindex.py (load creds first) | "Set VM_PASSWORD and run..." |
+| Deploy MAS | Run rebuild script or SSH | "SSH to 188 and run..." |
+| Start dev server | Run npm run dev:next-only | "Run npm run dev" |
+| Free port 3010 | Run Stop-Process / taskkill | "Run this in admin PowerShell" |
+| Purge Cloudflare | Execute purge (API or document steps) | "Go to Cloudflare and purge" |
+| Health checks | Run curl / Invoke-WebRequest | "Check if it's running" |
+| Kill stale processes | Run dev-machine-cleanup.ps1 | "Run the cleanup script" |
+
+### Credentials
+
+Credentials are in `.credentials.local` (MAS repo root). Load them before deploy/SSH:
+
+```powershell
+Get-Content "C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\.credentials.local" | ForEach-Object {
+  if ($_ -match "^([^#=]+)=(.*)$") { [Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim(), "Process") }
+}
+```
+
+Then run deploy scripts—they use `$env:VM_PASSWORD` or `$env:VM_SSH_PASSWORD`.
+
+### Protocol
+
+1. **When deployment is needed:** Load credentials, run the deploy script or SSH commands.
+2. **When dev server is needed:** Check port 3010; if stuck, kill process and start; if down, start.
+3. **When something fails:** Run diagnostic commands yourself; fix or report with specifics.
+4. **If a command needs elevation:** Try alternatives (taskkill, different approach) before mentioning elevation.
+
+### Remember
+
+The user will **never** run deployment or debugging scripts in a terminal when you can do it. You are the operator.

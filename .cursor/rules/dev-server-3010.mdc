@@ -1,0 +1,46 @@
+---
+description: Single website dev server on port 3010 only; no duplicates, no resource waste; ensure running when in Cursor.
+alwaysApply: true
+---
+
+# Dev Server 3010 Only (All Agents)
+
+## One dev server, one port
+
+- The **only** local website dev server for hot-reload is on **port 3010**.
+- **Command:** `npm run dev:next-only` (or `npm run dev:no-gpu`) in the **website repo** (`WEBSITE/website`). Both use port 3010.
+- **URL:** http://localhost:3010
+
+## Do NOT
+
+- **NEVER** run `npm run dev` for normal website work – it starts GPU services (PersonaPlex, Earth2) and wastes resources. Use only when the user explicitly needs voice or Earth2.
+- **NEVER** start a second npm/Next dev server (e.g. on another port or in another terminal) if 3010 is already in use. Check first.
+- **NEVER** start multiple Next.js processes. One instance only.
+
+## When doing website work in Cursor
+
+**MANDATORY: Execute these steps yourself.** Never ask the user to run commands. Use run_terminal_cmd.
+
+1. **Check if 3010 is already serving:** `(Invoke-WebRequest -Uri http://localhost:3010 -UseBasicParsing -TimeoutSec 3).StatusCode`. If 200, do **not** start another server.
+2. **If 3010 is not responding:** Run `.\scripts\start-dev.ps1` from website repo (frees port 3010 if stuck, then starts `npm run dev:next-only`), or `npm run dev:next-only` in background.
+3. **If port 3010 is in use but not responding:** Run `.\scripts\start-dev.ps1` to free the port and restart. Or: `Get-NetTCPConnection -LocalPort 3010 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }` then start dev server.
+
+## Resource discipline
+
+- Only one Next.js dev process for the website. No duplicate `next dev` or `node .\node_modules\next\...` processes.
+- Use `npm run dev:next-only` (or `dev:no-gpu`) so GPU services are not started unless the user explicitly needs them.
+- The **dev-server-guardian** agent is responsible for ensuring the dev server is running when working on the website in Cursor and for avoiding duplicate servers.
+
+## Website repo path
+
+- **Windows:** `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website`
+- **From workspace:** `WEBSITE/website`
+
+## Summary
+
+| What | Do |
+|------|-----|
+| Run website dev | `npm run dev:next-only` in WEBSITE/website; port 3010 only |
+| Ensure 3010 when in Cursor | Check 3010; if down, run `scripts/start-dev.ps1` or `npm run dev:next-only` |
+| Port in use / stuck | `.\scripts\start-dev.ps1` (frees 3010 and starts) |
+| Avoid waste | Never `npm run dev` unless user needs voice/Earth2; never start a second dev server |

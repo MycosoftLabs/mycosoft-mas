@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 """Run: pull on Sandbox VM 187 + set ANTHROPIC_API_KEY + test Claude; then deploy MAS to VM 188.
-Requires: ANTHROPIC_API_KEY set in environment (for VM 187)."""
+Requires: ANTHROPIC_API_KEY and VM_PASSWORD set in environment."""
 import os
 import sys
 import time
 import paramiko
 
-VM187 = "192.168.0.187"
-VM188 = "192.168.0.188"
-USER = "mycosoft"
-PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM187 = os.environ.get("SANDBOX_VM_HOST", "192.168.0.187")
+VM188 = os.environ.get("MAS_VM_HOST", "192.168.0.188")
+USER = os.environ.get("VM_USER", "mycosoft")
+PASSWORD = os.environ.get("VM_PASSWORD")
+
+if not PASSWORD:
+    print("ERROR: Set VM_PASSWORD environment variable. Never hardcode passwords!")
+    sys.exit(1)
 
 
 def run(ssh, cmd, timeout=60):

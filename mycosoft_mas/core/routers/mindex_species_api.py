@@ -1,4 +1,4 @@
-﻿"""
+"""
 MINDEX Species API Router - Feb 5, 2026
 
 Comprehensive API endpoints for MINDEX species, images, sequences, research, and compounds.
@@ -108,6 +108,19 @@ class CompoundResponse(BaseModel):
     source_url: Optional[str] = None
 
 
+class WebResultResponse(BaseModel):
+    """A semantic web search result (Exa)."""
+    url: str
+    title: str
+    score: float = 0.0
+    published_date: Optional[str] = None
+    author: Optional[str] = None
+    text: Optional[str] = None
+    highlights: List[str] = []
+    summary: Optional[str] = None
+    source: str = "exa"
+
+
 class UnifiedSearchResponse(BaseModel):
     query: str
     total_results: int
@@ -116,6 +129,7 @@ class UnifiedSearchResponse(BaseModel):
     sequences: List[SequenceResponse] = []
     papers: List[ResearchPaperResponse] = []
     compounds: List[CompoundResponse] = []
+    web: List[WebResultResponse] = []
 
 
 # =============================================================================
@@ -615,6 +629,7 @@ async def unified_search(
     include_sequences: bool = Query(False),
     include_research: bool = Query(False),
     include_compounds: bool = Query(False),
+    include_web: bool = Query(False, description="Include Exa semantic web results (requires EXA_API_KEY)"),
     limit: int = Query(10, ge=1, le=50),
 ):
     """
@@ -649,6 +664,37 @@ async def unified_search(
             compounds = await search_compounds(q=q, limit=limit)
             results.compounds = compounds
             results.total_results += len(compounds)
+
+        if include_web:
+            exa = None
+            try:
+                from mycosoft_mas.integrations.exa_client import ExaClient
+
+                exa = ExaClient()
+                exa_resp = await exa.semantic_search(query=q, num_results=limit)
+                results.web = [
+                    WebResultResponse(
+                        url=r.url,
+                        title=r.title,
+                        score=r.score,
+                        published_date=r.published_date,
+                        author=r.author,
+                        text=r.text,
+                        highlights=r.highlights,
+                        summary=r.summary,
+                    )
+                    for r in exa_resp.results
+                    if r.url and r.title
+                ]
+                results.total_results += len(results.web)
+            except Exception as e:
+                logger.error(f"Exa web search error: {e}")
+            finally:
+                if exa is not None:
+                    try:
+                        await exa.close()
+                    except Exception:
+                        pass
         
     except Exception as e:
         logger.error(f"Unified search error: {e}")
