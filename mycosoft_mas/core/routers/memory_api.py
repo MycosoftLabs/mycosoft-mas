@@ -432,12 +432,46 @@ class NamespacedMemoryManager:
             if not conversation:
                 return None
             
-            # NOTE: Pending implementation - LLM summarization requires:
-            # 1. Import LLMClient from mycosoft_mas.llm.client
-            # 2. Call llm_client.summarize(conversation_text, max_tokens=500)
-            # 3. Handle rate limits and fallback to simple summary
-            # Currently using timestamp-based summary placeholder
-            summary = f"Conversation summary for {namespace} at {datetime.now(timezone.utc).isoformat()}"
+            # Convert conversation data to text
+            if isinstance(conversation, dict):
+                # Handle dict of messages
+                conversation_text = "\n".join(
+                    f"{key}: {value}" for key, value in conversation.items()
+                )
+            elif isinstance(conversation, list):
+                # Handle list of messages
+                conversation_text = "\n".join(str(item) for item in conversation)
+            else:
+                conversation_text = str(conversation)
+            
+            # Use LLM to generate summary
+            try:
+                from mycosoft_mas.llm.client import get_llm_client
+                
+                llm_client = get_llm_client()
+                
+                # Call LLM summarization
+                summary = await llm_client.summarize(
+                    text=conversation_text,
+                    max_length=500,
+                    temperature=0.3  # More deterministic summaries
+                )
+                
+                logger.info(f"Generated LLM summary for {namespace}: {len(summary)} chars")
+                
+            except Exception as llm_error:
+                logger.warning(f"LLM summarization failed, using fallback: {llm_error}")
+                
+                # Fallback: Create a simple summary
+                lines = conversation_text.split("\n")
+                summary = f"Conversation summary for {namespace} with {len(lines)} entries. "
+                
+                # Include first few lines as preview
+                preview_lines = lines[:3]
+                if preview_lines:
+                    summary += "Preview: " + " | ".join(preview_lines[:100])
+                
+                summary += f" (Generated at {datetime.now(timezone.utc).isoformat()})"
             
             # Archive to long-term memory
             await self.write(
@@ -445,7 +479,12 @@ class NamespacedMemoryManager:
                 namespace=namespace,
                 key=f"summary_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
                 value=summary,
-                metadata={"source_scope": scope.value, "window": window},
+                metadata={
+                    "source_scope": scope.value,
+                    "window": window,
+                    "original_length": len(conversation_text),
+                    "summary_length": len(summary)
+                },
             )
             
             self._log_operation("summarize", scope, namespace, window, True)

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Real Moshi/PersonaPlex Full-Duplex Server - January 29, 2026
 Full-duplex conversational AI using Moshi model from Kyutai
@@ -22,10 +22,10 @@ MAS_URL = os.getenv("MAS_ORCHESTRATOR_URL", "http://192.168.0.188:8001")
 try:
     import torch
     import websockets
-    from websockets.server import serve
     import httpx
     from moshi.models import loaders
     from huggingface_hub import hf_hub_download
+    from http import HTTPStatus
 except ImportError as e:
     logger.error(f"Missing: {e}")
     sys.exit(1)
@@ -130,12 +130,33 @@ class FullDuplexServer:
             self.http = httpx.AsyncClient(timeout=30.0)
         return self.http
         
+    async def process_request(self, path, request_headers):
+        """Handle HTTP requests for health checks before WebSocket upgrade"""
+        # Health check endpoints
+        if path in ("/health", "/", "/status"):
+            body = json.dumps({
+                "status": "healthy",
+                "service": "moshi-personaplex",
+                "model_loaded": self.model.loaded,
+                "device": DEVICE,
+                "port": PORT,
+                "websocket": f"ws://{HOST}:{PORT}"
+            }).encode()
+            return (
+                HTTPStatus.OK,
+                [("Content-Type", "application/json"), ("Content-Length", str(len(body)))],
+                body
+            )
+        # Let WebSocket connections proceed
+        return None
+    
     async def start(self):
         await self.model.load()
         logger.info(f"Full-Duplex Server on ws://{HOST}:{PORT}")
+        logger.info(f"HTTP Health: http://{HOST}:{PORT}/health")
         logger.info(f"Model loaded: {self.model.mimi is not None}")
         logger.info(f"MAS: {MAS_URL}")
-        async with serve(self.handle_ws, HOST, PORT):
+        async with websockets.serve(self.handle_ws, HOST, PORT, process_request=self.process_request):
             await asyncio.Future()
     
     async def handle_ws(self, ws):

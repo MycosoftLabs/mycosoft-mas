@@ -426,6 +426,18 @@ class FCICorrelationResponse(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 
+def _mean(values: List[float]) -> float:
+    if not values:
+        return 0.0
+    return sum(values) / len(values)
+
+
+def _std(values: List[float], mean_value: float) -> float:
+    if not values:
+        return 0.0
+    return (sum((value - mean_value) ** 2 for value in values) / len(values)) ** 0.5
+
+
 @router.get("/devices/{device_id}/fingerprint", response_model=FCIFingerprintResponse)
 async def get_device_fingerprint(device_id: str):
     """
@@ -438,19 +450,61 @@ async def get_device_fingerprint(device_id: str):
     - Change detection
     """
     if device_id not in _connected_devices:
+        persisted = await load_devices_from_mindex()
+        for dev in persisted:
+            _connected_devices[dev.device_id] = dev
+    if device_id not in _connected_devices:
         raise HTTPException(status_code=404, detail="Device not found")
-    
-    # Generate fingerprint from recent signal characteristics
-    # In production, this would aggregate actual signal data
+
+    telemetry_rows: List[Dict[str, Any]] = []
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"{MINDEX_API_URL}/api/fci/telemetry/{device_id}",
+                params={"hours": 24, "limit": 1000},
+            )
+        if response.status_code == 200:
+            payload = response.json()
+            telemetry_rows = payload.get("readings", []) or []
+    except Exception as exc:
+        print(f"[FCI] Fingerprint telemetry fetch failed for {device_id}: {exc}")
+
+    amplitudes = [float(r.get("amplitude_uv", 0.0)) for r in telemetry_rows if r.get("amplitude_uv") is not None]
+    frequencies = [float(r.get("dominant_freq_hz", 0.0)) for r in telemetry_rows if r.get("dominant_freq_hz") is not None]
+    snr_values = [float(r.get("snr_db", 0.0)) for r in telemetry_rows if r.get("snr_db") is not None]
+    quality_values = [float(r.get("quality_score", 0.0)) for r in telemetry_rows if r.get("quality_score") is not None]
+
+    baseline_frequency = _mean(frequencies)
+    baseline_amplitude_mv = _mean(amplitudes) / 1000 if amplitudes else 0.0
+    amplitude_std = _std(amplitudes, _mean(amplitudes)) if amplitudes else 0.0
+    frequency_std = _std(frequencies, baseline_frequency) if frequencies else 0.0
+    avg_snr = _mean(snr_values)
+    avg_quality = _mean(quality_values) if quality_values else 0.0
+
+    sorted_freq = sorted(frequencies)
+    dominant_harmonics = []
+    if sorted_freq:
+        quantiles = [0.25, 0.5, 0.75]
+        for quantile in quantiles:
+            idx = int((len(sorted_freq) - 1) * quantile)
+            dominant_harmonics.append(round(sorted_freq[idx], 3))
+
+    spectral_entropy = min(1.0, max(0.0, frequency_std / (baseline_frequency + 1e-6))) if baseline_frequency > 0 else 0.0
+    signal_complexity = min(1.0, max(0.0, amplitude_std / (_mean(amplitudes) + 1e-6))) if amplitudes else 0.0
+    phase_coherence = min(1.0, max(0.0, avg_quality if avg_quality > 0 else (1.0 / (1.0 + frequency_std))))
+
     fingerprint = {
-        "baseline_frequency_hz": 0.35,
-        "baseline_amplitude_mv": 0.45,
-        "dominant_harmonics": [0.7, 1.05, 1.4],
-        "spectral_entropy": 0.72,
-        "signal_complexity": 0.58,
-        "phase_coherence": 0.84,
+        "baseline_frequency_hz": round(baseline_frequency, 4),
+        "baseline_amplitude_mv": round(baseline_amplitude_mv, 6),
+        "dominant_harmonics": dominant_harmonics,
+        "spectral_entropy": round(spectral_entropy, 4),
+        "signal_complexity": round(signal_complexity, 4),
+        "phase_coherence": round(phase_coherence, 4),
+        "mean_snr_db": round(avg_snr, 4),
+        "sample_count": len(telemetry_rows),
         "probe_type": _connected_devices[device_id].probe_type,
         "channels": _connected_devices[device_id].channels,
+        "source": "mindex_fci_telemetry",
     }
     
     return FCIFingerprintResponse(
@@ -479,11 +533,82 @@ async def get_device_correlations(
     Returns correlations from the last N hours with strength >= threshold.
     """
     if device_id not in _connected_devices:
+        persisted = await load_devices_from_mindex()
+        for dev in persisted:
+            _connected_devices[dev.device_id] = dev
+    if device_id not in _connected_devices:
         raise HTTPException(status_code=404, detail="Device not found")
-    
-    # In production, this would query MINDEX for stored correlations
-    # For now, return empty list (NO MOCK DATA)
+
     correlations: List[Dict[str, Any]] = []
+    min_strength = max(0.0, min(1.0, min_strength))
+
+    try:
+        async with httpx.AsyncClient(timeout=12.0) as client:
+            pattern_response = await client.get(
+                f"{MINDEX_API_URL}/api/fci/patterns/{device_id}",
+                params={"hours": hours, "min_confidence": min_strength, "limit": 200},
+            )
+            event_response = await client.get(
+                f"{MINDEX_API_URL}/api/mindex/crep/events",
+                params={"hours": hours, "limit": 500},
+            )
+
+        patterns = pattern_response.json() if pattern_response.status_code == 200 else []
+        events_payload = event_response.json() if event_response.status_code == 200 else {}
+        events = events_payload.get("events", []) if isinstance(events_payload, dict) else []
+
+        for pattern in patterns:
+            pattern_time_raw = pattern.get("start_time")
+            if not pattern_time_raw:
+                continue
+            try:
+                pattern_time = datetime.fromisoformat(str(pattern_time_raw).replace("Z", "+00:00"))
+            except Exception:
+                continue
+
+            for event in events:
+                event_time_raw = event.get("timestamp")
+                if not event_time_raw:
+                    continue
+                try:
+                    event_time = datetime.fromisoformat(str(event_time_raw).replace("Z", "+00:00"))
+                except Exception:
+                    continue
+
+                lag_seconds = abs((event_time - pattern_time).total_seconds())
+                if lag_seconds > 3600:
+                    continue
+
+                confidence = float(pattern.get("confidence_score") or pattern.get("confidence") or 0.0)
+                temporal_score = max(0.0, 1.0 - (lag_seconds / 3600))
+                correlation_strength = round((confidence + temporal_score) / 2, 4)
+                if correlation_strength < min_strength:
+                    continue
+
+                correlations.append(
+                    {
+                        "event_type": event.get("type", "external_event"),
+                        "source": event.get("source", "mindex_event_registry"),
+                        "correlation_strength": correlation_strength,
+                        "timestamp": event_time.isoformat(),
+                        "description": (
+                            f"Pattern '{pattern.get('pattern_name', 'unknown')}' near event "
+                            f"'{event.get('title', 'untitled')}' (lag={int(lag_seconds)}s)"
+                        ),
+                        "metadata": {
+                            "pattern_name": pattern.get("pattern_name"),
+                            "pattern_category": pattern.get("pattern_category"),
+                            "pattern_time": pattern_time.isoformat(),
+                            "event_id": event.get("id"),
+                            "lag_seconds": lag_seconds,
+                        },
+                    }
+                )
+
+        correlations.sort(key=lambda item: item["correlation_strength"], reverse=True)
+        correlations = correlations[:200]
+    except Exception as exc:
+        print(f"[FCI] Correlation query failed for {device_id}: {exc}")
     
     return {
         "device_id": device_id,

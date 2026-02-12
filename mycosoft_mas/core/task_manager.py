@@ -441,7 +441,7 @@ class TaskManager:
         return []
         
     async def _get_dependencies_info(self) -> List[DependencyInfo]:
-        """Get dependency information"""
+        """Get dependency information with real CVE scanning"""
         try:
             result = subprocess.run(
                 ["poetry", "show", "--outdated", "--json"],
@@ -450,20 +450,72 @@ class TaskManager:
             )
             packages = json.loads(result.stdout)
             
+            # Run safety check for CVE detection
+            vulnerabilities_by_package = await self._scan_dependency_vulnerabilities()
+            
             dependencies = []
             for package in packages:
+                package_name = package["name"]
+                package_vulns = vulnerabilities_by_package.get(package_name, [])
+                
                 dependencies.append(DependencyInfo(
-                    package=package["name"],
+                    package=package_name,
                     version=package["version"],
                     status="outdated" if package.get("latest_version") else "up-to-date",
                     dependencies=package.get("dependencies", []),
                     last_update=datetime.now(),
-                    vulnerabilities=[]  # TODO: Implement vulnerability scanning
+                    vulnerabilities=package_vulns
                 ))
             return dependencies
         except Exception as e:
             logger.error(f"Error getting dependencies: {str(e)}")
             return []
+    
+    async def _scan_dependency_vulnerabilities(self) -> Dict[str, List[str]]:
+        """
+        Scan dependencies for known CVEs using safety package.
+        
+        Returns:
+            Dict mapping package name to list of CVE IDs
+        """
+        vulnerabilities_by_package = {}
+        
+        try:
+            # Run safety check with JSON output
+            result = subprocess.run(
+                ["safety", "check", "--json"],
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+            
+            # safety returns non-zero exit code if vulnerabilities found
+            if result.returncode != 0 and result.stdout:
+                try:
+                    safety_output = json.loads(result.stdout)
+                    for vuln in safety_output.get("vulnerabilities", []):
+                        package_name = vuln.get("package_name")
+                        cve_id = vuln.get("vulnerability_id")
+                        advisory = vuln.get("advisory", "")
+                        
+                        if package_name:
+                            if package_name not in vulnerabilities_by_package:
+                                vulnerabilities_by_package[package_name] = []
+                            
+                            vuln_desc = f"{cve_id}: {advisory}" if advisory else cve_id
+                            vulnerabilities_by_package[package_name].append(vuln_desc)
+                            
+                except json.JSONDecodeError:
+                    logger.warning("Could not parse safety check output")
+                    
+        except FileNotFoundError:
+            logger.warning("safety package not installed - install with: pip install safety")
+        except subprocess.TimeoutExpired:
+            logger.warning("Dependency vulnerability scan timed out after 120s")
+        except Exception as e:
+            logger.error(f"Error scanning dependency vulnerabilities: {e}")
+        
+        return vulnerabilities_by_package
             
     async def _restart_orchestrator(self) -> Dict[str, str]:
         """Restart orchestrator"""

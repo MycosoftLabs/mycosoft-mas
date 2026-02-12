@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 PersonaPlex NVIDIA Bridge v8.1.0 - February 6, 2026
 Full-Duplex Voice with MAS Tool Call Integration, Memory Persistence, and CREP Voice Control
@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import re
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Set
@@ -29,8 +30,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse
 from pydantic import BaseModel
 
+# Suppress FastAPI on_event deprecation warning (lifespan refactor pending)
+warnings.filterwarnings("ignore", message=".*on_event is deprecated.*")
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("personaplex-bridge")
+
+# Reduce httpx noise (health check polling)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 app = FastAPI(title="PersonaPlex NVIDIA Bridge", version="8.1.0")
 
@@ -344,15 +351,18 @@ async def _send_to_mas(session: BridgeSession, speaker: str, text: str):
 
 
 async def check_moshi():
-    """Check Moshi availability."""
+    """Check Moshi availability via /health endpoint."""
     global moshi_available
+    prev = moshi_available
     try:
         async with httpx.AsyncClient() as c:
-            r = await c.get(f"http://{MOSHI_HOST}:{MOSHI_PORT}/api/chat", timeout=5)
-            moshi_available = r.status_code in (200, 400, 426)
-    except Exception as e:
-        error_str = str(e).lower()
-        moshi_available = "426" in error_str or "400" in error_str or "upgrade" in error_str
+            r = await c.get(f"http://{MOSHI_HOST}:{MOSHI_PORT}/health", timeout=5)
+            moshi_available = r.status_code == 200
+    except Exception:
+        moshi_available = False
+    # Only log state changes
+    if prev != moshi_available:
+        logger.info(f"Moshi server {'available' if moshi_available else 'unavailable'}")
 
 
 @app.on_event("startup")

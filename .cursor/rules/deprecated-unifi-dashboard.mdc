@@ -1,0 +1,90 @@
+# DEPRECATED: MAS unifi-dashboard (NEVER USE)
+
+## CRITICAL WARNING
+
+The `unifi-dashboard` directory in the MAS repo (`mycosoft-mas/unifi-dashboard/`) is **DEPRECATED** and must **NEVER** be used, edited, run, or referenced for any development work.
+
+## What is Deprecated
+
+| Item | Location | Status |
+|------|----------|--------|
+| `unifi-dashboard/` directory | `MAS/mycosoft-mas/unifi-dashboard/` | ❌ DEPRECATED - DO NOT USE |
+| Port 3001 | MAS Dashboard | ❌ DEPRECATED |
+| Port 3100 | Old MYCA UniFi Dashboard | ❌ DEPRECATED |
+| Any `npm run dev` from MAS repo | `mycosoft-mas/` | ❌ WRONG - Never run website from MAS |
+
+## What is CORRECT
+
+| Item | Location | Status |
+|------|----------|--------|
+| Website repo | `WEBSITE/website/` | ✅ CORRECT |
+| Dev port | **3010** | ✅ CORRECT |
+| Dev command | `npm run dev:next-only` from WEBSITE/website | ✅ CORRECT |
+| All UI pages | `WEBSITE/website/app/` | ✅ CORRECT |
+| All components | `WEBSITE/website/components/` | ✅ CORRECT |
+
+## The Two Repos Are Different
+
+### MAS Repo (mycosoft-mas/) - Python Backend
+- **Purpose**: Python backend, agents, orchestrator, FastAPI APIs
+- **Language**: Python
+- **VM**: 192.168.0.188 (port 8001)
+- **NEVER run npm/website commands from here**
+- **The unifi-dashboard/ folder is DEAD CODE**
+
+### Website Repo (WEBSITE/website/) - Next.js Frontend
+- **Purpose**: User-facing website, UI, React components, Next.js pages
+- **Language**: TypeScript/React
+- **Dev Port**: 3010
+- **Prod VM**: 192.168.0.187 (port 3000)
+- **ALL website work happens here**
+
+## Agent Rules
+
+### When asked to "run the dev server" or "start the website":
+1. **ALWAYS** work from `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\`
+2. **ALWAYS** use port 3010
+3. **ALWAYS** run `npm run dev:next-only` (or `npm run dev` only if voice/Earth2 needed)
+4. **NEVER** run any npm commands from the MAS repo
+5. **NEVER** start anything on port 3001 or 3100
+
+### When editing website pages or components:
+1. **ALWAYS** edit files in `WEBSITE/website/`
+2. **NEVER** edit files in `mycosoft-mas/unifi-dashboard/`
+3. Paths must start with `WEBSITE/website/app/` for pages
+4. Paths must start with `WEBSITE/website/components/` for components
+
+### Detection: Am I in the wrong directory?
+If you see any of these paths, STOP and switch to the correct repo:
+- `mycosoft-mas/unifi-dashboard/` → ❌ WRONG
+- `MAS/mycosoft-mas/src/app/` → ❌ WRONG (no such thing)
+- `mycosoft-mas/src/components/` → ❌ WRONG
+
+Correct paths look like:
+- `WEBSITE/website/app/test-voice/page.tsx` → ✅ CORRECT
+- `WEBSITE/website/components/` → ✅ CORRECT
+
+## History
+
+The `unifi-dashboard` was an early prototype built in the MAS repo before the proper website repo existed. It was deprecated on **February 3, 2026** and all components were migrated to the website repo. The directory still exists but is **dead code** and should eventually be deleted.
+
+## Related Documentation
+
+- `docs/MYCA_MEMORY_UI_MIGRATION_FEB05_2026.md` - Migration details
+- `docs/MYCA_DASHBOARD_COMPONENTS_FEB03_2026.md` - Deprecation notice
+- `docs/NATUREOS_OEI_INTEGRATION_PLAN.md` - Port 3001 deprecation
+
+## DO NOT
+
+- ❌ NEVER run `npm run dev` from MAS repo
+- ❌ NEVER edit files in `unifi-dashboard/`
+- ❌ NEVER start anything on port 3001 or 3100
+- ❌ NEVER reference `unifi-dashboard` components
+- ❌ NEVER point users to `localhost:3001` or `localhost:3100`
+
+## ALWAYS
+
+- ✅ ALWAYS run website dev server from `WEBSITE/website/`
+- ✅ ALWAYS use port 3010 for development
+- ✅ ALWAYS edit website files in `WEBSITE/website/`
+- ✅ ALWAYS point users to `localhost:3010` for dev

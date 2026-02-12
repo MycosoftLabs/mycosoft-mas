@@ -52,111 +52,165 @@ class ClassifiedIntent:
 
 
 INTENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
-    "agent_control": {
-        "keywords": ["spawn", "start", "stop", "restart", "pause", "resume", "kill", "status", "list", "agents"],
+    "greeting": {
+        "keywords": ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening", "howdy"],
         "patterns": [
-            r"(?:spawn|start|create)\s+(?:an?\s+)?(?:new\s+)?(\w+)\s+agent",
-            r"(?:stop|kill|terminate)\s+(?:the\s+)?(\w+)\s+agent",
+            r"^(?:hello|hi|hey|greetings|howdy)(?:\s+myca|\s+there)?",
+            r"^good\s+(?:morning|afternoon|evening|day)",
         ],
-        "agents": ["myca-orchestrator", "agent-manager", "health-monitor"],
-        "priority": IntentPriority.MEDIUM,
-        "confirmation": ConfirmationLevel.VERBAL,
-    },
-    "learning": {
-        "keywords": ["learn", "teach", "remember", "study", "research", "discover"],
-        "patterns": [r"(?:learn|teach)\s+(?:how\s+to\s+)?(.+)"],
-        "agents": ["skill-learning-agent", "research-agent", "memory-manager"],
-        "priority": IntentPriority.MEDIUM,
-        "confirmation": ConfirmationLevel.NONE,
-    },
-    "coding": {
-        "keywords": ["fix", "code", "create", "modify", "deploy", "merge", "pull request", "pr", "bug"],
-        "patterns": [r"(?:fix|solve)\s+(?:the\s+)?(?:bug|issue)\s+(?:in|with)?\s*(.+)"],
-        "agents": ["coding-agent", "github-agent", "deployment-agent"],
-        "priority": IntentPriority.HIGH,
-        "confirmation": ConfirmationLevel.VERBAL,
-    },
-    "business": {
-        "keywords": ["report", "financial", "invoice", "contract", "revenue", "expense", "budget"],
-        "patterns": [r"(?:show|get|generate)\s+(?:the\s+)?(?:financial|revenue)\s+report"],
-        "agents": ["cfo-agent", "financial-agent", "accounting-agent"],
-        "priority": IntentPriority.HIGH,
-        "confirmation": ConfirmationLevel.VERBAL,
-    },
-    "infrastructure": {
-        "keywords": ["server", "container", "docker", "network", "storage", "database", "proxmox", "vm"],
-        "patterns": [r"(?:start|stop|restart)\s+(?:the\s+)?(\w+)\s+(?:server|container|vm)"],
-        "agents": ["proxmox-agent", "docker-agent", "network-agent", "infrastructure-agent"],
-        "priority": IntentPriority.MEDIUM,
-        "confirmation": ConfirmationLevel.VERBAL,
-    },
-    "scientific": {
-        "keywords": ["experiment", "analyze", "simulate", "mindex", "species", "fungal", "data"],
-        "patterns": [r"(?:run|start)\s+(?:an?\s+)?experiment\s+(?:on|for)?\s*(.+)?"],
-        "agents": ["mindex-agent", "research-agent", "simulation-agent"],
-        "priority": IntentPriority.MEDIUM,
-        "confirmation": ConfirmationLevel.NONE,
-    },
-    "security": {
-        "keywords": ["threat", "incident", "audit", "scan", "security", "attack", "breach", "alert"],
-        "patterns": [r"(?:run|start|perform)\s+(?:a\s+)?(?:security\s+)?scan"],
-        "agents": ["security-agent", "watchdog-agent", "guardian-agent"],
-        "priority": IntentPriority.CRITICAL,
-        "confirmation": ConfirmationLevel.CHALLENGE,
-    },
-    "memory": {
-        "keywords": ["remember", "recall", "forget", "context", "history", "conversation"],
-        "patterns": [r"(?:remember|save)\s+(?:that\s+)?(.+)"],
-        "agents": ["memory-manager", "context-agent"],
+        "agents": ["conversation-agent", "secretary-agent"],
         "priority": IntentPriority.LOW,
         "confirmation": ConfirmationLevel.NONE,
     },
-    "communication": {
-        "keywords": ["email", "message", "send", "notify", "call", "meeting", "calendar"],
-        "patterns": [r"(?:send|write)\s+(?:an?\s+)?email\s+(?:to)?\s*(.+)"],
-        "agents": ["secretary-agent", "email-agent", "calendar-agent"],
+    "question": {
+        "keywords": ["what", "how", "why", "when", "where", "who", "which", "can you", "could you", "would you"],
+        "patterns": [
+            r"^(?:what|how|why|when|where|who|which)\s+",
+            r"^(?:can|could|would)\s+you\s+",
+            r"^(?:is|are|do|does)\s+",
+        ],
+        "agents": ["research-agent", "mindex-agent", "memory-manager"],
         "priority": IntentPriority.MEDIUM,
         "confirmation": ConfirmationLevel.NONE,
     },
-    "device": {
-        "keywords": ["device", "sensor", "mycobrain", "mushroom", "sporebase", "drone", "iot"],
-        "patterns": [r"(?:show|get|check)\s+(?:the\s+)?(?:device|sensor)\s+(?:status|data)"],
-        "agents": ["mycobrain-coordinator-agent", "device-manager-agent", "sensor-agent"],
+    "command": {
+        "keywords": ["do", "start", "stop", "create", "make", "build", "run", "execute", "launch", "kill", "terminate"],
+        "patterns": [
+            r"(?:start|stop|restart|pause|resume)\s+",
+            r"(?:create|make|build|generate)\s+(?:a|an|the)?\s*",
+            r"(?:run|execute|launch|trigger)\s+",
+            r"(?:kill|terminate|end)\s+",
+        ],
+        "agents": ["orchestrator", "agent-manager", "executor-agent"],
+        "priority": IntentPriority.HIGH,
+        "confirmation": ConfirmationLevel.VERBAL,
+    },
+    "search": {
+        "keywords": ["find", "search", "look up", "lookup", "query", "locate", "discover"],
+        "patterns": [
+            r"(?:find|search|look\s+up|lookup)\s+(?:for\s+)?",
+            r"(?:locate|discover)\s+",
+            r"query\s+(?:for\s+)?",
+        ],
+        "agents": ["mindex-agent", "search-agent", "research-agent"],
+        "priority": IntentPriority.MEDIUM,
+        "confirmation": ConfirmationLevel.NONE,
+    },
+    "navigation": {
+        "keywords": ["go to", "open", "show", "display", "navigate", "view", "switch to"],
+        "patterns": [
+            r"(?:go\s+to|navigate\s+to)\s+",
+            r"(?:open|show|display)\s+(?:the\s+)?",
+            r"(?:switch\s+to|view)\s+",
+        ],
+        "agents": ["ui-agent", "navigation-agent", "website-agent"],
+        "priority": IntentPriority.LOW,
+        "confirmation": ConfirmationLevel.NONE,
+    },
+    "device_control": {
+        "keywords": ["turn on", "turn off", "set", "configure", "adjust", "control", "device", "sensor"],
+        "patterns": [
+            r"(?:turn\s+(?:on|off)|switch\s+(?:on|off))\s+(?:the\s+)?",
+            r"(?:set|configure|adjust)\s+(?:the\s+)?",
+            r"(?:control|manage)\s+(?:the\s+)?(?:device|sensor)",
+        ],
+        "agents": ["mycobrain-coordinator-agent", "device-manager-agent", "iot-agent"],
+        "priority": IntentPriority.MEDIUM,
+        "confirmation": ConfirmationLevel.VERBAL,
+    },
+    "experiment": {
+        "keywords": ["experiment", "test", "hypothesis", "trial", "lab", "analyze", "measure"],
+        "patterns": [
+            r"(?:run|start|begin)\s+(?:an?\s+)?experiment",
+            r"(?:test|verify)\s+(?:the\s+)?hypothesis",
+            r"(?:conduct|perform)\s+(?:a\s+)?(?:trial|test)",
+        ],
+        "agents": ["lab-agent", "research-agent", "hypothesis-agent"],
         "priority": IntentPriority.MEDIUM,
         "confirmation": ConfirmationLevel.NONE,
     },
     "workflow": {
-        "keywords": ["workflow", "automation", "n8n", "trigger", "run", "execute"],
-        "patterns": [r"(?:run|execute|trigger)\s+(?:the\s+)?(\w+)\s+workflow"],
+        "keywords": ["workflow", "automation", "n8n", "pipeline", "automate"],
+        "patterns": [
+            r"(?:create|build|make)\s+(?:a\s+)?workflow",
+            r"(?:run|execute|trigger)\s+(?:the\s+)?(?:\w+\s+)?workflow",
+            r"(?:start|launch|run)\s+(?:the\s+)?automation",
+            r"trigger\s+(?:the\s+)?",
+        ],
         "agents": ["n8n-agent", "workflow-generator-agent", "automation-agent"],
         "priority": IntentPriority.MEDIUM,
         "confirmation": ConfirmationLevel.VERBAL,
     },
-    "system": {
-        "keywords": ["system", "status", "health", "diagnostics", "performance", "metrics"],
-        "patterns": [r"(?:show|get|check)\s+(?:the\s+)?system\s+(?:status|health)"],
+    "memory": {
+        "keywords": ["remember", "recall", "forget", "context", "history", "conversation", "note"],
+        "patterns": [
+            r"(?:remember|save|store)\s+(?:that\s+)?",
+            r"(?:recall|retrieve|get)\s+(?:the\s+)?(?:context|history|conversation)",
+            r"(?:forget|delete|remove)\s+(?:about\s+)?",
+        ],
+        "agents": ["memory-manager", "context-agent", "history-agent"],
+        "priority": IntentPriority.LOW,
+        "confirmation": ConfirmationLevel.NONE,
+    },
+    "status": {
+        "keywords": ["status", "health", "diagnostics", "metrics", "uptime", "monitoring"],
+        "patterns": [
+            r"(?:check|show|get)\s+(?:the\s+)?status",
+            r"(?:health|diagnostics)\s+(?:check|report)",
+            r"(?:show|display|get)\s+(?:the\s+)?(?:metrics|performance)",
+            r"(?:check|monitor)\s+(?:system\s+)?(?:health|performance)",
+        ],
         "agents": ["health-monitor", "diagnostics-agent", "metrics-agent"],
         "priority": IntentPriority.LOW,
         "confirmation": ConfirmationLevel.NONE,
     },
-    "ceo": {
-        "keywords": ["approve", "authorize", "strategic", "decision", "company", "executive"],
-        "patterns": [r"(?:approve|authorize)\s+(?:the\s+)?(.+)"],
-        "agents": ["ceo-agent", "board-agent", "executive-agent"],
-        "priority": IntentPriority.CRITICAL,
-        "confirmation": ConfirmationLevel.MFA,
-    },
-    "dao": {
-        "keywords": ["vote", "proposal", "governance", "dao", "treasury", "token", "stake"],
-        "patterns": [r"(?:create|submit)\s+(?:a\s+)?proposal\s+(?:for)?\s*(.+)?"],
-        "agents": ["dao-governance-agent", "dao-treasury-agent", "dao-voting-agent"],
+    "deploy": {
+        "keywords": ["deploy", "deployment", "release", "publish", "docker", "container", "server restart"],
+        "patterns": [
+            r"(?:deploy|push)\s+(?:to\s+)?",
+            r"(?:build|rebuild)\s+(?:the\s+)?(?:docker|image|container)",
+            r"(?:restart|reload)\s+(?:the\s+)?(?:service|server|container|application)",
+            r"(?:release|publish)\s+",
+        ],
+        "agents": ["deployment-agent", "github-agent", "docker-agent"],
         "priority": IntentPriority.HIGH,
+        "confirmation": ConfirmationLevel.VERBAL,
+    },
+    "security": {
+        "keywords": ["audit", "security", "threat", "vulnerability", "breach", "penetration test"],
+        "patterns": [
+            r"(?:run|start|perform)\s+(?:a\s+)?(?:security\s+)?(?:audit|scan)",
+            r"(?:check|verify)\s+security",
+            r"(?:detect|find)\s+(?:threats|vulnerabilities)",
+            r"scan\s+(?:for\s+)?(?:vulnerabilities|threats|security)",
+        ],
+        "agents": ["security-agent", "guardian-agent", "watchdog-agent"],
+        "priority": IntentPriority.CRITICAL,
         "confirmation": ConfirmationLevel.CHALLENGE,
+    },
+    "scientific": {
+        "keywords": ["simulation", "compute", "model", "calculate", "scientific"],
+        "patterns": [
+            r"(?:run|start)\s+(?:a\s+)?simulation",
+            r"(?:analyze|process)\s+(?:the\s+)?(?:scientific\s+)?data",
+            r"(?:compute|calculate)\s+",
+            r"lab\s+(?:monitoring|report|status|data)",
+        ],
+        "agents": ["simulation-agent", "lab-agent", "compute-agent"],
+        "priority": IntentPriority.MEDIUM,
+        "confirmation": ConfirmationLevel.NONE,
+    },
+    "general": {
+        "keywords": [],  # Fallback category - matches nothing specifically
+        "patterns": [],
+        "agents": ["orchestrator", "secretary-agent"],
+        "priority": IntentPriority.LOW,
+        "confirmation": ConfirmationLevel.NONE,
     },
 }
 
 ENTITY_PATTERNS: Dict[str, str] = {
-    "agent_name": r"(?:the\s+)?(\w+(?:-\w+)*)\s+agent",
+    "agent_name": r"(?:the\s+)?(\w+(?:-\w+)*-agent)\b",
     "number": r"\b(\d+(?:\.\d+)?)\b",
     "email": r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)",
 }
@@ -204,19 +258,20 @@ class IntentClassifier:
         
         # Guard against empty intents
         if not scores:
-            best_category = "system"
-            best_score = 0.0
+            best_category = "general"
+            best_score = 0.3
         else:
             best_category = max(scores.keys(), key=lambda k: scores[k])
             best_score = scores[best_category]
         
+        # Fallback to general category for low confidence
         if best_score < 0.2:
-            best_category = "system"
+            best_category = "general"
             best_score = 0.3
         
         # Validate category exists before accessing
         if best_category not in self.intents:
-            best_category = "system"
+            best_category = "general"
             best_score = 0.3
         
         config = self.intents[best_category]

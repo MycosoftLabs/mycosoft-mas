@@ -432,7 +432,12 @@ async def _stream_samples(
                         },
                     })
                 else:
-                    spectrum = simulator.generate_spectrum(sample_buffer[-256:])
+                    if hasattr(signal_source, "generate_spectrum"):
+                        spectrum = signal_source.generate_spectrum(sample_buffer[-256:])
+                    else:
+                        # Fallback for driver implementations that do not expose
+                        # a synchronous spectrum helper.
+                        spectrum = get_simulator(device_id).generate_spectrum(sample_buffer[-256:])
                     await websocket.send_json({
                         "type": "spectrum",
                         "data": spectrum,
@@ -502,12 +507,20 @@ async def _receive_commands(
                 # Handle stimulation command
                 command = data.get("command", {})
                 logger.info(f"Stimulation command for {device_id}: {command}")
-                
-                # Would send to actual device here
+
+                dispatch_result: Dict[str, Any] = {"status": "queued"}
+                if hasattr(signal_source, "send_stimulation"):
+                    try:
+                        dispatch_result = await signal_source.send_stimulation(command)
+                    except Exception as exc:
+                        logger.error(f"Stimulation dispatch failed for {device_id}: {exc}")
+                        dispatch_result = {"status": "error", "error": str(exc)}
+
                 await websocket.send_json({
                     "type": "stimulate_ack",
-                    "status": "queued",
+                    "status": dispatch_result.get("status", "queued"),
                     "command_id": str(uuid4()),
+                    "result": dispatch_result,
                 })
             
             elif msg_type == "set_pattern":
