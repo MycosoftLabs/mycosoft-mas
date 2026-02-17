@@ -172,12 +172,49 @@ async def topology_stream(websocket: WebSocket):
                 
                 # Handle snapshot request
                 elif data.get("type") == "request_snapshot":
-                    # TODO: Query current agent status from registry
-                    await websocket.send_json({
-                        "type": "snapshot",
-                        "message": "Snapshot not yet implemented",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
+                    # Query current agent status from registry
+                    try:
+                        from mycosoft_mas.registry.agent_registry import AgentRegistry
+                        registry = AgentRegistry()
+                        agents = registry.list_agents()
+                        
+                        # Format agents for topology visualization
+                        nodes = []
+                        edges = []
+                        
+                        for agent in agents:
+                            nodes.append({
+                                "id": str(agent.id),
+                                "label": agent.name,
+                                "category": agent.category.value,
+                                "status": agent.status.value,
+                                "capabilities": len(agent.capabilities),
+                                "version": agent.version,
+                                "last_heartbeat": agent.last_heartbeat.isoformat() if agent.last_heartbeat else None
+                            })
+                            
+                            # Create edges based on dependencies
+                            for dep in agent.dependencies:
+                                edges.append({
+                                    "from": str(agent.id),
+                                    "to": dep,
+                                    "type": "depends_on"
+                                })
+                        
+                        await websocket.send_json({
+                            "type": "snapshot",
+                            "nodes": nodes,
+                            "edges": edges,
+                            "agent_count": len(agents),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        })
+                    except Exception as e:
+                        logger.error(f"Error generating snapshot: {e}")
+                        await websocket.send_json({
+                            "type": "snapshot",
+                            "error": str(e),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        })
             
             except WebSocketDisconnect:
                 break
