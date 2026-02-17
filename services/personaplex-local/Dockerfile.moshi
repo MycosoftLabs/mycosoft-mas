@@ -1,23 +1,30 @@
-# Moshi Voice Server - GPU-Accelerated STT/TTS for PersonaPlex
-# Created: February 13, 2026
-# 
-# This Dockerfile builds a GPU-enabled Moshi server for full PersonaPlex voice:
-# - Moshi STT + TTS with female voice (moshika-pytorch-bf16 / NATF2)
-# - GPU-accelerated on RTX 5090 (32GB VRAM, CUDA 12.0)
-# - Runtime model download from Hugging Face cache
-# - PersonaPlex Bridge runs on Windows host, connects to this container
+# Moshi Voice Server - RTX 5090 GPU (Blackwell sm_120)
+# Updated: February 17, 2026
 #
-# Build: docker build -t mycosoft/moshi-voice:latest -f Dockerfile.moshi .
-# Run:   docker run -d --name moshi-voice --gpus all -p 8998:8998 mycosoft/moshi-voice:latest
+# Full GPU inference - CUDA 12.8 + PyTorch nightly cu128 for sm_120 Blackwell.
+# Model cache mounted via Docker volume so it never re-downloads.
+#
+# Build:
+#   docker build -t mycosoft/moshi-voice:latest -f Dockerfile.moshi .
+#
+# Run (first time - downloads model ~7GB to volume):
+#   docker run -d --name moshi-voice --gpus all --restart unless-stopped \
+#     -p 8998:8998 \
+#     -v moshi-model-cache:/root/.cache \
+#     mycosoft/moshi-voice:latest
+#
+# Run (subsequent - model already in volume, starts in ~60s):
+#   Same command above - cache is persistent.
 
-FROM nvidia/cuda:12.8.0-runtime-ubuntu22.04
+# CUDA 12.8 devel image includes cuDNN, NCCL, and full toolkit for sm_120 Blackwell
+FROM nvidia/cuda:12.8.0-cudnn-devel-ubuntu22.04
 
 # Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.11 \
     python3.11-dev \
     python3-pip \
@@ -29,68 +36,66 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Python 3.11 as default
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 && \
+    update-alternatives --install /usr/bin/python  python  /usr/bin/python3.11 1
 
 # Upgrade pip
 RUN python3 -m pip install --upgrade pip setuptools wheel
 
-# Set working directory
 WORKDIR /app
 
-# Install PyTorch nightly with CUDA 12.8 support (required for RTX 5090 sm_120 Blackwell)
-RUN pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
+# PyTorch nightly with CUDA 12.8 - supports sm_120 (RTX 5090 Blackwell)
+RUN pip install --pre torch torchvision torchaudio \
+        --index-url https://download.pytorch.org/whl/nightly/cu128 \
+    && python3 -c "import torch; assert torch.cuda.is_available(), 'CUDA must be available at build time is not required - runtime check will confirm'"
 
-# Install Moshi and dependencies
+# Moshi and audio dependencies
 RUN pip install \
     moshi \
     sphn \
     sentencepiece \
-    encodec \
     huggingface-hub \
     websockets \
     aiohttp
 
-# Model downloads on first run and is cached in the container volume
-
-# Environment variables
+# GPU env - model cache goes to volume /root/.cache so it persists across rebuilds
 ENV MOSHI_HOST=0.0.0.0
 ENV MOSHI_PORT=8998
 ENV CUDA_VISIBLE_DEVICES=0
-ENV TORCH_HOME=/root/.cache/torch
 ENV MOSHI_DEVICE=cuda
+ENV HF_HOME=/root/.cache/huggingface
+ENV TORCH_HOME=/root/.cache/torch
 
-# Expose Moshi port
+# TORCHDYNAMO_DISABLE=1 avoids a second sm_120 compile-check warning
+ENV TORCHDYNAMO_DISABLE=1
+
 EXPOSE 8998
 
-# Health check (WebSocket endpoint, expecting upgrade message)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
-    CMD curl -f http://localhost:8998/ 2>&1 | grep -q "websocket" || exit 1
-
-# Create startup script
-RUN echo '#!/bin/bash\n\
+# Startup script - validates GPU then launches Moshi
+RUN printf '#!/bin/bash\n\
 set -e\n\
 echo "========================================"\n\
-echo "Moshi Voice Server - Full PersonaPlex"\n\
+echo "Moshi Voice Server - RTX 5090 GPU"\n\
+echo "CUDA 12.8 / PyTorch cu128 / sm_120"\n\
 echo "Female Voice: NATF2 (Moshika)"\n\
 echo "========================================"\n\
 echo ""\n\
 echo "GPU Check:"\n\
-python3 -c "import torch; print(f\"  PyTorch: {torch.__version__}\")"\n\
-python3 -c "import torch; print(f\"  CUDA available: {torch.cuda.is_available()}\")"\n\
-python3 -c "import torch; print(f\"  GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else None}\")"\n\
-python3 -c "import torch; print(f\"  VRAM: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.1f} GB\" if torch.cuda.is_available() else \"\")" 2>/dev/null || true\n\
+python3 -c "import torch; v=torch.__version__; print(f\"  PyTorch : {v}\")"\n\
+python3 -c "import torch; ok=torch.cuda.is_available(); print(f\"  CUDA    : {ok}\"); assert ok, \"CUDA not available\""\n\
+python3 -c "import torch; n=torch.cuda.get_device_name(0); print(f\"  GPU     : {n}\")"\n\
+python3 -c "import torch; p=torch.cuda.get_device_properties(0); print(f\"  VRAM    : {p.total_memory/(1024**3):.1f} GB  sm_{p.major}{p.minor}\")"\n\
 echo ""\n\
-echo "Starting Moshi server..."\n\
-echo "  Model: kyutai/moshika-pytorch-bf16"\n\
-echo "  Port: $MOSHI_PORT"\n\
-echo "  Host: $MOSHI_HOST"\n\
-echo "  Device: $MOSHI_DEVICE"\n\
+echo "Model cache : $HF_HOME"\n\
+echo "Server      : $MOSHI_HOST:$MOSHI_PORT"\n\
+echo "Device      : $MOSHI_DEVICE"\n\
 echo ""\n\
-echo "Model will load and warm up (60-90 seconds)..."\n\
-echo ""\n\
-exec python3 -m moshi.server --host $MOSHI_HOST --port $MOSHI_PORT --hf-repo kyutai/moshika-pytorch-bf16 --device $MOSHI_DEVICE\n\
+echo "Starting Moshi (model loads in 60-90s on first GPU run)..."\n\
+exec python3 -m moshi.server \\\n\
+    --host  "$MOSHI_HOST" \\\n\
+    --port  "$MOSHI_PORT" \\\n\
+    --hf-repo kyutai/moshika-pytorch-bf16 \\\n\
+    --device "$MOSHI_DEVICE"\n\
 ' > /app/start-moshi.sh && chmod +x /app/start-moshi.sh
 
-# Run Moshi server
 CMD ["/app/start-moshi.sh"]
