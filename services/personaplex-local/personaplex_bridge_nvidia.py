@@ -1,17 +1,26 @@
 #!/usr/bin/env python3
 """
-PersonaPlex NVIDIA Bridge v8.1.0 - February 6, 2026
-Full-Duplex Voice with MAS Tool Call Integration, Memory Persistence, and CREP Voice Control
+PersonaPlex NVIDIA Bridge v8.2.0 - February 13, 2026
+Full-Duplex Voice: 100% Moshi STT + TTS (no edge-tts or other TTS fallback).
 
-FEATURES in v8.1.0:
+Voice path: User mic -> Moshi STT -> MAS Brain -> response text -> Moshi TTS -> speaker.
+Bridge connects to Moshi at MOSHI_HOST:MOSHI_PORT (e.g. GPU node 192.168.0.190:8998).
+
+FEATURES:
+- Full PersonaPlex: speech-to-speech via Moshi only (NATF2 / Moshika female voice when using moshika model).
 - CREP Voice Command Integration via MAS VoiceCommandRouter
-- Frontend command broadcasting for map control
-- Load conversation history when conversation_id is provided
-- Persist sessions to PostgreSQL via VoiceSessionStore
-- Context injection into Moshi's text_prompt
-- Memory coordinator integration
+- Load conversation history, persist sessions to PostgreSQL via VoiceSessionStore
+- Context injection into Moshi text_prompt, memory coordinator integration
 - Lower temperature (0.4) for consistent MYCA responses
 """
+import sys
+from pathlib import Path
+
+# Add MAS repo to Python path for mycosoft_mas imports
+MAS_REPO_PATH = Path(__file__).resolve().parent.parent.parent
+if str(MAS_REPO_PATH) not in sys.path:
+    sys.path.insert(0, str(MAS_REPO_PATH))
+
 import asyncio
 import json
 import logging
@@ -20,12 +29,21 @@ import re
 import warnings
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional, List, Dict, Set
+from typing import Any, Optional, List, Dict, Set
 from uuid import uuid4
 
 import aiohttp
 import httpx
+import numpy as np
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+
+# Import duplex session for full-duplex voice support
+try:
+    from mycosoft_mas.consciousness.duplex_session import create_duplex_session
+    DUPLEX_AVAILABLE = True
+except ImportError as e:
+    logging.getLogger("personaplex-bridge").warning(f"Duplex session not available: {e}")
+    DUPLEX_AVAILABLE = False
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse
 from pydantic import BaseModel
@@ -39,7 +57,7 @@ logger = logging.getLogger("personaplex-bridge")
 # Reduce httpx noise (health check polling)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-app = FastAPI(title="PersonaPlex NVIDIA Bridge", version="8.1.0")
+app = FastAPI(title="PersonaPlex NVIDIA Bridge", version="8.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -70,6 +88,12 @@ TEXT_TEMPERATURE = float(os.getenv("TEXT_TEMPERATURE", "0.4"))
 AUDIO_TEMPERATURE = float(os.getenv("AUDIO_TEMPERATURE", "0.6"))
 
 DEFAULT_VOICE_PROMPT = os.getenv("VOICE_PROMPT", "NATF2.pt")
+
+# Database configuration for VoiceSessionStore (MINDEX VM)
+# Force DATABASE_URL to connect to memory schema on MINDEX
+MINDEX_DATABASE_URL = "postgresql://mycosoft:REDACTED_DB_PASSWORD@192.168.0.189:5432/mindex"
+os.environ["DATABASE_URL"] = MINDEX_DATABASE_URL
+logger.info(f"Set DATABASE_URL for voice store: postgresql://mycosoft:****@192.168.0.189:5432/mindex")
 
 
 def load_myca_persona():
@@ -119,13 +143,19 @@ class BridgeSession:
     loaded_history: List[dict] = field(default_factory=list)
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     
+    # Full-duplex support (Phase 1)
+    duplex_session: Optional[Any] = None  # DuplexSession when available
+    is_tts_playing: bool = False
+    moshi_ws: Optional[Any] = None  # Reference to Moshi WebSocket for stop signal
+    
     def to_dict(self):
         return {
             "session_id": self.session_id,
             "conversation_id": self.conversation_id,
             "user_id": self.user_id,
             "created_at": self.created_at,
-            "history_count": len(self.loaded_history)
+            "history_count": len(self.loaded_history),
+            "duplex_enabled": self.duplex_session is not None,
         }
 
 
@@ -150,17 +180,126 @@ async def get_voice_store():
     global voice_store
     if voice_store is None:
         try:
+            logger.info("Initializing VoiceSessionStore...")
             from mycosoft_mas.voice.supabase_client import VoiceSessionStore
             voice_store = VoiceSessionStore()
-            await voice_store.connect()
-            logger.info("VoiceSessionStore initialized")
+            logger.info(f"VoiceSessionStore created, connecting to: {voice_store._url[:50]}...")
+            connected = await voice_store.connect()
+            if connected:
+                logger.info("VoiceSessionStore connected successfully!")
+            else:
+                logger.error("VoiceSessionStore connect() returned False")
+                voice_store = None
         except Exception as e:
-            logger.warning(f"VoiceSessionStore not available: {e}")
+            logger.error(f"VoiceSessionStore initialization failed: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            voice_store = None
     return voice_store
 
 
 def normalize(text):
     return re.sub(r"\s+", " ", text).strip()
+
+
+# ============================================================================
+# Full-Duplex Voice Support (Phase 1)
+# ============================================================================
+
+# VAD Configuration
+VAD_ENERGY_THRESHOLD = float(os.getenv("VAD_ENERGY_THRESHOLD", "0.02"))
+VAD_MIN_SPEECH_FRAMES = int(os.getenv("VAD_MIN_SPEECH_FRAMES", "3"))
+VAD_COOLDOWN_FRAMES = int(os.getenv("VAD_COOLDOWN_FRAMES", "10"))
+
+# Track VAD state per session
+vad_states: Dict[str, Dict] = {}
+
+
+def detect_speech_vad(audio_chunk: bytes, session_id: str) -> bool:
+    """
+    Detect voice activity in audio chunk with debounce.
+    
+    Uses energy-based detection with:
+    - 3 consecutive frames above threshold (debounce)
+    - Cooldown after barge-in to avoid repeated triggers
+    
+    Args:
+        audio_chunk: Raw PCM audio bytes (16-bit signed, mono)
+        session_id: Session ID for state tracking
+    
+    Returns:
+        True if sustained speech detected (triggers barge-in)
+    """
+    # Initialize state for session
+    if session_id not in vad_states:
+        vad_states[session_id] = {
+            "speech_frames": 0,
+            "cooldown": 0,
+        }
+    
+    state = vad_states[session_id]
+    
+    # Handle cooldown
+    if state["cooldown"] > 0:
+        state["cooldown"] -= 1
+        return False
+    
+    # Calculate RMS energy
+    try:
+        samples = np.frombuffer(audio_chunk, dtype=np.int16).astype(np.float32)
+        samples = samples / 32768.0  # Normalize to [-1, 1]
+        energy = np.sqrt(np.mean(samples ** 2))
+    except Exception:
+        return False
+    
+    # Check threshold with debounce
+    if energy > VAD_ENERGY_THRESHOLD:
+        state["speech_frames"] += 1
+        if state["speech_frames"] >= VAD_MIN_SPEECH_FRAMES:
+            logger.debug(f"[{session_id[:8]}] VAD: Speech detected (energy={energy:.4f})")
+            state["cooldown"] = VAD_COOLDOWN_FRAMES  # Start cooldown
+            state["speech_frames"] = 0
+            return True
+    else:
+        state["speech_frames"] = 0
+    
+    return False
+
+
+async def stop_moshi_tts(moshi_ws, session: BridgeSession):
+    """
+    Stop Moshi TTS playback immediately.
+    
+    This is called on barge-in to halt the current audio output.
+    
+    Protocol: Send a special "stop" signal to Moshi.
+    For now, we close and reopen the connection or send an interrupt byte.
+    
+    Args:
+        moshi_ws: The aiohttp WebSocket connection to Moshi
+        session: The BridgeSession
+    """
+    session.is_tts_playing = False
+    
+    try:
+        # Option 1: Send interrupt signal byte (if Moshi supports it)
+        # The Moshi protocol uses byte 0x03 for stop/interrupt
+        await moshi_ws.send_bytes(b"\x03")
+        logger.info(f"[{session.session_id[:8]}] Sent TTS stop signal to Moshi")
+    except Exception as e:
+        logger.warning(f"[{session.session_id[:8]}] Failed to send TTS stop: {e}")
+
+
+def start_tts_cooldown(session_id: str):
+    """Start VAD cooldown after TTS to avoid self-detection."""
+    if session_id in vad_states:
+        vad_states[session_id]["cooldown"] = VAD_COOLDOWN_FRAMES
+        vad_states[session_id]["speech_frames"] = 0
+
+
+def cleanup_vad_state(session_id: str):
+    """Clean up VAD state when session ends."""
+    vad_states.pop(session_id, None)
 
 
 # ============================================================================
@@ -305,7 +444,7 @@ async def create_db_session(session: BridgeSession) -> None:
                 persona=session.persona,
                 user_id=session.user_id,
                 voice_prompt=DEFAULT_VOICE_PROMPT,
-                metadata={"version": "8.1.0", "bridge": "nvidia", "crep_enabled": True}
+                metadata={"version": "8.2.0", "bridge": "nvidia", "crep_enabled": True}
             )
         except Exception as e:
             logger.warning(f"Failed to create DB session: {e}")
@@ -331,12 +470,111 @@ async def clone_to_mas_memory(session: BridgeSession, speaker: str, text: str):
     asyncio.create_task(_send_to_mas(session, speaker, normalize(text)))
     asyncio.create_task(persist_turn(session.session_id, speaker, text))
     
-    # NEW: Process for CREP voice commands if user speaking
+    # Process user speech: CREP commands + MAS Brain query
     if speaker == "user":
         asyncio.create_task(process_voice_for_crep(session, text))
+        # Query MAS Brain for intelligent context and send events to frontend
+        asyncio.create_task(process_with_mas_brain(session, text))
+
+
+async def process_with_mas_brain(session: BridgeSession, user_text: str):
+    """
+    Query MAS Brain and send events to frontend for dashboard display.
+    This runs in parallel with Moshi's response generation.
+    """
+    try:
+        # Send "processing" event to frontend
+        await send_mas_event_to_frontend(session.session_id, "tool_call", {
+            "id": f"brain_{session.session_id[:8]}",
+            "tool": "mas_brain_query",
+            "query": user_text[:50],
+            "status": "running"
+        })
+        
+        # Query MAS Brain
+        brain_response = await query_mas_brain(session, user_text)
+        
+        if brain_response:
+            # Send tool call results
+            for tc in brain_response.get("tool_calls", []):
+                await send_mas_event_to_frontend(session.session_id, "tool_call", {
+                    "id": tc.get("id", "unknown"),
+                    "tool": tc.get("tool", "unknown"),
+                    "query": tc.get("query", ""),
+                    "result": tc.get("result"),
+                    "status": "success"
+                })
+            
+            # Send memory stats
+            memory_stats = brain_response.get("memory_stats", {})
+            if memory_stats:
+                await send_mas_event_to_frontend(session.session_id, "memory", {
+                    "reads": memory_stats.get("reads", 0),
+                    "writes": memory_stats.get("writes", 0),
+                    "context_size": memory_stats.get("context_size", 0)
+                })
+            
+            # Send agent activity
+            for agent in brain_response.get("agents_invoked", []):
+                await send_mas_event_to_frontend(session.session_id, "agent_invoke", {
+                    "agentId": agent.get("id", "unknown"),
+                    "agentName": agent.get("name", "unknown"),
+                    "action": agent.get("action", "invoked"),
+                    "status": "completed"
+                })
+            
+            # Send injection data (MAS Brain response text)
+            response_text = brain_response.get("response", "")
+            if response_text:
+                await send_mas_event_to_frontend(session.session_id, "injection", {
+                    "type": "brain_response",
+                    "content": response_text[:200],
+                    "status": "available"
+                })
+                
+                # Full PersonaPlex: Send MAS response to frontend (text) and to Moshi for TTS only.
+                # No edge-tts or other fallback — voice is 100% Moshi (STT + TTS).
+                if session.session_id in voice_websockets:
+                    frontend_ws = voice_websockets[session.session_id]
+                    try:
+                        # Send response as text to frontend for display (same format Moshi uses)
+                        words = response_text.split()
+                        for word in words:
+                            await frontend_ws.send_json({
+                                "type": "text",
+                                "text": word + " ",
+                                "speaker": "myca"
+                            })
+                        # Send response text to Moshi for TTS; Moshi streams audio (kind=1) back
+                        # and moshi_to_browser() forwards it to the frontend.
+                        if session.moshi_ws:
+                            await session.moshi_ws.send_bytes(b"\x02" + response_text.encode("utf-8"))
+                            logger.info(f"[{session.session_id[:8]}] Sent MAS response to Moshi for TTS: {len(response_text)} chars")
+                        else:
+                            logger.warning(f"[{session.session_id[:8]}] Moshi WebSocket not set; TTS skipped (full PersonaPlex requires Moshi)")
+                        logger.info(f"[{session.session_id[:8]}] Sent MAS response to frontend: {response_text[:50]}...")
+                    except Exception as e:
+                        logger.error(f"Failed to send MAS response to frontend/Moshi: {e}")
+            
+            # Complete the brain query event
+            await send_mas_event_to_frontend(session.session_id, "tool_call", {
+                "id": f"brain_{session.session_id[:8]}",
+                "tool": "mas_brain_query",
+                "status": "success",
+                "duration": brain_response.get("latency_ms", 0)
+            })
+        else:
+            await send_mas_event_to_frontend(session.session_id, "tool_call", {
+                "id": f"brain_{session.session_id[:8]}",
+                "tool": "mas_brain_query",
+                "status": "timeout"
+            })
+    except Exception as e:
+        logger.warning(f"MAS Brain processing error: {e}")
 
 
 async def _send_to_mas(session: BridgeSession, speaker: str, text: str):
+    """Send feedback to MAS for logging."""
     try:
         client = await get_http_client()
         await client.post(f"{MAS_ORCHESTRATOR_URL}/voice/feedback", json={
@@ -350,14 +588,104 @@ async def _send_to_mas(session: BridgeSession, speaker: str, text: str):
         pass
 
 
+async def query_mas_brain(session: BridgeSession, user_text: str) -> Optional[dict]:
+    """
+    Query MAS Brain API for intelligent response, memory context, and tool calls.
+    Returns structured response including tool_calls, memory_stats, etc.
+    This enables the frontend to display MAS activity even in full-duplex mode.
+    """
+    if not MYCA_BRAIN_ENABLED:
+        return None
+    
+    try:
+        client = await get_http_client()
+        response = await client.post(
+            f"{MYCA_BRAIN_URL}/chat",
+            json={
+                "message": user_text,
+                "user_id": session.user_id or "voice_user",
+                "conversation_id": session.conversation_id,
+                "session_id": session.session_id,
+                "context": {
+                    "source": "personaplex_voice",
+                    "mode": "full_duplex",
+                    "return_metadata": True
+                }
+            },
+            timeout=30.0  # Allow time for MAS to process (increased for slower MAS responses)
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"MAS Brain response: {len(data.get('response', ''))} chars, tool_calls: {len(data.get('tool_calls', []))}")
+            return data
+        else:
+            logger.warning(f"MAS Brain returned {response.status_code}")
+            return None
+    except httpx.TimeoutException:
+        logger.warning("MAS Brain query timed out")
+        return None
+    except Exception as e:
+        logger.warning(f"MAS Brain query failed: {e}")
+        return None
+
+
+# Track WebSocket connections for sending MAS events
+voice_websockets: Dict[str, WebSocket] = {}
+
+
+async def send_mas_event_to_frontend(session_id: str, event_type: str, data: dict):
+    """Send MAS event to frontend via WebSocket.
+    
+    The frontend expects:
+    - msg.type === "mas_event"
+    - msg.event is a MASEvent object with: id, type, source, message, timestamp, data
+    """
+    ws = voice_websockets.get(session_id)
+    if ws:
+        try:
+            await ws.send_json({
+                "type": "mas_event",
+                "event": {
+                    "id": data.get("id", f"evt_{datetime.now().timestamp()}"),
+                    "type": event_type,  # tool_call, memory_write, memory_read, agent_invoke, system, feedback
+                    "source": "personaplex_bridge",
+                    "message": data.get("tool", data.get("agentName", event_type)),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "data": data
+                }
+            })
+        except Exception:
+            pass
+
+
 async def check_moshi():
-    """Check Moshi availability via /health endpoint."""
+    """Check Moshi availability.
+
+    Moshi (moshi.server) accepts WebSocket only. An HTTP GET may:
+    - Return 200 or 426  (server fully up)
+    - Close immediately / empty reply  (server starting or WS-only mode)
+    - Refuse connection  (not started)
+
+    Strategy: try HTTP first; if it raises a connection error but TCP connects,
+    treat as available (server is up, just WS-only or still warming up).
+    """
     global moshi_available
     prev = moshi_available
     try:
         async with httpx.AsyncClient() as c:
-            r = await c.get(f"http://{MOSHI_HOST}:{MOSHI_PORT}/health", timeout=5)
-            moshi_available = r.status_code == 200
+            r = await c.get(f"http://{MOSHI_HOST}:{MOSHI_PORT}/", timeout=5)
+            moshi_available = r.status_code in (200, 426)
+    except (httpx.RemoteProtocolError, httpx.ReadError):
+        # Server closed connection without an HTTP response — WebSocket-only mode.
+        # Fall back to a raw TCP connect to confirm the port is open.
+        try:
+            import socket
+            sock = socket.create_connection((MOSHI_HOST, MOSHI_PORT), timeout=3)
+            sock.close()
+            moshi_available = True   # TCP ok → Moshi is up
+        except OSError:
+            moshi_available = False
     except Exception:
         moshi_available = False
     # Only log state changes
@@ -367,7 +695,7 @@ async def check_moshi():
 
 @app.on_event("startup")
 async def startup():
-    logger.info(f"PersonaPlex Bridge v8.1.0 starting (CREP voice control enabled)...")
+    logger.info(f"PersonaPlex Bridge v8.2.0 starting (full PersonaPlex, Moshi STT+TTS only)...")
     logger.info(f"Temperature: text={TEXT_TEMPERATURE}, audio={AUDIO_TEMPERATURE}")
     logger.info(f"MYCA persona: {len(MYCA_PERSONA)} chars")
     logger.info(f"Voice command API: {VOICE_COMMAND_URL}")
@@ -396,7 +724,7 @@ async def health():
     store = await get_voice_store()
     return {
         "status": "healthy",
-        "version": "8.1.0",
+        "version": "8.2.0",
         "moshi_available": moshi_available,
         "moshi_url": f"http://{MOSHI_HOST}:{MOSHI_PORT}",
         "mas_url": MAS_ORCHESTRATOR_URL,
@@ -437,11 +765,27 @@ async def create_session(body: SessionCreate = None):
         enable_mas_events=body.enable_mas_events,
         loaded_history=loaded_history
     )
+    
+    # Initialize DuplexSession for full-duplex voice support
+    if DUPLEX_AVAILABLE:
+        try:
+            s.duplex_session = create_duplex_session(
+                session_id=sid,
+                conversation_id=conv_id,
+                user_id=body.user_id,
+                on_barge_in=lambda: logger.info(f"[{sid[:8]}] DuplexSession barge-in callback"),
+                on_state_change=lambda state: logger.debug(f"[{sid[:8]}] DuplexSession state: {state}"),
+            )
+            logger.info(f"[{sid[:8]}] DuplexSession initialized")
+        except Exception as e:
+            logger.error(f"[{sid[:8]}] Failed to create DuplexSession: {e}")
+            s.duplex_session = None
+    
     sessions[sid] = s
     
     await create_db_session(s)
     
-    logger.info(f"Session created: {sid[:8]} (history: {len(loaded_history)} turns)")
+    logger.info(f"Session created: {sid[:8]} (history: {len(loaded_history)} turns, duplex: {s.duplex_session is not None})")
     return s.to_dict()
 
 
@@ -510,6 +854,9 @@ async def ws_crep_commands(websocket: WebSocket):
 async def ws_bridge(websocket: WebSocket, session_id: str):
     await websocket.accept()
     
+    # Register WebSocket for MAS events
+    voice_websockets[session_id] = websocket
+    
     s = sessions.get(session_id)
     if not s:
         conv_id = websocket.query_params.get("conversation_id") or str(uuid4())
@@ -528,6 +875,21 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
             created_at=datetime.now(timezone.utc).isoformat(),
             loaded_history=loaded_history
         )
+        
+        # Initialize DuplexSession for full-duplex voice support
+        if DUPLEX_AVAILABLE:
+            try:
+                s.duplex_session = create_duplex_session(
+                    session_id=session_id,
+                    conversation_id=conv_id,
+                    user_id=user_id,
+                    on_barge_in=lambda: logger.info(f"[{session_id[:8]}] DuplexSession barge-in callback"),
+                    on_state_change=lambda state: logger.debug(f"[{session_id[:8]}] DuplexSession state: {state}"),
+                )
+                logger.info(f"[{session_id[:8]}] DuplexSession initialized")
+            except Exception as e:
+                logger.error(f"[{session_id[:8]}] Failed to create DuplexSession: {e}")
+        
         sessions[session_id] = s
         await create_db_session(s)
     
@@ -549,25 +911,60 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
     
     try:
         async with aiohttp.ClientSession() as aio:
-            async with aio.ws_connect(moshi_url, timeout=aiohttp.ClientTimeout(total=180)) as moshi:
+            logger.info(f"[{session_id[:8]}] Opening WebSocket to Moshi: {moshi_url[:100]}...")
+            # Explicitly set WebSocket headers to ensure proper upgrade
+            headers = {
+                'Connection': 'Upgrade',
+                'Upgrade': 'websocket'
+            }
+            # Add heartbeat to prevent keepalive timeout
+            async with aio.ws_connect(
+                moshi_url, 
+                timeout=aiohttp.ClientTimeout(total=180), 
+                headers=headers,
+                heartbeat=20.0  # Send ping every 20 seconds to keep connection alive
+            ) as moshi:
+                logger.info(f"[{session_id[:8]}] WebSocket opened, waiting for handshake...")
                 try:
                     hs = await asyncio.wait_for(moshi.receive(), 120)
+                    logger.info(f"[{session_id[:8]}] Handshake received: type={hs.type}, data={hs.data[:100] if hasattr(hs, 'data') else 'N/A'}")
                 except asyncio.TimeoutError:
+                    logger.error(f"[{session_id[:8]}] Handshake timeout after 120s")
                     await websocket.send_json({"type": "error", "message": "Moshi timeout"})
                     return
                 
+                # Accept either binary b"\x00" OR JSON {"type": "connected"} handshake from Moshi
+                handshake_ok = False
                 if hs.type == aiohttp.WSMsgType.BINARY and hs.data == b"\x00":
                     await websocket.send_bytes(b"\x00")
-                    if s.loaded_history:
-                        await websocket.send_json({
-                            "type": "history_loaded",
-                            "turns": len(s.loaded_history),
-                            "conversation_id": s.conversation_id
-                        })
-                    logger.info(f"[{session_id[:8]}] Full-duplex active")
-                else:
+                    handshake_ok = True
+                    logger.info(f"[{session_id[:8]}] Binary handshake accepted")
+                elif hs.type == aiohttp.WSMsgType.TEXT:
+                    try:
+                        import json
+                        hs_data = json.loads(hs.data)
+                        if hs_data.get("type") == "connected":
+                            # Send binary b"\x00" to frontend to complete its handshake/warmup
+                            await websocket.send_bytes(b"\x00")
+                            handshake_ok = True
+                            logger.info(f"[{session_id[:8]}] JSON handshake accepted from Moshi, sent binary handshake to frontend: {hs_data}")
+                    except json.JSONDecodeError:
+                        logger.error(f"[{session_id[:8]}] Invalid JSON handshake: {hs.data[:100]}")
+                
+                if not handshake_ok:
+                    logger.error(f"[{session_id[:8]}] Handshake failed: unexpected type={hs.type}, data={hs.data[:50] if hasattr(hs, 'data') else 'N/A'}")
                     await websocket.send_json({"type": "error", "message": f"Handshake failed"})
                     return
+                
+                # Send history loaded notification if applicable
+                if s.loaded_history:
+                    await websocket.send_json({
+                        "type": "history_loaded",
+                        "turns": len(s.loaded_history),
+                        "conversation_id": s.conversation_id
+                    })
+                
+                logger.info(f"[{session_id[:8]}] Full-duplex active")
                 
                 last_myca = ""
                 acc_myca = ""
@@ -579,11 +976,16 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                             if msg.type == aiohttp.WSMsgType.BINARY and len(msg.data) > 0:
                                 kind = msg.data[0]
                                 if kind == 1:
+                                    # TTS audio from Moshi - mark as playing
                                     audio_recv += 1
+                                    s.is_tts_playing = True
                                     await websocket.send_bytes(msg.data)
                                 elif kind == 2:
                                     text = msg.data[1:].decode("utf-8", errors="ignore")
                                     await websocket.send_json({"type": "text", "text": text, "speaker": "myca"})
+                                    # Add space between tokens for proper word separation
+                                    if acc_myca and not acc_myca.endswith(' ') and not text.startswith((' ', '.', ',', '!', '?', ';', ':', "'", '"', ')')):
+                                        acc_myca += ' '
                                     acc_myca += text
                                     if any(p in text for p in [".", "!", "?", "\n"]):
                                         n = normalize(acc_myca)
@@ -591,6 +993,9 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                                             last_myca = n
                                             await clone_to_mas_memory(s, "myca", n)
                                         acc_myca = ""
+                                elif kind == 0:
+                                    # End of TTS audio segment
+                                    s.is_tts_playing = False
                             elif msg.type == aiohttp.WSMsgType.TEXT:
                                 await websocket.send_text(msg.data)
                     except Exception as e:
@@ -603,15 +1008,47 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                             data = await websocket.receive()
                             if "bytes" in data:
                                 audio_sent += 1
-                                await moshi.send_bytes(data["bytes"])
+                                audio_bytes = data["bytes"]
+                                
+                                # VAD: Check for user speech during TTS (barge-in)
+                                if s.is_tts_playing:
+                                    if detect_speech_vad(audio_bytes, session_id):
+                                        logger.info(f"[{session_id[:8]}] Barge-in detected via VAD")
+                                        # If duplex session is available, let it coordinate cancellation.
+                                        if s.duplex_session:
+                                            s.duplex_session.barge_in()
+                                        else:
+                                            await stop_moshi_tts(moshi, s)
+                                        # Notify frontend of barge-in
+                                        try:
+                                            await websocket.send_json({
+                                                "type": "barge_in",
+                                                "message": "User interrupted",
+                                                "timestamp": datetime.now(timezone.utc).isoformat()
+                                            })
+                                        except Exception:
+                                            pass
+                                
+                                await moshi.send_bytes(audio_bytes)
                             elif "text" in data:
                                 try:
                                     payload = json.loads(data["text"])
                                     text = normalize(payload.get("text", ""))
                                     if text:
                                         await clone_to_mas_memory(s, "user", text)
+                                        # Record in duplex session if available
+                                        if s.duplex_session:
+                                            s.duplex_session.record_user_turn(text)
                                     if payload.get("forward_to_moshi", False) and text:
                                         await moshi.send_bytes(b"\x02" + text.encode("utf-8"))
+                                    
+                                    # Handle explicit barge-in from frontend
+                                    if payload.get("type") == "barge_in" or payload.get("interrupt"):
+                                        logger.info(f"[{session_id[:8]}] Explicit barge-in from frontend")
+                                        if s.duplex_session:
+                                            s.duplex_session.barge_in(text)
+                                        else:
+                                            await stop_moshi_tts(moshi, s)
                                 except json.JSONDecodeError:
                                     pass
                     except WebSocketDisconnect:
@@ -619,6 +1056,10 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                     except Exception as e:
                         logger.error(f"Browser->Moshi error: {e}")
                 
+                # Wire runtime callbacks once Moshi socket is available.
+                s.moshi_ws = moshi
+                if s.duplex_session:
+                    s.duplex_session.set_stop_tts_callback(lambda: stop_moshi_tts(moshi, s))
                 await asyncio.gather(moshi_to_browser(), browser_to_moshi(), return_exceptions=True)
                 
     except Exception as e:
@@ -628,6 +1069,14 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
         except:
             pass
     finally:
+        # Clean up WebSocket registration and VAD state
+        voice_websockets.pop(session_id, None)
+        cleanup_vad_state(session_id)
+        
+        # Reset duplex session if available
+        if s and s.duplex_session:
+            s.duplex_session.reset()
+        
         logger.info(f"[{session_id[:8]}] Session ended. Audio: sent={audio_sent}, recv={audio_recv}")
 
 
