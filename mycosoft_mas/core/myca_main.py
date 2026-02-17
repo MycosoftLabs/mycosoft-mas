@@ -54,12 +54,20 @@ from mycosoft_mas.core.routers.security_audit_api import router as security_rout
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
 
+# GPU Node API for mycosoft-gpu01 compute node
+try:
+    from mycosoft_mas.core.routers.gpu_node import router as gpu_node_router
+    GPU_NODE_API_AVAILABLE = True
+except ImportError:
+    GPU_NODE_API_AVAILABLE = False
+
 # Real-time streaming routers (Redis pub/sub)
 from mycosoft_mas.core.routers.scientific_stream import router as scientific_stream_router
 from mycosoft_mas.core.routers.topology_stream import router as topology_stream_router
 from mycosoft_mas.core.routers.crep_stream import router as crep_stream_router
 from mycosoft_mas.core.routers.devices_stream import router as devices_stream_router
 from mycosoft_mas.core.routers.security_stream import router as security_stream_router
+from mycosoft_mas.core.routers.entity_stream import router as entity_stream_router
 try:
     from mycosoft_mas.core.routers.iot_envelope_api import router as iot_router
     IOT_ENVELOPE_AVAILABLE = True
@@ -360,6 +368,10 @@ if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
 
+# GPU Node API for mycosoft-gpu01 compute node
+if GPU_NODE_API_AVAILABLE:
+    app.include_router(gpu_node_router, tags=["gpu-node"])
+
 # FCI (Fungal Computer Interface) - REST and WebSocket for real-time bioelectric signals
 app.include_router(fci_router, tags=["fci"])
 app.include_router(fci_websocket_router, tags=["fci-websocket"])
@@ -370,6 +382,7 @@ app.include_router(topology_stream_router, tags=["topology-stream"])
 app.include_router(crep_stream_router, tags=["crep-stream"])
 app.include_router(devices_stream_router, tags=["devices-stream"])
 app.include_router(security_stream_router, tags=["security-stream"])
+app.include_router(entity_stream_router, tags=["entity-stream"])
 
 # Earth-2 AI Weather API
 if EARTH2_API_AVAILABLE:

@@ -154,6 +154,28 @@ This API provides heartbeat-based registration and management for remote MycoBra
 }
 ```
 
+### GPU Node API (`/api/gpu-node/*`) (FEB13 2026)
+
+Manages mycosoft-gpu01 compute node (192.168.0.190): status, containers, deploy services. **Requires MAS restart on 188 after deploy.** See `docs/GPU_NODE_INTEGRATION_FEB13_2026.md`.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/gpu-node/health` | GET | Router health |
+| `/api/gpu-node/status` | GET | Full node status (GPU, containers) |
+| `/api/gpu-node/reachable` | GET | SSH connectivity check |
+| `/api/gpu-node/gpu` | GET | GPU memory, utilization, temp |
+| `/api/gpu-node/containers` | GET | List containers |
+| `/api/gpu-node/containers/{name}/logs` | GET | Container logs |
+| `/api/gpu-node/containers/{name}/running` | GET | Is container running |
+| `/api/gpu-node/deploy/container` | POST | Deploy custom container |
+| `/api/gpu-node/deploy/service` | POST | Deploy known service (moshi-voice, earth2-inference, personaplex-bridge) |
+| `/api/gpu-node/deploy/personaplex-split` | POST | Deploy split PersonaPlex (bridge on gpu01, inference on remote host) |
+| `/api/gpu-node/containers/{name}` | DELETE | Stop and remove container |
+| `/api/gpu-node/services` | GET | List known services |
+| `/api/gpu-node/services/{name}/health` | GET | Service health |
+
+**Router**: `mycosoft_mas/core/routers/gpu_node.py`
+
 ### Workflow API (`/api/workflow/*`)
 
 | Endpoint | Method | Description |
