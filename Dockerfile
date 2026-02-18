@@ -35,8 +35,8 @@ RUN poetry lock --no-update && poetry install --no-dev --no-root
 # Copy application code
 COPY . .
 
-# Install the application
-RUN poetry install --no-dev
+# Install the application (regenerate lock after COPY . . overwrites it)
+RUN poetry lock --no-update && poetry install --no-dev
 
 # === runtime stage ===
 FROM python:3.13-slim AS runtime
