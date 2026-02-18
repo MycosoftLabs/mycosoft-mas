@@ -2,6 +2,8 @@
 
 **Purpose:** Prepare everything for testing in sandbox (live on all VMs, outside the development environment). **Deployment is executed by another agent**; this document is the single reference for what to deploy, where, and how to verify.
 
+**Handoff for deploying agent:** See also `docs/DEPLOYMENT_HANDOFF_SANDBOX_FEB18_2026.md` for a short checklist and pointer to this doc. Code is prepared and pushed to GitHub; deployment runs on the VMs only.
+
 ---
 
 ## 1. VM and GPU Node Layout (Live)
