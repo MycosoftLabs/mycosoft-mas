@@ -42,7 +42,8 @@
 | `docs/TERMINAL_AND_PYTHON_OPERATIONS_GUIDE_FEB12_2026.md` | Autostart, GPU cleanup, process registry |
 | `docs/VM_LAYOUT_AND_DEV_REMOTE_SERVICES_FEB06_2026.md` | VM layout, dev using remote services |
 | `docs/DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md` | Dev → sandbox deploy pipeline |
-| `docs/SANDBOX_LIVE_TESTING_PREP_FEB18_2026.md` | **Sandbox live prep**: VM layout, deploy checklist for another agent, NAS mount, Cloudflare, verification |
+| `docs/SANDBOX_PREP_AND_HANDOFF_FEB18_2026.md` | **Sandbox prep entry point**: What is prepared, docs for deploying agent, GitHub repos; deployment in another agent |
+| `docs/SANDBOX_LIVE_TESTING_PREP_FEB18_2026.md` | **Sandbox live prep**: VM layout, pre-deploy health checks, deploy checklist for another agent, NAS mount, Cloudflare, verification |
 
 ## 4. Security & credentials
 

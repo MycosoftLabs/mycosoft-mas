@@ -2,7 +2,7 @@
 
 **Purpose:** Prepare everything for testing in sandbox (live on all VMs, outside the development environment). **Deployment is executed by another agent**; this document is the single reference for what to deploy, where, and how to verify.
 
-**Handoff for deploying agent:** See also `docs/DEPLOYMENT_HANDOFF_SANDBOX_FEB18_2026.md` for a short checklist and pointer to this doc. Code is prepared and pushed to GitHub; deployment runs on the VMs only.
+**Handoff for deploying agent:** See also `docs/DEPLOYMENT_HANDOFF_SANDBOX_FEB18_2026.md` for a short checklist and pointer to this doc. All code is prepared and pushed to GitHub; deployment runs on the VMs only (deployment will happen in another agent).
 
 ---
 
@@ -29,16 +29,31 @@
 
 ---
 
-## 3. Deployment Checklist (For the Deploying Agent)
+## 3. Pre-Deploy: Health Check All VMs (Run First)
+
+Before deploying the website, verify these endpoints from the deploying agent’s environment (or from any host that can reach the LAN):
+
+| Check | URL | Expected |
+|-------|-----|----------|
+| MAS | http://192.168.0.188:8001/health | 200, JSON with `"service": "mas"` |
+| MINDEX API | http://192.168.0.189:8000/docs | 200 (API docs page) |
+| PersonaPlex Bridge | http://192.168.0.190:8999/health | 200, JSON with `moshi_available: true` |
+| Sandbox (post-deploy) | http://192.168.0.187:3000 | 200 after website container is running |
+
+Credentials for SSH: load from `.credentials.local` (MAS or website repo); use `VM_SSH_PASSWORD` or `VM_PASSWORD`; user `mycosoft` on all VMs.
+
+---
+
+## 4. Deployment Checklist (For the Deploying Agent)
 
 Execute in order. Do not skip the NAS mount for the website container.
 
-### 3.1 Prerequisites
+### 4.1 Prerequisites
 
 - Website code **committed and pushed to GitHub `main`** (MycosoftLabs/website).
 - SSH access to Sandbox: `mycosoft@192.168.0.187` (use credentials from `.credentials.local`).
 
-### 3.2 On Sandbox VM (192.168.0.187)
+### 4.2 On Sandbox VM (192.168.0.187)
 
 1. **SSH**
    ```bash
@@ -82,11 +97,11 @@ Execute in order. Do not skip the NAS mount for the website container.
    ```
    Expect: container running, HTTP 200.
 
-### 3.3 Cloudflare
+### 4.3 Cloudflare
 
 - **Purge cache:** Cloudflare Dashboard → mycosoft.com → Caching → **Purge Everything** (or use Cloudflare API with zone ID and token from env).
 
-### 3.4 Post-Deploy Verification
+### 4.4 Post-Deploy Verification
 
 - **Homepage:** https://sandbox.mycosoft.com/ → 200, page loads.
 - **Assets:** https://sandbox.mycosoft.com/assets/mushroom1/Main%20A.jpg → 200 (confirms NAS mount).
@@ -94,7 +109,7 @@ Execute in order. Do not skip the NAS mount for the website container.
 
 ---
 
-## 4. Paths and Image Names (Reference)
+## 5. Paths and Image Names (Reference)
 
 | Item | Value |
 |------|--------|
@@ -108,7 +123,7 @@ Execute in order. Do not skip the NAS mount for the website container.
 
 ---
 
-## 5. Test-Voice (Sandbox + GPU Node)
+## 6. Test-Voice (Sandbox + GPU Node)
 
 - **Test-voice page:** https://sandbox.mycosoft.com/test-voice (after website is deployed).
 - **Bridge:** Must be reachable at `ws://192.168.0.190:8999` (or the URL configured in the website env). Bridge health: `http://192.168.0.190:8999/health`.
@@ -117,7 +132,7 @@ Execute in order. Do not skip the NAS mount for the website container.
 
 ---
 
-## 6. Env Vars (Website Container / Sandbox)
+## 7. Env Vars (Website Container / Sandbox)
 
 Set in container or in compose/env file used to start the website:
 
@@ -127,7 +142,7 @@ Set in container or in compose/env file used to start the website:
 
 ---
 
-## 7. Related Docs
+## 8. Related Docs
 
 - **VM layout and dev:** `docs/VM_LAYOUT_AND_DEV_REMOTE_SERVICES_FEB06_2026.md`
 - **Dev → Sandbox pipeline:** `docs/DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md`
@@ -137,7 +152,7 @@ Set in container or in compose/env file used to start the website:
 
 ---
 
-## 8. GitHub Repos (Source of Truth)
+## 9. GitHub Repos (Source of Truth)
 
 - **Website:** https://github.com/MycosoftLabs/website (branch `main`)
 - **MAS:** https://github.com/MycosoftLabs/mycosoft-mas (branch `main`)

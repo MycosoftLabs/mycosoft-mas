@@ -1,6 +1,6 @@
 # Deployment Handoff – Sandbox (February 18, 2026)
 
-**Purpose:** This document is for the **deploying agent**. All code is prepared and pushed to GitHub. Deployment (Sandbox website + Cloudflare purge) is to be executed by that agent; it is not run in the development environment.
+**Purpose:** This document is for the **deploying agent**. All code is prepared and pushed to GitHub. **Deployment will happen in another agent** (not in the development environment). Deployment = Sandbox website container + Cloudflare purge; execute on the VMs only.
 
 ---
 
