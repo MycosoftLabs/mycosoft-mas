@@ -17,8 +17,10 @@ These scripts/services must be running for the full Mycosoft development system 
 | 4 | **Cursor System Sync** | `scripts/sync_cursor_system.py` | Syncs rules/agents/skills from ALL repos to user Cursor system every 30s so all agents can talk to sub-agents, use all rules, and have context | `Get-Process python \| Where-Object {$_.CommandLine -like '*sync_cursor_system*'}` | `python scripts/sync_cursor_system.py --watch` |
 | 5 | **n8n Local (Docker)** | Docker container `mycosoft-n8n` | **CRITICAL** - Workflow automation, webhooks, MAS integrations. Requires Docker Desktop running. | `.\scripts\n8n-healthcheck.ps1` | `.\scripts\n8n-healthcheck.ps1 -StartDocker -StartLocal` |
 | 6 | **Docker Healthcheck** | `scripts/docker-healthcheck.ps1` | Periodic Docker cleanup - removes stopped containers, dangling images, unused volumes. Reports to MAS. | `.\scripts\docker-healthcheck.ps1 -Quick` | `.\scripts\docker-healthcheck.ps1 -Cleanup` |
+| 7 | **Dev Server Watchdog** | `WEBSITE/website/scripts/dev-server-watchdog.ps1` | **ALWAYS-ON** - Monitors localhost:3010 every 30s, auto-restarts Next.js dev server if it crashes. Installed in Windows Startup folder. | `Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" \| Where-Object { $_.CommandLine -match 'dev-server-watchdog' }` | `Start-Process powershell -ArgumentList "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File 'WEBSITE/website/scripts/dev-server-watchdog.ps1'"` |
 
 **CRITICAL:** MycoBrain Service (#1) and n8n (#5) must ALWAYS be running. If down, restart immediately.
+**ALWAYS-ON:** Dev Server Watchdog (#7) keeps localhost:3010 alive automatically — check it is running before doing website work.
 **CRITICAL:** n8n requires Docker Desktop. If Docker is not running, start it first with `.\scripts\docker-healthcheck.ps1 -StartDocker`.
 **PERIODIC:** Docker Healthcheck (#6) should run every 30 minutes during active sessions to prevent resource waste.
 

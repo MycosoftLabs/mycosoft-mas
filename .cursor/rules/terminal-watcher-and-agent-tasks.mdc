@@ -1,0 +1,48 @@
+---
+description: When any agent runs or monitors terminal commands (dev server, tests, build, deploy), involve the terminal-watcher subagent to read terminals for errors, diagnostics, and debugging—especially hot-reload development.
+alwaysApply: true
+---
+
+# Terminal Watcher and Agent Tasks (All Agents)
+
+## Rule: Monitor terminals when you use them
+
+**Whenever an agent is working on a task that runs or relies on terminal output**, that agent must ensure terminal output is checked for errors, issues, and failures.
+
+- **How:** Involve the **terminal-watcher** subagent: ask it to read the terminals folder, check for errors, run diagnostics if needed, and report back.
+- **When:** After starting a dev server, test run, build, or deploy; during hot-reload development; when the user reports "something broke" or "check the terminal."
+- **Why:** Errors in the terminal (compile failures, runtime errors, port conflicts, test failures) are only visible in terminal output. Terminal-watcher reads that output and surfaces issues so the parent agent can fix them.
+
+## Tasks that require terminal monitoring
+
+| Task type | Who usually runs it | Terminal-watcher role |
+|-----------|---------------------|------------------------|
+| **Website dev server (hot reload)** | website-dev, dev-server-guardian | Read dev server terminal for Next.js/React compile and runtime errors; suggest file:line fixes. |
+| **Tests** | test-engineer, backend-dev, website-dev | Read test terminal for FAILED, AssertionError, exit code; run diagnostics if needed. |
+| **Builds** | deploy-pipeline, regression-guard, backend-dev | Read build terminal for compilation/build errors. |
+| **Deploy scripts** | deploy-pipeline, myca-autonomous-operator | Read deploy terminal for SSH/Docker/script errors. |
+| **Lint / typecheck** | code-auditor, regression-guard | Read lint/typecheck output for errors. |
+| **Long-running scripts** | data-pipeline, process-manager, any agent | Read script terminal for exceptions, timeouts, failures. |
+
+## Protocol for the agent running the task
+
+1. **You** start or trigger the terminal command (e.g. `npm run dev:next-only`, `pytest`, `docker build`).
+2. **You** involve **terminal-watcher** (e.g. "Read the terminals folder and check for errors in the dev server / test / build output").
+3. **Terminal-watcher** lists the terminals folder, reads the relevant terminal file(s), scans for errors/warnings, optionally runs diagnostics, and reports to you.
+4. **You** use that report to fix issues, restart, or inform the user.
+
+## Hot-reload development (website)
+
+- Dev server runs in a terminal (often port 3010). Hot reload compiles on save; errors appear in **that terminal**.
+- **website-dev** or any agent doing front-end work should have **terminal-watcher** read that terminal after changes or when the user says something is broken.
+- Terminal-watcher looks for: "Failed to compile", "Module not found", "TypeError", React/Next.js errors, and suggests file and fix.
+
+## Subagent reference
+
+- **terminal-watcher** agent: `.cursor/agents/terminal-watcher.md`
+- **Commands:** Read terminals → Check for errors → Run diagnostics → Suggest fix (see agent file for full command table).
+
+## Summary
+
+- **Every agent** that runs or cares about terminal output should use **terminal-watcher** to read terminals, detect errors, and debug.
+- **Especially** for hot-reloading website development: terminal-watcher reads the dev server terminal and reports compile/runtime errors so they can be fixed immediately.

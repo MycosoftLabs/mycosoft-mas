@@ -1,7 +1,27 @@
 # Master Document Index
 
+## Full PersonaPlex — No Edge (Feb 13, 2026)
+- `docs/FULL_PERSONAPLEX_NO_EDGE_FEB13_2026.md` – **Voice 100% Moshi**: No edge-tts or other TTS fallback. Flow: User mic → Moshi STT → MAS Brain → response text → Moshi TTS → speaker. Bridge v8.2.0 sends MAS response to Moshi via `\x02` + text for TTS. Use `MOSHI_HOST=192.168.0.190` when Moshi runs on GPU node.
+- `docs/MOSHI_DEPLOYMENT_BLOCKED_FEB13_2026.md` – **BLOCKED**: Complete log of 10+ Moshi deployment attempts. RTX 5090 PyTorch incompatibility (sm_120 not supported until PyTorch 2.7), GTX 1080 Ti insufficient (11GB VRAM, CUDA 6.1). Bridge v8.2.0 code complete. 4 working solutions: swap GPU (RTX 3080 Ti/4070 Ti+), wait for PyTorch 2.7 (Q2 2026), use MAS VM, or cloud GPU. Dockerfile and scripts ready.
+- `docs/PERSONAPLEX_GPU_DIAGNOSIS_FEB13_2026.md` – **GPU limitations and solutions**: Why Moshi 7B fails on GTX 1080 Ti (11GB, CUDA 6.1) and Windows (Triton Linux-only). Includes 4 solutions: Docker CPU on gpu01 (recommended), upgrade GPU, alternative voice stack, or Linux VM on dev PC. Bridge v8.2.0 code complete; Moshi deployment blocked by hardware.
+- `docs/GPU_NODE_INTEGRATION_FEB13_2026.md` – Updated with full PersonaPlex and bridge env reference.
+- `docs/REMOTE_5090_INFERENCE_SPLIT_PLAN_FEB13_2026.md` – **Two-host split topology**: RTX 5090 as remote Moshi inference server (`192.168.0.172:8998`), Ubuntu 1080 Ti host runs PersonaPlex bridge/logic (`192.168.0.190:8999`) connected over LAN.
+
+## Cursor Team Audit (Feb 12, 2026)
+- `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md` – **Single source of truth**: All 34 subagents (roles + commands), all 29 rules, all 19 skills; script verification; gaps fixed (bug-fixer, gpu-node-ops in registry; execute-mandatory added); problems removed/updated. Use when ensuring the Cursor team is coded, workable, and active.
+
+## Subagent Roles and Terminal Watcher (Feb 12, 2026)
+- `docs/TERMINAL_WATCHER_AND_SUBAGENT_ROLES_COMPLETE_FEB12_2026.md` – **Completion**: Terminal-watcher subagent, rule, and subagent-roles doc implemented. All agents that use the terminal should involve terminal-watcher for errors and hot-reload diagnostics.
+- `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md` – **Subagent roles and commands per agent**: For every agent, related subagents and when to use **terminal-watcher** to read terminals for errors, diagnostics, and debugging (especially hot-reload). Rule: `.cursor/rules/terminal-watcher-and-agent-tasks.mdc`. Agent: `.cursor/agents/terminal-watcher.md`.
+
+## Plan and Task Completion Docs Policy (Feb 12, 2026)
+- `docs/PLAN_AND_TASK_COMPLETION_DOCS_POLICY_FEB12_2026.md` – **Policy**: Documents required at every plan completion; task completion docs must be updated. Rule: `.cursor/rules/plan-and-task-completion-docs.mdc`. Agents and skill updated.
+
 ## Autonomous Cursor System (Feb 12, 2026)
 - `docs/AUTONOMOUS_CURSOR_SYSTEM_FEB12_2026.md` – **Complete autonomous system**: MCP servers (memory, tasks, orchestrator, registry), auto-learning infrastructure (pattern scanner, skill generator, agent factory), background services (learning feedback, deployment feedback), autonomous scheduler, continuous improvement loop. Enables Cursor to self-improve, auto-generate skills, auto-create agents, track learning outcomes, and perform daily self-improvement cycles. Integrated with myca-autonomous-operator agent.
+
+## Stub and Placeholder Implementations (Feb 12, 2026)
+- `docs/STUB_IMPLEMENTATIONS_FEB12_2026.md` – **18 stub replacements completed**: Comprehensive documentation of all stub and placeholder implementations replaced with real working code. MAS core (task_manager, agents router, orchestrator/cluster/registry integration), communication services (email attachments, Twilio SMS/voice, validation), website API (usage limits, defense briefing notifications, Docker NAS backup). Includes implementation details, testing commands, environment variables, and pending high-priority TODOs. Files modified: 6 across MAS and website repos. Priority: API endpoints > agent methods > integration clients > memory/DB operations.
 
 ## 501 Routes Fixed (Feb 11, 2026)
 - `../WEBSITE/website/docs/501_ROUTES_FIXED_FEB11_2026.md` – **Stub implementation completion**: Fixed 3 API routes that were returning HTTP 501. WiFiSense POST control actions now forward to MINDEX backend, MINDEX anchor records return proper 503/502 status codes instead of 501, integrity verify returns appropriate error codes (503/422/500) instead of 501. All routes are now fully implemented with real backend connections. No mock data used.
@@ -14,7 +34,10 @@
 ## Deploy and Test MYCA (Feb 10, 2026)
 - `docs/DEPLOY_AND_TEST_MYCA_FEB10_2026.md` – **Deploy and test checklist**: Push to GitHub, run consciousness tests, deploy MAS VM (188) and Sandbox (187), MINDEX (no schema changes needed), full MYCA integration test script (`scripts/test_myca_consciousness_full.py`), endpoint reference, and sandbox/local verification.
 
-## MYCA Consciousness Architecture (Feb 10, 2026)
+## MYCA Consciousness Architecture (Feb 10-12, 2026)
+- `docs/CONSCIOUSNESS_PIPELINE_ARCHITECTURE_FEB12_2026.md` – **Complete pipeline architecture documentation**: Full diagram and explanation of MYCA's consciousness pipeline - input processing, attention focus, parallel context gathering (working memory, world model, memory recall), intuition engine (System 1), deliberation module (System 2), background updates, streaming output. Includes performance metrics (30s→5-8s optimization), API endpoints, voice integration, agent coordination, file inventory, and future enhancements.
+- `docs/CONSCIOUSNESS_PIPELINE_OPTIMIZATION_FEB11_2026.md` – **Pipeline optimization details**: How sequential operations were parallelized using asyncio.gather(), individual timeouts with graceful degradation, non-blocking state updates, cached world context fallback. Reduced response time from 30+ seconds to 5-8 seconds.
+- `docs/CONSCIOUSNESS_DEPLOYMENT_REPORT_FEB11_2026.md` – **Automated test report**: Results from `scripts/deploy_consciousness_full.py` deployment run.
 - `docs/MYCA_CONSCIOUSNESS_ARCHITECTURE_FEB10_2026.md` – **Complete MYCA consciousness system**: Digital consciousness architecture with Conscious Layer (AttentionController, WorkingMemory, DeliberateReasoning, VoiceInterface), Subconscious Layer (IntuitionEngine, DreamState, WorldModel with 5 sensors), Soul Layer (Identity, Beliefs, Purpose, CreativityEngine, EmotionalState), and Substrate Abstraction (Digital/Wetware/Hybrid for future mycelium integration). Unified API at `/api/myca/` with chat, voice, status, world perception, and personality endpoints. 30+ new Python files, comprehensive test suite.
 
 ## Fungal Electrical Signaling Science (Feb 10, 2026)

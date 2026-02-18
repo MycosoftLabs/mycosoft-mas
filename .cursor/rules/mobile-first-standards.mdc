@@ -1,0 +1,151 @@
+---
+description: Mobile-first development standards for all Mycosoft website pages, components, apps, and tools. Enforced on every page and component created or modified.
+alwaysApply: true
+---
+
+# Mobile-First Standards (All Website Work)
+
+## MANDATORY: Every page, component, app, and tool MUST be mobile-ready
+
+When ANY website page, component, dashboard, tool, or app is created or modified, it MUST pass mobile standards for iOS and Android without breaking the desktop version.
+
+**Use the `mobile-engineer` sub-agent proactively** for:
+- Any new page (`app/*/page.tsx`)
+- Any new component (`components/**/*.tsx`)
+- Any dashboard, widget, or tool UI
+- Any layout change that affects the header, navigation, or sidebar
+
+---
+
+## Breakpoints (always mobile-first)
+
+```
+default (0px+)  → mobile portrait — your BASE styles
+sm: (640px+)    → mobile landscape / small tablet
+md: (768px+)    → tablet portrait
+lg: (1024px+)   → desktop
+xl: (1280px+)   → large desktop
+2xl: (1536px+)  → wide desktop
+```
+
+Write base styles for mobile first. Add `sm:`, `md:`, `lg:` overrides for larger screens. NEVER write desktop-only styles without a mobile base.
+
+---
+
+## Required Standards
+
+### Navigation
+- All pages MUST have a mobile-accessible navigation
+- Desktop nav (`hidden md:flex`) paired with mobile sheet/drawer (`md:hidden`)
+- Use Shadcn `Sheet` component for mobile nav overlay
+- Sub-pages MUST have a back button visible on mobile
+
+### Touch Targets
+- Minimum: **44×44px** on all clickable elements
+- Apply via: `min-h-[44px] min-w-[44px]` or `p-3`
+- Spacing between targets: ≥ 8px
+
+### Typography
+- Inputs MUST have `text-base` (16px) minimum — prevents iOS zoom
+- Body text: `text-sm sm:text-base`
+- Headings: scale with breakpoints, e.g. `text-xl sm:text-2xl md:text-3xl`
+- Never use `text-xs` for interactive elements
+
+### Layout
+- Use `flex-col md:flex-row` for any side-by-side layouts
+- Full-width on mobile: `w-full md:w-auto`
+- Padding: `p-4 md:p-6 lg:p-8`
+- Never overflow viewport width (no unconstrained wide children)
+
+### Forms
+- Stack fields vertically on mobile (`flex flex-col gap-4`)
+- Input height: `h-12` or `py-3 px-4` minimum
+- Submit button: `w-full md:w-auto`
+- Use correct `type=` (email, tel, number, search)
+
+### Tables
+- Always wrap in `overflow-x-auto` OR convert to card layout on mobile:
+  ```tsx
+  <div className="overflow-x-auto">
+    <table className="min-w-[600px]">...</table>
+  </div>
+  ```
+
+### Modals and Dialogs
+- Full-width on mobile: `w-full max-w-full sm:max-w-md`
+- Positioned from bottom on mobile (Sheet side="bottom") for long forms
+
+### Images
+- Always use `next/image` with `sizes` prop
+- Example: `sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"`
+
+### Charts and Visualizations
+- Wrap in `<ResponsiveContainer width="100%" height={300}>` (Recharts)
+- Provide simplified mobile view for complex charts when needed
+
+### Safe Areas (iOS notch / Dynamic Island)
+- Full-screen layouts: include `env(safe-area-inset-*)` padding
+- Layout.tsx viewport meta MUST include: `viewport-fit=cover`
+
+---
+
+## Required Meta Tags (layout.tsx)
+
+Ensure `app/layout.tsx` includes:
+
+```tsx
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',  // iOS safe area
+  themeColor: '#0a0a0a',  // Android Chrome bar
+}
+```
+
+---
+
+## iOS-Specific Fixes
+
+| Issue | Fix |
+|-------|-----|
+| Input zoom on focus | Set `font-size: 16px` (text-base) on all inputs |
+| Tap delay | Use `touch-action: manipulation` on buttons |
+| Fixed + scroll bug | Avoid `position: fixed` inside scrollable containers |
+| Safe area | Use `env(safe-area-inset-bottom)` for bottom navigation |
+| Full height | Use `min-h-dvh` not `min-h-screen` |
+
+## Android-Specific Fixes
+
+| Issue | Fix |
+|-------|-----|
+| Address bar reflow | Use `min-h-dvh` (dynamic viewport height) |
+| Theme color | Set `<meta name="theme-color">` in layout |
+| Touch ripple | Shadcn/Radix handles automatically |
+
+---
+
+## Verification Steps (run after every change)
+
+1. Check at **375px** width (iPhone SE) in browser DevTools
+2. Check at **390px** (iPhone 14 Pro)
+3. Check at **360px** (Android)
+4. Check at **768px** (tablet)
+5. Verify desktop **1280px+** is unchanged
+6. Confirm no horizontal scroll bar at any mobile size
+7. Confirm navigation is accessible on mobile
+8. Confirm all buttons/links are tappable (≥ 44px)
+
+---
+
+## Sub-Agent Delegation
+
+For comprehensive mobile work, use the `mobile-engineer` agent which handles:
+- Full-page mobile audits
+- Navigation overhauls
+- Component-by-component fixes
+- iOS and Android platform-specific fixes
+- Viewport and safe-area configuration
+- Touch target remediation
+- Table and chart mobile layouts
+
+**Trigger phrase:** "@mobile-engineer audit [page/component]" or "make this mobile-ready"

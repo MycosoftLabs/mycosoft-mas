@@ -64,6 +64,14 @@ Search for status indicators in docs:
 5. Recommend priority order based on dependencies and impact
 6. Generate a progress report: `docs/PLAN_PROGRESS_MMMDD_YYYY.md`
 
+## When a plan or task is completed (required)
+
+Follow `.cursor/rules/plan-and-task-completion-docs.mdc`:
+
+- **Plan completed:** Create a dated completion doc (e.g. `docs/{PLAN_NAME}_COMPLETE_{MMMDD}_{YYYY}.md`), add to MASTER_DOCUMENT_INDEX and CURSOR_DOCS_INDEX if vital, and set the plan source status to Complete with a link to the completion doc.
+- **Task completed:** Update the plan/roadmap file (mark task done), update any status doc that lists the task, and if a new doc was created add it to MASTER_DOCUMENT_INDEX. Update registries if agents/APIs/services changed.
+- Never close a plan or task without updating the corresponding docs.
+
 ## Priority Criteria
 
 1. **Blocking other work**: Memory integration blocks voice, scientific, agents

@@ -49,14 +49,23 @@ Before creating plans, making code changes, or starting any task:
 
 This rule is enforced by `read-recent-docs-before-planning.mdc` and applies to ALL agents.
 
+## Plan and task completion docs (required)
+
+Follow `.cursor/rules/plan-and-task-completion-docs.mdc`:
+
+- **When a plan is completed:** Create a dated completion doc (`docs/{PLAN_NAME}_COMPLETE_{MMMDD}_{YYYY}.md`), add to MASTER_DOCUMENT_INDEX and CURSOR_DOCS_INDEX if vital, set plan source status to Complete with link to the completion doc.
+- **When a task is completed:** Update the plan/roadmap (mark task done), update any status doc that lists the task, add any new doc to MASTER_DOCUMENT_INDEX. Update registries if agents/APIs/services changed.
+- **Reinforce:** When you run, check for recently completed plans/tasks that are missing completion docs and create or update them.
+
 ## When Invoked
 
 1. **New code created**: Update relevant registries (agents, APIs, services)
 2. **New feature completed**: Create dated status/completion document
-3. **Architecture changed**: Update system_map.md
-4. **API added/modified**: Update API_CATALOG
-5. **Agent added**: Update SYSTEM_REGISTRY
-6. **Document created**: Add to MASTER_DOCUMENT_INDEX; if vital/current, add to `.cursor/CURSOR_DOCS_INDEX.md` (remove any doc it supersedes). Run `python scripts/build_docs_manifest.py` when many new docs are added.
+3. **Plan or task completed**: Apply plan-and-task-completion-docs.mdc (completion doc + index updates)
+4. **Architecture changed**: Update system_map.md
+5. **API added/modified**: Update API_CATALOG
+6. **Agent added**: Update SYSTEM_REGISTRY
+7. **Document created**: Add to MASTER_DOCUMENT_INDEX; if vital/current, add to `.cursor/CURSOR_DOCS_INDEX.md` (remove any doc it supersedes). Run `python scripts/build_docs_manifest.py` when many new docs are added.
 
 ## Notion Sync Integration
 

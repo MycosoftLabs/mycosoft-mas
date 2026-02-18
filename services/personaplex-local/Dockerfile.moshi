@@ -41,6 +41,9 @@ RUN pip install --pre torch torchaudio \
 # Install remaining Python deps
 RUN pip install numpy
 
+# hf_transfer: Rust parallel downloader — makes first-run model download 10x faster
+RUN pip install hf-transfer
+
 # Moshi and audio stack
 RUN pip install \
     moshi \
@@ -57,6 +60,7 @@ ENV MOSHI_HOST=0.0.0.0 \
     MOSHI_DEVICE=cuda \
     HF_HOME=/root/.cache/huggingface \
     TORCH_HOME=/root/.cache/torch \
+    HF_HUB_ENABLE_HF_TRANSFER=1 \
     TORCHDYNAMO_DISABLE=1 \
     TOKENIZERS_PARALLELISM=false
 

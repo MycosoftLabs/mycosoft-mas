@@ -1,0 +1,70 @@
+---
+description: At the end of every plan completion create a completion document; at every task completion update task completion docs and indexes. All agents must follow this.
+alwaysApply: true
+---
+
+# Plan and Task Completion Documentation (All Agents)
+
+## Mandatory: Documents at plan and task completion
+
+**Every plan completion** and **every task completion** must result in updated documentation. No exceptions.
+
+---
+
+## When a PLAN is completed
+
+1. **Create a completion document** (dated in the title).
+   - **Filename:** `docs/{PLAN_NAME}_COMPLETE_{MMMDD}_{YYYY}.md` (e.g. `AUTONOMOUS_CURSOR_COMPLETE_FEB12_2026.md`).
+   - **Contents:** What was in scope, what was delivered (files, endpoints, agents, etc.), how to verify, any follow-up or known gaps.
+   - **Header:** Include **Date**, **Status: Complete**, and **Related plan/doc** links.
+
+2. **Update indexes.**
+   - Add the new completion doc to **docs/MASTER_DOCUMENT_INDEX.md** in the correct section (by date or theme).
+   - If it is a vital/current doc, add to **.cursor/CURSOR_DOCS_INDEX.md** and remove any superseded entry.
+   - Optionally run `python scripts/build_docs_manifest.py` after adding many docs.
+
+3. **Update the plan source** (if applicable).
+   - If the plan lives in a file (e.g. `.cursor/plans/*.plan.md` or `docs/SOME_PLAN_FEB*.md`), set its status to **Complete** and add a one-line pointer to the completion doc.
+
+---
+
+## When a TASK is completed (within a plan or standalone)
+
+1. **Update task completion docs.**
+   - **Plan file:** In the plan or roadmap file, mark the task as done (e.g. `- [x] Task name` or update a "Completed" section).
+   - **Status doc:** If a status or roadmap doc lists this task (e.g. `docs/SYSTEM_REGISTRY_*`, `docs/*_STATUS_*.md`), update that section to reflect completion.
+   - **Single place:** If the project uses a single task log (e.g. `docs/TASK_COMPLETION_LOG_*.md`), append a short entry: date, task id/name, outcome, link to any new doc.
+
+2. **If the task produced a new document**, add that doc to **docs/MASTER_DOCUMENT_INDEX.md** and, if vital, to **.cursor/CURSOR_DOCS_INDEX.md**.
+
+3. **Registries.** If the task added or changed agents, APIs, services, or devices, update **docs/SYSTEM_REGISTRY_FEB04_2026.md** and **docs/API_CATALOG_FEB04_2026.md** as per existing rules.
+
+---
+
+## Checklist (use before closing a plan or task)
+
+**Plan completed:**
+- [ ] Dated completion doc created under `docs/`
+- [ ] MASTER_DOCUMENT_INDEX.md updated
+- [ ] CURSOR_DOCS_INDEX.md updated if doc is vital
+- [ ] Plan source file status set to Complete + link to completion doc
+
+**Task completed:**
+- [ ] Plan/roadmap file updated (task marked done)
+- [ ] Any status doc that lists the task updated
+- [ ] If new doc created, MASTER_DOCUMENT_INDEX (and CURSOR_DOCS_INDEX if vital) updated
+- [ ] Registries updated if agents/APIs/services changed
+
+---
+
+## Document naming and skill
+
+- Use the **create-dated-document** skill for correct naming: `{TITLE}_{MMMDD}_{YYYY}.md`.
+- Same date-in-title rule applies to completion docs and task log entries.
+
+---
+
+## Who does it
+
+- **Any agent** that completes a plan or task is responsible for the corresponding docs and index updates.
+- **Plan-tracker** and **documentation-manager** agents should reinforce this and fix missing completion docs when they run.

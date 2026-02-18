@@ -85,6 +85,7 @@ docker run -d `
     -v "${volumeName}:/root/.cache" `
     -e MOSHI_DEVICE=cuda `
     -e TORCHDYNAMO_DISABLE=1 `
+    -e HF_HUB_ENABLE_HF_TRANSFER=1 `
     $imageName
 
 if ($LASTEXITCODE -ne 0) { Write-Host "[ERROR] Failed to start." -ForegroundColor Red; exit 1 }

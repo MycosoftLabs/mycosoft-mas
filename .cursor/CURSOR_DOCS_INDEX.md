@@ -23,6 +23,7 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md` | **All 34 subagents, 29 rules, 19 skills** — single source of truth; commands and script verification; gaps fixed |
 | `docs/STATUS_AND_NEXT_STEPS_FEB09_2026.md` | VM checklist, MYCA coding, SSH |
 | `docs/SYSTEM_EXECUTION_REPORT_FEB09_2026.md` | Cloudflare, GitHub, VM health, SSH |
 | `docs/SYSTEM_GAPS_AND_REMAINING_WORK_FEB10_2026.md` | TODOs, stubs, 501 routes, gap summary |
@@ -54,6 +55,8 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/CONSCIOUSNESS_PIPELINE_ARCHITECTURE_FEB12_2026.md` | **Complete pipeline architecture**: Full diagram, components, flow, optimization (30s→5-8s), API endpoints, voice integration |
+| `docs/CONSCIOUSNESS_PIPELINE_OPTIMIZATION_FEB11_2026.md` | Pipeline optimization: parallel context, timeouts, non-blocking updates |
 | `docs/MYCA_CONSCIOUSNESS_DEPLOYMENT_FEB11_2026.md` | Consciousness deployment report |
 | `docs/MYCA_TRUE_CONSCIOUSNESS_IMPLEMENTATION_FEB11_2026.md` | Technical implementation |
 | `docs/MYCA_CONSCIOUSNESS_ARCHITECTURE_FEB10_2026.md` | Consciousness architecture |
@@ -74,7 +77,7 @@
 
 | Doc | Purpose |
 |-----|---------|
-| `docs/CURSOR_SUITE_AUDIT_FEB12_2026.md` | Rules (25), agents (32), indexes, interaction; re-audit reference |
+| `docs/CURSOR_SUITE_AUDIT_FEB12_2026.md` | Rules (25+), agents (35+), indexes, interaction; re-audit reference |
 | `docs/CURSOR_MCP_AND_EXTENSIONS_FEB12_2026.md` | MCPs (GitHub, Supabase, Context7, Cloudflare, browser, mindex-db), sub-agent usage, extensions |
 | `docs/CURSOR_DOCS_INDEXING_AND_NOTION_FEB12_2026.md` | Why Cursor doesn’t see 2000+ docs / Notion; indexing policy |
 | `docs/CURSOR_SYSTEM_REGISTRATION_AUDIT_FEB10_2026.md` | Rules, agents, skills registration |

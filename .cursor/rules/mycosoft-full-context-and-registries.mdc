@@ -37,6 +37,8 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
 3. **Align with:** sitemap, pages, apps, APIs, services, integrations, device lists, agent lists, routes, schema. If a registry or list exists for it, use it before adding or changing.
 4. **When introducing new code** that adds or changes: pages, apps, APIs, routes, services, devices, agents, or schema – **update the relevant registries, indexes, and docs** (including MASTER_DOCUMENT_INDEX if new docs are created). Keep sitemap, API catalog, and system registry in sync with reality.
 
+5. **When a plan or task is completed** – **create or update documentation**: create a dated completion document at plan completion; at task completion update the plan/status docs and any task log. Add new docs to MASTER_DOCUMENT_INDEX (and CURSOR_DOCS_INDEX if vital). See `.cursor/rules/plan-and-task-completion-docs.mdc`.
+
 ---
 
 ## Rule of thumb
@@ -71,7 +73,7 @@ Open via: File > Open Workspace from File. See `.cursor/rules/mycosoft-full-code
 
 ---
 
-## 32 Specialized Sub-Agents
+## 34 Specialized Sub-Agents
 
 Use the right agent for the right task. All agents live in `.cursor/agents/`.
 
@@ -80,6 +82,7 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 |-------|---------|
 | `backend-dev` | Python/FastAPI backend, MAS agents, API endpoints, integrations |
 | `website-dev` | Next.js pages, React components, Tailwind, API routes |
+| `mobile-engineer` | **Mobile responsiveness for ALL pages/apps** — iOS/Android audit, touch targets, mobile nav, breakpoints; use proactively on every new page/component |
 | `dev-server-guardian` | Ensure dev server on 3010 when in Cursor; no duplicate npm servers; use `dev:next-only` only |
 | `database-engineer` | PostgreSQL, Redis, Qdrant, migrations, pgvector |
 | `memory-engineer` | 6-layer memory, MINDEX backend, context injection |
@@ -94,11 +97,14 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 | `docker-ops` | **Docker Desktop resource management**, container cleanup, image pruning, MAS integration, vmmem control, local-to-VM coordination |
 | `infrastructure-ops` | VM management, Docker containers, SSH, NAS, Proxmox |
 | `process-manager` | GPU cleanup, port conflicts, zombie processes, autostart |
+| `terminal-watcher` | **Read terminals for errors, diagnostics, debugging** — use when any agent runs dev server (hot reload), tests, build, or deploy; reads terminals folder, detects failures, suggests fixes |
+| `gpu-node-ops` | GPU node (gpu01/192.168.0.190) deployment, PersonaPlex/Earth2 containers, nvidia-smi, offload from dev machine |
 | `backup-ops` | Cursor chat backup, Proxmox snapshots, DB backups |
 
 ### Quality/Audit Agents
 | Agent | Use For |
 |-------|---------|
+| `bug-fixer` | Diagnose and fix bugs from error reports, stack traces, test failures; root cause and patch |
 | `code-auditor` | Find TODOs, FIXMEs, stubs, dead code across all repos |
 | `gap-agent` | Cross-repo gaps, missing connections, bridge gaps; suggests plans; use when two projects need a third connection |
 | `plan-tracker` | Track 650+ plans, 17+ roadmaps, find stale/abandoned work |

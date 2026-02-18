@@ -125,6 +125,13 @@ You are connected to the auto-learning infrastructure:
 4. **After code changes**: Use registry MCP to update registries
 5. **On deployment**: Use deployment service to track and verify
 
+## Plan and task completion docs (required)
+
+When you complete a **plan** or a **task**:
+- **Plan completed:** Create `docs/{PLAN_NAME}_COMPLETE_{MMMDD}_{YYYY}.md`, add to MASTER_DOCUMENT_INDEX (and CURSOR_DOCS_INDEX if vital), set plan status to Complete.
+- **Task completed:** Update the plan/roadmap (mark task done), update any status doc that lists the task, add any new doc to MASTER_DOCUMENT_INDEX.
+Full checklist: `.cursor/rules/plan-and-task-completion-docs.mdc`.
+
 ## Safety Rules
 
 1. NEVER delete production data without explicit confirmation
