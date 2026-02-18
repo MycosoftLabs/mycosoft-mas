@@ -8,6 +8,7 @@ Thread-safe with file locking.
 All imports are from the Python standard library.
 
 Created: February 9, 2026
+Updated: February 17, 2026 - Added PERMISSIONS.json loading and validation for MYCA
 """
 
 import hashlib
@@ -21,10 +22,19 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
+import fnmatch
+import jsonschema
 
 from .skill_scanner import ScanResult, SkillScanner
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# MYCA Permissions Integration
+# ---------------------------------------------------------------------------
+
+MYCA_SKILL_PERMISSIONS_DIR = Path(__file__).resolve().parent.parent / "myca" / "skill_permissions"
+PERMISSIONS_SCHEMA_PATH = MYCA_SKILL_PERMISSIONS_DIR / "_schema" / "PERMISSIONS.schema.json"
 
 # ---------------------------------------------------------------------------
 # Default registry path
@@ -62,6 +72,210 @@ class SkillEntry:
         # Accept unknown keys gracefully (forward compat)
         known = {f.name for f in cls.__dataclass_fields__.values()}  # type: ignore[attr-defined]
         return cls(**{k: v for k, v in data.items() if k in known})
+
+
+# ---------------------------------------------------------------------------
+# MYCA Skill Permissions
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class SkillPermissions:
+    """Permission manifest for a MYCA skill."""
+    name: str
+    version: str
+    description: str
+    risk_tier: str                       # "low", "medium", "high", "critical"
+    tools_allow: List[str]
+    tools_deny: List[str]
+    filesystem_read: List[str]
+    filesystem_write: List[str]
+    filesystem_deny: List[str]
+    network_enabled: bool
+    network_allowlist: List[str]
+    network_denylist: List[str]
+    secrets_allowed_scopes: List[str]
+    max_runtime_seconds: int
+    max_files_written: int
+    max_bytes_written: int
+    sandbox_required: bool
+    dependencies: List[str] = field(default_factory=list)
+    reviewers: List[str] = field(default_factory=list)
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "SkillPermissions":
+        """Parse PERMISSIONS.json into SkillPermissions."""
+        tools = data.get("tools", {})
+        fs = data.get("filesystem", {})
+        net = data.get("network", {})
+        secrets = data.get("secrets", {})
+        limits = data.get("limits", {})
+        
+        return cls(
+            name=data.get("name", ""),
+            version=data.get("version", "0.0.0"),
+            description=data.get("description", ""),
+            risk_tier=data.get("risk_tier", "low"),
+            tools_allow=tools.get("allow", []),
+            tools_deny=tools.get("deny", []),
+            filesystem_read=fs.get("read_paths", []),
+            filesystem_write=fs.get("write_paths", []),
+            filesystem_deny=fs.get("deny_paths", []),
+            network_enabled=net.get("enabled", False),
+            network_allowlist=net.get("allowlist", []),
+            network_denylist=net.get("denylist", []),
+            secrets_allowed_scopes=secrets.get("allowed_scopes", []),
+            max_runtime_seconds=limits.get("max_runtime_seconds", 30),
+            max_files_written=limits.get("max_files_written", 10),
+            max_bytes_written=limits.get("max_bytes_written", 100000),
+            sandbox_required=limits.get("sandbox_required", False),
+            dependencies=data.get("dependencies", []),
+            reviewers=data.get("reviewers", []),
+        )
+    
+    def is_tool_allowed(self, tool_name: str) -> bool:
+        """Check if a tool is allowed for this skill."""
+        # Deny list takes precedence
+        if tool_name in self.tools_deny:
+            return False
+        # Check allow list (supports wildcard)
+        if "*" in self.tools_allow:
+            return True
+        return tool_name in self.tools_allow
+    
+    def is_path_allowed(self, path: str, mode: str = "read") -> bool:
+        """Check if a filesystem path is allowed. mode: 'read' or 'write'."""
+        path = str(Path(path).resolve())
+        
+        # Deny list takes precedence
+        for pattern in self.filesystem_deny:
+            if self._path_matches(path, pattern):
+                return False
+        
+        # Check allowed paths
+        allowed = self.filesystem_read if mode == "read" else self.filesystem_write
+        for pattern in allowed:
+            if self._path_matches(path, pattern):
+                return True
+        return False
+    
+    def is_network_allowed(self, url: str) -> bool:
+        """Check if a network URL is allowed."""
+        if not self.network_enabled:
+            return False
+        
+        # Extract domain from URL
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        domain = parsed.netloc or url
+        
+        # Denylist takes precedence
+        for pattern in self.network_denylist:
+            if fnmatch.fnmatch(domain, pattern):
+                return False
+        
+        # Check allowlist
+        for allowed in self.network_allowlist:
+            # Exact match or prefix match for full URLs
+            if domain == allowed or url.startswith(allowed):
+                return True
+        return False
+    
+    def is_secret_scope_allowed(self, scope: str) -> bool:
+        """Check if a secret scope is allowed."""
+        return scope in self.secrets_allowed_scopes
+    
+    @staticmethod
+    def _path_matches(path: str, pattern: str) -> bool:
+        """Check if path matches pattern (supports glob)."""
+        pattern = str(Path(pattern).expanduser())
+        return fnmatch.fnmatch(path, pattern) or path.startswith(pattern.rstrip("*"))
+
+
+class PermissionValidator:
+    """Validates skill permissions against the schema and enforces rules."""
+    
+    def __init__(self):
+        self._schema: Optional[Dict[str, Any]] = None
+        self._load_schema()
+    
+    def _load_schema(self) -> None:
+        """Load the PERMISSIONS.schema.json file."""
+        if PERMISSIONS_SCHEMA_PATH.exists():
+            try:
+                self._schema = json.loads(PERMISSIONS_SCHEMA_PATH.read_text(encoding="utf-8"))
+                logger.info("Loaded MYCA permissions schema from %s", PERMISSIONS_SCHEMA_PATH)
+            except (json.JSONDecodeError, OSError) as e:
+                logger.warning("Failed to load permissions schema: %s", e)
+    
+    def validate_schema(self, permissions_data: Dict[str, Any]) -> List[str]:
+        """Validate permissions data against JSON schema. Returns list of errors."""
+        if not self._schema:
+            return ["Permissions schema not loaded"]
+        
+        errors = []
+        try:
+            jsonschema.validate(permissions_data, self._schema)
+        except jsonschema.ValidationError as e:
+            errors.append(f"Schema validation error: {e.message}")
+        except jsonschema.SchemaError as e:
+            errors.append(f"Schema error: {e.message}")
+        return errors
+    
+    def validate_rules(self, permissions: SkillPermissions) -> List[str]:
+        """Validate semantic rules beyond schema. Returns list of errors/warnings."""
+        errors = []
+        
+        # Rule 2: Risk tier consistency
+        if permissions.risk_tier in ("high", "critical") and not permissions.sandbox_required:
+            errors.append(f"ERROR: {permissions.risk_tier} risk skill must have sandbox_required=true")
+        
+        # Rule 3: Network allowlist required if enabled
+        if permissions.network_enabled and not permissions.network_allowlist:
+            errors.append("ERROR: network.enabled=true but allowlist is empty")
+        
+        # Rule 4: Standard sensitive paths should be denied
+        required_deny = ["~/.ssh", "~/.aws", "~/.config", "/etc", "/var", "/proc"]
+        missing = [p for p in required_deny if p not in permissions.filesystem_deny]
+        if missing:
+            errors.append(f"WARN: Missing standard deny paths: {missing}")
+        
+        # Rule 6: Contradictory tool entries
+        contradictions = set(permissions.tools_allow) & set(permissions.tools_deny)
+        if contradictions:
+            errors.append(f"WARN: Tools in both allow and deny: {contradictions}")
+        
+        return errors
+    
+    def load_skill_permissions(self, skill_name: str) -> Optional[SkillPermissions]:
+        """Load PERMISSIONS.json for a skill."""
+        skill_dir = MYCA_SKILL_PERMISSIONS_DIR / skill_name
+        perm_file = skill_dir / "PERMISSIONS.json"
+        
+        if not perm_file.exists():
+            logger.debug("No PERMISSIONS.json for skill '%s'", skill_name)
+            return None
+        
+        try:
+            data = json.loads(perm_file.read_text(encoding="utf-8"))
+            return SkillPermissions.from_dict(data)
+        except (json.JSONDecodeError, OSError) as e:
+            logger.error("Failed to load permissions for '%s': %s", skill_name, e)
+            return None
+    
+    def get_all_skill_permissions(self) -> Dict[str, SkillPermissions]:
+        """Load all skill permissions from the myca/skill_permissions directory."""
+        result = {}
+        if not MYCA_SKILL_PERMISSIONS_DIR.exists():
+            return result
+        
+        for skill_dir in MYCA_SKILL_PERMISSIONS_DIR.iterdir():
+            if skill_dir.is_dir() and not skill_dir.name.startswith("_"):
+                perm = self.load_skill_permissions(skill_dir.name)
+                if perm:
+                    result[skill_dir.name] = perm
+        
+        return result
 
 
 # ---------------------------------------------------------------------------
@@ -197,6 +411,11 @@ class SkillRegistry:
     Skills are persisted in a JSON file at ``data/skill_registry.json``.
     The registry integrates with :class:`SkillScanner` to automatically
     scan and audit skill directories before approval.
+    
+    MYCA Integration (Feb 17, 2026):
+    - Loads PERMISSIONS.json from myca/skill_permissions/
+    - Validates permissions against schema and semantic rules
+    - Provides permission enforcement methods
     """
 
     def __init__(
@@ -207,6 +426,10 @@ class SkillRegistry:
         self._path = Path(registry_path) if registry_path else _DEFAULT_REGISTRY_PATH
         self._lock = _FileLock(str(self._path) + ".lock")
         self._scanner = scanner or SkillScanner()
+        
+        # MYCA permission validator
+        self._permission_validator = PermissionValidator()
+        self._skill_permissions: Dict[str, SkillPermissions] = {}
 
         # Ensure data directory exists
         self._path.parent.mkdir(parents=True, exist_ok=True)
@@ -222,8 +445,123 @@ class SkillRegistry:
 
         # Ensure blocklist is seeded
         self._seed_blocklist()
+        
+        # Load MYCA skill permissions
+        self._load_myca_permissions()
 
         logger.info("SkillRegistry initialized: %s", self._path)
+    
+    # ------------------------------------------------------------------
+    # MYCA Permission Loading
+    # ------------------------------------------------------------------
+    
+    def _load_myca_permissions(self) -> None:
+        """Load all MYCA skill permissions from skill_permissions directory."""
+        self._skill_permissions = self._permission_validator.get_all_skill_permissions()
+        if self._skill_permissions:
+            logger.info("Loaded MYCA permissions for %d skills", len(self._skill_permissions))
+    
+    def get_skill_permissions(self, skill_name: str) -> Optional[SkillPermissions]:
+        """Get the permissions for a skill."""
+        return self._skill_permissions.get(skill_name)
+    
+    def reload_permissions(self) -> int:
+        """Reload all MYCA permissions. Returns count of loaded permissions."""
+        self._load_myca_permissions()
+        return len(self._skill_permissions)
+    
+    def check_tool_permission(
+        self,
+        skill_name: str,
+        tool_name: str,
+    ) -> tuple[bool, str]:
+        """
+        Check if a skill is allowed to use a tool.
+        
+        Returns (allowed, reason).
+        """
+        perm = self._skill_permissions.get(skill_name)
+        if not perm:
+            # No permissions defined - default deny for MYCA skills
+            return False, f"No PERMISSIONS.json for skill '{skill_name}'"
+        
+        if perm.is_tool_allowed(tool_name):
+            return True, "Allowed by PERMISSIONS.json"
+        else:
+            return False, f"Tool '{tool_name}' denied for skill '{skill_name}'"
+    
+    def check_path_permission(
+        self,
+        skill_name: str,
+        path: str,
+        mode: str = "read",
+    ) -> tuple[bool, str]:
+        """
+        Check if a skill is allowed to access a filesystem path.
+        
+        Args:
+            skill_name: Name of the skill
+            path: Filesystem path
+            mode: "read" or "write"
+            
+        Returns (allowed, reason).
+        """
+        perm = self._skill_permissions.get(skill_name)
+        if not perm:
+            return False, f"No PERMISSIONS.json for skill '{skill_name}'"
+        
+        if perm.is_path_allowed(path, mode):
+            return True, f"Path {mode} allowed by PERMISSIONS.json"
+        else:
+            return False, f"Path '{path}' ({mode}) denied for skill '{skill_name}'"
+    
+    def check_network_permission(
+        self,
+        skill_name: str,
+        url: str,
+    ) -> tuple[bool, str]:
+        """
+        Check if a skill is allowed to access a network URL.
+        
+        Returns (allowed, reason).
+        """
+        perm = self._skill_permissions.get(skill_name)
+        if not perm:
+            return False, f"No PERMISSIONS.json for skill '{skill_name}'"
+        
+        if perm.is_network_allowed(url):
+            return True, "URL allowed by PERMISSIONS.json"
+        else:
+            return False, f"URL '{url}' denied for skill '{skill_name}'"
+    
+    def check_secret_permission(
+        self,
+        skill_name: str,
+        scope: str,
+    ) -> tuple[bool, str]:
+        """
+        Check if a skill is allowed to access a secret scope.
+        
+        Returns (allowed, reason).
+        """
+        perm = self._skill_permissions.get(skill_name)
+        if not perm:
+            return False, f"No PERMISSIONS.json for skill '{skill_name}'"
+        
+        if perm.is_secret_scope_allowed(scope):
+            return True, f"Secret scope '{scope}' allowed"
+        else:
+            return False, f"Secret scope '{scope}' denied for skill '{skill_name}'"
+    
+    def requires_sandbox(self, skill_name: str) -> bool:
+        """Check if a skill requires sandbox execution."""
+        perm = self._skill_permissions.get(skill_name)
+        return perm.sandbox_required if perm else False
+    
+    def get_risk_tier(self, skill_name: str) -> str:
+        """Get the risk tier for a skill."""
+        perm = self._skill_permissions.get(skill_name)
+        return perm.risk_tier if perm else "unknown"
 
     # ------------------------------------------------------------------
     # Public API — registration

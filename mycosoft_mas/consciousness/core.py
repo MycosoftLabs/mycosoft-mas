@@ -18,6 +18,9 @@ from typing import Any, Dict, List, Optional, Callable, AsyncGenerator
 from dataclasses import dataclass, field
 from contextlib import asynccontextmanager
 
+from mycosoft_mas.consciousness.cancellation import CancellationToken
+from mycosoft_mas.consciousness.event_bus import AttentionEvent, AttentionEventBus
+
 logger = logging.getLogger(__name__)
 
 
@@ -111,6 +114,7 @@ class MYCAConsciousness:
         
         # Event handlers
         self._event_handlers: Dict[str, List[Callable]] = {}
+        self._event_bus = AttentionEventBus(max_size=300)
         
         logger.info("MYCA consciousness initialized (dormant)")
     
@@ -194,6 +198,8 @@ class MYCAConsciousness:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
         self._background_tasks.clear()
+        if self._world_model:
+            await self._world_model.shutdown()
     
     async def _initialize_components(self) -> None:
         """Initialize all consciousness components."""
@@ -211,6 +217,7 @@ class MYCAConsciousness:
         self._intuition = IntuitionEngine(self)
         self._dream_state = DreamState(self)
         self._world_model = WorldModel(self)
+        self._world_model.start_write_queue()
         self._voice_interface = VoiceInterface(self)
         
         # Connect to external systems
@@ -271,6 +278,13 @@ class MYCAConsciousness:
                 if self._world_model:
                     await self._world_model.update()
                     self._metrics.world_updates_received += 1
+                    await self._event_bus.publish(
+                        AttentionEvent(
+                            type="world_update",
+                            source="world_model_loop",
+                            data=self._world_model.get_cached_context(),
+                        )
+                    )
                 await asyncio.sleep(5)  # Update every 5 seconds
             except asyncio.CancelledError:
                 break
@@ -287,6 +301,13 @@ class MYCAConsciousness:
                         self._world_model.get_current_state()
                     )
                     if patterns:
+                        await self._event_bus.publish(
+                            AttentionEvent(
+                                type="pattern_detected",
+                                source="pattern_loop",
+                                data={"count": len(patterns)},
+                            )
+                        )
                         await self._attention.notify_patterns(patterns)
                 await asyncio.sleep(10)  # Scan every 10 seconds
             except asyncio.CancelledError:
@@ -392,6 +413,11 @@ class MYCAConsciousness:
             # 1. Attention: Focus on the input (fast, <100ms)
             focus = await self._attention.focus_on(content, source, context)
             self._metrics.attention_focus = focus.summary
+
+            # Drain subconscious suggestions at input boundary (Phase 5).
+            for event in self._event_bus.drain(max_items=10):
+                if event.type == "pattern_detected":
+                    logger.debug(f"Subconscious event: {event.type} from {event.source}")
             
             # 5. Soul: Get personality context (fast, synchronous)
             soul_context = self._get_soul_context()
@@ -466,7 +492,9 @@ class MYCAConsciousness:
             
             # 7. Deliberation: Deep thinking with full context
             # This streams tokens as they arrive from the LLM
-            async for token in self._deliberation.think(
+            cancel_token = CancellationToken()
+            correction_used = False
+            async for token in self._deliberation.think_progressive(
                 input_content=content,
                 focus=focus,
                 working_context=working_context,
@@ -474,14 +502,29 @@ class MYCAConsciousness:
                 memories=memories,
                 soul_context=soul_context,
                 source=source,
+                token=cancel_token,
             ):
+                # Enforce additive refinement max 1 per turn.
+                if token.strip().lower().startswith("one more thing"):
+                    if correction_used:
+                        continue
+                    correction_used = True
                 yield token
+                # Drain events at safe speech boundaries.
+                if token.endswith((".", "!", "?", "\n")):
+                    for event in self._event_bus.drain(max_items=5):
+                        logger.debug(f"Drained event during response: {event.type}")
             
             self._metrics.thoughts_processed += 1
             
             # 8-9. Update state in background (fire-and-forget, don't block)
             asyncio.create_task(self._emotions.process_interaction(content, source))
-            asyncio.create_task(self._store_interaction(content, source, session_id, user_id))
+            if self._world_model:
+                self._world_model.enqueue_write(
+                    lambda: self._store_interaction(content, source, session_id, user_id)
+                )
+            else:
+                asyncio.create_task(self._store_interaction(content, source, session_id, user_id))
             
             # Update metrics synchronously
             self._metrics.emotional_valence = self._emotions.valence

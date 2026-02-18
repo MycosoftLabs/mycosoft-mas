@@ -1,0 +1,26 @@
+---
+description: Prevent Cursor OOM crashes – memory limits, exclusions, and never run heavy processes inside Cursor.
+globs: 
+alwaysApply: true
+---
+
+# Cursor OOM Prevention (All Agents)
+
+## Why Cursor hits OOM
+- **Multi-root workspace** (9 repos, 500k+ files) + **TypeScript/ESLint** + **file watchers** + **indexing** = very high RAM.
+- Running **Next.js dev server** or **GPU services** inside Cursor’s integrated terminal adds more memory and often triggers OOM.
+
+## Rules for agents (mandatory)
+1. **Never run the website dev server or GPU services inside Cursor’s terminal.** Always tell the user to run them from an **external terminal** (Windows Terminal, CMD, PowerShell outside Cursor). See `docs/DEV_SERVER_CRASH_FIX_FEB12_2026.md` and `scripts/start-dev.cmd` in the website repo.
+2. **When the user reports Cursor OOM or Cursor crashing:** point them to `docs/OOM_PREVENTION_FEB18_2026.md` and remind them to run `scripts/dev-machine-cleanup.ps1 -KillStaleGPU` before opening Cursor.
+3. **Do not suggest opening more roots or indexing more folders** than necessary; the workspace is already large.
+
+## What’s already configured (do not undo)
+- **Workspace** (`mycosoft.code-workspace`): `files.exclude`, `search.exclude`, `files.watcherExclude` for node_modules, .next, dist, build, .git, etc.; `typescript.tsserver.maxTsServerMemory`: 2048.
+- **MAS** `.cursorignore`: excludes node_modules, .next, Python/TS caches, logs, large binaries.
+- **Website** dev: run via `scripts\start-dev.cmd` or `.\scripts\start-dev.ps1 -Stable` from an external terminal only.
+
+## If OOM persists
+- User should add **.cursorignore** in any repo that doesn’t have one (e.g. WEBSITE/website), excluding at least: `node_modules/`, `.next/`, `out/`, `dist/`, `build/`, `*.log`.
+- User should **close unneeded workspace folders** (File > Remove Folder from Workspace) to reduce indexing.
+- User should **restart Cursor** after running cleanup and ensure no dev server/GPU runs inside Cursor.

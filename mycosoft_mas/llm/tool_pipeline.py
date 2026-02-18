@@ -3,6 +3,11 @@ MYCA Tool Integration Pipeline
 
 Enables mid-conversation tool calls during MYCA brain responses.
 Tools can be executed and results injected back into the response.
+
+MYCA Integration (Feb 17, 2026):
+- Added permission enforcement via SkillRegistry
+- Added EventLedger logging for tool calls and denials
+- Added risk-based execution controls
 """
 
 import asyncio
@@ -15,6 +20,39 @@ import json
 import httpx
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# MYCA Permission and Audit Integration
+# ---------------------------------------------------------------------------
+
+# Import skill registry for permission checks (lazy to avoid circular imports)
+_skill_registry = None
+_event_ledger = None
+
+
+def _get_skill_registry():
+    """Get the skill registry singleton (lazy import)."""
+    global _skill_registry
+    if _skill_registry is None:
+        try:
+            from mycosoft_mas.security.skill_registry import SkillRegistry
+            _skill_registry = SkillRegistry()
+        except ImportError as e:
+            logger.warning("SkillRegistry not available: %s", e)
+    return _skill_registry
+
+
+def _get_event_ledger():
+    """Get the event ledger singleton (lazy import)."""
+    global _event_ledger
+    if _event_ledger is None:
+        try:
+            from mycosoft_mas.myca.event_ledger import EventLedger
+            _event_ledger = EventLedger()
+        except ImportError as e:
+            logger.debug("EventLedger not available: %s", e)
+    return _event_ledger
 
 
 class ToolStatus(Enum):
@@ -37,6 +75,11 @@ class ToolCall:
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     latency_ms: Optional[int] = None
+    # MYCA permission context
+    skill_name: Optional[str] = None
+    permission_allowed: bool = True
+    permission_reason: str = ""
+    risk_flags: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -46,7 +89,10 @@ class ToolCall:
             "status": self.status.value,
             "result": self.result,
             "error": self.error,
-            "latency_ms": self.latency_ms
+            "latency_ms": self.latency_ms,
+            "skill_name": self.skill_name,
+            "permission_allowed": self.permission_allowed,
+            "risk_flags": self.risk_flags,
         }
 
 
@@ -271,12 +317,88 @@ class ToolRegistry:
 
 
 class ToolExecutor:
-    """Executes tools and manages results."""
+    """
+    Executes tools and manages results.
+    
+    MYCA Integration (Feb 17, 2026):
+    - Enforces skill permissions before execution
+    - Logs tool calls and denials to EventLedger
+    - Checks sandbox requirements for high-risk skills
+    """
     
     def __init__(self, registry: ToolRegistry):
         self.registry = registry
         self.mas_url = "http://192.168.0.188:8001"
         self.execution_history: List[ToolCall] = []
+        self._enable_permission_checks = True  # Can be disabled for testing
+    
+    def _check_permission(
+        self,
+        tool_call: ToolCall,
+    ) -> tuple[bool, str, List[str]]:
+        """
+        Check if the tool call is allowed by MYCA permissions.
+        
+        Returns (allowed, reason, risk_flags).
+        """
+        if not self._enable_permission_checks:
+            return True, "Permission checks disabled", []
+        
+        skill_registry = _get_skill_registry()
+        if not skill_registry:
+            # No skill registry available - allow by default (legacy mode)
+            return True, "SkillRegistry not available", []
+        
+        skill_name = tool_call.skill_name
+        if not skill_name:
+            # No skill context - allow for backward compatibility
+            return True, "No skill context", []
+        
+        risk_flags = []
+        
+        # Check if tool is allowed for this skill
+        allowed, reason = skill_registry.check_tool_permission(skill_name, tool_call.name)
+        if not allowed:
+            risk_flags.append("TOOL_DENIED")
+            return False, reason, risk_flags
+        
+        # Check sandbox requirement
+        if skill_registry.requires_sandbox(skill_name):
+            risk_flags.append("SANDBOX_REQUIRED")
+            # For now, we allow execution but flag it
+            # Full sandbox enforcement would require additional infrastructure
+        
+        # Check risk tier
+        risk_tier = skill_registry.get_risk_tier(skill_name)
+        if risk_tier in ("high", "critical"):
+            risk_flags.append(f"RISK_TIER_{risk_tier.upper()}")
+        
+        return True, "Allowed by PERMISSIONS.json", risk_flags
+    
+    def _log_to_ledger(self, tool_call: ToolCall, event_type: str = "tool_call"):
+        """Log tool call to EventLedger."""
+        ledger = _get_event_ledger()
+        if not ledger:
+            return
+        
+        try:
+            if event_type == "denial":
+                ledger.log_denial(
+                    agent_id=tool_call.skill_name or "unknown",
+                    tool=tool_call.name,
+                    args=tool_call.arguments,
+                    reason=tool_call.permission_reason,
+                )
+            else:
+                ledger.log_tool_call(
+                    agent_id=tool_call.skill_name or "unknown",
+                    tool=tool_call.name,
+                    args=tool_call.arguments,
+                    result_summary=str(tool_call.result)[:200] if tool_call.result else None,
+                    risk_flags=tool_call.risk_flags,
+                )
+        except Exception as e:
+            logger.debug("Failed to log to EventLedger: %s", e)
     
     async def execute(self, tool_call: ToolCall) -> ToolCall:
         """Execute a tool call and return results."""
@@ -285,6 +407,23 @@ class ToolExecutor:
         if not tool_def:
             tool_call.status = ToolStatus.FAILED
             tool_call.error = f"Unknown tool: {tool_call.name}"
+            return tool_call
+        
+        # MYCA: Check permissions before execution
+        allowed, reason, risk_flags = self._check_permission(tool_call)
+        tool_call.permission_allowed = allowed
+        tool_call.permission_reason = reason
+        tool_call.risk_flags = risk_flags
+        
+        if not allowed:
+            tool_call.status = ToolStatus.FAILED
+            tool_call.error = f"Permission denied: {reason}"
+            logger.warning(
+                "Tool call denied: %s for skill %s - %s",
+                tool_call.name, tool_call.skill_name, reason
+            )
+            self._log_to_ledger(tool_call, event_type="denial")
+            self.execution_history.append(tool_call)
             return tool_call
         
         tool_call.status = ToolStatus.EXECUTING
@@ -311,12 +450,16 @@ class ToolExecutor:
             logger.error(f"Tool execution error: {e}")
             tool_call.status = ToolStatus.FAILED
             tool_call.error = str(e)
+            tool_call.risk_flags.append("EXECUTION_ERROR")
         
         tool_call.completed_at = datetime.now()
         if tool_call.started_at:
             tool_call.latency_ms = int(
                 (tool_call.completed_at - tool_call.started_at).total_seconds() * 1000
             )
+        
+        # MYCA: Log to event ledger
+        self._log_to_ledger(tool_call)
         
         self.execution_history.append(tool_call)
         return tool_call
@@ -416,29 +559,84 @@ class ConversationToolManager:
     """
     Manages tool calls within a conversation context.
     Handles detecting when tools are needed and injecting results.
+    
+    MYCA Integration (Feb 17, 2026):
+    - Supports skill context for permission enforcement
+    - Provides filtered tool lists based on skill permissions
+    - Reports permission denials in results
     """
     
-    def __init__(self):
+    def __init__(self, skill_name: Optional[str] = None):
+        """
+        Initialize tool manager.
+        
+        Args:
+            skill_name: Optional skill context for permission enforcement.
+                       If provided, tool calls will be checked against the
+                       skill's PERMISSIONS.json.
+        """
         self.registry = ToolRegistry()
         self.executor = ToolExecutor(self.registry)
         self.pending_calls: List[ToolCall] = []
+        self.skill_name = skill_name
     
-    def get_tool_definitions_for_llm(self) -> List[Dict[str, Any]]:
-        """Get tool definitions in a format suitable for LLM function calling."""
-        return self.registry.get_tool_definitions()
+    def set_skill_context(self, skill_name: str):
+        """Set the skill context for permission enforcement."""
+        self.skill_name = skill_name
+    
+    def get_tool_definitions_for_llm(
+        self,
+        filter_by_permissions: bool = False,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get tool definitions in a format suitable for LLM function calling.
+        
+        Args:
+            filter_by_permissions: If True and skill_name is set, only return
+                                   tools allowed by the skill's permissions.
+        """
+        all_tools = self.registry.get_tool_definitions()
+        
+        if not filter_by_permissions or not self.skill_name:
+            return all_tools
+        
+        # Filter by skill permissions
+        skill_registry = _get_skill_registry()
+        if not skill_registry:
+            return all_tools
+        
+        allowed_tools = []
+        for tool in all_tools:
+            allowed, _ = skill_registry.check_tool_permission(
+                self.skill_name, tool["name"]
+            )
+            if allowed:
+                allowed_tools.append(tool)
+        
+        return allowed_tools
     
     async def process_tool_calls(
         self, 
-        tool_calls: List[Dict[str, Any]]
+        tool_calls: List[Dict[str, Any]],
+        skill_name: Optional[str] = None,
     ) -> List[ToolCall]:
-        """Process multiple tool calls and return results."""
+        """
+        Process multiple tool calls and return results.
+        
+        Args:
+            tool_calls: List of tool call dicts with id, name, arguments.
+            skill_name: Optional skill context override. If not provided,
+                       uses the manager's default skill_name.
+        """
         results = []
+        effective_skill = skill_name or self.skill_name
         
         for call_data in tool_calls:
             call = ToolCall(
                 id=call_data.get("id", ""),
                 name=call_data.get("name", ""),
-                arguments=call_data.get("arguments", {})
+                arguments=call_data.get("arguments", {}),
+                skill_name=effective_skill,
             )
             
             result = await self.executor.execute(call)
@@ -451,8 +649,22 @@ class ConversationToolManager:
         if tool_call.status == ToolStatus.COMPLETED:
             result_str = json.dumps(tool_call.result) if isinstance(tool_call.result, dict) else str(tool_call.result)
             return f"[TOOL] {tool_call.name}: {result_str}"
+        elif not tool_call.permission_allowed:
+            return f"[TOOL] {tool_call.name}: Permission denied - {tool_call.permission_reason}"
         else:
             return f"[TOOL] {tool_call.name}: Error - {tool_call.error}"
+    
+    def get_denied_tools_summary(self) -> List[Dict[str, Any]]:
+        """Get summary of denied tool calls from execution history."""
+        denied = []
+        for call in self.executor.execution_history:
+            if not call.permission_allowed:
+                denied.append({
+                    "tool": call.name,
+                    "skill": call.skill_name,
+                    "reason": call.permission_reason,
+                })
+        return denied
 
 
 # Singleton instances
@@ -468,9 +680,30 @@ def get_tool_registry() -> ToolRegistry:
     return _tool_registry
 
 
-def get_tool_manager() -> ConversationToolManager:
-    """Get or create the tool manager singleton."""
+def get_tool_manager(skill_name: Optional[str] = None) -> ConversationToolManager:
+    """
+    Get or create the tool manager singleton.
+    
+    Args:
+        skill_name: Optional skill context for permission enforcement.
+                   If provided, updates the manager's skill context.
+    """
     global _tool_manager
     if _tool_manager is None:
-        _tool_manager = ConversationToolManager()
+        _tool_manager = ConversationToolManager(skill_name=skill_name)
+    elif skill_name:
+        _tool_manager.set_skill_context(skill_name)
     return _tool_manager
+
+
+def create_tool_manager_for_skill(skill_name: str) -> ConversationToolManager:
+    """
+    Create a new tool manager for a specific skill context.
+    
+    Unlike get_tool_manager(), this always creates a new instance,
+    useful for isolated skill executions.
+    
+    Args:
+        skill_name: Skill context for permission enforcement.
+    """
+    return ConversationToolManager(skill_name=skill_name)

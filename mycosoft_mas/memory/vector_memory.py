@@ -31,7 +31,7 @@ class VectorMemory:
     ):
         self.connection_string = connection_string or os.getenv(
             "DATABASE_URL",
-            "postgresql://mycosoft:mycosoft@localhost:5432/mindex"
+            os.getenv("MINDEX_DATABASE_URL", "postgresql://mindex:mindex@localhost:5432/mindex")
         )
         self.embedder = embedder or get_embedder(os.getenv("EMBEDDER_PROVIDER", "openai"))
         self.pool: Optional[asyncpg.Pool] = None

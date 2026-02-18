@@ -893,17 +893,12 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
         sessions[session_id] = s
         await create_db_session(s)
     
-    text_prompt = build_context_prompt(MYCA_PERSONA, s.loaded_history)
-    
-    import urllib.parse
-    params = urllib.parse.urlencode({
-        "text_prompt": text_prompt,
-        "voice_prompt": DEFAULT_VOICE_PROMPT,
-        "audio_temperature": str(AUDIO_TEMPERATURE),
-        "text_temperature": str(TEXT_TEMPERATURE),
-    })
-    
-    moshi_url = f"{MOSHI_WS_URL}?{params}"
+    # Connect to Moshi's /api/chat with NO URL parameters.
+    # Passing text_prompt as a URL param produces a 6000+ char URL which causes
+    # Moshi's aiohttp server to silently hang after the WS upgrade (never sends handshake).
+    # The MYCA persona and memory context are injected by MAS through the conversation
+    # system — no need to pass them to Moshi's URL.
+    moshi_url = MOSHI_WS_URL
     logger.info(f"[{session_id[:8]}] Connecting to Moshi (history: {len(s.loaded_history)} turns)")
     
     audio_sent = 0
@@ -917,165 +912,162 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                 'Connection': 'Upgrade',
                 'Upgrade': 'websocket'
             }
-            # Add heartbeat to prevent keepalive timeout
-            async with aio.ws_connect(
-                moshi_url, 
-                timeout=aiohttp.ClientTimeout(total=180), 
-                headers=headers,
-                heartbeat=20.0  # Send ping every 20 seconds to keep connection alive
-            ) as moshi:
-                logger.info(f"[{session_id[:8]}] WebSocket opened, waiting for handshake...")
-                try:
-                    hs = await asyncio.wait_for(moshi.receive(), 120)
+            # No heartbeat — Moshi's WebSocket server doesn't respond to WS ping frames.
+            try:
+                async with aio.ws_connect(
+                    moshi_url,
+                    timeout=aiohttp.ClientTimeout(total=None, sock_connect=15, sock_read=300),
+                    headers=headers,
+                ) as moshi:
+                    logger.info(f"[{session_id[:8]}] WebSocket opened, waiting for handshake...")
+                    try:
+                        hs = await asyncio.wait_for(moshi.receive(), 120)
                     # hs.data may be bytes, str, or an exception object — always use str() for logging
-                    hs_data_repr = str(hs.data)[:100] if hasattr(hs, "data") else "N/A"
-                    logger.info(f"[{session_id[:8]}] Handshake received: type={hs.type}, data={hs_data_repr}")
-                except (asyncio.TimeoutError, Exception) as timeout_err:
-                    logger.error(f"[{session_id[:8]}] Handshake wait failed: {type(timeout_err).__name__}: {timeout_err}")
-                    await websocket.send_json({"type": "error", "message": "Moshi handshake timeout — try again in a few seconds"})
-                    return
-                
-                # Accept either binary b"\x00" OR JSON {"type": "connected"} handshake from Moshi
-                handshake_ok = False
-                if hs.type == aiohttp.WSMsgType.BINARY and hs.data == b"\x00":
-                    await websocket.send_bytes(b"\x00")
-                    handshake_ok = True
-                    logger.info(f"[{session_id[:8]}] Binary handshake accepted")
-                elif hs.type == aiohttp.WSMsgType.TEXT:
-                    try:
-                        import json
-                        hs_data = json.loads(hs.data)
-                        if hs_data.get("type") == "connected":
-                            await websocket.send_bytes(b"\x00")
-                            handshake_ok = True
-                            logger.info(f"[{session_id[:8]}] JSON handshake accepted: {hs_data}")
-                    except (json.JSONDecodeError, TypeError):
-                        logger.error(f"[{session_id[:8]}] Invalid JSON handshake: {str(hs.data)[:100]}")
-                elif hs.type == aiohttp.WSMsgType.ERROR:
-                    # Moshi sent an error frame — data is the exception object, not bytes
-                    logger.error(f"[{session_id[:8]}] Moshi error frame: {type(hs.data).__name__}: {hs.data}")
-                    await websocket.send_json({"type": "error", "message": f"Moshi error: {type(hs.data).__name__} — try again"})
-                    return
-                
-                if not handshake_ok:
-                    # data may be an exception; always convert with str()
-                    data_repr = str(hs.data)[:80] if hasattr(hs, "data") else "N/A"
-                    logger.error(f"[{session_id[:8]}] Handshake failed: type={hs.type}, data={data_repr}")
-                    await websocket.send_json({"type": "error", "message": "Moshi handshake failed — try again"})
-                    return
-                
-                # Send history loaded notification if applicable
-                if s.loaded_history:
-                    await websocket.send_json({
-                        "type": "history_loaded",
-                        "turns": len(s.loaded_history),
-                        "conversation_id": s.conversation_id
-                    })
-                
-                logger.info(f"[{session_id[:8]}] Full-duplex active")
-                
-                last_myca = ""
-                acc_myca = ""
-                
-                async def moshi_to_browser():
-                    nonlocal last_myca, acc_myca, audio_recv
-                    try:
-                        async for msg in moshi:
-                            if msg.type == aiohttp.WSMsgType.BINARY and len(msg.data) > 0:
-                                kind = msg.data[0]
-                                if kind == 1:
-                                    # TTS audio from Moshi - mark as playing
-                                    audio_recv += 1
-                                    s.is_tts_playing = True
-                                    await websocket.send_bytes(msg.data)
-                                elif kind == 2:
-                                    text = msg.data[1:].decode("utf-8", errors="ignore")
-                                    await websocket.send_json({"type": "text", "text": text, "speaker": "myca"})
-                                    # Add space between tokens for proper word separation
-                                    if acc_myca and not acc_myca.endswith(' ') and not text.startswith((' ', '.', ',', '!', '?', ';', ':', "'", '"', ')')):
-                                        acc_myca += ' '
-                                    acc_myca += text
-                                    if any(p in text for p in [".", "!", "?", "\n"]):
-                                        n = normalize(acc_myca)
-                                        if n and n != last_myca:
-                                            last_myca = n
-                                            await clone_to_mas_memory(s, "myca", n)
-                                        acc_myca = ""
-                                elif kind == 0:
-                                    # End of TTS audio segment
-                                    s.is_tts_playing = False
-                            elif msg.type == aiohttp.WSMsgType.TEXT:
-                                await websocket.send_text(msg.data)
-                    except Exception as e:
-                        logger.error(f"Moshi->Browser error: {e}")
-                
-                async def browser_to_moshi():
-                    nonlocal audio_sent
-                    try:
-                        while True:
-                            data = await websocket.receive()
-                            if "bytes" in data:
-                                audio_sent += 1
-                                audio_bytes = data["bytes"]
-                                
-                                # VAD: Check for user speech during TTS (barge-in)
-                                if s.is_tts_playing:
-                                    if detect_speech_vad(audio_bytes, session_id):
-                                        logger.info(f"[{session_id[:8]}] Barge-in detected via VAD")
-                                        # If duplex session is available, let it coordinate cancellation.
-                                        if s.duplex_session:
-                                            s.duplex_session.barge_in()
-                                        else:
-                                            await stop_moshi_tts(moshi, s)
-                                        # Notify frontend of barge-in
-                                        try:
-                                            await websocket.send_json({
-                                                "type": "barge_in",
-                                                "message": "User interrupted",
-                                                "timestamp": datetime.now(timezone.utc).isoformat()
-                                            })
-                                        except Exception:
-                                            pass
-                                
-                                await moshi.send_bytes(audio_bytes)
-                            elif "text" in data:
-                                try:
-                                    payload = json.loads(data["text"])
-                                    text = normalize(payload.get("text", ""))
-                                    if text:
-                                        await clone_to_mas_memory(s, "user", text)
-                                        # Record in duplex session if available
-                                        if s.duplex_session:
-                                            s.duplex_session.record_user_turn(text)
-                                    if payload.get("forward_to_moshi", False) and text:
-                                        await moshi.send_bytes(b"\x02" + text.encode("utf-8"))
-                                    
-                                    # Handle explicit barge-in from frontend
-                                    if payload.get("type") == "barge_in" or payload.get("interrupt"):
-                                        logger.info(f"[{session_id[:8]}] Explicit barge-in from frontend")
-                                        if s.duplex_session:
-                                            s.duplex_session.barge_in(text)
-                                        else:
-                                            await stop_moshi_tts(moshi, s)
-                                except json.JSONDecodeError:
-                                    pass
-                    except WebSocketDisconnect:
-                        logger.info(f"[{session_id[:8]}] Browser disconnected")
-                    except RuntimeError as e:
-                        # "Cannot call receive once a disconnect message has been received"
-                        if "disconnect" in str(e).lower() or "receive" in str(e).lower():
-                            logger.info(f"[{session_id[:8]}] Browser WS already closed")
-                        else:
+                        hs_data_repr = str(hs.data)[:100] if hasattr(hs, "data") else "N/A"
+                        logger.info(f"[{session_id[:8]}] Handshake received: type={hs.type}, data={hs_data_repr}")
+                    except (asyncio.TimeoutError, Exception) as timeout_err:
+                        logger.error(f"[{session_id[:8]}] Handshake wait failed: {type(timeout_err).__name__}: {timeout_err}")
+                        await websocket.send_json({"type": "error", "message": "Moshi handshake timeout — try again in a few seconds"})
+                        return
+
+                        # Accept either binary b"\x00" OR JSON {"type": "connected"} handshake from Moshi
+                    handshake_ok = False
+                    if hs.type == aiohttp.WSMsgType.BINARY and hs.data == b"\x00":
+                        await websocket.send_bytes(b"\x00")
+                        handshake_ok = True
+                        logger.info(f"[{session_id[:8]}] Binary handshake accepted")
+                    elif hs.type == aiohttp.WSMsgType.TEXT:
+                        try:
+                            import json
+                            hs_data = json.loads(hs.data)
+                            if hs_data.get("type") == "connected":
+                                await websocket.send_bytes(b"\x00")
+                                handshake_ok = True
+                                logger.info(f"[{session_id[:8]}] JSON handshake accepted: {hs_data}")
+                        except (json.JSONDecodeError, TypeError):
+                            logger.error(f"[{session_id[:8]}] Invalid JSON handshake: {str(hs.data)[:100]}")
+                    elif hs.type == aiohttp.WSMsgType.ERROR:
+                        logger.error(f"[{session_id[:8]}] Moshi error frame: {type(hs.data).__name__}: {hs.data}")
+                        await websocket.send_json({"type": "error", "message": f"Moshi error: {type(hs.data).__name__} — try again"})
+                        return
+
+                    if not handshake_ok:
+                        data_repr = str(hs.data)[:80] if hasattr(hs, "data") else "N/A"
+                        logger.error(f"[{session_id[:8]}] Handshake failed: type={hs.type}, data={data_repr}")
+                        await websocket.send_json({"type": "error", "message": "Moshi handshake failed — try again"})
+                        return
+
+                    if s.loaded_history:
+                        await websocket.send_json({
+                            "type": "history_loaded",
+                            "turns": len(s.loaded_history),
+                            "conversation_id": s.conversation_id
+                        })
+
+                    logger.info(f"[{session_id[:8]}] Full-duplex active")
+
+                    last_myca = ""
+                    acc_myca = ""
+
+                    async def moshi_to_browser():
+                        nonlocal last_myca, acc_myca, audio_recv
+                        try:
+                            async for msg in moshi:
+                                if msg.type == aiohttp.WSMsgType.BINARY and len(msg.data) > 0:
+                                    kind = msg.data[0]
+                                    if kind == 1:
+                                        audio_recv += 1
+                                        s.is_tts_playing = True
+                                        await websocket.send_bytes(msg.data)
+                                    elif kind == 2:
+                                        text = msg.data[1:].decode("utf-8", errors="ignore")
+                                        await websocket.send_json({"type": "text", "text": text, "speaker": "myca"})
+                                        if acc_myca and not acc_myca.endswith(' ') and not text.startswith((' ', '.', ',', '!', '?', ';', ':', "'", '"', ')')):
+                                            acc_myca += ' '
+                                        acc_myca += text
+                                        if any(p in text for p in [".", "!", "?", "\n"]):
+                                            n = normalize(acc_myca)
+                                            if n and n != last_myca:
+                                                last_myca = n
+                                                await clone_to_mas_memory(s, "myca", n)
+                                            acc_myca = ""
+                                    elif kind == 0:
+                                        s.is_tts_playing = False
+                                elif msg.type == aiohttp.WSMsgType.TEXT:
+                                    await websocket.send_text(msg.data)
+                        except Exception as e:
+                            logger.error(f"Moshi->Browser error: {e}")
+
+                    async def browser_to_moshi():
+                        nonlocal audio_sent
+                        try:
+                            while True:
+                                data = await websocket.receive()
+                                if "bytes" in data:
+                                    audio_sent += 1
+                                    audio_bytes = data["bytes"]
+
+                                    if s.is_tts_playing:
+                                        if detect_speech_vad(audio_bytes, session_id):
+                                            logger.info(f"[{session_id[:8]}] Barge-in detected via VAD")
+                                            if s.duplex_session:
+                                                s.duplex_session.barge_in()
+                                            else:
+                                                await stop_moshi_tts(moshi, s)
+                                            try:
+                                                await websocket.send_json({
+                                                    "type": "barge_in",
+                                                    "message": "User interrupted",
+                                                    "timestamp": datetime.now(timezone.utc).isoformat()
+                                                })
+                                            except Exception:
+                                                pass
+
+                                    # MYCA Brain mode: do NOT send user audio to Moshi.
+                                    # User transcript comes via user_transcript JSON; MAS Brain
+                                    # responds and we send 0x02+text to Moshi for TTS only.
+                                    # Otherwise Moshi generates its own "I'm Moshi" response.
+                                    if not MYCA_BRAIN_ENABLED:
+                                        await moshi.send_bytes(audio_bytes)
+                                elif "text" in data:
+                                    try:
+                                        payload = json.loads(data["text"])
+                                        text = normalize(payload.get("text", ""))
+                                        if text:
+                                            await clone_to_mas_memory(s, "user", text)
+                                            if s.duplex_session:
+                                                s.duplex_session.record_user_turn(text)
+                                        if payload.get("forward_to_moshi", False) and text:
+                                            await moshi.send_bytes(b"\x02" + text.encode("utf-8"))
+                                        if payload.get("type") == "barge_in" or payload.get("interrupt"):
+                                            logger.info(f"[{session_id[:8]}] Explicit barge-in from frontend")
+                                            if s.duplex_session:
+                                                s.duplex_session.barge_in(text)
+                                            else:
+                                                await stop_moshi_tts(moshi, s)
+                                    except json.JSONDecodeError:
+                                        pass
+                        except WebSocketDisconnect:
+                            logger.info(f"[{session_id[:8]}] Browser disconnected")
+                        except RuntimeError as e:
+                            if "disconnect" in str(e).lower() or "receive" in str(e).lower():
+                                logger.info(f"[{session_id[:8]}] Browser WS already closed")
+                            else:
+                                logger.error(f"Browser->Moshi error: {type(e).__name__}: {e}")
+                        except Exception as e:
                             logger.error(f"Browser->Moshi error: {type(e).__name__}: {e}")
-                    except Exception as e:
-                        logger.error(f"Browser->Moshi error: {type(e).__name__}: {e}")
-                
-                # Wire runtime callbacks once Moshi socket is available.
-                s.moshi_ws = moshi
-                if s.duplex_session:
-                    s.duplex_session.set_stop_tts_callback(lambda: stop_moshi_tts(moshi, s))
-                await asyncio.gather(moshi_to_browser(), browser_to_moshi(), return_exceptions=True)
-                
+
+                    s.moshi_ws = moshi
+                    if s.duplex_session:
+                        s.duplex_session.set_stop_tts_callback(lambda: stop_moshi_tts(moshi, s))
+                    await asyncio.gather(moshi_to_browser(), browser_to_moshi(), return_exceptions=True)
+            except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as conn_err:
+                logger.error(f"[{session_id[:8]}] Moshi connection failed: {type(conn_err).__name__}: {conn_err}")
+                await websocket.send_json({
+                    "type": "error",
+                    "message": f"Moshi unreachable at {MOSHI_HOST}:{MOSHI_PORT}. Ensure Moshi is running; run _start_voice_system.py to warm up.",
+                })
+                return
     except Exception as e:
         logger.error(f"Bridge error: {e}")
         try:

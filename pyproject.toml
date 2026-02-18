@@ -39,6 +39,8 @@ networkx = "^3.6.0"
 websockets = "^15.0.0"
 sse-starlette = "^2.2.0"
 requests = "^2.32.5"
+protobuf = "^5.29.2"
+s2sphere = "^0.2.5"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.0"

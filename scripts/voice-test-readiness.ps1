@@ -52,17 +52,15 @@ try {
 }
 Write-Host ""
 
-# 5) Checklist for 5090 and gpu01 (cannot be automated from this PC)
-Write-Host "=== To finish voice test (run on other machines) ===" -ForegroundColor Cyan
+# 5) Single script for local voice (this PC)
+Write-Host "=== Start entire voice system (this PC) ===" -ForegroundColor Cyan
+Write-Host "  python scripts/start_voice_system.py" -ForegroundColor Green
+Write-Host "  (Then open http://localhost:3010/test-voice and click Start MYCA Voice)" -ForegroundColor Gray
 Write-Host ""
+# GPU node / 5090 checklist (run on other machines)
+Write-Host "=== Optional: GPU node / 5090 (run on other machines) ===" -ForegroundColor Cyan
 Write-Host "On 5090 host:" -ForegroundColor White
 Write-Host "  1. Start Moshi: .\scripts\run-moshi-docker-local.ps1 -Device cuda" -ForegroundColor Gray
-Write-Host "  2. Start tunnel (leave open): ssh -o ExitOnForwardFailure=yes -N -R 19198:127.0.0.1:8998 mycosoft@192.168.0.190" -ForegroundColor Gray
-Write-Host ""
-Write-Host "On gpu01 (ssh mycosoft@192.168.0.190):" -ForegroundColor White
-Write-Host "  cd ~/mycosoft-mas && source .venv/bin/activate" -ForegroundColor Gray
-Write-Host "  export MOSHI_HOST=127.0.0.1 MOSHI_PORT=19198 MAS_ORCHESTRATOR_URL=http://192.168.0.188:8001" -ForegroundColor Gray
-Write-Host "  python services/personaplex-local/personaplex_bridge_nvidia.py" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Then open: http://localhost:3010/test-voice and click Start MYCA Voice" -ForegroundColor Green
+Write-Host "  2. Tunnel: ssh -o ExitOnForwardFailure=yes -N -R 19198:127.0.0.1:8998 mycosoft@192.168.0.190" -ForegroundColor Gray
+Write-Host "On gpu01: MOSHI_HOST=127.0.0.1 MOSHI_PORT=19198 python scripts/start_voice_system.py" -ForegroundColor Gray
 Write-Host ""

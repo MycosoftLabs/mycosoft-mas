@@ -1,0 +1,56 @@
+---
+description: CREP (Common Relevant Environmental Picture) – what it is, how it works, what's done/not done, and what it requires. Apply when working on CREP dashboard, OEI, satellites, planes, vessels, or CREP docs.
+globs: 
+  - "**/dashboard/crep/**"
+  - "**/crep/**"
+  - "**/oei/**"
+  - "**/CREP*.md"
+  - "**/crep*.md"
+alwaysApply: false
+---
+
+# CREP Context (All Agents)
+
+When working on **CREP** (Common Relevant Environmental Picture) dashboard, OEI APIs, satellite/aviation/maritime layers, or CREP documentation:
+
+## 1. Invoke the CREP sub-agent
+
+- **Agent**: `@crep-agent` or **crep-agent** (`.cursor/agents/crep-agent.md`).
+- Use it for: what CREP is, how it works, what's implemented, what's missing, and what it requires to run.
+
+## 2. What CREP is (short)
+
+- **CREP** = live multi-layer map: planes (FlightRadar24), boats (AISstream), satellites (CelesTrak), fungal (MINDEX), events, Earth-2.
+- **Route**: `/dashboard/crep` in the **WEBSITE** repo.
+- **Rendering**: **EntityDeckLayer** (deck.gl) draws aircraft, vessels, satellites, fungal; **single source** for satellite orbit lines (no separate SatelliteOrbitLines). TrajectoryLines for flight/ship routes.
+
+## 3. Key paths (WEBSITE)
+
+| What | Path |
+|------|------|
+| Dashboard | `app/dashboard/crep/CREPDashboardClient.tsx` |
+| Deck layer | `components/crep/layers/deck-entity-layer.tsx` |
+| Map controls / filters | `components/crep/map-controls.tsx` |
+| Satellite widget | `components/crep/satellite-tracker-widget.tsx` |
+| Orbit path | `lib/crep/orbit-path.ts` |
+| Unified entity | `lib/crep/entities/unified-entity-schema.ts` |
+| OEI APIs | `app/api/oei/*` (satellites, flightradar24, aisstream, etc.) |
+| CREP APIs | `app/api/crep/*` (fungal, demo, unified) |
+
+## 4. Requirements for CREP to work
+
+- **Website** running (dev 3010, prod 3000).
+- **MINDEX** up for fungal layer (and optional logging).
+- **Env**: `MINDEX_API_URL`; optional `REDIS_URL`; optional API keys for FlightRadar24, AISStream (CelesTrak is keyless but rate-limited – 429 handled with cache and friendly message).
+
+## 5. Docs (read when adding features or debugging)
+
+- **WEBSITE/docs**: `crep plan.md`, `CREP_INFRASTRUCTURE_DEPLOYMENT.md`, `CREP_FIXES_FEB18_2026.md`, `CREP_API_CACHING_FEB18_2026.md`, `CREP_PLANES_BOATS_SATELLITES_FEB12_2026.md`, `CREP_DECK_GL_FIX_FEB12_2026.md`.
+- **MAS/docs**: `CREP_PHASE5_ADDITIONAL_COLLECTORS_FEB06_2026.md`, `CREP_PHASE_3_LLM_AGENT_MEMORY_FEB06_2026.md`, `CREP_VOICE_CONTROL_FEB06_2026.md`.
+
+## 6. Rules of thumb
+
+- **No mock data**: CREP uses real APIs only; empty state or error message if unavailable.
+- **Single orbit source**: Satellite orbits only from EntityDeckLayer (`state.orbitPath`); do not reintroduce a second orbit layer.
+- **Satellite filter**: `showActive: false` by default; category toggles (Stations, Weather, Comms, GPS, Starlink, Debris, Active/Other) must show only the selected categories.
+- **429**: Satellites API and widget must not throw; show “Rate limit reached. Try again in a minute.”

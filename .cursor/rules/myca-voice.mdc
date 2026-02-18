@@ -1,0 +1,73 @@
+---
+description: Rules for MYCA voice work. PersonaPlex is voice interface only; MYCA Brain is the only response source. Read voice docs before any voice work.
+globs: 
+  - "**/personaplex*/**"
+  - "**/voice*/**"
+  - "**/test-voice/**"
+  - "**/consciousness/**"
+alwaysApply: false
+---
+
+# MYCA Voice Rules (All Agents Working on Voice)
+
+## MANDATORY: Read docs before MYCA voice work
+
+Before editing any voice-related code, **read these docs** (newest first):
+
+1. `docs/FULL_PERSONAPLEX_NO_EDGE_FEB13_2026.md`
+2. `docs/CONSCIOUSNESS_PIPELINE_ARCHITECTURE_FEB12_2026.md`
+3. `docs/MYCA_VOICE_APPLICATION_HANDOFF_FEB17_2026.md`
+4. `docs/MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md`
+5. `docs/VOICE_TEST_QUICK_START_FEB18_2026.md`
+
+Then invoke **myca-voice** sub-agent: read `.cursor/agents/myca-voice.md` and apply its protocols.
+
+---
+
+## CRITICAL: Correct flow
+
+**PersonaPlex/Moshi = voice interface only.** MYCA Brain = **only** response source.
+
+```
+User mic → Moshi STT → text → MAS Brain → response text → Moshi TTS → speaker
+```
+
+- **Never** let Moshi generate its own responses ("I'm Moshi")
+- **Always** route transcribed text through MAS (MYCAConsciousness or Voice Orchestrator)
+- **Always** use MAS response text as the input to Moshi TTS
+
+---
+
+## Key files
+
+| Purpose | Path |
+|---------|------|
+| Bridge | `services/personaplex-local/personaplex_bridge_nvidia.py` |
+| Persona | `config/myca_personaplex_short.txt` |
+| Orchestrator | `mycosoft_mas/core/routers/voice_orchestrator_api.py` |
+| Test-voice | `WEBSITE/website/app/test-voice/page.tsx` |
+
+---
+
+## Components and ports
+
+| Component | Port | Role |
+|-----------|------|------|
+| Moshi | 8998 | STT + TTS (no LLM) |
+| Bridge | 8999 | WebSocket, MAS Brain calls |
+| MAS | 8001 (VM 188) | Brain, consciousness |
+
+---
+
+## Do NOT
+
+- **Never** run MAS brain in parallel with Moshi's own response generation
+- **Never** let Moshi speak before MAS response is available for TTS
+- **Never** hardcode VM IPs in components; use env vars
+- **Never** use mock data for voice testing
+
+---
+
+## Sub-agent
+
+For any MYCA voice task: **invoke myca-voice** (read `.cursor/agents/myca-voice.md`).

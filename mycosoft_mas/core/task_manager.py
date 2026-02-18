@@ -256,14 +256,30 @@ class TaskManager:
             return yaml.safe_load(f)
             
     def _init_orchestrator_client(self):
-        """Initialize orchestrator client"""
-        # TODO: Implement actual orchestrator client
-        return None
+        """Initialize orchestrator client - connects to the legacy Orchestrator compatibility layer."""
+        try:
+            from mycosoft_mas.orchestrator import Orchestrator
+            config_path = Path("config.yaml")
+            if not config_path.exists():
+                logger.warning("config.yaml not found - orchestrator client unavailable")
+                return None
+            orchestrator = Orchestrator(str(config_path))
+            logger.info("Orchestrator client initialized successfully")
+            return orchestrator
+        except Exception as e:
+            logger.error(f"Failed to initialize orchestrator client: {str(e)}")
+            return None
         
     def _init_cluster_manager(self):
-        """Initialize cluster manager"""
-        # TODO: Implement actual cluster manager
-        return None
+        """Initialize cluster manager - connects to MAS cluster coordination system."""
+        try:
+            from mycosoft_mas.core.cluster import Cluster
+            cluster = Cluster()
+            logger.info("Cluster manager initialized successfully")
+            return cluster
+        except Exception as e:
+            logger.warning(f"Cluster manager unavailable: {str(e)}")
+            return None
         
     def _setup_routes(self):
         @self.app.get("/processes", response_model=List[ProcessInfo])
@@ -358,8 +374,34 @@ class TaskManager:
         return processes
         
     async def _get_agents(self) -> List[AgentInfo]:
-        # TODO: Implement agent monitoring
-        return []
+        """Get all registered agents from the agent registry."""
+        agents = []
+        try:
+            from mycosoft_mas.registry.agent_registry import AgentRegistry
+            registry = AgentRegistry()
+            
+            # Get all registered agents
+            registered_agents = registry.list_agents()
+            
+            for agent in registered_agents:
+                agents.append(AgentInfo(
+                    agent_id=str(agent.id),
+                    name=agent.name,
+                    status=agent.status.value,
+                    capabilities=len(agent.capabilities),
+                    category=agent.category.value,
+                    version=agent.version,
+                    uptime_seconds=0,  # Calculate from registered_at if needed
+                    current_task=None,
+                    error_count=agent.metadata.get("error_count", 0),
+                    last_heartbeat=agent.last_heartbeat
+                ))
+            
+            logger.info(f"Retrieved {len(agents)} agents from registry")
+        except Exception as e:
+            logger.error(f"Failed to retrieve agents from registry: {str(e)}")
+        
+        return agents
         
     async def _get_services(self) -> List[ServiceInfo]:
         services = []
@@ -392,8 +434,32 @@ class TaskManager:
             raise HTTPException(status_code=403, detail="Access denied")
             
     async def _restart_agent(self, agent_id: str) -> Dict[str, str]:
-        # TODO: Implement agent restart
-        return {"status": "success", "message": f"Agent {agent_id} restarted"}
+        """Restart a specific agent by ID through the orchestrator."""
+        try:
+            from mycosoft_mas.registry.agent_registry import AgentRegistry
+            registry = AgentRegistry()
+            
+            # Get agent info from registry
+            agent = registry.get_agent(agent_id)
+            if not agent:
+                raise HTTPException(status_code=404, detail=f"Agent {agent_id} not found in registry")
+            
+            # TODO: When agent lifecycle management is implemented, trigger actual restart
+            # For now, log the restart request
+            logger.info(f"Restart requested for agent: {agent.name} ({agent_id})")
+            
+            # Update agent status in registry
+            registry.update_agent_status(agent_id, "initializing")
+            
+            return {
+                "status": "accepted", 
+                "message": f"Agent {agent.name} restart initiated - lifecycle management pending implementation"
+            }
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to restart agent {agent_id}: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Agent restart failed: {str(e)}")
         
     async def _restart_service(self, service_name: str) -> Dict[str, str]:
         try:
@@ -423,22 +489,78 @@ class TaskManager:
         }
         
     async def _get_orchestrator_status_info(self) -> OrchestratorInfo:
-        """Get orchestrator status"""
-        # TODO: Implement actual orchestrator status check
-        return OrchestratorInfo(
-            status="running",
-            active_tasks=0,
-            pending_tasks=0,
-            failed_tasks=0,
-            resource_usage={"cpu": 0.0, "memory": 0.0},
-            last_heartbeat=datetime.now(),
-            cluster_status={}
-        )
+        """Get orchestrator status from the running orchestrator instance."""
+        try:
+            if not self.orchestrator_client:
+                return OrchestratorInfo(
+                    status="unavailable",
+                    active_tasks=0,
+                    uptime_seconds=0,
+                    agent_count=0,
+                    message_queue_size=0,
+                    error_count=0,
+                    version="unknown"
+                )
+            
+            # Get status from orchestrator
+            status_data = self._get_orchestrator_status()
+            
+            # Calculate uptime
+            uptime = int(status_data.get("uptime", 0))
+            if hasattr(self.orchestrator_client, "_start_time"):
+                uptime = int(datetime.now().timestamp() - self.orchestrator_client._start_time)
+            
+            # Count active agents
+            agent_count = len(getattr(self.orchestrator_client, "_agents", {}))
+            
+            return OrchestratorInfo(
+                status=status_data.get("status", "running"),
+                active_tasks=status_data.get("active_tasks", 0),
+                uptime_seconds=uptime,
+                agent_count=agent_count,
+                message_queue_size=status_data.get("message_queue_size", 0),
+                error_count=status_data.get("error_count", 0),
+                version=status_data.get("version", "1.0.0")
+            )
+        except Exception as e:
+            logger.error(f"Error getting orchestrator status: {str(e)}")
+            return OrchestratorInfo(
+                status="error",
+                active_tasks=0,
+                uptime_seconds=0,
+                agent_count=0,
+                message_queue_size=0,
+                error_count=1,
+                version="unknown"
+            )
         
     async def _get_clusters_info(self) -> List[ClusterInfo]:
-        """Get cluster information"""
-        # TODO: Implement actual cluster status check
-        return []
+        """Get cluster information from the cluster manager."""
+        clusters = []
+        try:
+            if not self.cluster_manager:
+                logger.warning("Cluster manager not available")
+                return clusters
+            
+            # Get cluster status
+            cluster_data = self._get_clusters()
+            
+            for cluster in cluster_data:
+                clusters.append(ClusterInfo(
+                    cluster_name=cluster.get("name", "default"),
+                    status=cluster.get("status", "unknown"),
+                    node_count=cluster.get("node_count", 0),
+                    active_agents=cluster.get("active_agents", 0),
+                    cpu_usage=cluster.get("cpu_usage", 0.0),
+                    memory_usage=cluster.get("memory_usage", 0.0),
+                    last_heartbeat=datetime.now()
+                ))
+            
+            logger.info(f"Retrieved {len(clusters)} clusters")
+        except Exception as e:
+            logger.error(f"Failed to retrieve cluster info: {str(e)}")
+        
+        return clusters
         
     async def _get_dependencies_info(self) -> List[DependencyInfo]:
         """Get dependency information with real CVE scanning"""
@@ -518,18 +640,91 @@ class TaskManager:
         return vulnerabilities_by_package
             
     async def _restart_orchestrator(self) -> Dict[str, str]:
-        """Restart orchestrator"""
+        """
+        Restart orchestrator process.
+        
+        Implementation requires:
+        1. For systemd (production VM): sudo systemctl restart mas-orchestrator
+        2. For Docker: docker restart container_name
+        3. For development: Process supervisor with graceful shutdown
+        
+        Current behavior: Logs request and updates status only.
+        """
         try:
-            # TODO: Implement actual orchestrator restart
-            return {"status": "success", "message": "Orchestrator restarted"}
+            logger.info("Orchestrator restart requested via task manager")
+            
+            # Check if running as systemd service
+            if os.path.exists("/etc/systemd/system/mas-orchestrator.service"):
+                logger.warning("Orchestrator restart requires systemd: sudo systemctl restart mas-orchestrator")
+                return {
+                    "status": "pending",
+                    "message": "Orchestrator restart requires systemd service control. Contact infrastructure team.",
+                    "method": "systemd"
+                }
+            
+            # Check if running in Docker
+            if os.path.exists("/.dockerenv"):
+                logger.warning("Orchestrator restart requires Docker: docker restart container")
+                return {
+                    "status": "pending",
+                    "message": "Orchestrator running in Docker. Use docker restart for container restart.",
+                    "method": "docker"
+                }
+            
+            # Development environment
+            logger.warning("Orchestrator restart not available in development mode")
+            return {
+                "status": "not_available",
+                "message": "Orchestrator restart only available in production (systemd/Docker deployment)",
+                "method": "development"
+            }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
             
     async def _restart_cluster(self, cluster_name: str) -> Dict[str, str]:
-        """Restart cluster"""
+        """
+        Restart all agents in a cluster.
+        
+        Implementation requires:
+        1. Get all agents in cluster from registry
+        2. For each agent:
+           - Save current state
+           - Gracefully shutdown
+           - Restart process
+           - Restore state
+           - Verify health
+        
+        Current behavior: Logs request only.
+        """
         try:
-            # TODO: Implement actual cluster restart
-            return {"status": "success", "message": f"Cluster {cluster_name} restarted"}
+            from mycosoft_mas.registry.agent_registry import AgentRegistry
+            registry = AgentRegistry()
+            
+            # Get agents in cluster
+            all_agents = registry.list_agents()
+            cluster_agents = [a for a in all_agents if cluster_name in a.metadata.get("clusters", [])]
+            
+            logger.info(f"Cluster restart requested: {cluster_name} ({len(cluster_agents)} agents)")
+            
+            if not cluster_agents:
+                return {
+                    "status": "error",
+                    "message": f"Cluster '{cluster_name}' not found or has no agents",
+                    "cluster": cluster_name,
+                    "agents_found": 0
+                }
+            
+            # Log each agent that would be restarted
+            agent_names = [a.name for a in cluster_agents]
+            logger.info(f"Cluster '{cluster_name}' agents: {', '.join(agent_names)}")
+            
+            return {
+                "status": "pending",
+                "message": f"Cluster restart requires agent lifecycle management. Found {len(cluster_agents)} agents.",
+                "cluster": cluster_name,
+                "agents": agent_names,
+                "implementation_note": "Agent process supervision system required. See docs/CODE_AUDIT_FEB13_2026.md"
+            }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
             

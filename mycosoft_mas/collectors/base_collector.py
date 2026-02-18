@@ -1,4 +1,4 @@
-﻿"""
+"""
 Base Collector - February 6, 2026
 
 Abstract base class for all data collectors.
@@ -6,6 +6,8 @@ Abstract base class for all data collectors.
 
 import asyncio
 import logging
+import os
+from hashlib import sha1
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -54,6 +56,21 @@ class TimelineEvent:
     properties: Dict[str, Any] = field(default_factory=dict)
     source: str = ""
     quality_score: float = 1.0
+
+
+@dataclass
+class UnifiedEntity:
+    """Unified entity payload emitted by collectors."""
+
+    id: str
+    type: str
+    geometry: Dict[str, Any]
+    state: Dict[str, Any]
+    time: Dict[str, Any]
+    confidence: float
+    source: str
+    properties: Dict[str, Any]
+    s2_cell: str
 
 
 @dataclass
@@ -119,6 +136,42 @@ class BaseCollector(ABC):
             Processed timeline event
         """
         pass
+
+    def _compute_s2_cell(self, lat: float, lng: float, level: int = 14) -> str:
+        """
+        Compute a stable cell identifier for spatial sharding.
+
+        We use a deterministic hash fallback to avoid hard dependency on native bindings
+        while still producing a repeatable cell key for channel routing.
+        """
+        precision_lat = round(lat, max(1, level // 2))
+        precision_lng = round(lng, max(1, level // 2))
+        digest = sha1(f"{precision_lat}:{precision_lng}:{level}".encode("utf-8")).hexdigest()
+        return digest[:16]
+
+    def to_unified_entity(self, event: TimelineEvent) -> UnifiedEntity:
+        observed_at = event.timestamp.isoformat()
+        geometry = {
+            "type": "Point",
+            "coordinates": [event.lng, event.lat] if event.altitude is None else [event.lng, event.lat, event.altitude],
+        }
+        return UnifiedEntity(
+            id=event.id,
+            type=event.entity_type,
+            geometry=geometry,
+            state={
+                "altitude": event.altitude,
+                "classification": event.properties.get("classification") if isinstance(event.properties, dict) else None,
+            },
+            time={
+                "observed_at": observed_at,
+                "valid_from": observed_at,
+            },
+            confidence=event.quality_score,
+            source=event.source,
+            properties=event.properties,
+            s2_cell=self._compute_s2_cell(event.lat, event.lng),
+        )
     
     async def ingest(self, events: List[TimelineEvent]) -> int:
         """
@@ -140,7 +193,7 @@ class BaseCollector(ABC):
             
             if self._pool is None:
                 self._pool = await asyncpg.create_pool(
-                    "postgresql://mycosoft:mycosoft@localhost:5432/mindex",
+                    os.getenv("MINDEX_DATABASE_URL", "postgresql://mindex:mindex@localhost:5432/mindex"),
                     min_size=1,
                     max_size=5
                 )

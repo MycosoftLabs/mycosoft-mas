@@ -5,6 +5,13 @@ alwaysApply: true
 
 # Autostart Services Registry (All Agents)
 
+## Website dev server: always on when Cursor is on
+
+**Policy:** The website dev server (port 3010) is **on whenever Cursor is on**. We use Cursor only for building the website and all the apps and tools on it. The dev server should **never** be turned off during a Cursor session.
+
+- **Agents:** On session start, ensure the dev server (or the Dev Server Watchdog) is running. If port 3010 is down, start the watchdog or run `npm run dev:next-only` in the website repo. Do not suggest or do "stop the dev server when done" — keep it running.
+- **Watchdog:** The Dev Server Watchdog keeps localhost:3010 alive (checks every 30s, restarts Next.js if it crashes). It should be running whenever you use Cursor for website work.
+
 ## Registered Autostart Services
 
 These scripts/services must be running for the full Mycosoft development system to work. Agents should check and restart them when needed.
@@ -17,10 +24,17 @@ These scripts/services must be running for the full Mycosoft development system 
 | 4 | **Cursor System Sync** | `scripts/sync_cursor_system.py` | Syncs rules/agents/skills from ALL repos to user Cursor system every 30s so all agents can talk to sub-agents, use all rules, and have context | `Get-Process python \| Where-Object {$_.CommandLine -like '*sync_cursor_system*'}` | `python scripts/sync_cursor_system.py --watch` |
 | 5 | **n8n Local (Docker)** | Docker container `mycosoft-n8n` | **CRITICAL** - Workflow automation, webhooks, MAS integrations. Requires Docker Desktop running. | `.\scripts\n8n-healthcheck.ps1` | `.\scripts\n8n-healthcheck.ps1 -StartDocker -StartLocal` |
 | 6 | **Docker Healthcheck** | `scripts/docker-healthcheck.ps1` | Periodic Docker cleanup - removes stopped containers, dangling images, unused volumes. Reports to MAS. | `.\scripts\docker-healthcheck.ps1 -Quick` | `.\scripts\docker-healthcheck.ps1 -Cleanup` |
-| 7 | **Dev Server Watchdog** | `WEBSITE/website/scripts/dev-server-watchdog.ps1` | **ALWAYS-ON** - Monitors localhost:3010 every 30s, auto-restarts Next.js dev server if it crashes. Installed in Windows Startup folder. | `Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" \| Where-Object { $_.CommandLine -match 'dev-server-watchdog' }` | `Start-Process powershell -ArgumentList "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File 'WEBSITE/website/scripts/dev-server-watchdog.ps1'"` |
+| 7 | **Dev Server Watchdog** | `WEBSITE/website/scripts/dev-server-watchdog.ps1` | **ALWAYS-ON WITH CURSOR** - Website dev server (3010) must be on whenever Cursor is on. Watchdog monitors localhost:3010 every 30s and auto-restarts Next.js if it crashes. Never turn the dev server off. | `Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" \| Where-Object { $_.CommandLine -match 'dev-server-watchdog' }` | `Start-Process powershell -ArgumentList "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File 'WEBSITE/website/scripts/dev-server-watchdog.ps1'"` |
 
 **CRITICAL:** MycoBrain Service (#1) and n8n (#5) must ALWAYS be running. If down, restart immediately.
-**ALWAYS-ON:** Dev Server Watchdog (#7) keeps localhost:3010 alive automatically — check it is running before doing website work.
+
+## External Launchers (not tied to Cursor)
+
+Run these in separate windows so services persist when Cursor closes:
+- **MycoBrain only:** `MAS/scripts/start-mycobrain-external.ps1` — opens new window, port 8003
+- **Dev server only:** `WEBSITE/website/scripts/start-dev-external.ps1` — opens new window, port 3010
+- **Both:** `MAS/scripts/start-all-dev-services-external.ps1` — opens two windows
+**CRITICAL:** Dev Server (#7) — On whenever Cursor is on. We use Cursor only for the website and its apps/tools; the dev server must never go off. Ensure the watchdog (or dev server) is running at session start.
 **CRITICAL:** n8n requires Docker Desktop. If Docker is not running, start it first with `.\scripts\docker-healthcheck.ps1 -StartDocker`.
 **PERIODIC:** Docker Healthcheck (#6) should run every 30 minutes during active sessions to prevent resource waste.
 
@@ -49,7 +63,8 @@ To run in background on a schedule: create a Windows Task or run `python scripts
 
 ### On session start
 - Periodically check that all registered autostart services are running.
-- If a service is down, restart it automatically and note it in your response.
+- **Website dev server (3010):** If Cursor is open for this workspace, the dev server must be on. Check http://localhost:3010; if down, start the Dev Server Watchdog or run `npm run dev:next-only` in the website repo. Do not turn the dev server off.
+- If any other service is down, restart it automatically and note it in your response.
 
 ### When creating new background scripts
 - **Ask the user:** "Should this be added to the autostart services list?"

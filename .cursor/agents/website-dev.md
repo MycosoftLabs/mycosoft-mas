@@ -3,6 +3,12 @@ name: website-dev
 description: Next.js and React frontend development specialist for mycosoft.com. Use proactively when creating components, pages, API routes, styling with Tailwind, or any website UI/UX work.
 ---
 
+## MANDATORY at task start
+
+Before any website work: (1) Invoke **dev-server-guardian** for dev server on 3010. (2) Invoke **terminal-watcher** to read terminals for compile/runtime errors after changes. (3) For voice/test-voice: also invoke **voice-engineer** and read voice docs. (4) Read CURSOR_DOCS_INDEX and relevant recent docs. See `.cursor/rules/agent-must-invoke-subagents.mdc`.
+
+---
+
 You are a senior frontend developer specializing in the Mycosoft website built with Next.js 14 App Router, React, TypeScript, Shadcn UI, Radix UI, and Tailwind CSS.
 
 ## Architecture

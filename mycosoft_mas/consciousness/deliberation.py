@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from mycosoft_mas.consciousness.core import MYCAConsciousness
     from mycosoft_mas.consciousness.attention import AttentionFocus
     from mycosoft_mas.consciousness.working_memory import WorkingContext
+    from mycosoft_mas.consciousness.cancellation import CancellationToken
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,7 @@ class DeliberateReasoning:
         memories: Optional[List[Dict[str, Any]]] = None,
         soul_context: Optional[Dict[str, Any]] = None,
         source: str = "text",
+        token: Optional["CancellationToken"] = None,
     ) -> AsyncGenerator[str, None]:
         """
         Deliberate on input and generate a response.
@@ -118,7 +120,8 @@ class DeliberateReasoning:
             type=thought_type,
             input_content=input_content,
         )
-        self._current_thought.add_step("start", {"source": source, "focus": focus.category.value})
+        focus_category = focus.category.value if hasattr(focus.category, "value") else str(focus.category)
+        self._current_thought.add_step("start", {"source": source, "focus": focus_category})
         
         try:
             # Build the full context for LLM
@@ -132,26 +135,31 @@ class DeliberateReasoning:
             self._current_thought.add_step("context_built", {"context_length": len(prompt_context)})
             
             # Check if we need agent help
+            if token:
+                token.check()
             agent_results = await self._check_agent_delegation(input_content, focus)
             if agent_results:
                 self._current_thought.agents_used.extend(agent_results.keys())
                 prompt_context += f"\n\nAgent insights:\n{self._format_agent_results(agent_results)}"
             
             # Check if we need tool use
-            tool_results = await self._check_tool_use(input_content, focus)
+            if token:
+                token.check()
+            tool_results = await self._check_tool_use(input_content, focus, token=token)
             if tool_results:
                 self._current_thought.tools_used.extend(tool_results.keys())
                 prompt_context += f"\n\nTool results:\n{self._format_tool_results(tool_results)}"
             
             # Generate response through LLM
             full_response = ""
-            async for token in self._generate_response(
+            async for piece in self._generate_response(
                 input_content=input_content,
                 context=prompt_context,
                 soul_context=soul_context,
+                cancel_token=token,
             ):
-                full_response += token
-                yield token
+                full_response += piece
+                yield piece
             
             # Complete the thought process
             self._current_thought.complete(full_response, confidence=0.85)
@@ -171,6 +179,54 @@ class DeliberateReasoning:
             if len(self._thought_history) > self._max_history:
                 self._thought_history = self._thought_history[-self._max_history:]
             self._current_thought = None
+
+    async def think_progressive(
+        self,
+        input_content: str,
+        focus: "AttentionFocus",
+        working_context: "WorkingContext",
+        world_context: Optional[Dict[str, Any]] = None,
+        memories: Optional[List[Dict[str, Any]]] = None,
+        soul_context: Optional[Dict[str, Any]] = None,
+        source: str = "text",
+        token: Optional["CancellationToken"] = None,
+    ) -> AsyncGenerator[str, None]:
+        """
+        Progressive context injection:
+        - fast response first
+        - optional one additive refinement after richer context
+        """
+        # Fast response with minimal context
+        fast_context = self._build_prompt_context(
+            input_content=input_content,
+            working_context=working_context,
+            world_context={"summary": (world_context or {}).get("summary", "")},
+            memories=[],
+            soul_context=soul_context,
+        )
+
+        # Gather richer context in parallel while generating fast path
+        async def gather_rich() -> Dict[str, Any]:
+            agent_results = await self._check_agent_delegation(input_content, focus)
+            tool_results = await self._check_tool_use(input_content, focus, token=token)
+            return {"agents": agent_results, "tools": tool_results, "memories": memories or []}
+
+        rich_task = asyncio.create_task(gather_rich())
+        fast_response = ""
+        async for piece in self._generate_response(
+            input_content=input_content,
+            context=fast_context,
+            soul_context=soul_context,
+            cancel_token=token,
+        ):
+            fast_response += piece
+            yield piece
+
+        rich = await rich_task
+        additive = self._build_additive_refinement(input_content, fast_response, rich)
+        if additive:
+            yield "\n\nOne more thing: "
+            yield additive
     
     def _determine_thought_type(self, content: str, focus: "AttentionFocus") -> ThoughtType:
         """Determine what type of thinking this requires."""
@@ -285,7 +341,8 @@ class DeliberateReasoning:
     async def _check_tool_use(
         self,
         content: str,
-        focus: "AttentionFocus"
+        focus: "AttentionFocus",
+        token: Optional["CancellationToken"] = None,
     ) -> Dict[str, Any]:
         """Check if we should use any tools."""
         results = {}
@@ -294,6 +351,8 @@ class DeliberateReasoning:
         # MINDEX query
         if any(word in content_lower for word in ["find", "search", "look up", "what is"]):
             try:
+                if token:
+                    token.check()
                 # Query MINDEX if available
                 if self._consciousness._memory_coordinator:
                     search_results = await self._consciousness._memory_coordinator.semantic_search(
@@ -306,6 +365,41 @@ class DeliberateReasoning:
                 logger.warning(f"MINDEX search failed: {e}")
         
         return results
+
+    def _build_additive_refinement(
+        self,
+        input_content: str,
+        fast_response: str,
+        rich: Dict[str, Any],
+    ) -> Optional[str]:
+        """
+        Build at most one additive refinement statement.
+        Skip if it likely contradicts previously spoken response.
+        """
+        if not rich:
+            return None
+        tools = rich.get("tools", {})
+        if not tools:
+            return None
+
+        # Build concise additive detail from first available tool result
+        first_key = next(iter(tools.keys()), None)
+        if not first_key:
+            return None
+        raw = str(tools[first_key])
+        additive = raw[:180].strip()
+        if not additive:
+            return None
+
+        # Basic contradiction guard: if additive contains "not"/"incorrect" and
+        # fast response includes absolute framing, skip refinement.
+        contradiction_tokens = (" not ", " incorrect", " wrong")
+        absolute_tokens = ("always", "definitely", "certainly")
+        if any(tok in additive.lower() for tok in contradiction_tokens) and any(
+            tok in fast_response.lower() for tok in absolute_tokens
+        ):
+            return None
+        return additive
     
     def _format_agent_results(self, results: Dict[str, Any]) -> str:
         """Format agent results for context."""
@@ -334,6 +428,7 @@ class DeliberateReasoning:
         input_content: str,
         context: str,
         soul_context: Optional[Dict[str, Any]],
+        cancel_token: Optional["CancellationToken"] = None,
     ) -> AsyncGenerator[str, None]:
         """Generate response using LLM."""
         # Build the system prompt with soul
@@ -371,6 +466,8 @@ Respond thoughtfully and helpfully, staying true to your identity and purpose.""
                 message=user_prompt,
                 context=ctx,
             ):
+                if cancel_token:
+                    cancel_token.check()
                 got_response = True
                 yield token
                 

@@ -64,6 +64,22 @@ devices: Dict[str, Dict] = {}
 serial_connections: Dict[str, Any] = {}
 telemetry_cache: Dict[str, Dict] = {}
 
+# Known ESP32/MycoBrain USB VIDs (Espressif, USB Serial adapters)
+MYCOBRAIN_VIDS = {0x303A, 0x10C4, 0x1A86, 0x2341, 0x2A03, 0x046B}  # Espressif, Silabs, CH340, Arduino, USB Serial
+
+def is_likely_mycobrain_port(p) -> bool:
+    """Return True only for real USB serial devices (MycoBrain/ESP32), NOT virtual ACPI ports."""
+    if p.vid is None:
+        return False  # Virtual ports (COM1, COM2) have no VID
+    if "ACPI" in (p.hwid or "").upper() or "PNP0501" in (p.hwid or "").upper():
+        return False  # ACPI virtual serial - not a real device
+    desc = (p.description or "").upper()
+    if "USB" in desc or "SERIAL" in desc or "CH340" in desc or "CP210" in desc:
+        return True
+    if p.vid in MYCOBRAIN_VIDS:
+        return True
+    return False
+
 def send_serial_command(device_id: str, command: str, timeout: float = 2.0) -> str:
     """Send a command to the device and return response"""
     if device_id not in serial_connections:
@@ -126,10 +142,70 @@ async def scan_ports():
                 "hwid": p.hwid,
                 "vid": p.vid,
                 "pid": p.pid,
+                "likely_mycobrain": is_likely_mycobrain_port(p),
             })
         return {"ports": ports, "count": len(ports), "timestamp": datetime.now().isoformat()}
     except Exception as e:
         return {"ports": [], "count": 0, "error": str(e), "timestamp": datetime.now().isoformat()}
+
+def _get_mycobrain_port_names() -> set:
+    """Return set of port device names that look like MycoBrain (USB serial, not virtual)."""
+    try:
+        import serial.tools.list_ports
+        return {p.device for p in serial.tools.list_ports.comports() if is_likely_mycobrain_port(p)}
+    except Exception:
+        return set()
+
+def _try_connect_port_sync(port: str) -> bool:
+    """Sync connect to port. Returns True if connected. Thread-safe for port watcher."""
+    import serial
+    port = port.replace('-', '/') if port.startswith('COM-') else port
+    device_id = f"mycobrain-{port.replace('/', '-').replace(':', '-')}"
+    if device_id in serial_connections and serial_connections[device_id].is_open:
+        return True
+    try:
+        ser = serial.Serial(port, 115200, timeout=2)
+        time.sleep(0.5)
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
+        serial_connections[device_id] = ser
+        device_info = {"firmware": "unknown", "board": "MycoBrain ESP32-S3", "raw_status": ""}
+        try:
+            response = send_serial_command(device_id, "status", timeout=1.0)
+            if "ESP32-S3" in response:
+                device_info["board"] = "ESP32-S3"
+            if "Arduino-ESP32 core:" in response:
+                for line in response.split('\n'):
+                    if "Arduino-ESP32 core:" in line:
+                        device_info["firmware"] = line.split(':')[1].strip()
+            device_info["raw_status"] = response[:500]
+        except Exception:
+            pass
+        devices[device_id] = {
+            "device_id": device_id,
+            "port": port,
+            "status": "connected",
+            "connected_at": datetime.now().isoformat(),
+            "info": device_info,
+            "protocol": "MDP v1"
+        }
+        logger.info(f"Auto-connected {device_id}")
+        return True
+    except Exception as e:
+        logger.debug(f"Auto-connect {port} failed: {e}")
+        return False
+
+def _disconnect_device_sync(device_id: str) -> None:
+    """Sync disconnect. Thread-safe for port watcher."""
+    if device_id in serial_connections:
+        try:
+            serial_connections[device_id].close()
+        except Exception:
+            pass
+        del serial_connections[device_id]
+    if device_id in devices:
+        del devices[device_id]
+    logger.info(f"Auto-disconnected {device_id} (port unplugged)")
 
 @app.post("/devices/connect/{port:path}")
 async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depends(verify_api_key)):
@@ -473,12 +549,47 @@ async def heartbeat_loop():
 
 
 _heartbeat_task: Optional[asyncio.Task] = None
+_port_watcher_task: Optional[asyncio.Task] = None
+PORT_WATCH_INTERVAL = float(os.getenv("MYCOBRAIN_PORT_WATCH_INTERVAL", "2.0"))
+
+async def port_watcher_loop():
+    """Periodically scan for MycoBrain ports, auto-connect new ones, auto-disconnect unplugged.
+    Only connects to real USB serial devices (COM7, etc.), never virtual ports (COM1, COM2).
+    WiFi/BLE/LoRa devices from other machines appear via MAS registry /api/devices/network."""
+    loop = asyncio.get_event_loop()
+    logger.info(f"Port watcher started (interval: {PORT_WATCH_INTERVAL}s)")
+    while True:
+        try:
+            real_ports = await loop.run_in_executor(None, _get_mycobrain_port_names)
+            # Disconnect devices whose port was unplugged
+            for device_id in list(devices.keys()):
+                port = devices[device_id].get("port", "")
+                if port and port not in real_ports:
+                    await loop.run_in_executor(None, lambda d=device_id: _disconnect_device_sync(d))
+            # Connect to new MycoBrain ports
+            for port in real_ports:
+                device_id = f"mycobrain-{port.replace('/', '-').replace(':', '-')}"
+                if device_id not in devices or device_id not in serial_connections:
+                    await loop.run_in_executor(None, lambda p=port: _try_connect_port_sync(p))
+        except Exception as e:
+            logger.debug(f"Port watcher tick: {e}")
+        await asyncio.sleep(PORT_WATCH_INTERVAL)
 
 @app.on_event("startup")
 async def startup_event():
-    """Start the heartbeat loop on service startup."""
-    global _heartbeat_task
-    
+    """Start heartbeat and port watcher on service startup."""
+    global _heartbeat_task, _port_watcher_task
+
+    # Disconnect any fake devices (COM1, COM2) that may have been connected before
+    real_ports = await asyncio.get_event_loop().run_in_executor(None, _get_mycobrain_port_names)
+    for device_id in list(devices.keys()):
+        port = devices[device_id].get("port", "")
+        if port and port not in real_ports:
+            await asyncio.get_event_loop().run_in_executor(None, lambda d=device_id: _disconnect_device_sync(d))
+
+    _port_watcher_task = asyncio.create_task(port_watcher_loop())
+    logger.info("Port watcher enabled - instant plug/unplug detection")
+
     if HEARTBEAT_ENABLED:
         _heartbeat_task = asyncio.create_task(heartbeat_loop())
         logger.info("Heartbeat system enabled")
@@ -488,9 +599,17 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Stop the heartbeat loop on service shutdown."""
-    global _heartbeat_task
-    
+    """Stop heartbeat and port watcher on service shutdown."""
+    global _heartbeat_task, _port_watcher_task
+
+    if _port_watcher_task:
+        _port_watcher_task.cancel()
+        try:
+            await _port_watcher_task
+        except asyncio.CancelledError:
+            pass
+        logger.info("Port watcher stopped")
+
     if _heartbeat_task:
         _heartbeat_task.cancel()
         try:

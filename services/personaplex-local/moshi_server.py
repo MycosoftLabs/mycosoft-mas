@@ -77,13 +77,24 @@ class MoshiModel:
         if self.mimi is None:
             return None
         try:
+            # Ensure buffer size is a multiple of 4 (float32 element size)
+            byte_len = len(audio_bytes)
+            remainder = byte_len % 4
+            if remainder != 0:
+                # Trim excess bytes to make it divisible by 4
+                audio_bytes = audio_bytes[:byte_len - remainder]
+                # Alternatively could pad: audio_bytes = audio_bytes + b'\x00' * (4 - remainder)
+            
+            if len(audio_bytes) == 0:
+                return None
+            
             audio = np.frombuffer(audio_bytes, dtype=np.float32)
             audio_tensor = torch.from_numpy(audio).unsqueeze(0).unsqueeze(0).to(DEVICE)
             with torch.no_grad():
                 tokens = self.mimi.encode(audio_tensor)
             return tokens
         except Exception as e:
-            logger.error(f"Encode error: {e}")
+            logger.error(f"Encode error: {e} (buffer size: {len(audio_bytes)})")
             return None
     
     def decode_audio(self, tokens):

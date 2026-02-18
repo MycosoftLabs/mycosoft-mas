@@ -204,14 +204,12 @@ Provide:
         changes = []
         
         if not self.llm_client:
-            # Return placeholder change
-            return [CodeChange(
-                file_path="unknown",
-                old_content=None,
-                new_content="# Fix applied",
-                change_type="modify",
-                description=analysis.get("description", "Bug fix"),
-            )]
+            # Cannot generate fixes without LLM client
+            logger.error("Coding agent cannot generate fixes: LLM client not initialized")
+            raise ValueError(
+                "Code fix generation requires LLM client. "
+                "Configure ANTHROPIC_API_KEY or OPENAI_API_KEY in environment."
+            )
         
         prompt = f"""Based on this analysis, generate the code fix:
 

@@ -1,0 +1,71 @@
+{
+  "name": "web_research",
+  "version": "0.1.0",
+  "description": "Fetch and analyze web content with restricted URL access",
+  "risk_tier": "medium",
+  "tools": {
+    "allow": [
+      "network_fetch",
+      "read_file",
+      "write_file"
+    ],
+    "deny": [
+      "exec_shell",
+      "exec_sandbox",
+      "secrets_get",
+      "delete_file"
+    ]
+  },
+  "filesystem": {
+    "read_paths": [
+      "./"
+    ],
+    "write_paths": [
+      "./research_output/",
+      "./tmp/",
+      "./docs/research/"
+    ],
+    "deny_paths": [
+      "~/.ssh",
+      "~/.aws",
+      "~/.config",
+      "/etc",
+      "/var",
+      "/proc",
+      "./.git/",
+      "./.env",
+      "./.credentials*",
+      "./secrets/"
+    ]
+  },
+  "network": {
+    "enabled": true,
+    "allowlist": [
+      "https://api.github.com",
+      "https://arxiv.org",
+      "https://scholar.google.com",
+      "https://pubmed.ncbi.nlm.nih.gov",
+      "https://en.wikipedia.org",
+      "https://docs.python.org",
+      "https://pypi.org"
+    ],
+    "denylist": [
+      "*.onion",
+      "localhost",
+      "127.0.0.1",
+      "192.168.*",
+      "10.*"
+    ]
+  },
+  "secrets": {
+    "allowed_scopes": []
+  },
+  "limits": {
+    "max_runtime_seconds": 60,
+    "max_files_written": 20,
+    "max_bytes_written": 1000000,
+    "sandbox_required": false
+  },
+  "dependencies": [],
+  "reviewers": ["security_agent"]
+}

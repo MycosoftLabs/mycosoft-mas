@@ -1,0 +1,72 @@
+{
+  "name": "github_pr",
+  "version": "0.1.0",
+  "description": "Create and manage GitHub pull requests with repository access",
+  "risk_tier": "medium",
+  "tools": {
+    "allow": [
+      "github_create_pr",
+      "github_list_prs",
+      "github_get_pr",
+      "github_add_comment",
+      "github_list_files",
+      "read_file",
+      "write_file",
+      "diff"
+    ],
+    "deny": [
+      "exec_shell",
+      "exec_sandbox",
+      "github_merge_pr",
+      "github_delete_branch",
+      "github_force_push",
+      "secrets_get"
+    ]
+  },
+  "filesystem": {
+    "read_paths": [
+      "./"
+    ],
+    "write_paths": [
+      "./",
+      "./docs/",
+      "./scripts/"
+    ],
+    "deny_paths": [
+      "~/.ssh",
+      "~/.aws",
+      "~/.config",
+      "/etc",
+      "/var",
+      "/proc",
+      "./.env",
+      "./.credentials*",
+      "./secrets/"
+    ]
+  },
+  "network": {
+    "enabled": true,
+    "allowlist": [
+      "https://api.github.com",
+      "https://github.com"
+    ],
+    "denylist": [
+      "*.onion",
+      "localhost",
+      "127.0.0.1"
+    ]
+  },
+  "secrets": {
+    "allowed_scopes": [
+      "github"
+    ]
+  },
+  "limits": {
+    "max_runtime_seconds": 120,
+    "max_files_written": 50,
+    "max_bytes_written": 2000000,
+    "sandbox_required": false
+  },
+  "dependencies": [],
+  "reviewers": ["security_agent", "myca_manager"]
+}

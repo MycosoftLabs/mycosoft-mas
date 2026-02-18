@@ -348,3 +348,29 @@ class AttentionController:
             "recent_categories": [f.category.value for f in self._history[-5:]],
             "pattern_queue_size": self._pattern_queue.qsize(),
         }
+
+    def decide_action(
+        self,
+        *,
+        confidence: float,
+        risk_level: str,
+        latency_budget_ms: int,
+        is_mid_utterance: bool,
+        user_mode: str = "conversation",
+    ) -> str:
+        """
+        Deterministic executive policy for speak/ask/act/defer decisions.
+
+        This is intentionally simple and acts as the single executive rule set.
+        """
+        if risk_level in ("high", "critical"):
+            return "ask_clarify"
+        if is_mid_utterance and confidence < 0.6:
+            return "defer"
+        if user_mode == "tasking" and confidence < 0.5:
+            return "tool_call"
+        if latency_budget_ms < 300:
+            return "speak_now"
+        if confidence >= 0.75:
+            return "speak_now"
+        return "ask_clarify"

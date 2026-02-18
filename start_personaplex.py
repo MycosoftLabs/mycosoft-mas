@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Start PersonaPlex Moshi server with proper path setup for RTX 5090.
+"""Start PersonaPlex Moshi server with NVIDIA PersonaPlex model for RTX 5090.
+
+CRITICAL: Always use NVIDIA PersonaPlex model - NEVER use Kyutai!
+- NVIDIA PersonaPlex supports custom voices (NATF2.pt = Female)
+- NVIDIA PersonaPlex supports persona text prompts (MYCA identity)
+- Kyutai model has hardcoded "Moshi" identity and male voice - DO NOT USE
 
 PERFORMANCE CRITICAL:
 - CUDA graphs MUST be enabled for real-time performance
@@ -28,33 +33,54 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 personaplex_path = r"c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\personaplex-repo\moshi"
 sys.path.insert(0, personaplex_path)
 
-# Voice prompts directory (from HuggingFace cache)
-voice_prompt_dir = r"C:\Users\admin2\.cache\huggingface\hub\models--nvidia--personaplex-7b-v1\snapshots\3343b641d663e4c851120b3575cbdfa4cc33e7fa\voices"
+# ============================================================================
+# NVIDIA PersonaPlex Model - LOCAL FILES (downloaded from nvidia/personaplex-7b-v1)
+# ============================================================================
+# CRITICAL: Use local NVIDIA model files, NOT Kyutai HuggingFace repo!
+# The NVIDIA model supports:
+#   - Custom voice embeddings (.pt files like NATF2.pt for female voice)
+#   - Text prompts for persona/identity (MYCA, not Moshi)
+# ============================================================================
+model_dir = r"C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\models\personaplex-7b-v1"
+
+moshi_weight = os.path.join(model_dir, "model.safetensors")
+mimi_weight = os.path.join(model_dir, "tokenizer-e351c8d8-checkpoint125.safetensors")
+tokenizer = os.path.join(model_dir, "tokenizer_spm_32k_3.model")
+voice_prompt_dir = os.path.join(model_dir, "voices")
 
 # Change to the moshi directory
 os.chdir(personaplex_path)
 
 print("=" * 60)
-print("PersonaPlex Server Startup - RTX 5090 PERFORMANCE MODE")
+print("NVIDIA PersonaPlex Server - RTX 5090 PERFORMANCE MODE")
 print("=" * 60)
 print(f"CUDA_VISIBLE_DEVICES = {os.environ.get('CUDA_VISIBLE_DEVICES')}")
 print(f"NO_TORCH_COMPILE = {os.environ.get('NO_TORCH_COMPILE')} (0=enabled)")
 print(f"NO_CUDA_GRAPH = {os.environ.get('NO_CUDA_GRAPH')} (0=enabled)")
 print(f"Working directory: {personaplex_path}")
-print(f"Voice prompts: {voice_prompt_dir}")
+print(f"Model: NVIDIA PersonaPlex (LOCAL)")
+print(f"  Moshi weights: {moshi_weight}")
+print(f"  Mimi weights: {mimi_weight}")
+print(f"  Tokenizer: {tokenizer}")
+print(f"  Voice prompts: {voice_prompt_dir}")
 print("=" * 60)
 print("CUDA graphs ENABLED - 30ms/step (REQUIRED for real-time)")
-print("Brain Engine: MYCA LLMs handle intelligent responses")
-print("Moshi: Handles immediate conversational responses")
-print("Starting PersonaPlex on RTX 5090...")
+print("Voice: NATF2.pt (Natural Female 2) for MYCA")
+print("Identity: MYCA (via text_prompt from PersonaPlex Bridge)")
+print("Starting NVIDIA PersonaPlex on RTX 5090...")
 print("=" * 60)
 
-# Pass voice-prompt-dir via sys.argv
+# Start server using LOCAL NVIDIA PersonaPlex model files
+# --static none = skip UI download (we use PersonaPlex bridge)
 sys.argv = [
     'moshi.server',
     '--host', '0.0.0.0',
     '--port', '8998',
+    '--moshi-weight', moshi_weight,
+    '--mimi-weight', mimi_weight,
+    '--tokenizer', tokenizer,
     '--voice-prompt-dir', voice_prompt_dir,
+    '--static', 'none',
 ]
 
 # Import and run the server

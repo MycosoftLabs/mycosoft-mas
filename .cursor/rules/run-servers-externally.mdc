@@ -1,0 +1,69 @@
+---
+description: Long-running servers and services must be run in an external terminal (outside Cursor), not in Cursor's integrated terminal, so they do not block Cursor and stay running independently.
+alwaysApply: true
+---
+
+# Run Servers and Services Externally (All Agents)
+
+## CRITICAL: Not in Cursor's terminal
+
+When the user needs **servers** or **long-running services** (dev server, Moshi, PersonaPlex Bridge, GPU services, etc.), they must be **run externally** — in a separate PowerShell window, Windows Terminal, or external process — **not** in Cursor's integrated terminal.
+
+- **Why:** Keeps Cursor responsive; services keep running if Cursor is closed or restarted; no blocking of the agent's terminal.
+- **How:** Use **Start-Process** (or equivalent) to launch a new external window that runs the server, or provide clear instructions for the user to open an external terminal and run the command there.
+
+---
+
+## What counts as "server" or "long-running service"
+
+| Type | Examples | Run externally? |
+|------|-----------|------------------|
+| Dev server | Next.js `npm run dev:next-only` (port 3010) | **Yes** |
+| Voice / GPU | Moshi (8998), PersonaPlex Bridge (8999), Earth2, PersonaPlex full stack | **Yes** |
+| Local APIs | Mycorrhizae 8002, MyceliumSeg 8010, E2CC gateway 8210 | **Yes** |
+| One-shot | Build, test run, deploy script, lint, migrate | No (run in Cursor terminal is OK) |
+| Health checks | curl, Invoke-WebRequest | No |
+
+---
+
+## How to start the website dev server externally
+
+From the **MAS repo** or **website repo**, run:
+
+```powershell
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd 'C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website'; npm run dev:next-only"
+```
+
+Or from **WEBSITE/website**:
+
+```powershell
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; npm run dev:next-only"
+```
+
+This opens a **new PowerShell window** that runs the dev server. Cursor's terminal is not used and is not blocked.
+
+---
+
+## How to start voice services (Moshi, Bridge) externally
+
+- **Moshi + Bridge on GPU node (192.168.0.190):** Run on that machine in an external terminal there (SSH session or external window on the node).
+- **Moshi + Bridge locally:** Open an **external** PowerShell or Windows Terminal window and run:
+  - Moshi: `python scripts/start_moshi_server.py` (or equivalent) in MAS repo.
+  - Bridge: `python services/personaplex-local/personaplex_bridge_nvidia.py` in MAS repo.
+- Do **not** run these in Cursor's integrated terminal for long-running use.
+
+---
+
+## Agent protocol
+
+1. **When starting the dev server:** Prefer launching it in an external window via `Start-Process powershell ...` (see above). If you cannot launch external processes, document for the user: "Open a new PowerShell or Windows Terminal window and run: `cd WEBSITE\website; npm run dev:next-only`."
+2. **When starting Moshi, Bridge, or other long-running services:** Instruct or script an **external** terminal (e.g. "Run in a separate PowerShell window: ...") or use `Start-Process` to open a new window that runs the service.
+3. **One-shot commands** (build, test, deploy, lint, health check): May still be run in Cursor's terminal.
+
+---
+
+## Cross-references
+
+- `dev-server-3010.mdc` — Dev server on 3010; use external launch when starting it.
+- `agent-must-execute-operations.mdc` — Agents execute operations; for servers, execute by launching externally.
+- `docs/VOICE_TEST_QUICK_START_FEB18_2026.md` — Voice quick start; run dev server and voice services in external terminals.

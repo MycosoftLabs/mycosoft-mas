@@ -21,9 +21,13 @@ alwaysApply: true
 
 **MANDATORY: Execute these steps yourself.** Never ask the user to run commands. Use run_terminal_cmd.
 
+**Run the dev server externally:** Long-running servers must not run in Cursor's terminal. Launch the dev server in an **external** PowerShell/Windows Terminal window. See `.cursor/rules/run-servers-externally.mdc`.
+
 1. **Check if 3010 is already serving:** `(Invoke-WebRequest -Uri http://localhost:3010 -UseBasicParsing -TimeoutSec 3).StatusCode`. If 200, do **not** start another server.
-2. **If 3010 is not responding:** Run `.\scripts\start-dev.ps1` from website repo (frees port 3010 if stuck, then starts `npm run dev:next-only`), or `npm run dev:next-only` in background.
-3. **If port 3010 is in use but not responding:** Run `.\scripts\start-dev.ps1` to free the port and restart. Or: `Get-NetTCPConnection -LocalPort 3010 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }` then start dev server.
+2. **If 3010 is not responding:** Start the dev server **externally** (new window):  
+   `Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd 'C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website'; npm run dev:next-only"`  
+   Or from website repo: `Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; .\scripts\start-dev.ps1"` (start-dev.ps1 frees port 3010 then runs npm run dev:next-only).
+3. **If port 3010 is in use but not responding:** In Cursor terminal you may run the one-shot port free: `Get-NetTCPConnection -LocalPort 3010 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`. Then start the dev server **externally** as in step 2.
 
 ## Resource discipline
 

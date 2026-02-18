@@ -12,21 +12,26 @@ alwaysApply: true
 - **vmmem** = WSL2 VM (often used by Docker Desktop). It can use a lot of RAM; shutting it down when not needed frees memory.
 
 ## Rules for agents
-1. **When suggesting or running the website dev server** and the user does NOT need voice or Earth2: use **npm run dev:next-only** (or **npm run dev:no-gpu**), NOT **npm run dev**, so GPU Services never start.
-2. **When the user reports slowness, lag, or "machine slow"**: remind them to run the cleanup script and optionally shut down WSL:
+1. **Never run the dev server or GPU services inside Cursor’s terminal** — it increases OOM risk. Tell the user to run from an **external terminal** (see `.cursor/rules/oom-prevention.mdc` and `docs/OOM_PREVENTION_FEB18_2026.md`).
+2. **When suggesting or running the website dev server** and the user does NOT need voice or Earth2: use **npm run dev:next-only** (or **npm run dev:no-gpu**), NOT **npm run dev**, so GPU Services never start. Always instruct: run from external terminal, e.g. `scripts\start-dev.cmd` in WEBSITE/website.
+3. **When the user reports slowness, lag, "machine slow", or Cursor OOM**: remind them to run the cleanup script and optionally shut down WSL:
    ```powershell
    cd scripts
    .\dev-machine-cleanup.ps1 -KillStaleGPU -ShutdownWSL
    ```
    Then restart Cursor if still slow. See `docs/WHY_DEV_MACHINE_SLOW_FEB06_2026.md` and `docs/WSL_VMMEM_DISABLE_FEB06_2026.md`.
-3. **When documenting or instructing** use of `npm run dev`: add that when done with GPU features they should **close the "GPU Services" window** or run `scripts\dev-machine-cleanup.ps1 -KillStaleGPU` so Python processes don't run for days.
+5. **When documenting or instructing** use of `npm run dev`: add that when done with GPU features they should **close the "GPU Services" window** or run `scripts\dev-machine-cleanup.ps1 -KillStaleGPU` so Python processes don't run for days.
 
 ## Key paths
 - Cleanup script: `scripts/dev-machine-cleanup.ps1` (-KillStaleGPU, -ShutdownWSL)
 - WSL shutdown only: `scripts/shutdown-wsl-free-vmmem.ps1` or `wsl --shutdown`
 - Root cause doc: `docs/WHY_DEV_MACHINE_SLOW_FEB06_2026.md`
 - WSL/vmmem doc: `docs/WSL_VMMEM_DISABLE_FEB06_2026.md`
+- **Cursor OOM prevention:** `docs/OOM_PREVENTION_FEB18_2026.md` and `.cursor/rules/oom-prevention.mdc`
+
+## Website dev server: always on with Cursor
+- The website dev server (port 3010) is **on whenever Cursor is on** — we use Cursor only for the website and its apps/tools. **Do not stop the dev server**; keep it running. See `.cursor/rules/autostart-services.mdc`.
 
 ## Website dev commands
 - **npm run dev** – starts Next.js + GPU Services (new window); GPU processes keep running after terminal close.
-- **npm run dev:next-only** or **npm run dev:no-gpu** – Next.js only on port 3010; no GPU Services. Prefer when voice/Earth2 not needed.
+- **npm run dev:next-only** or **npm run dev:no-gpu** – Next.js only on port 3010; no GPU Services. Prefer when voice/Earth2 not needed. Use this to start the dev server; do not turn it off when done.

@@ -50,7 +50,7 @@ class HealthChecker:
             
             conn_str = os.getenv(
                 "DATABASE_URL",
-                "postgresql://mycosoft:mycosoft@localhost:5432/mindex"
+                os.getenv("MINDEX_DATABASE_URL", "postgresql://mindex:mindex@localhost:5432/mindex")
             )
             
             conn = await asyncpg.connect(conn_str, timeout=5)

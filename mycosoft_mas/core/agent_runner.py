@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, asdict
 import aiofiles
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -317,13 +318,50 @@ class AgentCycleRunner:
                 # Log for monitoring
                 logger.info(f"[ADMIN NOTIFICATION] {notification.priority.upper()}: {notification.title}")
                 
-                # TODO: Send via webhook, email, push notification, etc.
-                # This will integrate with Twilio, n8n, etc.
+                # Send via webhook if configured
+                await self._send_notification_webhook(notification)
+                
+                # Future: Add email, SMS, push notifications here
                 
             except asyncio.TimeoutError:
                 continue
             except Exception as e:
                 logger.error(f"Notification worker error: {e}")
+
+    async def _send_notification_webhook(self, notification: AdminNotification) -> None:
+        """Send notification via webhook to configured endpoints."""
+        webhook_urls = os.getenv("NOTIFICATION_WEBHOOK_URLS", "").split(",")
+        webhook_urls = [url.strip() for url in webhook_urls if url.strip()]
+        
+        if not webhook_urls:
+            logger.debug("No webhook URLs configured for notifications")
+            return
+        
+        payload = {
+            "id": notification.notification_id,
+            "priority": notification.priority,
+            "category": notification.category,
+            "title": notification.title,
+            "message": notification.message,
+            "timestamp": notification.timestamp,
+            "source_agent": notification.source_agent,
+            "metadata": notification.metadata,
+        }
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            for webhook_url in webhook_urls:
+                try:
+                    response = await client.post(
+                        webhook_url,
+                        json=payload,
+                        headers={"Content-Type": "application/json"}
+                    )
+                    if response.status_code in (200, 201, 202, 204):
+                        logger.info(f"Notification webhook delivered to {webhook_url}")
+                    else:
+                        logger.warning(f"Webhook returned {response.status_code}: {webhook_url}")
+                except Exception as e:
+                    logger.error(f"Failed to send webhook to {webhook_url}: {e}")
 
     async def get_status(self) -> Dict[str, Any]:
         """Get current runner status."""

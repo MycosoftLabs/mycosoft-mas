@@ -1,5 +1,27 @@
 # Master Document Index
 
+## Sandbox Live Testing Prep (Feb 18, 2026)
+- `docs/SANDBOX_LIVE_TESTING_PREP_FEB18_2026.md` – **Sandbox live testing prep**: VM layout (Sandbox 187, MAS 188, MINDEX 189, GPU node 190), what must run where, deployment checklist for deploying agent (pull, build, run with NAS mount, Cloudflare purge), paths, image names, test-voice, env vars. Deployment is executed by another agent; this doc is the single reference.
+
+## Work Summary (Feb 15-18, 2026)
+- `docs/WORK_SUMMARY_FEB15_18_2026.md` – **Comprehensive work summary**: All work completed Feb 15-18 across MAS, Website, MINDEX repos. New agents (crep-agent, myca-voice, mycobrain-ops, search-engineer), new rules (OOM prevention, voice, CREP, subagent invocation), consciousness/memory/voice updates, Docker management system, CI/CD workflows. Commit and deployment plan included.
+
+## MYCA Widget AI Integration (Feb 11, 2026)
+- `docs/MYCA_WIDGET_AI_INTEGRATION_FEB11_2026.md` – **MYCA widget fixed**: Search AI now uses MYCA Consciousness + Brain first; never "No AI results"; integrated with Intent Engine, persistent memory, local knowledge base fallback.
+- `../WEBSITE/website/docs/MYCA_WIDGET_TEST_CASES_FEB10_2026.md` – **MYCA widget test cases**: Full regression checklist for AI widget + left panel; text and voice; math, fungi, documents, locations; all voice commands and search operators.
+
+## Search System & Search Engineer Agent (Feb 10, 2026)
+- `docs/SEARCH_SUBAGENT_MASTER_FEB10_2026.md` – **Search sub-agent master**: Complete reference for search-engineer — work done/not done, tools, interfaces, plans, deployment (dev→sandbox→prod), user interactions, MINDEX/MYCA/NLM integrations, Mycosoft apps. Agent: `.cursor/agents/search-engineer.md`.
+- `docs/SEARCH_SYSTEM_STATUS_FEB10_2026.md` – **Search status**: Fluid Search architecture, MINDEX/MYCA/NLM integrations, completed work, remaining tasks. Use when building or fixing search, widgets, Earth portals, compound→species, genetics, empty widgets, or deploying to sandbox/production.
+
+## Cursor OOM Prevention (Feb 18, 2026)
+- `docs/OOM_PREVENTION_FEB18_2026.md` – **Prevent Cursor OOM crashes**: Workspace settings (files/search/watcher exclude, TypeScript 2GB cap), run dev server and GPU from external terminal only, cleanup before opening Cursor, optional .cursorignore per repo. Rule: `.cursor/rules/oom-prevention.mdc`.
+
+## MYCA Voice Application Handoff (Feb 17, 2026)
+- `docs/MYCA_VOICE_APPLICATION_HANDOFF_FEB17_2026.md` – **Handoff for another agent**: How to apply the MYCA Self-Improvement System (constitution, skill permissions, tool enforcement, event ledger, evals, CI) to PersonaPlex voice, M-Y-C-A voice, and the test-voice page. Includes touchpoints (bridge, voice orchestrator, brain API, test-voice page), voice skill PERMISSIONS.json, wiring to tool_pipeline, evals, and CI.
+- `docs/MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md` – **Voice test systems online**: Diagnostics derive Moshi from bridge health (`moshi_available`); UI label "Moshi (via Bridge)"; env and network requirements so all four services (Moshi, Bridge, MAS Consciousness, Memory Bridge) show online on `/test-voice`.
+- `docs/VOICE_TEST_QUICK_START_FEB18_2026.md` – **Voice test quick start**: Step-by-step commands to start dev server, bridge, Moshi, MAS; env vars; troubleshooting table.
+
 ## Full PersonaPlex — No Edge (Feb 13, 2026)
 - `docs/FULL_PERSONAPLEX_NO_EDGE_FEB13_2026.md` – **Voice 100% Moshi**: No edge-tts or other TTS fallback. Flow: User mic → Moshi STT → MAS Brain → response text → Moshi TTS → speaker. Bridge v8.2.0 sends MAS response to Moshi via `\x02` + text for TTS. Use `MOSHI_HOST=192.168.0.190` when Moshi runs on GPU node.
 - `docs/MOSHI_DEPLOYMENT_BLOCKED_FEB13_2026.md` – **BLOCKED**: Complete log of 10+ Moshi deployment attempts. RTX 5090 PyTorch incompatibility (sm_120 not supported until PyTorch 2.7), GTX 1080 Ti insufficient (11GB VRAM, CUDA 6.1). Bridge v8.2.0 code complete. 4 working solutions: swap GPU (RTX 3080 Ti/4070 Ti+), wait for PyTorch 2.7 (Q2 2026), use MAS VM, or cloud GPU. Dockerfile and scripts ready.
@@ -128,6 +150,16 @@
 - `docs/IOT_ENVELOPE_LOCAL_FIRST_INTEGRATION_FEB09_2026.md` – Local-first unified IoT envelope ingest: MAS `/api/iot/*` forwarding, Mycorrhizae verification/dedupe/ACK, MINDEX `/api/telemetry/*` canonical storage (verified + replay + health), NatureOS envelope consumer, and NLM verified ingest.
 - `docs/IOT_API_KEY_BOOTSTRAP_FEB09_2026.md` – Bootstrap and wiring for `MYCORRHIZAE_API_KEY` and `MINDEX_API_KEY` (no secrets in git), including first-admin-key bootstrap, migrations, and `.env.example` templates.
 - `docs/MYCORRHIZAE_VM188_CONTAINER_DEPLOYMENT_FEB09_2026.md` – Run Mycorrhizae as an always-on Docker container on MAS VM 188 (port 8002) using Postgres+Redis on VM 189; includes compose file and bootstrap steps.
+
+## MYCA Self-Improvement System (Feb 17, 2026)
+- `docs/MYCA_SELF_IMPROVEMENT_SYSTEM_FEB17_2026.md` – **MYCA Self-Improvement System**: Complete PR-based improvement loop implementation with constitution files, skill permissions, evaluation harness, CI gates, agent policies, router enforcement, and event ledger. Enables controlled self-assembly/self-healing with human oversight.
+- `mycosoft_mas/myca/README.md` – MYCA system overview and directory structure
+- `mycosoft_mas/myca/ROUTER_POLICY.md` – Router enforcement policy documentation
+- `mycosoft_mas/myca/constitution/SYSTEM_CONSTITUTION.md` – Core safety rules
+- `mycosoft_mas/myca/evals/README.md` – Evaluation harness documentation
+- `scripts/myca_skill_lint.py` – Skill permission linter
+- `.github/workflows/myca-ci.yml` – MYCA CI pipeline
+- `.github/workflows/myca-security.yml` – MYCA security audit pipeline
 
 ## Security Hardening (Feb 9, 2026)
 - `docs/SECRET_MANAGEMENT_POLICY_FEB09_2026.md` – **Secret management policy**: No secrets in code, .env.example pattern for all repos, quarterly rotation schedule, CI/CD secrets via GitHub Actions, audit procedures, git-filter-repo for history remediation, current findings (30+ hardcoded secrets in scripts/, 12 credential-containing defaults in library code), remediation priority and pre-commit hook setup.

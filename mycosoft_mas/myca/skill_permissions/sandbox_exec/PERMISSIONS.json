@@ -1,0 +1,57 @@
+{
+  "name": "sandbox_exec",
+  "version": "0.1.0",
+  "description": "Execute code in isolated sandbox environment with strict restrictions",
+  "risk_tier": "high",
+  "tools": {
+    "allow": [
+      "exec_sandbox",
+      "read_file"
+    ],
+    "deny": [
+      "exec_shell",
+      "network_fetch",
+      "secrets_get",
+      "write_file",
+      "delete_file"
+    ]
+  },
+  "filesystem": {
+    "read_paths": [
+      "./"
+    ],
+    "write_paths": [
+      "./tmp/",
+      "./sandbox_output/"
+    ],
+    "deny_paths": [
+      "~/.ssh",
+      "~/.aws",
+      "~/.config",
+      "/etc",
+      "/var",
+      "/proc",
+      "./.git/",
+      "./.env",
+      "./.credentials*",
+      "./secrets/",
+      "./mycosoft_mas/security/"
+    ]
+  },
+  "network": {
+    "enabled": false,
+    "allowlist": [],
+    "denylist": ["*"]
+  },
+  "secrets": {
+    "allowed_scopes": []
+  },
+  "limits": {
+    "max_runtime_seconds": 20,
+    "max_files_written": 10,
+    "max_bytes_written": 200000,
+    "sandbox_required": true
+  },
+  "dependencies": [],
+  "reviewers": ["security_agent", "myca_manager"]
+}

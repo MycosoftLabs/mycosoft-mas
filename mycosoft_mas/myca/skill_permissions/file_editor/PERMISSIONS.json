@@ -1,0 +1,62 @@
+{
+  "name": "file_editor",
+  "version": "0.1.0",
+  "description": "Read and write files within the workspace with path restrictions",
+  "risk_tier": "low",
+  "tools": {
+    "allow": [
+      "read_file",
+      "write_file",
+      "list_files",
+      "diff",
+      "search_files"
+    ],
+    "deny": [
+      "exec_shell",
+      "exec_sandbox",
+      "network_fetch",
+      "secrets_get",
+      "delete_file"
+    ]
+  },
+  "filesystem": {
+    "read_paths": [
+      "./"
+    ],
+    "write_paths": [
+      "./mycosoft_mas/",
+      "./docs/",
+      "./scripts/",
+      "./tests/",
+      "./config/"
+    ],
+    "deny_paths": [
+      "~/.ssh",
+      "~/.aws",
+      "~/.config",
+      "/etc",
+      "/var",
+      "/proc",
+      "./.git/",
+      "./.env",
+      "./.credentials*",
+      "./secrets/"
+    ]
+  },
+  "network": {
+    "enabled": false,
+    "allowlist": [],
+    "denylist": ["*"]
+  },
+  "secrets": {
+    "allowed_scopes": []
+  },
+  "limits": {
+    "max_runtime_seconds": 30,
+    "max_files_written": 25,
+    "max_bytes_written": 500000,
+    "sandbox_required": false
+  },
+  "dependencies": [],
+  "reviewers": ["security_agent"]
+}

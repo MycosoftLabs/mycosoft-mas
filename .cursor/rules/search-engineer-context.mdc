@@ -1,0 +1,16 @@
+---
+description: When working on Fluid Search, read SEARCH_SUBAGENT_MASTER for full context. Covers MINDEX/MYCA/NLM integrations, widgets, deployment.
+globs: "**/components/search/**", "**/api/search/**", "**/use-unified-search*", "**/unified-search-sdk*", "**/lib/search/**"
+---
+
+# Search Engineer Context (All Agents)
+
+When editing or creating files in these paths, read `docs/SEARCH_SUBAGENT_MASTER_FEB10_2026.md` for full context:
+
+- `website/components/search/**`
+- `website/app/api/search/**`
+- `website/app/api/mindex/**` (when used by search)
+- `website/hooks/use-unified-search.ts`, `website/hooks/use-search.ts`
+- `website/lib/search/**`
+
+The search-engineer agent (`.cursor/agents/search-engineer.md`) owns Fluid Search. Key integrations: MINDEX (189:8000), MYCA/MAS (188:8001), NLM (FCI only). Deployment: dev (3010) → sandbox (187:3000) → Cloudflare purge. No mock data.

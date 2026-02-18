@@ -1,0 +1,169 @@
+# MYCA Voice System (All Agents)
+
+## CRITICAL: Voice Architecture
+
+MYCA Voice is **100% PersonaPlex/Moshi**. No edge-tts, no Aria, no fallbacks.
+
+**The Only Valid Flow:**
+```
+User Mic → PersonaPlex Bridge (8999) → Moshi STT (8998) → text
+                                                           ↓
+                                             MYCAConsciousness.process_input()
+                                                           ↓
+Speaker ← PersonaPlex Bridge ← Moshi TTS ← MYCA response text
+```
+
+**Moshi is STT + TTS ONLY. MYCAConsciousness generates ALL text responses.**
+
+---
+
+## Component Ports
+
+| Component | Port | Health Check |
+|-----------|------|--------------|
+| Moshi Server | 8998 | `curl http://localhost:8998/health` |
+| PersonaPlex Bridge | 8999 | `curl http://localhost:8999/health` |
+| MAS Orchestrator | 8001 | `curl http://192.168.0.188:8001/health` |
+| Test-voice page | 3010 | http://localhost:3010/test-voice |
+
+---
+
+## GPU Mode 0 (RTX 5090 Blackwell)
+
+The RTX 5090 (sm_120) requires these env vars for Moshi:
+
+```powershell
+$env:NO_TORCH_COMPILE = "1"
+$env:NO_CUDA_GRAPH = "1"
+$env:TORCHDYNAMO_DISABLE = "1"
+$env:TORCH_COMPILE_DISABLE = "1"
+```
+
+Without these, Moshi will fail with Triton/PyTorch errors.
+
+---
+
+## Key Files
+
+| File | What |
+|------|------|
+| `services/personaplex-local/personaplex_bridge_nvidia.py` | Bridge (GPU mode 0) |
+| `mycosoft_mas/consciousness/core.py` | MYCAConsciousness singleton |
+| `mycosoft_mas/consciousness/speech_planner.py` | Speech acts |
+| `mycosoft_mas/consciousness/conversation_control.py` | Barge-in, VAD |
+| `mycosoft_mas/consciousness/duplex_session.py` | Full-duplex session |
+| `mycosoft_mas/core/routers/voice_orchestrator_api.py` | Voice API |
+| `config/myca_personaplex_short.txt` | MYCA persona |
+
+---
+
+## Moshi Binary Protocol
+
+| Prefix | Direction | Meaning |
+|--------|-----------|---------|
+| `0x01` | Bridge→Moshi | Audio (Opus) |
+| `0x02` | Bridge→Moshi | Text for TTS |
+| `0x03` | Bridge→Moshi | Stop/interrupt TTS |
+| `kind=1` | Moshi→Bridge | TTS audio |
+| `kind=2` | Moshi→Bridge | STT text |
+
+---
+
+## MYCAConsciousness Pipeline
+
+Voice text goes through the FULL consciousness pipeline:
+
+1. Attention Focus (~100ms)
+2. Soul Context (~10ms) - identity, beliefs, emotions
+3. Parallel Context (~3s max) - working memory, world model, memory recall
+4. Intuition (~100ms) - fast pattern matching
+5. Deliberation (1-5s) - LLM with full context
+6. Background Updates - emotion, episodic memory
+
+**Result**: MYCA responds with memory, personality, and consciousness.
+
+---
+
+## Full-Duplex Features
+
+**Speech Acts**: LLM output chunked into ~80 chars (~1.5s speech) for natural interruption points.
+
+**Barge-In**: VAD detects user speech during MYCA TTS → sends 0x03 interrupt → preserves draft.
+
+**VAD Config**:
+- `VAD_ENERGY_THRESHOLD=0.02` (RMS threshold)
+- `VAD_MIN_SPEECH_FRAMES=3` (debounce)
+- `VAD_COOLDOWN_FRAMES=10` (ignore during TTS)
+
+---
+
+## Starting Voice
+
+```powershell
+# Terminal 1: Moshi (with GPU mode 0)
+$env:NO_TORCH_COMPILE="1"; $env:NO_CUDA_GRAPH="1"; $env:TORCHDYNAMO_DISABLE="1"; $env:TORCH_COMPILE_DISABLE="1"
+python -m moshi.server --host 0.0.0.0 --port 8998
+
+# Terminal 2: Bridge
+cd C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas
+python services/personaplex-local/personaplex_bridge_nvidia.py
+
+# Verify all healthy
+curl http://localhost:8998/health
+curl http://localhost:8999/health
+curl http://192.168.0.188:8001/health
+```
+
+Or use the unified script:
+```powershell
+python scripts/start_voice_system.py
+```
+
+---
+
+## Common Problems
+
+### "Voice says 'I'm Moshi' not MYCA"
+
+Moshi is generating its own responses instead of STT-only. Check:
+- `MYCA_BRAIN_ENABLED=true` in bridge
+- Bridge calling `POST /voice/brain/chat` on MAS
+- Bridge using MAS response for TTS (0x02)
+
+### "Voice garbled/choppy"
+
+Audio buffer or sample rate issue. Check:
+- Decoder: 24kHz → 48kHz
+- WebSocket stability
+- Opus codec init
+
+### "High latency"
+
+MAS consciousness slow. Check:
+- Memory Bridge latency (<2s normal)
+- MAS 188 health
+- Parallel context gathering
+
+---
+
+## Documentation
+
+Read these BEFORE working on voice:
+
+1. `docs/FULL_PERSONAPLEX_NO_EDGE_FEB13_2026.md` - Policy
+2. `docs/FULL_DUPLEX_VOICE_PHASE1_FEB12_2026.md` - Full-duplex
+3. `docs/CONSCIOUSNESS_PIPELINE_ARCHITECTURE_FEB12_2026.md` - Consciousness flow
+4. `docs/MYCA_TRUE_CONSCIOUSNESS_IMPLEMENTATION_FEB11_2026.md` - True consciousness
+5. `docs/MYCA_VOICE_APPLICATION_HANDOFF_FEB17_2026.md` - Handoff
+6. `docs/VOICE_TEST_QUICK_START_FEB18_2026.md` - Quick start
+
+---
+
+## NEVER
+
+- NEVER use edge-tts, Aria, or any TTS fallback
+- NEVER let Moshi generate its own text responses
+- NEVER bypass MYCAConsciousness for voice
+- NEVER run Moshi without GPU mode 0 env vars on 5090
+- NEVER start multiple Moshi or Bridge instances
+- NEVER forget to kill GPU processes when done (`scripts/dev-machine-cleanup.ps1 -KillStaleGPU`)

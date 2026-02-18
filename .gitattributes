@@ -23,9 +23,7 @@ Makefile text eol=lf
 # Windows-specific files must have CRLF
 *.ps1 text eol=crlf
 *.bat text eol=crlf
-*.cmd text eol=crlf
-
-# Binary files
+*.cmd text eol=crlf# Binary files
 *.png binary
 *.jpg binary
 *.jpeg binary

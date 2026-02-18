@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MYCA Skill Permissions",
+  "description": "Permission manifest for MYCA skills defining allowed tools, paths, network, and limits",
+  "type": "object",
+  "required": ["name", "version", "risk_tier", "tools", "filesystem", "network", "secrets", "limits"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Unique identifier for the skill",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the skill",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what the skill does"
+    },
+    "risk_tier": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"],
+      "description": "Risk classification affecting required approvals and restrictions"
+    },
+    "tools": {
+      "type": "object",
+      "description": "Tool access permissions",
+      "required": ["allow", "deny"],
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of allowed tool names. Use '*' for all (not recommended)"
+        },
+        "deny": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of explicitly denied tools (takes precedence over allow)"
+        }
+      }
+    },
+    "filesystem": {
+      "type": "object",
+      "description": "Filesystem access permissions",
+      "required": ["read_paths", "write_paths", "deny_paths"],
+      "properties": {
+        "read_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns for allowed read paths"
+        },
+        "write_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns for allowed write paths"
+        },
+        "deny_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Glob patterns for explicitly denied paths (takes precedence)"
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "description": "Network access permissions",
+      "required": ["enabled", "allowlist", "denylist"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether network access is allowed at all"
+        },
+        "allowlist": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of allowed domains/URLs (required if enabled=true)"
+        },
+        "denylist": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of explicitly blocked domains/URLs"
+        }
+      }
+    },
+    "secrets": {
+      "type": "object",
+      "description": "Secret/credential access permissions",
+      "required": ["allowed_scopes"],
+      "properties": {
+        "allowed_scopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of secret scopes this skill can access (e.g., 'github', 'database')"
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "description": "Resource and execution limits",
+      "required": ["max_runtime_seconds", "max_files_written", "max_bytes_written", "sandbox_required"],
+      "properties": {
+        "max_runtime_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600,
+          "description": "Maximum execution time in seconds"
+        },
+        "max_files_written": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Maximum number of files that can be written"
+        },
+        "max_bytes_written": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum total bytes that can be written"
+        },
+        "sandbox_required": {
+          "type": "boolean",
+          "description": "Whether execution must happen in sandbox (required for high/critical risk)"
+        }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Other skills this skill depends on"
+    },
+    "reviewers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Required reviewers for permission changes"
+    }
+  },
+  "additionalProperties": false
+}

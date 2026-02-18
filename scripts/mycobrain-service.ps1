@@ -53,25 +53,12 @@ if (-not (Test-Path $DataDir)) {
 
 function Get-ServicePid {
     if (Test-Path $PidFile) {
-        $pid = Get-Content $PidFile -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($pid -and ($pid.ToString().Trim() -match '^\d+$')) {
+        $pidVal = Get-Content $PidFile -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($pidVal -and ($pidVal.ToString().Trim() -match '^\d+$')) {
             try {
-                $proc = Get-Process -Id ([int]$pid) -ErrorAction SilentlyContinue
+                $proc = Get-Process -Id ([int]$pidVal) -ErrorAction SilentlyContinue
                 if ($proc) {
-                    return [int]$pid
-                }
-            } catch {
-                # Ignore errors, fall through to fallback below
-            }
-        }
-    }
-    # Fallback: find by port
-    $conn = Get-NetTCPConnection -LocalPort $ServicePort -ErrorAction SilentlyContinue | Where-Object { $_.State -eq "Listen" }
-    if ($conn) {
-        return $conn.OwningProcess
-    }
-    return $null
-}
+                    return [int]$pidVal
                 }
             } catch {
                 # Ignore errors, fall through to fallback below
@@ -87,8 +74,8 @@ function Get-ServicePid {
 }
 
 function Test-ServiceRunning {
-    $pid = Get-ServicePid
-    if ($pid) {
+    $servicePid = Get-ServicePid
+    if ($servicePid) {
         return $true
     }
     return $false
@@ -157,14 +144,14 @@ function Start-MycoBrainService {
 }
 
 function Stop-MycoBrainService {
-    $pid = Get-ServicePid
-    if (-not $pid) {
+    $servicePid = Get-ServicePid
+    if (-not $servicePid) {
         Write-Host "[INFO] $ServiceName is not running" -ForegroundColor Yellow
         return $true
     }
     
-    Write-Host "[INFO] Stopping $ServiceName (PID: $pid)..." -ForegroundColor Cyan
-    Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+    Write-Host "[INFO] Stopping $ServiceName (PID: $servicePid)..." -ForegroundColor Cyan
+    Stop-Process -Id $servicePid -Force -ErrorAction SilentlyContinue
     
     if (Test-Path $PidFile) {
         Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
@@ -181,15 +168,16 @@ function Stop-MycoBrainService {
 }
 
 function Show-ServiceStatus {
-    $pid = Get-ServicePid
-    if ($pid) {
-        $process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+    $servicePid = Get-ServicePid
+    if ($servicePid) {
+        $process = Get-Process -Id $servicePid -ErrorAction SilentlyContinue
         Write-Host "[OK] $ServiceName is RUNNING" -ForegroundColor Green
-        Write-Host "     PID: $pid" -ForegroundColor Gray
+        Write-Host "     PID: $servicePid" -ForegroundColor Gray
         Write-Host "     Port: $ServicePort" -ForegroundColor Gray
         if ($process) {
             Write-Host "     Memory: $([math]::Round($process.WorkingSet64 / 1MB, 1)) MB" -ForegroundColor Gray
-            Write-Host "     Uptime: $([math]::Round((Get-Date) - $process.StartTime).TotalHours, 1)) hours" -ForegroundColor Gray
+            $uptimeHours = [math]::Round(((Get-Date) - $process.StartTime).TotalHours, 1)
+            Write-Host "     Uptime: $uptimeHours hours" -ForegroundColor Gray
         }
         return $true
     } else {

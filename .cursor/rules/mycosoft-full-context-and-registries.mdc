@@ -24,6 +24,7 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
 
 **When a new agent is spun up, or a new plan/task is created, or before implementing code:**
 
+0. **EVERY CHAT – Invoke sub-agents and load docs first.** Before any other step: read `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md`, identify which sub-agents apply to this task, @-invoke them or read their `.cursor/agents/<name>.md` and follow their protocols. Load CURSOR_DOCS_INDEX and task-relevant docs. Do not skip. See `.cursor/rules/agent-must-invoke-subagents-and-docs.mdc`.
 1. **Read and use registries and indexes** so the full system is known. Do not build from ignorance or "rabbit holes."
 2. **Consult (at minimum):**
    - **.cursor/CURSOR_DOCS_INDEX.md** – vital/current docs only (Cursor internal reference; new replaces old)
@@ -36,7 +37,6 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
    - **Docs dated in the last 2 weeks** – list from `docs/` sorted by date (latest first) and read newest first for current state
 3. **Align with:** sitemap, pages, apps, APIs, services, integrations, device lists, agent lists, routes, schema. If a registry or list exists for it, use it before adding or changing.
 4. **When introducing new code** that adds or changes: pages, apps, APIs, routes, services, devices, agents, or schema – **update the relevant registries, indexes, and docs** (including MASTER_DOCUMENT_INDEX if new docs are created). Keep sitemap, API catalog, and system registry in sync with reality.
-
 5. **When a plan or task is completed** – **create or update documentation**: create a dated completion document at plan completion; at task completion update the plan/status docs and any task log. Add new docs to MASTER_DOCUMENT_INDEX (and CURSOR_DOCS_INDEX if vital). See `.cursor/rules/plan-and-task-completion-docs.mdc`.
 
 ---
@@ -44,6 +44,7 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
 ## Rule of thumb
 
 - **Execute operations yourself:** NEVER ask the user to run deployment scripts, terminal commands, or debug in a terminal. You have terminal access—use run_terminal_cmd. Load credentials from `.credentials.local` when needed. See `.cursor/rules/agent-must-execute-operations.mdc`.
+- **Run servers externally:** Long-running servers (dev server, Moshi, Bridge) must run in an **external** terminal (e.g. Start-Process powershell), not in Cursor's terminal. See `.cursor/rules/run-servers-externally.mdc`.
 - **Full context first:** Read and use the full index/registries so the entire system is known (or as much as is relevant to the task).
 - **Then plan/code:** Only after that, make plans, ideas, or implementations. This avoids chaos and duplicate or conflicting work across 500k+ files and multiple repos.
 - **Index rapidly:** Use table-of-contents style indexing and existing registries so context can be loaded quickly by any agent. Prefer updating existing registries over creating scattered new lists.
@@ -73,7 +74,7 @@ Open via: File > Open Workspace from File. See `.cursor/rules/mycosoft-full-code
 
 ---
 
-## 34 Specialized Sub-Agents
+## 35 Specialized Sub-Agents
 
 Use the right agent for the right task. All agents live in `.cursor/agents/`.
 
@@ -118,9 +119,12 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 | Agent | Use For |
 |-------|---------|
 | `scientific-systems` | Lab monitoring, experiments, FCI, MycoBrain compute, DNA storage |
+| `myca-voice` | MYCA voice docs, PersonaPlex + MYCA Brain flow, test-voice, consciousness in voice |
 | `voice-engineer` | PersonaPlex, Moshi, intent classification, GPU voice services |
+| `myca-voice` | **MYCA Voice specialist** — PersonaPlex Bridge, Moshi STT/TTS, MYCAConsciousness voice integration, full-duplex, barge-in, test-voice page; knows all voice architecture and flow |
 | `earth2-ops` | Earth2 simulation, prediction engine, weather models |
 | `crep-collector` | Aviation, maritime, satellite, weather data collection |
+| `crep-agent` | CREP dashboard, OEI APIs, satellites/planes/vessels filters, orbit lines, what's done/not done, requirements |
 | `data-pipeline` | MINDEX ETL, scrapers, GBIF, blob storage, NAS |
 | `n8n-workflow` | n8n workflow automation, webhooks, triggers |
 | `n8n-ops` | n8n instance on MAS VM, workflows, health, credentials |

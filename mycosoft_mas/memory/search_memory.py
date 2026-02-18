@@ -290,7 +290,12 @@ class SearchMemoryManager:
     SESSION_TIMEOUT = timedelta(minutes=30)
     
     def __init__(self, database_url: Optional[str] = None):
-        self._database_url = database_url or os.getenv("MINDEX_DATABASE_URL", "postgresql://mycosoft:REDACTED_VM_SSH_PASSWORD@192.168.0.189:5432/mindex")
+        self._database_url = database_url or os.getenv("MINDEX_DATABASE_URL", os.getenv("MINDEX_DATABASE_URL"))
+        if not self._database_url:
+            raise ValueError(
+                "MINDEX_DATABASE_URL environment variable is required. "
+                "Please set it to your PostgreSQL connection string."
+            )
         self._pool = None
         self._active_sessions: Dict[UUID, SearchSession] = {}
         self._user_sessions: Dict[str, UUID] = {}

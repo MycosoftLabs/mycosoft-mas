@@ -138,7 +138,7 @@ class MASCheckpointer:
             import asyncpg
             db_url = os.getenv(
                 "MINDEX_DATABASE_URL",
-                "postgresql://mycosoft:REDACTED_VM_SSH_PASSWORD@192.168.0.189:5432/mindex"
+                os.getenv("MINDEX_DATABASE_URL")
             )
             self._pool = await asyncpg.create_pool(db_url, min_size=1, max_size=3)
             

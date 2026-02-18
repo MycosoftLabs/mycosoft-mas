@@ -73,7 +73,7 @@ All live in `.cursor/agents/*.md`. Use the right agent for the task; involve **t
 
 ---
 
-## 2. All 29 Rules (Canonical List)
+## 2. All 32 Rules (Canonical List)
 
 All live in `.cursor/rules/*.mdc`. `alwaysApply: true` = applies to every chat.
 
@@ -81,11 +81,14 @@ All live in `.cursor/rules/*.mdc`. `alwaysApply: true` = applies to every chat.
 |------|---------|-------------|
 | mycosoft-full-context-and-registries | Full context and registries before plan/code; 34 subagents; plan/task completion docs | true |
 | agent-must-execute-operations | Never ask user to run commands; use run_terminal_cmd; load .credentials.local | true |
+| **agent-must-invoke-subagents-and-docs** | **Canonical: at task start load docs + @-invoke or follow sub-agents; why they aren’t auto-invoked** | true |
+| agent-must-invoke-subagents | Task-type table and checklist; same obligation (see agent-must-invoke-subagents-and-docs) | true |
 | terminal-watcher-and-agent-tasks | When any agent runs terminal, involve terminal-watcher to read terminals for errors | true |
 | plan-and-task-completion-docs | At plan completion create completion doc; at task completion update docs/indexes | true |
 | python-process-registry | Ports, processes, GPU, autostart, VM services; read before starting anything | true |
 | vm-layout-and-dev-remote-services | VM IPs (187/188/189), dev on 3010, MAS/MINDEX URLs | true |
-| dev-server-3010 | Website dev on 3010 only; dev:next-only | (globs) |
+| dev-server-3010 | Website dev on 3010 only; dev:next-only; start externally when possible | (globs) |
+| run-servers-externally | Long-running servers (dev server, Moshi, Bridge) run in external terminal, not Cursor | true |
 | dev-deploy-pipeline | Dev → sandbox pipeline; rebuild, purge Cloudflare | (globs) |
 | dev-machine-performance | Why machine is slow; KillStaleGPU; npm run dev:next-only | (globs) |
 | cursor-docs-indexing | CURSOR_DOCS_INDEX, docs_manifest.json, build_docs_manifest.py | true |
@@ -174,6 +177,7 @@ All dev-server-guardian and gap-agent commands point to existing scripts. Websit
 
 ## 7. How to Use This Doc
 
+- **At every chat when work is requested:** (1) Load CURSOR_DOCS_INDEX and task-relevant docs. (2) Pick the right subagent(s) from §1 and **@-invoke them or follow their agent file**. (3) If you run terminal commands, involve terminal-watcher. See `.cursor/rules/agent-must-invoke-subagents-and-docs.mdc`. Sub-agents are not auto-invoked — you must do this.
 - **Before starting a task:** Pick the right subagent(s) from §1; if the task involves terminal (dev server, tests, build, deploy), involve terminal-watcher.
 - **Rules:** §2 lists all rules; full-context and terminal-watcher and plan-and-task-completion-docs are always-on.
 - **Skills:** §3 lists when to use each skill (read the SKILL.md for steps).

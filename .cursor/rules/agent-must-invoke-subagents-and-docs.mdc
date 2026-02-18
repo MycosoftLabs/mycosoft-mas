@@ -1,0 +1,81 @@
+---
+description: When doing work, agents MUST invoke (or explicitly follow) the relevant sub-agents and load docs. No solo work without context and delegation.
+alwaysApply: true
+---
+
+# Agent Must Invoke Sub-Agents and Load Docs (All Agents)
+
+## CRITICAL: Why sub-agents are not invoked on every chat
+
+Cursor does not auto-invoke sub-agents. The **current agent** must explicitly:
+1. **@-mention** the right sub-agent(s) when the task needs them, or
+2. **Follow** the sub-agent’s guidance (read their agent file, run their commands, use their skills) as if that agent were involved.
+
+If you never @-invoke or follow sub-agents, work is done without voice-engineer, documentation-manager, terminal-watcher, etc., and quality/consistency suffer.
+
+---
+
+## Mandatory at task/session start (every chat when work is requested)
+
+When the user asks you to **do work** (code, fix, deploy, plan, debug, test), you MUST:
+
+### 1. Load context (docs)
+
+- Read **`.cursor/CURSOR_DOCS_INDEX.md`** (vital/current docs).
+- Read **docs relevant to the task** (e.g. voice → `VOICE_TEST_QUICK_START_FEB18_2026.md`, `MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md`; deploy → `DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md`).
+- For plans or multi-step work: read **last 7 days of docs** per `read-recent-docs-before-planning.mdc`.
+- Follow **documentation-manager** guidance: use dated docs, update MASTER_DOCUMENT_INDEX and registries when you add or change things.
+
+### 2. Invoke or follow the right sub-agents
+
+- **@-invoke** the sub-agent(s) that own the work (e.g. **@voice-engineer** for voice, **@website-dev** for Next.js, **@deploy-pipeline** for deploy).
+- If @-invoke is not used, **you** must still **follow** that agent’s instructions: read `.cursor/agents/<name>.md` and apply their “When Invoked” and commands.
+- **Terminal work:** Whenever you run dev server, tests, build, or deploy, involve **terminal-watcher** (read terminals folder, check for errors). See `terminal-watcher-and-agent-tasks.mdc`.
+- **Domain work:** Use the domain agent (e.g. **@voice-engineer** for PersonaPlex/Moshi/test-voice, **@documentation-manager** for new/updated docs and registries).
+
+### 3. Task-specific sub-agents (quick reference)
+
+| Task area | Must involve (invoke or follow) |
+|-----------|----------------------------------|
+| Voice, test-voice, Moshi, Bridge | voice-engineer, terminal-watcher if running services |
+| Website UI, Next.js, test-voice page | website-dev, dev-server-guardian if dev server, terminal-watcher for dev server |
+| Docs, registries, indexes | documentation-manager |
+| Deploy, VM, Docker, Cloudflare | deploy-pipeline, terminal-watcher for deploy output |
+| MAS/API/backend | backend-dev, terminal-watcher for tests/build |
+| DB, MINDEX, migrations | database-engineer |
+| Bugs, errors, stack traces | bug-fixer, test-engineer |
+| Gaps, missing connections | gap-agent |
+| Plans, roadmaps | plan-tracker |
+
+Full mapping: **`docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md`** and **`docs/CURSOR_TEAM_AUDIT_FEB12_2026.md`**.
+
+---
+
+## Protocol summary
+
+1. **User asks for work** → Treat as task start.
+2. **Load docs** → CURSOR_DOCS_INDEX + task-relevant docs (+ last 7 days if planning).
+3. **Choose sub-agents** → From task type (voice, website, deploy, docs, etc.).
+4. **Invoke or follow** → @-mention them or read their agent file and do what they would do.
+5. **Terminal** → If you run terminal commands, use terminal-watcher to read output and check for errors.
+6. **Completion** → If plan/task completes, follow `plan-and-task-completion-docs.mdc` (documentation-manager).
+
+---
+
+## Why this rule exists
+
+- Sub-agents exist so the right expertise (voice, website, docs, deploy) is applied.
+- If the main agent never invokes or follows them, sub-agents are never used and the user sees “why are you not invoking sub-agents on every chat?”
+- Making “invoke or follow sub-agents + load docs” **mandatory at task start** fixes that.
+
+---
+
+## Cross-references
+
+- `agent-must-invoke-subagents.mdc` — Task-type table and checklist (same obligation)
+- `mycosoft-full-context-and-registries.mdc` — Registries, 34 sub-agents list
+- `read-recent-docs-before-planning.mdc` — Recent docs before plans
+- `terminal-watcher-and-agent-tasks.mdc` — Terminal monitoring
+- `plan-and-task-completion-docs.mdc` — Completion docs
+- `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md` — Per-agent subagents and commands
+- `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md` — All 34 agents, rules, skills

@@ -80,26 +80,14 @@ try {
 Write-Host ""
 
 if ($PrintCommands) {
-    Write-Host "=== Commands to start the voice stack ===" -ForegroundColor Cyan
+    Write-Host "=== Start voice system (single script on this PC) ===" -ForegroundColor Cyan
+    Write-Host "   python scripts/start_voice_system.py"
     Write-Host ""
-    Write-Host "1) On 5090 host - start Moshi (Docker or native):" -ForegroundColor Yellow
-    Write-Host "   .\scripts\run-moshi-docker-local.ps1 -Device cuda"
-    Write-Host "   Or native: TORCHDYNAMO_DISABLE=1 python ... (see docs)"
-    Write-Host ""
-    Write-Host "2) On 5090 host - SSH reverse tunnel (keep this running):" -ForegroundColor Yellow
-    Write-Host "   ssh -o ExitOnForwardFailure=yes -N -R 19198:127.0.0.1:8998 mycosoft@192.168.0.190"
-    Write-Host "   (If 19198 is in use, use another port e.g. 19298 and set MOSHI_PORT on gpu01)"
-    Write-Host ""
-    Write-Host "3) On gpu01 - start PersonaPlex Bridge:" -ForegroundColor Yellow
-    Write-Host "   cd ~/mycosoft-mas && source .venv/bin/activate"
-    Write-Host "   export MOSHI_HOST=127.0.0.1 MOSHI_PORT=19198 MAS_ORCHESTRATOR_URL=http://192.168.0.188:8001"
-    Write-Host "   python services/personaplex-local/personaplex_bridge_nvidia.py"
-    Write-Host "   (Or nohup ... & and tail -f personaplex_bridge.log)"
-    Write-Host ""
-    Write-Host "4) Website dev (this PC):" -ForegroundColor Yellow
-    Write-Host "   cd C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website"
-    Write-Host "   npm run dev:next-only"
-    Write-Host "   Open: http://localhost:3010/test-voice"
+    Write-Host "=== Or: GPU node + 5090 (multi-machine) ===" -ForegroundColor Cyan
+    Write-Host "1) On 5090 - Moshi: .\scripts\run-moshi-docker-local.ps1 -Device cuda"
+    Write-Host "2) On 5090 - Tunnel: ssh -o ExitOnForwardFailure=yes -N -R 19198:127.0.0.1:8998 mycosoft@192.168.0.190"
+    Write-Host "3) On gpu01 - Bridge only: MOSHI_HOST=127.0.0.1 MOSHI_PORT=19198 python scripts/start_voice_system.py"
+    Write-Host "4) Website dev: cd WEBSITE/website && npm run dev:next-only -> http://localhost:3010/test-voice"
     Write-Host ""
 }
 

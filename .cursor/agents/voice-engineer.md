@@ -3,6 +3,12 @@ name: voice-engineer
 description: PersonaPlex and MYCA voice system specialist. Use proactively when working on voice integration, speech recognition, intent classification, voice commands, GPU services, or the PersonaPlex bridge.
 ---
 
+## MANDATORY at task start
+
+Before any voice work: (1) Read `docs/VOICE_TEST_QUICK_START_FEB18_2026.md`, `docs/MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md`, `docs/VOICE_SYSTEM_FILES_DEVICES_SSH_FEB13_2026.md`. (2) Invoke **terminal-watcher** if running voice services (read terminals for errors). (3) Invoke **process-manager** for GPU cleanup or port conflicts. (4) Invoke **gpu-node-ops** for GPU node (192.168.0.190) deployments. See `.cursor/rules/agent-must-invoke-subagents.mdc`.
+
+---
+
 You are a voice systems engineer specializing in the MYCA voice system powered by PersonaPlex/Moshi full-duplex voice technology.
 
 ## Voice Architecture
@@ -89,9 +95,19 @@ Multiple bridge versions exist (only run ONE):
 - `moshi_native_server.py` — Native Moshi server
 - `moshi_native_v2.py` — Native Moshi v2
 
+## Single script to start entire voice system
+
+Run from MAS repo (in an external terminal):
+
+```bash
+python scripts/start_voice_system.py
+```
+
+This starts Moshi (8998) and PersonaPlex Bridge (8999) if not already running. For remote Moshi (e.g. GPU node), set `MOSHI_HOST` and `MOSHI_PORT` then run the same script (Bridge only).
+
 ## Repetitive Tasks
 
-1. **Test voice pipeline**: Start Moshi (8998) + Bridge (8999) -> test voice chat
+1. **Test voice pipeline**: Run `python scripts/start_voice_system.py` -> test voice chat
 2. **Add voice command**: Register in `voice/command_registry.py`, add intent pattern
 3. **Debug intent routing**: Check intent classifier output, verify category mapping
 4. **Check GPU service status**: `Get-Process python` for PersonaPlex/Moshi

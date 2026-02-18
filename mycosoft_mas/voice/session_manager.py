@@ -257,7 +257,40 @@ class VoiceSessionManager:
                         f"RTF Alert: {session.session_id} status={session.rtf_status.value} "
                         f"rtf_avg={session.rtf_rolling_avg:.3f}"
                     )
-                    # TODO: Send alert to monitoring system
+                    # Send alert to monitoring system
+                    await self._send_rtf_alert(session)
+    
+    async def _send_rtf_alert(self, session: 'VoiceSession') -> None:
+        """Send RTF performance alert to monitoring system."""
+        try:
+            # Post to MAS monitoring endpoint if available
+            monitoring_url = os.getenv("MAS_MONITORING_URL", "http://192.168.0.188:8001/api/monitoring/alerts")
+            
+            alert_data = {
+                "type": "voice_rtf_degraded",
+                "severity": "critical" if session.rtf_status == RTFStatus.CRITICAL else "high",
+                "session_id": session.session_id,
+                "user_id": session.user_id,
+                "rtf_avg": session.rtf_rolling_avg,
+                "rtf_status": session.rtf_status.value,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "message": f"Voice session RTF degraded: {session.rtf_rolling_avg:.3f}x realtime",
+            }
+            
+            async with aiohttp.ClientSession() as client:
+                async with client.post(
+                    monitoring_url,
+                    json=alert_data,
+                    timeout=aiohttp.ClientTimeout(total=3),
+                    ssl=False
+                ) as resp:
+                    if resp.status in (200, 201, 202):
+                        logger.debug(f"RTF alert sent for session {session.session_id}")
+                    else:
+                        logger.debug(f"RTF alert endpoint returned {resp.status}")
+        except Exception as e:
+            # Don't fail session on monitoring errors
+            logger.debug(f"Could not send RTF alert: {e}")
     
     async def check_personaplex(self) -> bool:
         """Check if PersonaPlex server is available."""
@@ -432,4 +465,4 @@ async def init_session_manager() -> VoiceSessionManager:
     """Initialize and start the session manager."""
     manager = get_session_manager()
     await manager.start()
-    return manager
+    return manager

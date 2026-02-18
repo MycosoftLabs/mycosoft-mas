@@ -1,0 +1,101 @@
+---
+description: At the start of EVERY task or chat, agents MUST invoke relevant sub-agents by reading their guidance and applying their protocols. Never work in isolation.
+alwaysApply: true
+---
+
+# Agent Must Invoke Sub-Agents (All Agents – Perpetual)
+
+**Canonical rule:** `.cursor/rules/agent-must-invoke-subagents-and-docs.mdc` (adds why sub-agents aren’t auto-invoked and @-mention protocol). This file keeps the task-type table and checklist; both apply.
+
+## EVERY CHAT – DO THIS FIRST (before any other action)
+
+1. **Read** `.cursor/CURSOR_DOCS_INDEX.md` and **read** `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md`.
+2. **Identify** which sub-agents apply to this task (website, voice, deploy, docs, backend, etc.).
+3. **Read** the `.cursor/agents/<name>.md` file for each of those sub-agents and **apply** their protocols and commands.
+4. **Then** proceed with the user's request. Never answer or code without doing steps 1–3 first.
+
+---
+
+## CRITICAL: You Do Not Work Alone
+
+**On every task or chat start**, you MUST invoke the sub-agents your work requires. Do not proceed without loading their context and following their protocols.
+
+---
+
+## Mandatory at Task Start (Every Chat)
+
+### 1. Load docs and registries (always)
+
+- Read **`.cursor/CURSOR_DOCS_INDEX.md`** (vital/current docs)
+- Read **docs relevant to the task** from the last 7–14 days (sort by date, newest first)
+- For voice: `docs/VOICE_TEST_QUICK_START_FEB18_2026.md`, `docs/MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md`, `docs/VOICE_SYSTEM_FILES_DEVICES_SSH_FEB13_2026.md`, `docs/MYCA_VOICE_APPLICATION_HANDOFF_FEB17_2026.md`
+- Check `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md` and `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md` to identify which sub-agents apply
+
+### 2. Identify and invoke relevant sub-agents
+
+| Task type | Sub-agents to invoke (read their .md files + apply their protocols) |
+|-----------|----------------------------------------------------------------------|
+| **Website / UI** | `website-dev`, `dev-server-guardian`, `terminal-watcher` |
+| **Voice / PersonaPlex / test-voice** | `myca-voice`, `voice-engineer`, `process-manager`, `terminal-watcher` |
+| **Docs / registries** | `documentation-manager` |
+| **Deploy / pipeline** | `deploy-pipeline`, `terminal-watcher`, `regression-guard` |
+| **Database / MINDEX** | `database-engineer`, `memory-engineer` |
+| **Backend / MAS / APIs** | `backend-dev`, `terminal-watcher` |
+| **Tests** | `test-engineer`, `terminal-watcher` |
+| **Gaps / plans** | `gap-agent`, `plan-tracker` |
+| **Code quality** | `code-auditor`, `stub-implementer` |
+| **Security** | `security-auditor` |
+| **Docker / VMs** | `docker-ops`, `infrastructure-ops` |
+| **GPU / Moshi / PersonaPlex** | `myca-voice`, `voice-engineer`, `gpu-node-ops`, `process-manager` |
+
+**Invoke** means: read `.cursor/agents/<name>.md` and follow its guidance, protocols, and commands. Apply that context to your work.
+
+### 3. Terminal-using tasks
+
+- **Always** involve **terminal-watcher**: read the terminals folder, check for errors, run diagnostics.
+- See `.cursor/rules/terminal-watcher-and-agent-tasks.mdc`.
+
+### 4. Suggest @mentions when useful
+
+- When a task clearly needs a specialist, suggest: “@voice-engineer for voice setup” or “@documentation-manager to update registries.”
+- The user can @mention to load that agent explicitly.
+
+---
+
+## Why Sub-Agents Exist
+
+- **34 sub-agents** cover development, operations, quality, domain, and docs.
+- Each has protocols, commands, and context. Without them, agents duplicate work, miss steps, and skip critical checks.
+- **Voice, website, deploy, docs** all have dedicated agents. Use them.
+
+---
+
+## Voice-specific (test-voice, MYCA Voice)
+
+For any voice-related task:
+
+1. **Invoke `myca-voice`**: read `.cursor/agents/myca-voice.md` (knows all voice docs and correct flow)
+2. **Invoke `voice-engineer`**: read `.cursor/agents/voice-engineer.md`
+3. **Read voice docs**: `VOICE_TEST_QUICK_START_FEB18_2026.md`, `MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md`, `VOICE_SYSTEM_FILES_DEVICES_SSH_FEB13_2026.md`, `FULL_PERSONAPLEX_NO_EDGE_FEB13_2026.md`
+4. **Follow startup order**: Moshi → Bridge → MAS → website dev server
+5. **Invoke `terminal-watcher`** when running voice services or diagnostics
+
+---
+
+## Checklist Before Proceeding
+
+- [ ] Read CURSOR_DOCS_INDEX and task-relevant docs
+- [ ] Identified sub-agents from SUBAGENT_ROLES_AND_COMMANDS
+- [ ] Read the relevant sub-agent .md files
+- [ ] Applied their protocols and commands to the task
+- [ ] For terminal work: terminal-watcher protocol applied
+- [ ] For voice: myca-voice + voice-engineer + voice docs applied
+
+---
+
+## Related
+
+- `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md` – per-agent subagents and commands
+- `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md` – full agent list
+- `.cursor/rules/terminal-watcher-and-agent-tasks.mdc` – terminal monitoring
+- `.cursor/rules/mycosoft-full-context-and-registries.mdc` – registries and indexes

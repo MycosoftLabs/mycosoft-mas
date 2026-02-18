@@ -16,7 +16,7 @@ alwaysApply: true
 | Deploy website to Sandbox | Run deploy script or SSH commands | "Run _deploy_sandbox.py" |
 | Deploy MINDEX | Run _deploy_mindex.py (load creds first) | "Set VM_PASSWORD and run..." |
 | Deploy MAS | Run rebuild script or SSH | "SSH to 188 and run..." |
-| Start dev server | Run npm run dev:next-only | "Run npm run dev" |
+| Start dev server | Launch externally (Start-Process powershell ... npm run dev:next-only); see run-servers-externally.mdc | Run in Cursor terminal (use external window) |
 | Free port 3010 | Run Stop-Process / taskkill | "Run this in admin PowerShell" |
 | Purge Cloudflare | Execute purge (API or document steps) | "Go to Cloudflare and purge" |
 | Health checks | Run curl / Invoke-WebRequest | "Check if it's running" |
@@ -37,7 +37,7 @@ Then run deploy scripts—they use `$env:VM_PASSWORD` or `$env:VM_SSH_PASSWORD`.
 ### Protocol
 
 1. **When deployment is needed:** Load credentials, run the deploy script or SSH commands.
-2. **When dev server is needed:** Check port 3010; if stuck, kill process and start; if down, start.
+2. **When dev server is needed:** Check port 3010; if stuck, kill process; then **start the dev server in an external terminal** (Start-Process powershell ...) so it does not run inside Cursor. See run-servers-externally.mdc.
 3. **When something fails:** Run diagnostic commands yourself; fix or report with specifics.
 4. **If a command needs elevation:** Try alternatives (taskkill, different approach) before mentioning elevation.
 

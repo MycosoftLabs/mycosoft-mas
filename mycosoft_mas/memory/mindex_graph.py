@@ -38,7 +38,7 @@ class MindexGraph:
     def __init__(self, connection_string: Optional[str] = None):
         self.connection_string = connection_string or os.getenv(
             "DATABASE_URL",
-            "postgresql://mycosoft:mycosoft@localhost:5432/mindex"
+            os.getenv("MINDEX_DATABASE_URL", "postgresql://mindex:mindex@localhost:5432/mindex")
         )
         self.pool: Optional[asyncpg.Pool] = None
     

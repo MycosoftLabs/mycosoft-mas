@@ -18,7 +18,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional
 from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
@@ -26,6 +26,44 @@ if TYPE_CHECKING:
     from mycosoft_mas.consciousness.attention import AttentionFocus
 
 logger = logging.getLogger(__name__)
+
+
+class WriteBehindQueue:
+    """Non-blocking write-behind queue for low-priority persistence."""
+
+    def __init__(self):
+        self._queue: asyncio.Queue[Callable[[], Awaitable[None]]] = asyncio.Queue()
+        self._task: Optional[asyncio.Task] = None
+        self._shutdown = asyncio.Event()
+
+    def start(self) -> None:
+        if self._task and not self._task.done():
+            return
+        self._shutdown.clear()
+        self._task = asyncio.create_task(self._process_loop())
+
+    async def stop(self) -> None:
+        self._shutdown.set()
+        if self._task:
+            self._task.cancel()
+            await asyncio.gather(self._task, return_exceptions=True)
+        self._task = None
+
+    def enqueue(self, write_fn: Callable[[], Awaitable[None]]) -> None:
+        try:
+            self._queue.put_nowait(write_fn)
+        except asyncio.QueueFull:
+            pass
+
+    async def _process_loop(self) -> None:
+        while not self._shutdown.is_set():
+            try:
+                write_fn = await self._queue.get()
+                await write_fn()
+            except asyncio.CancelledError:
+                break
+            except Exception as exc:
+                logger.warning(f"Write-behind failed: {exc}")
 
 
 class DataFreshness(Enum):
@@ -145,6 +183,8 @@ class WorldModel:
         self._current_state = WorldState()
         self._history: List[WorldState] = []
         self._max_history = 100
+        self._cache_updated: datetime = datetime.now(timezone.utc)
+        self._write_queue = WriteBehindQueue()
 
         # Legacy/test compatibility: simple sensor registry.
         self._sensors: Dict[str, Any] = {}
@@ -264,6 +304,7 @@ class WorldModel:
             
             # Update timestamp and archive
             self._current_state.timestamp = now
+            self._cache_updated = now
             self._archive_state()
     
     def _should_update(self, last_update: Optional[datetime], interval: int) -> bool:
@@ -345,9 +386,17 @@ class WorldModel:
         Get a fast cached version of world context without any async operations.
         Used as fallback when get_relevant_context times out.
         """
+        age_seconds = max((datetime.now(timezone.utc) - self._cache_updated).total_seconds(), 0.0)
         return {
             "timestamp": self._current_state.timestamp.isoformat(),
             "summary": self._current_state.to_summary(),
+            "age_seconds": age_seconds,
+            "data": {
+                "crep": self._current_state.crep_data,
+                "predictions": self._current_state.predictions,
+                "ecosystem": self._current_state.ecosystem_status,
+                "devices": self._current_state.device_telemetry,
+            },
             "cached": True,
         }
     
@@ -454,7 +503,20 @@ class WorldModel:
             "total_satellites": self._current_state.total_satellites,
             "active_devices": self._current_state.active_devices,
             "history_size": len(self._history),
+            "cache_age_seconds": max((datetime.now(timezone.utc) - self._cache_updated).total_seconds(), 0.0),
         }
+
+    def enqueue_write(self, write_fn: Callable[[], Awaitable[None]]) -> None:
+        """Queue a non-blocking write-behind operation."""
+        self._write_queue.enqueue(write_fn)
+
+    def start_write_queue(self) -> None:
+        """Start write-behind processor loop."""
+        self._write_queue.start()
+
+    async def shutdown(self) -> None:
+        """Shutdown background write queue."""
+        await self._write_queue.stop()
     
     async def get_state(self) -> Dict[str, Any]:
         """Get current world state as a dictionary."""

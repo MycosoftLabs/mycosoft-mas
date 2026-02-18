@@ -172,7 +172,7 @@ class AgentRegistry:
         """Initialize agent registry."""
         self._database_url = database_url or os.getenv(
             "MINDEX_DATABASE_URL",
-            "postgresql://mycosoft:REDACTED_VM_SSH_PASSWORD@192.168.0.189:5432/mindex"
+            os.getenv("MINDEX_DATABASE_URL")
         )
         self._agents: Dict[str, RegisteredAgent] = {}
         self._initialized = False

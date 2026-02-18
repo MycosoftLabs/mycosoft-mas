@@ -70,6 +70,18 @@ $Services = @(
         MaxCpuPct   = 10
         Priority    = 2
     }
+    # ── Dev Server Watchdog (Website port 3010) ──
+    @{
+        Name          = "Dev Server Watchdog [port 3010]"
+        SearchPattern = "dev-server-watchdog"
+        StartScript   = "powershell.exe"
+        StartArgs     = "-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File `"C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\scripts\dev-server-watchdog.ps1`""
+        Port          = 3010
+        HealthUrl     = "http://localhost:3010"
+        MaxMemoryMB   = 50
+        MaxCpuPct     = 1
+        Priority      = 4
+    }
     # ── Add new services below this line ──
 )
 

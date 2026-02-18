@@ -97,6 +97,11 @@ class PersistentKnowledgeGraph:
     
     def __init__(self, database_url: Optional[str] = None):
         self._database_url = database_url or os.getenv(
+        if not self._database_url:
+            raise ValueError(
+                "MINDEX_DATABASE_URL environment variable is required. "
+                "Please set it to your PostgreSQL connection string."
+            )
             "DATABASE_URL",
             "postgresql://mycosoft:mycosoft@postgres:5432/mycosoft"
         )
@@ -774,7 +779,7 @@ class RegistryAutoPopulator:
         self._graph = graph
         self._database_url = database_url or os.getenv(
             "MINDEX_DATABASE_URL",
-            "postgresql://mycosoft:REDACTED_VM_SSH_PASSWORD@192.168.0.189:5432/mindex"
+            os.getenv("MINDEX_DATABASE_URL")
         )
         self._pool = None
     

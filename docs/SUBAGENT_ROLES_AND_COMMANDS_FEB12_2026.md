@@ -4,6 +4,21 @@
 **Status:** Complete  
 **Purpose:** For every agent working on a task: related subagents, their roles, commands, and when to use terminal-watcher for errors, diagnostics, and debugging (especially hot-reload).
 
+---
+
+## Session/task start: MUST invoke or follow sub-agents (every chat)
+
+**Rule:** When the user asks you to **do work** (code, fix, deploy, plan, debug, test), you MUST:
+
+1. **Load docs:** Read `.cursor/CURSOR_DOCS_INDEX.md` and any docs relevant to the task (e.g. voice → `VOICE_TEST_QUICK_START_FEB18_2026.md`, `MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md`). For plans, read last 7 days per `read-recent-docs-before-planning.mdc`.
+2. **Identify sub-agents:** Use the tables below (and `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md`) to pick which sub-agents own this work.
+3. **Invoke or follow:** Either **@-mention** those sub-agents (e.g. @voice-engineer, @website-dev, @documentation-manager) or read their `.cursor/agents/<name>.md` and apply their "When Invoked" and commands yourself.
+4. **Terminal:** If you run dev server, tests, build, or deploy, involve **terminal-watcher** (read terminals folder, check for errors).
+
+See `.cursor/rules/agent-must-invoke-subagents-and-docs.mdc` and `.cursor/rules/mycosoft-full-context-and-registries.mdc` (step 0). **Sub-agents are not auto-invoked** — the current agent must do this every chat when work is requested.
+
+---
+
 ## Terminal watcher (all terminal-using agents)
 
 **Rule:** When any agent runs or monitors terminal commands (dev server, tests, build, deploy), involve **terminal-watcher** to read the terminals folder, detect errors, run diagnostics, and suggest fixes. See `.cursor/rules/terminal-watcher-and-agent-tasks.mdc`.
@@ -37,6 +52,7 @@
 | **database-engineer** | terminal-watcher, deploy-mindex skill | Migrations, SQL, docker | After migration or DB commands. |
 | **memory-engineer** | terminal-watcher (if scripts run) | Memory scripts, MINDEX | When running scripts that output to terminal. |
 | **device-firmware** | terminal-watcher, process-manager | Serial, MycoBrain service | When running service or serial tools. |
+| **mycobrain-ops** | device-firmware, website-dev, terminal-watcher, process-manager | MycoBrain service, discover, firmware, UI | Full MycoBrain stack: services, firmware, UI, discovery, run/modify/upgrade. |
 | **websocket-engineer** | terminal-watcher, backend-dev | Run WS server, tests | After starting server or running tests. |
 
 ### Operations agents
@@ -70,6 +86,7 @@
 | Agent | Related subagents | Key commands (agent) | When to use terminal-watcher |
 |-------|-------------------|------------------------|------------------------------|
 | **scientific-systems** | terminal-watcher (if run scripts) | Lab/experiment scripts | When running scripts. |
+| **myca-voice** | voice-engineer, terminal-watcher, process-manager | MYCA voice docs, bridge flow, consciousness | When fixing MYCA persona/brain in voice; read voice docs first. |
 | **voice-engineer** | terminal-watcher, process-manager | PersonaPlex, bridge, GPU | When starting/stopping voice services. |
 | **earth2-ops** | terminal-watcher, process-manager | Earth2 API, GPU | When running Earth2 server. |
 | **crep-collector** | terminal-watcher (if collectors run) | Collector scripts | When running collectors. |
@@ -77,6 +94,7 @@
 | **n8n-workflow** | terminal-watcher (if CLI used) | n8n CLI, webhooks | When using n8n CLI. |
 | **n8n-ops** | terminal-watcher (if SSH/commands) | SSH to 188, n8n health | When running SSH or n8n commands. |
 | **integration-hub** | terminal-watcher (if tests run) | API client tests | When running integration tests. |
+| **mycobrain-ops** | device-firmware, website-dev, terminal-watcher | MycoBrain service, discover, firmware, UI | Full MycoBrain stack: run, modify, upgrade, ensure working. |
 | **notion-sync** | terminal-watcher (if sync run) | notion_docs_sync, watcher | When running sync scripts. |
 | **documentation-manager** | terminal-watcher (if manifest run) | build_docs_manifest.py | When running manifest or doc scripts. |
 

@@ -42,6 +42,7 @@
 | `docs/TERMINAL_AND_PYTHON_OPERATIONS_GUIDE_FEB12_2026.md` | Autostart, GPU cleanup, process registry |
 | `docs/VM_LAYOUT_AND_DEV_REMOTE_SERVICES_FEB06_2026.md` | VM layout, dev using remote services |
 | `docs/DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md` | Dev → sandbox deploy pipeline |
+| `docs/SANDBOX_LIVE_TESTING_PREP_FEB18_2026.md` | **Sandbox live prep**: VM layout, deploy checklist for another agent, NAS mount, Cloudflare, verification |
 
 ## 4. Security & credentials
 
@@ -55,6 +56,11 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/VOICE_TEST_QUICK_START_FEB18_2026.md` | **Voice test quick start**: dev server, Bridge + Moshi (GPU node or local), MAS, diagnostics, troubleshooting |
+| `docs/MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md` | **Voice systems checklist**: env vars, bridge/gpu node setup, diagnostics for test-voice page |
+| `docs/VOICE_SYSTEM_FILES_DEVICES_SSH_FEB13_2026.md` | Voice files, devices, SSH routes, startup order (5090, gpu01, MAS) |
+| `docs/MYCA_VOICE_APPLICATION_HANDOFF_FEB17_2026.md` | **Voice + MYCA handoff**: Apply MYCA (skill permissions, tool pipeline, evals, CI) to PersonaPlex, M-Y-C-A voice, test-voice page — for implementation in another agent |
+| `docs/MYCA_SELF_IMPROVEMENT_SYSTEM_FEB17_2026.md` | MYCA Self-Improvement System (constitution, skills, tool pipeline, event ledger, evals, CI) |
 | `docs/CONSCIOUSNESS_PIPELINE_ARCHITECTURE_FEB12_2026.md` | **Complete pipeline architecture**: Full diagram, components, flow, optimization (30s→5-8s), API endpoints, voice integration |
 | `docs/CONSCIOUSNESS_PIPELINE_OPTIMIZATION_FEB11_2026.md` | Pipeline optimization: parallel context, timeouts, non-blocking updates |
 | `docs/MYCA_CONSCIOUSNESS_DEPLOYMENT_FEB11_2026.md` | Consciousness deployment report |

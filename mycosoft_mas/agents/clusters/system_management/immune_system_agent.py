@@ -14,7 +14,6 @@ import json
 import uuid
 import os
 import time
-import random
 import aiohttp
 import feedparser
 from typing import Dict, List, Optional, Any, Set, Tuple, Union, Callable, Awaitable
@@ -24,6 +23,12 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 
 from mycosoft_mas.agents.base_agent import BaseAgent
+from mycosoft_mas.security.vulnerability_scanner import (
+    VulnerabilityScanner,
+    VulnerabilitySeverity,
+    VulnerabilityCategory,
+    get_vulnerability_scanner,
+)
 from mycosoft_mas.agents.enums import AgentStatus, TaskType, TaskStatus, TaskPriority
 
 class ThreatType(Enum):
@@ -584,161 +589,237 @@ class ImmuneSystemAgent(BaseAgent):
         )
     
     async def _scan_agent_implementation(self, agent_id: str) -> List[str]:
-        """Scan an agent's implementation for security issues"""
+        """Scan an agent's implementation for security issues using real VulnerabilityScanner"""
         self.logger.info(f"Scanning agent implementation: {agent_id}")
-        
-        # In a real implementation, this would analyze the agent's code
-        # For now, we'll simulate findings
         
         threat_ids = []
         
-        # Simulate finding a vulnerability
-        if random.random() < 0.3:  # 30% chance of finding a vulnerability
-            vulnerability_id = await self.detect_vulnerability(
-                name="Insecure Data Handling",
-                description="The agent is handling sensitive data without proper encryption",
-                cve_id="CVE-2023-12345",
-                severity=ThreatSeverity.HIGH,
-                affected_components=[agent_id],
-                patch_available=True,
-                patch_url="https://example.com/patches/secure-data-handling",
-                patch_notes="Implement proper encryption for sensitive data"
-            )
-            
-            # Create a threat based on the vulnerability
-            threat_id = await self.detect_threat(
-                name="Data Exposure Risk",
-                description="Risk of data exposure due to insecure data handling",
-                threat_type=ThreatType.VULNERABILITY,
-                severity=ThreatSeverity.HIGH,
-                source="internal_scan",
-                target=agent_id,
-                affected_agents=[agent_id],
-                metadata={"vulnerability_id": vulnerability_id}
-            )
-            
-            threat_ids.append(threat_id)
+        # Get the real vulnerability scanner
+        try:
+            scanner = await get_vulnerability_scanner()
+        except Exception as e:
+            self.logger.error(f"Could not initialize VulnerabilityScanner: {e}")
+            return threat_ids
         
-        # Simulate finding a potential backdoor
-        if random.random() < 0.1:  # 10% chance of finding a backdoor
-            threat_id = await self.detect_threat(
-                name="Suspicious Network Connection",
-                description="The agent is making connections to unknown external servers",
-                threat_type=ThreatType.MALWARE,
-                severity=ThreatSeverity.CRITICAL,
-                source="internal_scan",
-                target=agent_id,
-                indicators=["unknown_domain.com", "suspicious_ip:1234"],
-                affected_agents=[agent_id],
-                metadata={"connection_type": "outbound", "protocol": "tcp"}
-            )
-            
-            threat_ids.append(threat_id)
+        # Attempt to find the agent's source file
+        agent_file_patterns = [
+            f"mycosoft_mas/agents/{agent_id}.py",
+            f"mycosoft_mas/agents/v2/{agent_id}.py",
+            f"mycosoft_mas/agents/clusters/**/{agent_id}.py",
+        ]
         
+        # Scan the agents directory for real vulnerabilities
+        agents_dir = Path(__file__).parent.parent.parent / "agents"
+        if agents_dir.exists():
+            vulnerabilities = await scanner.scan_directory(str(agents_dir), recursive=True)
+            
+            # Process real findings
+            for vuln in vulnerabilities:
+                severity_map = {
+                    VulnerabilitySeverity.CRITICAL.value: ThreatSeverity.CRITICAL,
+                    VulnerabilitySeverity.HIGH.value: ThreatSeverity.HIGH,
+                    VulnerabilitySeverity.MEDIUM.value: ThreatSeverity.MEDIUM,
+                    VulnerabilitySeverity.LOW.value: ThreatSeverity.LOW,
+                }
+                threat_severity = severity_map.get(vuln.get("severity"), ThreatSeverity.MEDIUM)
+                
+                # Determine threat type from category
+                category_to_type = {
+                    VulnerabilityCategory.SECRET.value: ThreatType.DATA_LEAK,
+                    VulnerabilityCategory.INJECTION.value: ThreatType.CODE_INJECTION,
+                    VulnerabilityCategory.CVE.value: ThreatType.VULNERABILITY,
+                    VulnerabilityCategory.OWASP.value: ThreatType.VULNERABILITY,
+                    VulnerabilityCategory.CRYPTO.value: ThreatType.VULNERABILITY,
+                }
+                threat_type = category_to_type.get(vuln.get("category"), ThreatType.VULNERABILITY)
+                
+                # Create vulnerability record
+                vulnerability_id = await self.detect_vulnerability(
+                    name=vuln.get("message", "Security Issue"),
+                    description=f"Found in {vuln.get('file', 'unknown')} at line {vuln.get('line', 'unknown')}",
+                    cve_id=vuln.get("cve_id"),
+                    severity=threat_severity,
+                    affected_components=[agent_id, vuln.get("file", "")],
+                    patch_available=False,
+                    patch_notes=f"Review and fix: {vuln.get('message')}"
+                )
+                
+                # Create a threat based on the real vulnerability
+                threat_id = await self.detect_threat(
+                    name=f"Security Issue: {vuln.get('message', 'Unknown')[:50]}",
+                    description=vuln.get("message", "Security vulnerability detected"),
+                    threat_type=threat_type,
+                    severity=threat_severity,
+                    source="vulnerability_scanner",
+                    target=vuln.get("file", agent_id),
+                    affected_agents=[agent_id],
+                    metadata={
+                        "vulnerability_id": vulnerability_id,
+                        "category": vuln.get("category"),
+                        "file": vuln.get("file"),
+                        "line": vuln.get("line"),
+                        "pattern": vuln.get("pattern"),
+                    }
+                )
+                
+                threat_ids.append(threat_id)
+        
+        self.logger.info(f"Agent scan complete: {len(threat_ids)} threats found for {agent_id}")
         return threat_ids
     
     async def _scan_network_implementation(self, network_id: str) -> List[str]:
-        """Scan a network for security issues"""
-        self.logger.info(f"Scanning network: {network_id}")
-        
-        # In a real implementation, this would analyze the network
-        # For now, we'll simulate findings
+        """Scan network configuration for security issues using real analysis"""
+        self.logger.info(f"Scanning network configuration: {network_id}")
         
         threat_ids = []
         
-        # Simulate finding a network vulnerability
-        if random.random() < 0.2:  # 20% chance of finding a vulnerability
-            vulnerability_id = await self.detect_vulnerability(
-                name="Open Port",
-                description="An unnecessary port is open and accessible",
-                severity=ThreatSeverity.MEDIUM,
-                affected_components=[network_id],
-                patch_available=True,
-                patch_notes="Close the unnecessary port"
-            )
-            
-            # Create a threat based on the vulnerability
-            threat_id = await self.detect_threat(
-                name="Network Exposure",
-                description="Risk of network exposure due to open port",
-                threat_type=ThreatType.VULNERABILITY,
-                severity=ThreatSeverity.MEDIUM,
-                source="internal_scan",
-                target=network_id,
-                affected_networks=[network_id],
-                metadata={"vulnerability_id": vulnerability_id}
-            )
-            
-            threat_ids.append(threat_id)
+        # Get the real vulnerability scanner
+        try:
+            scanner = await get_vulnerability_scanner()
+        except Exception as e:
+            self.logger.error(f"Could not initialize VulnerabilityScanner: {e}")
+            return threat_ids
         
-        # Simulate finding a potential attack
-        if random.random() < 0.15:  # 15% chance of finding an attack
-            threat_id = await self.detect_threat(
-                name="Suspicious Network Traffic",
-                description="Detected suspicious network traffic patterns",
-                threat_type=ThreatType.NETWORK_ATTACK,
-                severity=ThreatSeverity.HIGH,
-                source="internal_scan",
-                target=network_id,
-                indicators=["port_scan", "brute_force_attempt"],
-                affected_networks=[network_id],
-                metadata={"traffic_type": "inbound", "protocol": "tcp"}
-            )
-            
-            threat_ids.append(threat_id)
+        # Scan network-related configuration files
+        config_patterns = [
+            "docker-compose*.yml",
+            "docker-compose*.yaml",
+            ".env*",
+            "*.conf",
+            "Caddyfile",
+        ]
         
+        # Scan the MAS repo root for network configs
+        repo_root = Path(__file__).parent.parent.parent.parent.parent
+        
+        # Check for common network security issues in config files
+        env_files = list(repo_root.glob(".env*"))
+        for env_file in env_files:
+            vulns = await scanner.scan_file(str(env_file))
+            for vuln in vulns:
+                if vuln.get("category") == VulnerabilityCategory.SECRET.value:
+                    threat_id = await self.detect_threat(
+                        name=f"Network Config Exposure: {vuln.get('message', 'Secret in config')[:40]}",
+                        description=f"Sensitive data found in {env_file.name}",
+                        threat_type=ThreatType.DATA_LEAK,
+                        severity=ThreatSeverity.HIGH,
+                        source="network_config_scan",
+                        target=network_id,
+                        affected_networks=[network_id],
+                        metadata={
+                            "file": str(env_file),
+                            "line": vuln.get("line"),
+                            "category": vuln.get("category"),
+                        }
+                    )
+                    threat_ids.append(threat_id)
+        
+        # Check for insecure CORS or firewall configurations
+        docker_files = list(repo_root.glob("docker-compose*.yml")) + list(repo_root.glob("docker-compose*.yaml"))
+        for docker_file in docker_files:
+            vulns = await scanner.scan_file(str(docker_file))
+            for vuln in vulns:
+                vulnerability_id = await self.detect_vulnerability(
+                    name=f"Docker Config Issue: {vuln.get('message', 'Config vulnerability')[:40]}",
+                    description=f"Found in {docker_file.name}",
+                    severity=ThreatSeverity.MEDIUM,
+                    affected_components=[network_id, str(docker_file)],
+                    patch_available=True,
+                    patch_notes="Review Docker configuration for security best practices"
+                )
+                
+                threat_id = await self.detect_threat(
+                    name="Network Configuration Vulnerability",
+                    description=f"Security issue in Docker/network configuration: {vuln.get('message')}",
+                    threat_type=ThreatType.VULNERABILITY,
+                    severity=ThreatSeverity.MEDIUM,
+                    source="network_config_scan",
+                    target=network_id,
+                    affected_networks=[network_id],
+                    metadata={
+                        "vulnerability_id": vulnerability_id,
+                        "file": str(docker_file),
+                        "line": vuln.get("line"),
+                    }
+                )
+                threat_ids.append(threat_id)
+        
+        self.logger.info(f"Network scan complete: {len(threat_ids)} threats found for {network_id}")
         return threat_ids
     
     async def _scan_file_implementation(self, file_path: str) -> List[str]:
-        """Scan a file for security issues"""
+        """Scan a file for security issues using real VulnerabilityScanner"""
         self.logger.info(f"Scanning file: {file_path}")
-        
-        # In a real implementation, this would analyze the file
-        # For now, we'll simulate findings
         
         threat_ids = []
         
-        # Simulate finding malware
-        if random.random() < 0.05:  # 5% chance of finding malware
-            threat_id = await self.detect_threat(
-                name="Malware Detected",
-                description="Detected malware in the file",
-                threat_type=ThreatType.MALWARE,
-                severity=ThreatSeverity.CRITICAL,
-                source="file_scan",
-                target=file_path,
-                signature="malware_signature_123",
-                affected_files=[file_path],
-                metadata={"file_type": "python", "file_size": 1024}
-            )
-            
-            threat_ids.append(threat_id)
+        # Get the real vulnerability scanner
+        try:
+            scanner = await get_vulnerability_scanner()
+        except Exception as e:
+            self.logger.error(f"Could not initialize VulnerabilityScanner: {e}")
+            return threat_ids
         
-        # Simulate finding a vulnerability
-        if random.random() < 0.1:  # 10% chance of finding a vulnerability
+        # Check if file exists
+        target_path = Path(file_path)
+        if not target_path.exists():
+            self.logger.warning(f"File does not exist: {file_path}")
+            return threat_ids
+        
+        # Scan the file for real vulnerabilities
+        vulnerabilities = await scanner.scan_file(str(target_path))
+        
+        for vuln in vulnerabilities:
+            # Map scanner severity to ThreatSeverity
+            severity_map = {
+                VulnerabilitySeverity.CRITICAL.value: ThreatSeverity.CRITICAL,
+                VulnerabilitySeverity.HIGH.value: ThreatSeverity.HIGH,
+                VulnerabilitySeverity.MEDIUM.value: ThreatSeverity.MEDIUM,
+                VulnerabilitySeverity.LOW.value: ThreatSeverity.LOW,
+            }
+            threat_severity = severity_map.get(vuln.get("severity"), ThreatSeverity.MEDIUM)
+            
+            # Determine threat type from category
+            category_to_type = {
+                VulnerabilityCategory.SECRET.value: ThreatType.DATA_LEAK,
+                VulnerabilityCategory.INJECTION.value: ThreatType.CODE_INJECTION,
+                VulnerabilityCategory.CVE.value: ThreatType.VULNERABILITY,
+                VulnerabilityCategory.OWASP.value: ThreatType.VULNERABILITY,
+                VulnerabilityCategory.CRYPTO.value: ThreatType.VULNERABILITY,
+            }
+            threat_type = category_to_type.get(vuln.get("category"), ThreatType.VULNERABILITY)
+            
+            # Create vulnerability record
             vulnerability_id = await self.detect_vulnerability(
-                name="Code Vulnerability",
-                description="Detected a code vulnerability in the file",
-                severity=ThreatSeverity.MEDIUM,
+                name=vuln.get("message", "File Security Issue"),
+                description=f"Found at line {vuln.get('line', 'unknown')} in {file_path}",
+                cve_id=vuln.get("cve_id"),
+                severity=threat_severity,
                 affected_components=[file_path],
-                patch_available=True,
-                patch_notes="Fix the vulnerability in the code"
+                patch_available=False,
+                patch_notes=f"Review and fix: {vuln.get('message')}"
             )
             
-            # Create a threat based on the vulnerability
+            # Create threat based on real vulnerability
             threat_id = await self.detect_threat(
-                name="Code Vulnerability",
-                description="Risk of code exploitation due to vulnerability",
-                threat_type=ThreatType.VULNERABILITY,
-                severity=ThreatSeverity.MEDIUM,
+                name=f"File Issue: {vuln.get('message', 'Unknown')[:50]}",
+                description=vuln.get("message", "Security vulnerability detected in file"),
+                threat_type=threat_type,
+                severity=threat_severity,
                 source="file_scan",
                 target=file_path,
                 affected_files=[file_path],
-                metadata={"vulnerability_id": vulnerability_id}
+                metadata={
+                    "vulnerability_id": vulnerability_id,
+                    "category": vuln.get("category"),
+                    "line": vuln.get("line"),
+                    "pattern": vuln.get("pattern"),
+                }
             )
             
             threat_ids.append(threat_id)
         
+        self.logger.info(f"File scan complete: {len(threat_ids)} threats found in {file_path}")
         return threat_ids
     
     async def _process_threat(self, threat_id: str) -> None:

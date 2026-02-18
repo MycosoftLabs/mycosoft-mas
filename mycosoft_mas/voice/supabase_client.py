@@ -1,4 +1,4 @@
-﻿"""Supabase Voice Session Store - February 5, 2026
+"""Supabase Voice Session Store - February 5, 2026
 
 Persists voice sessions to Supabase/PostgreSQL for the memory system.
 Integrates with PersonaPlex bridge for session tracking.
@@ -55,16 +55,17 @@ class VoiceSessionStore:
             await self.connect()
         
         try:
+            metadata_json = json.dumps(metadata or {})
             async with self._pool.acquire() as conn:
                 await conn.execute('''
                     INSERT INTO memory.voice_sessions 
                         (session_id, conversation_id, mode, persona, user_id, voice_prompt, metadata)
-                    VALUES ($1, $2, $3, $4, $5::uuid, $6, $7)
+                    VALUES ($1, $2, $3, $4, $5::uuid, $6, $7::jsonb)
                     ON CONFLICT (session_id) DO UPDATE SET
                         is_active = TRUE,
                         metadata = memory.voice_sessions.metadata || EXCLUDED.metadata
                 ''', session_id, conversation_id, mode, persona,
-                    user_id, voice_prompt, metadata or {})
+                    user_id, voice_prompt, metadata_json)
             logger.info(f"Created voice session: {session_id}")
             return True
         except Exception as e:
@@ -86,12 +87,13 @@ class VoiceSessionStore:
         
         turn_id = str(uuid4())
         try:
+            metadata_json = json.dumps(metadata or {})
             async with self._pool.acquire() as conn:
                 await conn.execute('''
                     INSERT INTO memory.voice_turns 
                         (turn_id, session_id, speaker, text, duration_ms, latency_ms, confidence, metadata)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-                ''', turn_id, session_id, speaker, text, duration_ms, latency_ms, confidence, metadata or {})
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
+                ''', turn_id, session_id, speaker, text, duration_ms, latency_ms, confidence, metadata_json)
                 
                 await conn.execute('''
                     UPDATE memory.voice_sessions 
@@ -120,16 +122,18 @@ class VoiceSessionStore:
         
         invocation_id = str(uuid4())
         try:
+            input_params_json = json.dumps(input_params or {})
+            result_json = json.dumps(result) if result else None
             async with self._pool.acquire() as conn:
                 await conn.execute('''
                     INSERT INTO memory.voice_tool_invocations 
                         (invocation_id, session_id, turn_id, agent, action, status, 
                          input_params, result, latency_ms, error_message,
                          completed_at)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                    VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9, $10,
                          CASE WHEN $6 IN ('success', 'error', 'cancelled') THEN NOW() ELSE NULL END)
                 ''', invocation_id, session_id, turn_id, agent, action, status,
-                    input_params or {}, result, latency_ms, error_message)
+                    input_params_json, result_json, latency_ms, error_message)
                 
                 if status in ('success', 'error'):
                     await conn.execute('''
