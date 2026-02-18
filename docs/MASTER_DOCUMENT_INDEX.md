@@ -4,6 +4,7 @@
 - `docs/SANDBOX_LIVE_TESTING_PREP_FEB18_2026.md` – **Sandbox live testing prep**: VM layout (Sandbox 187, MAS 188, MINDEX 189, GPU node 190), what must run where, deployment checklist for deploying agent (pull, build, run with NAS mount, Cloudflare purge), paths, image names, test-voice, env vars. Deployment is executed by another agent; this doc is the single reference.
 - `docs/DEPLOYMENT_HANDOFF_SANDBOX_FEB18_2026.md` – **Deployment handoff for deploying agent**: Short checklist and pointer to SANDBOX_LIVE_TESTING_PREP; code prepared and pushed to GitHub; deployment runs on VMs only.
 - `docs/MYCA_WIDGET_SANDBOX_DEPLOYMENT_PREP_FEB10_2026.md` – **MYCA widget sandbox prep**: Feature-specific deployment handoff for MYCA AI widget + voice (panel mic, voice commands). Website changes only; full deploy steps, verification checklist, env vars. Complements SANDBOX_LIVE_TESTING_PREP.
+- `docs/MYCA_WIDGET_SANDBOX_HANDOFF_FEB10_2026.md` – **Handoff summary**: Push status (website pushed, MAS pending), deploy agent instructions, VM layout. Quick reference for deployment.
 
 ## Work Summary (Feb 15-18, 2026)
 - `docs/WORK_SUMMARY_FEB15_18_2026.md` – **Comprehensive work summary**: All work completed Feb 15-18 across MAS, Website, MINDEX repos. New agents (crep-agent, myca-voice, mycobrain-ops, search-engineer), new rules (OOM prevention, voice, CREP, subagent invocation), consciousness/memory/voice updates, Docker management system, CI/CD workflows. Commit and deployment plan included.
