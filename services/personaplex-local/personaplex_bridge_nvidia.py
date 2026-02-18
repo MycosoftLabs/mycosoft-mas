@@ -927,10 +927,12 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                 logger.info(f"[{session_id[:8]}] WebSocket opened, waiting for handshake...")
                 try:
                     hs = await asyncio.wait_for(moshi.receive(), 120)
-                    logger.info(f"[{session_id[:8]}] Handshake received: type={hs.type}, data={hs.data[:100] if hasattr(hs, 'data') else 'N/A'}")
-                except asyncio.TimeoutError:
-                    logger.error(f"[{session_id[:8]}] Handshake timeout after 120s")
-                    await websocket.send_json({"type": "error", "message": "Moshi timeout"})
+                    # hs.data may be bytes, str, or an exception object — always use str() for logging
+                    hs_data_repr = str(hs.data)[:100] if hasattr(hs, "data") else "N/A"
+                    logger.info(f"[{session_id[:8]}] Handshake received: type={hs.type}, data={hs_data_repr}")
+                except (asyncio.TimeoutError, Exception) as timeout_err:
+                    logger.error(f"[{session_id[:8]}] Handshake wait failed: {type(timeout_err).__name__}: {timeout_err}")
+                    await websocket.send_json({"type": "error", "message": "Moshi handshake timeout — try again in a few seconds"})
                     return
                 
                 # Accept either binary b"\x00" OR JSON {"type": "connected"} handshake from Moshi
@@ -944,16 +946,22 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                         import json
                         hs_data = json.loads(hs.data)
                         if hs_data.get("type") == "connected":
-                            # Send binary b"\x00" to frontend to complete its handshake/warmup
                             await websocket.send_bytes(b"\x00")
                             handshake_ok = True
-                            logger.info(f"[{session_id[:8]}] JSON handshake accepted from Moshi, sent binary handshake to frontend: {hs_data}")
-                    except json.JSONDecodeError:
-                        logger.error(f"[{session_id[:8]}] Invalid JSON handshake: {hs.data[:100]}")
+                            logger.info(f"[{session_id[:8]}] JSON handshake accepted: {hs_data}")
+                    except (json.JSONDecodeError, TypeError):
+                        logger.error(f"[{session_id[:8]}] Invalid JSON handshake: {str(hs.data)[:100]}")
+                elif hs.type == aiohttp.WSMsgType.ERROR:
+                    # Moshi sent an error frame — data is the exception object, not bytes
+                    logger.error(f"[{session_id[:8]}] Moshi error frame: {type(hs.data).__name__}: {hs.data}")
+                    await websocket.send_json({"type": "error", "message": f"Moshi error: {type(hs.data).__name__} — try again"})
+                    return
                 
                 if not handshake_ok:
-                    logger.error(f"[{session_id[:8]}] Handshake failed: unexpected type={hs.type}, data={hs.data[:50] if hasattr(hs, 'data') else 'N/A'}")
-                    await websocket.send_json({"type": "error", "message": f"Handshake failed"})
+                    # data may be an exception; always convert with str()
+                    data_repr = str(hs.data)[:80] if hasattr(hs, "data") else "N/A"
+                    logger.error(f"[{session_id[:8]}] Handshake failed: type={hs.type}, data={data_repr}")
+                    await websocket.send_json({"type": "error", "message": "Moshi handshake failed — try again"})
                     return
                 
                 # Send history loaded notification if applicable
@@ -1053,8 +1061,14 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                                     pass
                     except WebSocketDisconnect:
                         logger.info(f"[{session_id[:8]}] Browser disconnected")
+                    except RuntimeError as e:
+                        # "Cannot call receive once a disconnect message has been received"
+                        if "disconnect" in str(e).lower() or "receive" in str(e).lower():
+                            logger.info(f"[{session_id[:8]}] Browser WS already closed")
+                        else:
+                            logger.error(f"Browser->Moshi error: {type(e).__name__}: {e}")
                     except Exception as e:
-                        logger.error(f"Browser->Moshi error: {e}")
+                        logger.error(f"Browser->Moshi error: {type(e).__name__}: {e}")
                 
                 # Wire runtime callbacks once Moshi socket is available.
                 s.moshi_ws = moshi
