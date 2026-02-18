@@ -26,11 +26,11 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 # Set working directory
 WORKDIR /app
 
-# Copy Poetry files
+# Copy pyproject.toml only - regenerate lock file to ensure consistency
 COPY pyproject.toml ./
 
-# Install dependencies
-RUN poetry install --no-dev --no-root
+# Regenerate lock file and install dependencies
+RUN poetry lock --no-update && poetry install --no-dev --no-root
 
 # Copy application code
 COPY . .
