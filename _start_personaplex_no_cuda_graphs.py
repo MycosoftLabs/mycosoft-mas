@@ -49,22 +49,40 @@ sys.path.insert(0, personaplex_path)
 # Voice prompts directory - use local models dir or HuggingFace cache
 model_dir = os.path.join(SCRIPT_DIR, "models", "personaplex-7b-v1")
 voice_prompt_dir = os.path.join(model_dir, "voices")
-hf_cache_voice_dir = os.path.expanduser(
-    r"~\.cache\huggingface\hub\models--nvidia--personaplex-7b-v1\snapshots\3343b641d663e4c851120b3575cbdfa4cc33e7fa\voices"
-)
+
+def _find_hf_cache_voices() -> str:
+    """Search HuggingFace snapshots directory for any snapshot containing a voices/ folder.
+    Returns the path if found, empty string otherwise. Never hardcodes a snapshot hash."""
+    hf_snapshots = os.path.expanduser(
+        os.path.join("~", ".cache", "huggingface", "hub",
+                     "models--nvidia--personaplex-7b-v1", "snapshots")
+    )
+    if not os.path.isdir(hf_snapshots):
+        return ""
+    for snapshot_hash in os.listdir(hf_snapshots):
+        candidate = os.path.join(hf_snapshots, snapshot_hash, "voices")
+        if os.path.isdir(candidate):
+            return candidate
+    return ""
 
 if not os.path.isdir(voice_prompt_dir):
-    # Try HuggingFace cache fallback
-    voice_prompt_dir = hf_cache_voice_dir
+    # Search HuggingFace cache across all snapshots (no hardcoded hash)
+    hf_found = _find_hf_cache_voices()
+    if hf_found:
+        voice_prompt_dir = hf_found
 
 # Validate voice prompts directory exists
 if not os.path.isdir(voice_prompt_dir):
+    hf_snapshots_path = os.path.expanduser(
+        os.path.join("~", ".cache", "huggingface", "hub",
+                     "models--nvidia--personaplex-7b-v1", "snapshots")
+    )
     print("=" * 70)
     print("ERROR: Voice prompts directory not found!")
     print("=" * 70)
     print("Checked locations:")
     print(f"  1. Local: {os.path.join(model_dir, 'voices')}")
-    print(f"  2. HuggingFace cache: {hf_cache_voice_dir}")
+    print(f"  2. HuggingFace cache (all snapshots): {hf_snapshots_path}")
     print()
     print("To download the model, run:")
     print("  pip install huggingface_hub")
