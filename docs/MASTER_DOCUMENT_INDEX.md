@@ -13,7 +13,8 @@
 ## MycoBrain COM7 + Sandbox Cohesion (Feb 18, 2026)
 - `docs/COM7_SANDBOX_COHESION_VERIFICATION_FEB18_2026.md` – **Board on desk (COM7) on sandbox and local**: Heartbeat to MAS, firewall, test script `scripts/test_mycobrain_com7_cohesion.py`, env and troubleshooting. Use when getting the desk board visible and controllable from both local dev and sandbox.
 
-## Sandbox Live Testing Prep (Feb 18, 2026)
+## Sandbox Live Testing Prep (Feb 18–19, 2026)
+- `docs/COMPOUNDS_BUG_FIX_AND_DEPLOY_FEB19_2026.md` – **Compounds bug fix deploy handoff**: Species compounds now fetched via `/api/compounds/species/[id]`; fix pushed to GitHub (website main). Deploy checklist, verification, env; reference SANDBOX_LIVE_TESTING_PREP for full deploy.
 - `docs/SANDBOX_PREP_AND_HANDOFF_FEB18_2026.md` – **Sandbox prep and handoff (entry point)**: What is prepared, docs to read (handoff → live prep), GitHub repos, live URLs. Deployment will happen in another agent.
 - `docs/SANDBOX_LIVE_TESTING_PREP_FEB18_2026.md` – **Sandbox live testing prep**: VM layout (Sandbox 187, MAS 188, MINDEX 189, GPU node 190), pre-deploy health check URLs, what must run where, deployment checklist for deploying agent (pull, build, run with NAS mount, Cloudflare purge), paths, image names, test-voice, env vars. Deployment is executed by another agent; this doc is the single reference.
 - `docs/DEPLOYMENT_HANDOFF_SANDBOX_FEB18_2026.md` – **Deployment handoff for deploying agent**: Short checklist and pointer to SANDBOX_LIVE_TESTING_PREP; code prepared and pushed to GitHub; deployment runs on VMs only (deployment will happen in another agent).
