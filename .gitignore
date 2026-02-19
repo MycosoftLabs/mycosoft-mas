@@ -184,3 +184,23 @@ _deprecated_mas_website/
 
 # PersonaPlex repo (not a proper submodule)
 personaplex-repo/
+
+# Logs directory
+logs/
+
+# Rust installer
+rustup-init.exe
+
+# Firmware build artifacts
+firmware/**/build*/
+firmware/**/*.bin
+firmware/**/*.elf
+firmware/**/*.map
+
+# Python venv inside project
+mycosoft_mas/venv/
+
+# Backup files
+*.backup
+*.bak
+docker-compose.*.backup
