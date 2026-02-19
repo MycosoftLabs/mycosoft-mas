@@ -8,6 +8,34 @@ Trade-off: Slower inference (~200ms/step instead of ~30ms) but more stable.
 import sys
 import os
 
+# =============================================================================
+# DEPENDENCY: personaplex-repo
+# =============================================================================
+# This script requires the personaplex-repo directory (not tracked in git).
+# If missing, clone it:
+#   cd c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas
+#   git clone https://github.com/mycosoft/personaplex-repo.git personaplex-repo
+# Or copy from an existing installation.
+# =============================================================================
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+personaplex_path = os.path.join(SCRIPT_DIR, "personaplex-repo", "moshi")
+
+if not os.path.isdir(personaplex_path):
+    print("=" * 70)
+    print("ERROR: personaplex-repo directory not found!")
+    print("=" * 70)
+    print(f"Expected path: {personaplex_path}")
+    print()
+    print("The personaplex-repo directory is not tracked in git.")
+    print("To set it up, run:")
+    print()
+    print("  cd c:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas")
+    print("  git clone https://github.com/mycosoft/personaplex-repo.git personaplex-repo")
+    print()
+    print("Or copy the personaplex-repo folder from an existing installation.")
+    print("=" * 70)
+    sys.exit(1)
+
 # DISABLE CUDA graphs and torch.compile for stability testing
 os.environ['NO_TORCH_COMPILE'] = '1'  # Disable torch.compile
 os.environ['NO_CUDA_GRAPH'] = '1'     # Disable CUDA graphs
@@ -15,12 +43,17 @@ os.environ['NO_CUDA_GRAPH'] = '1'     # Disable CUDA graphs
 # Set CUDA device
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-# Add PersonaPlex moshi to path
-personaplex_path = r"c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\personaplex-repo\moshi"
+# Add PersonaPlex moshi to path (personaplex_path already set above)
 sys.path.insert(0, personaplex_path)
 
-# Voice prompts directory (from HuggingFace cache)
-voice_prompt_dir = r"C:\Users\admin2\.cache\huggingface\hub\models--nvidia--personaplex-7b-v1\snapshots\3343b641d663e4c851120b3575cbdfa4cc33e7fa\voices"
+# Voice prompts directory - use local models dir or HuggingFace cache
+model_dir = os.path.join(SCRIPT_DIR, "models", "personaplex-7b-v1")
+voice_prompt_dir = os.path.join(model_dir, "voices")
+if not os.path.isdir(voice_prompt_dir):
+    # Fallback to HuggingFace cache
+    voice_prompt_dir = os.path.expanduser(
+        r"~\.cache\huggingface\hub\models--nvidia--personaplex-7b-v1\snapshots\3343b641d663e4c851120b3575cbdfa4cc33e7fa\voices"
+    )
 
 # Change to the moshi directory
 os.chdir(personaplex_path)
