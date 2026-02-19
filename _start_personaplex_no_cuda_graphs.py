@@ -66,19 +66,37 @@ if not os.path.isdir(model_dir):
     sys.exit(1)
 
 moshi_weight = os.path.join(model_dir, "model.safetensors")
-mimi_weight = os.path.join(model_dir, "tokenizer-e351c8d8-checkpoint125.safetensors")
 tokenizer = os.path.join(model_dir, "tokenizer_spm_32k_3.model")
 voice_prompt_dir = os.path.join(model_dir, "voices")
+
+def _find_mimi_weight(directory: str) -> str:
+    """Discover the Mimi tokenizer weight file by pattern rather than hardcoded name.
+    Matches tokenizer-*-checkpoint*.safetensors — works across model versions.
+    Returns the path if exactly one candidate found, or the newest by mtime if multiple."""
+    import glob as _glob
+    candidates = _glob.glob(os.path.join(directory, "tokenizer-*checkpoint*.safetensors"))
+    if not candidates:
+        return ""
+    if len(candidates) == 1:
+        return candidates[0]
+    # Multiple checkpoint versions — use the most recently modified
+    return max(candidates, key=os.path.getmtime)
+
+mimi_weight = _find_mimi_weight(model_dir)
 
 # Validate required model files exist
 missing_files = []
 for fpath, fname in [
-    (moshi_weight, "Moshi weights"),
-    (mimi_weight, "Mimi tokenizer weights"),
-    (tokenizer, "Tokenizer model"),
+    (moshi_weight, "Moshi weights (model.safetensors)"),
+    (tokenizer, "Tokenizer model (tokenizer_spm_32k_3.model)"),
 ]:
     if not os.path.isfile(fpath):
         missing_files.append(f"  - {fname}: {fpath}")
+
+if not mimi_weight:
+    missing_files.append(
+        f"  - Mimi tokenizer weights (tokenizer-*checkpoint*.safetensors): not found in {model_dir}"
+    )
 
 if missing_files:
     print("=" * 70)
