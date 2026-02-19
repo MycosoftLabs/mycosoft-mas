@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # Mycosoft MAS .gitignore - Consolidated Feb 2026
 # =============================================================================
 
@@ -191,8 +191,9 @@ logs/
 # Rust installer
 rustup-init.exe
 
-# Firmware build artifacts
+# Firmware build artifacts (directories and their contents)
 firmware/**/build*/
+firmware/**/build*/**
 firmware/**/*.bin
 firmware/**/*.elf
 firmware/**/*.map
