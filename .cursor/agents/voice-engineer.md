@@ -52,6 +52,51 @@ Voice requires GPU services running on the dev PC (RTX 5090):
 - NOT started by `npm run dev:next-only`
 - Cleanup: `scripts/dev-machine-cleanup.ps1 -KillStaleGPU`
 
+## PersonaPlex Startup Scripts (Feb 09, 2026)
+
+Two scripts start the Moshi server. Both validate all dependencies at startup and **fail fast** with clear instructions if anything is missing:
+
+| Script | Mode | CUDA Graphs | Speed |
+|--------|------|-------------|-------|
+| `start_personaplex.py` | Performance (default) | ENABLED | ~30ms/step |
+| `_start_personaplex_no_cuda_graphs.py` | Stability/debug | DISABLED | ~200ms/step |
+
+### Validation order (both scripts)
+
+1. `personaplex-repo/moshi` directory — fail with `git clone` instructions if missing
+2. `models/personaplex-7b-v1` directory — fail with `huggingface-cli download` instructions
+3. Individual model files (`model.safetensors`, tokenizer files) — list all missing files
+4. `voices/` directory — fail with download or copy instructions
+
+### Setup for fresh clone
+
+```powershell
+# 1. Clone personaplex-repo (not tracked in git)
+cd c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas
+git clone https://github.com/mycosoft/personaplex-repo.git personaplex-repo
+
+# 2. Download NVIDIA PersonaPlex model
+pip install huggingface_hub
+huggingface-cli download nvidia/personaplex-7b-v1 --local-dir models/personaplex-7b-v1
+
+# 3. Start (performance mode)
+python start_personaplex.py
+
+# 3b. OR stability mode (if server hangs/crashes)
+python _start_personaplex_no_cuda_graphs.py
+```
+
+### Path rules for PersonaPlex scripts
+
+- NEVER hardcode absolute paths — always use `SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))`
+- NEVER pass unvalidated paths to Moshi server — validate with `os.path.isdir()` / `os.path.isfile()` first
+- Both startup scripts must have identical validation coverage and error message format
+- `personaplex-repo/` and `models/` are gitignored — they must be set up manually on each machine
+
+### Reference doc
+
+`docs/PERSONAPLEX_STARTUP_HARDENING_FEB09_2026.md`
+
 ## When Invoked
 
 1. Handle PersonaPlex/Moshi integration (full-duplex voice)

@@ -50,6 +50,33 @@ Before scanning manually:
 5. **Memory**: `memory/mem0_adapter.py` -- vector search not implemented
 6. **Website API**: `/api/mindex/wifisense` POST, `/api/mindex/agents/anomalies` -- return 501 (GET implemented for wifisense)
 
+### Patterns Fixed in Feb 09, 2026 Session (use as audit template)
+
+| Pattern | Files | Fix Applied |
+|---------|-------|-------------|
+| Hardcoded absolute paths in startup scripts | `start_personaplex.py`, `_start_personaplex_no_cuda_graphs.py` | Replaced with `SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))` |
+| Missing dependency validation before use | Both PersonaPlex scripts | Added `os.path.isdir()` / `os.path.isfile()` checks with `sys.exit(1)` and actionable error messages |
+| Missing voice_prompt_dir validation | `start_personaplex.py` | Added directory check before passing to server |
+| Hardcoded DB passwords and API keys | `_full_mindex_sync.py`, `_quick_mindex_sync.py` | Moved to `os.environ.get()` |
+| `.gitignore` corruption (UTF-16 wide chars) | `.gitignore` | Detected and rewrote clean sections |
+| Incomplete gitignore patterns | `.gitignore` `firmware/**/build*/` | Added `firmware/**/build*/**` for full content exclusion |
+
+### Scan commands for these patterns
+
+```bash
+# Find hardcoded absolute paths in Python scripts
+rg "r\"[A-Za-z]:\\\\Users\\" --type py MAS/mycosoft-mas/ -l
+
+# Find hardcoded passwords / API keys
+rg "password\s*=\s*['\"][^'\"]{4}" --type py MAS/mycosoft-mas/ -l
+
+# Find scripts with sys.path.insert but no directory validation
+rg "sys\.path\.insert" --type py MAS/mycosoft-mas/ -l
+
+# Find os.path.join() calls with no subsequent validation
+rg "os\.path\.join.*dir\b" --type py MAS/mycosoft-mas/ -l
+```
+
 ## Scan Commands
 
 ```bash

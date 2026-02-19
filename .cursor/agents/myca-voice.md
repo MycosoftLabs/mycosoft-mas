@@ -131,6 +131,29 @@ python services/personaplex-local/personaplex_bridge_nvidia.py
 1. **"I'm Moshi" responses**: Moshi generating its own text while MAS brain runs in parallel. Fix: Bridge must use MAS response as sole TTS source; suppress or ignore Moshi's generated text.
 2. **No consciousness**: Bridge calling wrong endpoint or not waiting for MAS. Fix: Bridge must call `/voice/brain` or `/voice/orchestrator/chat` and use returned text for TTS.
 3. **Latency**: MAS context gathering (2–3s). Documented in CONSCIOUSNESS_PIPELINE_ARCHITECTURE; parallel gather helps.
+4. **Cryptic startup crash**: `ModuleNotFoundError` or silent path failures — caused by missing `personaplex-repo/` or `models/personaplex-7b-v1`. Both startup scripts now validate and fail fast; see setup instructions below.
+
+## PersonaPlex startup — required setup (Feb 09, 2026)
+
+The startup scripts validate all dependencies before launching. If anything is missing they print exact fix instructions. Setup for a new machine:
+
+```powershell
+# 1 — Clone personaplex-repo (gitignored, not in repo)
+cd c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas
+git clone https://github.com/mycosoft/personaplex-repo.git personaplex-repo
+
+# 2 — Download NVIDIA PersonaPlex model weights
+pip install huggingface_hub
+huggingface-cli download nvidia/personaplex-7b-v1 --local-dir models/personaplex-7b-v1
+
+# 3a — Performance mode (CUDA graphs ON, ~30ms/step — use this)
+python start_personaplex.py
+
+# 3b — Stability mode (CUDA graphs OFF, ~200ms/step — use when 3a hangs)
+python _start_personaplex_no_cuda_graphs.py
+```
+
+See `docs/PERSONAPLEX_STARTUP_HARDENING_FEB09_2026.md` for full detail.
 
 ---
 
