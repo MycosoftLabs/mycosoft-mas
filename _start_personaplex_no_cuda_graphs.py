@@ -49,11 +49,30 @@ sys.path.insert(0, personaplex_path)
 # Voice prompts directory - use local models dir or HuggingFace cache
 model_dir = os.path.join(SCRIPT_DIR, "models", "personaplex-7b-v1")
 voice_prompt_dir = os.path.join(model_dir, "voices")
+hf_cache_voice_dir = os.path.expanduser(
+    r"~\.cache\huggingface\hub\models--nvidia--personaplex-7b-v1\snapshots\3343b641d663e4c851120b3575cbdfa4cc33e7fa\voices"
+)
+
 if not os.path.isdir(voice_prompt_dir):
-    # Fallback to HuggingFace cache
-    voice_prompt_dir = os.path.expanduser(
-        r"~\.cache\huggingface\hub\models--nvidia--personaplex-7b-v1\snapshots\3343b641d663e4c851120b3575cbdfa4cc33e7fa\voices"
-    )
+    # Try HuggingFace cache fallback
+    voice_prompt_dir = hf_cache_voice_dir
+
+# Validate voice prompts directory exists
+if not os.path.isdir(voice_prompt_dir):
+    print("=" * 70)
+    print("ERROR: Voice prompts directory not found!")
+    print("=" * 70)
+    print("Checked locations:")
+    print(f"  1. Local: {os.path.join(model_dir, 'voices')}")
+    print(f"  2. HuggingFace cache: {hf_cache_voice_dir}")
+    print()
+    print("To download the model, run:")
+    print("  pip install huggingface_hub")
+    print("  huggingface-cli download nvidia/personaplex-7b-v1 --local-dir models/personaplex-7b-v1")
+    print()
+    print("Or copy models/personaplex-7b-v1/voices from an existing installation.")
+    print("=" * 70)
+    sys.exit(1)
 
 # Change to the moshi directory
 os.chdir(personaplex_path)
