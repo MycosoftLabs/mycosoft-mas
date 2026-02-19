@@ -6,7 +6,7 @@
 #
 # PERMANENT FIX APPLIED:
 #   - models/personaplex-7b-v1/.gitattributes: all filter=lfs rules removed
-#   - .lfsconfig: fetchexclude=*, concurrenttransfers=0
+#   - .lfsconfig: fetchexclude=*, concurrenttransfers=1 (1 is minimum safe for push)
 #   - git config local: filter.lfs.smudge/process set to --skip, required=false
 #   - git config global: all LFS filters removed
 #
@@ -72,7 +72,7 @@ foreach ($repo in $repos) {
         git config --local filter.lfs.process "git-lfs filter-process --skip"
         git config --local filter.lfs.required false
         git config --local lfs.fetchexclude "*"
-        git config --local lfs.concurrenttransfers 0
+        git config --local lfs.concurrenttransfers 1
     }
     Pop-Location
 }
