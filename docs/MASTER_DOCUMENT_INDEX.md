@@ -1,11 +1,28 @@
 # Master Document Index
 
+## Website UI – Neuromorphic Test Page (Feb 18, 2026)
+- `../WEBSITE/website/docs/NEUROMORPHIC_UI_TEST_PAGE_FEB18_2026.md` – **Neuromorphic UI test page**: Route `/ui/neuromorphic`; full component library (buttons, forms, feedback, data, advanced) with accessibility and scoped CSS. Test page only; rollout to specific pages/apps after validation.
+- `../WEBSITE/website/docs/DEFENSE_NEUROMORPHIC_UPDATE_FEB18_2026.md` – **Defense neuromorphic update**: Defense 2 replaces main defense page; Fusarium and OEI Capabilities converted to neuromorphic; UNCLASS removed; layout files for metadata.
+
+## External Services – MCP, Integrations, Env (Feb 18, 2026)
+- `docs/EXTERNAL_SERVICES_MCP_AND_ENV_FEB18_2026.md` – **NCBI, ChemSpider, Asana, Notion, Slack**: Env var names, `.mcp.json` wiring, MAS integration clients (NotionClient, NCBIClient, ChemSpiderClient, AsanaClient, SlackClient), which agents use them, and how they interact with MYCA. Set real values in `.env` only; never commit secrets.
+
+## VM Layout (Four Nodes)
+- `docs/VM_LAYOUT_FOUR_VMS_FEB09_2026.md` – **Canonical four-VM layout**: Sandbox 187, MAS 188, MINDEX 189, GPU node 190; each system has its own VM. Reference for rules and connectivity.
+
+## MycoBrain COM7 + Sandbox Cohesion (Feb 18, 2026)
+- `docs/COM7_SANDBOX_COHESION_VERIFICATION_FEB18_2026.md` – **Board on desk (COM7) on sandbox and local**: Heartbeat to MAS, firewall, test script `scripts/test_mycobrain_com7_cohesion.py`, env and troubleshooting. Use when getting the desk board visible and controllable from both local dev and sandbox.
+
 ## Sandbox Live Testing Prep (Feb 18, 2026)
 - `docs/SANDBOX_PREP_AND_HANDOFF_FEB18_2026.md` – **Sandbox prep and handoff (entry point)**: What is prepared, docs to read (handoff → live prep), GitHub repos, live URLs. Deployment will happen in another agent.
 - `docs/SANDBOX_LIVE_TESTING_PREP_FEB18_2026.md` – **Sandbox live testing prep**: VM layout (Sandbox 187, MAS 188, MINDEX 189, GPU node 190), pre-deploy health check URLs, what must run where, deployment checklist for deploying agent (pull, build, run with NAS mount, Cloudflare purge), paths, image names, test-voice, env vars. Deployment is executed by another agent; this doc is the single reference.
 - `docs/DEPLOYMENT_HANDOFF_SANDBOX_FEB18_2026.md` – **Deployment handoff for deploying agent**: Short checklist and pointer to SANDBOX_LIVE_TESTING_PREP; code prepared and pushed to GitHub; deployment runs on VMs only (deployment will happen in another agent).
 - `docs/MYCA_WIDGET_SANDBOX_DEPLOYMENT_PREP_FEB10_2026.md` – **MYCA widget sandbox prep**: Feature-specific deployment handoff for MYCA AI widget + voice (panel mic, voice commands). Website changes only; full deploy steps, verification checklist, env vars. Complements SANDBOX_LIVE_TESTING_PREP.
 - `docs/MYCA_WIDGET_SANDBOX_HANDOFF_FEB10_2026.md` – **Handoff summary**: Push status (website pushed, MAS pending), deploy agent instructions, VM layout. Quick reference for deployment.
+
+## n8n Workflow Sync and MYCA Registry (Feb 18, 2026)
+- `docs/AUTONOMOUS_WORKFLOW_SYSTEM_FEB18_2026.md` – **Autonomous n8n workflow system**: N8NWorkflowAgent (real implementation), WorkflowGeneratorAgent integration, WorkflowAutoMonitor (health/drift/auto-sync), voice run_workflow, LLM execute_workflow and generate_workflow tools, NLM workflow bridge, workflow outcome tracking (learning feedback), GET /workflows/performance, n8n-autonomous agent.
+- `docs/N8N_WORKFLOW_SYNC_AND_REGISTRY_FEB18_2026.md` – **n8n local + cloud forever synced**: Repo `n8n/workflows/*.json` → sync-both to local and cloud; MYCA full registry and full CRUD via `/api/workflows/*`; rule `.cursor/rules/n8n-management.mdc`; agents n8n-workflow, n8n-ops, n8n-workflow-sync, n8n-autonomous.
 
 ## Work Summary (Feb 15-18, 2026)
 - `docs/WORK_SUMMARY_FEB15_18_2026.md` – **Comprehensive work summary**: All work completed Feb 15-18 across MAS, Website, MINDEX repos. New agents (crep-agent, myca-voice, mycobrain-ops, search-engineer), new rules (OOM prevention, voice, CREP, subagent invocation), consciousness/memory/voice updates, Docker management system, CI/CD workflows. Commit and deployment plan included.
