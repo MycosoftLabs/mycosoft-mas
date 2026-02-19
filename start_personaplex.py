@@ -115,6 +115,21 @@ if missing_files:
     print("=" * 70)
     sys.exit(1)
 
+# Validate voice prompts directory exists
+if not os.path.isdir(voice_prompt_dir):
+    print("=" * 70)
+    print("ERROR: Voice prompts directory not found!")
+    print("=" * 70)
+    print(f"Expected path: {voice_prompt_dir}")
+    print()
+    print("The voices directory contains voice embeddings (e.g., NATF2.pt).")
+    print("Re-download the model with:")
+    print("  huggingface-cli download nvidia/personaplex-7b-v1 --local-dir models/personaplex-7b-v1")
+    print()
+    print("Or copy the voices folder from an existing installation.")
+    print("=" * 70)
+    sys.exit(1)
+
 # Change to the moshi directory
 os.chdir(personaplex_path)
 
