@@ -1,0 +1,87 @@
+# n8n Workflow Management (All Agents)
+
+**Date:** February 18, 2026  
+**Purpose:** Keep local and cloud n8n forever synced; ensure any task that needs workflows gets one; any task that modifies workflows is done by agents; MYCA has full registry view and full access to modify, rewire, and integrate workflows.
+
+---
+
+## CRITICAL: When to Involve n8n
+
+1. **Anything that would benefit from a workflow** (automation, webhooks, scheduled tasks, integrations, event-driven actions) → **Create or use an n8n workflow.** Invoke **@n8n-workflow** or **@n8n-ops** and create/update a workflow in `n8n/workflows/` and sync to both local and cloud.
+2. **Anything that would modify an existing workflow** (new trigger, new node, rewire, change credentials, add integration) → **Do it via the workflow API or repo + sync.** Never leave workflows only on one environment; always run sync-both after changes.
+3. **MYCA (orchestrator)** has **full view** of all n8n workflows via `GET /api/workflows/registry` and **full access** to modify, rewire, and integrate via the workflows API (`/api/workflows/*`). Use these endpoints for listing, creating, updating, activating, and syncing.
+
+---
+
+## Local and Cloud Forever Synced
+
+| Environment | URL (env) | Purpose |
+|-------------|-----------|---------|
+| **Local dev** | `N8N_LOCAL_URL` (default `http://localhost:5678`) | Development, testing |
+| **Cloud / production** | `N8N_URL` (default `http://192.168.0.188:5678`) | Live production on MAS VM |
+
+**Source of truth:** Repo folder `n8n/workflows/*.json`.  
+**Sync:** Push from repo to both local and cloud so production and local dev stay in sync.
+
+- After **creating** a new workflow: add JSON to `n8n/workflows/`, then call `POST /api/workflows/sync-both` (or run sync script).
+- After **editing** a workflow: update JSON in `n8n/workflows/` or update via API, then call `POST /api/workflows/sync-both`.
+- **n8n-ops** and **n8n-workflow** agents: ensure sync-both is run after any workflow change and that both environments are healthy.
+
+---
+
+## Sub-agents and Who Does What
+
+| Sub-agent | Use for |
+|-----------|---------|
+| **n8n-workflow** | Creating workflows, designing nodes, webhooks, workflow-memory integration, debugging execution. When a feature needs automation → create or extend a workflow. |
+| **n8n-ops** | n8n health, Docker/VM, starting local and VM n8n, sync status, ensuring both local and cloud are running and in sync. |
+| **n8n-workflow-sync** | Running sync-both, verifying repo ↔ local ↔ cloud parity, fixing drift. |
+
+When in doubt: **@n8n-workflow** for workflow design and creation; **@n8n-ops** for health and sync; **n8n-workflow-sync** for dedicated sync and parity checks.
+
+---
+
+## MAS API (MYCA Full View and Access)
+
+All under `http://192.168.0.188:8001/api/workflows/` (or local MAS):
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/workflows/registry` | GET | Full registry: all workflows with id, name, active, category, webhook_base. MYCA full view. |
+| `/api/workflows/list` | GET | List workflows (optional filters: active_only, category). |
+| `/api/workflows/sync-both` | POST | Sync repo workflows to both N8N_LOCAL_URL and N8N_URL. Call after any workflow change. |
+| `/api/workflows/sync` | POST | Sync repo to primary n8n (single target). |
+| `/api/workflows/{id}` | GET/PUT/DELETE | Get, update, delete workflow. |
+| `/api/workflows/{id}/activate` | POST | Activate workflow. |
+| `/api/workflows/{id}/deactivate` | POST | Deactivate workflow. |
+| `/api/workflows/create` | POST | Create workflow. |
+| `/api/workflows/export-all` | POST | Export all from n8n to repo. |
+
+MYCA can list, create, update, activate, deactivate, delete, clone, export, and sync workflows via these endpoints.
+
+---
+
+## Agent Protocol for Code Tasks
+
+- **Before adding automation / webhooks / scheduled behavior:** Consider whether an n8n workflow should implement it. If yes, invoke **n8n-workflow**, add or update workflow in `n8n/workflows/`, then sync-both.
+- **Before modifying an existing workflow:** Invoke **n8n-workflow** or **n8n-ops**; make the change (in repo JSON or via API); then run sync-both so local and cloud stay in sync.
+- **After any workflow change in this session:** Ensure `POST /api/workflows/sync-both` is called (or document for the user to run it / run it via script).
+
+---
+
+## Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `N8N_URL` | Production n8n (VM 188). Default: `http://192.168.0.188:5678` |
+| `N8N_LOCAL_URL` | Local n8n. Default: `http://localhost:5678` |
+| `N8N_API_KEY` | API key for production n8n |
+| `N8N_LOCAL_API_KEY` | API key for local n8n (can equal N8N_API_KEY) |
+
+---
+
+## DO NOT
+
+- **NEVER** create or edit a workflow only on local or only on cloud without syncing the other.
+- **NEVER** assume workflows are in sync without checking or running sync-both after changes.
+- **NEVER** skip involving n8n-workflow or n8n-ops when a task clearly needs workflow automation or n8n health/sync.

@@ -192,6 +192,16 @@ class SkillRegistry:
                 visibility=SkillVisibility.PUBLIC,
                 tags=["workflow", "automation", "n8n"],
             ),
+            SkillEntry(
+                skill_id="system.workflow.create",
+                name="Create Workflow",
+                description="Create an n8n workflow from a natural language description",
+                category="automation",
+                owner_agent="workflow-generator-agent",
+                source=SkillSource.BUILTIN,
+                visibility=SkillVisibility.PUBLIC,
+                tags=["workflow", "automation", "n8n", "generate"],
+            ),
         ]
         
         for skill in builtins:

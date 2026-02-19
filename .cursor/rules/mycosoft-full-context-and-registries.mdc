@@ -62,6 +62,7 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
 | System map | docs/system_map.md |
 | Memory docs index | docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md |
 | Recent docs | docs/*.md – sort by date, read last 2 weeks first |
+| n8n workflows (local+cloud sync, MYCA registry) | .cursor/rules/n8n-management.mdc; docs/N8N_WORKFLOW_SYNC_AND_REGISTRY_FEB18_2026.md |
 
 Website repo and other repos may have their own sitemaps, app lists, and API lists; when working there, discover and use those too.
 
@@ -126,8 +127,9 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 | `crep-collector` | Aviation, maritime, satellite, weather data collection |
 | `crep-agent` | CREP dashboard, OEI APIs, satellites/planes/vessels filters, orbit lines, what's done/not done, requirements |
 | `data-pipeline` | MINDEX ETL, scrapers, GBIF, blob storage, NAS |
-| `n8n-workflow` | n8n workflow automation, webhooks, triggers |
-| `n8n-ops` | n8n instance on MAS VM, workflows, health, credentials |
+| `n8n-workflow` | n8n workflow automation, webhooks, triggers; anything needing automation gets a workflow |
+| `n8n-ops` | n8n instance on MAS VM, workflows, health, credentials; local+cloud sync |
+| `n8n-workflow-sync` | Run sync-both (repo→local+cloud), verify parity, fix drift; use after workflow changes |
 | `integration-hub` | External API clients, API keys, rate limits |
 | `notion-sync` | Notion doc sync, watcher daemon, categorization |
 | `documentation-manager` | Dated docs, registry updates, MASTER_DOCUMENT_INDEX |

@@ -116,6 +116,28 @@ This new API provides heartbeat-based registration for remote MycoBrain devices.
 - Connection types: `tailscale`, `cloudflare`, `lan`
 - Devices auto-detected via Tailscale IP or manual configuration
 
+### n8n Workflows API (Feb 18, 2026)
+
+MYCA has full view and full access to n8n workflows. Source of truth: repo `n8n/workflows/*.json`. Sync-both pushes to local (N8N_LOCAL_URL) and cloud (N8N_URL) so production and local dev stay in sync.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/workflows/registry` | GET | Full workflow registry for MYCA (id, name, active, category, webhook_base, source_url, count) |
+| `/api/workflows/sync-both` | POST | Sync repo workflows to both local and cloud n8n (body: `{"activate_core": true}` optional) |
+| `/api/workflows/list` | GET | List workflows |
+| `/api/workflows/health` | GET | n8n health |
+| `/api/workflows/stats` | GET | Workflow stats |
+| `/api/workflows/{id}` | GET/PUT/DELETE | Get, update, delete workflow |
+| `/api/workflows/{id}/activate` | POST | Activate workflow |
+| `/api/workflows/{id}/deactivate` | POST | Deactivate workflow |
+| `/api/workflows/create` | POST | Create workflow |
+| `/api/workflows/sync` | POST | Sync to primary n8n |
+| `/api/workflows/export-all` | POST | Export all to repo |
+
+**Router**: `mycosoft_mas/core/routers/n8n_workflows_api.py`  
+**Rule**: `.cursor/rules/n8n-management.mdc`  
+**Agents**: n8n-workflow, n8n-ops, n8n-workflow-sync
+
 ### Code Files
 
 | Endpoint | Method | Description |

@@ -267,6 +267,58 @@ class LearningFeedbackService:
     def get_agent_performance(self, agent_id: str) -> Optional[AgentPerformance]:
         """Get performance metrics for an agent."""
         return self._agent_stats.get(agent_id)
+
+    def record_workflow_execution(
+        self,
+        workflow_name: str,
+        success: bool,
+        duration_seconds: float,
+        error_message: Optional[str] = None,
+    ) -> str:
+        """Record a workflow execution outcome for learning and performance tracking."""
+        return self.record_outcome(
+            task_type="workflow_execution",
+            agent_id="n8n",
+            success=success,
+            duration_seconds=duration_seconds,
+            error_message=error_message,
+            metadata={"workflow_name": workflow_name},
+        )
+
+    def get_workflow_performance(self) -> List[Dict[str, Any]]:
+        """Aggregate execution stats per workflow (success/failure rates, avg duration)."""
+        by_workflow: Dict[str, Dict[str, Any]] = {}
+        for o in self._outcomes:
+            if o.task_type != "workflow_execution":
+                continue
+            name = (o.metadata or {}).get("workflow_name") or "unknown"
+            if name not in by_workflow:
+                by_workflow[name] = {
+                    "workflow_name": name,
+                    "total": 0,
+                    "success_count": 0,
+                    "failed_count": 0,
+                    "total_duration_seconds": 0.0,
+                }
+            rec = by_workflow[name]
+            rec["total"] += 1
+            rec["total_duration_seconds"] += o.duration_seconds
+            if o.success:
+                rec["success_count"] += 1
+            else:
+                rec["failed_count"] += 1
+        result = []
+        for name, rec in by_workflow.items():
+            total = rec["total"]
+            result.append({
+                "workflow_name": rec["workflow_name"],
+                "total_executions": total,
+                "success_count": rec["success_count"],
+                "failed_count": rec["failed_count"],
+                "success_rate": rec["success_count"] / total if total else 0,
+                "avg_duration_seconds": rec["total_duration_seconds"] / total if total else 0,
+            })
+        return sorted(result, key=lambda x: -x["total_executions"])
     
     def get_all_agent_performance(self) -> Dict[str, AgentPerformance]:
         """Get performance metrics for all agents."""

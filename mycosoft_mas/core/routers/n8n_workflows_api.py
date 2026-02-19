@@ -3,8 +3,10 @@ N8N Workflow Management API Router - January 25, 2026
 
 FastAPI router for MYCA to manage n8n workflows via REST API.
 This is the interface for the orchestrator to control workflows 24/7/365.
+Full registry view and local+cloud sync for production and dev (Feb 18, 2026).
 """
 
+import os
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -79,6 +81,12 @@ class SchedulerConfig(BaseModel):
     archive_interval: int = 24
 
 
+class WorkflowExecuteRequest(BaseModel):
+    """Request body for voice/API workflow execution."""
+    workflow_name: str
+    data: Optional[Dict[str, Any]] = None
+
+
 # ==================== Workflow CRUD ====================
 
 @router.get("/health")
@@ -105,6 +113,126 @@ async def list_workflows(
     cat = WorkflowCategory(category) if category else None
     workflows = engine.list_workflows(active_only=active_only, category=cat)
     return {"workflows": [w.to_dict() for w in workflows], "count": len(workflows)}
+
+
+@router.get("/registry")
+async def workflow_registry(
+    active_only: bool = False,
+    category: Optional[str] = None
+):
+    """Full workflow registry for MYCA: all workflows with id, name, active, category, webhook path.
+    Single source of truth view so MYCA can modify, rewire, and integrate workflows."""
+    engine = get_workflow_engine()
+    cat = WorkflowCategory(category) if category else None
+    workflows = engine.list_workflows(active_only=active_only, category=cat)
+    base_url = getattr(engine, "base_url", "") or os.getenv("N8N_URL", "http://192.168.0.188:5678")
+    items = []
+    for w in workflows:
+        d = w.to_dict()
+        d["webhook_base"] = base_url.rstrip("/") + "/webhook/"
+        items.append(d)
+    return {
+        "source_url": base_url,
+        "workflows": items,
+        "count": len(items),
+        "timestamp": datetime.utcnow().isoformat(),
+    }
+
+
+@router.post("/sync-both")
+async def sync_both_local_and_cloud(request: SyncRequest):
+    """Sync repo workflows (n8n/workflows/*.json) to BOTH local (N8N_LOCAL_URL) and cloud (N8N_URL).
+    Keeps local dev and production forever in sync. Use after any workflow change."""
+    local_url = os.getenv("N8N_LOCAL_URL", "http://localhost:5678")
+    cloud_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+    local_key = os.getenv("N8N_LOCAL_API_KEY", os.getenv("N8N_API_KEY", ""))
+    cloud_key = os.getenv("N8N_API_KEY", "")
+    results = {"local": None, "cloud": None, "errors": []}
+    # Sync to local
+    try:
+        engine_local = N8NWorkflowEngine(base_url=local_url, api_key=local_key)
+        try:
+            r = engine_local.sync_all_local_workflows(activate_core=request.activate_core)
+            results["local"] = r.to_dict()
+        finally:
+            engine_local.close()
+    except Exception as e:
+        logger.warning(f"Sync to local failed: {e}")
+        results["errors"].append({"target": "local", "error": str(e)})
+    # Sync to cloud
+    try:
+        engine_cloud = N8NWorkflowEngine(base_url=cloud_url, api_key=cloud_key)
+        try:
+            r = engine_cloud.sync_all_local_workflows(activate_core=request.activate_core)
+            results["cloud"] = r.to_dict()
+        finally:
+            engine_cloud.close()
+    except Exception as e:
+        logger.warning(f"Sync to cloud failed: {e}")
+        results["errors"].append({"target": "cloud", "error": str(e)})
+    return {"status": "synced", "results": results, "timestamp": datetime.utcnow().isoformat()}
+
+
+@router.post("/execute")
+async def execute_workflow(request: WorkflowExecuteRequest):
+    """Execute an n8n workflow by name. Used by voice (run_workflow) and LLM tools."""
+    import time
+    start = time.perf_counter()
+    try:
+        from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
+        agent = N8NWorkflowAgent(
+            agent_id="n8n-workflow-api",
+            name="N8N Workflow",
+            config={},
+        )
+        task = {
+            "type": "execute_workflow",
+            "workflow_name": request.workflow_name,
+        }
+        if request.data:
+            task["data"] = request.data
+        result = await agent.process_task(task)
+        duration = time.perf_counter() - start
+        status = result.get("status", "unknown")
+        success = status == "success"
+        try:
+            from mycosoft_mas.services.learning_feedback import get_learning_service
+            get_learning_service().record_workflow_execution(
+                workflow_name=request.workflow_name,
+                success=success,
+                duration_seconds=duration,
+                error_message=None if success else result.get("message", str(result)),
+            )
+        except Exception as le:
+            logger.debug("Learning feedback record skipped: %s", le)
+        if success:
+            return {"status": "success", "result": result.get("result"), "message": "Workflow executed."}
+        return {"status": status, "result": result, "message": result.get("message", str(result))}
+    except Exception as e:
+        duration = time.perf_counter() - start
+        try:
+            from mycosoft_mas.services.learning_feedback import get_learning_service
+            get_learning_service().record_workflow_execution(
+                workflow_name=request.workflow_name,
+                success=False,
+                duration_seconds=duration,
+                error_message=str(e),
+            )
+        except Exception as le:
+            logger.debug("Learning feedback record skipped: %s", le)
+        logger.exception("Execute workflow failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/performance")
+async def get_workflow_performance():
+    """Aggregate workflow execution stats (success/failure rates, avg duration)."""
+    try:
+        from mycosoft_mas.services.learning_feedback import get_learning_service
+        return get_learning_service().get_workflow_performance()
+    except Exception as e:
+        logger.warning("Workflow performance unavailable: %s", e)
+        return []
 
 
 @router.get("/{workflow_id}")

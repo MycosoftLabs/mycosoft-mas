@@ -1,37 +1,30 @@
-import paramiko
+#!/usr/bin/env python3
+"""Final status check."""
+import os
 import sys
-sys.stdout.reconfigure(encoding='utf-8')
+from pathlib import Path
+import paramiko
 
-VM_HOST = '192.168.0.187'
-VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
+creds_file = Path(__file__).parent.parent / ".credentials.local"
+for line in creds_file.read_text().splitlines():
+    if line and not line.startswith("#") and "=" in line:
+        key, value = line.split("=", 1)
+        os.environ[key.strip()] = value.strip()
 
-print('=== CONTAINER STATUS ===')
-_, out, _ = ssh.exec_command('docker ps --filter name=mycosoft-website --format "{{.Names}}\t{{.Status}}"')
-print(out.read().decode('utf-8', errors='replace'))
+client = paramiko.SSHClient()
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+client.connect('192.168.0.189', username='mycosoft', password=os.environ['VM_SSH_PASSWORD'], timeout=30)
 
-print('\n=== CURL TEST ===')
-_, out, _ = ssh.exec_command('curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/')
-print(f'Homepage: {out.read().decode("utf-8", errors="replace")}')
+print("Container status:")
+stdin, stdout, stderr = client.exec_command('docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep mindex-api', timeout=30)
+stdout.channel.recv_exit_status()
+print(stdout.read().decode('utf-8', errors='replace'))
 
-print('\n=== RECENT LOGS ===')
-_, out, _ = ssh.exec_command('docker logs mycosoft-website --tail 20 2>&1')
-print(out.read().decode('utf-8', errors='replace'))
+print("\nFinal health check:")
+stdin, stdout, stderr = client.exec_command('curl -s http://localhost:8000/api/mindex/health', timeout=30)
+stdout.channel.recv_exit_status()
+print(stdout.read().decode('utf-8', errors='replace'))
 
-print('\n=== RESTART CLOUDFLARE TUNNEL ===')
-_, out, err = ssh.exec_command(f'echo "{VM_PASS}" | sudo -S systemctl restart cloudflared 2>&1')
-out.channel.recv_exit_status()
-print('Restarted cloudflared service')
-
-import time
-time.sleep(5)
-
-print('\n=== CLOUDFLARE STATUS ===')
-_, out, _ = ssh.exec_command('systemctl status cloudflared --no-pager 2>&1 | head -15')
-print(out.read().decode('utf-8', errors='replace'))
-
-ssh.close()
+client.close()

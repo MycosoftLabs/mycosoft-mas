@@ -35,6 +35,9 @@
 - `docs/SEARCH_SUBAGENT_MASTER_FEB10_2026.md` – **Search sub-agent master**: Complete reference for search-engineer — work done/not done, tools, interfaces, plans, deployment (dev→sandbox→prod), user interactions, MINDEX/MYCA/NLM integrations, Mycosoft apps. Agent: `.cursor/agents/search-engineer.md`.
 - `docs/SEARCH_SYSTEM_STATUS_FEB10_2026.md` – **Search status**: Fluid Search architecture, MINDEX/MYCA/NLM integrations, completed work, remaining tasks. Use when building or fixing search, widgets, Earth portals, compound→species, genetics, empty widgets, or deploying to sandbox/production.
 
+## Auto-Apply Analyzer Fixes (Feb 09, 2026)
+- `docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md` – **Linter and analyzer fixes auto-applied**: `editor.codeActionsOnSave` (ESLint, source.fixAll), `editor.formatOnSave`, bulk fix via terminal (npm run lint --fix, make fmt), code-auditor → @stub-implementer workflow for approved fixes. Settings added to `.cursor/settings.json`.
+
 ## Cursor OOM Prevention (Feb 18, 2026)
 - `docs/OOM_PREVENTION_FEB18_2026.md` – **Prevent Cursor OOM crashes**: Workspace settings (files/search/watcher exclude, TypeScript 2GB cap), run dev server and GPU from external terminal only, cleanup before opening Cursor, optional .cursorignore per repo. Rule: `.cursor/rules/oom-prevention.mdc`.
 

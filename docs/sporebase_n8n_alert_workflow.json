@@ -1,0 +1,77 @@
+{
+  "name": "SporeBase Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 15 }]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 15 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "url": "=http://192.168.0.188:8001/api/sporebase/devices",
+        "options": {}
+      },
+      "id": "fetch-devices",
+      "name": "Fetch SporeBase devices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [220, 0],
+      "notes": "Get list of SporeBase devices from MAS"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "offline-check",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "offline",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-offline",
+      "name": "Filter offline",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [440, 0],
+      "notes": "Keep only offline devices for alert"
+    },
+    {
+      "parameters": {
+        "content": "=SporeBase device offline: {{ $json.device_id }} ({{ $json.device_name || 'Unknown' }})",
+        "height": 100,
+        "width": 200
+      },
+      "id": "stub-notify",
+      "name": "Notify (configure Slack/Email)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [660, 0],
+      "notes": "Replace with Slack, Email, or HTTP node to send alert"
+    }
+  ],
+  "connections": {
+    "Every 15 min": { "main": [[{ "node": "Fetch SporeBase devices", "type": "main", "index": 0 }]] },
+    "Fetch SporeBase devices": { "main": [[{ "node": "Filter offline", "type": "main", "index": 0 }]] },
+    "Filter offline": { "main": [[{ "node": "Notify (configure Slack/Email)", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [{ "name": "SporeBase" }],
+  "triggerCount": 0,
+  "updatedAt": "2026-02-12T00:00:00.000Z",
+  "versionId": "1"
+}

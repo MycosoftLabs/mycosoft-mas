@@ -26,18 +26,20 @@ These run in the background and should be restarted if found down. Managed by `s
 
 ## 2. VM SERVICES (always-on, run on VMs not local)
 
-These run on VMs as systemd services or Docker containers. Do NOT start locally.
+MAS has its own VM (188), Sandbox (187), MINDEX (189), GPU node (190). Do NOT start these locally.
 
 | Service | VM | Port | Script/Entry | Notes |
 |---------|-----|------|-------------|-------|
-| MAS Orchestrator | 188 | 8001 | `mycosoft_mas/core/myca_main.py` | systemd service. Restart: `ssh 188; sudo systemctl restart mas-orchestrator` |
-| MINDEX API | 189 | 8000 | `mindex_api/main.py` | Database + vector store API |
-| Website Container | 187 | 3000 | Docker container | Next.js in Docker. Rebuild with `_rebuild_sandbox.py` |
-| n8n Workflows | 188 | 5678 | Docker container | Workflow automation |
-| PostgreSQL | 189 | 5432 | Docker container | Main database |
-| Redis | 189 | 6379 | Docker container | Cache |
-| Qdrant | 189 | 6333 | Docker container | Vector DB |
-| Ollama | 188 | 11434 | Docker container | LLM service |
+| MAS Orchestrator | 188 | 8001 | `mycosoft_mas/core/myca_main.py` | systemd on MAS VM. Restart: `ssh 188; sudo systemctl restart mas-orchestrator` |
+| MINDEX API | 189 | 8000 | `mindex_api/main.py` | MINDEX VM: database + vector store API |
+| Website Container | 187 | 3000 | Docker container | Sandbox VM. Rebuild with `_rebuild_sandbox.py` |
+| MycoBrain (host) | 187 | 8003 | systemd on Sandbox | Serial gateway; always-on on 187 |
+| n8n Workflows | 188 | 5678 | Docker container | MAS VM: workflow automation |
+| PostgreSQL | 189 | 5432 | Docker container | MINDEX VM: main database |
+| Redis | 189 | 6379 | Docker container | MINDEX VM: cache |
+| Qdrant | 189 | 6333 | Docker container | MINDEX VM: vector DB |
+| Ollama | 188 | 11434 | Docker container | MAS VM: LLM service |
+| GPU workloads | 190 | TBD | TBD | GPU node: voice, Earth2, inference (when moved) |
 
 ## 3. GPU SERVICES (resource-heavy, start ONLY when needed)
 

@@ -73,6 +73,15 @@ from .memory_store import NLMMemoryStore, get_nlm_store
 # Legacy exports for backward compatibility
 from .data_pipeline import NLMDataPipeline
 
+# NLM-to-workflow bridge (trigger workflows from predictions)
+from .workflow_bridge import (
+    get_workflow_for_prediction,
+    trigger_workflow_from_nlm,
+    maybe_trigger_workflow_from_prediction,
+    NLM_TO_WORKFLOW_MAP,
+    DEFAULT_CONFIDENCE_THRESHOLD,
+)
+
 # Alias NLMInference to NLMService for backward compatibility
 NLMInference = NLMService
 
@@ -114,6 +123,12 @@ __all__ = [
     # Legacy
     "NLMDataPipeline",
     "NLMInference",
+    # Workflow bridge
+    "get_workflow_for_prediction",
+    "trigger_workflow_from_nlm",
+    "maybe_trigger_workflow_from_prediction",
+    "NLM_TO_WORKFLOW_MAP",
+    "DEFAULT_CONFIDENCE_THRESHOLD",
 ]
 
 __version__ = "0.1.0"

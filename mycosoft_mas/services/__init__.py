@@ -15,10 +15,16 @@ from mycosoft_mas.services.deployment_feedback import (
     DeploymentFeedbackService,
     get_deployment_service,
 )
+from mycosoft_mas.services.workflow_auto_monitor import (
+    WorkflowAutoMonitor,
+    get_workflow_auto_monitor,
+)
 
 __all__ = [
     "LearningFeedbackService",
     "get_learning_service",
     "DeploymentFeedbackService",
     "get_deployment_service",
+    "WorkflowAutoMonitor",
+    "get_workflow_auto_monitor",
 ]

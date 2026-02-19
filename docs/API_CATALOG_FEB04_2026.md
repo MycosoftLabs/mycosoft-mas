@@ -76,6 +76,24 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/registry/stats` | GET | Registry stats |
 | `/api/registry/health` | GET | Registry health |
 
+### n8n Workflows API (`/api/workflows/*`) – Feb 18, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/workflows/registry` | GET | Full workflow registry for MYCA |
+| `/api/workflows/sync-both` | POST | Sync repo to both local and cloud n8n |
+| `/api/workflows/execute` | POST | Execute workflow by name (voice/LLM); body: workflow_name, optional data |
+| `/api/workflows/performance` | GET | Per-workflow execution stats (learning feedback) |
+| `/api/workflows/list` | GET | List workflows |
+| `/api/workflows/health` | GET | n8n health |
+| `/api/workflows/stats` | GET | Workflow stats |
+| `/api/workflows/{id}` | GET/PUT/DELETE | Get, update, delete workflow |
+| `/api/workflows/{id}/activate` | POST | Activate workflow |
+| `/api/workflows/{id}/deactivate` | POST | Deactivate workflow |
+| `/api/workflows/create` | POST | Create workflow |
+| `/api/workflows/sync` | POST | Sync to primary n8n |
+| `/api/workflows/export-all` | POST | Export all to repo |
+
 ### Graph API (`/api/graph/*`)
 
 | Endpoint | Method | Description |

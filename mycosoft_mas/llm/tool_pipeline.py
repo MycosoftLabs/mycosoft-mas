@@ -204,6 +204,33 @@ class ToolRegistry:
             requires_confirmation=True
         ))
         
+        # Generate Workflow Tool
+        self.register(ToolDefinition(
+            name="generate_workflow",
+            description="Create a new n8n workflow from a natural language description. Saves to repo and syncs to local and cloud n8n.",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Natural language description of what the workflow should do"
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Optional workflow name (auto-generated if omitted)"
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Optional tags for the workflow"
+                    }
+                },
+                "required": ["description"]
+            },
+            requires_confirmation=True,
+            max_timeout_seconds=60
+        ))
+        
         # Agent Invoke Tool
         self.register(ToolDefinition(
             name="agent_invoke",
@@ -439,6 +466,10 @@ class ToolExecutor:
                 result = await self._execute_mindex_query(tool_call.arguments)
             elif tool_call.name == "memory_recall":
                 result = await self._execute_memory_recall(tool_call.arguments)
+            elif tool_call.name == "execute_workflow":
+                result = await self._execute_workflow_tool(tool_call.arguments)
+            elif tool_call.name == "generate_workflow":
+                result = await self._generate_workflow_tool(tool_call.arguments)
             else:
                 # Call MAS API for other tools
                 result = await self._call_mas_tool(tool_call.name, tool_call.arguments)
@@ -541,6 +572,51 @@ class ToolExecutor:
                 return response.json()
             else:
                 return {"memories": [], "message": "Nothing recalled"}
+
+    async def _execute_workflow_tool(self, args: Dict[str, Any]) -> Any:
+        """Execute an n8n workflow by name via N8NWorkflowAgent."""
+        workflow_name = args.get("workflow_name", "").strip()
+        parameters = args.get("parameters") or args.get("data")
+        if not workflow_name:
+            return {"status": "error", "message": "workflow_name is required"}
+        try:
+            from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
+            agent = N8NWorkflowAgent(agent_id="n8n-llm", name="N8N Workflow", config={})
+            task = {"type": "execute_workflow", "workflow_name": workflow_name}
+            if parameters:
+                task["data"] = parameters
+            result = await agent.process_task(task)
+            return result
+        except Exception as e:
+            logger.exception("execute_workflow tool failed: %s", e)
+            return {"status": "error", "message": str(e)}
+
+    async def _generate_workflow_tool(self, args: Dict[str, Any]) -> Any:
+        """Generate a new n8n workflow from natural language via WorkflowGeneratorAgent."""
+        description = args.get("description", "").strip() or args.get("query", "").strip()
+        name = args.get("name", "").strip() or None
+        tags = args.get("tags")
+        if isinstance(tags, str):
+            tags = [t.strip() for t in tags.split(",") if t.strip()]
+        if not description:
+            return {"status": "error", "message": "description (or query) is required"}
+        try:
+            from mycosoft_mas.agents.workflow_generator_agent import generate_save_and_sync_workflow
+            out = await generate_save_and_sync_workflow(
+                description,
+                name=name or None,
+                tags=tags,
+            )
+            return {
+                "status": "success",
+                "workflow_id": out.get("workflow_id"),
+                "name": out.get("name"),
+                "file_path": out.get("file_path"),
+                "sync": out.get("sync"),
+            }
+        except Exception as e:
+            logger.exception("generate_workflow tool failed: %s", e)
+            return {"status": "error", "message": str(e)}
     
     async def _call_mas_tool(self, tool_name: str, args: Dict[str, Any]) -> Any:
         """Call a generic MAS tool endpoint."""

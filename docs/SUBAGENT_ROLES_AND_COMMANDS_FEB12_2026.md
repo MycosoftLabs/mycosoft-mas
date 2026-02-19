@@ -91,8 +91,10 @@ See `.cursor/rules/agent-must-invoke-subagents-and-docs.mdc` and `.cursor/rules/
 | **earth2-ops** | terminal-watcher, process-manager | Earth2 API, GPU | When running Earth2 server. |
 | **crep-collector** | terminal-watcher (if collectors run) | Collector scripts | When running collectors. |
 | **data-pipeline** | terminal-watcher, database-engineer | ETL, GBIF, scrapers | When running ETL or pipeline commands. |
-| **n8n-workflow** | terminal-watcher (if CLI used) | n8n CLI, webhooks | When using n8n CLI. |
-| **n8n-ops** | terminal-watcher (if SSH/commands) | SSH to 188, n8n health | When running SSH or n8n commands. |
+| **n8n-workflow** | terminal-watcher (if CLI used), n8n-ops | n8n CLI, webhooks, create workflows | When creating/modifying workflows; anything needing automation gets a workflow. |
+| **n8n-ops** | terminal-watcher (if SSH/commands), n8n-workflow-sync | SSH to 188, n8n health, sync-both | When running SSH or n8n commands; ensure local and cloud synced. |
+| **n8n-workflow-sync** | n8n-ops, terminal-watcher | POST /api/workflows/sync-both, registry | When sync status unknown, after workflow changes, fix drift. |
+| **n8n-autonomous** | n8n-ops, n8n-workflow | WorkflowAutoMonitor status, force sync, GET /workflows/performance | When configuring or debugging autonomous health/drift/auto-sync. |
 | **integration-hub** | terminal-watcher (if tests run) | API client tests | When running integration tests. |
 | **mycobrain-ops** | device-firmware, website-dev, terminal-watcher | MycoBrain service, discover, firmware, UI | Full MycoBrain stack: run, modify, upgrade, ensure working. |
 | **notion-sync** | terminal-watcher (if sync run) | notion_docs_sync, watcher | When running sync scripts. |

@@ -145,6 +145,11 @@
   "typescript.updateImportsOnFileMove.enabled": "never",
   "typescript.suggest.autoImports": false,
   "typescript.preferences.quoteStyle": "single",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always",
+    "source.fixAll": "explicit"
+  },
+  "editor.formatOnSave": true,
   "editor.maxTokenizationLineLength": 20000,
   "files.maxMemoryForLargeFilesMB": 4096,
   "files.exclude": {
@@ -174,6 +179,32 @@
     "**/*.mp3",
     "**/*.mp4",
     "**/*.bin"
-  ]
+  ],
+  "plugins": {
+    "slack": {
+      "enabled": true
+    },
+    "notion-workspace": {
+      "enabled": true
+    },
+    "functions": {
+      "enabled": true
+    },
+    "supabase": {
+      "enabled": true
+    },
+    "browserstack": {
+      "enabled": true
+    },
+    "linear": {
+      "enabled": true
+    },
+    "sentry": {
+      "enabled": true
+    },
+    "cloudflare": {
+      "enabled": true
+    }
+  }
 }
 

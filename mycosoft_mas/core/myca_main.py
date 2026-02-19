@@ -53,6 +53,7 @@ from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
+from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -139,6 +140,18 @@ try:
     N8N_WEBHOOKS_API_AVAILABLE = True
 except ImportError:
     N8N_WEBHOOKS_API_AVAILABLE = False
+
+# N8N Workflows API - full CRUD, registry, sync for MYCA (local + cloud)
+try:
+    from mycosoft_mas.core.routers.n8n_workflows_api import router as n8n_workflows_router
+    N8N_WORKFLOWS_API_AVAILABLE = True
+except ImportError:
+    n8n_workflows_router = None
+    N8N_WORKFLOWS_API_AVAILABLE = False
+try:
+    from mycosoft_mas.services.workflow_auto_monitor import get_workflow_auto_monitor
+except ImportError:
+    get_workflow_auto_monitor = None
 
 # NLM API - Nature Learning Model
 try:
@@ -367,6 +380,8 @@ if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
 
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
+# SporeBase API (devices, telemetry, samples, calibration)
+app.include_router(sporebase_router, tags=["sporebase"])
 
 # GPU Node API for mycosoft-gpu01 compute node
 if GPU_NODE_API_AVAILABLE:
@@ -424,6 +439,13 @@ except NameError:
 try:
     if N8N_WEBHOOKS_API_AVAILABLE:
         app.include_router(n8n_webhooks_router, tags=["n8n-webhooks"])
+except NameError:
+    pass
+
+# N8N Workflows API - full registry, CRUD, sync (local + cloud) for MYCA
+try:
+    if N8N_WORKFLOWS_API_AVAILABLE:
+        app.include_router(n8n_workflows_router, prefix="/api", tags=["n8n-workflows"])
 except NameError:
     pass
 
@@ -863,7 +885,30 @@ async def startup_event():
     except Exception as exc:
         logger.warning(f"Runner auto-load failed on startup: {exc}")
 
+    # Start WorkflowAutoMonitor (n8n health + drift detection + auto-sync)
+    if get_workflow_auto_monitor is not None:
+        try:
+            monitor = get_workflow_auto_monitor()
+            await monitor.start()
+            logger.info("✓ WorkflowAutoMonitor started (health 60s, drift 15m)")
+        except Exception as exc:
+            logger.warning("WorkflowAutoMonitor failed to start: %s", exc)
+
     logger.info("✓ MAS ready - all agents operational 24/7")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Graceful shutdown: stop WorkflowAutoMonitor and other background services."""
+    import logging
+    logger = logging.getLogger("MAS_Shutdown")
+    if get_workflow_auto_monitor is not None:
+        try:
+            monitor = get_workflow_auto_monitor()
+            await monitor.stop()
+            logger.info("WorkflowAutoMonitor stopped")
+        except Exception as exc:
+            logger.warning("WorkflowAutoMonitor stop error: %s", exc)
 
 
 

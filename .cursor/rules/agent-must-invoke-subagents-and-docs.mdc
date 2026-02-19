@@ -46,6 +46,7 @@ When the user asks you to **do work** (code, fix, deploy, plan, debug, test), yo
 | Bugs, errors, stack traces | bug-fixer, test-engineer |
 | Gaps, missing connections | gap-agent |
 | Plans, roadmaps | plan-tracker |
+| n8n, workflows, automation, sync local+cloud | n8n-workflow, n8n-ops, n8n-workflow-sync |
 
 Full mapping: **`docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md`** and **`docs/CURSOR_TEAM_AUDIT_FEB12_2026.md`**.
 

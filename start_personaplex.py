@@ -109,15 +109,12 @@ mimi_weight = _find_mimi_weight(model_dir)
 missing_files = []
 for fpath, fname in [
     (moshi_weight, "Moshi weights (model.safetensors)"),
+    (mimi_weight, "Mimi tokenizer weights (tokenizer-*checkpoint*.safetensors)"),
     (tokenizer, "Tokenizer model (tokenizer_spm_32k_3.model)"),
 ]:
-    if not os.path.isfile(fpath):
-        missing_files.append(f"  - {fname}: {fpath}")
-
-if not mimi_weight:
-    missing_files.append(
-        f"  - Mimi tokenizer weights (tokenizer-*checkpoint*.safetensors): not found in {model_dir}"
-    )
+    if not fpath or not os.path.isfile(fpath):
+        loc = fpath if fpath else f"not found in {model_dir}"
+        missing_files.append(f"  - {fname}: {loc}")
 
 if missing_files:
     print("=" * 70)

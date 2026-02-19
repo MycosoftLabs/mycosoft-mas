@@ -91,6 +91,8 @@ async def execute_tool(request: ToolCallRequest):
             return await _get_system_status(query)
         elif tool_name == "run_myceliumseg_validation":
             return await _run_myceliumseg_validation(query)
+        elif tool_name == "run_workflow":
+            return await _run_workflow_voice(query)
         else:
             return ToolCallResponse(
                 success=False,
@@ -105,6 +107,57 @@ async def execute_tool(request: ToolCallRequest):
             tool_name=tool_name,
             result=f"Tool execution failed: {str(e)}",
             timestamp=datetime.utcnow().isoformat()
+        )
+
+
+async def _run_workflow_voice(query: str) -> ToolCallResponse:
+    """Execute an n8n workflow by name parsed from voice query (e.g. 'run the backup workflow')."""
+    # Parse workflow name: "run the backup workflow" -> backup, "execute security workflow" -> security
+    match = re.search(r"(?:run|execute|trigger)\s+(?:the\s+)?(\w+)\s+workflow", query, re.IGNORECASE)
+    workflow_name = match.group(1) if match else None
+    if not workflow_name:
+        # Fallback: word before "workflow"
+        parts = query.lower().split()
+        if "workflow" in parts:
+            idx = parts.index("workflow")
+            workflow_name = parts[idx - 1] if idx > 0 else None
+    if not workflow_name:
+        return ToolCallResponse(
+            success=False,
+            tool_name="run_workflow",
+            result="I couldn't identify which workflow to run. Say for example: run the backup workflow.",
+            timestamp=datetime.utcnow().isoformat(),
+        )
+    try:
+        from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
+        agent = N8NWorkflowAgent(agent_id="n8n-voice", name="N8N Workflow", config={})
+        result = await agent.process_task({"type": "execute_workflow", "workflow_name": workflow_name})
+        status = result.get("status", "unknown")
+        if status == "success":
+            msg = f"Workflow {workflow_name} executed successfully."
+            if result.get("result"):
+                msg += " " + str(result.get("result"))[:200]
+            return ToolCallResponse(
+                success=True,
+                tool_name="run_workflow",
+                result=msg,
+                data=result,
+                timestamp=datetime.utcnow().isoformat(),
+            )
+        return ToolCallResponse(
+            success=False,
+            tool_name="run_workflow",
+            result=f"Workflow {workflow_name} returned: {status}. {result.get('message', '')}"[:300],
+            data=result,
+            timestamp=datetime.utcnow().isoformat(),
+        )
+    except Exception as e:
+        logger.exception("run_workflow voice failed: %s", e)
+        return ToolCallResponse(
+            success=False,
+            tool_name="run_workflow",
+            result=f"Failed to run workflow {workflow_name}: {str(e)[:150]}.",
+            timestamp=datetime.utcnow().isoformat(),
         )
 
 

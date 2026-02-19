@@ -3,9 +3,7 @@
     "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/",
-      "headers": {
-        "Authorization": "Bearer ${GITHUB_PAT}"
-      }
+      "headers": { "Authorization": "Bearer ${GITHUB_PAT}" }
     },
     "mindex-db": {
       "type": "stdio",
@@ -16,17 +14,13 @@
       "type": "stdio",
       "command": "python",
       "args": ["-m", "mycosoft_mas.memory.mcp_memory_server"],
-      "env": {
-        "MINDEX_DATABASE_URL": "${MINDEX_DATABASE_URL}"
-      }
+      "env": { "MINDEX_DATABASE_URL": "${MINDEX_DATABASE_URL}" }
     },
     "mycosoft-tasks": {
       "type": "stdio",
       "command": "python",
       "args": ["-m", "mycosoft_mas.mcp.task_management_server"],
-      "env": {
-        "CURSOR_PLANS_DIR": "C:/Users/admin2/.cursor/plans"
-      }
+      "env": { "CURSOR_PLANS_DIR": "C:/Users/admin2/.cursor/plans" }
     },
     "mycosoft-orchestrator": {
       "type": "stdio",
@@ -35,7 +29,13 @@
       "env": {
         "MAS_API_URL": "http://192.168.0.188:8001",
         "MINDEX_API_URL": "http://192.168.0.189:8000",
-        "N8N_URL": "http://192.168.0.188:5678"
+        "N8N_URL": "http://192.168.0.188:5678",
+        "NOTION_API_KEY": "${NOTION_API_KEY}",
+        "NCBI_API_KEY": "${NCBI_API_KEY}",
+        "CHEMSPIDER_API_KEY": "${CHEMSPIDER_API_KEY}",
+        "ASANA_API_KEY": "${ASANA_API_KEY}",
+        "ASANA_WORKSPACE_ID": "${ASANA_WORKSPACE_ID}",
+        "SLACK_OAUTH_TOKEN": "${SLACK_OAUTH_TOKEN}"
       }
     },
     "mycosoft-registry": {
@@ -43,7 +43,20 @@
       "command": "python",
       "args": ["-m", "mycosoft_mas.mcp.registry_server"],
       "env": {
-        "WORKSPACE_ROOT": "c:/Users/admin2/Desktop/MYCOSOFT/CODE/MAS/mycosoft-mas"
+        "WORKSPACE_ROOT": "c:/Users/admin2/Desktop/MYCOSOFT/CODE/MAS/mycosoft-mas",
+        "NOTION_API_KEY": "${NOTION_API_KEY}",
+        "NCBI_API_KEY": "${NCBI_API_KEY}",
+        "CHEMSPIDER_API_KEY": "${CHEMSPIDER_API_KEY}",
+        "ASANA_API_KEY": "${ASANA_API_KEY}",
+        "SLACK_OAUTH_TOKEN": "${SLACK_OAUTH_TOKEN}"
+      }
+    },
+    "Notion": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "OPENAPI_MCP_HEADERS": "{\"Authorization\": \"Bearer ${NOTION_API_KEY}\", \"Notion-Version\": \"2022-06-28\"}"
       }
     }
   }

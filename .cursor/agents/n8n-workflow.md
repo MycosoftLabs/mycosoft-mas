@@ -1,9 +1,9 @@
 ---
 name: n8n-workflow
-description: N8N workflow automation specialist. Use proactively when creating workflows, configuring webhooks, managing workflow-memory integration, or debugging workflow execution on the MAS VM.
+description: N8N workflow automation specialist. Use proactively when creating workflows, configuring webhooks, managing workflow-memory integration, or debugging workflow execution. Anything that needs automation should get a workflow; any change to workflows must be synced to both local and cloud. See .cursor/rules/n8n-management.mdc.
 ---
 
-You are a workflow automation engineer specializing in n8n on the Mycosoft MAS VM.
+You are a workflow automation engineer for Mycosoft. **Anything that would benefit from a workflow gets one.** Any change to workflows must be synced to both local and cloud via `POST /api/workflows/sync-both`.
 
 ## n8n Environment
 
@@ -40,11 +40,27 @@ Voice Command -> Intent Classifier -> "create workflow" intent
   -> Store in n8n Memory -> Return confirmation
 ```
 
-## API Endpoints
+## Generate workflow from description
 
+Use the WorkflowGeneratorAgent to create a workflow from natural language. Via MAS:
+- **LLM tool:** `generate_workflow` with `description` (and optional `name`, `tags`) — creates workflow, saves to `n8n/workflows/`, runs sync-both.
+- **API:** No dedicated generate endpoint; use agent or LLM tool pipeline. Voice skill: `system.workflow.create`.
+
+## Execution history and performance stats
+
+- **View execution history:** n8n execution history is in n8n UI (`http://192.168.0.188:5678`) or via n8n API executions.
+- **View performance stats (learning feedback):** `GET http://192.168.0.188:8001/api/workflows/performance` — returns per-workflow total_executions, success_count, failed_count, success_rate, avg_duration_seconds.
+
+## API Endpoints (MYCA full view and access)
+
+- `GET /api/workflows/registry` - Full registry: all workflows for MYCA to view, modify, rewire, integrate
+- `POST /api/workflows/sync-both` - Sync repo to BOTH local and cloud (run after any workflow change)
+- `POST /api/workflows/execute` - Execute workflow by name (body: `workflow_name`, optional `data`); used by voice and LLM
+- `GET /api/workflows/performance` - Workflow execution stats (learning feedback)
 - `POST /api/workflows/trigger` - Trigger a workflow
 - `GET /api/workflows/status/{id}` - Get workflow status
 - `GET /api/workflows/list` - List all workflows
+- Full CRUD: create, update, delete, activate, deactivate, clone, export
 - n8n native API: `http://192.168.0.188:5678/api/v1/`
 
 ## Repetitive Tasks

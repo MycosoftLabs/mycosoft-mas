@@ -1,0 +1,28 @@
+# Neuromorphic UI Standards (All Agents)
+
+## Mandatory
+
+1. **CSS variables** – Use `--neu-bg-primary`, `--neu-shadow-dark`, `--neu-shadow-light`, etc. from `neuromorphic-styles.css`. Never hardcode neuromorphic colors.
+
+2. **Dark mode** – Apply `.neuromorphic-dark` class when `next-themes` reports dark mode. Use `NeuromorphicProvider` which handles this automatically.
+
+3. **Component props** – Use size variants, states, and accessibility props consistently. All neuromorphic components support `className`, `aria-*` where applicable.
+
+## Forbidden
+
+- Hardcoded shadow/background colors on neuromorphic pages
+- Non-neuromorphic shadows (e.g. `shadow-lg` from Tailwind) on neuromorphic components – use `.neu-raised`, `.neu-inset`, `.neu-flat` instead
+- Skipping `NeuromorphicProvider` when building neuromorphic pages
+
+## Component Standards
+
+- **NeuButton:** Use `variant` (default, primary, success, etc.), `isLoading`, `fullWidth`
+- **NeuCard:** Use `NeuCard`, `NeuCardHeader`, `NeuCardContent` for structure
+- **NeuBadge:** Use `variant` for semantic colors
+- **NeuTabs:** Use `tabs`, `activeIndex`, `onTabChange` with `NeuTabsContent` for panels
+
+## Accessibility
+
+- All interactive elements must have `neu-focus` for focus-visible outline
+- Tooltips use `aria-describedby`
+- Modals use focus trap and Escape to close

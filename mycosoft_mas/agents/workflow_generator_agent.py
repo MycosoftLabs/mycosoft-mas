@@ -6,7 +6,10 @@ Agent that dynamically creates n8n workflows based on
 natural language descriptions and requirements.
 """
 
+import asyncio
 import logging
+import os
+from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -349,8 +352,47 @@ _agent_instance: Optional[WorkflowGeneratorAgent] = None
 def get_workflow_generator() -> WorkflowGeneratorAgent:
     global _agent_instance
     if _agent_instance is None:
-        _agent_instance = WorkflowGeneratorAgent()
+        n8n_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+        n8n_key = os.getenv("N8N_API_KEY", "")
+        _agent_instance = WorkflowGeneratorAgent(n8n_api_url=n8n_url, n8n_api_key=n8n_key)
     return _agent_instance
+
+
+async def generate_save_and_sync_workflow(
+    description: str,
+    name: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Generate a workflow from description, save to n8n/workflows/, and trigger sync-both.
+    Returns dict with workflow_id, name, file_path, sync_result.
+    """
+    from mycosoft_mas.core.n8n_workflow_engine import WORKFLOWS_DIR, N8NWorkflowEngine
+
+    generator = get_workflow_generator()
+    workflow = await generator.generate_workflow(description=description, name=name, tags=tags)
+    safe_name = "".join(c if c.isalnum() or c in " ._-" else "_" for c in workflow.name).strip().replace(" ", "_")
+    if not safe_name:
+        safe_name = f"generated_{workflow.workflow_id}"
+    file_path = Path(WORKFLOWS_DIR) / f"{safe_name}.json"
+    workflow_json = workflow.to_n8n_format()
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(workflow_json, f, indent=2)
+    logger.info(f"Saved generated workflow to {file_path}")
+
+    engine = N8NWorkflowEngine()
+    sync_result = await asyncio.to_thread(engine.sync_all_local_workflows, True)
+    return {
+        "workflow_id": workflow.workflow_id,
+        "name": workflow.name,
+        "file_path": str(file_path),
+        "sync": {
+            "imported": sync_result.imported,
+            "skipped": sync_result.skipped,
+            "errors": sync_result.errors,
+        },
+    }
 
 
 __all__ = [
@@ -359,4 +401,5 @@ __all__ = [
     "WorkflowNode",
     "WorkflowConnection",
     "get_workflow_generator",
+    "generate_save_and_sync_workflow",
 ]

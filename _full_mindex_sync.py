@@ -19,14 +19,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger("mindex_sync")
 
-# Config
-NCBI_API_KEY = "REDACTED_NCBI_API_KEY"
+# Config - use environment variables (set in .env); never commit secrets
+NCBI_API_KEY = os.environ.get("NCBI_API_KEY", "")
 MINDEX_DB = {
-    "host": "192.168.0.189",
-    "port": 5432,
-    "user": "mycosoft",
-    "password": "REDACTED_DB_PASSWORD",
-    "database": "mindex"
+    "host": os.environ.get("MINDEX_DB_HOST", "192.168.0.189"),
+    "port": int(os.environ.get("MINDEX_DB_PORT", "5432")),
+    "user": os.environ.get("MINDEX_DB_USER", "mycosoft"),
+    "password": os.environ.get("MINDEX_DB_PASSWORD", ""),
+    "database": os.environ.get("MINDEX_DB_NAME", "mindex"),
 }
 
 # APIs

@@ -52,6 +52,7 @@ _safe_import(".secretary_agent", "SecretaryAgent")
 _safe_import(".dashboard_agent", "DashboardAgent")
 _safe_import(".opportunity_scout", "OpportunityScout")
 _safe_import(".gap_agent", "GapAgent")
+_safe_import(".sporebase_agent", "SporeBaseAgent")
 
 # Corporate Agents
 _safe_import(".corporate.corporate_operations_agent", "CorporateOperationsAgent")

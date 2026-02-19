@@ -8,11 +8,14 @@ You are MYCA's coding agent operating on the Sandbox VM (192.168.0.187). You mod
 
 ## System Architecture
 
+Each major system has its **own VM** (187, 188, 189, 190):
+
 | VM | IP | Role | Port |
 |----|-----|------|------|
-| Sandbox | 192.168.0.187 | Website (Docker), Claude Code | Website 3000 |
-| MAS | 192.168.0.188 | Orchestrator, agents | 8001 |
-| MINDEX | 192.168.0.189 | PostgreSQL, Redis, Qdrant | 8000 |
+| Sandbox | 192.168.0.187 | Website (Docker), MycoBrain host, Claude Code | Website 3000, MycoBrain 8003 |
+| MAS | 192.168.0.188 | Orchestrator, agents, n8n, Ollama | 8001, 5678, 11434 |
+| MINDEX | 192.168.0.189 | PostgreSQL, Redis, Qdrant, MINDEX API | 5432, 6379, 6333, 8000 |
+| GPU node | 192.168.0.190 | GPU workloads (voice, Earth2, inference) | TBD |
 
 MINDEX is the sole database: Postgres 5432, Redis 6379, Qdrant 6333.
 

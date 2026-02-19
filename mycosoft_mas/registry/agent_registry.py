@@ -150,6 +150,7 @@ class AgentRegistry:
         
         # ===== Workflow Agents =====
         {"name": "n8n_workflow_agent", "category": "workflow", "module": "mycosoft_mas.agents.workflow.n8n_workflow_agent", "class": "N8NWorkflowAgent", "description": "n8n workflow execution"},
+        {"name": "workflow_generator_agent", "category": "workflow", "module": "mycosoft_mas.agents.workflow_generator_agent", "class": "WorkflowGeneratorAgent", "description": "Generate n8n workflows from natural language"},
         {"name": "trigger_agent", "category": "workflow", "module": "mycosoft_mas.agents.workflow.trigger_agent", "class": "TriggerAgent", "description": "Event trigger management"},
         {"name": "scheduler_agent", "category": "workflow", "module": "mycosoft_mas.agents.workflow.scheduler_agent", "class": "SchedulerAgent", "description": "Task scheduling"},
         {"name": "notification_agent", "category": "workflow", "module": "mycosoft_mas.agents.workflow.notification_agent", "class": "NotificationAgent", "description": "Notification dispatch"},

@@ -43,17 +43,20 @@ These prefixes are recognized as valid Mycosoft containers:
 
 ## VM Docker Containers (Reference)
 
+Each of 187, 188, 189 has its own VM; 190 is the GPU node.
+
 | VM | Container | Port | Purpose |
 |----|-----------|------|---------|
-| 187 | `mycosoft-website` | 3000 | Production website |
-| 187 | `mycorrhizae-api` | 8002 | Mycorrhizae protocol |
-| 188 | `n8n` | 5678 | Production workflows |
-| 188 | `ollama` | 11434 | LLM inference |
-| 188 | `prometheus` | 9090 | Monitoring |
-| 189 | `mindex-postgres` | 5432 | PostgreSQL |
-| 189 | `mindex-redis` | 6379 | Redis cache |
-| 189 | `mindex-qdrant` | 6333 | Vector DB |
-| 189 | `mindex-api` | 8000 | MINDEX API |
+| **187** (Sandbox) | `mycosoft-website` | 3000 | Production website |
+| **187** | `mycorrhizae-api` | 8002 | Mycorrhizae protocol |
+| **188** (MAS) | `n8n` | 5678 | Production workflows |
+| **188** | `ollama` | 11434 | LLM inference |
+| **188** | `prometheus` | 9090 | Monitoring |
+| **189** (MINDEX) | `mindex-postgres` | 5432 | PostgreSQL |
+| **189** | `mindex-redis` | 6379 | Redis cache |
+| **189** | `mindex-qdrant` | 6333 | Vector DB |
+| **189** | `mindex-api` | 8000 | MINDEX API |
+| **190** (GPU node) | (TBD) | TBD | GPU workloads (voice, Earth2, inference) |
 
 ## Agent Protocol
 
