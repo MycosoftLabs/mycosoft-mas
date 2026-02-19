@@ -204,3 +204,9 @@ mycosoft_mas/venv/
 *.backup
 *.bak
 docker-compose.*.backup
+
+# Additional venv directories
+venv311/
+
+# Audio test files
+*.wav
