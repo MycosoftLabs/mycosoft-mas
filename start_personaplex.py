@@ -15,6 +15,34 @@ PERFORMANCE CRITICAL:
 import sys
 import os
 
+# =============================================================================
+# DEPENDENCY: personaplex-repo
+# =============================================================================
+# This script requires the personaplex-repo directory (not tracked in git).
+# If missing, clone it:
+#   cd c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas
+#   git clone https://github.com/mycosoft/personaplex-repo.git personaplex-repo
+# Or copy from an existing installation.
+# =============================================================================
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+personaplex_path = os.path.join(SCRIPT_DIR, "personaplex-repo", "moshi")
+
+if not os.path.isdir(personaplex_path):
+    print("=" * 70)
+    print("ERROR: personaplex-repo directory not found!")
+    print("=" * 70)
+    print(f"Expected path: {personaplex_path}")
+    print()
+    print("The personaplex-repo directory is not tracked in git.")
+    print("To set it up, run:")
+    print()
+    print("  cd c:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas")
+    print("  git clone https://github.com/mycosoft/personaplex-repo.git personaplex-repo")
+    print()
+    print("Or copy the personaplex-repo folder from an existing installation.")
+    print("=" * 70)
+    sys.exit(1)
+
 # CUDA GRAPHS STATUS:
 # - CUDA graphs provide 30ms/step performance - REQUIRED for real-time voice
 # - NEVER disable CUDA graphs - they are vital for PersonaPlex/NVIDIA performance
@@ -29,8 +57,7 @@ os.environ['TORCHDYNAMO_DISABLE'] = '0'  # Enable dynamo for optimization
 # Set CUDA device
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-# Add PersonaPlex moshi to path
-personaplex_path = r"c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\personaplex-repo\moshi"
+# Add PersonaPlex moshi to path (personaplex_path already set above)
 sys.path.insert(0, personaplex_path)
 
 # ============================================================================
@@ -41,7 +68,7 @@ sys.path.insert(0, personaplex_path)
 #   - Custom voice embeddings (.pt files like NATF2.pt for female voice)
 #   - Text prompts for persona/identity (MYCA, not Moshi)
 # ============================================================================
-model_dir = r"C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\models\personaplex-7b-v1"
+model_dir = os.path.join(SCRIPT_DIR, "models", "personaplex-7b-v1")
 
 moshi_weight = os.path.join(model_dir, "model.safetensors")
 mimi_weight = os.path.join(model_dir, "tokenizer-e351c8d8-checkpoint125.safetensors")
