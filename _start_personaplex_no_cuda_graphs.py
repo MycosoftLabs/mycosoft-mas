@@ -46,9 +46,53 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 # Add PersonaPlex moshi to path (personaplex_path already set above)
 sys.path.insert(0, personaplex_path)
 
-# Voice prompts directory - use local models dir or HuggingFace cache
+# Model directory
 model_dir = os.path.join(SCRIPT_DIR, "models", "personaplex-7b-v1")
+
+if not os.path.isdir(model_dir):
+    print("=" * 70)
+    print("ERROR: PersonaPlex model directory not found!")
+    print("=" * 70)
+    print(f"Expected path: {model_dir}")
+    print()
+    print("The NVIDIA PersonaPlex model files are required.")
+    print("To download them, run:")
+    print()
+    print("  pip install huggingface_hub")
+    print("  huggingface-cli download nvidia/personaplex-7b-v1 --local-dir models/personaplex-7b-v1")
+    print()
+    print("Or copy the models/personaplex-7b-v1 folder from an existing installation.")
+    print("=" * 70)
+    sys.exit(1)
+
+moshi_weight = os.path.join(model_dir, "model.safetensors")
+mimi_weight = os.path.join(model_dir, "tokenizer-e351c8d8-checkpoint125.safetensors")
+tokenizer = os.path.join(model_dir, "tokenizer_spm_32k_3.model")
 voice_prompt_dir = os.path.join(model_dir, "voices")
+
+# Validate required model files exist
+missing_files = []
+for fpath, fname in [
+    (moshi_weight, "Moshi weights"),
+    (mimi_weight, "Mimi tokenizer weights"),
+    (tokenizer, "Tokenizer model"),
+]:
+    if not os.path.isfile(fpath):
+        missing_files.append(f"  - {fname}: {fpath}")
+
+if missing_files:
+    print("=" * 70)
+    print("ERROR: Required model files missing!")
+    print("=" * 70)
+    print("The following files are missing from the model directory:")
+    print()
+    for mf in missing_files:
+        print(mf)
+    print()
+    print("Re-download the model with:")
+    print("  huggingface-cli download nvidia/personaplex-7b-v1 --local-dir models/personaplex-7b-v1")
+    print("=" * 70)
+    sys.exit(1)
 
 def _find_hf_cache_voices() -> str:
     """Search HuggingFace snapshots directory for any snapshot containing a voices/ folder.
@@ -102,18 +146,26 @@ print(f"CUDA_VISIBLE_DEVICES = {os.environ.get('CUDA_VISIBLE_DEVICES')}")
 print(f"NO_TORCH_COMPILE = {os.environ.get('NO_TORCH_COMPILE')} (1=disabled)")
 print(f"NO_CUDA_GRAPH = {os.environ.get('NO_CUDA_GRAPH')} (1=disabled)")
 print(f"Working directory: {personaplex_path}")
-print(f"Voice prompts: {voice_prompt_dir}")
+print(f"Model: NVIDIA PersonaPlex (LOCAL)")
+print(f"  Moshi weights: {moshi_weight}")
+print(f"  Mimi weights: {mimi_weight}")
+print(f"  Tokenizer: {tokenizer}")
+print(f"  Voice prompts: {voice_prompt_dir}")
 print("=" * 60)
 print("CUDA graphs DISABLED - expect ~200ms/step (slower but stable)")
 print("Starting PersonaPlex...")
 print("=" * 60)
 
-# Pass voice-prompt-dir via sys.argv
+# Start server with explicit model file paths (same as performance mode)
 sys.argv = [
     'moshi.server',
     '--host', '0.0.0.0',
     '--port', '8998',
+    '--moshi-weight', moshi_weight,
+    '--mimi-weight', mimi_weight,
+    '--tokenizer', tokenizer,
     '--voice-prompt-dir', voice_prompt_dir,
+    '--static', 'none',
 ]
 
 # Import and run the server
