@@ -381,17 +381,32 @@ async def generate_save_and_sync_workflow(
         json.dump(workflow_json, f, indent=2)
     logger.info(f"Saved generated workflow to {file_path}")
 
-    engine = N8NWorkflowEngine()
-    sync_result = await asyncio.to_thread(engine.sync_all_local_workflows, True)
+    # Sync to both local and cloud — read env vars at call time (not import time)
+    # to match the sync-both pattern used in n8n_workflows_api.py.
+    local_url = os.getenv("N8N_LOCAL_URL", "http://localhost:5678")
+    cloud_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+    local_key = os.getenv("N8N_LOCAL_API_KEY", os.getenv("N8N_API_KEY", ""))
+    cloud_key = os.getenv("N8N_API_KEY", "")
+
+    sync_results: Dict[str, Any] = {"local": None, "cloud": None, "errors": []}
+
+    for target, url, key in [("local", local_url, local_key), ("cloud", cloud_url, cloud_key)]:
+        try:
+            engine = N8NWorkflowEngine(base_url=url, api_key=key)
+            try:
+                r = await asyncio.to_thread(engine.sync_all_local_workflows, True)
+                sync_results[target] = {"imported": r.imported, "skipped": r.skipped, "errors": r.errors}
+            finally:
+                engine.close()
+        except Exception as exc:
+            logger.warning(f"generate_save_and_sync: sync to {target} ({url}) failed: {exc}")
+            sync_results["errors"].append({"target": target, "error": str(exc)})
+
     return {
         "workflow_id": workflow.workflow_id,
         "name": workflow.name,
         "file_path": str(file_path),
-        "sync": {
-            "imported": sync_result.imported,
-            "skipped": sync_result.skipped,
-            "errors": sync_result.errors,
-        },
+        "sync": sync_results,
     }
 
 
