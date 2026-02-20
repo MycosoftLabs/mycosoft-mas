@@ -21,6 +21,29 @@ def classifier():
     return IntentClassifier()
 
 
+class TestNatureOSIntent:
+    """Test natureos category - MATLAB-driven analyses"""
+
+    def test_analyze_zone(self, classifier):
+        result = classifier.classify("Analyze soil quality in zone A")
+        assert result.intent_category == "natureos"
+        assert result.confidence > 0.3
+
+    def test_forecast(self, classifier):
+        result = classifier.classify("Predict temperature for next 24 hours")
+        assert result.intent_category == "natureos"
+        assert result.confidence > 0.3
+
+    def test_anomaly_scan(self, classifier):
+        result = classifier.classify("Are there any sensor anomalies?")
+        assert result.intent_category == "natureos"
+        assert result.confidence > 0.3
+
+    def test_biodiversity_report(self, classifier):
+        result = classifier.classify("Generate biodiversity report")
+        assert result.intent_category == "natureos"
+
+
 class TestGreetingIntent:
     """Test greeting category - "hello", "hi", "hey" """
     
