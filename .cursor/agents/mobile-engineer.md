@@ -44,6 +44,12 @@ All pages and apps at `C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\app
 | `/support` | Support portal |
 | All components | `components/` directory |
 
+## Neuromorphic UI (when applicable)
+
+- Neuromorphic pages (About, Apps, Devices, Defense, device details) use NeuromorphicProvider.
+- Over-video sections: add `data-over-video`; use `.portal-hero-*`, `.device-hero-*` classes for white text over dark video. See neuromorphic-ui-standards.mdc.
+- Ensure touch targets (min 44px) on NeuButton, NeuCard in neuromorphic layouts.
+
 ## Architecture Standards
 
 - **Framework**: Next.js 15 App Router, TypeScript strict

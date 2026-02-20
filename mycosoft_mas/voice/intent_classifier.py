@@ -200,6 +200,22 @@ INTENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
         "priority": IntentPriority.MEDIUM,
         "confirmation": ConfirmationLevel.NONE,
     },
+    "natureos": {
+        "keywords": [
+            "analyze", "zone", "soil", "forecast", "temperature", "humidity",
+            "anomaly", "anomalies", "sensor", "identify", "fungal", "biodiversity",
+        ],
+        "patterns": [
+            r"analyze\s+(?:soil\s+quality|zone|telemetry)",
+            r"predict\s+(?:temperature|humidity)",
+            r"(?:are\s+there\s+any\s+)?sensor\s+anomalies",
+            r"identify\s+(?:this\s+)?fungal\s+sample",
+            r"generate\s+biodiversity\s+report",
+        ],
+        "agents": ["natureos-matlab", "lab-agent", "simulation-agent"],
+        "priority": IntentPriority.MEDIUM,
+        "confirmation": ConfirmationLevel.NONE,
+    },
     "general": {
         "keywords": [],  # Fallback category - matches nothing specifically
         "patterns": [],

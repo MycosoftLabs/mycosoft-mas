@@ -160,29 +160,61 @@ class Earth2Sensor(BaseSensor):
 class NatureOSSensor(BaseSensor):
     """
     NatureOS Ecosystem Sensor.
-    
+
     Provides ecosystem and life status data:
     - Environment health
     - Species observations
     - Ecological metrics
+    - MATLAB integration status
     """
-    
+
     def __init__(self, world_model: "WorldModel"):
         super().__init__(world_model)
-        self.natureos_url = os.environ.get("NATUREOS_API_URL", "http://192.168.0.187:3000/api/natureos")
-    
+        self.natureos_url = os.environ.get(
+            "NATUREOS_API_URL", "http://192.168.0.187:3000/api/natureos"
+        ).rstrip("/")
+
     async def read(self) -> Optional[Dict[str, Any]]:
-        """Read current NatureOS status."""
+        """Read current NatureOS status including MATLAB health."""
         try:
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.get(f"{self.natureos_url}/status")
                 if response.status_code == 200:
                     self._last_data = response.json()
                     self._last_update = datetime.now(timezone.utc)
+                    # Include MATLAB health when available
+                    try:
+                        matlab_base = self.natureos_url.replace(
+                            "/api/natureos", ""
+                        )
+                        mres = await client.get(
+                            f"{matlab_base}/api/natureos/matlab/health"
+                        )
+                        if mres.status_code == 200:
+                            self._last_data["matlab"] = mres.json()
+                    except Exception:
+                        pass
                     return self._last_data
         except Exception as e:
             logger.warning(f"NatureOS sensor read failed: {e}")
         return self._last_data
+
+    async def get_anomaly_scores(
+        self, device_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Get anomaly detection scores from MATLAB endpoint."""
+        try:
+            matlab_base = self.natureos_url.replace("/api/natureos", "")
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.post(
+                    f"{matlab_base}/api/natureos/matlab/anomaly-detection",
+                    json={"deviceId": device_id} if device_id else {},
+                )
+                if response.status_code == 200:
+                    return response.json()
+        except Exception as e:
+            logger.warning(f"NatureOS anomaly detection failed: {e}")
+        return {"anomalies": [], "scores": []}
 
 
 class MINDEXSensor(BaseSensor):

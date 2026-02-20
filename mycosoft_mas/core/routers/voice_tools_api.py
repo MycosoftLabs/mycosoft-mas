@@ -93,6 +93,8 @@ async def execute_tool(request: ToolCallRequest):
             return await _run_myceliumseg_validation(query)
         elif tool_name == "run_workflow":
             return await _run_workflow_voice(query)
+        elif tool_name in ("natureos.analyze_zone", "natureos.forecast", "natureos.anomaly_scan", "natureos.classify", "natureos.biodiversity_report"):
+            return await _run_natureos_matlab_tool(tool_name, query)
         else:
             return ToolCallResponse(
                 success=False,
@@ -108,6 +110,74 @@ async def execute_tool(request: ToolCallRequest):
             result=f"Tool execution failed: {str(e)}",
             timestamp=datetime.utcnow().isoformat()
         )
+
+
+async def _run_natureos_matlab_tool(tool_name: str, query: str) -> ToolCallResponse:
+    """Execute NatureOS MATLAB-driven analyses via NATUREOSClient."""
+    try:
+        from mycosoft_mas.integrations.natureos_client import NATUREOSClient
+        client = NATUREOSClient()
+    except ImportError:
+        return ToolCallResponse(
+            success=False,
+            tool_name=tool_name,
+            result="NatureOS integration is not available.",
+            timestamp=datetime.utcnow().isoformat(),
+        )
+    result_data: Optional[Dict[str, Any]] = None
+    try:
+        if tool_name == "natureos.analyze_zone":
+            zone = "A"
+            m = re.search(r"zone\s+([A-Za-z0-9]+)", query, re.IGNORECASE)
+            if m:
+                zone = m.group(1)
+            result_data = await client.run_anomaly_detection(device_id=f"zone_{zone}")
+            msg = f"Zone {zone} analysis complete. " + _format_anomaly_result(result_data)
+        elif tool_name == "natureos.forecast":
+            metric = "temperature"
+            hours = 24
+            if "humidity" in query:
+                metric = "humidity"
+            m = re.search(r"(\d+)\s*hour", query)
+            if m:
+                hours = int(m.group(1))
+            result_data = await client.forecast_environmental(metric=metric, hours=hours)
+            msg = f"Forecast for {metric} over {hours} hours: " + str(result_data.get("forecast", "available"))
+        elif tool_name == "natureos.anomaly_scan":
+            result_data = await client.run_anomaly_detection(device_id="")
+            msg = _format_anomaly_result(result_data)
+        elif tool_name == "natureos.classify":
+            msg = "Classification requires morphology signal data. Please use the AI Studio to upload a sample."
+        elif tool_name == "natureos.biodiversity_report":
+            result_data = await client.execute_analysis("calculateBiodiversityIndices", [])
+            msg = f"Biodiversity report generated. Shannon index: {result_data.get('shannon', 'N/A')}, Simpson: {result_data.get('simpson', 'N/A')}."
+        else:
+            msg = f"Unknown NatureOS tool: {tool_name}"
+        return ToolCallResponse(
+            success=True,
+            tool_name=tool_name,
+            result=msg[:500],
+            data=result_data,
+            timestamp=datetime.utcnow().isoformat(),
+        )
+    except Exception as e:
+        logger.warning("NatureOS MATLAB tool failed: %s", e)
+        return ToolCallResponse(
+            success=False,
+            tool_name=tool_name,
+            result=f"NatureOS analysis failed: {str(e)[:200]}. The NatureOS backend may be offline.",
+            timestamp=datetime.utcnow().isoformat(),
+        )
+
+
+def _format_anomaly_result(data: Dict[str, Any]) -> str:
+    anomalies = data.get("anomalies", [])
+    scores = data.get("scores", [])
+    if anomalies:
+        return f"Found {len(anomalies)} anomalies. " + str(anomalies)[:150]
+    if scores:
+        return f"Anomaly scan complete. {len(scores)} data points analyzed. No significant anomalies detected."
+    return "Anomaly scan complete. No anomalies detected."
 
 
 async def _run_workflow_voice(query: str) -> ToolCallResponse:

@@ -1,5 +1,14 @@
 # Master Document Index
 
+## Superapp Architecture and Unification (Feb 19, 2026)
+- `docs/SUPERAPP_ARCHITECTURE_AND_UNIFICATION_FEB19_2026.md` – **Superapp architecture and unification plan**: Full analysis of all 50+ app directories, 45 component namespaces, duplicate pages (devices/devices2, defense/defense2, myca/myca-ai/test-voice), and siloed AI/data surfaces. 13 unification opportunities with impact/effort ratings, prioritized 10-item implementation plan, agent responsibility matrix, and accessibility/interactivity improvements. Key: unified nav shell, persistent MYCA panel, universal Cmd+K search, WebSocket real-time layer, Agent Studio, scientific→NatureOS migration. Use when planning platform convergence, UX simplification, or cross-system integration.
+
+## NatureOS Full Platform (Feb 19, 2026)
+- `docs/NATUREOS_FULL_PLATFORM_COMPLETE_FEB19_2026.md` – **NatureOS Full Platform Plan complete**: All phases implemented — controllers, services, FungaService stubs (NatureOS); lab-tools, data-explorer, reports, biotech pages (Website); analytics/lab/export/status API routes; MAS compatibility routes (devices/sensor-data/commands). Use for verification and follow-up.
+
+## NatureOS Upgrade Prep (Feb 19, 2026)
+- `docs/NATUREOS_UPGRADE_PREP_FEB19_2026.md` – **NatureOS dashboard fix + upgrade prep**: Fix for `TypeError: Failed to fetch` in MINDEX fetch (Promise.allSettled, base URL, timeout). MINDEX observations route URL corrected (VM 189:8000). Full NatureOS doc index, upgrade roadmap (API compatibility, mock removal, PersonaPlex, real-time), env vars, test commands. Use when upgrading NatureOS or fixing dashboard fetch errors.
+
 ## Website UI – Neuromorphic Test Page (Feb 18, 2026)
 - `../WEBSITE/website/docs/NEUROMORPHIC_UI_TEST_PAGE_FEB18_2026.md` – **Neuromorphic UI test page**: Route `/ui/neuromorphic`; full component library (buttons, forms, feedback, data, advanced) with accessibility and scoped CSS. Test page only; rollout to specific pages/apps after validation.
 - `../WEBSITE/website/docs/DEFENSE_NEUROMORPHIC_UPDATE_FEB18_2026.md` – **Defense neuromorphic update**: Defense 2 replaces main defense page; Fusarium and OEI Capabilities converted to neuromorphic; UNCLASS removed; layout files for metadata.
@@ -14,6 +23,10 @@
 - `docs/COM7_SANDBOX_COHESION_VERIFICATION_FEB18_2026.md` – **Board on desk (COM7) on sandbox and local**: Heartbeat to MAS, firewall, test script `scripts/test_mycobrain_com7_cohesion.py`, env and troubleshooting. Use when getting the desk board visible and controllable from both local dev and sandbox.
 
 ## Sandbox Live Testing Prep (Feb 18–19, 2026)
+- `docs/DEPLOY_ALL_THREE_VMS_FEB19_2026.md` – **Deploy all three VMs**: Single checklist for Website (187), MAS (188), MINDEX (189); credentials, automated/manual steps, verification. For deploy agent.
+- `docs/DEPLOYMENT_READINESS_CHECK_FEB19_2026.md` – **Deployment readiness check**: Pre-deploy verification for handoff to deploy agent. Git status (website, MAS), build status, deploy checklist, credentials, included work (mobile, security). Do not deploy from this agent; use for readiness only.
+- `docs/DEPLOYMENT_AGENT_HANDOFF_FEB18_2026.md` – **Deployment agent handoff (for another agent)**: Full instructions for deploying website to Sandbox: what's being deployed, prerequisites, VM layout, automated + manual commands, verification, troubleshooting. Use when handing off to deploy-pipeline or deployer agent.
+- `docs/DEPLOYMENT_COMMANDS_FEB18_2026.md` – **Copy-paste deployment commands**: Quick reference; automated script and manual SSH commands for the deploying agent.
 - `docs/COMPOUNDS_BUG_FIX_AND_DEPLOY_FEB19_2026.md` – **Compounds bug fix deploy handoff**: Species compounds now fetched via `/api/compounds/species/[id]`; fix pushed to GitHub (website main). Deploy checklist, verification, env; reference SANDBOX_LIVE_TESTING_PREP for full deploy.
 - `docs/SANDBOX_PREP_AND_HANDOFF_FEB18_2026.md` – **Sandbox prep and handoff (entry point)**: What is prepared, docs to read (handoff → live prep), GitHub repos, live URLs. Deployment will happen in another agent.
 - `docs/SANDBOX_LIVE_TESTING_PREP_FEB18_2026.md` – **Sandbox live testing prep**: VM layout (Sandbox 187, MAS 188, MINDEX 189, GPU node 190), pre-deploy health check URLs, what must run where, deployment checklist for deploying agent (pull, build, run with NAS mount, Cloudflare purge), paths, image names, test-voice, env vars. Deployment is executed by another agent; this doc is the single reference.

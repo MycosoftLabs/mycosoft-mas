@@ -57,6 +57,23 @@
 
 ---
 
+## Over-Video / Dark-Background Logic
+
+When building neuromorphic pages with video or dark hero backgrounds:
+
+1. Add `data-over-video` to the section containing dark video/gradient.
+2. Apply override classes so text stays white: `.portal-hero-badge`, `.portal-hero-title`, `.device-hero-title`, etc.
+3. Green accents: always `text-green-400`.
+4. CTA buttons: light mode = dark text on light button; dark mode = white text (use `device-cta-over-video` or `portal-cta-over-video` class).
+5. Light mode widgets over video get sharp outline via CSS in `neuromorphic-styles.css`.
+
+## Device Pages
+
+- Mushroom1, SporeBase, Hyphae1, MycoNode, Alarm — all wrapped in `NeuromorphicProvider` with `data-over-video` on video/dark hero sections.
+- Paths: `components/devices/mushroom1-details.tsx`, `sporebase-details.tsx`, `hyphae1-details.tsx`, `myconode-details.tsx`, `alarm-details.tsx`.
+
+---
+
 ## Protocol
 
 - Follow `.cursor/rules/neuromorphic-ui-standards.mdc`

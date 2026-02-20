@@ -21,6 +21,16 @@
 - **NeuBadge:** Use `variant` for semantic colors
 - **NeuTabs:** Use `tabs`, `activeIndex`, `onTabChange` with `NeuTabsContent` for panels
 
+## Over-Video / Dark-Background Text (Critical)
+
+When content sits over dark video or dark gradients (hero sections, device pages, apps portal):
+1. Mark the section with `data-over-video` on the containing section or wrapper.
+2. Text over dark backgrounds must stay white — do NOT follow light/dark theme for these elements.
+3. Override classes in neuromorphic-styles.css: `.portal-hero-badge`, `.portal-hero-title`, `.device-hero-title`, `.device-cta-over-video`, etc.
+4. Green accents: always `text-green-400`.
+5. CTA buttons: light mode = dark text on light button; dark mode = white text.
+6. Device pages: Mushroom1, SporeBase, Hyphae1, MycoNode, Alarm — wrap in NeuromorphicProvider, add data-over-video to video/dark hero sections.
+
 ## Accessibility
 
 - All interactive elements must have `neu-focus` for focus-visible outline

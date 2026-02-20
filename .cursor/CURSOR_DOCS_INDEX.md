@@ -44,7 +44,9 @@
 | `docs/DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md` | Dev → sandbox deploy pipeline |
 | `docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md` | **Auto-apply linter/analyzer fixes**: codeActionsOnSave, formatOnSave, bulk fix commands, code-auditor → stub-implementer workflow |
 | `docs/N8N_WORKFLOW_SYNC_AND_REGISTRY_FEB18_2026.md` | **n8n sync + MYCA registry**: Local and cloud n8n synced from repo; GET /api/workflows/registry, POST /api/workflows/sync-both; rule n8n-management; agents n8n-workflow, n8n-ops, n8n-workflow-sync |
+| `docs/NATUREOS_FULL_PLATFORM_COMPLETE_FEB19_2026.md` | **NatureOS Full Platform complete**: All phases — controllers, services, pages, API routes, MAS integration; verification and gaps |
 | `docs/COMPOUNDS_BUG_FIX_AND_DEPLOY_FEB19_2026.md` | **Compounds fix deploy**: Species compounds via API proxy; pushed to GitHub; deploy checklist, verification |
+| `docs/DEPLOYMENT_READINESS_CHECK_FEB19_2026.md` | **Deployment readiness**: Pre-deploy verification for handoff agent; Git, build, deploy checklist; do not deploy from this agent |
 | `docs/SANDBOX_PREP_AND_HANDOFF_FEB18_2026.md` | **Sandbox prep entry point**: What is prepared, docs for deploying agent, GitHub repos; deployment in another agent |
 | `docs/SANDBOX_LIVE_TESTING_PREP_FEB18_2026.md` | **Sandbox live prep**: VM layout, pre-deploy health checks, deploy checklist for another agent, NAS mount, Cloudflare, verification |
 

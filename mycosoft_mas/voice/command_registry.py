@@ -152,6 +152,68 @@ class VoiceCommandRegistry:
                 handler=CommandHandler("navigation", "frontend-router"),
                 examples=["go to the MINDEX dashboard", "open settings page"],
             ),
+            # NatureOS MATLAB-driven analyses (PersonaPlex voice commands)
+            RegisteredCommand(
+                command_id="natureos.analyze_zone",
+                name="Analyze Zone",
+                description="Analyze soil quality or telemetry in a zone",
+                patterns=[
+                    r"analyze\s+(?:soil\s+quality|telemetry)\s+in\s+zone\s+([A-Za-z0-9]+)",
+                    r"analyze\s+zone\s+([A-Za-z0-9]+)",
+                ],
+                command_type=CommandType.QUERY,
+                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                examples=["analyze soil quality in zone A", "analyze zone B"],
+            ),
+            RegisteredCommand(
+                command_id="natureos.forecast",
+                name="Environmental Forecast",
+                description="Predict temperature or humidity for next hours",
+                patterns=[
+                    r"predict\s+(?:temperature|humidity)\s+for\s+(?:the\s+)?next\s+(\d+)\s*hours?",
+                    r"forecast\s+(?:temperature|humidity)\s+(?:for\s+)?(\d+)\s*hours?",
+                ],
+                command_type=CommandType.QUERY,
+                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                examples=["predict temperature for next 24 hours", "forecast humidity 12 hours"],
+            ),
+            RegisteredCommand(
+                command_id="natureos.anomaly_scan",
+                name="Sensor Anomaly Scan",
+                description="Check for sensor anomalies",
+                patterns=[
+                    r"(?:are\s+there\s+any\s+)?sensor\s+anomalies?",
+                    r"check\s+for\s+anomalies",
+                    r"run\s+anomaly\s+(?:scan|detection)",
+                ],
+                command_type=CommandType.QUERY,
+                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                examples=["are there any sensor anomalies?", "check for anomalies"],
+            ),
+            RegisteredCommand(
+                command_id="natureos.classify",
+                name="Identify Fungal Sample",
+                description="Identify fungal sample from morphology",
+                patterns=[
+                    r"identify\s+(?:this\s+)?fungal\s+sample",
+                    r"classify\s+(?:this\s+)?(?:fungal|mushroom)\s+sample",
+                ],
+                command_type=CommandType.QUERY,
+                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                examples=["identify this fungal sample"],
+            ),
+            RegisteredCommand(
+                command_id="natureos.biodiversity_report",
+                name="Biodiversity Report",
+                description="Generate biodiversity report",
+                patterns=[
+                    r"generate\s+biodiversity\s+report",
+                    r"(?:create|run)\s+biodiversity\s+report",
+                ],
+                command_type=CommandType.QUERY,
+                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                examples=["generate biodiversity report"],
+            ),
         ]
         
         for cmd in defaults:

@@ -41,6 +41,13 @@ The website calls backend VMs -- NOT local services:
 - **MINDEX API**: `http://192.168.0.189:8000` (env: `MINDEX_API_URL`)
 - Configure in `.env.local` in the website repo.
 
+## Neuromorphic UI
+
+- **Use `NeuromorphicProvider`** when building neuromorphic pages (About, Apps, Devices, Defense).
+- **Over-video sections:** Add `data-over-video` and use `.portal-hero-*`, `.device-hero-*` classes so text stays white over dark video. See `.cursor/rules/neuromorphic-ui-standards.mdc`.
+- **Device pages:** Mushroom1, SporeBase, Hyphae1, MycoNode, Alarm — all use `NeuromorphicProvider` + `data-over-video` on video/dark hero sections.
+- Invoke **neuromorphic-ui** agent for neuromorphic conversions or theming issues.
+
 ## Key Pages/Apps
 
 - `/` - Homepage with search
