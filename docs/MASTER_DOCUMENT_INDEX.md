@@ -2,6 +2,7 @@
 
 ## Petri Dish Simulator Upgrade (Feb 20, 2026)
 - `docs/PETRI_DISH_SIM_UPGRADE_TASK_COMPLETE_FEB20_2026.md` – **Task completion**: Petridishsim repo foundation, chemical engine, segmentation + morphology utilities, calibration optimizer, MAS petri simulation API, and website UI overlays/panels. Includes verification steps and follow-up notes.
+- `docs/PETRI_DISH_SIM_DEPLOYMENT_STATUS_FEB20_2026.md` – **Deployment status**: GitHub pushes, MAS VM deploy completed, website VM deploy blocked by repeated Docker build loops, petridishsim target pending.
 
 ## NatureOS Tools Integration (Feb 21, 2026)
 - `docs/NATUREOS_TOOLS_INTEGRATION_TASK_COMPLETE_FEB21_2026.md` – **Task completion**: NatureOS tool embedding, new tool pages, navigation updates, MycoBrain stream connector, NatureOS search indexing helper, and verification checklist.
