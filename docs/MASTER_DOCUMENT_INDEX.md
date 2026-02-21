@@ -65,6 +65,7 @@
 
 ## MYCA Website Integration (Feb 17, 2026)
 - `../WEBSITE/website/docs/MYCA_FULL_WEBSITE_INTEGRATION_FEB17_2026.md` – **Unified MYCA website integration**: Global provider, persistent session/conversation IDs, unified chat widget, floating assistant, and consistent `user_id`/`session_id` forwarding across MYCA routes.
+- `../WEBSITE/website/docs/MYCA_FULL_WEBSITE_INTEGRATION_TEST_FEB21_2026.md` – **Integration test results**: Cross-page MYCA continuity verification on local dev server; dashboard auth gate noted.
 
 ## Full PersonaPlex — No Edge (Feb 13, 2026)
 - `docs/PERSONAPLEX_STARTUP_HARDENING_FEB09_2026.md` – **PersonaPlex startup hardening**: Both startup scripts (`start_personaplex.py`, `_start_personaplex_no_cuda_graphs.py`) hardened with 4-layer validation (personaplex-repo dir, model dir, model files, voices dir). All hardcoded paths removed. Setup instructions for fresh clones. Also covers git bloat cleanup and secrets removed from `_full_mindex_sync.py` / `_quick_mindex_sync.py`.
