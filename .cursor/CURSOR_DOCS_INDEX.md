@@ -19,6 +19,12 @@
 | `docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md` | Memory system (when relevant) |
 | `docs/Code and System Prioritization.docx.md` | Priorities, execution order |
 
+## Petri Dish Simulator Upgrade (Feb 20, 2026)
+
+| Doc | Purpose |
+|-----|---------|
+| `docs/PETRI_DISH_SIM_UPGRADE_TASK_COMPLETE_FEB20_2026.md` | Task completion: petridishsim foundation, chemical engine, segmentation/morphology, calibration, MAS endpoints, website overlays/panels, verification steps |
+
 ## 2. Current status & execution
 
 | Doc | Purpose |

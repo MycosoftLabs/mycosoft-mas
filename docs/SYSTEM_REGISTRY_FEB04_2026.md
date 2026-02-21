@@ -138,6 +138,18 @@ MYCA has full view and full access to n8n workflows. Source of truth: repo `n8n/
 **Rule**: `.cursor/rules/n8n-management.mdc`  
 **Agents**: n8n-workflow, n8n-ops, n8n-workflow-sync
 
+### Petri Dish Simulation API (Feb 20, 2026)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/simulation/petri/chemical/init` | POST | Initialize chemical fields |
+| `/api/simulation/petri/chemical/step` | POST | Step chemical simulation via petridishsim |
+| `/api/simulation/petri/metrics` | GET | Aggregate metrics from latest fields |
+| `/api/simulation/petri/calibrate` | POST | Submit calibration payload |
+
+**Router**: `mycosoft_mas/core/routers/petri_sim_api.py`  
+**Registered in**: `mycosoft_mas/core/myca_main.py`
+
 ### Code Files
 
 | Endpoint | Method | Description |

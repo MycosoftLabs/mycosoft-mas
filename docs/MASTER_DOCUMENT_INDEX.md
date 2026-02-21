@@ -1,5 +1,8 @@
 # Master Document Index
 
+## Petri Dish Simulator Upgrade (Feb 20, 2026)
+- `docs/PETRI_DISH_SIM_UPGRADE_TASK_COMPLETE_FEB20_2026.md` – **Task completion**: Petridishsim repo foundation, chemical engine, segmentation + morphology utilities, calibration optimizer, MAS petri simulation API, and website UI overlays/panels. Includes verification steps and follow-up notes.
+
 ## Superapp Architecture and Unification (Feb 19, 2026)
 - `docs/SUPERAPP_ARCHITECTURE_AND_UNIFICATION_FEB19_2026.md` – **Superapp architecture and unification plan**: Full analysis of all 50+ app directories, 45 component namespaces, duplicate pages (devices/devices2, defense/defense2, myca/myca-ai/test-voice), and siloed AI/data surfaces. 13 unification opportunities with impact/effort ratings, prioritized 10-item implementation plan, agent responsibility matrix, and accessibility/interactivity improvements. Key: unified nav shell, persistent MYCA panel, universal Cmd+K search, WebSocket real-time layer, Agent Studio, scientific→NatureOS migration. Use when planning platform convergence, UX simplification, or cross-system integration.
 
@@ -59,6 +62,9 @@
 - `docs/MYCA_VOICE_APPLICATION_HANDOFF_FEB17_2026.md` – **Handoff for another agent**: How to apply the MYCA Self-Improvement System (constitution, skill permissions, tool enforcement, event ledger, evals, CI) to PersonaPlex voice, M-Y-C-A voice, and the test-voice page. Includes touchpoints (bridge, voice orchestrator, brain API, test-voice page), voice skill PERMISSIONS.json, wiring to tool_pipeline, evals, and CI.
 - `docs/MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md` – **Voice test systems online**: Diagnostics derive Moshi from bridge health (`moshi_available`); UI label "Moshi (via Bridge)"; env and network requirements so all four services (Moshi, Bridge, MAS Consciousness, Memory Bridge) show online on `/test-voice`.
 - `docs/VOICE_TEST_QUICK_START_FEB18_2026.md` – **Voice test quick start**: Step-by-step commands to start dev server, bridge, Moshi, MAS; env vars; troubleshooting table.
+
+## MYCA Website Integration (Feb 17, 2026)
+- `../WEBSITE/website/docs/MYCA_FULL_WEBSITE_INTEGRATION_FEB17_2026.md` – **Unified MYCA website integration**: Global provider, persistent session/conversation IDs, unified chat widget, floating assistant, and consistent `user_id`/`session_id` forwarding across MYCA routes.
 
 ## Full PersonaPlex — No Edge (Feb 13, 2026)
 - `docs/PERSONAPLEX_STARTUP_HARDENING_FEB09_2026.md` – **PersonaPlex startup hardening**: Both startup scripts (`start_personaplex.py`, `_start_personaplex_no_cuda_graphs.py`) hardened with 4-layer validation (personaplex-repo dir, model dir, model files, voices dir). All hardcoded paths removed. Setup instructions for fresh clones. Also covers git bloat cleanup and secrets removed from `_full_mindex_sync.py` / `_quick_mindex_sync.py`.

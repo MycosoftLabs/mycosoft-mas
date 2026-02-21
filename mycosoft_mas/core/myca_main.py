@@ -54,6 +54,7 @@ from mycosoft_mas.core.routers.security_audit_api import router as security_rout
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
 from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
+from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -362,6 +363,7 @@ app.include_router(integrations_router)
 app.include_router(notifications_router)
 app.include_router(infrastructure_router)
 app.include_router(documents_router)
+app.include_router(petri_sim_router)
 
 # Scientific platform routers
 app.include_router(scientific_router, prefix="/scientific", tags=["scientific"])

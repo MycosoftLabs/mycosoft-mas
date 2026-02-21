@@ -8,7 +8,9 @@ and processes environmental data for petri dish experiments.
 import asyncio
 import logging
 import json
+import os
 import numpy as np
+import httpx
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
@@ -87,6 +89,43 @@ class PetriDishSimulatorAgent(BaseAgent):
             "parameters_updated": 0
         })
         self.physics_simulator = PhysicsSimulator()
+        self.petridishsim_url = config.get("petridishsim_url") or os.environ.get("PETRIDISHSIM_URL", "")
+        self.chemical_fields: Dict[str, np.ndarray] = {}
+
+    def initialize_chemical_fields(self, fields: Dict[str, List[List[float]]]) -> None:
+        self.chemical_fields = {
+            name: np.array(grid, dtype=np.float32) for name, grid in fields.items()
+        }
+
+    async def step_chemical_simulation(
+        self,
+        dt: float,
+        diffusion_rates: Dict[str, float],
+        reaction_params: Dict[str, Dict[str, float]],
+        decay_rates: Optional[Dict[str, float]] = None,
+    ) -> Dict[str, np.ndarray]:
+        if not self.petridishsim_url:
+            raise ValueError("PETRIDISHSIM_URL is not configured.")
+        if not self.chemical_fields:
+            raise ValueError("Chemical fields not initialized.")
+
+        payload = {
+            "fields": {k: v.tolist() for k, v in self.chemical_fields.items()},
+            "diffusion_rates": diffusion_rates,
+            "decay_rates": decay_rates or {},
+            "dt": dt,
+            "reaction_params": reaction_params,
+        }
+
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.post(f"{self.petridishsim_url}/chemical/step", json=payload)
+            response.raise_for_status()
+            data = response.json()
+
+        self.chemical_fields = {
+            name: np.array(grid, dtype=np.float32) for name, grid in data.get("fields", {}).items()
+        }
+        return self.chemical_fields
 
     async def initialize(self) -> bool:
         """Initialize the agent and its services."""
@@ -238,6 +277,25 @@ class PetriDishSimulatorAgent(BaseAgent):
         biomass = max(parameters.initial_biomass, 0.001)
         now = datetime.utcnow()
         for step in range(max(1, min(parameters.time_steps, 120))):
+            chemical_config = parameters.metadata.get("chemical_simulation") if parameters.metadata else None
+            if chemical_config:
+                if "fields" in chemical_config and not self.chemical_fields:
+                    self.initialize_chemical_fields(chemical_config["fields"])
+                diffusion_rates = chemical_config.get("diffusion_rates", {})
+                reaction_params = chemical_config.get("reaction_params", {})
+                decay_rates = chemical_config.get("decay_rates", {})
+                dt = chemical_config.get("dt")
+                if diffusion_rates and reaction_params and dt:
+                    try:
+                        await self.step_chemical_simulation(
+                            dt=float(dt),
+                            diffusion_rates=diffusion_rates,
+                            reaction_params=reaction_params,
+                            decay_rates=decay_rates,
+                        )
+                    except Exception as exc:
+                        self.logger.warning(f"Chemical simulation step failed: {exc}")
+
             diffusion = await self.physics_simulator.simulate_growth_physics(
                 nutrient_field=nutrient_grid,
                 diffusion_coefficient=0.02,

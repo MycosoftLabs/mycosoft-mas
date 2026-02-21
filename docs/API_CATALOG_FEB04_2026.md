@@ -390,3 +390,16 @@ Most endpoints require authentication via:
 | `/physics/reaction` | POST | Reaction/diffusion kinetics |
 | `/physics/neural-operator` | POST | Neural-operator style transformation |
 | `/physics/pinn` | POST | PINN-style equation solve endpoint |
+
+---
+
+## Petri Dish Simulation API Endpoints (Feb 20, 2026)
+
+### MAS Petri Simulation (`/api/simulation/petri/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/simulation/petri/chemical/init` | POST | Initialize chemical fields |
+| `/api/simulation/petri/chemical/step` | POST | Step chemical simulation via petridishsim |
+| `/api/simulation/petri/metrics` | GET | Aggregate metrics from latest fields |
+| `/api/simulation/petri/calibrate` | POST | Submit calibration payload |
