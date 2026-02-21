@@ -3,6 +3,9 @@
 ## Petri Dish Simulator Upgrade (Feb 20, 2026)
 - `docs/PETRI_DISH_SIM_UPGRADE_TASK_COMPLETE_FEB20_2026.md` – **Task completion**: Petridishsim repo foundation, chemical engine, segmentation + morphology utilities, calibration optimizer, MAS petri simulation API, and website UI overlays/panels. Includes verification steps and follow-up notes.
 
+## NatureOS Tools Integration (Feb 21, 2026)
+- `docs/NATUREOS_TOOLS_INTEGRATION_TASK_COMPLETE_FEB21_2026.md` – **Task completion**: NatureOS tool embedding, new tool pages, navigation updates, MycoBrain stream connector, NatureOS search indexing helper, and verification checklist.
+
 ## Superapp Architecture and Unification (Feb 19, 2026)
 - `docs/SUPERAPP_ARCHITECTURE_AND_UNIFICATION_FEB19_2026.md` – **Superapp architecture and unification plan**: Full analysis of all 50+ app directories, 45 component namespaces, duplicate pages (devices/devices2, defense/defense2, myca/myca-ai/test-voice), and siloed AI/data surfaces. 13 unification opportunities with impact/effort ratings, prioritized 10-item implementation plan, agent responsibility matrix, and accessibility/interactivity improvements. Key: unified nav shell, persistent MYCA panel, universal Cmd+K search, WebSocket real-time layer, Agent Studio, scientific→NatureOS migration. Use when planning platform convergence, UX simplification, or cross-system integration.
 

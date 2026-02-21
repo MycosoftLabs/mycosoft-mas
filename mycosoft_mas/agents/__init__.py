@@ -53,6 +53,8 @@ _safe_import(".dashboard_agent", "DashboardAgent")
 _safe_import(".opportunity_scout", "OpportunityScout")
 _safe_import(".gap_agent", "GapAgent")
 _safe_import(".sporebase_agent", "SporeBaseAgent")
+_safe_import(".natureos_simulation_agent", "NatureOSSimulationAgent")
+_safe_import(".digital_twin_agent", "DigitalTwinAgent")
 
 # Corporate Agents
 _safe_import(".corporate.corporate_operations_agent", "CorporateOperationsAgent")

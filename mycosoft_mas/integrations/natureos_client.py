@@ -39,6 +39,7 @@ class NATUREOSClient:
             or os.environ.get("NATUREOS_API_BASE_URL")
             or "http://192.168.0.187:5000"
         ).rstrip("/")
+        self.mas_base_url = os.environ.get("MAS_API_URL")
         self.timeout = timeout
 
     async def _post(
@@ -116,3 +117,52 @@ class NATUREOSClient:
     async def get_matlab_health(self) -> Dict[str, Any]:
         """Get MATLAB engine status."""
         return await self._get("/api/Matlab/health")
+
+    async def run_simulation(
+        self, simulation_type: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Run a named simulation via MATLAB analysis endpoint."""
+        args: List[Any] = []
+        if params is not None:
+            args = [params]
+        return await self.execute_analysis(simulation_type, args)
+
+    async def get_earth2_forecast(
+        self, forecast_payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Run Earth-2 forecast via MAS."""
+        if not self.mas_base_url:
+            raise ValueError("MAS_API_URL is not configured")
+        url = f"{self.mas_base_url.rstrip('/')}/api/earth2/forecast"
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(url, json=forecast_payload)
+            response.raise_for_status()
+            return response.json()
+
+    async def sync_digital_twin(self, device_id: str) -> Dict[str, Any]:
+        """Fetch device telemetry for digital twin synchronization."""
+        return await self._get(f"/api/Devices/{device_id}/sensor-data")
+
+    async def analyze_symbiosis_network(
+        self, latitude: float, longitude: float, radius_meters: int = 1000
+    ) -> Dict[str, Any]:
+        """Analyze mycorrhizal network within a geographic area."""
+        query = (
+            f"/api/Funga/network/analyze?latitude={latitude}"
+            f"&longitude={longitude}&radiusMeters={radius_meters}"
+        )
+        return await self._get(query)
+
+    async def track_spores(
+        self,
+        latitude: float,
+        longitude: float,
+        start_time: str,
+        end_time: str,
+    ) -> Dict[str, Any]:
+        """Fetch spore dispersal patterns for a time period and location."""
+        query = (
+            f"/api/Funga/spores/dispersal?latitude={latitude}"
+            f"&longitude={longitude}&startTime={start_time}&endTime={end_time}"
+        )
+        return await self._get(query)

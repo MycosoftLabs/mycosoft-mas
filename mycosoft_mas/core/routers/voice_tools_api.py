@@ -7,7 +7,7 @@ It handles device status checks, agent queries, MINDEX searches, and system stat
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import os
 import re
@@ -93,7 +93,26 @@ async def execute_tool(request: ToolCallRequest):
             return await _run_myceliumseg_validation(query)
         elif tool_name == "run_workflow":
             return await _run_workflow_voice(query)
-        elif tool_name in ("natureos.analyze_zone", "natureos.forecast", "natureos.anomaly_scan", "natureos.classify", "natureos.biodiversity_report"):
+        elif tool_name in (
+            "natureos.analyze_zone",
+            "natureos.forecast",
+            "natureos.anomaly_scan",
+            "natureos.classify",
+            "natureos.biodiversity_report",
+            "natureos.earth_forecast",
+            "natureos.simulate_petri",
+            "natureos.simulate_mushroom",
+            "natureos.simulate_compound",
+            "natureos.simulate_genetic_circuit",
+            "natureos.simulate_lifecycle",
+            "natureos.simulate_physics",
+            "natureos.growth_analytics",
+            "natureos.retrosynthesis",
+            "natureos.alchemy_lab",
+            "natureos.sync_twin",
+            "natureos.symbiosis_network",
+            "natureos.track_spores",
+        ):
             return await _run_natureos_matlab_tool(tool_name, query)
         else:
             return ToolCallResponse(
@@ -151,6 +170,73 @@ async def _run_natureos_matlab_tool(tool_name: str, query: str) -> ToolCallRespo
         elif tool_name == "natureos.biodiversity_report":
             result_data = await client.execute_analysis("calculateBiodiversityIndices", [])
             msg = f"Biodiversity report generated. Shannon index: {result_data.get('shannon', 'N/A')}, Simpson: {result_data.get('simpson', 'N/A')}."
+        elif tool_name == "natureos.earth_forecast":
+            hours = 24
+            m = re.search(r"(\d+)\s*hour", query)
+            if m:
+                hours = int(m.group(1))
+            payload = {"hours": hours, "query": query}
+            result_data = await client.get_earth2_forecast(payload)
+            msg = "Earth-2 forecast requested."
+        elif tool_name in (
+            "natureos.simulate_petri",
+            "natureos.simulate_mushroom",
+            "natureos.simulate_compound",
+            "natureos.simulate_genetic_circuit",
+            "natureos.simulate_lifecycle",
+            "natureos.simulate_physics",
+            "natureos.growth_analytics",
+            "natureos.retrosynthesis",
+            "natureos.alchemy_lab",
+        ):
+            simulation_type = tool_name.replace("natureos.", "")
+            result_data = await client.run_simulation(simulation_type=simulation_type, params={"query": query})
+            msg = f"NatureOS {simulation_type.replace('_', ' ')} run started."
+        elif tool_name == "natureos.sync_twin":
+            m = re.search(r"device\s+([A-Za-z0-9_-]+)", query)
+            device_id = m.group(1) if m else ""
+            if not device_id:
+                return ToolCallResponse(
+                    success=False,
+                    tool_name=tool_name,
+                    result="Please specify a device id to sync.",
+                    timestamp=datetime.utcnow().isoformat(),
+                )
+            result_data = await client.sync_digital_twin(device_id)
+            msg = f"Digital twin sync complete for {device_id}."
+        elif tool_name == "natureos.symbiosis_network":
+            coords = _parse_lat_lon(query)
+            if not coords:
+                return ToolCallResponse(
+                    success=False,
+                    tool_name=tool_name,
+                    result="Please include latitude and longitude for symbiosis analysis.",
+                    timestamp=datetime.utcnow().isoformat(),
+                )
+            latitude, longitude = coords
+            radius_match = re.search(r"radius\s+(\d+)", query)
+            radius_meters = int(radius_match.group(1)) if radius_match else 1000
+            result_data = await client.analyze_symbiosis_network(latitude, longitude, radius_meters)
+            msg = "Symbiosis network analysis complete."
+        elif tool_name == "natureos.track_spores":
+            coords = _parse_lat_lon(query)
+            if not coords:
+                return ToolCallResponse(
+                    success=False,
+                    tool_name=tool_name,
+                    result="Please include latitude and longitude to track spores.",
+                    timestamp=datetime.utcnow().isoformat(),
+                )
+            latitude, longitude = coords
+            iso_times = re.findall(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?", query)
+            if len(iso_times) >= 2:
+                start_time, end_time = iso_times[0], iso_times[1]
+            else:
+                now = datetime.utcnow()
+                end_time = now.isoformat()
+                start_time = (now - timedelta(hours=24)).isoformat()
+            result_data = await client.track_spores(latitude, longitude, start_time, end_time)
+            msg = "Spore tracking request submitted."
         else:
             msg = f"Unknown NatureOS tool: {tool_name}"
         return ToolCallResponse(
@@ -178,6 +264,17 @@ def _format_anomaly_result(data: Dict[str, Any]) -> str:
     if scores:
         return f"Anomaly scan complete. {len(scores)} data points analyzed. No significant anomalies detected."
     return "Anomaly scan complete. No anomalies detected."
+
+
+def _parse_lat_lon(query: str) -> Optional[tuple[float, float]]:
+    lat_match = re.search(r"(?:lat|latitude)\s*[:=]?\s*(-?\d+(?:\.\d+)?)", query)
+    lon_match = re.search(r"(?:lon|long|longitude)\s*[:=]?\s*(-?\d+(?:\.\d+)?)", query)
+    if lat_match and lon_match:
+        return float(lat_match.group(1)), float(lon_match.group(1))
+    pair_match = re.search(r"(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)", query)
+    if pair_match:
+        return float(pair_match.group(1)), float(pair_match.group(2))
+    return None
 
 
 async def _run_workflow_voice(query: str) -> ToolCallResponse:
