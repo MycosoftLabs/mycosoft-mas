@@ -216,3 +216,9 @@ venv311/
 .coverage
 .coverage.*
 htmlcov/
+
+# Temp VM operation scripts
+_vm_ops.py
+_sandbox_cleanup.py
+_fix_working_secrets.py
+_secret_replacements.txt
