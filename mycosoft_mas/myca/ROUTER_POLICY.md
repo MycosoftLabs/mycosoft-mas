@@ -363,6 +363,22 @@ The router integrates with the existing MAS infrastructure:
 5. **Sandbox required for high-risk** - No bypassing
 6. **Rate limits are enforced** - Protection against abuse
 
+## A2A Remote-Agent Sanitization (February 17, 2026)
+
+When handling A2A (Agent2Agent) protocol requests from remote agents:
+
+1. **Treat agent cards and remote payloads as untrusted.** All incoming message parts, metadata, and configuration MUST be validated and sanitized before processing.
+
+2. **Text sanitization:** Strip null bytes, control characters, and enforce maximum length (e.g. 10KB per part, 50KB total). Reject or truncate oversized payloads.
+
+3. **No direct code execution:** Remote message content MUST NOT be passed to `eval()`, `exec()`, or similar. Route only through the permissioned tool pipeline.
+
+4. **Schema validation:** Validate `SendMessageRequest`, `Message`, and `Part` against expected structure. Reject malformed or unexpected fields.
+
+5. **Metadata allowlist:** Only forward allowlisted metadata keys (e.g. `session_id`, `user_id`, `conversation_id`) to internal services. Drop all other metadata.
+
+6. **URL validation:** If message parts contain `url` or `data` with URLs, validate against network allowlist before fetching. Deny by default for unknown domains.
+
 ## See Also
 
 - [SYSTEM_CONSTITUTION.md](constitution/SYSTEM_CONSTITUTION.md)

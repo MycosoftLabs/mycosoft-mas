@@ -293,11 +293,17 @@ async def unregister_device(device_id: str):
 
 
 @router.post("/{device_id}/command")
-async def send_device_command(device_id: str, cmd: DeviceCommand):
+async def send_device_command(
+    device_id: str,
+    cmd: DeviceCommand,
+    use_mycorrhizae: bool = Query(True, description="Also publish command via Mycorrhizae for gateways"),
+):
     """
     Forward a command to a remote device.
     
-    The command is proxied to the device's MycoBrain service.
+    Proxies to the device's MycoBrain service. When use_mycorrhizae is true,
+    also publishes to device.{device_id}.command via Mycorrhizae so gateways
+    can forward to serial/LoRa devices.
     """
     _cleanup_expired_devices()
     
@@ -310,7 +316,19 @@ async def send_device_command(device_id: str, cmd: DeviceCommand):
     if device_status == "offline":
         raise HTTPException(status_code=503, detail=f"Device {device_id} is offline")
     
-    # Build target URL
+    # Publish to Mycorrhizae so gateways can forward (optional, non-blocking)
+    if use_mycorrhizae:
+        try:
+            from mycosoft_mas.integrations.mycorrhizae_client import MycorrhizaeClient
+            client = MycorrhizaeClient()
+            command_payload = {"cmd": cmd.command, **cmd.params}
+            published = await client.send_device_command(device_id, command_payload)
+            if published:
+                logger.info("Command published to Mycorrhizae device.%s.command", device_id)
+        except Exception as e:
+            logger.debug("Mycorrhizae publish skipped: %s", e)
+    
+    # Build target URL for direct device call
     host = device["host"]
     port = device["port"]
     

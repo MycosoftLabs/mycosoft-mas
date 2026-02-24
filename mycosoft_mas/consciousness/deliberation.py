@@ -273,6 +273,17 @@ class DeliberateReasoning:
                 parts.append(f"  Time: {world_context['time']}")
             if "events" in world_context:
                 parts.append(f"  Recent events: {world_context['events'][:100]}")
+            if "presence" in world_context:
+                presence = world_context["presence"]
+                online_count = presence.get("online_count", 0)
+                staff_count = presence.get("staff_count", 0)
+                if online_count > 0:
+                    parts.append(f"  [Live Presence] {online_count} users online ({staff_count} staff)")
+                    online_users = presence.get("online_users", [])
+                    for u in online_users[:5]:
+                        name = u.get("name", u.get("user_id", "?"))
+                        role = u.get("role", "user")
+                        parts.append(f"    - {name} ({role})")
         
         # Memories
         if memories:

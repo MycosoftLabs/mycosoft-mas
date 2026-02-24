@@ -8,6 +8,9 @@ relevant information.
 
 import asyncio
 import logging
+import os
+import re
+from difflib import SequenceMatcher
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 import json
@@ -17,6 +20,7 @@ from enum import Enum, auto
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.enums import AgentStatus, TaskType, TaskStatus, TaskPriority
+import httpx
 
 class SearchType(Enum):
     """Types of search operations"""
@@ -49,8 +53,8 @@ class SearchResult:
 class SearchAgent(BaseAgent):
     """Agent for performing search and discovery operations"""
     
-    def __init__(self, agent_id: str):
-        super().__init__(agent_id)
+    def __init__(self, agent_id: str, name: str = "SearchAgent", config: Optional[Dict[str, Any]] = None):
+        super().__init__(agent_id=agent_id, name=name, config=config or {})
         self.search_results: Dict[str, SearchResult] = {}
         self.search_queue: asyncio.Queue = asyncio.Queue()
         self.index_queue: asyncio.Queue = asyncio.Queue()
@@ -66,6 +70,9 @@ class SearchAgent(BaseAgent):
             "index_updates": 0,
             "search_errors": 0
         })
+
+        self.mindex_api_url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000")
+        self.mindex_api_key = os.getenv("MINDEX_API_KEY")
     
     async def initialize(self) -> None:
         """Initialize the agent"""
@@ -193,30 +200,141 @@ class SearchAgent(BaseAgent):
     
     async def _keyword_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform keyword-based search"""
-        # Implementation for keyword search
-        pass
+        limit = query.limit or 10
+        types = query.filters.get("types") if isinstance(query.filters, dict) else None
+        if not types:
+            types = ["taxa", "compounds", "genetics"]
+        params: Dict[str, Any] = {
+            "q": query.query,
+            "types": ",".join(types),
+            "limit": limit,
+        }
+        for key in ("toxicity", "lat", "lng", "radius"):
+            if key in query.filters:
+                params[key] = query.filters[key]
+
+        data = await self._call_mindex("/api/mindex/unified-search", params)
+        results = data.get("results", {}) if isinstance(data, dict) else {}
+        matches: List[Dict[str, Any]] = []
+        for result_type, items in results.items():
+            for item in items:
+                matches.append({"type": result_type, "data": item, "source": "mindex"})
+        return matches
     
     async def _semantic_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform semantic search"""
-        # Implementation for semantic search
-        pass
+        limit = query.limit or 10
+        results: List[Dict[str, Any]] = []
+
+        mindex_data = await self._call_mindex(
+            "/api/mindex/unified-search",
+            {"q": query.query, "types": "taxa,compounds,genetics", "limit": limit},
+        )
+        mindex_results = mindex_data.get("results", {}) if isinstance(mindex_data, dict) else {}
+        for result_type, items in mindex_results.items():
+            for item in items:
+                results.append({"type": result_type, "data": item, "source": "mindex"})
+
+        from mycosoft_mas.integrations.exa_client import get_exa_client
+        exa = get_exa_client()
+        if exa.is_configured:
+            exa_response = await exa.semantic_search(
+                query=query.query,
+                num_results=min(limit, 10),
+                include_text=True,
+                include_highlights=True,
+                category=query.filters.get("category") if isinstance(query.filters, dict) else None,
+            )
+            for item in exa_response.results or []:
+                results.append({"type": "web", "data": item.model_dump(), "source": "exa"})
+
+        return results
     
     async def _fuzzy_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform fuzzy search"""
-        # Implementation for fuzzy search
-        pass
+        limit = query.limit or 20
+        data = await self._call_mindex("/api/mindex/taxa", {"q": query.query, "limit": limit})
+        taxa = data.get("data", []) if isinstance(data, dict) else []
+        matches: List[Dict[str, Any]] = []
+        for item in taxa:
+            candidates = [item.get("canonical_name", ""), item.get("common_name", "")]
+            best_score = 0.0
+            for candidate in candidates:
+                if not candidate:
+                    continue
+                score = SequenceMatcher(None, query.query.lower(), candidate.lower()).ratio()
+                best_score = max(best_score, score)
+            if best_score >= 0.65:
+                matches.append({
+                    "type": "taxa",
+                    "data": item,
+                    "source": "mindex",
+                    "score": round(best_score, 3),
+                })
+        matches.sort(key=lambda m: m.get("score", 0), reverse=True)
+        return matches[:limit]
     
     async def _regex_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform regex-based search"""
-        # Implementation for regex search
-        pass
+        try:
+            pattern = re.compile(query.query, re.IGNORECASE)
+        except re.error:
+            return []
+        limit = query.limit or 50
+        data = await self._call_mindex("/api/mindex/taxa", {"q": query.query, "limit": limit})
+        taxa = data.get("data", []) if isinstance(data, dict) else []
+        matches = [
+            {"type": "taxa", "data": item, "source": "mindex"}
+            for item in taxa
+            if pattern.search(item.get("canonical_name", "")) or pattern.search(item.get("common_name", ""))
+        ]
+        return matches[:limit]
     
     async def _structured_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform structured search"""
-        # Implementation for structured search
-        pass
+        limit = query.limit or 10
+        filters = query.filters or {}
+        params: Dict[str, Any] = {
+            "q": query.query,
+            "types": ",".join(filters.get("types", ["taxa", "compounds", "genetics"])),
+            "limit": limit,
+        }
+        if "toxicity" in filters:
+            params["toxicity"] = filters["toxicity"]
+        if "lat" in filters and "lng" in filters:
+            params["lat"] = filters["lat"]
+            params["lng"] = filters["lng"]
+            params["radius"] = filters.get("radius", 100)
+            params["types"] = params["types"] + ",observations"
+
+        data = await self._call_mindex("/api/mindex/unified-search", params)
+        results = data.get("results", {}) if isinstance(data, dict) else {}
+        matches: List[Dict[str, Any]] = []
+        for result_type, items in results.items():
+            for item in items:
+                matches.append({"type": result_type, "data": item, "source": "mindex"})
+        return matches
     
     async def _update_search_index(self, data: Dict[str, Any]) -> None:
         """Update the search index with new data"""
-        # Implementation for index update
-        pass 
+        try:
+            index_entry = {
+                "timestamp": datetime.utcnow().isoformat(),
+                "data": data,
+            }
+            file_path = self.data_dir / f"index_update_{datetime.utcnow().strftime('%Y%m%d')}.jsonl"
+            with file_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(index_entry) + "\n")
+        except Exception as e:
+            self.logger.error(f"Failed to update index: {e}")
+
+    async def _call_mindex(self, path: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        headers = {}
+        if self.mindex_api_key:
+            headers["X-API-Key"] = self.mindex_api_key
+        url = f"{self.mindex_api_url}{path}"
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url, params=params, headers=headers)
+            if response.status_code != 200:
+                return {}
+            return response.json()

@@ -1,0 +1,13 @@
+# MYCA Docs Living (All Agents)
+
+## When MYCA code changes
+
+- Invoke **myca-docs** agent or update relevant atomic doc
+- Atomic and living docs: **NO date in filename** (myca-docs keeps them current)
+- Atomic docs: single component, under 150 lines
+- Large docs: overview only; link to atomic docs for detail
+- Run `python scripts/build_docs_manifest.py` after doc changes
+
+## Trigger
+
+- "update MYCA docs", "@myca-docs", "MYCA documentation drift"

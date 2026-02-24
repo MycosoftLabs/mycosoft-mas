@@ -61,6 +61,7 @@ from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
 from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
 from mycosoft_mas.core.routers.nlq_api import router as nlq_router
 from mycosoft_mas.core.routers.telemetry_pipeline_api import router as telemetry_pipeline_router
+from mycosoft_mas.core.routers.presence_api import router as presence_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -424,6 +425,8 @@ if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
+# Presence API (online users, sessions, staff)
+app.include_router(presence_router, tags=["presence"])
 # IoT Alert Service API
 app.include_router(alert_router, tags=["iot-alerts"])
 # IoT Analytics API

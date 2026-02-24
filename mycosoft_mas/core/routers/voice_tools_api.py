@@ -93,6 +93,8 @@ async def execute_tool(request: ToolCallRequest):
             return await _run_myceliumseg_validation(query)
         elif tool_name == "run_workflow":
             return await _run_workflow_voice(query)
+        elif tool_name in ("petri.monitor", "petri.adjust_env", "petri.contamination_response", "petri.multi_run"):
+            return await _run_petri_agent_tool(tool_name, query)
         elif tool_name in (
             "natureos.analyze_zone",
             "natureos.forecast",
@@ -129,6 +131,48 @@ async def execute_tool(request: ToolCallRequest):
             result=f"Tool execution failed: {str(e)}",
             timestamp=datetime.utcnow().isoformat()
         )
+
+
+async def _run_petri_agent_tool(tool_name: str, query: str) -> ToolCallResponse:
+    """Execute Petri agent control via MAS petri API."""
+    import httpx
+    base = os.getenv("MAS_API_URL", "http://localhost:8001")
+    url = f"{base.rstrip('/')}/api/simulation/petri/agent/control"
+    action = tool_name.replace("petri.", "")
+    params: Dict[str, Any] = {}
+    if action == "monitor":
+        pass
+    elif action == "adjust_env":
+        m = re.search(r"temp(?:erature)?\s*(?:to\s+)?(\d+(?:\.\d+)?)", query, re.I)
+        if m:
+            params["temperature"] = float(m.group(1))
+        m = re.search(r"humidity\s*(?:to\s+)?(\d+(?:\.\d+)?)", query, re.I)
+        if m:
+            params["humidity"] = float(m.group(1))
+        m = re.search(r"ph\s*(?:to\s+)?(\d+(?:\.\d+)?)", query, re.I)
+        if m:
+            params["ph"] = float(m.group(1))
+    elif action == "contamination_response":
+        params["strategy"] = "reduce_speed"
+        if "isolate" in query.lower():
+            params["strategy"] = "isolate"
+        elif "ph" in query.lower() or "adjust" in query.lower():
+            params["strategy"] = "adjust_ph"
+    elif action == "multi_run":
+        m = re.search(r"(\d+)\s*iterations?", query, re.I) or re.search(r"batch\s+(\d+)", query, re.I)
+        params["iterations"] = int(m.group(1)) if m else 10
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.post(url, json={"action": action, "source": "voice", "params": params})
+            r.raise_for_status()
+            data = r.json()
+        msg = data.get("message", str(data.get("status", "ok")))
+        if action == "monitor":
+            msg = f"Petri status: {data.get('petridishsim_reachable', False) and 'reachable' or 'offline'}. Sessions: {data.get('sessions_count', 0)}."
+        return ToolCallResponse(success=True, tool_name=tool_name, result=msg[:500], data=data, timestamp=datetime.utcnow().isoformat())
+    except Exception as e:
+        logger.warning("Petri agent tool failed: %s", e)
+        return ToolCallResponse(success=False, tool_name=tool_name, result=f"Petri control failed: {str(e)[:200]}", timestamp=datetime.utcnow().isoformat())
 
 
 async def _run_natureos_matlab_tool(tool_name: str, query: str) -> ToolCallResponse:

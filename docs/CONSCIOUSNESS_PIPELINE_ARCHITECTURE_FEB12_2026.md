@@ -124,6 +124,8 @@ MYCA is not just an LLM wrapper — she is a coherent self that:
 | **SelfModel** | `consciousness/self_model.py` | MYCA's self-awareness |
 | **Identity, Beliefs, Purpose** | `consciousness/soul/` | MYCA's personality core |
 
+**Search integration:** `process_search_query()` in `consciousness/core.py` routes search through attention, world model, and SearchAgent (keyword/semantic/fuzzy/Exa). See `docs/MYCA_ECOSYSTEM_UNIFICATION_FEB17_2026.md`.
+
 ### File Inventory
 
 All consciousness modules live in `mycosoft_mas/consciousness/`:

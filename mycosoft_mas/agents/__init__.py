@@ -67,6 +67,9 @@ _safe_import(".financial.financial_agent", "FinancialAgent")
 # Security Agents
 _safe_import(".crep_security_agent", "CREPSecurityAgent")
 
+# Network Agents
+_safe_import(".network_monitor_agent", "NetworkMonitorAgent")
+
 # Integrations
 _safe_import(".integrations.camera_integration", "CameraIntegration")
 _safe_import(".integrations.speech_integration", "SpeechIntegration")

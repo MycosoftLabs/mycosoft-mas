@@ -22,6 +22,7 @@ from .graph_memory import GraphMemory
 from .coordinator import MemoryCoordinator, get_memory_coordinator
 from .user_context import UserContext, UserContextManager, get_context_manager
 from .session_memory import SessionMemory, SessionMemoryManager, get_session_manager
+from .temporal_patterns import TemporalPattern, TemporalPatternStore
 
 __all__ = [
     # Schema
@@ -58,4 +59,7 @@ __all__ = [
     "SessionMemory",
     "SessionMemoryManager",
     "get_session_manager",
+    # Temporal patterns (biospheric sensor patterns)
+    "TemporalPattern",
+    "TemporalPatternStore",
 ]

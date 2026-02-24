@@ -121,6 +121,13 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/voice/stt` | POST | Speech to text |
 | `/api/voice/health` | GET | Voice health |
 
+### NLQ API (`/api/nlq/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/nlq/health` | GET | NLQ router health |
+| `/api/nlq/query` | POST | Natural language query processing for search |
+
 ### MINDEX Integration (`/api/mindex/*`)
 
 | Endpoint | Method | Description |
@@ -403,3 +410,13 @@ Most endpoints require authentication via:
 | `/api/simulation/petri/chemical/step` | POST | Step chemical simulation via petridishsim |
 | `/api/simulation/petri/metrics` | GET | Aggregate metrics from latest fields |
 | `/api/simulation/petri/calibrate` | POST | Submit calibration payload |
+| `/api/simulation/petri/session/create` | POST | Create session |
+| `/api/simulation/petri/session/{id}` | GET | Get session |
+| `/api/simulation/petri/session/{id}/reset` | POST | Reset session |
+| `/api/simulation/petri/status` | GET | MAS + petridishsim status |
+| `/api/simulation/petri/batch` | POST | Batch run (≤10k iterations) |
+| `/api/simulation/petri/batch/scale` | POST | Scale batch (up to 1M iterations) |
+| `/api/simulation/petri/batch/scale/{job_id}` | GET | Scale batch job status |
+| `/api/simulation/petri/batch/scale/{job_id}/cancel` | POST | Cancel scale batch |
+| `/api/simulation/petri/agent/control` | POST | MYCA agent control (monitor, adjust_env, contamination_response, multi_run) |
+| `/api/simulation/petri/agent/audit` | GET | Audit trail of agent actions |

@@ -7,6 +7,7 @@ Sensors for perceiving the world through various data sources:
 - NatureOSSensor: Life and ecosystem status
 - MINDEXSensor: Knowledge and fungi data with semantic search
 - MycoBrainSensor: Device telemetry
+- PresenceSensor: Live user presence, active sessions, API usage
 
 Created: Feb 11, 2026
 Author: Morgan Rockwell / MYCA
@@ -389,6 +390,105 @@ class MycoBrainSensor(BaseSensor):
         return None
 
 
+class PresenceSensor(BaseSensor):
+    """
+    Presence Sensor for real-time user awareness.
+
+    Provides MYCA with visibility into:
+    - Currently online users
+    - Active sessions and their context
+    - Staff directory with live status
+    - API usage patterns
+    """
+
+    def __init__(self, world_model: "WorldModel"):
+        super().__init__(world_model)
+        self.presence_url = os.environ.get(
+            "PRESENCE_API_URL", "http://192.168.0.187:3000/api/presence"
+        ).rstrip("/")
+        self.service_key = os.environ.get("PRESENCE_SERVICE_KEY", "")
+
+    def _headers(self) -> Dict[str, str]:
+        h: Dict[str, str] = {"Accept": "application/json"}
+        if self.service_key:
+            h["X-Service-Key"] = self.service_key
+        return h
+
+    async def read(self) -> Optional[Dict[str, Any]]:
+        """Read presence data: online users, sessions, API usage."""
+        try:
+            online_data = await self.get_online_users()
+            sessions_data = await self.get_active_sessions()
+            usage_data: Dict[str, Any] = {}
+            try:
+                async with httpx.AsyncClient(timeout=5) as client:
+                    r = await client.get(
+                        f"{self.presence_url}/api-usage?hours=24",
+                        headers=self._headers(),
+                    )
+                    if r.status_code == 200:
+                        usage_data = r.json()
+            except Exception:
+                pass
+
+            staff = [u for u in (online_data or []) if u.get("is_superuser") or (u.get("role") or "").lower() in ("staff", "admin", "owner", "superuser")]
+            self._last_data = {
+                "online_users": online_data or [],
+                "online_count": len(online_data) if online_data else 0,
+                "active_sessions": sessions_data or [],
+                "sessions_count": len(sessions_data) if sessions_data else 0,
+                "staff_online": staff,
+                "staff_count": len(staff),
+                "superuser_online": any(u.get("is_superuser") for u in (online_data or [])),
+                "api_usage": usage_data,
+            }
+            self._last_update = datetime.now(timezone.utc)
+            return self._last_data
+        except Exception as e:
+            logger.warning(f"Presence sensor read failed: {e}")
+        return self._last_data
+
+    async def get_online_users(self) -> List[Dict[str, Any]]:
+        """Return list of online users with roles."""
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(
+                    f"{self.presence_url}/online",
+                    headers=self._headers(),
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get("online", [])
+        except Exception as e:
+            logger.warning(f"Presence online users fetch failed: {e}")
+        return []
+
+    async def get_active_sessions(self) -> List[Dict[str, Any]]:
+        """Return all active sessions with context."""
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(
+                    f"{self.presence_url}/sessions",
+                    headers=self._headers(),
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    return data.get("sessions", [])
+        except Exception as e:
+            logger.warning(f"Presence sessions fetch failed: {e}")
+        return []
+
+    async def get_staff_presence(self) -> List[Dict[str, Any]]:
+        """Return staff/admin/superuser presence specifically."""
+        online = await self.get_online_users()
+        return [
+            u
+            for u in online
+            if u.get("is_superuser")
+            or (u.get("role") or "").lower() in ("staff", "admin", "owner", "superuser")
+        ]
+
+
 # Export all sensors
 __all__ = [
     "BaseSensor",
@@ -397,4 +497,5 @@ __all__ = [
     "NatureOSSensor",
     "MINDEXSensor",
     "MycoBrainSensor",
+    "PresenceSensor",
 ]

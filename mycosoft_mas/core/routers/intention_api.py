@@ -4,25 +4,96 @@ MYCA Intention API - Feb 11, 2026
 Tracks user interactions and search context to enable MYCA to provide
 intelligent suggestions, relevant widgets, and contextual responses.
 
+Persistence: Redis (when available) for cross-session restoration.
+Fallback: in-memory when Redis unavailable.
+
 Endpoints:
 - POST /api/myca/intention - Record a user interaction
 - GET /api/myca/intention/{session_id} - Get session intentions
 - GET /api/myca/intention/{session_id}/suggestions - Get suggestions based on context
 """
 
+import json
+import logging
+import os
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-import logging
 
 logger = logging.getLogger(__name__)
-
 router = APIRouter(prefix="/api/myca/intention", tags=["myca-intention"])
 
-
-# In-memory storage for now (would be Redis in production)
+# In-memory fallback when Redis unavailable
 _intention_store: Dict[str, List[Dict[str, Any]]] = {}
+
+# Redis key prefix for intention storage
+INTENTION_KEY_PREFIX = "myca:intention:"
+INTENTION_MAX_EVENTS = 100
+INTENTION_TTL_SECONDS = 86400 * 7  # 7 days
+
+
+def _get_redis():
+    """Get Redis client if available."""
+    try:
+        import redis.asyncio as redis
+        url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        return redis.from_url(url, decode_responses=True)
+    except Exception as e:
+        logger.debug("Redis not available for intention store: %s", e)
+        return None
+
+
+async def _intention_append(session_id: str, event_dict: Dict[str, Any]) -> None:
+    """Append event to intention store (Redis or in-memory)."""
+    r = _get_redis()
+    if r:
+        try:
+            key = f"{INTENTION_KEY_PREFIX}{session_id}"
+            data = json.dumps(event_dict)
+            await r.rpush(key, data)
+            await r.ltrim(key, -INTENTION_MAX_EVENTS, -1)
+            await r.expire(key, INTENTION_TTL_SECONDS)
+            return
+        except Exception as e:
+            logger.warning("Redis append failed: %s", e)
+    if session_id not in _intention_store:
+        _intention_store[session_id] = []
+    _intention_store[session_id].append(event_dict)
+    if len(_intention_store[session_id]) > INTENTION_MAX_EVENTS:
+        _intention_store[session_id] = _intention_store[session_id][-INTENTION_MAX_EVENTS:]
+
+
+async def _intention_get_all(session_id: str) -> List[Dict[str, Any]]:
+    """Get all events for session (Redis or in-memory)."""
+    r = _get_redis()
+    if r:
+        try:
+            key = f"{INTENTION_KEY_PREFIX}{session_id}"
+            raw = await r.lrange(key, 0, -1)
+            return [json.loads(x) for x in raw] if raw else []
+        except Exception as e:
+            logger.warning("Redis get failed: %s", e)
+    return _intention_store.get(session_id, [])
+
+
+async def _intention_clear(session_id: str) -> int:
+    """Clear session intentions. Returns count cleared."""
+    r = _get_redis()
+    if r:
+        try:
+            key = f"{INTENTION_KEY_PREFIX}{session_id}"
+            count = await r.llen(key)
+            await r.delete(key)
+            return count
+        except Exception as e:
+            logger.warning("Redis clear failed: %s", e)
+    if session_id in _intention_store:
+        count = len(_intention_store[session_id])
+        del _intention_store[session_id]
+        return count
+    return 0
 
 
 class IntentionEvent(BaseModel):
@@ -73,46 +144,34 @@ async def track_intention(event: IntentionEvent) -> IntentionResponse:
     """
     try:
         session_id = event.session_id
-        
-        # Initialize session if needed
-        if session_id not in _intention_store:
-            _intention_store[session_id] = []
-        
-        # Store event
         event_dict = event.model_dump()
         event_dict["timestamp"] = datetime.utcnow().isoformat()
-        _intention_store[session_id].append(event_dict)
-        
-        # Keep only last 100 events per session
-        if len(_intention_store[session_id]) > 100:
-            _intention_store[session_id] = _intention_store[session_id][-100:]
-        
-        # Analyze intentions and generate suggestions
-        suggestions = _analyze_intentions(session_id)
-        
-        logger.info(f"[Intention] {event.event_type} from session {session_id[:8]}...")
-        
+
+        await _intention_append(session_id, event_dict)
+        events = await _intention_get_all(session_id)
+        suggestions = _analyze_intentions_sync(events)
+
+        logger.info("[Intention] %s from session %s...", event.event_type, session_id[:8] if session_id else "?")
+
         return IntentionResponse(
             success=True,
             session_id=session_id,
-            event_count=len(_intention_store[session_id]),
+            event_count=len(events),
             suggested_widgets=suggestions.get("widgets", []),
             suggested_queries=suggestions.get("queries", []),
             insights=suggestions.get("insights", {}),
         )
     except Exception as e:
-        logger.error(f"[Intention] Error tracking: {e}")
+        logger.error("[Intention] Error tracking: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{session_id}", response_model=SessionIntentions)
 async def get_session_intentions(session_id: str) -> SessionIntentions:
     """Get all recorded intentions for a session"""
-    events = _intention_store.get(session_id, [])
-    
-    # Build summary
+    events = await _intention_get_all(session_id)
     summary = _build_session_summary(events)
-    
+
     return SessionIntentions(
         session_id=session_id,
         events=[IntentionEvent(**e) for e in events],
@@ -123,8 +182,8 @@ async def get_session_intentions(session_id: str) -> SessionIntentions:
 @router.get("/{session_id}/suggestions", response_model=SuggestionResponse)
 async def get_suggestions(session_id: str) -> SuggestionResponse:
     """Get intelligent suggestions based on session context"""
-    events = _intention_store.get(session_id, [])
-    
+    events = await _intention_get_all(session_id)
+
     if not events:
         return SuggestionResponse(
             widgets=["species", "ai"],
@@ -132,9 +191,9 @@ async def get_suggestions(session_id: str) -> SuggestionResponse:
             actions=[],
             reasoning="No session history - showing default suggestions",
         )
-    
-    suggestions = _analyze_intentions(session_id)
-    
+
+    suggestions = _analyze_intentions_sync(events)
+
     return SuggestionResponse(
         widgets=suggestions.get("widgets", ["species"]),
         queries=suggestions.get("queries", []),
@@ -146,17 +205,12 @@ async def get_suggestions(session_id: str) -> SuggestionResponse:
 @router.delete("/{session_id}")
 async def clear_session(session_id: str) -> Dict[str, Any]:
     """Clear all intentions for a session"""
-    if session_id in _intention_store:
-        count = len(_intention_store[session_id])
-        del _intention_store[session_id]
-        return {"success": True, "cleared_events": count}
-    return {"success": True, "cleared_events": 0}
+    count = await _intention_clear(session_id)
+    return {"success": True, "cleared_events": count}
 
 
-def _analyze_intentions(session_id: str) -> Dict[str, Any]:
-    """Analyze session intentions and generate suggestions"""
-    events = _intention_store.get(session_id, [])
-    
+def _analyze_intentions_sync(events: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Analyze session intentions and generate suggestions (sync, accepts events list)."""
     if not events:
         return {}
     

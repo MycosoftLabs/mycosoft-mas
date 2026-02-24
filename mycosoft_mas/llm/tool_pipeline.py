@@ -292,6 +292,41 @@ class ToolRegistry:
                 "required": ["query"]
             }
         ))
+
+        # Exa Semantic Web Search Tool
+        self.register(ToolDefinition(
+            name="exa_search",
+            description="Semantic web search for research papers, news, and external sources",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Semantic search query"
+                    },
+                    "num_results": {
+                        "type": "integer",
+                        "description": "Maximum number of results",
+                        "default": 10
+                    },
+                    "include_domains": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Restrict results to these domains"
+                    },
+                    "exclude_domains": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Exclude results from these domains"
+                    },
+                    "category": {
+                        "type": "string",
+                        "description": "Result category filter (e.g., research paper, news)"
+                    }
+                },
+                "required": ["query"]
+            }
+        ))
         
         # Weather Tool (example external API)
         self.register(ToolDefinition(
@@ -466,6 +501,8 @@ class ToolExecutor:
                 result = await self._execute_mindex_query(tool_call.arguments)
             elif tool_call.name == "memory_recall":
                 result = await self._execute_memory_recall(tool_call.arguments)
+            elif tool_call.name == "exa_search":
+                result = await self._execute_exa_search(tool_call.arguments)
             elif tool_call.name == "execute_workflow":
                 result = await self._execute_workflow_tool(tool_call.arguments)
             elif tool_call.name == "generate_workflow":
@@ -572,6 +609,32 @@ class ToolExecutor:
                 return response.json()
             else:
                 return {"memories": [], "message": "Nothing recalled"}
+
+    async def _execute_exa_search(self, args: Dict[str, Any]) -> Any:
+        """Perform semantic web search using Exa."""
+        query = (args.get("query") or "").strip()
+        if not query:
+            return {"results": [], "message": "query is required"}
+        num_results = int(args.get("num_results") or 10)
+        include_domains = args.get("include_domains")
+        exclude_domains = args.get("exclude_domains")
+        category = args.get("category")
+
+        from mycosoft_mas.integrations.exa_client import get_exa_client
+        client = get_exa_client()
+        if not client.is_configured:
+            return {"results": [], "message": "Exa API key not configured"}
+
+        response = await client.semantic_search(
+            query=query,
+            num_results=min(num_results, 100),
+            include_domains=include_domains,
+            exclude_domains=exclude_domains,
+            category=category,
+            include_text=True,
+            include_highlights=True,
+        )
+        return response.model_dump()
 
     async def _execute_workflow_tool(self, args: Dict[str, Any]) -> Any:
         """Execute an n8n workflow by name via N8NWorkflowAgent."""

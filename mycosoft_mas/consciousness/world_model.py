@@ -119,6 +119,14 @@ class WorldState:
     nlm_insights: Dict[str, Any] = field(default_factory=dict)
     nlm_freshness: DataFreshness = DataFreshness.UNAVAILABLE
 
+    # Presence data (live users, sessions, staff)
+    presence_data: Dict[str, Any] = field(default_factory=dict)
+    presence_freshness: DataFreshness = DataFreshness.UNAVAILABLE
+    online_users: int = 0
+    active_sessions: int = 0
+    staff_online: int = 0
+    superuser_online: bool = False
+
     # Aggregated metrics
     total_flights: int = 0
     total_vessels: int = 0
@@ -167,6 +175,9 @@ class WorldState:
         if self.active_devices > 0:
             parts.append(f"{self.active_devices} devices online")
 
+        if self.online_users > 0:
+            parts.append(f"{self.online_users} users online ({self.staff_online} staff)")
+
         if self.pending_alerts > 0:
             parts.append(f"{self.pending_alerts} pending alerts")
         
@@ -187,6 +198,7 @@ class WorldModel:
     ECOSYSTEM_UPDATE_INTERVAL = 60
     DEVICE_UPDATE_INTERVAL = 10
     NLM_UPDATE_INTERVAL = 60
+    PRESENCE_UPDATE_INTERVAL = 5
 
     def __init__(self, consciousness: Optional["MYCAConsciousness"] = None):
         self._consciousness = consciousness
@@ -200,7 +212,8 @@ class WorldModel:
         self._sensors: Dict[str, Any] = {}
         try:
             from mycosoft_mas.consciousness.sensors import (
-                CREPSensor, Earth2Sensor, NatureOSSensor, MINDEXSensor, MycoBrainSensor, NLMSensor
+                CREPSensor, Earth2Sensor, NatureOSSensor,
+                MINDEXSensor, MycoBrainSensor, NLMSensor, PresenceSensor
             )
             self._sensors = {
                 "crep": CREPSensor(self),
@@ -209,6 +222,7 @@ class WorldModel:
                 "mindex": MINDEXSensor(self),
                 "mycobrain": MycoBrainSensor(self),
                 "nlm": NLMSensor(self),
+                "presence": PresenceSensor(self),
             }
         except Exception:
             self._sensors = {}
@@ -220,6 +234,7 @@ class WorldModel:
         self._mindex_sensor: Optional["MINDEXSensor"] = None
         self._mycobrain_sensor: Optional["MycoBrainSensor"] = None
         self._nlm_sensor: Optional["NLMSensor"] = None
+        self._presence_sensor: Optional["PresenceSensor"] = None
 
         # Timestamps for throttling
         self._last_crep_update: Optional[datetime] = None
@@ -227,6 +242,7 @@ class WorldModel:
         self._last_ecosystem_update: Optional[datetime] = None
         self._last_device_update: Optional[datetime] = None
         self._last_nlm_update: Optional[datetime] = None
+        self._last_presence_update: Optional[datetime] = None
 
         self._lock = asyncio.Lock()
     
@@ -235,7 +251,7 @@ class WorldModel:
         try:
             from mycosoft_mas.consciousness.sensors import (
                 CREPSensor, Earth2Sensor, NatureOSSensor,
-                MINDEXSensor, MycoBrainSensor, NLMSensor
+                MINDEXSensor, MycoBrainSensor, NLMSensor, PresenceSensor
             )
 
             self._crep_sensor = CREPSensor(self)
@@ -244,6 +260,7 @@ class WorldModel:
             self._mindex_sensor = MINDEXSensor(self)
             self._mycobrain_sensor = MycoBrainSensor(self)
             self._nlm_sensor = NLMSensor(self)
+            self._presence_sensor = PresenceSensor(self)
             
             logger.info("World sensors initialized")
         except ImportError as e:
@@ -280,6 +297,13 @@ class WorldModel:
                 self._current_state.device_telemetry = data
             elif name == "nlm":
                 self._current_state.nlm_insights = data
+            elif name == "presence":
+                if isinstance(data, dict):
+                    self._current_state.presence_data = data
+                    self._current_state.online_users = data.get("online_count", 0)
+                    self._current_state.active_sessions = data.get("sessions_count", 0)
+                    self._current_state.staff_online = data.get("staff_count", 0)
+                    self._current_state.superuser_online = data.get("superuser_online", False)
 
     def get_current_state(self) -> WorldState:
         """Legacy getter for tests."""
@@ -322,6 +346,11 @@ class WorldModel:
             if self._should_update(self._last_nlm_update, self.NLM_UPDATE_INTERVAL):
                 await self._update_nlm()
                 self._last_nlm_update = now
+
+            # Update presence
+            if self._should_update(self._last_presence_update, self.PRESENCE_UPDATE_INTERVAL):
+                await self._update_presence()
+                self._last_presence_update = now
 
             # Update timestamp and archive
             self._current_state.timestamp = now
@@ -400,6 +429,22 @@ class WorldModel:
                 logger.warning(f"NLM update error: {e}")
                 self._current_state.nlm_freshness = DataFreshness.UNAVAILABLE
 
+    async def _update_presence(self) -> None:
+        """Update presence data (online users, sessions, staff)."""
+        if self._presence_sensor:
+            try:
+                data = await self._presence_sensor.read()
+                if data and isinstance(data, dict):
+                    self._current_state.presence_data = data
+                    self._current_state.online_users = data.get("online_count", 0)
+                    self._current_state.active_sessions = data.get("sessions_count", 0)
+                    self._current_state.staff_online = data.get("staff_count", 0)
+                    self._current_state.superuser_online = data.get("superuser_online", False)
+                    self._current_state.presence_freshness = DataFreshness.LIVE
+            except Exception as e:
+                logger.warning(f"Presence update error: {e}")
+                self._current_state.presence_freshness = DataFreshness.UNAVAILABLE
+
     def _archive_state(self) -> None:
         """Archive the current state to history."""
         self._history.append(self._current_state)
@@ -430,6 +475,7 @@ class WorldModel:
                 "ecosystem": self._current_state.ecosystem_status,
                 "devices": self._current_state.device_telemetry,
                 "nlm": self._current_state.nlm_insights,
+                "presence": self._current_state.presence_data,
             },
             "cached": True,
         }
@@ -481,6 +527,11 @@ class WorldModel:
                     "telemetry": self._current_state.device_telemetry,
                     "freshness": self._current_state.device_freshness.value,
                 }
+
+        # Presence for user/session-related queries
+        if any(word in focus_content for word in ["who", "user", "online", "staff", "presence", "session"]):
+            if self._current_state.presence_data:
+                context["presence"] = self._current_state.presence_data
         
         return context
     

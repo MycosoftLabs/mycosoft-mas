@@ -359,6 +359,58 @@ class VoiceCommandRegistry:
                 handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
                 examples=["analyze symbiosis network"],
             ),
+            # Petri agent control (MYCA live monitoring, adjustment, autonomy)
+            RegisteredCommand(
+                command_id="petri.monitor",
+                name="Monitor Petri Simulation",
+                description="Get Petri simulation status and metrics",
+                patterns=[
+                    r"(?:monitor|check|status)\s+petri",
+                    r"petri\s+(?:simulation\s+)?(?:status|monitor)",
+                ],
+                command_type=CommandType.QUERY,
+                handler=CommandHandler("simulation", "petri-agent", "/api/voice/tools/execute", "POST"),
+                examples=["monitor petri", "petri status"],
+            ),
+            RegisteredCommand(
+                command_id="petri.adjust_env",
+                name="Adjust Petri Environment",
+                description="Adjust temperature, humidity, or pH in Petri simulation",
+                patterns=[
+                    r"adjust\s+(?:petri\s+)?(?:env|environment)\s+(.+)",
+                    r"set\s+petri\s+(?:temp|temperature|humidity|ph)\s+(?:to\s+)?(\d+(?:\.\d+)?)",
+                ],
+                command_type=CommandType.AGENT,
+                handler=CommandHandler("simulation", "petri-agent", "/api/voice/tools/execute", "POST"),
+                requires_confirmation=False,
+                examples=["adjust petri environment temperature to 25", "set petri humidity 80"],
+            ),
+            RegisteredCommand(
+                command_id="petri.contamination_response",
+                name="Petri Contamination Response",
+                description="Trigger contamination response strategy",
+                patterns=[
+                    r"petri\s+contamination\s+(?:response|strategy)",
+                    r"respond\s+to\s+petri\s+contamination",
+                ],
+                command_type=CommandType.AGENT,
+                handler=CommandHandler("simulation", "petri-agent", "/api/voice/tools/execute", "POST"),
+                requires_confirmation=True,
+                examples=["petri contamination response"],
+            ),
+            RegisteredCommand(
+                command_id="petri.multi_run",
+                name="Petri Multi-Run",
+                description="Run multiple Petri simulation iterations",
+                patterns=[
+                    r"(?:run|execute)\s+petri\s+(?:multi\s+)?run\s+(?:of\s+)?(\d+)\s*iterations?",
+                    r"petri\s+batch\s+(\d+)",
+                ],
+                command_type=CommandType.AGENT,
+                handler=CommandHandler("simulation", "petri-agent", "/api/voice/tools/execute", "POST"),
+                requires_confirmation=True,
+                examples=["run petri multi run of 100 iterations", "petri batch 50"],
+            ),
             RegisteredCommand(
                 command_id="natureos.track_spores",
                 name="Spore Tracking",

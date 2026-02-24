@@ -594,6 +594,75 @@ class MYCAConsciousness:
                 )
             except Exception as e:
                 logger.warning(f"Could not store interaction: {e}")
+
+    # =========================================================================
+    # Search Processing
+    # =========================================================================
+
+    async def process_search_query(
+        self,
+        query: str,
+        search_context: Optional[Dict[str, Any]] = None,
+        user_id: Optional[str] = None,
+        session_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Process a search query using attention, world model, and deliberation.
+        Returns ranked results and contextual guidance for the search system.
+        """
+        if self._state == ConsciousnessState.DORMANT:
+            await self.awaken()
+
+        focus = await self._attention.focus_on(query, "search", search_context)
+        self._metrics.attention_focus = focus.summary
+
+        working_context, world_context, memories = await asyncio.gather(
+            self._working_memory.load_context(focus, session_id, user_id),
+            self._world_model.get_relevant_context(focus),
+            self._recall_relevant_memories(query, focus),
+            return_exceptions=False,
+        )
+
+        from mycosoft_mas.agents.clusters.search_discovery.search_agent import (
+            SearchAgent,
+            SearchQuery,
+            SearchType,
+        )
+        search_agent = SearchAgent(agent_id="search-agent")
+
+        keyword_query = SearchQuery(query_type=SearchType.KEYWORD, query=query, filters=search_context or {})
+        semantic_query = SearchQuery(query_type=SearchType.SEMANTIC, query=query, filters=search_context or {})
+
+        keyword_results, semantic_results = await asyncio.gather(
+            search_agent._keyword_search(keyword_query),
+            search_agent._semantic_search(semantic_query),
+            return_exceptions=False,
+        )
+
+        result_payload = {
+            "query": query,
+            "focus": focus.summary,
+            "world_context": world_context,
+            "working_context": working_context,
+            "memories": memories,
+            "results": {
+                "keyword": keyword_results,
+                "semantic": semantic_results,
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+        if self._memory_coordinator:
+            try:
+                await self._memory_coordinator.store(
+                    key=f"search:{session_id or 'anon'}:{datetime.now(timezone.utc).isoformat()}",
+                    value=result_payload,
+                    layer="episodic",
+                )
+            except Exception as e:
+                logger.warning(f"Failed to store search interaction: {e}")
+
+        return result_payload
     
     # =========================================================================
     # Agent Coordination

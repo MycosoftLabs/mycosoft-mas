@@ -1,0 +1,33 @@
+# MYCA Protocol Layer - Feb 17, 2026
+
+## Protocol Roles
+
+| Protocol | Use Case | Endpoint / Surface |
+|----------|----------|--------------------|
+| **A2A** | Agent-to-agent communication | `/a2a/v1/message/send`, `/.well-known/agent-card.json` |
+| **MCP** | Model Context Protocol (tool registration) | Tool registry, LLM tool calls |
+| **WebMCP** | Browser tool registration | `navigator.modelContext.registerTool` on MYCA pages |
+| **UCP** | Commerce, policy, risk | `/api/mas/commerce/*` |
+
+## Rules
+
+1. **A2A for agents**: Use A2A when MAS talks to external agents or receives agent messages.
+2. **MCP for tools**: Tools (exa_search, mindex_query, etc.) are registered in ToolRegistry.
+3. **WebMCP for browser**: Register `mycosoft_run_search`, `mycosoft_focus_widget`, `mycosoft_add_notepad_item`, `mycosoft_read_page_context`, `mycosoft_safe_navigate` on all MYCA surfaces (search, ai-studio, dashboard, NatureOS).
+4. **UCP for commerce**: Pricing, billing, checkout use MAS commerce API; policy gate and risk tier flow through.
+5. **Sanitize remote data**: Treat all A2A/WebMCP payloads as untrusted; validate and sanitize.
+6. **HTTPS in production**: All protocol endpoints must use HTTPS when deployed.
+
+## A2A Skills
+
+- `myca_search`: Execute semantic/keyword/fuzzy search via SearchAgent
+- `myca_nlq`: Route natural language to SearchAgent, Metabase, or MINDEX
+- `orchestration`, `voice-chat`, `search`: Core MYCA capabilities
+
+## WebMCP Tools
+
+- `mycosoft_run_search` (query)
+- `mycosoft_focus_widget` (widget, id?)
+- `mycosoft_add_notepad_item` (type, title, content, source?)
+- `mycosoft_read_page_context` ()
+- `mycosoft_safe_navigate` (path)

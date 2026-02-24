@@ -146,8 +146,20 @@ MYCA has full view and full access to n8n workflows. Source of truth: repo `n8n/
 | `/api/simulation/petri/chemical/step` | POST | Step chemical simulation via petridishsim |
 | `/api/simulation/petri/metrics` | GET | Aggregate metrics from latest fields |
 | `/api/simulation/petri/calibrate` | POST | Submit calibration payload |
+| `/api/simulation/petri/session/create` | POST | Create session |
+| `/api/simulation/petri/session/{id}` | GET | Get session |
+| `/api/simulation/petri/session/{id}/reset` | POST | Reset session |
+| `/api/simulation/petri/status` | GET | MAS + petridishsim status |
+| `/api/simulation/petri/batch` | POST | Batch run (≤10k iterations) |
+| `/api/simulation/petri/batch/scale` | POST | Scale batch (up to 1M iterations) |
+| `/api/simulation/petri/batch/scale/{job_id}` | GET | Scale batch job status |
+| `/api/simulation/petri/batch/scale/{job_id}/cancel` | POST | Cancel scale batch |
+| `/api/simulation/petri/agent/control` | POST | MYCA agent control |
+| `/api/simulation/petri/agent/audit` | GET | Audit trail |
 
 **Router**: `mycosoft_mas/core/routers/petri_sim_api.py`  
+**Services**: `petri_persistence`, `petri_batch_engine`  
+**Voice commands**: petri.monitor, petri.adjust_env, petri.contamination_response, petri.multi_run  
 **Registered in**: `mycosoft_mas/core/myca_main.py`
 
 ### Code Files

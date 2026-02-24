@@ -17,6 +17,8 @@ DEFAULT_CONFIDENCE_THRESHOLD = 0.85
 # Map NLM query/prediction types or labels to workflow names (by name or webhook path)
 # Add workflow names that exist in n8n/workflows/ or on the n8n instance.
 NLM_TO_WORKFLOW_MAP = {
+    "petri_outcome": "petri_outcome_ingest",
+    "simulation_outcome": "petri_outcome_ingest",
     "anomaly": "security_alert",
     "anomaly_detection": "security_alert",
     "security_alert": "security_alert",

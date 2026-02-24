@@ -24,6 +24,9 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/PETRI_DISH_SIM_UPGRADE_TASK_COMPLETE_FEB20_2026.md` | Task completion: petridishsim foundation, chemical engine, segmentation/morphology, calibration, MAS endpoints, website overlays/panels, verification steps |
+| `docs/PETRI_SIMULATION_MINDEX_SCHEMA_FEB20_2026.md` | MINDEX schema for petri sessions, metrics, calibration, outcomes; migration 0015 |
+| `docs/PETRI_INTEGRATION_DEMO_WALKTHROUGH_FEB20_2026.md` | **Demo walkthrough**: Legacy features, UI, API, MINDEX/NLM, MYCA control, scale batch, checklist |
+| `docs/PETRI_DEPLOYMENT_HANDOFF_FEB20_2026.md` | **Deploy handoff**: Website/MAS/MINDEX steps for deploy agent |
 
 ## 2. Current status & execution
 
@@ -41,6 +44,9 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/MYCA_ASANA_HANDOFF_REPORT_FEB23_2026.md` | **MYCA Asana handoff**: Full report, architecture, file inventory, next tasks; copy-paste into Claude CoWorker for Asana |
+| `docs/MYCA_ECOSYSTEM_UNIFICATION_FEB17_2026.md` | **MYCA unification complete**: A2A/WebMCP/UCP, Exa, NLQ parse/execute, intention persistence, NatureOS routing, protocol rules |
+| `docs/MYCA_THUMB_PHASE2_PHASE5_COMPLETE_FEB17_2026.md` | **MYCA Opposable Thumb Phase 2–5 complete**: Ensemble orchestration, A2A federation client/adapters, provenance integrity API, governance gates, constitution extension |
 | `docs/MASTER_ARCHITECTURE_FEB09_2026.md` | Full ecosystem, VMs, memory, agents |
 | `docs/ALWAYS_ON_SERVICES_FEB12_2026.md` | Local vs VM always-on services, health checks |
 | `docs/REDIS_PUBSUB_USAGE_FEB12_2026.md` | **Real-time messaging**: Redis pub/sub on VM 189, 4 channels (devices, agents, experiments, CREP), RedisPubSubClient, auto-reconnection, NO MOCK DATA |
@@ -68,11 +74,13 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/myca/MYCA_DOC_INDEX.md` | **MYCA doc index** – single entry point; links to 15 atomic docs and large composite docs |
 | `docs/VOICE_TEST_QUICK_START_FEB18_2026.md` | **Voice test quick start**: dev server, Bridge + Moshi (GPU node or local), MAS, diagnostics, troubleshooting |
 | `docs/MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md` | **Voice systems checklist**: env vars, bridge/gpu node setup, diagnostics for test-voice page |
 | `docs/VOICE_SYSTEM_FILES_DEVICES_SSH_FEB13_2026.md` | Voice files, devices, SSH routes, startup order (5090, gpu01, MAS) |
 | `docs/MYCA_VOICE_APPLICATION_HANDOFF_FEB17_2026.md` | **Voice + MYCA handoff**: Apply MYCA (skill permissions, tool pipeline, evals, CI) to PersonaPlex, M-Y-C-A voice, test-voice page — for implementation in another agent |
 | `docs/MYCA_SELF_IMPROVEMENT_SYSTEM_FEB17_2026.md` | MYCA Self-Improvement System (constitution, skills, tool pipeline, event ledger, evals, CI) |
+| `docs/MYCA_PROTOCOL_STACK_INTEGRATION_PLAN_FEB17_2026.md` | **Protocol plan**: A2A + MCP/WebMCP + UCP integration across MAS + website |
 | `docs/CONSCIOUSNESS_PIPELINE_ARCHITECTURE_FEB12_2026.md` | **Complete pipeline architecture**: Full diagram, components, flow, optimization (30s→5-8s), API endpoints, voice integration |
 | `docs/CONSCIOUSNESS_PIPELINE_OPTIMIZATION_FEB11_2026.md` | Pipeline optimization: parallel context, timeouts, non-blocking updates |
 | `docs/MYCA_CONSCIOUSNESS_DEPLOYMENT_FEB11_2026.md` | Consciousness deployment report |

@@ -19,6 +19,11 @@ from enum import Enum
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.enums import AgentStatus
 from mycosoft_mas.simulation.physics import PhysicsSimulator
+from mycosoft_mas.simulation.petri_persistence import (
+    save_simulation_state,
+    load_simulation_state,
+    notify_nlm_petri_outcome,
+)
 
 class GrowthPhase(Enum):
     """Enumeration of fungal growth phases."""
@@ -203,6 +208,14 @@ class PetriDishSimulatorAgent(BaseAgent):
             # Store results
             self.simulations[simulation_id] = result
             self.metrics["simulations_completed"] += 1
+
+            # Notify NLM for learning workflows
+            asyncio.create_task(notify_nlm_petri_outcome(
+                session_id=simulation_id,
+                outcome_type="simulation_complete",
+                summary={"species_id": parameters.species_id, "biomass_final": result.biomass_values[-1] if result.biomass_values else 0},
+                metrics={"time_points": len(result.time_points), "phases": len(result.growth_phases)},
+            ))
             
             self.logger.info(f"Completed simulation: {simulation_id}")
             return result
@@ -255,15 +268,121 @@ class PetriDishSimulatorAgent(BaseAgent):
             self.logger.error(f"Error processing environmental data: {str(e)}")
             return {}
 
+    def _dict_to_env_conditions(self, d: Dict[str, Any]) -> EnvironmentalConditions:
+        """Reconstruct EnvironmentalConditions from dict."""
+        ts = d.get("timestamp")
+        if isinstance(ts, str):
+            try:
+                ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            except Exception:
+                ts = datetime.utcnow()
+        elif ts is None:
+            ts = datetime.utcnow()
+        return EnvironmentalConditions(
+            temperature=float(d.get("temperature", 24.0)),
+            humidity=float(d.get("humidity", 80.0)),
+            ph=float(d.get("ph", 6.0)),
+            light_intensity=float(d.get("light_intensity", 0.0)),
+            co2_level=float(d.get("co2_level", 500.0)),
+            nutrients=dict(d.get("nutrients") or {}),
+            timestamp=ts,
+        )
+
+    def _dict_to_growth_parameters(self, d: Dict[str, Any]) -> GrowthParameters:
+        """Reconstruct GrowthParameters from dict."""
+        opt = d.get("optimal_conditions") or {}
+        opt_cond = self._dict_to_env_conditions(opt) if isinstance(opt, dict) else EnvironmentalConditions(
+            temperature=24.0, humidity=80.0, ph=6.0, light_intensity=0.0, co2_level=500.0,
+            nutrients={}, timestamp=datetime.utcnow(),
+        )
+        return GrowthParameters(
+            species_id=str(d.get("species_id", "")),
+            initial_biomass=float(d.get("initial_biomass", 0.001)),
+            growth_rate=float(d.get("growth_rate", 0.1)),
+            optimal_conditions=opt_cond,
+            tolerance_ranges=dict(d.get("tolerance_ranges") or {}),
+            metadata=dict(d.get("metadata") or {}),
+        )
+
+    def _dict_to_simulation_result(self, d: Dict[str, Any]) -> Optional[SimulationResult]:
+        """Reconstruct SimulationResult from dict. Returns None if invalid."""
+        try:
+            params_d = d.get("parameters") or {}
+            params = self._dict_to_growth_parameters(params_d) if isinstance(params_d, dict) else None
+            if params is None:
+                params = self._dict_to_growth_parameters({"species_id": "unknown"})
+            time_points: List[datetime] = []
+            for tp in d.get("time_points") or []:
+                if isinstance(tp, str):
+                    try:
+                        time_points.append(datetime.fromisoformat(tp.replace("Z", "+00:00")))
+                    except Exception:
+                        pass
+            env_data: List[EnvironmentalConditions] = []
+            for ed in d.get("environmental_data") or []:
+                if isinstance(ed, dict):
+                    env_data.append(self._dict_to_env_conditions(ed))
+            growth_phases: List[Tuple[datetime, GrowthPhase]] = []
+            for gp in d.get("growth_phases") or []:
+                if isinstance(gp, (list, tuple)) and len(gp) >= 2:
+                    dt_val = gp[0]
+                    if isinstance(dt_val, str):
+                        try:
+                            dt_val = datetime.fromisoformat(dt_val.replace("Z", "+00:00"))
+                        except Exception:
+                            continue
+                    phase_val = gp[1]
+                    if isinstance(phase_val, str):
+                        try:
+                            phase_val = GrowthPhase(phase_val)
+                        except ValueError:
+                            phase_val = GrowthPhase.LAG
+                    growth_phases.append((dt_val, phase_val))
+            created = d.get("created_at")
+            if isinstance(created, str):
+                try:
+                    created = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                except Exception:
+                    created = datetime.utcnow()
+            elif created is None:
+                created = datetime.utcnow()
+            return SimulationResult(
+                simulation_id=str(d.get("simulation_id", "")),
+                parameters=params,
+                time_points=time_points,
+                biomass_values=[float(x) for x in (d.get("biomass_values") or [])],
+                environmental_data=env_data,
+                growth_phases=growth_phases,
+                metadata=dict(d.get("metadata") or {}),
+                created_at=created,
+            )
+        except Exception as e:
+            self.logger.warning("Could not reconstruct SimulationResult: %s", e)
+            return None
+
     async def _load_simulation_data(self):
         """Load simulation data from storage."""
-        # Implementation for loading simulation data
-        pass
+        sims_raw, params_raw = load_simulation_state()
+        for sid, p in params_raw.items():
+            if isinstance(p, dict):
+                try:
+                    self.parameters[sid] = self._dict_to_growth_parameters(p)
+                except Exception as e:
+                    self.logger.debug("Skip loading parameter %s: %s", sid, e)
+        for sid, s in sims_raw.items():
+            if isinstance(s, dict):
+                rec = self._dict_to_simulation_result(s)
+                if rec:
+                    self.simulations[sid] = rec
 
     async def _save_simulation_data(self):
         """Save simulation data to storage."""
-        # Implementation for saving simulation data
-        pass
+        mindex_url = os.environ.get("MINDEX_API_URL")
+        save_simulation_state(
+            self.simulations,
+            self.parameters,
+            mindex_url=mindex_url,
+        )
 
     async def _run_growth_simulation(self, parameters: GrowthParameters) -> SimulationResult:
         """Run a growth simulation with given parameters."""
