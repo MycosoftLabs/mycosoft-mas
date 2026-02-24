@@ -118,6 +118,8 @@ mycosoft_mas/config/.env
 data/*.db
 data/claude_code_queue.db
 data/voice_feedback.db
+data/mycobrain_service.log.err
+data/mycobrain_service.pid
 
 # -----------------------------------------------------------------------------
 # Large Model Files - NEVER COMMIT
