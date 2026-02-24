@@ -46,6 +46,9 @@ jobs:
       - name: Run tests
         run: poetry run pytest -q
 
+      - name: Protocol security tests (A2A, UCP)
+        run: poetry run pytest tests/test_protocol_a2a.py tests/test_protocol_ucp.py -v --tb=short
+
       - name: MCP lint
         run: |
           if command -v mcp >/dev/null 2>&1; then mcp lint mcp/**/*.json || true ; fi
