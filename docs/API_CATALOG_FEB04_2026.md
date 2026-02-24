@@ -94,6 +94,19 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/workflows/sync` | POST | Sync to primary n8n |
 | `/api/workflows/export-all` | POST | Export all to repo |
 
+### Presence API (`/api/presence/*`) – Feb 24, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/presence/online` | GET | List online users (proxies to Website) |
+| `/api/presence/sessions` | GET | List active sessions |
+| `/api/presence/staff` | GET | List staff/admin presence |
+| `/api/presence/stats` | GET | Presence statistics |
+| `/api/presence/stream` | GET | SSE real-time presence updates |
+
+**Router**: `mycosoft_mas/core/routers/presence_api.py`  
+**Upstream**: Website `http://192.168.0.187:3000/api/presence` (PRESENCE_API_URL)
+
 ### Graph API (`/api/graph/*`)
 
 | Endpoint | Method | Description |
