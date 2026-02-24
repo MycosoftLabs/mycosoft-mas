@@ -74,11 +74,17 @@ class IntentEngine:
     
     KNOWLEDGE_KEYWORDS = [
         r"\b(what|tell me about|explain|describe)\b.*\b(fungi|mushroom|species|taxon|mycel|amanita|psilocybe|boletus)\b",
+        r"^\s*(what is|what are|explain|describe)\s+.+",
         r"\b(fungi|mushroom|species|mycel|spore|hypha|amanita|psilocybe)\b.*\b(information|data|details|properties)\b",
         r"\b(search|find|lookup|query)\b.*\b(database|mindex|knowledge)\b",
         r"\b(how many|count|list)\b.*\b(species|observations|compounds)\b",
         r"\b(tell me about|what is|what are)\b.*\b(amanita|psilocybe|boletus|russula|lactarius)\b",
         r"\bamanita\s+muscaria\b",
+    ]
+
+    CONVERSATIONAL_KNOWLEDGE_PATTERNS = [
+        r"^\s*(what\s+is|what\s+are|tell\s+me\s+about|explain|describe|how\s+does)\b",
+        r"\b(mycelium|hyphae|spore|fungi|fungus|mushroom|taxonomy|genetics|compound|metabolite)\b",
     ]
     
     STATUS_KEYWORDS = [
@@ -106,6 +112,7 @@ class IntentEngine:
         self._agent_patterns = [re.compile(p, re.IGNORECASE) for p in self.AGENT_KEYWORDS]
         self._tool_patterns = [re.compile(p, re.IGNORECASE) for p in self.TOOL_KEYWORDS]
         self._knowledge_patterns = [re.compile(p, re.IGNORECASE) for p in self.KNOWLEDGE_KEYWORDS]
+        self._conversational_knowledge_patterns = [re.compile(p, re.IGNORECASE) for p in self.CONVERSATIONAL_KNOWLEDGE_PATTERNS]
         self._status_patterns = [re.compile(p, re.IGNORECASE) for p in self.STATUS_KEYWORDS]
         self._system_patterns = [re.compile(p, re.IGNORECASE) for p in self.SYSTEM_KEYWORDS]
     
@@ -238,6 +245,18 @@ Respond with JSON only:
         """Rule-based intent classification fallback."""
         
         message_lower = message.lower()
+
+        # Conversational science questions should route to knowledge query (e.g., "what is mycelium?")
+        if self._looks_like_conversational_knowledge_query(message):
+            topic = self._extract_knowledge_topic(message_lower)
+            return IntentResult(
+                intent_type=IntentType.KNOWLEDGE_QUERY,
+                confidence=0.82,
+                entities={"topic": topic} if topic else {},
+                target="mindex",
+                reasoning="Conversational scientific query detected",
+                fallback_used=True,
+            )
         
         # Check patterns in order of specificity
         scores = {
@@ -247,6 +266,17 @@ Respond with JSON only:
             IntentType.STATUS_QUERY: self._match_patterns(message, self._status_patterns),
             IntentType.SYSTEM_COMMAND: self._match_patterns(message, self._system_patterns),
         }
+
+        # Conversational scientific questions should strongly bias toward knowledge_query.
+        # This catches natural phrasing like "what is mycelium" or "tell me about psilocybin".
+        conversational_question = bool(
+            re.search(r"^\s*(what is|what are|tell me about|explain|describe)\b", message_lower)
+        )
+        has_science_term = bool(
+            re.search(r"\b(mycelium|fungi|mushroom|species|genetics|compound|psilocybin|amanita|spore|hypha)\b", message_lower)
+        )
+        if conversational_question and has_science_term:
+            scores[IntentType.KNOWLEDGE_QUERY] = max(scores[IntentType.KNOWLEDGE_QUERY], 0.85)
         
         # Find best match
         best_intent = IntentType.GENERAL_CHAT
@@ -349,6 +379,30 @@ Respond with JSON only:
                     break
         
         return entities
+
+    def _looks_like_conversational_knowledge_query(self, message: str) -> bool:
+        """Detect natural-language scientific questions that should route to knowledge."""
+        if "?" in message:
+            matched = sum(1 for p in self._conversational_knowledge_patterns if p.search(message))
+            return matched >= 2
+        starts_with_question = bool(re.search(r"^\s*(what|how|why|which|where)\b", message, re.IGNORECASE))
+        has_bio_term = bool(re.search(
+            r"\b(mycelium|hyphae|spore|fungi|fungus|mushroom|species|compound|genetics)\b",
+            message,
+            re.IGNORECASE,
+        ))
+        return starts_with_question and has_bio_term
+
+    def _extract_knowledge_topic(self, message_lower: str) -> Optional[str]:
+        """Extract likely topic for conversational knowledge routing."""
+        topics = [
+            "mycelium", "hyphae", "spore", "fungi", "fungus", "mushroom",
+            "taxonomy", "species", "genetics", "compound", "metabolite",
+        ]
+        for topic in topics:
+            if topic in message_lower:
+                return topic
+        return None
 
 
 # Singleton instance

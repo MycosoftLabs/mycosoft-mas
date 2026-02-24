@@ -31,3 +31,4 @@
 | atomic/MYCA_SYNC_API.md | Sync/conversations |
 | atomic/MYCA_PROTOCOLS_RULE.md | Protocol rules |
 | atomic/MYCA_PRESENCE.md | Live presence, sessions, online, API usage |
+| atomic/MYCA_ANSWERS_PERSONA_FEB10_2026.md | Answers widget persona, scientific tone, safety rules |

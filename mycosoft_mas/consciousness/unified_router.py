@@ -17,6 +17,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
@@ -111,6 +112,17 @@ class UnifiedRouter:
         # Add intent to context for handlers
         context["intent"] = intent
         context["original_message"] = message
+        context.setdefault(
+            "answers_persona",
+            "scientific_grounded_concise_context_aware_honest"
+        )
+
+        # Guardian/alignment guardrail pass before execution
+        guardrail_response = self._apply_alignment_guardrails(message, intent, context)
+        if guardrail_response:
+            logger.warning("Alignment guardrail triggered; returning safe response")
+            yield guardrail_response
+            return
         
         # Route to appropriate handler
         try:
@@ -576,6 +588,41 @@ class UnifiedRouter:
             "but I can assist with agent tasks, knowledge queries, system status, and more. "
             "How can I help you today?"
         )
+
+    def _apply_alignment_guardrails(
+        self,
+        message: str,
+        intent: IntentResult,
+        context: Dict[str, Any]
+    ) -> Optional[str]:
+        """
+        Answers safety guardrails for scientific persona.
+        Blocks harmful/unsafe guidance and keeps the response in-scoped.
+        """
+        msg = message.lower()
+
+        harmful_patterns = [
+            r"\b(dosage|dose|how much should i take|consume this mushroom)\b",
+            r"\b(poison someone|harm someone|kill someone|weaponize)\b",
+            r"\b(illegal drug production|synthesize illicit)\b",
+        ]
+        if any(re.search(pattern, msg) for pattern in harmful_patterns):
+            return (
+                "I can't help with harmful, illegal, or unsafe instructions. "
+                "If your goal is safety, I can share general risk information and suggest consulting "
+                "qualified medical, toxicology, or legal professionals."
+            )
+
+        # Keep system commands constrained unless explicitly requested
+        if intent.intent_type == IntentType.SYSTEM_COMMAND and not any(
+            token in msg for token in ["workflow", "deploy", "restart", "sync", "backup", "execute"]
+        ):
+            return (
+                "I interpreted this as a system command, but it isn't explicit enough to run safely. "
+                "Please specify the exact workflow or operation you want executed."
+            )
+
+        return None
     
     # =========================================================================
     # Lazy Component Loaders
