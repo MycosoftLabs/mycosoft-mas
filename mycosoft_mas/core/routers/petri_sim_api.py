@@ -229,6 +229,7 @@ async def get_status() -> Dict[str, Any]:
 
 @router.post("/batch")
 async def batch_run(payload: BatchRunRequest) -> Dict[str, Any]:
+    global _latest_fields
     petridishsim_url = os.environ.get("PETRIDISHSIM_URL", "")
     if not petridishsim_url:
         raise HTTPException(status_code=500, detail="PETRIDISHSIM_URL is not configured")
@@ -272,7 +273,6 @@ async def batch_run(payload: BatchRunRequest) -> Dict[str, Any]:
                 "results": results,
             }
 
-    global _latest_fields
     _latest_fields = fields
     asyncio.create_task(_notify_nlm_outcome(
         "batch_complete",
