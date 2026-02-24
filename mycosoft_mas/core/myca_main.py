@@ -49,12 +49,18 @@ from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
 from mycosoft_mas.core.routers.bio_api import router as bio_router
 from mycosoft_mas.core.routers.fusarium_api import router as fusarium_router
 from mycosoft_mas.core.routers.redteam_api import router as redteam_router
+from mycosoft_mas.core.routers.network_api import router as network_api_router
 from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
+from mycosoft_mas.core.routers.alert_api import router as alert_router
+from mycosoft_mas.core.routers.iot_analytics_api import router as iot_analytics_router
+from mycosoft_mas.core.routers.fleet_api import router as fleet_router
 from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
 from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
+from mycosoft_mas.core.routers.nlq_api import router as nlq_router
+from mycosoft_mas.core.routers.telemetry_pipeline_api import router as telemetry_pipeline_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -121,6 +127,22 @@ try:
 except ImportError:
     TOOLS_API_AVAILABLE = False
 
+# A2A (Agent2Agent) Protocol Gateway
+try:
+    from mycosoft_mas.core.routers.a2a_api import router as a2a_router
+    A2A_API_AVAILABLE = True
+except ImportError:
+    a2a_router = None
+    A2A_API_AVAILABLE = False
+
+# Commerce API (UCP-first)
+try:
+    from mycosoft_mas.core.routers.commerce_api import router as commerce_router
+    COMMERCE_API_AVAILABLE = True
+except ImportError:
+    commerce_router = None
+    COMMERCE_API_AVAILABLE = False
+
 # MYCA Consciousness API - unified entry point for all chat/voice
 try:
     from mycosoft_mas.core.routers.consciousness_api import router as consciousness_router
@@ -160,6 +182,22 @@ try:
     NLM_API_AVAILABLE = True
 except ImportError:
     NLM_API_AVAILABLE = False
+
+# Provenance API - telemetry chain verification
+try:
+    from mycosoft_mas.core.routers.provenance_api import router as provenance_router
+    PROVENANCE_API_AVAILABLE = True
+except ImportError:
+    provenance_router = None
+    PROVENANCE_API_AVAILABLE = False
+
+# Governance API - stakeholder impact gates
+try:
+    from mycosoft_mas.core.routers.governance_api import router as governance_router
+    GOVERNANCE_API_AVAILABLE = True
+except ImportError:
+    governance_router = None
+    GOVERNANCE_API_AVAILABLE = False
 
 # MYCA Intention API - tracks user context for intelligent suggestions
 try:
@@ -374,14 +412,24 @@ app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
 app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(fusarium_router, prefix="/api/fusarium", tags=["fusarium"])
 app.include_router(redteam_router, tags=["redteam"])
+app.include_router(network_api_router, tags=["network"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
+app.include_router(nlq_router, tags=["nlq"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
     app.include_router(iot_router, tags=["iot"])
 
+# Telemetry Pipeline API (MycoBrain → MAS → MINDEX)
+app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
+# IoT Alert Service API
+app.include_router(alert_router, tags=["iot-alerts"])
+# IoT Analytics API
+app.include_router(iot_analytics_router, tags=["iot-analytics"])
+# IoT Fleet Management API
+app.include_router(fleet_router, tags=["iot-fleet"])
 # SporeBase API (devices, telemetry, samples, calibration)
 app.include_router(sporebase_router, tags=["sporebase"])
 
@@ -423,6 +471,20 @@ try:
 except NameError:
     pass
 
+# A2A (Agent2Agent) Protocol Gateway - agent card, message/send
+try:
+    if A2A_API_AVAILABLE and a2a_router:
+        app.include_router(a2a_router)
+except NameError:
+    pass
+
+# Commerce API (UCP-first, policy-gated)
+try:
+    if COMMERCE_API_AVAILABLE and commerce_router:
+        app.include_router(commerce_router)
+except NameError:
+    pass
+
 # MYCA Consciousness API - unified entry point for all chat/voice
 try:
     if CONSCIOUSNESS_API_AVAILABLE:
@@ -455,6 +517,20 @@ except NameError:
 try:
     if NLM_API_AVAILABLE:
         app.include_router(nlm_router, tags=["nlm"])
+except NameError:
+    pass
+
+# Provenance API - chain-of-custody verification
+try:
+    if PROVENANCE_API_AVAILABLE and provenance_router:
+        app.include_router(provenance_router, tags=["provenance"])
+except NameError:
+    pass
+
+# Governance API - multi-stakeholder impact assessment
+try:
+    if GOVERNANCE_API_AVAILABLE and governance_router:
+        app.include_router(governance_router, tags=["governance"])
 except NameError:
     pass
 
@@ -887,6 +963,14 @@ async def startup_event():
     except Exception as exc:
         logger.warning(f"Runner auto-load failed on startup: {exc}")
 
+    # Start MycoBrain → MINDEX telemetry pipeline (polls every 60s)
+    try:
+        from mycosoft_mas.services.telemetry_pipeline import start_telemetry_pipeline
+        start_telemetry_pipeline()
+        logger.info("✓ Telemetry pipeline started (MycoBrain → MINDEX)")
+    except Exception as exc:
+        logger.warning("Telemetry pipeline failed to start: %s", exc)
+
     # Start WorkflowAutoMonitor (n8n health + drift detection + auto-sync)
     if get_workflow_auto_monitor is not None:
         try:
@@ -904,6 +988,12 @@ async def shutdown_event():
     """Graceful shutdown: stop WorkflowAutoMonitor and other background services."""
     import logging
     logger = logging.getLogger("MAS_Shutdown")
+    try:
+        from mycosoft_mas.services.telemetry_pipeline import stop_telemetry_pipeline
+        stop_telemetry_pipeline()
+        logger.info("Telemetry pipeline stopped")
+    except Exception as exc:
+        logger.warning("Telemetry pipeline stop error: %s", exc)
     if get_workflow_auto_monitor is not None:
         try:
             monitor = get_workflow_auto_monitor()

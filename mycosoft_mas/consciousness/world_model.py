@@ -114,7 +114,11 @@ class WorldState:
     # Device telemetry
     device_telemetry: Dict[str, Any] = field(default_factory=dict)
     device_freshness: DataFreshness = DataFreshness.UNAVAILABLE
-    
+
+    # NLM insights and predictions (Nature Learning Model)
+    nlm_insights: Dict[str, Any] = field(default_factory=dict)
+    nlm_freshness: DataFreshness = DataFreshness.UNAVAILABLE
+
     # Aggregated metrics
     total_flights: int = 0
     total_vessels: int = 0
@@ -155,9 +159,14 @@ class WorldState:
             status = self.ecosystem_status.get("overall", "Unknown")
             parts.append(f"Ecosystem: {status}")
         
+        if self.nlm_insights:
+            insights = self.nlm_insights.get("insights", [])
+            if insights:
+                parts.append(f"NLM: {insights[0]}" if len(insights) == 1 else f"NLM: {len(insights)} insights")
+
         if self.active_devices > 0:
             parts.append(f"{self.active_devices} devices online")
-        
+
         if self.pending_alerts > 0:
             parts.append(f"{self.pending_alerts} pending alerts")
         
@@ -177,7 +186,8 @@ class WorldModel:
     PREDICTION_UPDATE_INTERVAL = 300
     ECOSYSTEM_UPDATE_INTERVAL = 60
     DEVICE_UPDATE_INTERVAL = 10
-    
+    NLM_UPDATE_INTERVAL = 60
+
     def __init__(self, consciousness: Optional["MYCAConsciousness"] = None):
         self._consciousness = consciousness
         self._current_state = WorldState()
@@ -190,7 +200,7 @@ class WorldModel:
         self._sensors: Dict[str, Any] = {}
         try:
             from mycosoft_mas.consciousness.sensors import (
-                CREPSensor, Earth2Sensor, NatureOSSensor, MINDEXSensor, MycoBrainSensor
+                CREPSensor, Earth2Sensor, NatureOSSensor, MINDEXSensor, MycoBrainSensor, NLMSensor
             )
             self._sensors = {
                 "crep": CREPSensor(self),
@@ -198,6 +208,7 @@ class WorldModel:
                 "natureos": NatureOSSensor(self),
                 "mindex": MINDEXSensor(self),
                 "mycobrain": MycoBrainSensor(self),
+                "nlm": NLMSensor(self),
             }
         except Exception:
             self._sensors = {}
@@ -208,28 +219,31 @@ class WorldModel:
         self._natureos_sensor: Optional["NatureOSSensor"] = None
         self._mindex_sensor: Optional["MINDEXSensor"] = None
         self._mycobrain_sensor: Optional["MycoBrainSensor"] = None
-        
+        self._nlm_sensor: Optional["NLMSensor"] = None
+
         # Timestamps for throttling
         self._last_crep_update: Optional[datetime] = None
         self._last_prediction_update: Optional[datetime] = None
         self._last_ecosystem_update: Optional[datetime] = None
         self._last_device_update: Optional[datetime] = None
-        
+        self._last_nlm_update: Optional[datetime] = None
+
         self._lock = asyncio.Lock()
     
     async def initialize_sensors(self) -> None:
         """Initialize all world sensors."""
         try:
             from mycosoft_mas.consciousness.sensors import (
-                CREPSensor, Earth2Sensor, NatureOSSensor, 
-                MINDEXSensor, MycoBrainSensor
+                CREPSensor, Earth2Sensor, NatureOSSensor,
+                MINDEXSensor, MycoBrainSensor, NLMSensor
             )
-            
+
             self._crep_sensor = CREPSensor(self)
             self._earth2_sensor = Earth2Sensor(self)
             self._natureos_sensor = NatureOSSensor(self)
             self._mindex_sensor = MINDEXSensor(self)
             self._mycobrain_sensor = MycoBrainSensor(self)
+            self._nlm_sensor = NLMSensor(self)
             
             logger.info("World sensors initialized")
         except ImportError as e:
@@ -264,6 +278,8 @@ class WorldModel:
                 self._current_state.knowledge_stats = data
             elif name == "mycobrain":
                 self._current_state.device_telemetry = data
+            elif name == "nlm":
+                self._current_state.nlm_insights = data
 
     def get_current_state(self) -> WorldState:
         """Legacy getter for tests."""
@@ -301,7 +317,12 @@ class WorldModel:
             if self._should_update(self._last_device_update, self.DEVICE_UPDATE_INTERVAL):
                 await self._update_devices()
                 self._last_device_update = now
-            
+
+            # Update NLM
+            if self._should_update(self._last_nlm_update, self.NLM_UPDATE_INTERVAL):
+                await self._update_nlm()
+                self._last_nlm_update = now
+
             # Update timestamp and archive
             self._current_state.timestamp = now
             self._cache_updated = now
@@ -366,7 +387,19 @@ class WorldModel:
             except Exception as e:
                 logger.warning(f"Device update error: {e}")
                 self._current_state.device_freshness = DataFreshness.UNAVAILABLE
-    
+
+    async def _update_nlm(self) -> None:
+        """Update NLM insights and predictions."""
+        if self._nlm_sensor:
+            try:
+                reading = await self._nlm_sensor.read()
+                if reading:
+                    self._current_state.nlm_insights = reading.data
+                    self._current_state.nlm_freshness = reading.freshness
+            except Exception as e:
+                logger.warning(f"NLM update error: {e}")
+                self._current_state.nlm_freshness = DataFreshness.UNAVAILABLE
+
     def _archive_state(self) -> None:
         """Archive the current state to history."""
         self._history.append(self._current_state)
@@ -396,6 +429,7 @@ class WorldModel:
                 "predictions": self._current_state.predictions,
                 "ecosystem": self._current_state.ecosystem_status,
                 "devices": self._current_state.device_telemetry,
+                "nlm": self._current_state.nlm_insights,
             },
             "cached": True,
         }
@@ -474,17 +508,53 @@ class WorldModel:
         
         elif query_type == "devices":
             return {"data": self._current_state.device_telemetry, "active": self._current_state.active_devices}
-        
+
+        elif query_type == "telemetry":
+            return await self.get_current_telemetry(params.get("device_id"))
+
         elif query_type == "knowledge":
             if self._mindex_sensor:
                 return await self._mindex_sensor.query(params.get("query", ""))
             return {"error": "MINDEX sensor not available"}
-        
+
         elif query_type == "summary":
             return {"summary": self._current_state.to_summary()}
-        
+
         else:
             return {"error": f"Unknown query type: {query_type}"}
+
+    async def get_current_telemetry(self, device_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get current device telemetry. Supports "what's the temperature at mushroom1?" queries.
+        Returns cached telemetry from world state; if device_id given and not in cache,
+        fetches live from MycoBrain sensor.
+        """
+        data = self._current_state.device_telemetry or {}
+        if device_id:
+            device_id_lower = device_id.lower().replace(" ", "-")
+            devices_list = data.get("devices", []) if isinstance(data, dict) else []
+            sensor_readings = data.get("sensor_readings", {}) if isinstance(data, dict) else {}
+            for d in devices_list:
+                if not isinstance(d, dict):
+                    continue
+                did = d.get("device_id") or d.get("id") or ""
+                if device_id_lower in str(did).lower() or str(did).lower() in device_id_lower:
+                    telemetry = sensor_readings.get(did, d) if isinstance(sensor_readings, dict) else d
+                    return {"device_id": did, "telemetry": telemetry, "freshness": self._current_state.device_freshness.value}
+            if self._mycobrain_sensor and hasattr(self._mycobrain_sensor, "get_device_telemetry"):
+                try:
+                    live = await self._mycobrain_sensor.get_device_telemetry(device_id)
+                    if live and "error" not in live:
+                        t = live.get("telemetry", live)
+                        return {"device_id": device_id, "telemetry": t, "freshness": "live"}
+                except Exception as e:
+                    logger.debug("Live telemetry fetch failed: %s", e)
+            return {"device_id": device_id, "telemetry": {}, "error": "Device not found or offline"}
+        return {
+            "devices": data,
+            "active": self._current_state.active_devices,
+            "freshness": self._current_state.device_freshness.value,
+        }
     
     def get_history(self, limit: int = 10) -> List[WorldState]:
         """Get recent world state history."""

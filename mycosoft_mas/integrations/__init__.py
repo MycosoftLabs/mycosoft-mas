@@ -6,6 +6,8 @@ from mycosoft_mas.integrations.chemspider_client import ChemSpiderClient
 from mycosoft_mas.integrations.asana_client import AsanaClient
 from mycosoft_mas.integrations.slack_client import SlackClient
 from mycosoft_mas.integrations.natureos_client import NATUREOSClient
+from mycosoft_mas.integrations.mycorrhizae_client import MycorrhizaeClient
+from mycosoft_mas.integrations.a2a_client import A2AClient
 
 __all__ = [
     "NotionClient",
@@ -14,4 +16,6 @@ __all__ = [
     "AsanaClient",
     "SlackClient",
     "NATUREOSClient",
+    "MycorrhizaeClient",
+    "A2AClient",
 ]

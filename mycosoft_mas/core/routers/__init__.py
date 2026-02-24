@@ -11,6 +11,8 @@ from .knowledge_graph_api import router as knowledge_graph
 from .physicsnemo_api import router as physicsnemo
 from .fci_api import router as fci
 from .fci_websocket import router as fci_websocket
+from .provenance_api import router as provenance
+from .governance_api import router as governance
 
 __all__ = [
     "agents",
@@ -26,4 +28,6 @@ __all__ = [
     "physicsnemo",
     "fci",
     "fci_websocket",
+    "provenance",
+    "governance",
 ]

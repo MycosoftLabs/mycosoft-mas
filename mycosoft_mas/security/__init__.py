@@ -4,6 +4,7 @@ from .audit import AuditLogger
 from .encryption import EncryptionService
 from .skill_scanner import SkillScanner, ScanResult, Finding
 from .skill_registry import SkillRegistry, SkillEntry
+from .telemetry_integrity import TelemetryIntegrityService, TelemetryProof
 
 __all__ = [
     "RBACManager",
@@ -14,4 +15,6 @@ __all__ = [
     "Finding",
     "SkillRegistry",
     "SkillEntry",
+    "TelemetryIntegrityService",
+    "TelemetryProof",
 ]

@@ -168,6 +168,33 @@ class EventLedger:
         
         self._append_event(event)
         return event
+
+    def log_telemetry_provenance(
+        self,
+        device_id: str,
+        payload_hash: str,
+        signature: str,
+        chain_hash: str,
+        prev_chain_hash: str = "",
+        metadata: Optional[dict] = None,
+    ) -> dict:
+        """
+        Log telemetry chain-of-custody event.
+        """
+        event = {
+            "ts": int(time.time()),
+            "ts_iso": datetime.utcnow().isoformat() + "Z",
+            "session_id": self._session_id,
+            "event_type": "telemetry_provenance",
+            "device_id": device_id,
+            "payload_hash": payload_hash,
+            "signature": signature,
+            "chain_hash": chain_hash,
+            "prev_chain_hash": prev_chain_hash,
+            "metadata": metadata or {},
+        }
+        self._append_event(event)
+        return event
     
     def _append_event(self, event: dict) -> None:
         """Append an event to the ledger file."""
@@ -270,6 +297,16 @@ class EventLedger:
                 summary["by_tool"][tool] = summary["by_tool"].get(tool, 0) + 1
         
         return summary
+
+    def read_telemetry_chain(self, device_id: Optional[str] = None, limit: int = 1000) -> list[dict]:
+        """
+        Read telemetry provenance events in append order.
+        """
+        events = self.read_events(limit=limit)
+        chain = [e for e in events if e.get("event_type") == "telemetry_provenance"]
+        if device_id:
+            chain = [e for e in chain if e.get("device_id") == device_id]
+        return chain
 
 
 # Module-level singleton for convenience

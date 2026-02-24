@@ -1,8 +1,14 @@
 # Master Document Index
 
+## Network Monitor Agent (Feb 12, 2026)
+- `docs/NETWORK_MONITOR_AGENT_FEB12_2026.md` – **Network diagnostics**: NetworkMonitorAgent, DNS anomaly detection (multi-resolver), topology (UniFi), latency, connectivity, unauthorized clients. MAS `/api/network/*`, Website `/api/security/network-diagnostics`. Subagent: @network-monitor.
+
 ## Petri Dish Simulator Upgrade (Feb 20, 2026)
 - `docs/PETRI_DISH_SIM_UPGRADE_TASK_COMPLETE_FEB20_2026.md` – **Task completion**: Petridishsim repo foundation, chemical engine, segmentation + morphology utilities, calibration optimizer, MAS petri simulation API, and website UI overlays/panels. Includes verification steps and follow-up notes.
 - `docs/PETRI_DISH_SIM_DEPLOYMENT_STATUS_FEB20_2026.md` – **Deployment status**: GitHub pushes, MAS VM deploy completed, website VM deploy blocked by repeated Docker build loops, petridishsim target pending.
+- `docs/PETRI_SIMULATION_MINDEX_SCHEMA_FEB20_2026.md` – **MINDEX schema**: Petri simulation sessions, metrics, calibration, outcomes; migration 0015; NLM integration.
+- `docs/PETRI_INTEGRATION_DEMO_WALKTHROUGH_FEB20_2026.md` – **Demo walkthrough**: Legacy features, new controls, API endpoints, MINDEX/NLM path, MYCA agent control, batch autonomy, verification checklist.
+- `docs/PETRI_DEPLOYMENT_HANDOFF_FEB20_2026.md` – **Deployment handoff**: Ready for deploy agent; website (187), MAS (188), MINDEX migration (189); steps, verification, rollback.
 
 ## NatureOS Tools Integration (Feb 21, 2026)
 - `docs/NATUREOS_TOOLS_INTEGRATION_TASK_COMPLETE_FEB21_2026.md` – **Task completion**: NatureOS tool embedding, new tool pages, navigation updates, MycoBrain stream connector, NatureOS search indexing helper, and verification checklist.
@@ -22,6 +28,26 @@
 
 ## External Services – MCP, Integrations, Env (Feb 18, 2026)
 - `docs/EXTERNAL_SERVICES_MCP_AND_ENV_FEB18_2026.md` – **NCBI, ChemSpider, Asana, Notion, Slack**: Env var names, `.mcp.json` wiring, MAS integration clients (NotionClient, NCBIClient, ChemSpiderClient, AsanaClient, SlackClient), which agents use them, and how they interact with MYCA. Set real values in `.env` only; never commit secrets.
+
+## MYCA Documentation (Living)
+
+- `docs/myca/MYCA_DOC_INDEX.md` – **MYCA doc index** (living): single entry point for all MYCA docs; links to 15 atomic docs and large composite docs
+- `docs/myca/MYCA_DOC_ORGANIZED_LIST.md` – Large vs atomic doc lists (living)
+
+## MYCA Asana Handoff (Feb 23, 2026)
+- `docs/MYCA_ASANA_HANDOFF_REPORT_FEB23_2026.md` – **Asana handoff**: Full MYCA report, architecture, file inventory, status, next tasks. Copy-pastable into Claude CoWorker to populate Asana automatically.
+
+## MYCA Opposable Thumb – Phase 0 & 1 (Feb 17, 2026)
+- `docs/MYCA_THUMB_PHASE0_PHASE1_COMPLETE_FEB17_2026.md` – **Thumb Phase 0–1 complete**: Telemetry pipeline (MycoBrain→MINDEX), telemetry query (consciousness API), drift detector, continuous learner, temporal pattern store. Verification and remaining phases.
+- `docs/MYCA_THUMB_PHASE2_PHASE5_COMPLETE_FEB17_2026.md` – **Thumb Phase 2–5 complete**: Ensemble controller + finger registry + truth arbitrator, A2A outbound federation adapters, telemetry integrity/provenance API, governance module/API, constitution extension for all-organisms stakeholders.
+- `docs/MYCA_THUMB_ALL_PHASES_DOCUMENT_SUMMARY_FEB23_2026.md` – **All-phases summary index**: consolidated list of all Thumb phase completion docs (Phase 0 through Phase 5).
+
+## MYCA Ecosystem Unification (Feb 17, 2026)
+- `docs/MYCA_ECOSYSTEM_UNIFICATION_FEB17_2026.md` – **Unification complete**: A2A/WebMCP/UCP, Exa, Metabase LLM, consciousness search, NLQ parse/execute, intention persistence (Redis), NatureOS MYCA routing, protocol rules. Verification checklist and data flow.
+
+## Protocol Stack Integration (Feb 17, 2026)
+- `docs/MYCA_PROTOCOL_STACK_INTEGRATION_PLAN_FEB17_2026.md` – **Plan**: A2A + MCP/WebMCP + UCP protocol-layer upgrade across MAS + website, including A2A server/client, WebMCP tools, UCP commerce agent, security rules, and tests.
+- `docs/PROTOCOL_ROLLOUT_RUNBOOK_FEB17_2026.md` – **Operational runbook**: Feature flags (MYCA_A2A_ENABLED, MYCA_WEBMCP_ENABLED, MYCA_UCP_ENABLED), protocol telemetry, staged rollout (local → sandbox → MAS VM → website), quick checks, troubleshooting.
 
 ## VM Layout (Four Nodes)
 - `docs/VM_LAYOUT_FOUR_VMS_FEB09_2026.md` – **Canonical four-VM layout**: Sandbox 187, MAS 188, MINDEX 189, GPU node 190; each system has its own VM. Reference for rules and connectivity.

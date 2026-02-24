@@ -556,6 +556,22 @@ async def get_world_state():
     )
 
 
+@router.get("/telemetry")
+async def get_telemetry(device_id: Optional[str] = None):
+    """
+    Get current device telemetry from MYCA's world model.
+    Supports "what's the temperature at mushroom1?"-style queries.
+    Optional device_id filters to a specific device.
+    """
+    consciousness = get_consciousness()
+    if not consciousness.is_conscious:
+        raise HTTPException(status_code=503, detail="MYCA is not conscious")
+    world_model = consciousness.world_model
+    if not world_model:
+        raise HTTPException(status_code=503, detail="World model not available")
+    return await world_model.get_current_telemetry(device_id)
+
+
 @router.post("/alert")
 async def send_alert(request: AlertRequest):
     """
