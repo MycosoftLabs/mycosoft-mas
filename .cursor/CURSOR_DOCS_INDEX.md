@@ -26,6 +26,11 @@
 | `docs/MYCA_LIVE_PRESENCE_AND_SESSION_COMPLETE_FEB24_2026.md` | **Session complete**: Presence integration, Supabase migration, testing, workflow scope fix, GitHub pushes |
 | `docs/myca/atomic/MYCA_PRESENCE.md` | **Atomic**: Live presence, sessions, online, API usage; website + MAS + Supabase |
 
+## Protocol Unification (Feb 23, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCOSOFT_PROTOCOL_UNIFICATION_COMPLETE_FEB23_2026.md` | **Protocol unification complete**: MDP/MMP v1, gateway, clients, tests, specs; pushed to Mycorrhizae repo |
+
 ## Petri Dish Simulator Upgrade (Feb 20, 2026)
 
 | Doc | Purpose |

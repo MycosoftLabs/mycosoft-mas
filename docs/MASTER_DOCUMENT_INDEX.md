@@ -1,5 +1,8 @@
 # Master Document Index
 
+## Protocol Unification Complete (Feb 23, 2026)
+- `docs/MYCOSOFT_PROTOCOL_UNIFICATION_COMPLETE_FEB23_2026.md` – **Protocol unification complete**: MDP v1, MMP v1, device gateway, MINDEX persistence, WebSocket transport, Python client SDK, 41 tests, spec docs. Pushed to MycosoftLabs/Mycorrhizae. MAS device commands use MycorrhizaeClient.
+
 ## MYCA Live Presence and Session Complete (Feb 24, 2026)
 - `docs/MYCA_LIVE_PRESENCE_AND_SESSION_COMPLETE_FEB24_2026.md` – **Session summary**: MYCA Live Presence integration (Supabase migration, website routes, MAS PresenceSensor, consciousness injection), testing, fixes (orchestrator-chat, gitignore), GitHub workflow scope resolution, pushes to MAS and website. Verification checklist and related docs.
 - `docs/myca/atomic/MYCA_PRESENCE.md` – **Atomic doc**: Live presence, sessions, online status, API usage; website hooks/routes, MAS PresenceSensor, Supabase tables, env vars.
