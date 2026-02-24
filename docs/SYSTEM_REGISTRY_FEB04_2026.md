@@ -138,6 +138,23 @@ MYCA has full view and full access to n8n workflows. Source of truth: repo `n8n/
 **Rule**: `.cursor/rules/n8n-management.mdc`  
 **Agents**: n8n-workflow, n8n-ops, n8n-workflow-sync
 
+### Presence API (Feb 24, 2026)
+
+MYCA live awareness of online users, active sessions, and staff presence. Proxies to Website presence API. Used by consciousness world model and deliberation.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/presence/online` | GET | List online users |
+| `/api/presence/sessions` | GET | List active sessions |
+| `/api/presence/staff` | GET | List staff/admin presence |
+| `/api/presence/stats` | GET | Presence statistics |
+| `/api/presence/stream` | GET | SSE real-time presence |
+
+**Router**: `mycosoft_mas/core/routers/presence_api.py`  
+**Upstream**: Website `PRESENCE_API_URL` (default http://192.168.0.187:3000/api/presence)  
+**Auth**: `x-service-key: PRESENCE_SERVICE_KEY` for service-to-service  
+**Doc**: `docs/myca/atomic/MYCA_PRESENCE.md`
+
 ### Petri Dish Simulation API (Feb 20, 2026)
 
 | Endpoint | Method | Description |
