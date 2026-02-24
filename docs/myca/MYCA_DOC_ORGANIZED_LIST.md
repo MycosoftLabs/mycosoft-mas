@@ -4,6 +4,7 @@
 
 ## Large Updated Docs (composite, broad scope)
 
+- docs/MYCA_LIVE_PRESENCE_AND_SESSION_COMPLETE_FEB24_2026.md - Live presence integration, session summary
 - docs/MYCA_ECOSYSTEM_UNIFICATION_FEB17_2026.md - Full stack unification
 - docs/MYCA_PROTOCOL_STACK_INTEGRATION_PLAN_FEB17_2026.md - Protocol plan
 - docs/MYCA_SELF_IMPROVEMENT_SYSTEM_FEB17_2026.md - Self-improvement
@@ -29,3 +30,4 @@
 - docs/myca/atomic/MYCA_QUERY_NATUREOS.md
 - docs/myca/atomic/MYCA_SYNC_API.md
 - docs/myca/atomic/MYCA_PROTOCOLS_RULE.md
+- docs/myca/atomic/MYCA_PRESENCE.md

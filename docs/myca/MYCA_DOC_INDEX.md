@@ -30,3 +30,4 @@
 | atomic/MYCA_QUERY_NATUREOS.md | NatureOS query |
 | atomic/MYCA_SYNC_API.md | Sync/conversations |
 | atomic/MYCA_PROTOCOLS_RULE.md | Protocol rules |
+| atomic/MYCA_PRESENCE.md | Live presence, sessions, online, API usage |

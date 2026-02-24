@@ -19,6 +19,13 @@
 | `docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md` | Memory system (when relevant) |
 | `docs/Code and System Prioritization.docx.md` | Priorities, execution order |
 
+## MYCA Live Presence (Feb 24, 2026)
+
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCA_LIVE_PRESENCE_AND_SESSION_COMPLETE_FEB24_2026.md` | **Session complete**: Presence integration, Supabase migration, testing, workflow scope fix, GitHub pushes |
+| `docs/myca/atomic/MYCA_PRESENCE.md` | **Atomic**: Live presence, sessions, online, API usage; website + MAS + Supabase |
+
 ## Petri Dish Simulator Upgrade (Feb 20, 2026)
 
 | Doc | Purpose |

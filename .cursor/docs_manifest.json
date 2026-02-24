@@ -1,5 +1,5 @@
 {
-  "count": 557,
+  "count": 568,
   "docs": [
     {
       "path": "docs\\AGENT_ACTIVATION_COMPLETE_FEB09_2026.md",
@@ -1184,6 +1184,12 @@
       "date": null
     },
     {
+      "path": "docs\\Myca and the Opposable-Thumb.md",
+      "repo": "MAS",
+      "title": "Myca and the Opposable-Thumb AI: An Architectural Design Thesis for a Nature-Learning System",
+      "date": null
+    },
+    {
       "path": "docs\\MYCA Autonomous Scientific Architecture (2026).docx.md",
       "repo": "MAS",
       "title": "MYCA Autonomous Scientific Architecture (2026)",
@@ -1194,6 +1200,12 @@
       "repo": "MAS",
       "title": "MYCA_AI_STUDIO_ACTIVITY_TOPOLOGY_FEB06_2026",
       "date": "2026-FEB-06"
+    },
+    {
+      "path": "docs\\MYCA_ASANA_HANDOFF_REPORT_FEB23_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Full Report \u2014 Asana Handoff (Claude CoWorker)",
+      "date": "2026-FEB-23"
     },
     {
       "path": "docs\\MYCA_CHAT_DEPLOYMENT_FEB10_2026.md",
@@ -1232,6 +1244,12 @@
       "date": null
     },
     {
+      "path": "docs\\MYCA_DEMO_CONNECTION_FIXES_FEB17_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Demo Connection Fixes \u2013 Feb 17, 2026",
+      "date": "2026-FEB-17"
+    },
+    {
       "path": "docs\\MYCA_ECOSYSTEM_UNIFICATION_FEB17_2026.md",
       "repo": "MAS",
       "title": "MYCA Ecosystem Unification \u2013 Feb 17, 2026",
@@ -1248,6 +1266,12 @@
       "repo": "MAS",
       "title": "MYCA Knowledge Base",
       "date": null
+    },
+    {
+      "path": "docs\\MYCA_LIVE_PRESENCE_AND_SESSION_COMPLETE_FEB24_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Live Presence Integration and Session Summary",
+      "date": "2026-FEB-24"
     },
     {
       "path": "docs\\MYCA_MAS_OPERATIONAL_VISION_JAN26_2026.md",
@@ -1314,6 +1338,24 @@
       "repo": "MAS",
       "title": "MYCA Test Voice Complete \u2013 February 11, 2026",
       "date": "2026-FEB-11"
+    },
+    {
+      "path": "docs\\MYCA_THUMB_ALL_PHASES_DOCUMENT_SUMMARY_FEB23_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Opposable Thumb - All Phases Document Summary",
+      "date": "2026-FEB-23"
+    },
+    {
+      "path": "docs\\MYCA_THUMB_PHASE0_PHASE1_COMPLETE_FEB17_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Opposable Thumb \u2013 Phase 0 & Phase 1 Complete",
+      "date": "2026-FEB-17"
+    },
+    {
+      "path": "docs\\MYCA_THUMB_PHASE2_PHASE5_COMPLETE_FEB17_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Opposable Thumb \u2013 Phase 2 to 5 Complete",
+      "date": "2026-FEB-17"
     },
     {
       "path": "docs\\MYCA_TRUE_CONSCIOUSNESS_IMPLEMENTATION_FEB11_2026.md",
@@ -1628,6 +1670,12 @@
       "date": "2026-JAN-21"
     },
     {
+      "path": "docs\\NETWORK_MONITOR_AGENT_FEB12_2026.md",
+      "repo": "MAS",
+      "title": "Network Monitor Agent and Diagnostics",
+      "date": "2026-FEB-12"
+    },
+    {
       "path": "docs\\NETWORK_RECOVERY_COMPLETE_JAN28_2026.md",
       "repo": "MAS",
       "title": "Network Recovery Complete - January 28, 2026",
@@ -1820,6 +1868,12 @@
       "date": "2026-JAN-29"
     },
     {
+      "path": "docs\\PETRI_DEPLOYMENT_HANDOFF_FEB20_2026.md",
+      "repo": "MAS",
+      "title": "Petri Full Integration Deployment Handoff",
+      "date": "2026-FEB-20"
+    },
+    {
       "path": "docs\\PETRI_DISH_SIM_DEPLOYMENT_STATUS_FEB20_2026.md",
       "repo": "MAS",
       "title": "Petri Dish Simulator Deployment Status",
@@ -1829,6 +1883,12 @@
       "path": "docs\\PETRI_DISH_SIM_UPGRADE_TASK_COMPLETE_FEB20_2026.md",
       "repo": "MAS",
       "title": "Petri Dish Simulator Upgrade Task Complete",
+      "date": "2026-FEB-20"
+    },
+    {
+      "path": "docs\\PETRI_INTEGRATION_DEMO_WALKTHROUGH_FEB20_2026.md",
+      "repo": "MAS",
+      "title": "Petri Full Integration Demonstration Walkthrough",
       "date": "2026-FEB-20"
     },
     {
@@ -3215,6 +3275,12 @@
       "path": "docs\\myca\\atomic\\MYCA_NLQ.md",
       "repo": "MAS",
       "title": "MYCA NLQ (Natural Language Query)",
+      "date": null
+    },
+    {
+      "path": "docs\\myca\\atomic\\MYCA_PRESENCE.md",
+      "repo": "MAS",
+      "title": "MYCA Presence",
       "date": null
     },
     {
