@@ -452,14 +452,16 @@ class MYCAConsciousness:
             
             async def safe_memories():
                 try:
-                    if self._memory_coordinator:
-                        memories = await asyncio.wait_for(
-                            self._recall_relevant_memories(content, focus),
-                            timeout=3.0
-                        )
-                        self._metrics.memories_recalled += len(memories)
-                        return memories
-                    return []
+                    memories = await asyncio.wait_for(
+                        self._recall_relevant_memories(
+                            content, focus,
+                            context=context,
+                            user_id=user_id,
+                        ),
+                        timeout=3.0
+                    )
+                    self._metrics.memories_recalled += len(memories)
+                    return memories
                 except asyncio.TimeoutError:
                     logger.warning("Memory recall timed out, proceeding without memories")
                     return []
@@ -536,9 +538,12 @@ class MYCAConsciousness:
     async def _recall_relevant_memories(
         self,
         content: str,
-        focus: "AttentionFocus"
+        focus: "AttentionFocus",
+        context: Optional[Dict[str, Any]] = None,
+        user_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        """Recall memories relevant to the current focus."""
+        """Recall memories relevant to the current focus.
+        When user is creator (Morgan), also inject autobiographical memory."""
         memories = []
         if self._memory_coordinator:
             try:
@@ -559,6 +564,27 @@ class MYCAConsciousness:
                     memories.extend(recent)
             except Exception as e:
                 logger.warning(f"Memory recall error: {e}")
+
+        # Creator (Morgan) consciousness: inject autobiographical history
+        is_creator = (
+            (context or {}).get("is_creator") is True
+            or (user_id or "").lower() == "morgan"
+        )
+        if is_creator:
+            try:
+                from mycosoft_mas.memory.autobiographical import get_autobiographical_memory
+                autobio = await get_autobiographical_memory()
+                if autobio:
+                    morgan_history = await autobio.get_morgan_history(limit=10)
+                    for h in morgan_history[:5]:
+                        memories.append({
+                            "content": f"[Creator memory] Morgan said: {h.message[:150]}... MYCA: {h.response[:150]}...",
+                            "source": "autobiographical",
+                            "user_id": "morgan",
+                            "timestamp": h.timestamp.isoformat() if hasattr(h.timestamp, "isoformat") else str(h.timestamp),
+                        })
+            except Exception as e:
+                logger.debug(f"Creator memory recall skipped: {e}")
         return memories
     
     def _get_soul_context(self) -> Dict[str, Any]:
