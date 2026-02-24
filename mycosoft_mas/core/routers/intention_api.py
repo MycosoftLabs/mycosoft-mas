@@ -186,7 +186,7 @@ async def get_suggestions(session_id: str) -> SuggestionResponse:
 
     if not events:
         return SuggestionResponse(
-            widgets=["species", "ai"],
+            widgets=["species", "answers"],
             queries=["Amanita muscaria", "medicinal fungi", "mycelium networks"],
             actions=[],
             reasoning="No session history - showing default suggestions",
@@ -255,9 +255,9 @@ def _analyze_intentions_sync(events: List[Dict[str, Any]]) -> Dict[str, Any]:
             widgets.append("research")
         insights["species_interest"] = True
     
-    # Always suggest AI widget if not already
-    if "ai" not in widgets:
-        widgets.append("ai")
+    # Always suggest Answers widget if not already
+    if "answers" not in widgets:
+        widgets.append("answers")
     
     return {
         "widgets": widgets[:4],  # Max 4 suggestions

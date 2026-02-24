@@ -18,7 +18,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Union
 from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
@@ -169,8 +169,17 @@ class DeliberateReasoning:
             await self._store_thought(self._current_thought)
             
         except Exception as e:
+            import traceback as tb
+
             logger.error(f"Deliberation error: {e}")
             self._current_thought.add_step("error", {"error": str(e)})
+            # Report to autonomous fix pipeline (chat-facing errors are high priority)
+            await self._consciousness._report_error(
+                str(e),
+                source="chat",
+                context={"phase": "deliberation", "input_preview": input_content[:100]},
+                traceback=tb.format_exc(),
+            )
             yield "I apologize, but I encountered an issue while thinking about that. Let me try a simpler approach."
         
         finally:
@@ -252,7 +261,7 @@ class DeliberateReasoning:
     def _build_prompt_context(
         self,
         input_content: str,
-        working_context: "WorkingContext",
+        working_context: Union["WorkingContext", Dict[str, Any]],
         world_context: Optional[Dict[str, Any]],
         memories: Optional[List[Dict[str, Any]]],
         soul_context: Optional[Dict[str, Any]],
@@ -260,9 +269,12 @@ class DeliberateReasoning:
         """Build the full context for the LLM prompt."""
         parts = []
         
-        # Working context
-        if working_context:
+        # Working context (handle dict fallback from safe_working_context timeout/error)
+        if working_context and hasattr(working_context, "to_prompt_context"):
             parts.append(working_context.to_prompt_context())
+        elif working_context and isinstance(working_context, dict):
+            if working_context.get("minimal"):
+                parts.append("(Working context timed out - proceeding with available context)")
         
         # World context
         if world_context:

@@ -1,0 +1,95 @@
+{
+  "name": "MYCA Autonomous Fix Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "autonomous-fix",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "MYCA Error Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "autonomous-fix"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process ErrorTriageService payload and prepare fix request\nconst body = $input.first().json.body || $input.first().json;\nconst errorId = body.error_id || `fix_${Date.now()}`;\nconst errorMessage = body.error_message || '';\nconst filePath = body.file_path || '';\nconst suggestedFix = body.suggested_fix || '';\nconst deployTarget = body.deploy_target || 'mas';\nconst traceback = body.traceback || '';\nconst source = body.source || 'unknown';\n\nconst fixRequest = {\n  type: 'autonomous_fix_request',\n  priority: 'high',\n  errorId,\n  data: {\n    error_message: errorMessage,\n    file_path: filePath,\n    suggested_fix: suggestedFix,\n    deploy_target: deployTarget,\n    source,\n    traceback: traceback.substring(0, 2000),\n    context: body.context || {},\n    timestamp: body.timestamp || new Date().toISOString(),\n  },\n};\n\nreturn [{ json: fixRequest }];"
+      },
+      "id": "prepare-fix-request",
+      "name": "Prepare Fix Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://{{ $env.MAS_HOST || '192.168.0.188' }}:8001/api/deploy/autonomous-fix",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": { "timeout": 15000 }
+      },
+      "id": "submit-to-mas",
+      "name": "Submit to MAS Deploy API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "continueOnFail": true,
+      "notes": "Requires MAS /api/tasks/submit or /api/autonomous/fix endpoint"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://{{ $env.MAS_HOST || '192.168.0.188' }}:8001/api/deploy/trigger",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"target\": \"{{ $('Prepare Fix Request').item.json.data.deploy_target }}\",\n  \"reason\": \"autonomous_fix\",\n  \"error_id\": \"{{ $('Prepare Fix Request').item.json.errorId }}\"\n}",
+        "options": { "timeout": 60000 }
+      },
+      "id": "trigger-deploy",
+      "name": "Trigger Deploy",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300],
+      "continueOnFail": true,
+      "disabled": true,
+      "notes": "Enable when deploy API is ready"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'received', errorId: $('Prepare Fix Request').item.json.errorId, dispatched: true } }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "MYCA Error Webhook": {
+      "main": [[{ "node": "Prepare Fix Request", "type": "main", "index": 0 }]]
+    },
+    "Prepare Fix Request": {
+      "main": [[{ "node": "Submit to MAS Orchestrator", "type": "main", "index": 0 }]]
+    },
+    "Submit to MAS Orchestrator": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "autonomous-fix-v1",
+  "active": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

@@ -1,7 +1,13 @@
 # Master Document Index
 
+## MYCA Autonomous Self-Healing (Feb 17, 2026)
+- `docs/MYCA_AUTONOMOUS_SELF_HEALING_COMPLETE_FEB17_2026.md` – **Autonomous self-healing complete**: ErrorTriageService, consciousness integration, n8n autonomous-fix pipeline, MCP submit_coding_task, Deploy API, error-fixer agent, proactive_error_scanner, workflow_dispatch deploy. MYCA detects/fixes errors, dispatches to Cursor, triggers deploys.
+
 ## Protocol Unification Complete (Feb 23, 2026)
 - `docs/MYCOSOFT_PROTOCOL_UNIFICATION_COMPLETE_FEB23_2026.md` – **Protocol unification complete**: MDP v1, MMP v1, device gateway, MINDEX persistence, WebSocket transport, Python client SDK, 41 tests, spec docs. Pushed to MycosoftLabs/Mycorrhizae. MAS device commands use MycorrhizaeClient.
+
+## Answers Widget and Activity Stream (Feb 10, 2026)
+- `docs/ANSWERS_WIDGET_AND_ACTIVITY_STREAM_FEB10_2026.md` – **Answers overhaul**: Merge AIWidget + MYCAChatPanel into Answers; left panel → Activity Stream; rich markdown; MYCA Answers persona. See docs/myca/atomic/MYCA_ANSWERS_PERSONA_FEB10_2026.md.
 
 ## MYCA Live Presence and Session Complete (Feb 24, 2026)
 - `docs/MYCA_LIVE_PRESENCE_AND_SESSION_COMPLETE_FEB24_2026.md` – **Session summary**: MYCA Live Presence integration (Supabase migration, website routes, MAS PresenceSensor, consciousness injection), testing, fixes (orchestrator-chat, gitignore), GitHub workflow scope resolution, pushes to MAS and website. Verification checklist and related docs.

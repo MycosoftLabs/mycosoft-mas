@@ -163,6 +163,12 @@ class MYCAConsciousness:
             
         except Exception as e:
             logger.error(f"Failed to awaken: {e}")
+            await self._report_error(
+                str(e),
+                source="consciousness",
+                context={"phase": "awaken"},
+                traceback=__import__("traceback").format_exc(),
+            )
             self._state = ConsciousnessState.DORMANT
             raise
     
@@ -290,6 +296,7 @@ class MYCAConsciousness:
                 break
             except Exception as e:
                 logger.error(f"World model update error: {e}")
+                await self._report_error(str(e), source="background_task", context={"loop": "world_model"})
                 await asyncio.sleep(30)
     
     async def _pattern_recognition_loop(self) -> None:
@@ -314,6 +321,7 @@ class MYCAConsciousness:
                 break
             except Exception as e:
                 logger.error(f"Pattern recognition error: {e}")
+                await self._report_error(str(e), source="background_task", context={"loop": "pattern_recognition"})
                 await asyncio.sleep(60)
     
     async def _dream_loop(self) -> None:
@@ -335,6 +343,7 @@ class MYCAConsciousness:
                 break
             except Exception as e:
                 logger.error(f"Dream loop error: {e}")
+                await self._report_error(str(e), source="background_task", context={"loop": "dream"})
                 self._state = ConsciousnessState.CONSCIOUS
                 await asyncio.sleep(300)
     
@@ -370,6 +379,7 @@ class MYCAConsciousness:
                 )
             except Exception as e:
                 logger.error(f"Could not save state: {e}")
+                await self._report_error(str(e), source="consciousness", context={"phase": "save_state"})
     
     # =========================================================================
     # Main Processing Pipeline
@@ -747,6 +757,42 @@ class MYCAConsciousness:
         if self._voice_interface:
             await self._voice_interface.speak(text)
     
+    async def _report_error(
+        self,
+        error_message: str,
+        source: str = "unknown",
+        context: Optional[Dict[str, Any]] = None,
+        traceback: Optional[str] = None,
+    ) -> None:
+        """
+        Report error to ErrorTriageService for autonomous fix pipeline.
+        Critical errors also trigger alert_morgan.
+        """
+        try:
+            from mycosoft_mas.services.error_triage_service import (
+                FixFeasibility,
+                get_error_triage_service,
+            )
+
+            triage_svc = get_error_triage_service()
+            result = await triage_svc.triage(
+                error_message=error_message,
+                source=source,
+                context=context,
+                traceback=traceback,
+            )
+            # Alert Morgan for errors requiring human review or unclassified chat errors
+            if source in ("chat", "consciousness") and result.feasibility in (
+                FixFeasibility.REQUIRES_HUMAN,
+                FixFeasibility.UNKNOWN,
+            ):
+                await self.alert_morgan(
+                    f"Error needs attention: {error_message[:100]}...",
+                    priority="high" if result.feasibility == FixFeasibility.REQUIRES_HUMAN else "normal",
+                )
+        except Exception as e:
+            logger.warning(f"Could not report error to triage service: {e}")
+
     async def alert_morgan(self, message: str, priority: str = "normal") -> None:
         """
         Alert Morgan about something important.
@@ -788,6 +834,7 @@ class MYCAConsciousness:
                         handler(data)
                 except Exception as e:
                     logger.error(f"Event handler error for {event}: {e}")
+                    await self._report_error(str(e), source="consciousness", context={"event": event})
     
     # =========================================================================
     # Properties

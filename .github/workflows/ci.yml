@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deploy target (mas, website, mindex) - used for tagging only; actual deploy via MAS /api/deploy/trigger'
+        required: false
+        default: 'mas'
 
 jobs:
   test-build:
@@ -155,6 +161,25 @@ jobs:
           docker-compose pull
           docker-compose up -d
           docker system prune -f
+
+  # Programmatic deploy: trigger via GitHub UI or API (workflow_dispatch)
+  deploy-dispatch:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    steps:
+    - name: Deploy MAS (workflow_dispatch)
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USERNAME }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: |
+          cd /opt/mycosoft-mas
+          git pull origin main
+          docker-compose pull
+          docker-compose up -d
+          docker system prune -f
+          echo "Deployed via workflow_dispatch at $(date)"
 
   lint:
     runs-on: ubuntu-latest

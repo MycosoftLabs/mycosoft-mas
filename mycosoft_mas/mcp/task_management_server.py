@@ -326,6 +326,46 @@ class TaskManagementMCPServer:
                         }
                     }
                 }
+            ),
+            MCPToolDefinition(
+                name="submit_coding_task",
+                description="Submit a coding fix task from MYCA's autonomous error triage. Use when ErrorTriageService or n8n sends an auto-fix request. Creates a high-priority task for error-fixer or myca-autonomous-operator agent.",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "error_id": {
+                            "type": "string",
+                            "description": "Unique ID from triage (e.g. triage_abc123)"
+                        },
+                        "error_message": {
+                            "type": "string",
+                            "description": "The error message that occurred"
+                        },
+                        "file_path": {
+                            "type": "string",
+                            "description": "Path to file that needs fixing (e.g. mycosoft_mas/consciousness/deliberation.py)"
+                        },
+                        "suggested_fix": {
+                            "type": "string",
+                            "description": "Hint for how to fix (e.g. Add type check before attribute access)"
+                        },
+                        "deploy_target": {
+                            "type": "string",
+                            "description": "Where to deploy after fix",
+                            "enum": ["mas", "website", "mindex"]
+                        },
+                        "traceback": {
+                            "type": "string",
+                            "description": "Optional traceback for context"
+                        },
+                        "source": {
+                            "type": "string",
+                            "description": "Error source (chat, consciousness, api, etc.)",
+                            "default": "unknown"
+                        }
+                    },
+                    "required": ["error_message"]
+                }
             )
         ]
     
@@ -419,6 +459,7 @@ class TaskManagementMCPServer:
             "plan_update": self._handle_plan_update,
             "plan_list": self._handle_plan_list,
             "gap_scan": self._handle_gap_scan,
+            "submit_coding_task": self._handle_submit_coding_task,
         }
         
         handler = handlers.get(name)
@@ -708,6 +749,61 @@ class TaskManagementMCPServer:
             "gap_report_path": str(self._gap_report_path),
             "gap_index_path": str(self._gap_index_path),
             "categories": ["todo", "fixme", "stub", "placeholder", "501_route"]
+        }
+
+    async def _handle_submit_coding_task(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a coding fix task from autonomous error triage."""
+        error_message = args["error_message"]
+        error_id = args.get("error_id", f"fix_{uuid4().hex[:8]}")
+        file_path = args.get("file_path", "")
+        suggested_fix = args.get("suggested_fix", "")
+        deploy_target = args.get("deploy_target", "mas")
+        traceback = args.get("traceback", "")
+        source = args.get("source", "unknown")
+
+        title = f"[Auto-Fix] {error_message[:60]}{'...' if len(error_message) > 60 else ''}"
+        description = f"""Autonomous fix request from MYCA error triage.
+
+Error ID: {error_id}
+Source: {source}
+File: {file_path}
+
+Error: {error_message}
+
+Suggested fix: {suggested_fix}
+
+Deploy target after fix: {deploy_target}
+
+Traceback:
+{traceback[:1500] if traceback else 'N/A'}
+"""
+
+        task = Task(
+            id=f"fix_{uuid4().hex[:8]}",
+            title=title,
+            description=description,
+            status="pending",
+            priority="critical",
+            assigned_agent="error-fixer",
+            tags=["autonomous_fix", "error_triage", deploy_target],
+            metadata={
+                "error_id": error_id,
+                "file_path": file_path,
+                "suggested_fix": suggested_fix,
+                "deploy_target": deploy_target,
+                "source": source,
+            },
+        )
+
+        self._tasks[task.id] = task
+        await self._save_tasks()
+
+        return {
+            "success": True,
+            "task_id": task.id,
+            "message": f"Coding fix task created for {file_path or 'unknown file'}",
+            "assigned_agent": "error-fixer",
+            "priority": "critical",
         }
 
 

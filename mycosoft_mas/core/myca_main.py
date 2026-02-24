@@ -62,6 +62,7 @@ from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
 from mycosoft_mas.core.routers.nlq_api import router as nlq_router
 from mycosoft_mas.core.routers.telemetry_pipeline_api import router as telemetry_pipeline_router
 from mycosoft_mas.core.routers.presence_api import router as presence_router
+from mycosoft_mas.core.routers.deploy_api import router as deploy_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -427,6 +428,8 @@ app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 app.include_router(device_registry_router, tags=["device-registry"])
 # Presence API (online users, sessions, staff)
 app.include_router(presence_router, tags=["presence"])
+# Deploy API (autonomous fix pipeline)
+app.include_router(deploy_router)
 # IoT Alert Service API
 app.include_router(alert_router, tags=["iot-alerts"])
 # IoT Analytics API
