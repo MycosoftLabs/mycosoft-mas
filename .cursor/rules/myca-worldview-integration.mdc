@@ -1,0 +1,33 @@
+# MYCA Worldview Cross-System Integration (All Agents)
+
+## When This Rule Applies
+
+**When working on anything that touches** MYCA AI, MAS, Search, Memory, Consciousness, Brain, MINDEX, MycoBrain, Services, Protocols, Apps, NatureOS, NLM, Data, or Training modules—**check integration points** and ensure systems work together.
+
+## Systems and Touch Points
+
+| System | Key Paths | Integration Points |
+|--------|-----------|--------------------|
+| **MAS** | `mycosoft_mas/core/`, routers | All API routes, agent registry, orchestrator |
+| **NLM** | `mycosoft_mas/nlm/`, NLM repo | Translation, NMF, bio-tokens, nlm_api router, NLMSensor |
+| **Consciousness** | `consciousness/world_model.py`, sensors | WorldState, CREP, Earth2, NLM, EarthLIVE, MINDEX, MycoBrain, Presence |
+| **MINDEX** | mindex repo, mindex_router | Unified search, species, compounds, NLM query_knowledge_graph |
+| **Memory** | `memory/`, memory_api | Context injection, storage, recall |
+| **Search** | Website Fluid Search, MINDEX | Unified search API, compound/species widgets |
+| **MycoBrain** | localhost:8003, MycoBrainSensor | device_telemetry, heartbeats |
+| **NatureOS** | Mycorrhizae, NatureOSSensor | ecosystem_status, channels |
+| **EarthLIVE** | `earthlive/`, EarthLIVESensor | Weather, seismic, satellite → WorldState.earthlive_packet |
+| **Protocols** | MDP, MMP, HPL, FCI (Mycorrhizae) | Envelopes, semantic translator |
+| **Training** | `nlm/training`, `nlm/inference` | NLMTrainer, telemetry ingest |
+
+## Mandatory Checks
+
+1. **Before changing a sensor** – Confirm WorldState fields and `update_all`/`_update_*` handlers.
+2. **Before changing NLM** – Confirm nlm_api router, NLM client, NLMSensor, MINDEX query path.
+3. **Before changing APIs** – Update `docs/API_CATALOG_FEB04_2026.md` and `docs/SYSTEM_REGISTRY_FEB04_2026.md`.
+4. **Before changing World Model** – Confirm all sensors, `to_summary()`, and downstream consumers.
+
+## Reference
+
+- **Full audit**: `docs/MYCA_WORLDVIEW_INTEGRATION_AUDIT_FEB17_2026.md`
+- **Plan**: `~/.cursor/plans/myca_worldview_complete_build_939bcf99.plan.md`
