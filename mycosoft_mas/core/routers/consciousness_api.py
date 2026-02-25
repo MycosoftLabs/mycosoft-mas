@@ -78,6 +78,9 @@ class WorldStateResponse(BaseModel):
     natureos: Optional[Dict[str, Any]] = None
     mindex: Optional[Dict[str, Any]] = None
     mycobrain: Optional[Dict[str, Any]] = None
+    nlm: Optional[Dict[str, Any]] = None
+    earthlive: Optional[Dict[str, Any]] = None
+    presence: Optional[Dict[str, Any]] = None
 
 
 class AlertRequest(BaseModel):
@@ -552,7 +555,10 @@ async def get_world_state():
         earth2=state.earth2_data if state else None,
         natureos=state.natureos_data if state else None,
         mindex=state.mindex_data if state else None,
-        mycobrain=state.mycobrain_data if state else None
+        mycobrain=state.mycobrain_data if state else None,
+        nlm=state.nlm_insights if state else None,
+        earthlive=state.earthlive_packet if state else None,
+        presence=state.presence_data if state else None,
     )
 
 
