@@ -61,7 +61,7 @@ mas_ok = run_ssh(
         "cd /home/mycosoft/mycosoft/mas && git fetch origin && git reset --hard origin/main",
         "cd /home/mycosoft/mycosoft/mas && docker build -t mycosoft/mas-agent:latest --no-cache .",
         "docker stop myca-orchestrator-new 2>/dev/null || true; docker rm myca-orchestrator-new 2>/dev/null || true",
-        "docker run -d --name myca-orchestrator-new --restart unless-stopped -p 8001:8000 mycosoft/mas-agent:latest",
+        "docker run -d --name myca-orchestrator-new --restart unless-stopped -p 8001:8000 --env-file /home/mycosoft/mycosoft/mas/.env mycosoft/mas-agent:latest",
     ],
     "MAS Deploy",
 )

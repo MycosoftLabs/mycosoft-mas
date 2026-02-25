@@ -7,11 +7,21 @@ includes the core routers, and provides minimal voice endpoints used by the UI.
 
 from __future__ import annotations
 
+import os
+
+# Load .env from project root so GEMINI/ANTHROPIC/OPENAI API keys are available
+try:
+    from dotenv import load_dotenv
+    _env_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+    if os.path.exists(_env_path):
+        load_dotenv(_env_path)
+except ImportError:
+    pass
+
 from dataclasses import asdict
 from datetime import datetime
 from uuid import uuid4
 from pathlib import Path
-import os
 import subprocess
 import time
 import threading
@@ -142,6 +152,23 @@ try:
 except ImportError:
     a2a_router = None
     A2A_API_AVAILABLE = False
+
+# A2A WebSocket - MYCA_A2A_WS_ENABLED=true to enable
+try:
+    from mycosoft_mas.core.routers.a2a_websocket import router as a2a_ws_router
+    A2A_WS_AVAILABLE = True
+except ImportError:
+    a2a_ws_router = None
+    A2A_WS_AVAILABLE = False
+
+# Agent Event Bus (WebSocket) - MYCA_AGENT_BUS_ENABLED=true to enable
+try:
+    from mycosoft_mas.realtime.agent_bus import get_agent_bus_router
+    agent_bus_router = get_agent_bus_router()
+    AGENT_BUS_AVAILABLE = agent_bus_router is not None
+except ImportError:
+    agent_bus_router = None
+    AGENT_BUS_AVAILABLE = False
 
 # Commerce API (UCP-first)
 try:
@@ -502,6 +529,20 @@ except NameError:
 try:
     if A2A_API_AVAILABLE and a2a_router:
         app.include_router(a2a_router)
+except NameError:
+    pass
+
+# A2A WebSocket - ws://host/a2a/v1/ws (MYCA_A2A_WS_ENABLED=true)
+try:
+    if A2A_WS_AVAILABLE and a2a_ws_router:
+        app.include_router(a2a_ws_router)
+except NameError:
+    pass
+
+# Agent Event Bus WebSocket - ws://host/ws/agent-bus (MYCA_AGENT_BUS_ENABLED=true)
+try:
+    if AGENT_BUS_AVAILABLE and agent_bus_router:
+        app.include_router(agent_bus_router)
 except NameError:
     pass
 
