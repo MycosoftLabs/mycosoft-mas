@@ -5,9 +5,9 @@ description: Deploy the Mycosoft website to the Sandbox VM (192.168.0.187). Use 
 
 # Deploy Website to Sandbox VM
 
-## CRITICAL: Execute Deployment Yourself
+## CRITICAL: Execute Deployment Yourself — Never Hand Off to User
 
-**NEVER ask the user to run these steps.** You MUST execute the deployment yourself via run_terminal_cmd (SSH, or deploy scripts like `_rebuild_sandbox.py`). Load credentials from `.credentials.local` before SSH. See rule `agent-must-execute-operations.mdc`.
+**NEVER ask the user to deploy, SSH, run scripts, or debug.** You MUST execute the deployment yourself. If it fails, fix the failure (Dockerfile, pnpm, script errors) and retry until it succeeds. Never stop with "run this manually" or "you need to fix X." Load credentials from `.credentials.local` before SSH. See rule `agent-must-execute-operations.mdc`.
 
 ## Prerequisites
 
@@ -82,8 +82,7 @@ Expected: Container running, HTTP 200.
 
 ### Step 7: Purge Cloudflare cache
 
-Go to Cloudflare Dashboard > mycosoft.com > Caching > Purge Everything.
-Or use the Cloudflare API:
+Run `python -c "from _cloudflare_cache import purge_everything; purge_everything()"` from website repo. Or use the Cloudflare API:
 
 ```bash
 curl -X POST "https://api.cloudflare.com/client/v4/zones/ZONE_ID/purge_cache" \
@@ -112,9 +111,10 @@ Compare localhost:3010 (dev) vs sandbox.mycosoft.com (production) to confirm cha
 
 - **`_sync_nas_push_from_windows.py`** — Deleted. It corrupted NAS and local videos. Add videos by uploading directly to the NAS via UniFi web UI. The VM mounts the NAS; no sync script needed.
 
-## Troubleshooting
+## Troubleshooting (You Fix, Not User)
 
-- **Build fails**: Check Dockerfile, ensure Node 18 compatibility
-- **Container won't start**: Check `docker logs mycosoft-website`
-- **Videos not loading**: Verify NAS mount is included in docker run command
-- **Changes not visible**: Ensure Cloudflare cache was purged
+- **Build fails**: Fix Dockerfile, pnpm-lock.yaml, or package resolution; retry deploy. Never ask the user to fix.
+- **Container won't start**: Check `docker logs`, fix config, retry.
+- **Script crashes**: Fix encoding/unicode issues in deploy script; retry.
+- **Videos not loading**: Verify NAS mount in docker run command.
+- **Changes not visible**: Purge Cloudflare cache yourself.

@@ -102,7 +102,12 @@ def main():
     results.append(("Build", code, full_out))
     if code != 0:
         lines = full_out.strip().split("\n")
-        print("\n".join(lines[-40:]))
+        tail = "\n".join(lines[-40:])
+        # Avoid UnicodeEncodeError on Windows (cp1252)
+        try:
+            print(tail)
+        except UnicodeEncodeError:
+            print(tail.encode("ascii", errors="replace").decode("ascii"))
         print(f"\nBUILD FAILED exit={code}")
     else:
         print("Build succeeded.")
@@ -158,13 +163,18 @@ def main():
     print("="*60)
     for name, ec, txt in results:
         tail = (txt[:200] + "..." if len(txt) > 200 else txt).replace("\n", " ")
-        print(f"  {name}: exit={ec} | {tail[:80]}")
+        safe = tail[:80].encode("ascii", errors="replace").decode("ascii")
+        print(f"  {name}: exit={ec} | {safe}")
     print(f"\nBuild exit code: {build_code}")
     print(f"Final HTTP status: {http_status}")
     if build_code != 0:
         print("\nLast 40 lines of build output:")
         build_result = next((r[2] for r in results if r[0] == "Build"), "")
-        print("\n".join(build_result.strip().split("\n")[-40:]))
+        tail = "\n".join(build_result.strip().split("\n")[-40:])
+        try:
+            print(tail)
+        except UnicodeEncodeError:
+            print(tail.encode("ascii", errors="replace").decode("ascii"))
     sys.exit(0 if build_code == 0 and http_status == "200" else 1)
 
 if __name__ == "__main__":
