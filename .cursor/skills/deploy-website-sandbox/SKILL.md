@@ -108,6 +108,10 @@ Compare localhost:3010 (dev) vs sandbox.mycosoft.com (production) to confirm cha
 | Port | 3000 |
 | NAS Mount | /opt/mycosoft/media/website/assets:/app/public/assets:ro |
 
+## NEVER Run or Recreate
+
+- **`_sync_nas_push_from_windows.py`** — Deleted. It corrupted NAS and local videos. Add videos by uploading directly to the NAS via UniFi web UI. The VM mounts the NAS; no sync script needed.
+
 ## Troubleshooting
 
 - **Build fails**: Check Dockerfile, ensure Node 18 compatibility

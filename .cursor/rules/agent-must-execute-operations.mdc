@@ -16,11 +16,17 @@ alwaysApply: true
 | Deploy website to Sandbox | Run deploy script or SSH commands | "Run _deploy_sandbox.py" |
 | Deploy MINDEX | Run _deploy_mindex.py (load creds first) | "Set VM_PASSWORD and run..." |
 | Deploy MAS | Run rebuild script or SSH | "SSH to 188 and run..." |
-| Start dev server | Launch externally (Start-Process powershell ... npm run dev:next-only); see run-servers-externally.mdc | Run in Cursor terminal (use external window) |
+| Start dev server | ALWAYS launch externally (Start-Process powershell ... npm run dev:next-only); NEVER in Cursor | NEVER run inside Cursor — uses too much memory |
 | Free port 3010 | Run Stop-Process / taskkill | "Run this in admin PowerShell" |
-| Purge Cloudflare | Execute purge (API or document steps) | "Go to Cloudflare and purge" |
+| Purge Cloudflare | Run purge API (_cloudflare_cache.py or curl) | "Go to Cloudflare and purge" |
+| NAS assets / videos | Upload directly to NAS via UniFi web UI | **NEVER** run `_sync_nas_push_from_windows.py` — it destroys NAS and local videos (0-byte overwrites) |
 | Health checks | Run curl / Invoke-WebRequest | "Check if it's running" |
+| Browser verification | Use cursor-ide-browser MCP to test pages | "Test in your browser" |
 | Kill stale processes | Run dev-machine-cleanup.ps1 | "Run the cleanup script" |
+
+### Scripts That Must NEVER Exist or Run
+
+- **`_sync_nas_push_from_windows.py`** — DELETED. It caused catastrophic data loss (0-byte overwrites of NAS and local videos). Do not recreate it. To add videos: upload directly to the NAS via UniFi web UI; the VM mounts the NAS.
 
 ### Credentials
 
@@ -43,4 +49,4 @@ Then run deploy scripts—they use `$env:VM_PASSWORD` or `$env:VM_SSH_PASSWORD`.
 
 ### Remember
 
-The user will **never** run deployment or debugging scripts in a terminal when you can do it. You are the operator.
+The user will **never** run deployment, NAS sync, Cloudflare purge, or debugging when you can do it. You are the operator. Sub-agents (deploy-pipeline, infrastructure-ops, etc.) exist to do this work—invoke them. If something fails, fix it and retry. Never hand work back to the user.

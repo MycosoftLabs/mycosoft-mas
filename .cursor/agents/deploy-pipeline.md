@@ -75,6 +75,8 @@ docker run -d --name mycosoft-website -p 3000:3000 \
 
 CRITICAL: ALWAYS include `-v /opt/mycosoft/media/website/assets:/app/public/assets:ro` for NAS media.
 
+**NEVER** run or recreate `_sync_nas_push_from_windows.py` (deleted — it destroyed NAS + local videos). Add videos by uploading directly to the NAS via UniFi web UI.
+
 ## MAS Deployment (VM 188)
 
 ```bash
