@@ -1,5 +1,15 @@
 # Master Document Index
 
+## Session Summary – MYCA Worldview Integration (Feb 17, 2026)
+- `docs/SESSION_SUMMARY_MYCA_WORLDVIEW_INTEGRATION_FEB17_2026.md` – **Today's work**: Consciousness API extended with nlm/earthlive/presence; LiveDemo WorldState interface; defensive world endpoint; integration tests; MAS deploy. Verification results and commits.
+- `docs/MYCA_WORLDVIEW_INTEGRATION_AUDIT_FEB17_2026.md` – **Integration audit**: NLM API, EarthLIVE, consciousness wiring; flows for MYCA page, Search, Voice, Chat.
+- `docs/MYCA_WORLDVIEW_INTEGRATION_TEST_FEB17_2026.md` – **Test plan**: Manual steps, test matrix, deployment requirement, automated script.
+- `docs/SANDBOX_REBOOT_AND_MYCA_UNAVAILABLE_INVESTIGATION_FEB17_2026.md` – **Investigation**: Sandbox reboot, MYCA unavailable.
+- `docs/DEPLOYMENT_STATUS_AND_FIXES_FEB24_2026.md` – **Deployment status and fixes** (Feb 24).
+- `docs/SANDBOX_WEBSITE_RESTART_RESULT_FEB24_2026.md` – **Sandbox website restart result** (Feb 24).
+- `docs/VM_RAM_CLEAR_AND_REBOOT_FEB24_2026.md` – **VM RAM clear and reboot** (Feb 24).
+- `docs/CALDIGIT_DOCK_USB_DIAGNOSTIC_FEB24_2026.md` – **CalDigit dock USB diagnostic** (Feb 24).
+
 ## MYCA Autonomous Self-Healing (Feb 17, 2026)
 - `docs/MYCA_AUTONOMOUS_SELF_HEALING_COMPLETE_FEB17_2026.md` – **Autonomous self-healing complete**: ErrorTriageService, consciousness integration, n8n autonomous-fix pipeline, MCP submit_coding_task, Deploy API, error-fixer agent, proactive_error_scanner, workflow_dispatch deploy. MYCA detects/fixes errors, dispatches to Cursor, triggers deploys.
 
