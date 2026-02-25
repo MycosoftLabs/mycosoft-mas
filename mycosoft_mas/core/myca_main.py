@@ -84,6 +84,12 @@ try:
 except ImportError:
     iot_router = None
     IOT_ENVELOPE_AVAILABLE = False
+try:
+    from mycosoft_mas.core.routers.first_light_api import router as first_light_router
+    FIRST_LIGHT_API_AVAILABLE = True
+except ImportError:
+    first_light_router = None
+    FIRST_LIGHT_API_AVAILABLE = False
 from mycosoft_mas.monitoring.health_check import get_health_checker
 try:
     from mycosoft_mas.monitoring.metrics import get_metrics  # type: ignore
@@ -149,7 +155,12 @@ except ImportError:
 try:
     from mycosoft_mas.core.routers.consciousness_api import router as consciousness_router
     CONSCIOUSNESS_API_AVAILABLE = True
-except ImportError:
+except Exception as e:
+    import logging
+    logging.getLogger(__name__).warning(
+        "Consciousness API failed to load (MYCA chat will 404): %s", e, exc_info=True
+    )
+    consciousness_router = None
     CONSCIOUSNESS_API_AVAILABLE = False
 
 # System Status API - unified status for all systems
@@ -184,6 +195,14 @@ try:
     NLM_API_AVAILABLE = True
 except ImportError:
     NLM_API_AVAILABLE = False
+
+# EarthLIVE API - packetized environmental data (weather, seismic, satellite)
+try:
+    from mycosoft_mas.core.routers.earthlive_api import router as earthlive_router
+    EARTHLIVE_API_AVAILABLE = True
+except ImportError:
+    earthlive_router = None
+    EARTHLIVE_API_AVAILABLE = False
 
 # Provenance API - telemetry chain verification
 try:
@@ -421,6 +440,8 @@ app.include_router(memory_integration_router, tags=["memory-integration"])
 app.include_router(nlq_router, tags=["nlq"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
     app.include_router(iot_router, tags=["iot"])
+if FIRST_LIGHT_API_AVAILABLE and first_light_router is not None:
+    app.include_router(first_light_router, tags=["first-light"])
 
 # Telemetry Pipeline API (MycoBrain → MAS → MINDEX)
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
@@ -523,6 +544,13 @@ except NameError:
 try:
     if NLM_API_AVAILABLE:
         app.include_router(nlm_router, tags=["nlm"])
+except NameError:
+    pass
+
+# EarthLIVE API - packetized environmental data
+try:
+    if EARTHLIVE_API_AVAILABLE and earthlive_router:
+        app.include_router(earthlive_router, tags=["earthlive"])
 except NameError:
     pass
 

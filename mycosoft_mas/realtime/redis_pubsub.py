@@ -43,6 +43,10 @@ class Channel(str, Enum):
     WEBSOCKET_BROADCAST = "websocket:broadcast"
     SYSTEM_ALERTS = "system:alerts"
 
+    # Agent Event Bus channels (Feb 9, 2026)
+    AGENTS_TASKS = "agents:tasks"
+    AGENTS_TOOL_CALLS = "agents:tool_calls"
+
 
 @dataclass
 class PubSubMessage:

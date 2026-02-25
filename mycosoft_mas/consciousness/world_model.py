@@ -119,6 +119,10 @@ class WorldState:
     nlm_insights: Dict[str, Any] = field(default_factory=dict)
     nlm_freshness: DataFreshness = DataFreshness.UNAVAILABLE
 
+    # EarthLIVE packetized environmental data (weather, seismic, satellite)
+    earthlive_packet: Dict[str, Any] = field(default_factory=dict)
+    earthlive_freshness: DataFreshness = DataFreshness.UNAVAILABLE
+
     # Presence data (live users, sessions, staff)
     presence_data: Dict[str, Any] = field(default_factory=dict)
     presence_freshness: DataFreshness = DataFreshness.UNAVAILABLE
@@ -172,6 +176,12 @@ class WorldState:
             if insights:
                 parts.append(f"NLM: {insights[0]}" if len(insights) == 1 else f"NLM: {len(insights)} insights")
 
+        if self.earthlive_packet:
+            w = self.earthlive_packet.get("weather", {})
+            s = self.earthlive_packet.get("seismic", {})
+            if w or s:
+                parts.append("EarthLIVE: weather + seismic")
+
         if self.active_devices > 0:
             parts.append(f"{self.active_devices} devices online")
 
@@ -198,6 +208,7 @@ class WorldModel:
     ECOSYSTEM_UPDATE_INTERVAL = 60
     DEVICE_UPDATE_INTERVAL = 10
     NLM_UPDATE_INTERVAL = 60
+    EARTHLIVE_UPDATE_INTERVAL = 120
     PRESENCE_UPDATE_INTERVAL = 5
 
     def __init__(self, consciousness: Optional["MYCAConsciousness"] = None):
@@ -213,7 +224,8 @@ class WorldModel:
         try:
             from mycosoft_mas.consciousness.sensors import (
                 CREPSensor, Earth2Sensor, NatureOSSensor,
-                MINDEXSensor, MycoBrainSensor, NLMSensor, PresenceSensor
+                MINDEXSensor, MycoBrainSensor, NLMSensor,
+                EarthLIVESensor, PresenceSensor
             )
             self._sensors = {
                 "crep": CREPSensor(self),
@@ -222,6 +234,7 @@ class WorldModel:
                 "mindex": MINDEXSensor(self),
                 "mycobrain": MycoBrainSensor(self),
                 "nlm": NLMSensor(self),
+                "earthlive": EarthLIVESensor(self),
                 "presence": PresenceSensor(self),
             }
         except Exception:
@@ -234,6 +247,7 @@ class WorldModel:
         self._mindex_sensor: Optional["MINDEXSensor"] = None
         self._mycobrain_sensor: Optional["MycoBrainSensor"] = None
         self._nlm_sensor: Optional["NLMSensor"] = None
+        self._earthlive_sensor: Optional["EarthLIVESensor"] = None
         self._presence_sensor: Optional["PresenceSensor"] = None
 
         # Timestamps for throttling
@@ -242,6 +256,7 @@ class WorldModel:
         self._last_ecosystem_update: Optional[datetime] = None
         self._last_device_update: Optional[datetime] = None
         self._last_nlm_update: Optional[datetime] = None
+        self._last_earthlive_update: Optional[datetime] = None
         self._last_presence_update: Optional[datetime] = None
 
         self._lock = asyncio.Lock()
@@ -251,7 +266,8 @@ class WorldModel:
         try:
             from mycosoft_mas.consciousness.sensors import (
                 CREPSensor, Earth2Sensor, NatureOSSensor,
-                MINDEXSensor, MycoBrainSensor, NLMSensor, PresenceSensor
+                MINDEXSensor, MycoBrainSensor, NLMSensor,
+                EarthLIVESensor, PresenceSensor
             )
 
             self._crep_sensor = CREPSensor(self)
@@ -260,6 +276,7 @@ class WorldModel:
             self._mindex_sensor = MINDEXSensor(self)
             self._mycobrain_sensor = MycoBrainSensor(self)
             self._nlm_sensor = NLMSensor(self)
+            self._earthlive_sensor = EarthLIVESensor(self)
             self._presence_sensor = PresenceSensor(self)
             
             logger.info("World sensors initialized")
@@ -297,6 +314,9 @@ class WorldModel:
                 self._current_state.device_telemetry = data
             elif name == "nlm":
                 self._current_state.nlm_insights = data
+            elif name == "earthlive":
+                self._current_state.earthlive_packet = data
+                self._current_state.earthlive_freshness = DataFreshness.LIVE if data else DataFreshness.UNAVAILABLE
             elif name == "presence":
                 if isinstance(data, dict):
                     self._current_state.presence_data = data
@@ -346,6 +366,11 @@ class WorldModel:
             if self._should_update(self._last_nlm_update, self.NLM_UPDATE_INTERVAL):
                 await self._update_nlm()
                 self._last_nlm_update = now
+
+            # Update EarthLIVE
+            if self._should_update(self._last_earthlive_update, self.EARTHLIVE_UPDATE_INTERVAL):
+                await self._update_earthlive()
+                self._last_earthlive_update = now
 
             # Update presence
             if self._should_update(self._last_presence_update, self.PRESENCE_UPDATE_INTERVAL):
@@ -428,6 +453,18 @@ class WorldModel:
             except Exception as e:
                 logger.warning(f"NLM update error: {e}")
                 self._current_state.nlm_freshness = DataFreshness.UNAVAILABLE
+
+    async def _update_earthlive(self) -> None:
+        """Update EarthLIVE packetized environmental data."""
+        if self._earthlive_sensor:
+            try:
+                reading = await self._earthlive_sensor.read()
+                if reading:
+                    self._current_state.earthlive_packet = reading.data
+                    self._current_state.earthlive_freshness = reading.freshness
+            except Exception as e:
+                logger.warning(f"EarthLIVE update error: {e}")
+                self._current_state.earthlive_freshness = DataFreshness.UNAVAILABLE
 
     async def _update_presence(self) -> None:
         """Update presence data (online users, sessions, staff)."""

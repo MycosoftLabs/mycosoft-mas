@@ -616,3 +616,18 @@ class NLMTrainer:
         
         with open(runs_file, "w") as f:
             json.dump(runs, f, indent=2)
+
+    def load_sporebase_supervised_labels(self) -> Dict[str, Dict[str, object]]:
+        """Load optional SporeBase supervised labels for Phase 2.4."""
+        from mycosoft_mas.nlm.sporebase_labels import SporebaseLabelStore
+
+        store = SporebaseLabelStore()
+        return store.as_supervised_map()
+
+    def run_self_supervised_epoch(self, vectors: List[List[float]]) -> Dict[str, float]:
+        """Run Phase 2.2 self-supervised objectives over embedding vectors."""
+        from mycosoft_mas.nlm.self_supervised import SelfSupervisedTasks
+
+        tasks = SelfSupervisedTasks()
+        result = tasks.run_batch(vectors)
+        return tasks.to_dict(result)

@@ -44,6 +44,7 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/MYCA_WORLDVIEW_INTEGRATION_AUDIT_FEB17_2026.md` | **MYCA Worldview audit**: Plan completion, cross-system integration map, gaps, checklist for sub-agents |
 | `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md` | **All 34 subagents, 29 rules, 19 skills** — single source of truth; commands and script verification; gaps fixed |
 | `docs/STATUS_AND_NEXT_STEPS_FEB09_2026.md` | VM checklist, MYCA coding, SSH |
 | `docs/SYSTEM_EXECUTION_REPORT_FEB09_2026.md` | Cloudflare, GitHub, VM health, SSH |

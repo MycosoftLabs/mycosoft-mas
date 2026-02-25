@@ -17,6 +17,7 @@ Created: February 10, 2026
 import asyncio
 import logging
 import httpx
+import os
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, AsyncGenerator, Callable, Dict, List, Optional
 from dataclasses import dataclass, field
@@ -82,6 +83,8 @@ class VoiceInterface:
     PERSONAPLEX_API = "http://localhost:8998"  # Local GPU service
     PERSONAPLEX_BRIDGE = "http://localhost:8999"  # Bridge service
     MAS_VOICE_API = "http://192.168.0.188:8001/api/voice"  # MAS voice endpoints
+    JETSON_STT_API = os.getenv("JETSON_STT_API", "http://192.168.0.100:8080/audio/transcribe")
+    ELEVENLABS_TTS_API = os.getenv("ELEVENLABS_TTS_API", "http://localhost:8018/v1/audio/speech")
     
     def __init__(self, consciousness: "MYCAConsciousness"):
         self._consciousness = consciousness
@@ -300,6 +303,7 @@ class VoiceInterface:
     
     async def _transcribe(self, audio_data: bytes) -> Optional[str]:
         """Transcribe audio to text using Whisper or PersonaPlex."""
+        # Primary: PersonaPlex bridge.
         try:
             if self._http_client and self._personaplex_available:
                 # Use PersonaPlex's built-in Whisper
@@ -313,6 +317,18 @@ class VoiceInterface:
                     return result.get("text")
         except Exception as e:
             logger.warning(f"Transcription failed: {e}")
+        # Fallback: Jetson Whisper endpoint.
+        try:
+            if self._http_client:
+                files = {"audio": ("voice.wav", audio_data, "audio/wav")}
+                response = await self._http_client.post(self.JETSON_STT_API, files=files)
+                if response.status_code == 200:
+                    result = response.json()
+                    text = result.get("text")
+                    if text:
+                        return text
+        except Exception as e:
+            logger.warning(f"Jetson STT fallback failed: {e}")
         return None
     
     async def speak(self, text: str, interrupt: bool = False) -> None:
@@ -345,15 +361,37 @@ class VoiceInterface:
                     )
             except Exception as e:
                 logger.warning(f"PersonaPlex speak failed: {e}")
+                await self._speak_with_elevenlabs(text)
         else:
-            # Log that we would speak
-            logger.info(f"MYCA would say: {text[:100]}...")
+            await self._speak_with_elevenlabs(text)
         
         # After speaking, return to listening
         if self.current_session:
             self._state = VoiceState.LISTENING
         else:
             self._state = VoiceState.IDLE
+
+    async def _speak_with_elevenlabs(self, text: str) -> None:
+        """Fallback TTS through ElevenLabs proxy service."""
+        try:
+            if not self._http_client:
+                return
+            response = await self._http_client.post(
+                self.ELEVENLABS_TTS_API,
+                json={
+                    "model": "tts-1-hd",
+                    "voice": "myca",
+                    "input": text,
+                    "response_format": "mp3",
+                },
+            )
+            if response.status_code == 200:
+                logger.info("ElevenLabs fallback TTS generated %d bytes", len(response.content))
+                return
+            logger.warning("ElevenLabs fallback failed with status %s", response.status_code)
+        except Exception as exc:
+            logger.warning("ElevenLabs fallback error: %s", exc)
+            logger.info("MYCA would say: %s...", text[:100])
     
     async def speak_stream(
         self,

@@ -67,12 +67,15 @@ mas_ok = run_ssh(
 )
 
 # --- MINDEX VM 189 ---
+# Build api image; VM may have existing db/redis (name conflict). Start api only:
+# docker run on mindex_mindex-network with MINDEX_DB_HOST=mindex-postgres.
 mindex_ok = run_ssh(
     "192.168.0.189",
     "mycosoft",
     [
         "cd /home/mycosoft/mindex && git fetch origin && git reset --hard origin/main",
-        "cd /home/mycosoft/mindex && docker compose stop mindex-api; docker compose build --no-cache mindex-api; docker compose up -d mindex-api",
+        "cd /home/mycosoft/mindex && docker-compose build --no-cache api",
+        "docker rm -f mindex-api 2>/dev/null; docker run -d --name mindex-api --restart unless-stopped -p 8000:8000 --network mindex_mindex-network -e MINDEX_DB_HOST=mindex-postgres -e MINDEX_DB_PORT=5432 -e MINDEX_DB_USER=mindex -e MINDEX_DB_PASSWORD=mindex -e MINDEX_DB_NAME=mindex mindex_api:latest",
     ],
     "MINDEX Deploy",
 )

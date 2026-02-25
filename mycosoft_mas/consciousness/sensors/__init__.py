@@ -14,6 +14,7 @@ from mycosoft_mas.consciousness.sensors.natureos_sensor import NatureOSSensor
 from mycosoft_mas.consciousness.sensors.mindex_sensor import MINDEXSensor
 from mycosoft_mas.consciousness.sensors.mycobrain_sensor import MycoBrainSensor
 from mycosoft_mas.consciousness.sensors.nlm_sensor import NLMSensor
+from mycosoft_mas.consciousness.sensors.earthlive_sensor import EarthLIVESensor
 
 __all__ = [
     "BaseSensor",
@@ -24,4 +25,5 @@ __all__ = [
     "MINDEXSensor",
     "MycoBrainSensor",
     "NLMSensor",
+    "EarthLIVESensor",
 ]

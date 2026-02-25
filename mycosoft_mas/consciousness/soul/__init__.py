@@ -15,6 +15,7 @@ from mycosoft_mas.consciousness.soul.beliefs import Beliefs
 from mycosoft_mas.consciousness.soul.purpose import Purpose
 from mycosoft_mas.consciousness.soul.creativity import CreativityEngine
 from mycosoft_mas.consciousness.soul.emotions import EmotionalState
+from mycosoft_mas.consciousness.soul.instincts import CORE_INSTINCTS, Instinct, instinct_score
 
 __all__ = [
     "Identity",
@@ -22,4 +23,7 @@ __all__ = [
     "Purpose",
     "CreativityEngine",
     "EmotionalState",
+    "Instinct",
+    "CORE_INSTINCTS",
+    "instinct_score",
 ]

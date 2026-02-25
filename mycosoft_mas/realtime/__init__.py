@@ -5,6 +5,7 @@ WebSocket pub/sub and Redis pub/sub for real-time updates.
 """
 
 from .pubsub import WebSocketHub, ChannelManager, ChannelMessage, get_hub
+from .event_schema import AgentEvent
 from .redis_pubsub import (
     RedisPubSubClient,
     PubSubMessage,
@@ -17,6 +18,8 @@ from .redis_pubsub import (
 )
 
 __all__ = [
+    # Event schema
+    "AgentEvent",
     # WebSocket pub/sub
     "WebSocketHub",
     "ChannelManager",

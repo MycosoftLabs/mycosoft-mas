@@ -131,6 +131,16 @@ class StatusResponse(BaseModel):
     uptime_seconds: float = Field(..., ge=0, description="Uptime in seconds")
 
 
+class NatureEmbeddingRequest(BaseModel):
+    packet: Dict[str, Any] = Field(..., description="NaturePacket-like payload")
+
+
+class NatureEmbeddingResponse(BaseModel):
+    vector: List[float]
+    anomaly_score: float
+    vector_size: int
+
+
 # ============================================================================
 # Endpoints
 # ============================================================================
@@ -232,6 +242,26 @@ async def predict(request: PredictRequest) -> PredictResponse:
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+
+@router.post("/embeddings/nature", response_model=NatureEmbeddingResponse)
+async def generate_nature_embedding(request: NatureEmbeddingRequest) -> NatureEmbeddingResponse:
+    """
+    Phase 2.3 Nature embedding endpoint with anomaly scoring.
+    """
+    try:
+        from mycosoft_mas.nlm.embodiment_encoders import NatureEmbeddingEncoder
+
+        encoder = NatureEmbeddingEncoder()
+        result = encoder.encode(request.packet)
+        return NatureEmbeddingResponse(
+            vector=result.vector,
+            anomaly_score=result.anomaly_score,
+            vector_size=len(result.vector),
+        )
+    except Exception as e:
+        logger.error(f"Nature embedding failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/model/info", response_model=ModelInfoResponse)
@@ -375,21 +405,312 @@ async def list_categories() -> Dict[str, Any]:
 async def get_training_status() -> Dict[str, Any]:
     """
     Get current training status (if training is active).
-    
+
     Returns information about any active training runs,
     including progress and metrics.
     """
     try:
         from mycosoft_mas.nlm.training import NLMTrainer
-        
+
         trainer = NLMTrainer()
-        
+
         return {
             "is_training": trainer.is_training,
             "current_run_id": trainer._current_run_id,
             "metrics": trainer.metrics.to_dict() if trainer.is_training else None,
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get training status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# NLM Full Endpoints - Translate, NMF, Tokens, Predict/Fruiting, Query/Knowledge
+# Extended: February 17, 2026
+# =============================================================================
+
+
+class TranslateRequest(BaseModel):
+    """Request for translation layer (raw -> NMF)."""
+    raw: Dict[str, Any] = Field(..., description="Raw sensor/environmental data")
+    envelopes: Optional[List[Dict[str, Any]]] = Field(default=None, description="Optional telemetry envelopes")
+    source_id: str = Field(default="", description="Source identifier")
+    context: Optional[Dict[str, Any]] = Field(default=None, description="Optional context")
+
+
+class NMFCreateRequest(BaseModel):
+    """Request for creating a Nature Message Frame."""
+    raw: Dict[str, Any] = Field(..., description="Raw sensor/environmental data")
+    envelopes: Optional[List[Dict[str, Any]]] = Field(default=None, description="Optional telemetry envelopes")
+    source_id: str = Field(default="", description="Source identifier")
+    context: Optional[Dict[str, Any]] = Field(default=None, description="Optional context")
+
+
+class FruitingPredictRequest(BaseModel):
+    """Request for fruiting prediction."""
+    entity_id: str = Field(default="generic", description="Species or entity identifier")
+    time_horizon: str = Field(default="30d", description="Prediction horizon (e.g. 7d, 30d)")
+    conditions: Optional[Dict[str, Any]] = Field(default=None, description="Environmental conditions")
+    location: Optional[Dict[str, float]] = Field(default=None, description="Lat/lon/alt")
+
+
+class KnowledgeQueryRequest(BaseModel):
+    """Request for knowledge graph query."""
+    query: str = Field(..., min_length=1, description="Query string")
+    limit: int = Field(default=10, ge=1, le=100, description="Max results")
+    context: Optional[Dict[str, Any]] = Field(default=None, description="Optional context")
+
+
+class EnvironmentalProcessRequest(BaseModel):
+    """Request for environmental data processing."""
+    temperature: float = Field(..., description="Temperature in Celsius")
+    humidity: float = Field(..., description="Humidity percentage")
+    co2: Optional[float] = Field(default=None, description="CO2 ppm")
+    pressure: Optional[float] = Field(default=None, description="Pressure hPa")
+    timestamp: Optional[str] = Field(default=None, description="ISO timestamp")
+    location: Optional[Dict[str, float]] = Field(default=None, description="Lat/lon/alt")
+
+
+def _parse_envelopes(envelopes: Optional[List[Dict[str, Any]]]) -> Optional[List[Any]]:
+    """Convert envelope dicts to TelemetryEnvelope objects when available."""
+    if not envelopes:
+        return None
+    try:
+        from mycosoft_mas.nlm.telemetry_envelopes import TelemetryEnvelope
+
+        return [TelemetryEnvelope.from_dict(e) if isinstance(e, dict) else e for e in envelopes]
+    except ImportError:
+        return envelopes  # Pass through as dicts if module unavailable
+
+
+@router.post("/translate")
+async def api_translate(req: TranslateRequest) -> Dict[str, Any]:
+    """
+    Translate raw environmental data through the NLM translation layer.
+
+    Raw -> Normalized -> Bio-Tokens -> Nature Message Frame (NMF).
+    Uses mycosoft_mas.nlm.translation_layer.
+    """
+    try:
+        from mycosoft_mas.nlm.translation_layer import translate as translate_layer
+
+        parsed = _parse_envelopes(req.envelopes)
+        nmf = translate_layer(
+            raw=req.raw,
+            envelopes=parsed,
+            source_id=req.source_id,
+            context=req.context,
+        )
+        return nmf.to_dict()
+    except Exception as e:
+        logger.error(f"Translation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/nmf/create")
+async def api_nmf_create(req: NMFCreateRequest) -> Dict[str, Any]:
+    """
+    Create a Nature Message Frame from raw data.
+    """
+    try:
+        from mycosoft_mas.nlm.translation_layer import build_nmf
+
+        parsed = _parse_envelopes(req.envelopes)
+        nmf = build_nmf(
+            raw=req.raw,
+            envelopes=parsed,
+            source_id=req.source_id,
+            context=req.context,
+        )
+        return nmf.to_dict()
+    except Exception as e:
+        logger.error(f"NMF creation failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/tokens/vocabulary")
+async def api_tokens_vocabulary() -> Dict[str, Any]:
+    """
+    Get the Bio-Token vocabulary (micro-speak codes and semantic labels).
+    """
+    try:
+        from mycosoft_mas.nlm.bio_tokens import (
+            BIO_TOKEN_VOCABULARY,
+            all_semantics,
+            all_tokens,
+        )
+
+        return {
+            "vocabulary": BIO_TOKEN_VOCABULARY,
+            "token_codes": all_tokens(),
+            "semantic_labels": list(all_semantics()),
+            "count": len(BIO_TOKEN_VOCABULARY),
+        }
+    except Exception as e:
+        logger.error(f"Failed to get vocabulary: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/predict/fruiting")
+async def api_predict_fruiting(req: FruitingPredictRequest) -> Dict[str, Any]:
+    """
+    Generate fruiting probability prediction.
+
+    Proxies to NLM API when available, or uses MAS NLM client.
+    """
+    try:
+        import os
+        import httpx
+
+        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        if nlm_url:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    f"{nlm_url.rstrip('/')}/api/predict/fruiting",
+                    json={
+                        "entity_id": req.entity_id,
+                        "time_horizon": req.time_horizon,
+                        "conditions": req.conditions,
+                        "location": req.location,
+                    },
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+    except Exception as e:
+        logger.debug(f"NLM API fruiting predict proxy failed: {e}")
+
+    try:
+        from nlm.client import NLMClient
+
+        client = NLMClient()
+        conditions = req.conditions or {}
+        if req.location:
+            conditions["location"] = req.location
+        return await client.predict(
+            entity_type="fruiting_conditions",
+            entity_id=req.entity_id,
+            time_horizon=req.time_horizon,
+            conditions=conditions,
+        )
+    except ImportError:
+        return {
+            "entity_type": "fruiting_conditions",
+            "entity_id": req.entity_id,
+            "time_horizon": req.time_horizon,
+            "prediction": {"fallback": True, "message": "NLM client not available"},
+            "confidence": 0.3,
+        }
+    except Exception as e:
+        logger.error(f"Fruiting predict failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/query/knowledge")
+async def api_query_knowledge(req: KnowledgeQueryRequest) -> Dict[str, Any]:
+    """
+    Query the knowledge graph via MINDEX.
+    """
+    try:
+        import os
+        import httpx
+
+        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        if nlm_url:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    f"{nlm_url.rstrip('/')}/api/query/knowledge",
+                    json={
+                        "query": req.query,
+                        "limit": req.limit,
+                        "context": req.context,
+                    },
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+    except Exception as e:
+        logger.debug(f"NLM API knowledge query proxy failed: {e}")
+
+    try:
+        from nlm.client import NLMClient
+
+        client = NLMClient()
+        return await client.query_knowledge_graph(
+            query=req.query,
+            context=req.context,
+            limit=req.limit,
+        )
+    except ImportError:
+        return {
+            "query": req.query,
+            "results": [],
+            "entities": [],
+            "relations": [],
+            "message": "NLM client not available",
+        }
+    except Exception as e:
+        logger.error(f"Knowledge query failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/environmental/process")
+async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[str, Any]:
+    """
+    Process environmental data through NLM.
+
+    Returns insights and predictions based on temperature, humidity, etc.
+    """
+    try:
+        import os
+        import httpx
+        from datetime import datetime
+
+        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        if nlm_url:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    f"{nlm_url.rstrip('/')}/api/environmental/process",
+                    json={
+                        "temperature": req.temperature,
+                        "humidity": req.humidity,
+                        "co2": req.co2,
+                        "pressure": req.pressure,
+                        "timestamp": req.timestamp,
+                        "location": req.location,
+                    },
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+    except Exception as e:
+        logger.debug(f"NLM API environmental process proxy failed: {e}")
+
+    try:
+        from nlm.client import NLMClient
+
+        client = NLMClient()
+        ts = None
+        if req.timestamp:
+            try:
+                ts = datetime.fromisoformat(req.timestamp.replace("Z", "+00:00"))
+            except Exception:
+                pass
+        return await client.process_environmental_data(
+            temperature=req.temperature,
+            humidity=req.humidity,
+            co2=req.co2,
+            pressure=req.pressure,
+            location=req.location,
+            timestamp=ts,
+        )
+    except ImportError:
+        return {
+            "status": "fallback",
+            "temperature": req.temperature,
+            "humidity": req.humidity,
+            "insights": ["NLM client not available; returning basic acknowledgment"],
+            "predictions": [],
+            "confidence": 0.3,
+        }
+    except Exception as e:
+        logger.error(f"Environmental process failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
