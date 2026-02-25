@@ -547,18 +547,32 @@ async def get_world_state():
         raise HTTPException(status_code=503, detail="World model not available")
     
     state = world_model.get_current_state()
-    
+
+    def _get(obj: Any, attr: str, default: Any = None) -> Any:
+        if not obj:
+            return default
+        try:
+            return getattr(obj, attr, default)
+        except Exception:
+            return default
+
+    try:
+        summary = state.to_summary() if state else "No world state available"
+    except Exception as e:
+        logger.warning("WorldState.to_summary failed: %s", e)
+        summary = "World state available (summary generation failed)"
+
     return WorldStateResponse(
         timestamp=state.timestamp.isoformat() if state else datetime.now(timezone.utc).isoformat(),
-        summary=state.to_summary() if state else "No world state available",
-        crep=state.crep_data if state else None,
-        earth2=state.earth2_data if state else None,
-        natureos=state.natureos_data if state else None,
-        mindex=state.mindex_data if state else None,
-        mycobrain=state.mycobrain_data if state else None,
-        nlm=state.nlm_insights if state else None,
-        earthlive=state.earthlive_packet if state else None,
-        presence=state.presence_data if state else None,
+        summary=summary,
+        crep=_get(state, "crep_data"),
+        earth2=_get(state, "earth2_data"),
+        natureos=_get(state, "natureos_data"),
+        mindex=_get(state, "mindex_data"),
+        mycobrain=_get(state, "mycobrain_data"),
+        nlm=_get(state, "nlm_insights"),
+        earthlive=_get(state, "earthlive_packet"),
+        presence=_get(state, "presence_data"),
     )
 
 
