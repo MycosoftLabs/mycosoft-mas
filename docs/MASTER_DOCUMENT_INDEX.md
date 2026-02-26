@@ -3,6 +3,7 @@
 ## Agent Event Bus (Feb 9, 2026)
 - `docs/WEBSOCKET_AGENT_BUS_FEB09_2026.md` – **WebSocket Agent Bus**: Architecture, endpoints, event schema, BaseAgent mixin, MCP progress, feature flags.
 - `docs/AGENT_BUS_MIGRATION_GUIDE_FEB09_2026.md` – **Migration guide**: Enabling flags, migrating from HTTP polling, rollback, rollout strategy.
+- `docs/WEBSOCKET_AGENT_BUS_VERIFICATION_REPORT_FEB17_2026.md` – **Verification report**: MAS health, ws-handshake, browser pages, integration test, Cloudflare wss; enable MYCA_AGENT_BUS_ENABLED for agent-bus.
 
 ## Session Summary – MYCA Worldview Integration (Feb 17, 2026)
 - `docs/SESSION_SUMMARY_MYCA_WORLDVIEW_INTEGRATION_FEB17_2026.md` – **Today's work**: Consciousness API extended with nlm/earthlive/presence; LiveDemo WorldState interface; defensive world endpoint; integration tests; MAS deploy. Verification results and commits.
@@ -68,6 +69,13 @@
 - `docs/MYCA_THUMB_PHASE0_PHASE1_COMPLETE_FEB17_2026.md` – **Thumb Phase 0–1 complete**: Telemetry pipeline (MycoBrain→MINDEX), telemetry query (consciousness API), drift detector, continuous learner, temporal pattern store. Verification and remaining phases.
 - `docs/MYCA_THUMB_PHASE2_PHASE5_COMPLETE_FEB17_2026.md` – **Thumb Phase 2–5 complete**: Ensemble controller + finger registry + truth arbitrator, A2A outbound federation adapters, telemetry integrity/provenance API, governance module/API, constitution extension for all-organisms stakeholders.
 - `docs/MYCA_THUMB_ALL_PHASES_DOCUMENT_SUMMARY_FEB23_2026.md` – **All-phases summary index**: consolidated list of all Thumb phase completion docs (Phase 0 through Phase 5).
+
+## Grounded Cognition V0 (Feb 17, 2026)
+- `docs/GROUNDED_COGNITION_V0_FEB17_2026.md` – **Grounded Cognition Phase 1 complete**: Experience Packets, GroundingGate, ThoughtObjects with evidence, pre-LLM enforcement, spatial/temporal stubs. Enable with `MYCA_GROUNDED_COGNITION=1`.
+- `docs/MYCA_GROUNDED_COGNITION_INTEGRATION_COMPLETE_FEB17_2026.md` – **Integration complete**: Error sanitization, grounding API, error triage API, GroundingStatusBadge, LiveActivityPanel, MYCAContext grounding state, website proxy routes, integration tests. Manual: MYCA_GROUNDED_COGNITION=1 on MAS VM, LLM API keys.
+
+## MAS Consciousness and Orchestrator Routing (Feb 17, 2026)
+- `docs/MAS_LLM_KEYS_AND_ORCHESTRATOR_ROUTING_FEB17_2026.md` – **Why orchestrator/consciousness/agents aren't used**: MAS container needs GEMINI/ANTHROPIC/OPENAI keys; fast path vs complex triggers; data-aware fallback (MINDEX injection when consciousness fails). How to enable full consciousness.
 
 ## MYCA Ecosystem Unification (Feb 17, 2026)
 - `docs/MYCA_ECOSYSTEM_UNIFICATION_FEB17_2026.md` – **Unification complete**: A2A/WebMCP/UCP, Exa, Metabase LLM, consciousness search, NLQ parse/execute, intention persistence (Redis), NatureOS MYCA routing, protocol rules. Verification checklist and data flow.

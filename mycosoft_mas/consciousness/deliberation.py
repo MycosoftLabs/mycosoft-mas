@@ -16,10 +16,13 @@ Created: February 10, 2026
 
 import asyncio
 import logging
+import os
 from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Union
 from dataclasses import dataclass, field
+
+from mycosoft_mas.llm.error_sanitizer import sanitize_for_log
 
 if TYPE_CHECKING:
     from mycosoft_mas.consciousness.core import MYCAConsciousness
@@ -28,6 +31,8 @@ if TYPE_CHECKING:
     from mycosoft_mas.consciousness.cancellation import CancellationToken
 
 logger = logging.getLogger(__name__)
+
+GROUNDED_COGNITION_ENABLED = os.getenv("MYCA_GROUNDED_COGNITION", "0") == "1"
 
 
 class ThoughtType(Enum):
@@ -171,8 +176,8 @@ class DeliberateReasoning:
         except Exception as e:
             import traceback as tb
 
-            logger.error(f"Deliberation error: {e}")
-            self._current_thought.add_step("error", {"error": str(e)})
+            logger.error(f"Deliberation error: {sanitize_for_log(e)}")
+            self._current_thought.add_step("error", {"error": sanitize_for_log(e)})
             # Report to autonomous fix pipeline (chat-facing errors are high priority)
             await self._consciousness._report_error(
                 str(e),
@@ -199,12 +204,33 @@ class DeliberateReasoning:
         soul_context: Optional[Dict[str, Any]] = None,
         source: str = "text",
         token: Optional["CancellationToken"] = None,
+        experience_packet: Optional[Any] = None,
     ) -> AsyncGenerator[str, None]:
         """
         Progressive context injection:
         - fast response first
         - optional one additive refinement after richer context
         """
+        # Pre-deliberation gate: no LLM without grounding (when enabled)
+        if GROUNDED_COGNITION_ENABLED:
+            ep = experience_packet
+            if not ep or not ep.self_state or not ep.world_state:
+                yield "[Cannot generate response: missing grounding context]"
+                return
+            workspace = getattr(self._consciousness, "_working_memory", None)
+            if not workspace:
+                yield "[Cannot generate response: missing workspace]"
+                return
+            if not workspace.has_thought_objects():
+                from mycosoft_mas.schemas.thought_object import ThoughtObject, ThoughtObjectType
+                root_thought = ThoughtObject(
+                    claim=f"User asked: {input_content[:100]}",
+                    type=ThoughtObjectType.QUESTION,
+                    evidence_links=[{"ep_id": ep.id}],
+                    confidence=1.0,
+                )
+                workspace.add_thought(root_thought)
+
         # Fast response with minimal context
         fast_context = self._build_prompt_context(
             input_content=input_content,
@@ -236,6 +262,20 @@ class DeliberateReasoning:
         if additive:
             yield "\n\nOne more thing: "
             yield additive
+            fast_response = fast_response + "\n\nOne more thing: " + additive
+
+        # Grounded cognition: add result ThoughtObject with evidence
+        if GROUNDED_COGNITION_ENABLED and experience_packet:
+            workspace = getattr(self._consciousness, "_working_memory", None)
+            if workspace:
+                from mycosoft_mas.schemas.thought_object import ThoughtObject, ThoughtObjectType
+                result_thought = ThoughtObject(
+                    claim=fast_response[:5000],
+                    type=ThoughtObjectType.ANSWER,
+                    evidence_links=[{"ep_id": experience_packet.id}],
+                    confidence=0.85,
+                )
+                workspace.add_thought(result_thought)
     
     def _determine_thought_type(self, content: str, focus: "AttentionFocus") -> ThoughtType:
         """Determine what type of thinking this requires."""
@@ -502,7 +542,7 @@ Respond thoughtfully and helpfully, staying true to your identity and purpose.""
             logger.warning(f"Could not import FrontierLLMRouter: {e}")
             yield self._generate_fallback_response(input_content)
         except Exception as e:
-            logger.error(f"LLM generation error: {e}")
+            logger.error(f"LLM generation error: {sanitize_for_log(e)}")
             yield self._generate_fallback_response(input_content)
     
     def _generate_fallback_response(self, input_content: str) -> str:

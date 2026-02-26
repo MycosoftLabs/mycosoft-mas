@@ -20,6 +20,7 @@ from fastapi.responses import StreamingResponse
 from sse_starlette.sse import EventSourceResponse
 
 from mycosoft_mas.consciousness import get_consciousness, MYCAConsciousness
+from mycosoft_mas.llm.error_sanitizer import sanitize_for_user, sanitize_for_log
 
 logger = logging.getLogger(__name__)
 
@@ -212,8 +213,8 @@ async def chat(request: ChatRequest):
                 "Please check my LLM API connections."
             ]
     except Exception as e:
-        logger.error(f"Chat error: {e}")
-        response_parts = [f"I am MYCA. An error occurred during processing: {str(e)[:100]}"]
+        logger.error(f"Chat error: {sanitize_for_log(e)}")
+        response_parts = [f"I am MYCA. {sanitize_for_user(e)}"]
     
     full_response = "".join(response_parts)
     
@@ -262,10 +263,10 @@ async def chat_stream(request: ChatRequest):
                 }
             }
         except Exception as e:
-            logger.error(f"Stream error: {e}")
+            logger.error(f"Stream error: {sanitize_for_log(e)}")
             yield {
                 "event": "error",
-                "data": str(e)
+                "data": sanitize_for_user(e)
             }
     
     return EventSourceResponse(generate())
@@ -318,7 +319,7 @@ async def chat_websocket(websocket: WebSocket):
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
+        logger.error(f"WebSocket error: {sanitize_for_log(e)}")
         await websocket.close()
 
 
@@ -389,7 +390,8 @@ async def voice_stream(request: VoiceRequest):
                 "data": {"timestamp": datetime.now(timezone.utc).isoformat()}
             }
         except Exception as e:
-            yield {"event": "error", "data": str(e)}
+            logger.error(f"Voice stream error: {sanitize_for_log(e)}")
+            yield {"event": "error", "data": sanitize_for_user(e)}
     
     return EventSourceResponse(generate())
 
@@ -717,8 +719,8 @@ async def route_message(request: RouteRequest):
             response_parts.append(chunk)
             
     except Exception as e:
-        logger.error(f"Routing error: {e}")
-        response_parts = [f"I encountered a routing error: {str(e)[:100]}"]
+        logger.error(f"Routing error: {sanitize_for_log(e)}")
+        response_parts = [f"I encountered a routing error. {sanitize_for_user(e)}"]
     
     full_response = "".join(response_parts)
     
@@ -762,8 +764,8 @@ async def route_message_stream(request: RouteRequest):
                 "data": {"timestamp": datetime.now(timezone.utc).isoformat()}
             }
         except Exception as e:
-            logger.error(f"Stream routing error: {e}")
-            yield {"event": "error", "data": str(e)}
+            logger.error(f"Stream routing error: {sanitize_for_log(e)}")
+            yield {"event": "error", "data": sanitize_for_user(e)}
     
     return EventSourceResponse(generate())
 

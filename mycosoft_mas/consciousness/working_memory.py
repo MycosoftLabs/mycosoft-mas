@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from collections import OrderedDict
 
 if TYPE_CHECKING:
+    from mycosoft_mas.schemas.thought_object import ThoughtObject
     from mycosoft_mas.consciousness.core import MYCAConsciousness
     from mycosoft_mas.consciousness.attention import AttentionFocus
 
@@ -142,6 +143,8 @@ class WorkingMemory:
         self._active_goals: List[str] = []
         self._lock = asyncio.Lock()
         self._decay_task: Optional[asyncio.Task] = None
+        # Grounded cognition: ThoughtObjects with evidence links
+        self._thought_objects: List["ThoughtObject"] = []
 
     @property
     def capacity(self) -> int:
@@ -366,3 +369,20 @@ class WorkingMemory:
             "active_goals": len(self._active_goals),
             "types": {},
         }
+
+    # Grounded cognition: ThoughtObject tracking
+    def add_thought(self, thought: "ThoughtObject") -> None:
+        """Add a ThoughtObject to the workspace."""
+        self._thought_objects.append(thought)
+
+    def get_thoughts(self, top_k: int = 5) -> List["ThoughtObject"]:
+        """Get the most recent ThoughtObjects."""
+        return list(self._thought_objects[-top_k:]) if self._thought_objects else []
+
+    def has_thought_objects(self) -> bool:
+        """True if workspace has at least one ThoughtObject."""
+        return len(self._thought_objects) > 0
+
+    def clear_turn_thoughts(self) -> None:
+        """Clear ThoughtObjects at turn boundary."""
+        self._thought_objects.clear()

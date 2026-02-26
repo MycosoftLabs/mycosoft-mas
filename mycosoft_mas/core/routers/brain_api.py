@@ -22,6 +22,8 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.llm.error_sanitizer import sanitize_for_user, sanitize_for_log
+
 logger = logging.getLogger("BrainAPI")
 
 router = APIRouter(prefix="/voice/brain", tags=["brain"])
@@ -142,8 +144,8 @@ async def brain_chat(request: BrainChatRequest):
         )
         
     except Exception as e:
-        logger.error(f"Brain chat error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Brain chat error: {sanitize_for_log(e)}")
+        raise HTTPException(status_code=500, detail=sanitize_for_user(e))
 
 
 @router.post("/stream")
@@ -176,8 +178,8 @@ async def brain_stream(request: BrainChatRequest):
                 yield f"data: {json.dumps({'done': True, 'session_id': session_id, 'conversation_id': conversation_id})}\n\n"
                 
             except Exception as e:
-                logger.error(f"Stream error: {e}")
-                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                logger.error(f"Stream error: {sanitize_for_log(e)}")
+                yield f"data: {json.dumps({'error': sanitize_for_user(e)})}\n\n"
         
         return StreamingResponse(
             generate(),
@@ -189,8 +191,8 @@ async def brain_stream(request: BrainChatRequest):
         )
         
     except Exception as e:
-        logger.error(f"Brain stream error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Brain stream error: {sanitize_for_log(e)}")
+        raise HTTPException(status_code=500, detail=sanitize_for_user(e))
 
 
 @router.get("/status")
@@ -220,10 +222,10 @@ async def brain_status():
         }
         
     except Exception as e:
-        logger.error(f"Brain status error: {e}")
+        logger.error(f"Brain status error: {sanitize_for_log(e)}")
         return {
             "status": "error",
-            "error": str(e),
+            "error": sanitize_for_user(e),
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
@@ -262,8 +264,8 @@ async def get_memory_context(
         )
         
     except Exception as e:
-        logger.error(f"Memory context error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Memory context error: {sanitize_for_log(e)}")
+        raise HTTPException(status_code=500, detail=sanitize_for_user(e))
 
 
 @router.post("/event")
@@ -299,8 +301,8 @@ async def record_brain_event(
         }
         
     except Exception as e:
-        logger.error(f"Event recording error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Event recording error: {sanitize_for_log(e)}")
+        raise HTTPException(status_code=500, detail=sanitize_for_user(e))
 
 
 @router.get("/health")

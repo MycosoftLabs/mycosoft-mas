@@ -30,7 +30,14 @@ cmds = [
     "cd /home/mycosoft/mycosoft/mas && docker build -t mycosoft/mas-agent:latest --no-cache .",
     "docker stop myca-orchestrator-new 2>/dev/null || true",
     "docker rm myca-orchestrator-new 2>/dev/null || true",
-    "docker run -d --name myca-orchestrator-new --restart unless-stopped -p 8001:8000 mycosoft/mas-agent:latest",
+    (
+        "docker run -d --name myca-orchestrator-new --restart unless-stopped -p 8001:8000 "
+        "-e REDIS_URL=redis://192.168.0.189:6379/0 "
+        "-e MINDEX_DATABASE_URL=postgresql://mindex:mindex@192.168.0.189:5432/mindex "
+        "-e DATABASE_URL=postgresql://mindex:mindex@192.168.0.189:5432/mindex "
+        "-e N8N_URL=http://192.168.0.188:5678 "
+        "mycosoft/mas-agent:latest"
+    ),
 ]
 
 print(f"Connecting to {user}@{host}...")

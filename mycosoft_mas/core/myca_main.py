@@ -178,6 +178,22 @@ except ImportError:
     commerce_router = None
     COMMERCE_API_AVAILABLE = False
 
+# MYCA Grounding API - grounding gate status, EP, thoughts
+try:
+    from mycosoft_mas.core.routers.grounding_api import router as grounding_router
+    GROUNDING_API_AVAILABLE = True
+except ImportError:
+    grounding_router = None
+    GROUNDING_API_AVAILABLE = False
+
+# Error Triage API - expose ErrorTriageService via HTTP
+try:
+    from mycosoft_mas.core.routers.error_triage_api import router as error_triage_router
+    ERROR_TRIAGE_API_AVAILABLE = True
+except ImportError:
+    error_triage_router = None
+    ERROR_TRIAGE_API_AVAILABLE = False
+
 # MYCA Consciousness API - unified entry point for all chat/voice
 try:
     from mycosoft_mas.core.routers.consciousness_api import router as consciousness_router
@@ -559,6 +575,14 @@ try:
         app.include_router(consciousness_router, tags=["myca-consciousness"])
 except NameError:
     pass
+
+# MYCA Grounding API - grounding gate status, EP, thoughts
+if GROUNDING_API_AVAILABLE and grounding_router is not None:
+    app.include_router(grounding_router, tags=["grounding", "myca"])
+
+# Error Triage API - expose ErrorTriageService via HTTP
+if ERROR_TRIAGE_API_AVAILABLE and error_triage_router is not None:
+    app.include_router(error_triage_router)
 
 # System Status API - unified status for all systems
 try:

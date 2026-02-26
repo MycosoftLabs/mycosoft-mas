@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
+from mycosoft_mas.llm.error_sanitizer import sanitize_for_log, sanitize_error_body
+
 logger = logging.getLogger(__name__)
 
 
@@ -153,24 +155,33 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         
         logger.info(f"[MYCA Brain] Using {provider} for: {message[:50]}...")
         
+        yielded = 0
         try:
             if provider == "gemini" and self.gemini_api_key:
                 async for token in self._stream_gemini(messages):
+                    yielded += 1
                     yield token
             elif provider == "claude" and self.anthropic_api_key:
                 async for token in self._stream_claude(messages, system_prompt):
+                    yielded += 1
                     yield token
             elif provider == "openai" and self.openai_api_key:
                 async for token in self._stream_openai(messages):
+                    yielded += 1
                     yield token
             else:
-                logger.error(f"[MYCA Brain] No available provider — keys missing or all unhealthy")
+                logger.error("[MYCA Brain] No available provider — keys missing or all unhealthy")
+                yield LLM_FALLBACK_MESSAGE
                 return
 
+            if yielded == 0:
+                logger.warning(f"[MYCA Brain] Provider {provider} returned no tokens")
+                yield LLM_FALLBACK_MESSAGE
+
         except Exception as e:
-            logger.error(f"[MYCA Brain] Error with {provider}: {e}")
+            logger.error(f"[MYCA Brain] Error with {provider}: {sanitize_for_log(e)}")
             self._mark_provider_failure(provider)
-            return
+            yield LLM_FALLBACK_MESSAGE
     
     def _select_provider(self) -> str:
         """Select best available provider."""
@@ -219,15 +230,16 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         if system_instruction:
             payload["system_instruction"] = {"parts": [{"text": system_instruction}]}
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key={self.gemini_api_key}&alt=sse"
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse"
+        headers = {"x-goog-api-key": self.gemini_api_key} if self.gemini_api_key else {}
         
         try:
             async with httpx.AsyncClient(timeout=30) as client:
-                async with client.stream("POST", url, json=payload) as response:
+                async with client.stream("POST", url, json=payload, headers=headers) as response:
                     # Check for error status codes immediately
                     if response.status_code != 200:
                         body = await response.aread()
-                        logger.error(f"Gemini API error {response.status_code}: {body[:200]}")
+                        logger.error(f"Gemini API error {response.status_code}: {sanitize_error_body(body)}")
                         self._mark_provider_failure("gemini")
                         return
                     
@@ -237,7 +249,9 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                                 data = json.loads(line[6:])
                                 # Check for error response
                                 if "error" in data:
-                                    logger.error(f"Gemini error: {data['error']}")
+                                    err = data["error"]
+                                    err_msg = err.get("message", str(err)) if isinstance(err, dict) else str(err)
+                                    logger.error(f"Gemini error: {sanitize_for_log(Exception(err_msg))}")
                                     self._mark_provider_failure("gemini")
                                     return
                                 if "candidates" in data:
@@ -249,7 +263,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                             except json.JSONDecodeError:
                                 continue
         except Exception as e:
-            logger.error(f"Gemini stream error: {e}")
+            logger.error(f"Gemini stream error: {sanitize_for_log(e)}")
             self._mark_provider_failure("gemini")
     
     async def _stream_claude(self, messages: List[Dict], system: str) -> AsyncGenerator[str, None]:
@@ -285,7 +299,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                     # Check for error status codes immediately
                     if response.status_code != 200:
                         body = await response.aread()
-                        logger.error(f"Claude API error {response.status_code}: {body[:200]}")
+                        logger.error(f"Claude API error {response.status_code}: {sanitize_error_body(body)}")
                         self._mark_provider_failure("claude")
                         return
                     
@@ -295,7 +309,8 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                                 data = json.loads(line[6:])
                                 # Check for error response
                                 if data.get("type") == "error":
-                                    logger.error(f"Claude error: {data}")
+                                    err_msg = data.get("error", {}).get("message", str(data))
+                                    logger.error(f"Claude error: {sanitize_for_log(Exception(err_msg))}")
                                     self._mark_provider_failure("claude")
                                     return
                                 if data.get("type") == "content_block_delta":
@@ -305,7 +320,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                             except json.JSONDecodeError:
                                 continue
         except Exception as e:
-            logger.error(f"Claude stream error: {e}")
+            logger.error(f"Claude stream error: {sanitize_for_log(e)}")
             self._mark_provider_failure("claude")
     
     async def _stream_openai(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
@@ -336,7 +351,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                     # Check for error status codes immediately
                     if response.status_code != 200:
                         body = await response.aread()
-                        logger.error(f"OpenAI API error {response.status_code}: {body[:200]}")
+                        logger.error(f"OpenAI API error {response.status_code}: {sanitize_error_body(body)}")
                         self._mark_provider_failure("openai")
                         return
                     
@@ -346,7 +361,9 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                                 data = json.loads(line[6:])
                                 # Check for error response
                                 if "error" in data:
-                                    logger.error(f"OpenAI error: {data['error']}")
+                                    err = data["error"]
+                                    err_msg = err.get("message", str(err)) if isinstance(err, dict) else str(err)
+                                    logger.error(f"OpenAI error: {sanitize_for_log(Exception(err_msg))}")
                                     self._mark_provider_failure("openai")
                                     return
                                 if "choices" in data:
@@ -356,9 +373,14 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                             except json.JSONDecodeError:
                                 continue
         except Exception as e:
-            logger.error(f"OpenAI stream error: {e}")
+            logger.error(f"OpenAI stream error: {sanitize_for_log(e)}")
             self._mark_provider_failure("openai")
 
+
+# User-facing message when all LLM providers fail
+LLM_FALLBACK_MESSAGE = (
+    "I'm having a moment of difficulty with that request. Could you try again in a moment?"
+)
 
 # Singleton instance
 _frontier_router: Optional[FrontierLLMRouter] = None

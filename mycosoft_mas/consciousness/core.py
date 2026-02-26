@@ -12,6 +12,7 @@ Created: February 10, 2026
 
 import asyncio
 import logging
+import os
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Callable, AsyncGenerator
@@ -22,6 +23,9 @@ from mycosoft_mas.consciousness.cancellation import CancellationToken
 from mycosoft_mas.consciousness.event_bus import AttentionEvent, AttentionEventBus
 
 logger = logging.getLogger(__name__)
+
+# Grounded Cognition: wrap inputs in Experience Packets before cognition
+GROUNDED_COGNITION_ENABLED = os.getenv("MYCA_GROUNDED_COGNITION", "0") == "1"
 
 
 class ConsciousnessState(Enum):
@@ -420,6 +424,23 @@ class MYCAConsciousness:
         self._metrics.state = ConsciousnessState.FOCUSED
         
         try:
+            # STEP 0: Grounding Gate (if enabled)
+            if GROUNDED_COGNITION_ENABLED:
+                if self._working_memory:
+                    self._working_memory.clear_turn_thoughts()
+                from mycosoft_mas.consciousness.grounding_gate import GroundingGate
+                gate = GroundingGate(self)
+                ep = await gate.build_experience_packet(content, source, context, session_id, user_id)
+                ep = await gate.attach_self_state(ep)
+                ep = await gate.attach_world_state(ep)
+                ep = gate.compute_provenance(ep)
+                valid, errors = gate.validate(ep)
+                if not valid:
+                    yield f"[Grounding incomplete: {', '.join(errors)}] "
+                    return
+                context = context or {}
+                context["experience_packet"] = ep
+
             # 1. Attention: Focus on the input (fast, <100ms)
             focus = await self._attention.focus_on(content, source, context)
             self._metrics.attention_focus = focus.summary
@@ -506,6 +527,7 @@ class MYCAConsciousness:
             # This streams tokens as they arrive from the LLM
             cancel_token = CancellationToken()
             correction_used = False
+            experience_packet = (context or {}).get("experience_packet") if context else None
             async for token in self._deliberation.think_progressive(
                 input_content=content,
                 focus=focus,
@@ -515,6 +537,7 @@ class MYCAConsciousness:
                 soul_context=soul_context,
                 source=source,
                 token=cancel_token,
+                experience_packet=experience_packet,
             ):
                 # Enforce additive refinement max 1 per turn.
                 if token.strip().lower().startswith("one more thing"):

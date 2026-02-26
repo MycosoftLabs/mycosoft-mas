@@ -1,0 +1,118 @@
+﻿=== Step 1: Check current container ===
+myca-orchestrator-new   mycosoft/mas-agent:latest              Up 27 minutes (healthy)
+myca-n8n                n8nio/n8n:latest                       Up 22 hours (healthy)
+
+
+=== Step 2: Check Dockerfile location ===
+-rw-rw-r-- 1 mycosoft mycosoft 2720 Feb 18 07:15 /home/mycosoft/mycosoft/mas/Dockerfile
+-rw-rw-r-- 1 mycosoft mycosoft  807 Feb 12 06:35 /home/mycosoft/mycosoft/mas/Dockerfile.bio
+-rw-rw-r-- 1 mycosoft mycosoft 1636 Feb 12 06:35 /home/mycosoft/mycosoft/mas/Dockerfile.dev
+-rw-rw-r-- 1 mycosoft mycosoft  315 Feb 12 06:35 /home/mycosoft/mycosoft/mas/Dockerfile.elevenlabs
+-rw-rw-r-- 1 mycosoft mycosoft 1583 Feb 12 06:35 /home/mycosoft/mycosoft/mas/Dockerfile.next
+-rw-rw-r-- 1 mycosoft mycosoft 5145 Feb 12 06:35 /home/mycosoft/mycosoft/mas/Dockerfile.orchestrator
+-rw-rw-r-- 1 mycosoft mycosoft  467 Feb 12 06:35 /home/mycosoft/mycosoft/mas/Dockerfile.personaplex-bridge
+-rw-rw-r-- 1 mycosoft mycosoft  819 Feb 12 06:35 /home/mycosoft/mycosoft/mas/Dockerfile.simulation
+
+
+=== Step 3: Stop the current container ===
+OUT: myca-orchestrator-new
+
+ERR: 
+
+=== Step 4: Build new image ===
+Running: cd /home/mycosoft/mycosoft/mas && docker build -t mycosoft/mas-agent:latest --no-cache . 2>&1
+9 dos2unix: converting file /app/plugins/__init__.py to Unix format...
+#18 13.60 dos2unix: converting file /app/plugins/bio_data_translator.py to Unix format...
+#18 13.60 dos2unix: converting file /app/test_boards.py to Unix format...
+#18 13.60 dos2unix: converting file /app/test_bridge_simple.py to Unix format...
+#18 13.60 dos2unix: converting file /app/_config_cloudinit.py to Unix format...
+#18 13.60 dos2unix: converting file /app/_apply_pipe.py to Unix format...
+#18 13.60 dos2unix: converting file /app/test_board.py to Unix format...
+#18 13.60 dos2unix: converting file /app/_test_website_memory.py to Unix format...
+#18 13.61 dos2unix: converting file /app/_start_all.py to Unix format...
+#18 13.61 dos2unix: converting file /app/_start_personaplex_no_cuda_graphs.py to Unix format...
+#18 13.61 dos2unix: converting file /app/_run_mindex_etl.py to Unix format...
+#18 13.61 dos2unix: converting file /app/_fix_mindex_api_compounds.py to Unix format...
+#18 13.62 Reading package lists...
+#18 14.62 Building dependency tree...
+#18 14.82 Reading state information...
+#18 15.21 The following packages will be REMOVED:
+#18 15.21   dos2unix*
+#18 15.48 0 upgraded, 0 newly installed, 1 to remove and 0 not upgraded.
+#18 15.48 After this operation, 1916 kB disk space will be freed.
+#18 15.57 (Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 8729 files and directories currently installed.)
+
+#18 15.58 Removing dos2unix (7.5.2-1) ...
+
+#18 DONE 16.0s
+
+#19 [runtime  8/10] COPY docker/wait-for-it.sh /usr/local/bin/wait-for-it
+#19 DONE 0.1s
+
+#20 [runtime  9/10] RUN chmod +x /usr/local/bin/wait-for-it
+#20 DONE 0.2s
+
+#21 [runtime 10/10] RUN mkdir -p /app/logs /app/data
+#21 DONE 0.3s
+
+#22 exporting to image
+#22 exporting layers
+#22 exporting layers 27.6s done
+#22 exporting manifest sha256:c3ecc5b51fd5bd81cd8f8a810ef88f98b4ca21d30967691cc8c02fa7eafc9596 0.1s done
+#22 exporting config sha256:53f66cd05942f85977375739908be8befe6980d55462254bfc93d68d9b318595 0.1s done
+#22 exporting attestation manifest sha256:6d69e66a4fdf18c0400fa7a8ff33d1ca3687deaf6a1c43ccbaf3b193f4f696f1
+#22 exporting attestation manifest sha256:6d69e66a4fdf18c0400fa7a8ff33d1ca3687deaf6a1c43ccbaf3b193f4f696f1 0.1s done
+#22 exporting manifest list sha256:f23a79c34b9b7b4b340f6851a83df6d84a01cf88902b3ae8a552236eecaa3cc6 done
+#22 naming to docker.io/mycosoft/mas-agent:latest done
+#22 unpacking to docker.io/mycosoft/mas-agent:latest
+#22 unpacking to docker.io/mycosoft/mas-agent:latest 10.8s done
+#22 DONE 38.9s
+
+
+=== Step 5: Remove old container ===
+OUT: myca-orchestrator-new
+
+
+=== Step 6: Start new container ===
+Running: docker run -d --name myca-orchestrator-new \
+  --restart unless-stopped \
+  -p 8001:8000 \
+  -e REDIS_URL=redis://192.168.0.188:6379/0 \
+  -e DATABASE_URL=postgresql://mycosoft:mycosoft@192.168.0.188:5432/mindex \
+  -e N8N_URL=http://192.168.0.188:5678 \
+  mycosoft/mas-agent:latest
+OUT: b8056dd9e860544d8fe242ea482525d02670df0ce72f09a93110051b9c616d2c
+
+ERR: 
+
+=== Step 7: Wait for startup ===
+
+=== Step 8: Verify Earth-2 API ===
+Health check: 
+
+=== Step 9: Check container logs ===
+WARNING:mycosoft_mas.services.infrastructure_ops:NAS not mounted, using fallback logs path: /tmp/mas-logs
+
+
+=== Rebuild complete! ===
