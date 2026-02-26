@@ -164,14 +164,13 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                 async for token in self._stream_openai(messages):
                     yield token
             else:
-                # Fallback to local response
-                yield f"I apologize, but my connection to my main intelligence is currently unavailable. "
-                yield f"Please try again in a moment."
-                
+                logger.error(f"[MYCA Brain] No available provider — keys missing or all unhealthy")
+                return
+
         except Exception as e:
             logger.error(f"[MYCA Brain] Error with {provider}: {e}")
             self._mark_provider_failure(provider)
-            yield f"I encountered an issue processing your request. Let me try again."
+            return
     
     def _select_provider(self) -> str:
         """Select best available provider."""
