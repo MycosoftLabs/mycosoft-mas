@@ -19,6 +19,12 @@
 | `docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md` | Memory system (when relevant) |
 | `docs/Code and System Prioritization.docx.md` | Priorities, execution order |
 
+## MYCA First Light Embodiment (Feb 25, 2026)
+
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCA_FIRST_LIGHT_AND_SESSION_COMPLETE_FEB25_2026.md` | **Session complete**: Full First Light plan (Phases 0–3), Jetson body, NLM, instincts, safety gates, MYCA chat fix, LLM keys, deployment |
+
 ## MYCA Live Presence (Feb 24, 2026)
 
 | Doc | Purpose |
