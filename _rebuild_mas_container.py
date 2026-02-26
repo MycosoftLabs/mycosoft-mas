@@ -27,6 +27,10 @@ ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 ssh.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=10)
 
+print('=== Step 0: Pull latest code ===')
+stdin, stdout, stderr = ssh.exec_command('cd /home/mycosoft/mycosoft/mas && git fetch origin && git reset --hard origin/main && git log -1 --oneline', timeout=60)
+print(stdout.read().decode())
+
 print('=== Step 1: Check current container ===')
 stdin, stdout, stderr = ssh.exec_command('docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" | grep myca', timeout=10)
 print(stdout.read().decode())
@@ -65,6 +69,7 @@ if key_exists:
   -e N8N_URL=http://192.168.0.188:5678 \\
   -e MAS_SSH_KEY_PATH=/run/secrets/mas_ssh_key \\
   -v {key_on_188}:/run/secrets/mas_ssh_key:ro \\
+  -e MYCA_GROUNDED_COGNITION=1 \\
   mycosoft/mas-agent:latest'''
 else:
     cmd = '''docker run -d --name myca-orchestrator-new \\
@@ -73,6 +78,7 @@ else:
   -e REDIS_URL=redis://192.168.0.188:6379/0 \\
   -e DATABASE_URL=postgresql://mycosoft:mycosoft@192.168.0.188:5432/mindex \\
   -e N8N_URL=http://192.168.0.188:5678 \\
+  -e MYCA_GROUNDED_COGNITION=1 \\
   mycosoft/mas-agent:latest'''
 print(f'Running: {cmd}')
 stdin, stdout, stderr = ssh.exec_command(cmd, timeout=60)

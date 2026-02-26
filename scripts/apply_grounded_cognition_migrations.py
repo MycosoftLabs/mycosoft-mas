@@ -11,6 +11,8 @@ from pathlib import Path
 mas_root = Path(__file__).resolve().parent.parent
 mindex_root = mas_root.parent / "MINDEX" / "mindex"
 if not mindex_root.exists():
+    mindex_root = mas_root.parent.parent / "MINDEX" / "mindex"
+if not mindex_root.exists():
     mindex_root = mas_root.parent / "mindex"
 migrations_dir = mindex_root / "migrations"
 
