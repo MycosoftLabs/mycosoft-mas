@@ -145,7 +145,14 @@ class MYCAConsciousness:
         try:
             # Initialize components
             await self._initialize_components()
-            
+
+            # WorldModel cache warming: ensures first get_cached_context() returns non-empty
+            if self._world_model and hasattr(self._world_model, "update"):
+                try:
+                    await asyncio.wait_for(self._world_model.update(), timeout=5.0)
+                except (asyncio.TimeoutError, Exception) as e:
+                    logger.debug("WorldModel cache warm skipped: %s", e)
+
             # Load soul
             await self._load_soul()
             
@@ -433,11 +440,12 @@ class MYCAConsciousness:
                 ep = await gate.build_experience_packet(content, source, context, session_id, user_id)
                 ep = await gate.attach_self_state(ep)
                 ep = await gate.attach_world_state(ep)
+                asyncio.create_task(gate.wire_spatial_and_temporal(ep, context, session_id))
                 ep = gate.compute_provenance(ep)
+                asyncio.create_task(gate._store_ep(ep, session_id, user_id))
                 valid, errors = gate.validate(ep)
                 if not valid:
-                    yield f"[Grounding incomplete: {', '.join(errors)}] "
-                    return
+                    logger.warning("Grounding incomplete (soft-fail): %s", errors)
                 context = context or {}
                 context["experience_packet"] = ep
 

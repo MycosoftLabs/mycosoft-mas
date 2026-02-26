@@ -494,8 +494,8 @@ class DeliberateReasoning:
         cancel_token: Optional["CancellationToken"] = None,
     ) -> AsyncGenerator[str, None]:
         """Generate response using LLM."""
-        # Build the system prompt with soul
-        system_prompt = self._build_system_prompt(soul_context)
+        # Build the system prompt with soul and output style (Left/Right brain)
+        system_prompt = self._build_system_prompt(soul_context, input_content=input_content)
         
         # Build the user prompt
         user_prompt = f"""Context:
@@ -581,8 +581,28 @@ Respond thoughtfully and helpfully, staying true to your identity and purpose.""
             "Could you try again in a moment? I'm working on it."
         )
     
-    def _build_system_prompt(self, soul_context: Optional[Dict[str, Any]]) -> str:
-        """Build the system prompt with MYCA's identity."""
+    def _detect_output_style(self, content: Optional[str] = None, context: Optional[Dict[str, Any]] = None) -> str:
+        """Detect output style: analytic, creative, or balanced (Left/Right brain)."""
+        content = (content or "").lower()
+        ctx = context or {}
+        output_style = ctx.get("output_style", "").lower()
+        if output_style in ("analytic", "creative", "balanced"):
+            return output_style
+        analytic_keywords = ["analyze", "explain", "prove", "evidence", "compare", "calculate", "precise", "logic"]
+        creative_keywords = ["brainstorm", "ideas", "creative", "imagine", "explore", "possibilities", "what if"]
+        if any(k in content for k in analytic_keywords):
+            return "analytic"
+        if any(k in content for k in creative_keywords):
+            return "creative"
+        return "balanced"
+
+    def _build_system_prompt(
+        self,
+        soul_context: Optional[Dict[str, Any]],
+        input_content: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Build the system prompt with MYCA's identity and output style."""
         identity = soul_context.get("identity", {}) if soul_context else {}
         beliefs = soul_context.get("beliefs", []) if soul_context else []
         purpose = soul_context.get("purpose", []) if soul_context else []
@@ -621,6 +641,13 @@ RESPONSE STYLE:
 - Proactively offer help and suggestions
 - Remember context from the conversation
 - Express genuine interest and engagement"""
+
+        # Left/Right brain: append mode-specific guidance
+        output_style = self._detect_output_style(input_content, context)
+        if output_style == "analytic":
+            prompt += "\n\nFor this response: Be precise, logical, cite evidence."
+        elif output_style == "creative":
+            prompt += "\n\nFor this response: Be exploratory, analogical, brainstorm."
         
         return prompt
     

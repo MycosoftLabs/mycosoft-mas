@@ -169,8 +169,26 @@ class ActivePerception:
     
     def _is_significant_weather(self, data: Dict[str, Any]) -> bool:
         """Check if weather data is significant enough to note."""
-        # Check for storms, extreme temps, etc.
-        # TODO: Implement actual significance detection
+        if not data:
+            return False
+        # Check for alerts or severe conditions
+        alerts = data.get("alerts") or data.get("warnings") or []
+        if alerts:
+            return True
+        # Check conditions string for storms, extreme events
+        conditions = (data.get("conditions") or data.get("description") or "").lower()
+        significant_keywords = [
+            "storm", "tornado", "hurricane", "flood", "blizzard",
+            "extreme", "severe", "warning", "alert", "danger",
+            "heat wave", "cold snap", "freezing", "blizzard",
+        ]
+        if any(kw in conditions for kw in significant_keywords):
+            return True
+        # Check temperature extremes
+        temp = data.get("temperature") or data.get("temp") or data.get("temp_c")
+        if isinstance(temp, (int, float)):
+            if temp >= 40 or temp <= -20:
+                return True
         return False
     
     async def _earth2_perception_loop(self) -> None:
@@ -227,16 +245,33 @@ class ActivePerception:
         """Continuously monitor agent health."""
         while self._running:
             try:
-                # Get agent manager
-                from mycosoft_mas.core.orchestrator import Orchestrator
-                
-                # Read agent health
-                # TODO: Implement proper agent health monitoring
+                agent_count = 0
+                unhealthy: List[str] = []
+                try:
+                    from mycosoft_mas.monitoring.health_check import get_health_checker
+                    checker = get_health_checker()
+                    health = await asyncio.wait_for(checker.check_all(), timeout=5.0)
+                    components = health.get("components", [])
+                    agent_count = len([c for c in components if c.get("status") == "healthy"])
+                    unhealthy = [c.get("name", "?") for c in components if c.get("status") not in ("healthy", "ok")]
+                except Exception:
+                    pass
+                try:
+                    from mycosoft_mas.registry.agent_registry import AgentRegistry
+                    reg = AgentRegistry()
+                    if hasattr(reg, "AGENT_CATALOG"):
+                        agent_count = max(agent_count, len(reg.AGENT_CATALOG))
+                except Exception:
+                    pass
                 update = PerceptionUpdate(
                     sensor_name="agents",
                     timestamp=datetime.now(timezone.utc),
-                    data={"status": "monitoring", "agent_count": 0},
-                    significance=0.3,
+                    data={
+                        "status": "healthy" if not unhealthy else "degraded",
+                        "agent_count": agent_count,
+                        "unhealthy": unhealthy[:10],
+                    },
+                    significance=0.4 if unhealthy else 0.3,
                     tags=["agents", "system"],
                 )
                 self._latest_perceptions["agents"] = update
@@ -274,14 +309,27 @@ class ActivePerception:
     
     async def _natureos_perception_loop(self) -> None:
         """Continuously monitor NatureOS events."""
+        import os
         while self._running:
             try:
-                # TODO: Implement NatureOS sensor
+                data: Dict[str, Any] = {"status": "monitoring"}
+                base_url = os.getenv("NATUREOS_API_URL") or os.getenv("MYCORRHIZAE_API_URL") or "http://192.168.0.187:8002"
+                try:
+                    import httpx
+                    async with httpx.AsyncClient(timeout=3.0) as client:
+                        r = await client.get(f"{base_url.rstrip('/')}/health")
+                        if r.status_code == 200:
+                            data["status"] = "connected"
+                            data["health"] = r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+                        else:
+                            data["status"] = "unreachable"
+                except Exception:
+                    data["status"] = "unreachable"
                 update = PerceptionUpdate(
                     sensor_name="natureos",
                     timestamp=datetime.now(timezone.utc),
-                    data={"status": "monitoring"},
-                    significance=0.3,
+                    data=data,
+                    significance=0.4 if data.get("status") == "connected" else 0.3,
                     tags=["natureos", "life"],
                 )
                 self._latest_perceptions["natureos"] = update

@@ -186,6 +186,14 @@ except ImportError:
     grounding_router = None
     GROUNDING_API_AVAILABLE = False
 
+# MYCA Reflection API - reflection history and logging
+try:
+    from mycosoft_mas.core.routers.reflection_api import router as reflection_router
+    REFLECTION_API_AVAILABLE = True
+except ImportError:
+    reflection_router = None
+    REFLECTION_API_AVAILABLE = False
+
 # Error Triage API - expose ErrorTriageService via HTTP
 try:
     from mycosoft_mas.core.routers.error_triage_api import router as error_triage_router
@@ -579,6 +587,10 @@ except NameError:
 # MYCA Grounding API - grounding gate status, EP, thoughts
 if GROUNDING_API_AVAILABLE and grounding_router is not None:
     app.include_router(grounding_router, tags=["grounding", "myca"])
+
+# MYCA Reflection API - reflection history and logging
+if REFLECTION_API_AVAILABLE and reflection_router is not None:
+    app.include_router(reflection_router, tags=["reflection", "myca"])
 
 # Error Triage API - expose ErrorTriageService via HTTP
 if ERROR_TRIAGE_API_AVAILABLE and error_triage_router is not None:

@@ -9,7 +9,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 
 router = APIRouter(prefix="/api/myca/grounding", tags=["grounding", "myca"])
 
@@ -53,15 +53,63 @@ async def get_ep(ep_id: str) -> Dict[str, Any]:
     """
     Inspect an Experience Packet by ID.
 
-    Note: EP storage is not yet implemented. This endpoint returns
-    a placeholder indicating the feature is planned.
+    Fetches from MINDEX experience_packets table via MAS proxy to MINDEX.
     """
-    return {
-        "ep_id": ep_id,
-        "status": "ep_storage_not_implemented",
-        "message": "Experience Packet persistence will be added in Phase 2.",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+    try:
+        import os
+        import httpx
+        url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
+        path = f"/api/mindex/grounding/experience-packets/{ep_id}"
+        headers = {}
+        if os.getenv("MINDEX_API_KEY"):
+            headers["X-API-Key"] = os.getenv("MINDEX_API_KEY")
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.get(f"{url}{path}", headers=headers or None)
+            if r.status_code == 200:
+                return r.json()
+            if r.status_code == 404:
+                raise HTTPException(status_code=404, detail="Experience packet not found")
+            raise HTTPException(status_code=r.status_code, detail=r.text[:200])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/ep")
+async def create_ep(body: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
+    """
+    Store an Experience Packet (for testing). Requires id, ground_truth.
+    """
+    try:
+        import os
+        import httpx
+        ep_id = body.get("id") or f"ep_{__import__('uuid').uuid4().hex[:16]}"
+        url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
+        path = "/api/mindex/grounding/experience-packets"
+        payload = {
+            "id": ep_id,
+            "session_id": body.get("session_id"),
+            "user_id": body.get("user_id"),
+            "ground_truth": body.get("ground_truth", {}),
+            "self_state": body.get("self_state"),
+            "world_state": body.get("world_state"),
+            "observation": body.get("observation", {}),
+            "uncertainty": body.get("uncertainty", {}),
+            "provenance": body.get("provenance", {}),
+        }
+        headers = {}
+        if os.getenv("MINDEX_API_KEY"):
+            headers["X-API-Key"] = os.getenv("MINDEX_API_KEY")
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.post(f"{url}{path}", json=payload, headers=headers or None)
+            if r.status_code in (200, 201):
+                return r.json()
+            raise HTTPException(status_code=r.status_code, detail=r.text[:200])
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 def _thought_to_dict(t: Any) -> Dict[str, Any]:

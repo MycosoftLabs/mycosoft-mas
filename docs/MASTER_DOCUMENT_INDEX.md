@@ -5,6 +5,10 @@
 - `docs/AGENT_BUS_MIGRATION_GUIDE_FEB09_2026.md` – **Migration guide**: Enabling flags, migrating from HTTP polling, rollback, rollout strategy.
 - `docs/WEBSOCKET_AGENT_BUS_VERIFICATION_REPORT_FEB17_2026.md` – **Verification report**: MAS health, ws-handshake, browser pages, integration test, Cloudflare wss; enable MYCA_AGENT_BUS_ENABLED for agent-bus.
 
+## Grounded Cognition Full Sprint (Feb 17, 2026)
+- `docs/GROUNDED_COGNITION_FULL_SPRINT_COMPLETE_FEB17_2026.md` – **Full sprint complete**: All 18 tasks – MINDEX migrations, Spatial/Temporal/Intention/Reflection services, EP storage, reflection API, ThoughtObjectsPanel, ExperiencePacketView, grounding toggle, agent wrappers, active perception TODOs. Deployment steps and verification checklist.
+- `docs/SESSION_GROUNDED_COGNITION_AND_DEPLOY_FEB17_2026.md` – **Session doc**: Grounded Cognition sprint + deployment – summary, VM checklist, key files, related docs.
+
 ## Session Summary – MYCA Worldview Integration (Feb 17, 2026)
 - `docs/SESSION_SUMMARY_MYCA_WORLDVIEW_INTEGRATION_FEB17_2026.md` – **Today's work**: Consciousness API extended with nlm/earthlive/presence; LiveDemo WorldState interface; defensive world endpoint; integration tests; MAS deploy. Verification results and commits.
 - `docs/MYCA_WORLDVIEW_INTEGRATION_AUDIT_FEB17_2026.md` – **Integration audit**: NLM API, EarthLIVE, consciousness wiring; flows for MYCA page, Search, Voice, Chat.
@@ -73,6 +77,7 @@
 ## Grounded Cognition V0 (Feb 17, 2026)
 - `docs/GROUNDED_COGNITION_V0_FEB17_2026.md` – **Grounded Cognition Phase 1 complete**: Experience Packets, GroundingGate, ThoughtObjects with evidence, pre-LLM enforcement, spatial/temporal stubs. Enable with `MYCA_GROUNDED_COGNITION=1`.
 - `docs/MYCA_GROUNDED_COGNITION_INTEGRATION_COMPLETE_FEB17_2026.md` – **Integration complete**: Error sanitization, grounding API, error triage API, GroundingStatusBadge, LiveActivityPanel, MYCAContext grounding state, website proxy routes, integration tests. Manual: MYCA_GROUNDED_COGNITION=1 on MAS VM, LLM API keys.
+- `docs/MYCA_GROUNDED_COGNITION_PHASES_2_3_4_SPRINT_PLAN_FEB17_2026.md` – **Phases 2–4 sprint plan**: Overnight execution to complete SpatialService, TemporalService, NLM integration, Brain Cortex, IntentionService, FingerOrchestrator, ReflectionService by morning. Hour-by-hour tasks, superuser first-conversation critical path.
 
 ## MAS Consciousness and Orchestrator Routing (Feb 17, 2026)
 - `docs/MAS_LLM_KEYS_AND_ORCHESTRATOR_ROUTING_FEB17_2026.md` – **Why orchestrator/consciousness/agents aren't used**: MAS container needs GEMINI/ANTHROPIC/OPENAI keys; fast path vs complex triggers; data-aware fallback (MINDEX injection when consciousness fails). How to enable full consciousness.

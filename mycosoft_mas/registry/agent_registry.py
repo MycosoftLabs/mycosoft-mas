@@ -161,6 +161,11 @@ class AgentRegistry:
         {"name": "mcp_bridge_agent", "category": "integration", "module": "mycosoft_mas.agents.integration.mcp_bridge_agent", "class": "MCPBridgeAgent", "description": "MCP protocol bridge"},
         {"name": "database_agent", "category": "integration", "module": "mycosoft_mas.agents.integration.database_agent", "class": "DatabaseAgent", "description": "Database operations"},
         
+        # ===== Grounded Cognition Agents =====
+        {"name": "grounding_agent", "category": "utility", "module": "mycosoft_mas.agents.v2.grounding_agent", "class": "GroundingAgent", "description": "GroundingGate wrapper: ground_input, validate_ep, inspect_ep"},
+        {"name": "intention_agent", "category": "utility", "module": "mycosoft_mas.agents.v2.intention_agent", "class": "IntentionAgent", "description": "IntentionService wrapper: decompose_intent, plan_candidates"},
+        {"name": "reflection_agent", "category": "utility", "module": "mycosoft_mas.agents.v2.reflection_agent", "class": "ReflectionAgent", "description": "ReflectionService wrapper: log_response, analyze_outcome, create_learning_task"},
+
         # ===== Utility Agents =====
         {"name": "health_check_agent", "category": "utility", "module": "mycosoft_mas.agents.utility.health_check_agent", "class": "HealthCheckAgent", "description": "System health monitoring"},
         {"name": "gap_agent", "category": "utility", "module": "mycosoft_mas.agents.gap_agent", "class": "GapAgent", "description": "Cross-repo gap detection: TODOs, stubs, missing connections, bridge gaps; suggests plans"},

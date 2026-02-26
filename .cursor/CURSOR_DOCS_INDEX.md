@@ -19,6 +19,14 @@
 | `docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md` | Memory system (when relevant) |
 | `docs/Code and System Prioritization.docx.md` | Priorities, execution order |
 
+## MYCA Grounded Cognition Phases 2–4 Sprint (Feb 17, 2026)
+
+| Doc | Purpose |
+|-----|---------|
+| `docs/SESSION_GROUNDED_COGNITION_AND_DEPLOY_FEB17_2026.md` | **Session**: Grounded Cognition sprint + deployment – summary, VM checklist, key files. |
+| `docs/GROUNDED_COGNITION_FULL_SPRINT_COMPLETE_FEB17_2026.md` | **Full sprint complete**: All 18 tasks; deployment steps; verification checklist. |
+| `docs/MYCA_GROUNDED_COGNITION_PHASES_2_3_4_SPRINT_PLAN_FEB17_2026.md` | **Phases 2–4 sprint**: Hour-by-hour plan to complete SpatialService, TemporalService, NLM integration, Brain Cortex, IntentionService, FingerOrchestrator, ReflectionService by morning. Superuser first-conversation critical path. |
+
 ## MYCA First Light Embodiment (Feb 25, 2026)
 
 | Doc | Purpose |

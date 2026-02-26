@@ -216,11 +216,30 @@ class GroundingGate:
             sources = []
             summary = "World model not available"
 
+        nlm_prediction: Optional[Dict[str, Any]] = None
+        try:
+            import os
+            import httpx
+            mas_url = os.getenv("MAS_API_URL", "http://localhost:8001")
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                r = await client.post(
+                    f"{mas_url.rstrip('/')}/api/nlm/predict/sensors",
+                    json={"entity_id": "sporebase", "horizon_minutes": 60},
+                )
+                if r.status_code == 200:
+                    data = r.json()
+                    if not data.get("fallback"):
+                        nlm_prediction = data
+                        sources = sources + ["nlm_prediction"]
+        except Exception as e:
+            logger.debug("NLM predict/sensors unavailable: %s", e)
+
         ep.world_state = WorldStateRef(
             snapshot_ts=datetime.now(timezone.utc).isoformat(),
             sources=sources,
             freshness=freshness,
             summary=summary,
+            nlm_prediction=nlm_prediction,
         )
         return ep
 
@@ -234,3 +253,68 @@ class GroundingGate:
             logger.warning(f"Provenance hash failed: {sanitize_for_log(e)}")
             ep.uncertainty.missingness["provenance_hash"] = sanitize_for_log(e)
         return ep
+
+    async def _store_ep(
+        self,
+        ep: ExperiencePacket,
+        session_id: Optional[str],
+        user_id: Optional[str],
+    ) -> None:
+        """Persist EP to MINDEX. Soft-fail: log and return on error."""
+        try:
+            import os
+            import httpx
+            from mycosoft_mas.schemas.codec import _to_json_serializable
+            url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
+            path = "/api/mindex/grounding/experience-packets"
+            payload = _to_json_serializable(ep)
+            if isinstance(payload, dict):
+                body = {
+                    "id": ep.id,
+                    "session_id": session_id,
+                    "user_id": user_id,
+                    "ground_truth": payload.get("ground_truth", {}),
+                    "self_state": payload.get("self_state"),
+                    "world_state": payload.get("world_state"),
+                    "observation": payload.get("observation", {}),
+                    "uncertainty": payload.get("uncertainty", {}),
+                    "provenance": payload.get("provenance", {}),
+                }
+            else:
+                body = {"id": ep.id, "session_id": session_id, "user_id": user_id, "ground_truth": {}}
+            headers = {}
+            if os.getenv("MINDEX_API_KEY"):
+                headers["X-API-Key"] = os.getenv("MINDEX_API_KEY")
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                await client.post(f"{url}{path}", json=body, headers=headers or None)
+        except Exception as e:
+            logger.warning("EP store failed (soft-fail): %s", e)
+
+    async def wire_spatial_and_temporal(
+        self,
+        ep: ExperiencePacket,
+        context: Optional[Dict[str, Any]],
+        session_id: Optional[str],
+    ) -> None:
+        """Wire spatial/temporal: store_point if geo, check episode. Soft-fail, non-blocking."""
+        try:
+            geo = (context or {}).get("geo") if context else None
+            if geo and session_id:
+                lat = geo.get("lat") if isinstance(geo, dict) else getattr(geo, "lat", None)
+                lon = geo.get("lon") if isinstance(geo, dict) else getattr(geo, "lon", None)
+                if lat is not None and lon is not None:
+                    from mycosoft_mas.engines.spatial.service import SpatialService
+                    svc = SpatialService()
+                    await svc.store_point(session_id, float(lat), float(lon), ep_id=ep.id)
+        except Exception as e:
+            logger.debug("Spatial wire failed: %s", e)
+        try:
+            if session_id:
+                from mycosoft_mas.engines.temporal.service import TemporalService
+                from datetime import datetime, timezone
+                svc = TemporalService()
+                now = datetime.now(timezone.utc)
+                if svc.should_start_episode(session_id, None, now):
+                    await svc.store_episode(session_id, now, end_ts=None, ep_ids=[ep.id])
+        except Exception as e:
+            logger.debug("Temporal wire failed: %s", e)

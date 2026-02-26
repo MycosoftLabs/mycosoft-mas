@@ -68,6 +68,7 @@ class WorldStateRef:
     sources: List[str] = field(default_factory=list)
     freshness: str = "unknown"
     summary: Optional[str] = None
+    nlm_prediction: Optional[Dict[str, Any]] = None
 
 
 @dataclass

@@ -74,6 +74,9 @@ _safe_import(".network_monitor_agent", "NetworkMonitorAgent")
 _safe_import(".integrations.camera_integration", "CameraIntegration")
 _safe_import(".integrations.speech_integration", "SpeechIntegration")
 _safe_import(".v2.physicsnemo_agent", "PhysicsNeMoAgent")
+_safe_import(".v2.grounding_agent", "GroundingAgent")
+_safe_import(".v2.intention_agent", "IntentionAgent")
+_safe_import(".v2.reflection_agent", "ReflectionAgent")
 
 # Dynamically create runtime-safe agent modules/classes for compatibility.
 import sys

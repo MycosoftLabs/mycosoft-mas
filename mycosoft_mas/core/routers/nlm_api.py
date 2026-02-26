@@ -653,6 +653,50 @@ async def api_query_knowledge(req: KnowledgeQueryRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class SensorPredictRequest(BaseModel):
+    """Request for next-hour sensor prediction."""
+    entity_id: str = Field(default="sporebase", description="Entity/device ID")
+    horizon_minutes: int = Field(default=60, ge=1, le=1440, description="Prediction horizon in minutes")
+    current_conditions: Optional[Dict[str, Any]] = Field(default=None, description="Current sensor readings")
+
+
+@router.post("/predict/sensors")
+async def api_predict_sensors(req: SensorPredictRequest) -> Dict[str, Any]:
+    """
+    Predict next-hour sensor readings for grounding.
+
+    Used by GroundingGate.attach_world_state() to add nlm_prediction.
+    Proxies to NLM API when available; returns fallback structure otherwise.
+    """
+    try:
+        import os
+        import httpx
+
+        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        if nlm_url:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                resp = await client.post(
+                    f"{nlm_url.rstrip('/')}/api/predict/sensors",
+                    json={
+                        "entity_id": req.entity_id,
+                        "horizon_minutes": req.horizon_minutes,
+                        "current_conditions": req.current_conditions,
+                    },
+                )
+                if resp.status_code == 200:
+                    return resp.json()
+    except Exception as e:
+        logger.debug("NLM sensors predict proxy failed: %s", e)
+
+    return {
+        "entity_id": req.entity_id,
+        "horizon_minutes": req.horizon_minutes,
+        "predictions": [],
+        "fallback": True,
+        "message": "NLM sensor prediction not available",
+    }
+
+
 @router.post("/environmental/process")
 async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[str, Any]:
     """
