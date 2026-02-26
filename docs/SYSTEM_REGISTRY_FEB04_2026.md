@@ -155,6 +155,20 @@ MYCA live awareness of online users, active sessions, and staff presence. Proxie
 **Auth**: `x-service-key: PRESENCE_SERVICE_KEY` for service-to-service  
 **Doc**: `docs/myca/atomic/MYCA_PRESENCE.md`
 
+### Agent Event Bus (Feb 9, 2026)
+
+WebSocket endpoint for agent-to-agent real-time messaging. Bridges to Redis pub/sub channels.
+
+| Endpoint | Transport | Description |
+|----------|-----------|-------------|
+| `/ws/agent-bus` | WebSocket | Agent Event Bus – persistent connection, session tracking, heartbeats |
+| `/a2a/v1/ws` | WebSocket | A2A protocol with streaming responses |
+
+**Feature flags**: `MYCA_AGENT_BUS_ENABLED`, `MYCA_A2A_WS_ENABLED`  
+**Redis channels**: `agents:tasks`, `agents:tool_calls`  
+**Router**: `mycosoft_mas/realtime/agent_bus.py`, `mycosoft_mas/core/routers/a2a_websocket.py`  
+**Docs**: `docs/WEBSOCKET_AGENT_BUS_FEB09_2026.md`, `docs/AGENT_BUS_MIGRATION_GUIDE_FEB09_2026.md`
+
 ### Petri Dish Simulation API (Feb 20, 2026)
 
 | Endpoint | Method | Description |

@@ -22,7 +22,26 @@ from .redis_pubsub import get_client, Channel
 
 logger = logging.getLogger(__name__)
 
+
+def _validate_event(event: AgentEvent) -> tuple[bool, str]:
+    """Validate event through policy engine if enabled. Returns (allowed, reason)."""
+    try:
+        from mycosoft_mas.security.policy_engine import get_policy_engine
+        from mycosoft_mas.security.event_audit import audit_blocked_event
+
+        engine = get_policy_engine()
+        result = engine.validate_event(event)
+        if not result.allowed:
+            audit_blocked_event(event, result.reason, result.details)
+            return False, result.reason
+    except ImportError:
+        pass
+    return True, "ok"
+
 AGENT_BUS_ENABLED = os.getenv("MYCA_AGENT_BUS_ENABLED", "false").lower() == "true"
+
+# Valid event types for AgentEvent (subset of EVENT_TYPES)
+_AGENT_EVENT_TYPES = frozenset({"task", "result", "alert", "heartbeat", "tool_call", "status"})
 
 
 def create_agent_bus_router() -> APIRouter:
@@ -58,6 +77,7 @@ def create_agent_bus_router() -> APIRouter:
         agent_id: Optional[str] = None
 
         try:
+            await hub.initialize()
             await hub.connect(websocket, connection_id)
 
             # Expect initial message with agent_id
@@ -98,10 +118,16 @@ def create_agent_bus_router() -> APIRouter:
                     session_manager.heartbeat(connection_id)
                     continue
 
-                if msg_type == "event":
+                # Event: support both {"type":"event","event_type":"task",...} and {"type":"task",...}
+                event_type = (
+                    data.get("event_type", "status")
+                    if msg_type == "event"
+                    else (msg_type if msg_type in _AGENT_EVENT_TYPES else "status")
+                )
+                if msg_type == "event" or msg_type in _AGENT_EVENT_TYPES:
                     try:
                         event = AgentEvent(
-                            type=data.get("type", "status"),
+                            type=event_type,
                             from_agent=agent_id,
                             to_agent=data.get("to_agent", "broadcast"),
                             payload=data.get("payload", {}),
@@ -113,19 +139,34 @@ def create_agent_bus_router() -> APIRouter:
                         })
                         continue
 
-                    # Route to Redis
+                    # Policy validation
+                    allowed, reason = _validate_event(event)
+                    if not allowed:
+                        await websocket.send_json({
+                            "type": "error",
+                            "payload": {"message": f"Event blocked: {reason}"},
+                        })
+                        continue
+
+                    # Determine Redis channel by event type
+                    channel = Channel.AGENTS_STATUS.value
+                    if event.type == "task":
+                        channel = Channel.AGENTS_TASKS.value
+                    elif event.type == "tool_call":
+                        channel = Channel.AGENTS_TOOL_CALLS.value
+
+                    # Publish to Redis (cross-instance, other subscribers)
                     redis_client = await get_redis()
                     if redis_client and redis_client.is_connected():
-                        channel = Channel.AGENTS_STATUS.value
-                        if event.type == "task":
-                            channel = Channel.AGENTS_TASKS.value
-                        elif event.type == "tool_call":
-                            channel = Channel.AGENTS_TOOL_CALLS.value
                         await redis_client.publish(
                             channel,
                             event.model_dump(mode="json"),
                             source=agent_id,
                         )
+
+                    # Broadcast to local WebSocket subscribers
+                    event_data = event.model_dump(mode="json")
+                    await hub.publish(channel, event_data, sender=agent_id)
 
         except WebSocketDisconnect:
             logger.info(f"Agent Bus WebSocket disconnected: {connection_id}")

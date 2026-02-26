@@ -22,6 +22,7 @@ from mycosoft_mas.core.task_manager import TaskManager
 from mycosoft_mas.services.monitoring_interface import AgentMonitorable
 from mycosoft_mas.services.security_interface import AgentSecurable
 from mycosoft_mas.agents.memory_mixin import AgentMemoryMixin
+from mycosoft_mas.agents.websocket_mixin import AgentWebSocketMixin
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class ErrorLoggingService:
         return
 
 
-class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin):
+class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSocketMixin):
     """
     Base agent class that all other agents inherit from.
     
@@ -108,6 +109,9 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin):
         
         # Desktop automation
         self.desktop_automation = None
+
+        # WebSocket Agent Bus (optional, ws_enabled from config)
+        self.__init_ws_mixin__()
 
         # Integration service
         self.integration_service: Optional[IntegrationService] = None
@@ -350,6 +354,13 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin):
         # Initialize memory (from AgentMemoryMixin)
         await self.init_memory()
 
+        # Connect to Agent Bus if ws_enabled (default False)
+        if self.config.get("ws_enabled", False):
+            try:
+                await self.connect_to_bus(self.agent_id, metadata={"name": self.name})
+            except Exception as e:
+                self.logger.warning(f"Agent Bus connect failed (non-fatal): {e}")
+
         # Load previous learnings from memory
         if getattr(self, "_memory_initialized", False):
             learnings = await self.recall(tags=["learning"], limit=10)
@@ -407,7 +418,14 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin):
         self.running = False
         self.status = AgentStatus.SHUTDOWN
         self.is_running = False
-        
+
+        # Disconnect from Agent Bus if connected
+        if getattr(self, "_ws_enabled", False):
+            try:
+                await self.disconnect_from_bus()
+            except Exception as e:
+                self.logger.warning(f"Agent Bus disconnect error: {e}")
+
         # Save agent state to memory before stopping
         if self._memory_initialized:
             await self.save_agent_state()

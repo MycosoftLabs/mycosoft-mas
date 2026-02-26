@@ -1,5 +1,9 @@
 # Master Document Index
 
+## Agent Event Bus (Feb 9, 2026)
+- `docs/WEBSOCKET_AGENT_BUS_FEB09_2026.md` – **WebSocket Agent Bus**: Architecture, endpoints, event schema, BaseAgent mixin, MCP progress, feature flags.
+- `docs/AGENT_BUS_MIGRATION_GUIDE_FEB09_2026.md` – **Migration guide**: Enabling flags, migrating from HTTP polling, rollback, rollout strategy.
+
 ## Session Summary – MYCA Worldview Integration (Feb 17, 2026)
 - `docs/SESSION_SUMMARY_MYCA_WORLDVIEW_INTEGRATION_FEB17_2026.md` – **Today's work**: Consciousness API extended with nlm/earthlive/presence; LiveDemo WorldState interface; defensive world endpoint; integration tests; MAS deploy. Verification results and commits.
 - `docs/MYCA_WORLDVIEW_INTEGRATION_AUDIT_FEB17_2026.md` – **Integration audit**: NLM API, EarthLIVE, consciousness wiring; flows for MYCA page, Search, Voice, Chat.

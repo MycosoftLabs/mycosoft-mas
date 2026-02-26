@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from mycosoft_mas.mcp.progress_notifier import emit_progress
+
 logger = logging.getLogger("TaskManagementMCP")
 
 
@@ -706,6 +708,7 @@ class TaskManagementMCPServer:
     
     async def _handle_gap_scan(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Scan for code gaps."""
+        await emit_progress("gap_scan", 0, 1, "Starting gap scan")
         repo = args.get("repo")
         category = args.get("category", "all")
         refresh = args.get("refresh", False)
@@ -731,7 +734,8 @@ class TaskManagementMCPServer:
                         "summary": {category: summary.get(category, 0)},
                         "category_filter": category
                     }
-                
+
+                await emit_progress("gap_scan", 1, 1, "Gap scan complete (cached)")
                 return {
                     "success": True,
                     "source": "cached_report",
@@ -742,6 +746,7 @@ class TaskManagementMCPServer:
                 logger.warning(f"Failed to read gap report: {e}")
         
         # If no cached report or refresh requested, return guidance
+        await emit_progress("gap_scan", 1, 1, "Gap scan complete")
         return {
             "success": True,
             "source": "guidance",
@@ -753,6 +758,7 @@ class TaskManagementMCPServer:
 
     async def _handle_submit_coding_task(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Create a coding fix task from autonomous error triage."""
+        await emit_progress("submit_coding_task", 0, 1, "Creating coding fix task")
         error_message = args["error_message"]
         error_id = args.get("error_id", f"fix_{uuid4().hex[:8]}")
         file_path = args.get("file_path", "")
@@ -797,6 +803,7 @@ Traceback:
 
         self._tasks[task.id] = task
         await self._save_tasks()
+        await emit_progress("submit_coding_task", 1, 1, "Coding fix task created")
 
         return {
             "success": True,

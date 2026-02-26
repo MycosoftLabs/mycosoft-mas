@@ -20,6 +20,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
+from mycosoft_mas.mcp.progress_notifier import emit_progress
+
 logger = logging.getLogger("MCPMemoryServer")
 
 
@@ -45,15 +47,12 @@ class MCPMemoryServer:
     """
     
     def __init__(self, database_url: Optional[str] = None):
-        self._database_url = database_url or os.getenv(
+        self._database_url = database_url or os.getenv("MINDEX_DATABASE_URL")
         if not self._database_url:
             raise ValueError(
                 "MINDEX_DATABASE_URL environment variable is required. "
                 "Please set it to your PostgreSQL connection string."
             )
-            "MINDEX_DATABASE_URL",
-            os.getenv("MINDEX_DATABASE_URL")
-        )
         self._pool = None
         self._memory_cache: Dict[str, Dict[str, Any]] = {}
         self._initialized = False
@@ -390,6 +389,7 @@ class MCPMemoryServer:
     
     async def _handle_search(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Handle memory_search tool call."""
+        await emit_progress("memory_search", 0, 2, "Searching memories")
         query = args.get("query", "")
         category = args.get("category")
         limit = args.get("limit", 10)
@@ -434,7 +434,8 @@ class MCPMemoryServer:
                         })
             except Exception as e:
                 logger.error(f"Failed to search memories: {e}")
-        
+
+        await emit_progress("memory_search", 2, 2, "Memory search complete")
         # Deduplicate by ID
         seen = set()
         unique = []
