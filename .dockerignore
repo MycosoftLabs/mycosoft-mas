@@ -110,3 +110,5 @@ docker-compose.override.yml
 **/.pytest_cache
 **/.mypy_cache
 **/.hypothesis 
+!docs/MYCA_Master_Ideas_Concepts_Resources.md
+!docs/IDEA_STATUS_TRACKER_FEB26_2026.md
