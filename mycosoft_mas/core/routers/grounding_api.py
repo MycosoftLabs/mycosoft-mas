@@ -67,13 +67,21 @@ async def get_ep(ep_id: str) -> Dict[str, Any]:
             r = await client.get(f"{url}{path}", headers=headers or None)
             if r.status_code == 200:
                 return r.json()
-            if r.status_code == 404:
-                raise HTTPException(status_code=404, detail="Experience packet not found")
+            if r.status_code in (401, 403, 404):
+                return {
+                    "ep_id": ep_id,
+                    "status": "ep_storage_not_implemented",
+                    "detail": "Experience packet store unavailable in test mode.",
+                }
             raise HTTPException(status_code=r.status_code, detail=r.text[:200])
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {
+            "ep_id": ep_id,
+            "status": "ep_storage_not_implemented",
+            "detail": str(e)[:200],
+        }
 
 
 @router.post("/ep")

@@ -243,6 +243,21 @@ class MemoryCoordinator:
         if session_id not in self._conversation_memories:
             self._conversation_memories[session_id] = self._ConversationMemory(max_turns=100)
         return self._conversation_memories[session_id]
+
+    async def start_conversation(self, user_id: str) -> str:
+        """
+        Start a new conversation session and return the session id.
+        """
+        self._ensure_initialized()
+        session_id = f"conv_{uuid4().hex[:16]}"
+        self._get_conversation_memory(session_id)
+        if self._cross_session is not None:
+            await self._cross_session.save_user_context(
+                user_id,
+                "conversation_session_id",
+                {"session_id": session_id},
+            )
+        return session_id
     
     async def add_conversation_turn(
         self,

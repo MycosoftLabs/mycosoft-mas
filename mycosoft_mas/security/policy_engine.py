@@ -64,7 +64,8 @@ class PolicyEngine:
         enabled: bool = True,
     ):
         self.rate_limit_per_minute = rate_limit_per_minute
-        self.enabled = enabled and MYCA_POLICY_ENGINE_ENABLED
+        env_enabled = os.getenv("MYCA_POLICY_ENGINE_ENABLED", "false").lower() in ("1", "true", "yes")
+        self.enabled = enabled and env_enabled
         self._event_counts: Dict[str, list] = defaultdict(list)
         self._tool_whitelists: Dict[str, Set[str]] = {}
 
@@ -91,10 +92,15 @@ class PolicyEngine:
             return PolicyResult(allowed=True, reason="Policy engine disabled")
 
         try:
-            from_agent = getattr(event, "from_agent", str(event.get("from_agent", "")))
-            event_type = getattr(event, "type", event.get("type", ""))
-            classification = getattr(event, "classification", event.get("classification", "UNCLASS"))
-            payload = getattr(event, "payload", event.get("payload", {})) or {}
+            def _safe_get(obj: Any, key: str, default: Any) -> Any:
+                if isinstance(obj, dict):
+                    return obj.get(key, default)
+                return getattr(obj, key, default)
+
+            from_agent = _safe_get(event, "from_agent", "")
+            event_type = _safe_get(event, "type", "")
+            classification = _safe_get(event, "classification", "UNCLASS")
+            payload = _safe_get(event, "payload", {}) or {}
             tool_name = payload.get("tool") or payload.get("tool_name")
 
             if classification not in ALLOWED_CLASSIFICATIONS:
