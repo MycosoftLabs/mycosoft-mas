@@ -1,0 +1,52 @@
+# Full Context Before Planning FEB10_2026 (All Agents)
+
+## MANDATORY: Context Loading Before Any Plan, Task, or Implementation
+
+Before ANY agent creates a plan, writes new code, makes architectural decisions,
+or starts a new task in any Mycosoft repository, it MUST load full system context.
+
+## Required Steps (in order)
+
+### 1. Read Cursor Docs Index and Master Index
+- Read `.cursor/CURSOR_DOCS_INDEX.md` first (vital and current docs).
+- Read `docs/MASTER_DOCUMENT_INDEX.md` for full table of contents.
+- Use `.cursor/docs_manifest.json` for full discovery if needed.
+
+### 2. Read All Docs From the Last 72 Hours (ALL repos)
+- Scan `docs/` across MAS, MINDEX, NLM, Mycorrhizae, Website, NatureOS.
+- Read ALL docs created or updated in the last 72 hours, newest first.
+
+### 3. Read Core Registries (ALL plans)
+- `docs/SYSTEM_REGISTRY_FEB04_2026.md`
+- `docs/API_CATALOG_FEB04_2026.md`
+- `docs/system_map.md`
+- `docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md`
+- `docs/Code and System Prioritization.docx.md`
+
+### 4. Read the Ideas Document (ALL evolution/growth plans)
+- `docs/MYCA_Master_Ideas_Concepts_Resources.md`
+
+### 5. Check Gap Reports
+- `.cursor/gap_report_latest.json`
+- `.cursor/gap_report_index.json`
+
+### 6. Cross-Repo Code Reality Check
+- MAS: `mycosoft_mas/agents/`, `mycosoft_mas/core/routers/`, `mycosoft_mas/bio/`
+- MINDEX: `mindex_api/routers/`, `mindex_etl/jobs/`, `migrations/`
+- NLM: `nlm/api/`, `nlm/biology/`, `nlm/chemistry/`, `nlm/physics/`
+- Mycorrhizae: `mycorrhizae/`, `api/`, `mycorrhizae/fci/`, `mycorrhizae/hpl/`
+- Website: `app/`, `components/`, `lib/`, `app/api/`
+
+## Plan Requirements (enforced)
+- Every plan MUST include a "Context Sources" section listing documents read.
+- Every plan MUST include cross-repo impact analysis.
+- Every plan MUST list related existing work or known gaps.
+
+## Why This Rule Exists
+- Mycosoft has 500,000+ files across 9 repos.
+- Plans without full context create duplicate or conflicting work.
+- Evolution work requires cross-system integration awareness.
+
+## Enforcement
+- If a plan is created without this context, it must be invalidated and redone.
+- The plan-tracker agent should verify context loading.

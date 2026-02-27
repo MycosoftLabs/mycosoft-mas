@@ -1,5 +1,11 @@
 # Master Document Index
 
+## Idea Evolution Status (Feb 26, 2026)
+- `docs/IDEA_STATUS_TRACKER_FEB26_2026.md` – **Idea status tracker**: Living status overrides and cross-repo mapping for the 834-entry ideas catalog.
+
+## Platform Upgrade Audit (Feb 27, 2026)
+- `docs/PLATFORM_UPGRADE_AUDIT_FEB27_2026.md` – **Upgrade audit**: Node outdated inventory, ikonate lockfile SSH resolution, Node engine mismatch, VM apt backlog, Docker versions and running containers.
+
 ## Agent Event Bus (Feb 9, 2026)
 - `docs/WEBSOCKET_AGENT_BUS_FEB09_2026.md` – **WebSocket Agent Bus**: Architecture, endpoints, event schema, BaseAgent mixin, MCP progress, feature flags.
 - `docs/AGENT_BUS_MIGRATION_GUIDE_FEB09_2026.md` – **Migration guide**: Enabling flags, migrating from HTTP polling, rollback, rollout strategy.

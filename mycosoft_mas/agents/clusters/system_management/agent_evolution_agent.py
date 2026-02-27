@@ -8,6 +8,7 @@ upgrades to enhance the system's capabilities.
 
 import asyncio
 import logging
+import os
 from typing import Dict, List, Optional, Any, Set, Tuple, Union, Callable, Awaitable
 from datetime import datetime, timedelta
 import json
@@ -30,6 +31,8 @@ class DiscoverySource(Enum):
     HUGGINGFACE = auto()
     PAPERS_WITH_CODE = auto()
     ARXIV = auto()
+    DISCORD_IDEAS = auto()
+    CODEBASE_SCAN = auto()
     CUSTOM = auto()
 
 class ImprovementType(Enum):
@@ -123,6 +126,20 @@ class ImplementationPlan:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
+@dataclass
+class IdeaEntry:
+    """Entry parsed from the Ideas catalog"""
+    entry_id: str
+    entry_type: str
+    title: str
+    url: Optional[str]
+    date: Optional[str]
+    author: Optional[str]
+    section: str
+    channel: Optional[str]
+    raw: str
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
 class AgentEvolutionAgent(BaseAgent):
     """Agent for discovering and recommending improvements to other agents"""
     
@@ -136,10 +153,26 @@ class AgentEvolutionAgent(BaseAgent):
         self.discovery_queue: asyncio.Queue = asyncio.Queue()
         self.evaluation_queue: asyncio.Queue = asyncio.Queue()
         self.implementation_queue: asyncio.Queue = asyncio.Queue()
+        self._background_tasks: List[asyncio.Task] = []
         
         # Create necessary directories
         self.data_dir = Path("data/agent_evolution")
         self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.idea_data_dir = Path("mycosoft_mas/runtime/idea_evolution")
+        self.idea_data_dir.mkdir(parents=True, exist_ok=True)
+
+        self.ideas_doc_path = Path(
+            os.environ.get(
+                "IDEAS_DOC_PATH",
+                "docs/MYCA_Master_Ideas_Concepts_Resources.md"
+            )
+        )
+        self.status_tracker_path = Path(
+            os.environ.get(
+                "IDEA_STATUS_TRACKER_PATH",
+                "docs/IDEA_STATUS_TRACKER_FEB26_2026.md"
+            )
+        )
         
         # Initialize metrics
         self.metrics.update({
@@ -148,7 +181,10 @@ class AgentEvolutionAgent(BaseAgent):
             "improvements_implemented": 0,
             "discovery_tasks_run": 0,
             "evaluation_tasks_run": 0,
-            "implementation_tasks_run": 0
+            "implementation_tasks_run": 0,
+            "ideas_parsed": 0,
+            "ideas_status_updated": 0,
+            "codebase_findings": 0
         })
     
     async def initialize(self) -> None:
@@ -158,12 +194,21 @@ class AgentEvolutionAgent(BaseAgent):
         await self._register_default_discovery_tasks()
         self.status = AgentStatus.READY
         self.logger.info("Agent Evolution Agent initialized")
+
+        self._background_tasks = [
+            asyncio.create_task(self._process_discovery_queue()),
+            asyncio.create_task(self._process_evaluation_queue()),
+            asyncio.create_task(self._process_implementation_queue()),
+            asyncio.create_task(self.start_evolution_loop())
+        ]
     
     async def stop(self) -> None:
         """Stop the agent"""
         self.status = AgentStatus.STOPPING
         self.logger.info("Stopping Agent Evolution Agent")
         await self._save_data()
+        for task in self._background_tasks:
+            task.cancel()
         await super().stop()
     
     async def register_agent(
@@ -238,6 +283,10 @@ class AgentEvolutionAgent(BaseAgent):
             improvement_ids = await self._discover_from_papers_with_code(task)
         elif task.source == DiscoverySource.ARXIV:
             improvement_ids = await self._discover_from_arxiv(task)
+        elif task.source == DiscoverySource.DISCORD_IDEAS:
+            improvement_ids = await self._discover_from_discord_ideas(task)
+        elif task.source == DiscoverySource.CODEBASE_SCAN:
+            improvement_ids = await self._discover_from_codebase_scan(task)
         elif task.source == DiscoverySource.CUSTOM:
             improvement_ids = await self._discover_from_custom_source(task)
         
@@ -432,211 +481,174 @@ class AgentEvolutionAgent(BaseAgent):
             filters={"category": "cs.CV,cs.LG,q-bio"},
             next_run=datetime.utcnow() + timedelta(days=1)
         )
+
+        # Discord ideas catalog
+        await self.create_discovery_task(
+            source=DiscoverySource.DISCORD_IDEAS,
+            query="ideas_catalog",
+            filters={"source": str(self.ideas_doc_path)},
+            next_run=datetime.utcnow() + timedelta(hours=12)
+        )
+
+        # Codebase scan (gaps and TODOs)
+        await self.create_discovery_task(
+            source=DiscoverySource.CODEBASE_SCAN,
+            query="gap_report_scan",
+            filters={
+                "gap_report_latest": ".cursor/gap_report_latest.json",
+                "gap_report_index": ".cursor/gap_report_index.json"
+            },
+            next_run=datetime.utcnow() + timedelta(hours=12)
+        )
     
     async def _discover_from_github(self, task: DiscoveryTask) -> List[str]:
         """Discover improvements from GitHub"""
         self.logger.info(f"Discovering from GitHub: {task.query}")
-        
-        # In a real implementation, this would use the GitHub API
-        # For now, we'll simulate discoveries
-        
-        improvement_ids = []
-        
-        # Simulate finding a new library
-        if "classification" in task.query.lower():
-            improvement_id = await self._create_improvement(
-                name="Advanced Fungal Classification Library",
-                description="A new deep learning library specifically designed for fungal classification with improved accuracy",
-                source=DiscoverySource.GITHUB,
-                source_url="https://github.com/example/fungal-classification",
-                improvement_type=ImprovementType.NEW_LIBRARY,
-                target_agent_id="species_classification_agent",
-                relevance_score=0.9,
-                implementation_complexity=0.6,
-                potential_impact=0.8,
-                code_snippets=[
-                    "from fungal_classification import FungalClassifier\n\nclassifier = FungalClassifier(model='advanced')\nresults = classifier.predict(image)"
-                ],
-                dependencies=["torch>=1.9.0", "fungal_classification>=0.2.0"],
-                requirements={"python": ">=3.8", "gpu": True}
-            )
-            improvement_ids.append(improvement_id)
-        
-        # Simulate finding a new algorithm
-        if "pattern" in task.query.lower():
-            improvement_id = await self._create_improvement(
-                name="Mycelium Pattern Recognition Algorithm",
-                description="A novel algorithm for recognizing complex mycelium growth patterns using graph theory",
-                source=DiscoverySource.GITHUB,
-                source_url="https://github.com/example/mycelium-patterns",
-                improvement_type=ImprovementType.NEW_ALGORITHM,
-                target_agent_id="mycelium_pattern_agent",
-                relevance_score=0.85,
-                implementation_complexity=0.7,
-                potential_impact=0.75,
-                code_snippets=[
-                    "from mycelium_patterns import PatternRecognizer\n\nrecognizer = PatternRecognizer()\npatterns = recognizer.analyze(growth_data)"
-                ],
-                dependencies=["networkx>=2.6.0", "numpy>=1.20.0"],
-                requirements={"python": ">=3.7"}
-            )
-            improvement_ids.append(improvement_id)
-        
+        token = os.environ.get("GITHUB_TOKEN")
+        if not token:
+            self.logger.warning("GITHUB_TOKEN not set; skipping GitHub discovery")
+            return []
+
+        query = task.query
+        language = task.filters.get("language", "python")
+        per_page = int(task.filters.get("per_page", 5))
+        q = f"{query} language:{language}"
+        url = f"https://api.github.com/search/repositories?q={q}&sort=stars&order=desc&per_page={per_page}"
+
+        headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
+        improvement_ids: List[str] = []
+
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url, timeout=30) as resp:
+                if resp.status != 200:
+                    self.logger.warning(f"GitHub discovery failed: {resp.status}")
+                    return []
+                payload = await resp.json()
+                for item in payload.get("items", []):
+                    improvement_id = await self._create_improvement(
+                        name=item.get("name", "GitHub Repository"),
+                        description=item.get("description") or "GitHub repository discovery",
+                        source=DiscoverySource.GITHUB,
+                        source_url=item.get("html_url", ""),
+                        improvement_type=ImprovementType.NEW_TOOL,
+                        target_agent_id=task.filters.get("target_agent_id", "system"),
+                        relevance_score=0.6,
+                        implementation_complexity=0.5,
+                        potential_impact=0.6,
+                        dependencies=[],
+                        requirements={"stars": item.get("stargazers_count", 0)}
+                    )
+                    improvement_ids.append(improvement_id)
+
         return improvement_ids
     
     async def _discover_from_twitter(self, task: DiscoveryTask) -> List[str]:
         """Discover improvements from Twitter"""
         self.logger.info(f"Discovering from Twitter: {task.query}")
-        
-        # In a real implementation, this would use the Twitter API
-        # For now, we'll simulate discoveries
-        
-        improvement_ids = []
-        
-        # Simulate finding a new tool
-        if "mycology" in task.query.lower():
-            improvement_id = await self._create_improvement(
-                name="Mycology Data Visualization Tool",
-                description="A new tool for visualizing complex mycology data with interactive 3D models",
-                source=DiscoverySource.TWITTER,
-                source_url="https://twitter.com/example/status/123456789",
-                improvement_type=ImprovementType.NEW_TOOL,
-                target_agent_id="data_visualization_agent",
-                relevance_score=0.8,
-                implementation_complexity=0.5,
-                potential_impact=0.7,
-                code_snippets=[
-                    "from mycology_viz import MycologyVisualizer\n\nviz = MycologyVisualizer()\nviz.plot_3d(mycelium_data)"
-                ],
-                dependencies=["plotly>=5.0.0", "dash>=2.0.0"],
-                requirements={"python": ">=3.8", "browser": True}
-            )
-            improvement_ids.append(improvement_id)
-        
-        return improvement_ids
+        self.logger.warning("Twitter discovery not configured; skipping")
+        return []
     
     async def _discover_from_reddit(self, task: DiscoveryTask) -> List[str]:
         """Discover improvements from Reddit"""
         self.logger.info(f"Discovering from Reddit: {task.query}")
-        
-        # In a real implementation, this would use the Reddit API
-        # For now, we'll simulate discoveries
-        
-        improvement_ids = []
-        
-        # Simulate finding a new protocol
-        if "protocol" in task.query.lower():
-            improvement_id = await self._create_improvement(
-                name="Optimized Mycorrhizae Cultivation Protocol",
-                description="A new protocol for cultivating mycorrhizae with improved yield and health",
-                source=DiscoverySource.REDDIT,
-                source_url="https://reddit.com/r/mycology/comments/example",
-                improvement_type=ImprovementType.NEW_PROTOCOL,
-                target_agent_id="mycorrhizae_protocol_agent",
-                relevance_score=0.75,
-                implementation_complexity=0.4,
-                potential_impact=0.6,
-                code_snippets=[
-                    "protocol = {\n  'name': 'Optimized Mycorrhizae Cultivation',\n  'steps': [\n    {'name': 'Substrate Preparation', 'duration': 120, 'temperature': 22},\n    {'name': 'Inoculation', 'duration': 30, 'humidity': 0.8}\n  ]\n}"
-                ],
-                dependencies=[],
-                requirements={"temperature_control": True, "humidity_control": True}
-            )
-            improvement_ids.append(improvement_id)
-        
-        return improvement_ids
+        self.logger.warning("Reddit discovery not configured; skipping")
+        return []
     
     async def _discover_from_huggingface(self, task: DiscoveryTask) -> List[str]:
         """Discover improvements from HuggingFace"""
         self.logger.info(f"Discovering from HuggingFace: {task.query}")
-        
-        # In a real implementation, this would use the HuggingFace API
-        # For now, we'll simulate discoveries
-        
-        improvement_ids = []
-        
-        # Simulate finding a new model
-        if "fungi" in task.query.lower():
-            improvement_id = await self._create_improvement(
-                name="FungiVision Transformer Model",
-                description="A state-of-the-art transformer model for fungi classification with 98% accuracy",
-                source=DiscoverySource.HUGGINGFACE,
-                source_url="https://huggingface.co/models/example/fungivision",
-                improvement_type=ImprovementType.NEW_MODEL,
-                target_agent_id="species_classification_agent",
-                relevance_score=0.95,
-                implementation_complexity=0.8,
-                potential_impact=0.9,
-                code_snippets=[
-                    "from transformers import AutoModelForImageClassification\n\nmodel = AutoModelForImageClassification.from_pretrained('example/fungivision')\nresults = model.predict(image)"
-                ],
-                dependencies=["transformers>=4.15.0", "torch>=1.10.0"],
-                requirements={"python": ">=3.8", "gpu": True, "memory": ">=8GB"}
-            )
-            improvement_ids.append(improvement_id)
-        
+        query = task.query
+        per_page = int(task.filters.get("per_page", 5))
+        url = f"https://huggingface.co/api/models?search={query}&limit={per_page}"
+        token = os.environ.get("HUGGINGFACE_API_TOKEN")
+
+        headers = {}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        improvement_ids: List[str] = []
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.get(url, timeout=30) as resp:
+                if resp.status != 200:
+                    self.logger.warning(f"HuggingFace discovery failed: {resp.status}")
+                    return []
+                payload = await resp.json()
+                for item in payload:
+                    model_id = item.get("id", "")
+                    improvement_id = await self._create_improvement(
+                        name=model_id or "HuggingFace Model",
+                        description=item.get("pipeline_tag") or "HuggingFace model discovery",
+                        source=DiscoverySource.HUGGINGFACE,
+                        source_url=f"https://huggingface.co/{model_id}" if model_id else "",
+                        improvement_type=ImprovementType.NEW_MODEL,
+                        target_agent_id=task.filters.get("target_agent_id", "system"),
+                        relevance_score=0.6,
+                        implementation_complexity=0.7,
+                        potential_impact=0.6,
+                        dependencies=[],
+                        requirements={"downloads": item.get("downloads", 0)}
+                    )
+                    improvement_ids.append(improvement_id)
+
         return improvement_ids
     
     async def _discover_from_papers_with_code(self, task: DiscoveryTask) -> List[str]:
         """Discover improvements from Papers with Code"""
         self.logger.info(f"Discovering from Papers with Code: {task.query}")
-        
-        # In a real implementation, this would use the Papers with Code API
-        # For now, we'll simulate discoveries
-        
-        improvement_ids = []
-        
-        # Simulate finding a new algorithm
-        if "classification" in task.query.lower():
-            improvement_id = await self._create_improvement(
-                name="Fungal Feature Extraction Algorithm",
-                description="A novel algorithm for extracting discriminative features from fungal images",
-                source=DiscoverySource.PAPERS_WITH_CODE,
-                source_url="https://paperswithcode.com/paper/example",
-                improvement_type=ImprovementType.NEW_ALGORITHM,
-                target_agent_id="species_classification_agent",
-                relevance_score=0.85,
-                implementation_complexity=0.7,
-                potential_impact=0.8,
-                code_snippets=[
-                    "from fungal_features import FeatureExtractor\n\nextractor = FeatureExtractor()\nfeatures = extractor.extract(image)"
-                ],
-                dependencies=["opencv-python>=4.5.0", "scikit-image>=0.18.0"],
-                requirements={"python": ">=3.7"}
-            )
-            improvement_ids.append(improvement_id)
-        
+        query = task.query
+        per_page = int(task.filters.get("per_page", 5))
+        url = f"https://paperswithcode.com/api/v1/papers/?search={query}&page_size={per_page}"
+
+        improvement_ids: List[str] = []
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=30) as resp:
+                if resp.status != 200:
+                    self.logger.warning(f"Papers with Code discovery failed: {resp.status}")
+                    return []
+                payload = await resp.json()
+                for item in payload.get("results", []):
+                    improvement_id = await self._create_improvement(
+                        name=item.get("title", "Paper"),
+                        description=item.get("abstract") or "Paper discovery",
+                        source=DiscoverySource.PAPERS_WITH_CODE,
+                        source_url=item.get("url", ""),
+                        improvement_type=ImprovementType.NEW_ALGORITHM,
+                        target_agent_id=task.filters.get("target_agent_id", "system"),
+                        relevance_score=0.6,
+                        implementation_complexity=0.7,
+                        potential_impact=0.6,
+                        dependencies=[],
+                        requirements={}
+                    )
+                    improvement_ids.append(improvement_id)
+
         return improvement_ids
     
     async def _discover_from_arxiv(self, task: DiscoveryTask) -> List[str]:
         """Discover improvements from ArXiv"""
         self.logger.info(f"Discovering from ArXiv: {task.query}")
-        
-        # In a real implementation, this would use the ArXiv API
-        # For now, we'll simulate discoveries
-        
-        improvement_ids = []
-        
-        # Simulate finding a new approach
-        if "mycology" in task.query.lower():
+        query = task.query.replace(" ", "+")
+        max_results = int(task.filters.get("max_results", 5))
+        url = f"http://export.arxiv.org/api/query?search_query=all:{query}&start=0&max_results={max_results}"
+
+        feed = feedparser.parse(url)
+        improvement_ids: List[str] = []
+        for entry in feed.entries:
             improvement_id = await self._create_improvement(
-                name="Mycelial Network Analysis Framework",
-                description="A theoretical framework for analyzing mycelial networks using graph theory and information flow",
+                name=entry.get("title", "ArXiv Paper"),
+                description=entry.get("summary", "")[:500],
                 source=DiscoverySource.ARXIV,
-                source_url="https://arxiv.org/abs/2101.12345",
-                improvement_type=ImprovementType.NEW_FEATURE,
-                target_agent_id="mycelium_pattern_agent",
-                relevance_score=0.8,
-                implementation_complexity=0.75,
-                potential_impact=0.7,
-                code_snippets=[
-                    "from mycelial_network import NetworkAnalyzer\n\nanalyzer = NetworkAnalyzer()\nnetwork = analyzer.build_network(mycelium_data)\nmetrics = analyzer.analyze(network)"
-                ],
-                dependencies=["networkx>=2.6.0", "numpy>=1.20.0", "scipy>=1.7.0"],
-                requirements={"python": ">=3.8"}
+                source_url=entry.get("link", ""),
+                improvement_type=ImprovementType.NEW_ALGORITHM,
+                target_agent_id=task.filters.get("target_agent_id", "system"),
+                relevance_score=0.6,
+                implementation_complexity=0.7,
+                potential_impact=0.6,
+                dependencies=[],
+                requirements={}
             )
             improvement_ids.append(improvement_id)
-        
+
         return improvement_ids
     
     async def _discover_from_custom_source(self, task: DiscoveryTask) -> List[str]:
@@ -647,6 +659,171 @@ class AgentEvolutionAgent(BaseAgent):
         # For now, we'll return an empty list
         
         return []
+
+    async def _discover_from_discord_ideas(self, task: DiscoveryTask) -> List[str]:
+        """Parse Ideas catalog and update idea status data"""
+        self.logger.info("Parsing Discord ideas catalog")
+        ideas = self._parse_ideas_document()
+        if not ideas:
+            return []
+
+        ideas_payload = [idea.__dict__ for idea in ideas]
+        self._write_json(self.idea_data_dir / "ideas_parsed.json", ideas_payload)
+        self.metrics["ideas_parsed"] = len(ideas)
+
+        status_overrides = self._load_status_overrides()
+        ideas_status = []
+        for idea in ideas:
+            status = self._apply_status_overrides(idea, status_overrides)
+            ideas_status.append({
+                "entry_id": idea.entry_id,
+                "status": status,
+                "section": idea.section,
+                "channel": idea.channel,
+                "title": idea.title,
+                "url": idea.url,
+                "date": idea.date,
+                "author": idea.author
+            })
+
+        self._write_json(self.idea_data_dir / "ideas_status.json", ideas_status)
+        self.metrics["ideas_status_updated"] = len(ideas_status)
+        return []
+
+    async def _discover_from_codebase_scan(self, task: DiscoveryTask) -> List[str]:
+        """Discover improvements from gap reports"""
+        improvement_ids: List[str] = []
+        gap_latest = Path(task.filters.get("gap_report_latest", ".cursor/gap_report_latest.json"))
+        if not gap_latest.exists():
+            self.logger.warning("Gap report not found; skipping codebase scan")
+            return []
+
+        gaps = self._read_json(gap_latest) or {}
+        items = gaps.get("todos_fixmes", [])
+        for item in items[:25]:
+            improvement_type = ImprovementType.BUG_FIX if item.get("kind") == "BUG" else ImprovementType.DOCUMENTATION
+            name = f"{item.get('kind', 'GAP')}: {item.get('file', '')}"
+            description = item.get("line", "") or item.get("message", "")
+            improvement_id = await self._create_improvement(
+                name=name,
+                description=description,
+                source=DiscoverySource.CODEBASE_SCAN,
+                source_url=item.get("file", ""),
+                improvement_type=improvement_type,
+                target_agent_id="system",
+                relevance_score=0.6,
+                implementation_complexity=0.4,
+                potential_impact=0.6,
+                dependencies=[],
+                requirements={"repo": item.get("repo")}
+            )
+            improvement_ids.append(improvement_id)
+
+        self.metrics["codebase_findings"] += len(improvement_ids)
+        return improvement_ids
+
+    async def start_evolution_loop(self) -> None:
+        """Run discovery loop continuously"""
+        while self.status == AgentStatus.RUNNING:
+            try:
+                now = datetime.utcnow()
+                for task_id, task in self.discovery_tasks.items():
+                    if task.is_active and task.next_run and task.next_run <= now:
+                        await self.run_discovery_task(task_id)
+                await asyncio.sleep(3600)
+            except Exception as exc:
+                self.logger.error(f"Evolution loop error: {exc}")
+                await asyncio.sleep(60)
+
+    def _parse_ideas_document(self) -> List[IdeaEntry]:
+        """Parse the ideas document into structured entries"""
+        if not self.ideas_doc_path.exists():
+            self.logger.warning(f"Ideas doc not found: {self.ideas_doc_path}")
+            return []
+
+        entries: List[IdeaEntry] = []
+        section = ""
+        channel = None
+        link_re = re.compile(r"^- \[(.+?)\]\((.+?)\)\s+`(\d{4}-\d{2}-\d{2})`\s+\*(.+?)\*")
+        note_re = re.compile(r"^- `(\d{4}-\d{2}-\d{2})`\s+\*\*(.+?)\*\*:\s+(.*)")
+
+        for line in self.ideas_doc_path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("## "):
+                section = line.replace("## ", "").strip()
+                channel = None
+                continue
+            if line.startswith("### "):
+                channel = line.replace("### ", "").strip()
+                continue
+
+            link_match = link_re.match(line)
+            if link_match:
+                title, url, date, author = link_match.groups()
+                entry_id = f"idea_{uuid.uuid4().hex[:10]}"
+                entries.append(IdeaEntry(
+                    entry_id=entry_id,
+                    entry_type="link",
+                    title=title,
+                    url=url,
+                    date=date,
+                    author=author,
+                    section=section,
+                    channel=channel,
+                    raw=line
+                ))
+                continue
+
+            note_match = note_re.match(line)
+            if note_match:
+                date, author, text = note_match.groups()
+                entry_id = f"idea_{uuid.uuid4().hex[:10]}"
+                entries.append(IdeaEntry(
+                    entry_id=entry_id,
+                    entry_type="note",
+                    title=text,
+                    url=None,
+                    date=date,
+                    author=author,
+                    section=section,
+                    channel=channel,
+                    raw=line
+                ))
+                continue
+
+        return entries
+
+    def _load_status_overrides(self) -> Dict[str, str]:
+        """Load status overrides from the tracker document"""
+        if not self.status_tracker_path.exists():
+            return {}
+
+        overrides: Dict[str, str] = {}
+        pattern = re.compile(r"^- \*\*(Implemented|Partial)\*\*:\s*(.+)")
+        for line in self.status_tracker_path.read_text(encoding="utf-8").splitlines():
+            match = pattern.match(line.strip())
+            if match:
+                status, title = match.groups()
+                overrides[title.strip().lower()] = status.lower()
+        return overrides
+
+    def _apply_status_overrides(self, idea: IdeaEntry, overrides: Dict[str, str]) -> str:
+        """Apply status overrides based on title keyword match"""
+        title = (idea.title or "").lower()
+        for key, status in overrides.items():
+            if key in title:
+                return status
+        return "not_started"
+
+    def _write_json(self, path: Path, payload: Any) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2)
+
+    def _read_json(self, path: Path) -> Optional[Dict[str, Any]]:
+        if not path.exists():
+            return None
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
     
     async def _create_improvement(
         self,

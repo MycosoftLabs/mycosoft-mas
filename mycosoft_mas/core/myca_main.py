@@ -45,6 +45,7 @@ from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.documents import router as documents_router
 from mycosoft_mas.core.routers.agents import router as agents_router
+from mycosoft_mas.core.routers.evolution_api import router as evolution_router
 
 # FCI (Fungal Computer Interface) routers
 from mycosoft_mas.core.routers import fci as fci_router
@@ -473,6 +474,7 @@ app.include_router(integrations_router)
 app.include_router(notifications_router)
 app.include_router(infrastructure_router)
 app.include_router(documents_router)
+app.include_router(evolution_router)
 app.include_router(petri_sim_router)
 
 # Scientific platform routers

@@ -1,0 +1,106 @@
+{
+  "name": "Evolution Daily Scan",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "hour": 2,
+            "minute": 0
+          }
+        ]
+      },
+      "id": "cron-daily",
+      "name": "Cron: Daily 02:00 UTC",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [240, 240]
+    },
+    {
+      "parameters": {
+        "url": "={{ ($env.MAS_API_URL || 'http://192.168.0.188:8001') + '/api/evolution/run-scan' }}",
+        "method": "POST",
+        "responseFormat": "json"
+      },
+      "id": "mas-evolution-scan",
+      "name": "Run MAS Evolution Scan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [480, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $json;\nconst status = result?.status || 'unknown';\nconst report = result?.report || {};\nreturn [{\n  json: {\n    text: `Evolution scan complete. status=${status} ideas=${report.ideas_line_count ?? 'n/a'} timestamp=${report.timestamp ?? ''}`,\n    channel: '#myca-evolution'\n  }\n}];"
+      },
+      "id": "format-slack-message",
+      "name": "Format Slack Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 240]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "={{ $json.channel }}",
+        "text": "={{ $json.text }}"
+      },
+      "id": "slack-post",
+      "name": "Slack: Post Message",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [960, 240]
+    }
+  ],
+  "connections": {
+    "Cron: Daily 02:00 UTC": {
+      "main": [
+        [
+          {
+            "node": "Run MAS Evolution Scan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run MAS Evolution Scan": {
+      "main": [
+        [
+          {
+            "node": "Format Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Slack: Post Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2026-02-10T00:00:00.000Z",
+      "updatedAt": "2026-02-10T00:00:00.000Z",
+      "id": "myca-evolution",
+      "name": "MYCA Evolution"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-02-10T00:00:00.000Z",
+  "versionId": "1"
+}

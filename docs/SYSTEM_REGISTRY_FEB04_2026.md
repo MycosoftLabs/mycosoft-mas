@@ -134,6 +134,19 @@ MYCA has full view and full access to n8n workflows. Source of truth: repo `n8n/
 | `/api/workflows/sync` | POST | Sync to primary n8n |
 | `/api/workflows/export-all` | POST | Export all to repo |
 
+### Evolution API (Feb 10, 2026)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/evolution/run-scan` | POST | Run evolution scan |
+| `/api/evolution/ideas/status` | GET | Get ideas status |
+| `/api/evolution/discoveries` | GET | Get recent discoveries |
+| `/api/evolution/recommendations` | GET | Get recommendations |
+| `/api/evolution/evaluate` | POST | Record evaluation |
+
+**Router**: `mycosoft_mas/core/routers/evolution_api.py`  
+**Registered in**: `mycosoft_mas/core/myca_main.py`
+
 **Router**: `mycosoft_mas/core/routers/n8n_workflows_api.py`  
 **Rule**: `.cursor/rules/n8n-management.mdc`  
 **Agents**: n8n-workflow, n8n-ops, n8n-workflow-sync

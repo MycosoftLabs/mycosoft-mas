@@ -107,6 +107,18 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 **Router**: `mycosoft_mas/core/routers/presence_api.py`  
 **Upstream**: Website `http://192.168.0.187:3000/api/presence` (PRESENCE_API_URL)
 
+### Evolution API (`/api/evolution/*`) – Feb 10, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/evolution/run-scan` | POST | Run evolution scan |
+| `/api/evolution/ideas/status` | GET | Get ideas status |
+| `/api/evolution/discoveries` | GET | Get recent discoveries |
+| `/api/evolution/recommendations` | GET | Get recommendations |
+| `/api/evolution/evaluate` | POST | Record evaluation |
+
+**Router**: `mycosoft_mas/core/routers/evolution_api.py`
+
 ### Graph API (`/api/graph/*`)
 
 | Endpoint | Method | Description |
