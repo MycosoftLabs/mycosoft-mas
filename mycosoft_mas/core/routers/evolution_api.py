@@ -26,7 +26,9 @@ IDEAS_DOC = Path("docs/MYCA_Master_Ideas_Concepts_Resources.md")
 def _read_json(path: Path) -> Optional[Any]:
     if not path.exists():
         return None
-    return path.read_text(encoding="utf-8")
+    import json
+
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _write_json(path: Path, payload: Any) -> None:
