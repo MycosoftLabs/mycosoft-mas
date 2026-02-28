@@ -1,0 +1,309 @@
+{
+  "name": "daily-ops-digest",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "hour": 8,
+            "minute": 0
+          }
+        ]
+      },
+      "name": "Daily 8AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        220,
+        300
+      ],
+      "id": "cron-daily-8am"
+    },
+    {
+      "parameters": {
+        "url": "https://app.asana.com/api/1.0/tasks",
+        "method": "GET",
+        "responseFormat": "json",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.ASANA_TOKEN}}"
+            }
+          ]
+        },
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "assignee",
+              "value": "me"
+            },
+            {
+              "name": "due_on",
+              "value": "{{$now.toISODate()}}"
+            },
+            {
+              "name": "completed_since",
+              "value": "now"
+            },
+            {
+              "name": "opt_fields",
+              "value": "name,permalink_url,due_on,assignee.name,projects.name"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "name": "Asana Tasks Due Today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        480,
+        180
+      ],
+      "id": "asana-tasks"
+    },
+    {
+      "parameters": {
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+        "method": "GET",
+        "responseFormat": "json",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.GMAIL_TOKEN}}"
+            }
+          ]
+        },
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "q",
+              "value": "is:unread label:important"
+            },
+            {
+              "name": "maxResults",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "name": "Gmail Unread Important",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        480,
+        300
+      ],
+      "id": "gmail-unread"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        "method": "GET",
+        "responseFormat": "json",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.GCAL_TOKEN}}"
+            }
+          ]
+        },
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "timeMin",
+              "value": "{{$now.startOf('day').toISO()}}"
+            },
+            {
+              "name": "timeMax",
+              "value": "{{$now.endOf('day').toISO()}}"
+            },
+            {
+              "name": "singleEvents",
+              "value": "true"
+            },
+            {
+              "name": "orderBy",
+              "value": "startTime"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "name": "Calendar Events Today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        480,
+        420
+      ],
+      "id": "calendar-events"
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "name": "Merge Asana + Gmail",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        740,
+        240
+      ],
+      "id": "merge-asana-gmail"
+    },
+    {
+      "parameters": {
+        "mode": "combine"
+      },
+      "name": "Merge + Calendar",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        980,
+        320
+      ],
+      "id": "merge-all"
+    },
+    {
+      "parameters": {
+        "functionCode": "const asana = items[0]?.json || {};\nconst gmail = items[1]?.json || {};\nconst calendar = items[2]?.json || {};\n\nconst asanaTasks = asana.data || [];\nconst gmailCount = (gmail.messages || []).length;\nconst calendarEvents = calendar.items || [];\n\nconst lines = [];\nlines.push(`Daily Ops Digest — ${new Date().toLocaleDateString()}`);\nlines.push('');\nlines.push(`Asana tasks due today: ${asanaTasks.length}`);\nfor (const task of asanaTasks.slice(0, 10)) {\n  const project = (task.projects && task.projects[0]?.name) ? ` (${task.projects[0].name})` : '';\n  lines.push(`- ${task.name}${project} — ${task.permalink_url || ''}`.trim());\n}\nlines.push('');\nlines.push(`Gmail unread important: ${gmailCount}`);\nlines.push('');\nlines.push(`Calendar events today: ${calendarEvents.length}`);\nfor (const event of calendarEvents.slice(0, 10)) {\n  const start = event.start?.dateTime || event.start?.date || '';\n  lines.push(`- ${event.summary || 'Untitled'} @ ${start}`.trim());\n}\n\nreturn [{ json: { text: lines.join('\\n') } }];"
+      },
+      "name": "Format Digest",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        320
+      ],
+      "id": "format-digest"
+    },
+    {
+      "parameters": {
+        "url": "={{$env.SLACK_WEBHOOK_URL}}",
+        "method": "POST",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {
+          "timeout": 20000
+        },
+        "bodyParametersJson": "={{ { text: $json.text } }}"
+      },
+      "name": "Post to Slack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1460,
+        320
+      ],
+      "id": "post-slack"
+    }
+  ],
+  "connections": {
+    "Daily 8AM": {
+      "main": [
+        [
+          {
+            "node": "Asana Tasks Due Today",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail Unread Important",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calendar Events Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Asana Tasks Due Today": {
+      "main": [
+        [
+          {
+            "node": "Merge Asana + Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Unread Important": {
+      "main": [
+        [
+          {
+            "node": "Merge Asana + Gmail",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Asana + Gmail": {
+      "main": [
+        [
+          {
+            "node": "Merge + Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar Events Today": {
+      "main": [
+        [
+          {
+            "node": "Merge + Calendar",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge + Calendar": {
+      "main": [
+        [
+          {
+            "node": "Format Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Digest": {
+      "main": [
+        [
+          {
+            "node": "Post to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "id": "daily-ops-digest"
+}

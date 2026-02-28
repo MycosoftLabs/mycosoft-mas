@@ -117,6 +117,20 @@ class AgentRegistry:
             voice_triggers=["financial", "budget", "money", "accounting", "expenses"],
             config_key="financial"
         ))
+
+        self.register(AgentDefinition(
+            agent_id="relay_financial",
+            name="RelayFinancialAgent",
+            display_name="Relay Financial Agent",
+            description="Relay Financial API integration for banking and treasury operations",
+            category=AgentCategory.FINANCIAL,
+            capabilities=[AgentCapability.READ, AgentCapability.WRITE, AgentCapability.ANALYZE],
+            module_path="mycosoft_mas.agents.financial.relay_financial_agent",
+            class_name="RelayFinancialAgent",
+            keywords=["relay", "banking", "treasury", "balances", "transactions"],
+            voice_triggers=["relay financial", "relay banking", "treasury status"],
+            config_key="relay_financial"
+        ))
         
         self.register(AgentDefinition(
             agent_id="finance_admin",
@@ -131,7 +145,7 @@ class AgentRegistry:
             voice_triggers=["finance admin", "payment approval"],
             requires_confirmation=True
         ))
-        
+
         self.register(AgentDefinition(
             agent_id="corporate_ops",
             name="CorporateOperationsAgent",

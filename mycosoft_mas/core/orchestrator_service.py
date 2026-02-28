@@ -58,6 +58,14 @@ except ImportError as e:
     logging.warning(f"Could not import N8NClient: {e}")
     N8NClient = None
 
+# Agent Evolution import
+try:
+    from mycosoft_mas.agents.clusters.system_management.agent_evolution_agent import AgentEvolutionAgent
+except ImportError as e:
+    import logging
+    logging.warning(f"Could not import AgentEvolutionAgent: {e}")
+    AgentEvolutionAgent = None
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MYCA_Orchestrator")
 
@@ -144,6 +152,7 @@ class OrchestratorService:
         self.task_queues: Dict[str, asyncio.Queue] = {}
         self.pending_tasks: Dict[str, AgentTask] = {}
         self.agent_heartbeats: Dict[str, datetime] = {}
+        self.evolution_agent: Optional[AgentEvolutionAgent] = None
         self._started = False
         self._monitor_task: Optional[asyncio.Task] = None
     
@@ -164,6 +173,15 @@ class OrchestratorService:
             "orchestrator:heartbeats",
             self._handle_heartbeat
         )
+
+        # Start Agent Evolution background loop (if available)
+        if AgentEvolutionAgent is not None:
+            try:
+                self.evolution_agent = AgentEvolutionAgent(agent_id="agent_evolution")
+                await self.evolution_agent.initialize()
+                logger.info("Agent Evolution Agent started")
+            except Exception as exc:
+                logger.error(f"Failed to start Agent Evolution Agent: {exc}")
         
         # Start monitoring
         self._monitor_task = asyncio.create_task(self._health_monitor())
@@ -180,6 +198,12 @@ class OrchestratorService:
         
         if self.message_broker:
             await self.message_broker.close()
+
+        if self.evolution_agent is not None:
+            try:
+                await self.evolution_agent.stop()
+            except Exception as exc:
+                logger.error(f"Failed to stop Agent Evolution Agent: {exc}")
         
         self._started = False
         logger.info("MYCA Orchestrator stopped")

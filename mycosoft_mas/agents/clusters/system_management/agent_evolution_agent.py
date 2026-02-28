@@ -143,8 +143,8 @@ class IdeaEntry:
 class AgentEvolutionAgent(BaseAgent):
     """Agent for discovering and recommending improvements to other agents"""
     
-    def __init__(self, agent_id: str):
-        super().__init__(agent_id)
+    def __init__(self, agent_id: str, name: str = "Agent Evolution Agent", config: Optional[Dict[str, Any]] = None):
+        super().__init__(agent_id=agent_id, name=name, config=config or {})
         self.improvements: Dict[str, Improvement] = {}
         self.discovery_tasks: Dict[str, DiscoveryTask] = {}
         self.evaluation_results: Dict[str, EvaluationResult] = {}
@@ -192,7 +192,7 @@ class AgentEvolutionAgent(BaseAgent):
         await super().initialize()
         await self._load_data()
         await self._register_default_discovery_tasks()
-        self.status = AgentStatus.READY
+        self.status = AgentStatus.RUNNING
         self.logger.info("Agent Evolution Agent initialized")
 
         self._background_tasks = [
@@ -201,10 +201,16 @@ class AgentEvolutionAgent(BaseAgent):
             asyncio.create_task(self._process_implementation_queue()),
             asyncio.create_task(self.start_evolution_loop())
         ]
+
+    async def _initialize_services(self) -> None:
+        """Initialize without external dependencies."""
+        # Agent Evolution runs its own loops and file IO. Avoid external
+        # dependency wiring so startup is resilient.
+        return None
     
     async def stop(self) -> None:
         """Stop the agent"""
-        self.status = AgentStatus.STOPPING
+        self.status = AgentStatus.STOPPED
         self.logger.info("Stopping Agent Evolution Agent")
         await self._save_data()
         for task in self._background_tasks:
