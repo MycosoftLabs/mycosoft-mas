@@ -17,6 +17,45 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/voice/tools", tags=["voice-tools"])
 
 
+def _normalize_text(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.lower()) if value else ""
+
+
+def _get_mas_base_url() -> str:
+    return os.getenv("MAS_API_URL", "http://localhost:8001").rstrip("/")
+
+
+def _get_mindex_base_url() -> str:
+    return (
+        os.getenv("MINDEX_API_URL")
+        or os.getenv("MINDEX_API_BASE_URL")
+        or "http://192.168.0.189:8000"
+    ).rstrip("/")
+
+
+def _get_n8n_base_url() -> str:
+    return os.getenv("N8N_URL", "http://192.168.0.188:5678").rstrip("/")
+
+
+def _pick_device_match(devices: List[Dict[str, Any]], query: str) -> Optional[Dict[str, Any]]:
+    normalized_query = _normalize_text(query)
+    if not normalized_query:
+        return devices[0] if len(devices) == 1 else None
+    for device in devices:
+        candidates = [
+            device.get("device_id", ""),
+            device.get("device_name", ""),
+            device.get("device_display_name", ""),
+            device.get("device_role", ""),
+            device.get("location", ""),
+        ]
+        for value in candidates:
+            normalized_value = _normalize_text(str(value))
+            if normalized_value and (normalized_value in normalized_query or normalized_query in normalized_value):
+                return device
+    return None
+
+
 class ToolCallRequest(BaseModel):
     tool_name: str
     query: str
@@ -30,48 +69,6 @@ class ToolCallResponse(BaseModel):
     result: str
     data: Optional[Dict[str, Any]] = None
     timestamp: str
-
-
-# Simulated device data (will be replaced with real NatureOS integration)
-DEVICE_STATUS = {
-    "mushroom1": {
-        "status": "online",
-        "temperature": 22.5,
-        "humidity": 85,
-        "co2_ppm": 800,
-        "light_level": 45,
-        "last_update": datetime.utcnow().isoformat()
-    },
-    "sporebase": {
-        "status": "online",
-        "spore_count": 1250,
-        "air_flow": "normal",
-        "filter_status": "good",
-        "last_update": datetime.utcnow().isoformat()
-    },
-    "myconode": {
-        "status": "online",
-        "soil_moisture": 65,
-        "soil_temp": 20.1,
-        "ph_level": 6.5,
-        "conductivity": 1.2,
-        "last_update": datetime.utcnow().isoformat()
-    },
-    "petraeus": {
-        "status": "standby",
-        "electrode_count": 64,
-        "signal_quality": "good",
-        "mycelium_activity": "low",
-        "last_update": datetime.utcnow().isoformat()
-    },
-    "trufflebot": {
-        "status": "docked",
-        "battery": 95,
-        "samples_collected": 12,
-        "location": "lab_a",
-        "last_update": datetime.utcnow().isoformat()
-    }
-}
 
 
 @router.post("/execute", response_model=ToolCallResponse)
@@ -323,16 +320,9 @@ def _parse_lat_lon(query: str) -> Optional[tuple[float, float]]:
 
 async def _run_workflow_voice(query: str) -> ToolCallResponse:
     """Execute an n8n workflow by name parsed from voice query (e.g. 'run the backup workflow')."""
-    # Parse workflow name: "run the backup workflow" -> backup, "execute security workflow" -> security
-    match = re.search(r"(?:run|execute|trigger)\s+(?:the\s+)?(\w+)\s+workflow", query, re.IGNORECASE)
-    workflow_name = match.group(1) if match else None
-    if not workflow_name:
-        # Fallback: word before "workflow"
-        parts = query.lower().split()
-        if "workflow" in parts:
-            idx = parts.index("workflow")
-            workflow_name = parts[idx - 1] if idx > 0 else None
-    if not workflow_name:
+    stopwords = {"run", "execute", "trigger", "workflow", "the", "a", "an", "please"}
+    tokens = [t for t in re.findall(r"[a-z0-9]+", query.lower()) if t not in stopwords]
+    if not tokens:
         return ToolCallResponse(
             success=False,
             tool_name="run_workflow",
@@ -342,10 +332,40 @@ async def _run_workflow_voice(query: str) -> ToolCallResponse:
     try:
         from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
         agent = N8NWorkflowAgent(agent_id="n8n-voice", name="N8N Workflow", config={})
-        result = await agent.process_task({"type": "execute_workflow", "workflow_name": workflow_name})
+        workflows = await agent.process_task({"type": "list_workflows"})
+        names = [w.get("name") for w in workflows.get("result", {}).get("workflows", []) if w.get("name")]
+        selected = None
+        if names:
+            query_lower = query.lower()
+
+            def score(name: str) -> int:
+                name_lower = name.lower()
+                if name_lower == query_lower:
+                    return 100
+                if query_lower in name_lower:
+                    return 90
+                if all(token in name_lower for token in tokens):
+                    return 80
+                if any(token in name_lower for token in tokens):
+                    return 60
+                return 0
+
+            ranked = sorted(((score(name), name) for name in names), reverse=True)
+            if ranked and ranked[0][0] >= 60:
+                selected = ranked[0][1]
+        if not selected:
+            suggestions = ", ".join(names[:3]) if names else "none"
+            return ToolCallResponse(
+                success=False,
+                tool_name="run_workflow",
+                result=f"Workflow not found. Try one of: {suggestions}",
+                data={"available": names[:10]},
+                timestamp=datetime.utcnow().isoformat(),
+            )
+        result = await agent.process_task({"type": "execute_workflow", "workflow_name": selected})
         status = result.get("status", "unknown")
         if status == "success":
-            msg = f"Workflow {workflow_name} executed successfully."
+            msg = f"Workflow {selected} executed successfully."
             if result.get("result"):
                 msg += " " + str(result.get("result"))[:200]
             return ToolCallResponse(
@@ -358,7 +378,7 @@ async def _run_workflow_voice(query: str) -> ToolCallResponse:
         return ToolCallResponse(
             success=False,
             tool_name="run_workflow",
-            result=f"Workflow {workflow_name} returned: {status}. {result.get('message', '')}"[:300],
+            result=f"Workflow {selected} returned: {status}. {result.get('message', '')}"[:300],
             data=result,
             timestamp=datetime.utcnow().isoformat(),
         )
@@ -367,53 +387,67 @@ async def _run_workflow_voice(query: str) -> ToolCallResponse:
         return ToolCallResponse(
             success=False,
             tool_name="run_workflow",
-            result=f"Failed to run workflow {workflow_name}: {str(e)[:150]}.",
+            result=f"Failed to run workflow: {str(e)[:150]}.",
             timestamp=datetime.utcnow().isoformat(),
         )
 
 
 async def _get_device_status(query: str) -> ToolCallResponse:
     """Get status of a NatureOS device."""
-    # Extract device name from query
-    device_name = None
-    for name in DEVICE_STATUS.keys():
-        if name in query.replace(" ", "").lower():
-            device_name = name
-            break
-    
-    if not device_name:
-        device_name = "mushroom1"  # Default
-    
-    device = DEVICE_STATUS.get(device_name)
-    if not device:
+    import httpx
+    mas_base = _get_mas_base_url()
+    try:
+        async with httpx.AsyncClient(timeout=6.0) as client:
+            response = await client.get(f"{mas_base}/api/devices", params={"include_offline": True})
+            response.raise_for_status()
+            devices_payload = response.json()
+        devices = devices_payload.get("devices", [])
+        if not devices:
+            return ToolCallResponse(
+                success=False,
+                tool_name="device_status",
+                result="No devices are registered in the MAS device registry.",
+                data=devices_payload,
+                timestamp=datetime.utcnow().isoformat(),
+            )
+        matched = _pick_device_match(devices, query)
+        if not matched:
+            available = [d.get("device_name") or d.get("device_id") for d in devices][:5]
+            return ToolCallResponse(
+                success=False,
+                tool_name="device_status",
+                result="No matching device found. Try a device name like: " + ", ".join([a for a in available if a]),
+                data={"available": available},
+                timestamp=datetime.utcnow().isoformat(),
+            )
+        name = matched.get("device_display_name") or matched.get("device_name") or matched.get("device_id", "device")
+        status = matched.get("status", "unknown")
+        last_seen = matched.get("last_seen")
+        role = matched.get("device_role")
+        sensors = matched.get("sensors")
+        result = f"{name} is {status}."
+        if role:
+            result += f" Role: {role}."
+        if last_seen:
+            result += f" Last seen at {last_seen}."
+        if sensors:
+            result += f" Sensors: {', '.join(sensors[:4])}."
+        return ToolCallResponse(
+            success=True,
+            tool_name="device_status",
+            result=result,
+            data=matched,
+            timestamp=datetime.utcnow().isoformat(),
+        )
+    except Exception as e:
+        logger.warning("Device registry lookup failed: %s", e)
         return ToolCallResponse(
             success=False,
             tool_name="device_status",
-            result=f"Device {device_name} not found",
-            timestamp=datetime.utcnow().isoformat()
+            result="Device registry lookup failed. Check MAS device registry status.",
+            data={"error": str(e)[:200]},
+            timestamp=datetime.utcnow().isoformat(),
         )
-    
-    # Format result for speech
-    if device_name == "mushroom1":
-        result = f"Mushroom 1 is {device['status']}. Temperature is {device['temperature']} degrees, humidity at {device['humidity']} percent, CO2 at {device['co2_ppm']} parts per million."
-    elif device_name == "sporebase":
-        result = f"SporeBase is {device['status']}. Current spore count is {device['spore_count']}, air flow is {device['air_flow']}, filter status is {device['filter_status']}."
-    elif device_name == "myconode":
-        result = f"MycoNode is {device['status']}. Soil moisture at {device['soil_moisture']} percent, temperature {device['soil_temp']} degrees, pH level {device['ph_level']}."
-    elif device_name == "petraeus":
-        result = f"Petraeus bio-computer is in {device['status']} mode. {device['electrode_count']} electrodes active, signal quality is {device['signal_quality']}, mycelium activity is {device['mycelium_activity']}."
-    elif device_name == "trufflebot":
-        result = f"TruffleBot is {device['status']}. Battery at {device['battery']} percent, {device['samples_collected']} samples collected, located in {device['location']}."
-    else:
-        result = f"Device {device_name}: status is {device['status']}"
-    
-    return ToolCallResponse(
-        success=True,
-        tool_name="device_status",
-        result=result,
-        data=device,
-        timestamp=datetime.utcnow().isoformat()
-    )
 
 
 async def _get_agent_list(query: str) -> ToolCallResponse:
@@ -444,96 +478,159 @@ async def _get_agent_list(query: str) -> ToolCallResponse:
     except Exception as e:
         logger.warning(f"Agent registry query failed: {e}")
         return ToolCallResponse(
-            success=True,
+            success=False,
             tool_name="agent_list",
-            result="The Multi-Agent System has 227 registered agents across 14 categories including Core, Scientific, Financial, Mycology, and DAO governance.",
-            data={"total": 227, "active": 45},
+            result="Agent registry unavailable. Check MAS registry health.",
+            data={"error": str(e)[:200]},
             timestamp=datetime.utcnow().isoformat()
         )
 
 
 async def _query_mindex(query: str) -> ToolCallResponse:
     """Query the MINDEX fungal knowledge base."""
+    import httpx
     # Extract search terms
     search_terms = query.lower()
     for prefix in ["search", "find", "query", "look up", "mindex", "fungal", "mushroom", "species"]:
         search_terms = search_terms.replace(prefix, "").strip()
-    
-    # Simulated MINDEX results (will be replaced with real database query)
-    mindex_data = {
-        "cordyceps": {
-            "name": "Cordyceps militaris",
-            "common_name": "Caterpillar fungus",
-            "family": "Cordycipitaceae",
-            "properties": ["medicinal", "antioxidant", "energy-boosting"],
-            "cultivation": "substrate-based, 18-22Â°C",
-        },
-        "lion": {
-            "name": "Hericium erinaceus",
-            "common_name": "Lion's Mane",
-            "family": "Hericiaceae",
-            "properties": ["neuroprotective", "cognitive enhancement", "NGF stimulation"],
-            "cultivation": "hardwood substrate, 16-20Â°C",
-        },
-        "reishi": {
-            "name": "Ganoderma lucidum",
-            "common_name": "Reishi",
-            "family": "Ganodermataceae",
-            "properties": ["immune modulation", "adaptogenic", "anti-inflammatory"],
-            "cultivation": "hardwood logs, 20-28Â°C",
-        },
-        "oyster": {
-            "name": "Pleurotus ostreatus",
-            "common_name": "Oyster Mushroom",
-            "family": "Pleurotaceae",
-            "properties": ["cholesterol reduction", "high protein", "easy cultivation"],
-            "cultivation": "straw/wood substrate, 15-25Â°C",
-        },
-    }
-    
-    # Find matching species
-    result_data = None
-    for key, data in mindex_data.items():
-        if key in search_terms or data["common_name"].lower() in search_terms:
-            result_data = data
-            break
-    
-    if result_data:
-        result = f"MINDEX found {result_data['name']}, commonly known as {result_data['common_name']}. Family: {result_data['family']}. Key properties: {', '.join(result_data['properties'][:3])}. Optimal cultivation: {result_data['cultivation']}."
-    else:
-        result = f"MINDEX search for '{search_terms}' returned no direct matches. The database contains over 100,000 fungal species. Try searching for specific species names like Cordyceps, Lion's Mane, or Reishi."
-    
-    return ToolCallResponse(
-        success=True,
-        tool_name="query_mindex",
-        result=result,
-        data=result_data,
-        timestamp=datetime.utcnow().isoformat()
-    )
+    if not search_terms:
+        return ToolCallResponse(
+            success=False,
+            tool_name="query_mindex",
+            result="Provide a search term for MINDEX.",
+            timestamp=datetime.utcnow().isoformat(),
+        )
+
+    mindex_base = _get_mindex_base_url()
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            response = await client.get(
+                f"{mindex_base}/unified-search",
+                params={"q": search_terms, "limit": 5},
+            )
+            response.raise_for_status()
+            payload = response.json()
+        results = payload.get("results", {})
+        taxa = results.get("taxa") or []
+        compounds = results.get("compounds") or []
+        if taxa:
+            taxon = taxa[0]
+            name = taxon.get("scientific_name") or "Unknown taxon"
+            common = taxon.get("common_name")
+            rank = taxon.get("rank")
+            toxicity = taxon.get("toxicity")
+            edibility = taxon.get("edibility")
+            result = f"MINDEX found {name}."
+            if common:
+                result += f" Common name: {common}."
+            if rank:
+                result += f" Rank: {rank}."
+            if toxicity:
+                result += f" Toxicity: {toxicity}."
+            if edibility:
+                result += f" Edibility: {edibility}."
+            return ToolCallResponse(
+                success=True,
+                tool_name="query_mindex",
+                result=result,
+                data=taxon,
+                timestamp=datetime.utcnow().isoformat(),
+            )
+        if compounds:
+            compound = compounds[0]
+            name = compound.get("name") or "Unknown compound"
+            formula = compound.get("formula")
+            mw = compound.get("molecular_weight")
+            result = f"MINDEX found compound {name}."
+            if formula:
+                result += f" Formula: {formula}."
+            if mw:
+                result += f" Molecular weight: {mw}."
+            return ToolCallResponse(
+                success=True,
+                tool_name="query_mindex",
+                result=result,
+                data=compound,
+                timestamp=datetime.utcnow().isoformat(),
+            )
+        return ToolCallResponse(
+            success=False,
+            tool_name="query_mindex",
+            result=f"No data available for '{search_terms}'.",
+            data={"query": search_terms, "results": results},
+            timestamp=datetime.utcnow().isoformat(),
+        )
+    except Exception as e:
+        logger.warning("MINDEX query failed: %s", e)
+        return ToolCallResponse(
+            success=False,
+            tool_name="query_mindex",
+            result="MINDEX query failed. Check MINDEX API health.",
+            data={"error": str(e)[:200]},
+            timestamp=datetime.utcnow().isoformat(),
+        )
 
 
 async def _get_system_status(query: str) -> ToolCallResponse:
     """Get overall system status."""
-    # Check various system components
-    status_data = {
-        "mas_orchestrator": "healthy",
-        "moshi_server": "running",
-        "redis_cache": "connected",
-        "postgres_db": "connected",
-        "n8n_workflows": "active",
-        "agent_count": 227,
-        "active_sessions": len(DEVICE_STATUS),  # Placeholder
-        "uptime_hours": 48,
+    import httpx
+    mas_base = _get_mas_base_url()
+    mindex_base = _get_mindex_base_url()
+    n8n_base = _get_n8n_base_url()
+    status_data: Dict[str, Any] = {
+        "mas": "unknown",
+        "mindex": "unknown",
+        "n8n": "unknown",
+        "devices": "unknown",
+        "workflows": "unknown",
     }
-    
-    result = f"System status: MAS orchestrator is {status_data['mas_orchestrator']}. Moshi voice server is {status_data['moshi_server']}. Database and cache connections are {status_data['postgres_db']}. {status_data['agent_count']} agents registered, n8n workflows are {status_data['n8n_workflows']}. System uptime is {status_data['uptime_hours']} hours."
-    
+    async with httpx.AsyncClient(timeout=6.0) as client:
+        try:
+            mas_health = await client.get(f"{mas_base}/health")
+            status_data["mas"] = "healthy" if mas_health.status_code == 200 else f"unhealthy:{mas_health.status_code}"
+        except Exception as e:
+            status_data["mas"] = f"unavailable:{str(e)[:120]}"
+        try:
+            mindex_health = await client.get(f"{mindex_base}/api/mindex/health")
+            status_data["mindex"] = "healthy" if mindex_health.status_code == 200 else f"unhealthy:{mindex_health.status_code}"
+        except Exception as e:
+            status_data["mindex"] = f"unavailable:{str(e)[:120]}"
+        try:
+            n8n_health = await client.get(f"{n8n_base}/healthz")
+            status_data["n8n"] = "healthy" if n8n_health.status_code == 200 else f"unhealthy:{n8n_health.status_code}"
+        except Exception as e:
+            status_data["n8n"] = f"unavailable:{str(e)[:120]}"
+        try:
+            devices_health = await client.get(f"{mas_base}/api/devices/health")
+            if devices_health.status_code == 200:
+                payload = devices_health.json()
+                status_data["devices"] = payload
+            else:
+                status_data["devices"] = f"unhealthy:{devices_health.status_code}"
+        except Exception as e:
+            status_data["devices"] = f"unavailable:{str(e)[:120]}"
+        try:
+            workflows_health = await client.get(f"{mas_base}/api/workflows/health")
+            status_data["workflows"] = workflows_health.json() if workflows_health.status_code == 200 else f"unhealthy:{workflows_health.status_code}"
+        except Exception as e:
+            status_data["workflows"] = f"unavailable:{str(e)[:120]}"
+
+    device_summary = ""
+    if isinstance(status_data["devices"], dict):
+        online = status_data["devices"].get("online_devices")
+        total = status_data["devices"].get("total_devices")
+        if online is not None and total is not None:
+            device_summary = f" Devices online: {online}/{total}."
+    result = (
+        f"System status: MAS is {status_data['mas']}. MINDEX is {status_data['mindex']}. "
+        f"n8n is {status_data['n8n']}.{device_summary}"
+    )
     return ToolCallResponse(
         success=True,
         tool_name="system_status",
         result=result,
         data=status_data,
-        timestamp=datetime.utcnow().isoformat()
+        timestamp=datetime.utcnow().isoformat(),
     )
 
 
@@ -541,14 +638,22 @@ async def _get_system_status(query: str) -> ToolCallResponse:
 @router.get("/devices/{device_name}/status")
 async def get_device_status_direct(device_name: str):
     """Direct endpoint for device status lookup."""
-    device_name = device_name.lower().replace(" ", "").replace("-", "")
-    
-    if device_name in DEVICE_STATUS:
-        return DEVICE_STATUS[device_name]
-    
-    # Try partial match
-    for key, data in DEVICE_STATUS.items():
-        if device_name in key or key in device_name:
-            return data
-    
-    raise HTTPException(status_code=404, detail=f"Device {device_name} not found")
+    import httpx
+    mas_base = _get_mas_base_url()
+    normalized = device_name.lower().replace(" ", "").replace("-", "")
+    try:
+        async with httpx.AsyncClient(timeout=6.0) as client:
+            response = await client.get(f"{mas_base}/api/devices", params={"include_offline": True})
+            response.raise_for_status()
+            devices_payload = response.json()
+        devices = devices_payload.get("devices", [])
+        if not devices:
+            raise HTTPException(status_code=404, detail="No devices registered")
+        matched = _pick_device_match(devices, normalized)
+        if matched:
+            return matched
+        raise HTTPException(status_code=404, detail=f"Device {device_name} not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Device registry unavailable: {str(e)[:120]}")

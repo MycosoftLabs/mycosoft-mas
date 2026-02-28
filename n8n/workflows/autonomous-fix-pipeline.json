@@ -31,7 +31,7 @@
         "url": "=http://{{ $env.MAS_HOST || '192.168.0.188' }}:8001/api/deploy/autonomous-fix",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}",
+        "jsonBody": "={{ $json }}",
         "options": { "timeout": 15000 }
       },
       "id": "submit-to-mas",
@@ -78,9 +78,9 @@
       "main": [[{ "node": "Prepare Fix Request", "type": "main", "index": 0 }]]
     },
     "Prepare Fix Request": {
-      "main": [[{ "node": "Submit to MAS Orchestrator", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Submit to MAS Deploy API", "type": "main", "index": 0 }]]
     },
-    "Submit to MAS Orchestrator": {
+    "Submit to MAS Deploy API": {
       "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
     }
   },

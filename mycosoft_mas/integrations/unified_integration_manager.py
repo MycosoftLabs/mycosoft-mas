@@ -44,6 +44,7 @@ from .natureos_client import NATUREOSClient
 from .website_client import WebsiteClient
 from .notion_client import NotionClient
 from .n8n_client import N8NClient
+from .supabase_client import SupabaseClient
 from .azure_client import AzureClient
 from .space_weather_client import SpaceWeatherClient
 from .environmental_client import EnvironmentalClient
@@ -114,6 +115,7 @@ class UnifiedIntegrationManager:
         self._notion_client = None
         self._n8n_client = None
         self._azure_client = None
+        self._supabase_client = None
         self._space_weather_client = None
         self._environmental_client = None
         self._earth_science_client = None
@@ -204,6 +206,19 @@ class UnifiedIntegrationManager:
             n8n_config = self.config.get("n8n", {})
             self._n8n_client = N8NClient(config=n8n_config)
         return self._n8n_client
+    
+    @property
+    def supabase(self) -> SupabaseClient:
+        """
+        Get Supabase client instance (lazy initialization).
+        
+        Returns:
+            SupabaseClient: Supabase API client
+        """
+        if self._supabase_client is None:
+            supabase_config = self.config.get("supabase", {})
+            self._supabase_client = SupabaseClient(config=supabase_config)
+        return self._supabase_client
 
     @property
     def azure(self) -> AzureClient:
@@ -334,6 +349,7 @@ class UnifiedIntegrationManager:
             "Notion": self.notion,
             "N8N": self.n8n,
             "Azure": self.azure,
+            "Supabase": self.supabase,
             "SpaceWeather": self.space_weather,
             "Environmental": self.environmental,
             "EarthScience": self.earth_science,
@@ -385,6 +401,7 @@ class UnifiedIntegrationManager:
             "Notion": self.notion.health_check(),
             "N8N": self.n8n.health_check(),
             "Azure": self.azure.health_check(),
+            "Supabase": self.supabase.health_check(),
             "SpaceWeather": self.space_weather.health_check(),
             "Environmental": self.environmental.health_check(),
             "EarthScience": self.earth_science.health_check(),
@@ -622,6 +639,8 @@ class UnifiedIntegrationManager:
             close_tasks.append(self._n8n_client.close())
         if self._azure_client:
             close_tasks.append(self._azure_client.close())
+        if self._supabase_client:
+            close_tasks.append(self._supabase_client.close())
         if self._space_weather_client:
             close_tasks.append(self._space_weather_client.close())
         if self._environmental_client:

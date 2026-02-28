@@ -35,6 +35,17 @@ def _get_n8n_client():
     return N8NClient()
 
 
+def _extract_webhook_path(workflow: Dict[str, Any]) -> Optional[str]:
+    """Find a webhook trigger path for public execution."""
+    for node in workflow.get("nodes", []) or []:
+        if node.get("type") == "n8n-nodes-base.webhook":
+            params = node.get("parameters") or {}
+            path = params.get("path")
+            if path:
+                return str(path).lstrip("/")
+    return None
+
+
 class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # type: ignore[misc]
     """n8n workflow execution and management; real n8n API integration."""
 
@@ -78,7 +89,16 @@ class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # typ
                     return {"status": "error", "result": {"error": f"Workflow not found: {workflow_name}"}}
                 workflow_id = wf.get("id")
                 client = _get_n8n_client()
-                result = await client.execute_workflow(workflow_id, data=parameters)
+                webhook_path = _extract_webhook_path(wf)
+                if webhook_path:
+                    result = await client.trigger_workflow(f"webhook/{webhook_path}", data=parameters)
+                else:
+                    return {
+                        "status": "error",
+                        "result": {
+                            "error": "Workflow has no webhook trigger; execution by ID is not supported."
+                        },
+                    }
                 return {"status": "success", "result": {"workflow_id": workflow_id, "triggered": True, "response": result}}
 
             if task_type == "list_workflows":

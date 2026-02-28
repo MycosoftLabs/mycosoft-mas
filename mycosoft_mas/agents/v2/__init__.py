@@ -71,10 +71,11 @@ try:
         ETLAgent,
         SearchAgent,
         RouteMonitorAgent,
+        NLMAgent,
     )
 except Exception as e:
     _log.warning("v2 data_agents unavailable: %s", e)
-    MindexAgent = ETLAgent = SearchAgent = RouteMonitorAgent = None  # type: ignore[misc, assignment]
+    MindexAgent = ETLAgent = SearchAgent = RouteMonitorAgent = NLMAgent = None  # type: ignore[misc, assignment]
 
 try:
     from .integration_agents import (
@@ -146,6 +147,7 @@ __all__ = [
     "ETLAgent",
     "SearchAgent",
     "RouteMonitorAgent",
+    "NLMAgent",
     # Integration
     "N8NAgent",
     "ElevenLabsAgent",
@@ -177,7 +179,7 @@ def _build_registry():
     if MycoBrainCoordinatorAgent is not None:
         reg.update({"mycobrain-coordinator": MycoBrainCoordinatorAgent, "bme688-agent": BME688SensorAgent, "bme690-agent": BME690SensorAgent, "lora-gateway-agent": LoRaGatewayAgent, "firmware-agent": FirmwareAgent, "mycodrone-agent": MycoDroneAgent, "spectrometer-agent": SpectrometerAgent})
     if MindexAgent is not None:
-        reg.update({"mindex-agent": MindexAgent, "etl-agent": ETLAgent, "search-agent": SearchAgent})
+        reg.update({"mindex-agent": MindexAgent, "etl-agent": ETLAgent, "search-agent": SearchAgent, "nlm-agent": NLMAgent})
     if N8NAgent is not None:
         reg.update({"n8n-agent": N8NAgent, "elevenlabs-agent": ElevenLabsAgent, "zapier-agent": ZapierAgent, "ifttt-agent": IFTTTAgent, "openai-agent": OpenAIAgent, "anthropic-agent": AnthropicAgent, "gemini-agent": GeminiAgent, "grok-agent": GrokAgent, "supabase-agent": SupabaseAgent, "notion-agent": NotionAgent, "website-agent": WebsiteAgent})
     if GuardianAgentV2 is not None:
@@ -204,7 +206,7 @@ def count_agents_by_category():
         "corporate": 9,
         "infrastructure": 8,
         "device": 7,
-        "data": 3,
+        "data": 4,
         "integration": 11,
         "security": 3,
         "total": 41,

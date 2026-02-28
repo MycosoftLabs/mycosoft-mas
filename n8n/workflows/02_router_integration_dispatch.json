@@ -2,6 +2,20 @@
   "name": "Router: Integration Dispatch",
   "nodes": [
     {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/router",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 140],
+      "webhookId": "myca-router"
+    },
+    {
       "parameters": {},
       "id": "subworkflow-trigger",
       "name": "Execute Workflow Trigger",
@@ -23,7 +37,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Parse registry and find integration\nconst command = $('Execute Workflow Trigger').item.json.command;\nconst registryFile = $input.item.json.data;\nconst registry = JSON.parse(registryFile.toString());\n\nconst integrationName = command.integration;\nlet integration = null;\n\n// If integration specified, find it\nif (integrationName) {\n  integration = registry.integrations.find(i => i.integration === integrationName);\n  \n  if (!integration) {\n    return [{\n      json: {\n        error: true,\n        status: 404,\n        message: `Integration '${integrationName}' not found in registry`,\n        request_id: command.request_id\n      }\n    }];\n  }\n} else {\n  // Try to infer integration from intent using basic pattern matching\n  // This is a simple implementation - could be enhanced with ML/embeddings\n  const intent = (command.intent || '').toLowerCase();\n  \n  // Basic keyword matching for common integrations\n  const keywords = {\n    'sheet': 'google_sheets',\n    'gmail': 'gmail',\n    'email': 'gmail',\n    'drive': 'google_drive',\n    'calendar': 'google_calendar',\n    'github': 'github',\n    'jira': 'jira',\n    'slack': 'slack',\n    'telegram': 'telegram',\n    'openai': 'openai',\n    'proxmox': 'proxmox',\n    'unifi': 'unifi'\n  };\n  \n  for (const [keyword, intName] of Object.entries(keywords)) {\n    if (intent.includes(keyword)) {\n      integration = registry.integrations.find(i => i.integration === intName);\n      break;\n    }\n  }\n  \n  if (!integration) {\n    return [{\n      json: {\n        error: true,\n        status: 400,\n        message: 'Could not determine integration. Please specify integration name.',\n        request_id: command.request_id\n      }\n    }];\n  }\n}\n\n// Check if integration is enabled\nif (!integration.enabled) {\n  return [{\n    json: {\n      error: true,\n      status: 403,\n      message: `Integration '${integration.integration}' is disabled`,\n      request_id: command.request_id\n    }\n  }];\n}\n\n// Determine routing\nconst routing = {\n  error: false,\n  command: command,\n  integration: integration,\n  category: integration.category,\n  use_native: integration.native_node === true,\n  confirm_required: integration.confirm_required === true,\n  risk_level: integration.risk,\n  request_id: command.request_id\n};\n\nreturn [{ json: routing }];"
+        "jsCode": "// Parse registry and find integration\nconst trigger = $('Execute Workflow Trigger').item?.json || $('Webhook').item?.json || $input.first().json;\nconst command = trigger.command || trigger;\nconst requestId = command.request_id || trigger.request_id || '';\nconst registryFile = $input.item.json.data;\nconst registry = JSON.parse(registryFile.toString());\n\nconst integrationName = command.integration;\nlet integration = null;\n\n// If integration specified, find it\nif (integrationName) {\n  integration = registry.integrations.find(i => i.integration === integrationName);\n  \n  if (!integration) {\n    return [{\n      json: {\n        error: true,\n        status: 404,\n        message: `Integration '${integrationName}' not found in registry`,\n        request_id: requestId\n      }\n    }];\n  }\n} else {\n  // Try to infer integration from intent using basic pattern matching\n  // This is a simple implementation - could be enhanced with ML/embeddings\n  const intent = (command.intent || '').toLowerCase();\n  \n  // Basic keyword matching for common integrations\n  const keywords = {\n    'sheet': 'google_sheets',\n    'gmail': 'gmail',\n    'email': 'gmail',\n    'drive': 'google_drive',\n    'calendar': 'google_calendar',\n    'github': 'github',\n    'jira': 'jira',\n    'slack': 'slack',\n    'telegram': 'telegram',\n    'openai': 'openai',\n    'proxmox': 'proxmox',\n    'unifi': 'unifi'\n  };\n  \n  for (const [keyword, intName] of Object.entries(keywords)) {\n    if (intent.includes(keyword)) {\n      integration = registry.integrations.find(i => i.integration === intName);\n      break;\n    }\n  }\n  \n  if (!integration) {\n    return [{\n      json: {\n        error: true,\n        status: 400,\n        message: 'Could not determine integration. Please specify integration name.',\n        request_id: requestId\n      }\n    }];\n  }\n}\n\n// Check if integration is enabled\nif (!integration.enabled) {\n  return [{\n    json: {\n      error: true,\n      status: 403,\n      message: `Integration '${integration.integration}' is disabled`,\n      request_id: requestId\n    }\n  }];\n}\n\n// Determine routing\nconst routing = {\n  error: false,\n  command: command,\n  integration: integration,\n  category: integration.category,\n  use_native: integration.native_node === true,\n  confirm_required: integration.confirm_required === true,\n  risk_level: integration.risk,\n  request_id: requestId\n};\n\nreturn [{ json: routing }];"
       },
       "id": "determine-routing",
       "name": "Determine Routing",
@@ -198,9 +212,32 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [2100, 80]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2300, 80]
     }
   ],
   "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Load Integration Registry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Execute Workflow Trigger": {
       "main": [
         [
@@ -355,6 +392,39 @@
         [
           {
             "node": "Return Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Error": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Require Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Result": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }

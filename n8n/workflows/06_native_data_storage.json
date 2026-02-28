@@ -2,6 +2,20 @@
   "name": "Native: DataStorage",
   "nodes": [
     {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "native/datastorage",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 140],
+      "webhookId": "native-datastorage"
+    },
+    {
       "parameters": {},
       "id": "data-trigger",
       "name": "Execute Workflow Trigger",
@@ -11,7 +25,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Route to specific data/storage integration\nconst input = $input.item.json;\nconst integrationName = input.integration.integration;\nreturn [{ json: { ...input, routing_node: integrationName } }];"
+        "jsCode": "// Route to specific data/storage integration\nconst trigger = $('Execute Workflow Trigger').item?.json || $('Webhook').item?.json || $input.first().json;\nconst input = trigger.command ? trigger : (trigger.body || trigger);\nconst integrationName = (input.integration && input.integration.integration) || input.integration || input.routing_node;\nreturn [{ json: { ...input, routing_node: integrationName } }];"
       },
       "id": "data-router",
       "name": "Data Router",
@@ -112,16 +126,29 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $('Execute Workflow Trigger').item.json;const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:input.integration.integration,action:input.command.action,result:result,timestamp:new Date().toISOString()}}];"
+        "jsCode": "const trigger = $('Execute Workflow Trigger').item?.json || $('Webhook').item?.json || $input.first().json;const input = trigger.command ? trigger : (trigger.body || trigger);const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:(input.integration && input.integration.integration) || input.integration || input.routing_node,action:(input.command || {}).action,result:result,timestamp:new Date().toISOString()}}];"
       },
       "id": "format-data",
       "name": "Format Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1760, 300]
     }
   ],
   "connections": {
+    "Webhook": { "main": [[{ "node": "Data Router", "type": "main", "index": 0 }]] },
     "Execute Workflow Trigger": { "main": [[{ "node": "Data Router", "type": "main", "index": 0 }]] },
     "Data Router": { "main": [[{ "node": "Prepare Switch", "type": "main", "index": 0 }]] },
     "Prepare Switch": { "main": [[{ "node": "Switch: Data", "type": "main", "index": 0 }]] },
@@ -136,7 +163,8 @@
     "Postgres Query": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
     "MongoDB Find": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
     "Object Storage List": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
-    "Data Fallback": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] }
+    "Data Fallback": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
   },
   "settings": { "executionOrder": "v1" },
   "tags": [{ "id": "myca-native", "name": "MYCA Native" }],

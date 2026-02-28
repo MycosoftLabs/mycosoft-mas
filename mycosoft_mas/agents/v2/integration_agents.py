@@ -10,6 +10,7 @@ import aiohttp
 
 from .base_agent_v2 import BaseAgentV2
 from mycosoft_mas.runtime import AgentTask, AgentCategory, MessageType
+from mycosoft_mas.integrations.supabase_client import SupabaseClient
 
 
 class N8NAgent(BaseAgentV2):
@@ -499,6 +500,91 @@ class SupabaseAgent(BaseAgentV2):
             "storage_upload",
             "realtime_subscribe",
         ]
+    
+    async def on_start(self):
+        self.supabase_client = SupabaseClient()
+        self.register_handler("auth_user", self._handle_auth_user)
+        self.register_handler("database_query", self._handle_database_query)
+        self.register_handler("storage_upload", self._handle_storage_upload)
+        self.register_handler("realtime_subscribe", self._handle_realtime_subscribe)
+    
+    async def _handle_auth_user(self, task: AgentTask) -> Dict[str, Any]:
+        email = task.payload.get("email")
+        password = task.payload.get("password")
+        if not email or not password:
+            return {"status": "error", "error": "email and password required"}
+        result = await self.supabase_client.auth_sign_in(email=email, password=password)
+        return {"status": "success", "result": result}
+    
+    async def _handle_database_query(self, task: AgentTask) -> Dict[str, Any]:
+        action = task.payload.get("action", "select")
+        table = task.payload.get("table")
+        if not table:
+            return {"status": "error", "error": "table required"}
+        
+        filters = task.payload.get("filters") or {}
+        select = task.payload.get("select", "*")
+        limit = task.payload.get("limit")
+        order = task.payload.get("order")
+        data = task.payload.get("data") or {}
+        rpc = task.payload.get("rpc")
+        
+        if action == "select":
+            result = await self.supabase_client.select(
+                table=table,
+                filters=filters,
+                select=select,
+                limit=limit,
+                order=order,
+            )
+            return {"status": "success", "result": result}
+        if action == "insert":
+            result = await self.supabase_client.insert(table=table, data=data)
+            return {"status": "success", "result": result}
+        if action == "update":
+            result = await self.supabase_client.update(table=table, data=data, filters=filters)
+            return {"status": "success", "result": result}
+        if action == "delete":
+            result = await self.supabase_client.delete(table=table, filters=filters)
+            return {"status": "success", "result": result}
+        if action == "rpc":
+            if not rpc:
+                return {"status": "error", "error": "rpc function name required"}
+            result = await self.supabase_client.rpc(function_name=rpc, params=data)
+            return {"status": "success", "result": result}
+        return {"status": "error", "error": f"unsupported action: {action}"}
+    
+    async def _handle_storage_upload(self, task: AgentTask) -> Dict[str, Any]:
+        bucket = task.payload.get("bucket")
+        path = task.payload.get("path")
+        content_base64 = task.payload.get("content_base64")
+        content_text = task.payload.get("content_text")
+        content_type = task.payload.get("content_type", "application/octet-stream")
+        
+        if not bucket or not path:
+            return {"status": "error", "error": "bucket and path required"}
+        if content_base64:
+            import base64
+            content = base64.b64decode(content_base64)
+        elif content_text is not None:
+            content = content_text.encode("utf-8")
+        else:
+            return {"status": "error", "error": "content_base64 or content_text required"}
+        
+        result = await self.supabase_client.storage_upload(
+            bucket=bucket,
+            path=path,
+            content=content,
+            content_type=content_type,
+            upsert=True,
+        )
+        return {"status": "success", "result": result}
+    
+    async def _handle_realtime_subscribe(self, task: AgentTask) -> Dict[str, Any]:
+        return {
+            "status": "error",
+            "error": "Realtime subscriptions require websocket client support",
+        }
 
 
 class NotionAgent(BaseAgentV2):

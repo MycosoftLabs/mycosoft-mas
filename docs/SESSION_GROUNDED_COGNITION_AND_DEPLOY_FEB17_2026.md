@@ -52,22 +52,22 @@
 
 ### MAS VM (192.168.0.188)
 
-- [ ] Set `MYCA_GROUNDED_COGNITION=1` in `.env`
-- [ ] Ensure LLM keys (Gemini, Grok, OpenAI, Claude) in `.env`
-- [ ] Rebuild container, restart
-- [ ] Health: `http://192.168.0.188:8001/health`
+- [x] Set `MYCA_GROUNDED_COGNITION=1` (via `_rebuild_mas_container.py`)
+- [x] Ensure LLM keys in `.env` (VM has keys)
+- [x] Rebuild container, restart
+- [x] Health: `http://192.168.0.188:8001/health`
 
 ### MINDEX VM (192.168.0.189)
 
-- [ ] Apply migrations 0016, 0017, 0018 (PostGIS requires extension)
-- [ ] Restart mindex-api if schema changed
-- [ ] Health: `http://192.168.0.189:8000/health`
+- [x] Apply migrations 0016, 0017, 0018 (PostGIS requires extension)
+- [x] Restart mindex-api (deploy_mindex.py)
+- [x] Health: `http://192.168.0.189:8000/health`
 
 ### Sandbox VM (192.168.0.187)
 
-- [ ] Rebuild website Docker image
-- [ ] Restart with NAS mount: `-v /opt/mycosoft/media/website/assets:/app/public/assets:ro`
-- [ ] Purge Cloudflare cache
+- [x] Rebuild website Docker image (`_rebuild_sandbox.py` — ran in background)
+- [x] Restart with NAS mount: `-v /opt/mycosoft/media/website/assets:/app/public/assets:ro`
+- [ ] Purge Cloudflare cache (manual: dash.cloudflare.com → Purge Everything)
 
 ---
 
