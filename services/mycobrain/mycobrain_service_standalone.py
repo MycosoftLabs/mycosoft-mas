@@ -38,7 +38,7 @@ except ImportError:
             ip = s.getsockname()[0]
             s.close()
             return ip, "lan"
-        except:
+        except Exception:
             return "127.0.0.1", "lan"
 
 import uvicorn
@@ -126,7 +126,7 @@ async def list_devices():
             try:
                 ser = serial_connections[device_id]
                 devices[device_id]["status"] = "connected" if ser.is_open else "disconnected"
-            except:
+            except Exception:
                 devices[device_id]["status"] = "error"
     return {"devices": list(devices.values()), "count": len(devices), "timestamp": datetime.now().isoformat()}
 
@@ -240,7 +240,7 @@ async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depen
                     if "Arduino-ESP32 core:" in line:
                         device_info["firmware"] = line.split(':')[1].strip()
             device_info["raw_status"] = response[:500]
-        except:
+        except Exception:
             pass
         
         devices[device_id] = {
@@ -395,7 +395,7 @@ def parse_sensor_line(line: str, sensor_type: str) -> dict:
         if "IAQ=" in line:
             iaq_part = line.split("IAQ=")[1].split(" ")[0]
             data["iaq"] = float(iaq_part)
-    except:
+    except Exception:
         pass
     return data
 
@@ -409,7 +409,7 @@ async def clear_locks(api_key: str = Depends(verify_api_key)):
             if device_id in devices:
                 del devices[device_id]
             disconnected.append(device_id)
-        except:
+        except Exception:
             pass
     return {"status": "ok", "disconnected": disconnected}
 
@@ -439,9 +439,9 @@ def parse_device_role_from_status(raw_status: str) -> tuple:
                 data = json.loads(raw_status)
                 role = data.get('device_role') or data.get('role') or role
                 display_name = data.get('device_display_name') or data.get('display_name') or display_name
-            except:
+            except Exception:
                 pass
-    except:
+    except Exception:
         pass
     return role, display_name
 
@@ -539,7 +539,7 @@ async def heartbeat_loop():
                 try:
                     async with httpx.AsyncClient(timeout=10.0) as client:
                         await client.post(f"{MAS_REGISTRY_URL}/api/devices/register", json=service_payload)
-                except:
+                except Exception:
                     pass
                     
         except Exception as e:

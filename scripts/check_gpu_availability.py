@@ -47,11 +47,11 @@ def exec_cmd(vm_id, cmd, timeout=60):
                     err_b64 = data.get("err-data", "")
                     try:
                         out = base64.b64decode(out_b64).decode() if out_b64 else ""
-                    except:
+                    except Exception:
                         out = out_b64
                     try:
                         err = base64.b64decode(err_b64).decode() if err_b64 else ""
-                    except:
+                    except Exception:
                         err = err_b64
                     return data.get("exitcode", 0) == 0, out or err
         return None, "Timeout"

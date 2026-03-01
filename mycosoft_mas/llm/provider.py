@@ -57,7 +57,7 @@ class LLMResponse:
     
     # Metadata
     response_time_ms: float = 0.0
-    timestamp: datetime = None
+    timestamp: Optional[datetime] = None
     raw_response: Optional[Dict[str, Any]] = None
     
     # Function calling

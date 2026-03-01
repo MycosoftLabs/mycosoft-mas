@@ -404,8 +404,8 @@ class Orchestrator:
                     description="Orchestrator shutdown - states saved to memory",
                     importance=0.6
                 )
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to record shutdown episode to memory: {e}")
         
         logger.info("Orchestrator stopped")
     
@@ -590,8 +590,8 @@ class Orchestrator:
                 
                 if history:
                     logger.info(f"Found {len(history)} recovery records for {service_id} in memory")
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not retrieve recovery history from memory: {e}")
         
         for attempt in range(config.max_retries):
             status.recovery_attempts = attempt + 1

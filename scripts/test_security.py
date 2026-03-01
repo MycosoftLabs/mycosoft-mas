@@ -82,7 +82,7 @@ def get_ssh_client():
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
         return client
-    except:
+    except Exception:
         return None
 
 def run_ssh_command(client, cmd, timeout=60):
@@ -134,7 +134,7 @@ class SecurityTests:
             return TestResult("Security Module", TestStatus.FAIL, "No security files",
                              category="Codebase",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Security Module", TestStatus.FAIL, "Could not check",
                              category="Codebase",
                              duration_ms=int((time.time() - start) * 1000))
@@ -188,7 +188,7 @@ class SecurityTests:
                              category="Secret Management",
                              severity="MEDIUM",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Exposed Secrets", TestStatus.FAIL, "Could not check",
                              category="Secret Management",
                              duration_ms=int((time.time() - start) * 1000))
@@ -220,7 +220,7 @@ class SecurityTests:
                              category="Container Security",
                              severity="LOW",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Docker Security", TestStatus.FAIL, "Could not check",
                              category="Container Security",
                              duration_ms=int((time.time() - start) * 1000))
@@ -265,7 +265,7 @@ class SecurityTests:
                              category="Logging",
                              severity="LOW",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Audit Logging", TestStatus.FAIL, "Could not check",
                              category="Logging",
                              duration_ms=int((time.time() - start) * 1000))

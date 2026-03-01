@@ -47,7 +47,7 @@ async def check_personaplex():
         async with websockets.connect(PERSONAPLEX_URL, close_timeout=2) as ws:
             pp_available = True
             return True
-    except:
+    except Exception:
         pp_available = False
         return False
 
@@ -112,7 +112,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                             await websocket.send_text(msg)
                         else:
                             await websocket.send_bytes(msg)
-                except:
+                except Exception:
                     pass
             async def forward_to_personaplex():
                 try:
@@ -122,7 +122,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                             await pp_ws.send(data["text"])
                         elif "bytes" in data:
                             await pp_ws.send(data["bytes"])
-                except:
+                except Exception:
                     pass
             await asyncio.gather(forward_to_client(), forward_to_personaplex())
     except WebSocketDisconnect:

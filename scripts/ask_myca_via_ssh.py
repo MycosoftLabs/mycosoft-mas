@@ -23,7 +23,7 @@ if out.strip():
     try:
         data = json.loads(out)
         print(f"  Status: {json.dumps(data, indent=2)}")
-    except:
+    except Exception:
         print(f"  Raw: {out[:500]}")
 else:
     print(f"  Error: {stderr.read().decode()[:500]}")
@@ -38,7 +38,7 @@ if out.strip():
         print(f"  Name: {data.get('name', 'N/A')}")
         print(f"  Creator: {data.get('creator', 'N/A')}")
         print(f"  Role: {data.get('role', 'N/A')}")
-    except:
+    except Exception:
         print(f"  Raw: {out[:500]}")
 else:
     print(f"  Error: {stderr.read().decode()[:500]}")

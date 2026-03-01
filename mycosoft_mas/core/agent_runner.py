@@ -42,7 +42,7 @@ class WorkCycle:
     tasks_processed: int = 0
     insights_generated: int = 0
     knowledge_added: int = 0
-    errors: List[str] = None
+    errors: Optional[List[str]] = None
     summary: str = ""
 
     def __post_init__(self):
@@ -61,7 +61,7 @@ class AgentInsight:
     description: str
     confidence: float
     timestamp: str
-    data: Dict[str, Any] = None
+    data: Optional[Dict[str, Any]] = None
     actionable: bool = False
     priority: str = "normal"  # low, normal, high, critical
 
@@ -81,7 +81,7 @@ class AdminNotification:
     agent: str
     priority: str = "normal"  # low, normal, high, critical
     requires_action: bool = False
-    data: Dict[str, Any] = None
+    data: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         if self.data is None:
@@ -100,7 +100,7 @@ class AgentCycleRunner:
     - Admin notifications for Morgan
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.running = False
         self.cycles: Dict[str, WorkCycle] = {}
@@ -127,7 +127,7 @@ class AgentCycleRunner:
             d.mkdir(parents=True, exist_ok=True)
         logger.info(f"Agent storage initialized at: {STORAGE_PATH}")
 
-    async def start(self, agents: List[Any] = None):
+    async def start(self, agents: Optional[List[Any]] = None):
         """Start the continuous agent runner."""
         if self.running:
             logger.warning("Agent runner already running")
@@ -284,7 +284,7 @@ class AgentCycleRunner:
         agent: str,
         priority: str = "normal",
         requires_action: bool = False,
-        data: Dict[str, Any] = None
+        data: Optional[Dict[str, Any]] = None
     ):
         """Queue a notification for Morgan (super admin)."""
         notification = AdminNotification(
@@ -449,7 +449,7 @@ def get_agent_runner() -> AgentCycleRunner:
     return _runner
 
 
-async def start_24_7_operation(agents: List[Any] = None):
+async def start_24_7_operation(agents: Optional[List[Any]] = None):
     """Start 24/7 agent operation."""
     runner = get_agent_runner()
     await runner.start(agents)

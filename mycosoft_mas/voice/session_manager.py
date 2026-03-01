@@ -147,7 +147,7 @@ class VoiceSession:
             else:
                 self.rtf_status = RTFStatus.WARNING
     
-    def record_turn(self, agents_invoked: List[str] = None):
+    def record_turn(self, agents_invoked: Optional[List[str]] = None):
         """Record a conversation turn."""
         self.turn_count += 1
         if agents_invoked:

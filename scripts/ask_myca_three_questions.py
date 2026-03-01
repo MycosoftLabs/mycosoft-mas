@@ -31,7 +31,7 @@ def ask_myca(client, question):
     try:
         data = json.loads(response)
         return data.get("message", response)
-    except:
+    except Exception:
         return response
 
 

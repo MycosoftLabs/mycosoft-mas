@@ -37,7 +37,7 @@ def exec_cmd(cmd, timeout=60):
                     out_b64 = data.get("out-data", "")
                     try:
                         out = base64.b64decode(out_b64).decode() if out_b64 else ""
-                    except:
+                    except Exception:
                         out = out_b64
                     return data.get("exitcode", 0) == 0, out
         return None, "Timeout"

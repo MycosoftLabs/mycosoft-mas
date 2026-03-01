@@ -48,7 +48,7 @@ try:
             if isinstance(data, dict):
                 for k, v in list(data.items())[:3]:
                     log(f"  {k}: {str(v)[:100]}", "INFO")
-        except:
+        except Exception:
             log(f"Response: {r.text[:200]}", "INFO")
 except Exception as e:
     log(f"Error: {e}", "ERR")

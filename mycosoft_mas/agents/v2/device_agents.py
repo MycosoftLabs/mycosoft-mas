@@ -95,7 +95,7 @@ class MycoBrainDeviceAgent(BaseAgentV2):
     One agent per physical MycoBrain device.
     """
     
-    def __init__(self, agent_id: str, device_id: str = None, **kwargs):
+    def __init__(self, agent_id: str, device_id: Optional[str] = None, **kwargs):
         self.device_id = device_id or agent_id.replace("mycobrain-", "")
         super().__init__(agent_id, **kwargs)
     

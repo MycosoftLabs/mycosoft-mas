@@ -7,6 +7,7 @@ regulatory requirements, and corporate governance rules.
 
 import asyncio
 import logging
+import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from pathlib import Path
@@ -65,18 +66,18 @@ class LegalComplianceAgent(BaseAgent):
     
     async def _load_compliance_rules(self) -> None:
         """Load corporate compliance rules."""
-        # TODO: Implement compliance rules loading
-        pass
+        rules_file = self.data_dir / "compliance_rules.json"
+        self.compliance_rules = await self._load_json_file(rules_file, default={})
     
     async def _load_regulatory_requirements(self) -> None:
         """Load regulatory requirements."""
-        # TODO: Implement regulatory requirements loading
-        pass
+        requirements_file = self.data_dir / "regulatory_requirements.json"
+        self.regulatory_requirements = await self._load_json_file(requirements_file, default={})
     
     async def _initialize_retention_policies(self) -> None:
         """Initialize document retention policies."""
-        # TODO: Implement retention policies initialization
-        pass
+        policies_file = self.data_dir / "retention_policies.json"
+        self.retention_policies = await self._load_json_file(policies_file, default={})
     
     async def check_compliance(self, entity: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -206,48 +207,169 @@ class LegalComplianceAgent(BaseAgent):
         """Validate policy format."""
         required_fields = ["id", "type", "rules", "effective_date"]
         return all(field in policy for field in required_fields)
+
+    async def _load_json_file(self, path: Path, default: Any) -> Any:
+        if not path.exists():
+            return default
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            self.logger.error("Failed to read %s: %s", path, exc)
+            return default
+
+    async def _write_json_file(self, path: Path, payload: Any) -> None:
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     
     async def _perform_compliance_check(self, entity: Dict[str, Any]) -> Dict[str, Any]:
         """Perform compliance check on an entity."""
-        # TODO: Implement compliance check
-        pass
+        entity_type = entity.get("type")
+        rules = self.compliance_rules.get(entity_type, [])
+        if not rules:
+            return {
+                "status": "no_rules_configured",
+                "entity_id": entity.get("id"),
+                "entity_type": entity_type,
+                "violations": [],
+                "checked_at": datetime.now().isoformat(),
+            }
+
+        violations = []
+        entity_data = entity.get("data", {})
+        for rule in rules:
+            required_fields = rule.get("required_fields", [])
+            missing = [field for field in required_fields if field not in entity_data]
+            if missing:
+                violations.append({
+                    "rule_id": rule.get("id"),
+                    "type": "missing_fields",
+                    "details": missing,
+                })
+            disallowed = rule.get("disallowed_fields", [])
+            present = [field for field in disallowed if field in entity_data]
+            if present:
+                violations.append({
+                    "rule_id": rule.get("id"),
+                    "type": "disallowed_fields",
+                    "details": present,
+                })
+
+        status = "compliant" if not violations else "violations_detected"
+        return {
+            "status": status,
+            "entity_id": entity.get("id"),
+            "entity_type": entity_type,
+            "violations": violations,
+            "checked_at": datetime.now().isoformat(),
+        }
     
     async def _record_compliance_check(self, entity: Dict[str, Any], results: Dict[str, Any]) -> None:
         """Record results of a compliance check."""
-        # TODO: Implement compliance check recording
-        pass
+        checks_file = self.data_dir / "compliance_checks.json"
+        current = await self._load_json_file(checks_file, default=[])
+        current.append({
+            "entity_id": entity.get("id"),
+            "entity_type": entity.get("type"),
+            "results": results,
+            "recorded_at": datetime.now().isoformat(),
+        })
+        await self._write_json_file(checks_file, current)
     
     async def _determine_retention_policy(self, document: Dict[str, Any]) -> Dict[str, Any]:
         """Determine retention policy for a document."""
-        # TODO: Implement retention policy determination
-        pass
+        doc_type = document.get("type")
+        policy = self.retention_policies.get(doc_type)
+        if not policy:
+            default_id = self.retention_config.get("default_policy_id")
+            policy = self.retention_policies.get(default_id) if default_id else None
+        if not policy:
+            raise ValueError(f"No retention policy configured for document type {doc_type}")
+        return policy
     
     async def _archive_document(self, document: Dict[str, Any], policy: Dict[str, Any]) -> None:
         """Archive a document according to retention policy."""
-        # TODO: Implement document archiving
-        pass
+        archive_dir = self.data_dir / "archive"
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        archive_id = f"{document.get('id')}_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        archive_path = archive_dir / f"{archive_id}.json"
+        payload = {
+            "document": document,
+            "policy": policy,
+            "archived_at": datetime.now().isoformat(),
+        }
+        await self._write_json_file(archive_path, payload)
     
     async def _update_policy(self, policy: Dict[str, Any]) -> None:
         """Update a compliance policy."""
-        # TODO: Implement policy update
-        pass
+        policy_type = policy.get("type")
+        if policy_type == "retention":
+            self.retention_policies[policy["id"]] = policy
+            await self._write_json_file(self.data_dir / "retention_policies.json", self.retention_policies)
+        else:
+            entity_type = policy.get("entity_type", "default")
+            self.compliance_rules.setdefault(entity_type, [])
+            updated = [p for p in self.compliance_rules[entity_type] if p.get("id") != policy["id"]]
+            updated.append(policy)
+            self.compliance_rules[entity_type] = updated
+            await self._write_json_file(self.data_dir / "compliance_rules.json", self.compliance_rules)
     
     async def _notify_policy_update(self, policy: Dict[str, Any]) -> None:
         """Notify relevant parties about policy update."""
-        # TODO: Implement policy update notification
-        pass
+        updates_file = self.data_dir / "policy_updates.json"
+        current = await self._load_json_file(updates_file, default=[])
+        current.append({
+            "policy_id": policy.get("id"),
+            "policy_type": policy.get("type"),
+            "effective_date": policy.get("effective_date"),
+            "notified_at": datetime.now().isoformat(),
+        })
+        await self._write_json_file(updates_file, current)
+        self.logger.info("Policy update recorded for %s", policy.get("id"))
     
     async def _get_requirement(self, requirement_id: str) -> Dict[str, Any]:
         """Get details of a regulatory requirement."""
-        # TODO: Implement requirement retrieval
-        pass
+        requirement = self.regulatory_requirements.get(requirement_id)
+        if not requirement:
+            raise ValueError(f"Requirement {requirement_id} not found")
+        return requirement
     
     async def _check_requirement_compliance(self, requirement: Dict[str, Any]) -> Dict[str, Any]:
         """Check compliance with a regulatory requirement."""
-        # TODO: Implement requirement compliance check
-        pass
+        checks = requirement.get("checks", [])
+        if not checks:
+            return {
+                "status": "no_checks_configured",
+                "requirement_id": requirement.get("id"),
+                "checked_at": datetime.now().isoformat(),
+                "violations": [],
+            }
+
+        violations = []
+        requirement_data = requirement.get("data", {})
+        for check in checks:
+            required_fields = check.get("required_fields", [])
+            missing = [field for field in required_fields if field not in requirement_data]
+            if missing:
+                violations.append({
+                    "check_id": check.get("id"),
+                    "type": "missing_fields",
+                    "details": missing,
+                })
+
+        status = "compliant" if not violations else "violations_detected"
+        return {
+            "status": status,
+            "requirement_id": requirement.get("id"),
+            "checked_at": datetime.now().isoformat(),
+            "violations": violations,
+        }
     
     async def _record_requirement_check(self, requirement_id: str, results: Dict[str, Any]) -> None:
         """Record results of a regulatory requirement check."""
-        # TODO: Implement requirement check recording
-        pass 
+        checks_file = self.data_dir / "requirement_checks.json"
+        current = await self._load_json_file(checks_file, default=[])
+        current.append({
+            "requirement_id": requirement_id,
+            "results": results,
+            "recorded_at": datetime.now().isoformat(),
+        })
+        await self._write_json_file(checks_file, current)

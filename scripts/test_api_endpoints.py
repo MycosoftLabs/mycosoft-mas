@@ -128,7 +128,7 @@ class APIEndpointTests:
                                 response_time_ms=response_time,
                                 status_code=response.status_code
                             )
-                    except:
+                    except Exception:
                         pass
                 
                 return TestResult(

@@ -46,11 +46,11 @@ def exec_cmd(cmd, timeout=120):
                     err_b64 = result.get("err-data", "")
                     try:
                         out = base64.b64decode(out_b64).decode() if out_b64 else ""
-                    except:
+                    except Exception:
                         out = out_b64
                     try:
                         err = base64.b64decode(err_b64).decode() if err_b64 else ""
-                    except:
+                    except Exception:
                         err = err_b64
                     return result.get("exitcode", 0), out + err
         return None, "Timeout"

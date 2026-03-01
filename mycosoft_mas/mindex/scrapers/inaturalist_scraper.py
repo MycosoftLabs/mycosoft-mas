@@ -277,8 +277,8 @@ class INaturalistScraper:
     
     async def fetch_images(
         self,
-        species_name: str = None,
-        taxon_id: int = None,
+        species_name: Optional[str] = None,
+        taxon_id: Optional[int] = None,
         limit: int = 1000,
         download_to_path: Optional[str] = None,
     ) -> List[Dict[str, Any]]:

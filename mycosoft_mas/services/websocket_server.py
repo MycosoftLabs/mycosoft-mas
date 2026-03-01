@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import websockets
-from typing import Dict, Set, Any
+from typing import Dict, Set, Any, Optional
 from datetime import datetime
 from ..core.knowledge_graph import KnowledgeGraph
 
@@ -98,7 +98,7 @@ class WebSocketServer:
             "throughput": throughput
         })
 
-    async def update_agent_status(self, agent_id: str, status: str, details: Dict[str, Any] = None):
+    async def update_agent_status(self, agent_id: str, status: str, details: Optional[Dict[str, Any]] = None):
         """Update and broadcast agent status."""
         self.metrics_buffer["agents"][agent_id] = {
             "status": status,

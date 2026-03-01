@@ -47,7 +47,7 @@ def test_chrome_setup():
     finally:
         try:
             driver.quit()
-        except:
+        except Exception:
             pass
 
 if __name__ == "__main__":

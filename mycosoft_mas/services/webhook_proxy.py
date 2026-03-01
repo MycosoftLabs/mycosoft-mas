@@ -32,7 +32,8 @@ async def webhook_proxy(path: str, request: Request):
     
     try:
         body = await request.json()
-    except:
+    except Exception as e:
+        logger.debug(f"Non-critical error parsing webhook request body: {e}")
         body = {}
     
     logger.info(f"Webhook: /{path} - Body: {body}")

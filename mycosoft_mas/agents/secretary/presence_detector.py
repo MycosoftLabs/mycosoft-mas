@@ -233,7 +233,7 @@ class PresenceDetector:
         ip_address: Optional[str] = None,
         mac_address: Optional[str] = None,
         firmware_version: Optional[str] = None,
-        custom_data: Dict[str, Any] = None
+        custom_data: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Register a new device for presence detection.

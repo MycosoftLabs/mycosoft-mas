@@ -149,7 +149,7 @@ def scan_all() -> Dict:
                     else:
                         rel_path = file_path.name
                         repo = 'UNKNOWN'
-                except:
+                except Exception:
                     rel_path = file_path.name
                     repo = 'UNKNOWN'
                 

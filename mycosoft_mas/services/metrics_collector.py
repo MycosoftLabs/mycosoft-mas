@@ -2,7 +2,7 @@ import asyncio
 import logging
 import psutil
 import time
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 from .websocket_server import WebSocketServer
 
@@ -105,7 +105,7 @@ class MetricsCollector:
                 logger.error(f"Error collecting metrics: {e}")
                 await asyncio.sleep(self.interval)
 
-    def update_agent_status(self, agent_id: str, status: str, details: Dict[str, Any] = None):
+    def update_agent_status(self, agent_id: str, status: str, details: Optional[Dict[str, Any]] = None):
         """Update agent status in the metrics collector."""
         asyncio.create_task(
             self.websocket_server.update_agent_status(agent_id, status, details)

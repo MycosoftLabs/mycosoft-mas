@@ -88,7 +88,7 @@ def main():
     for line in out.split('\n')[:15]:
         try:
             print(f"   {line}")
-        except:
+        except Exception:
             print(f"   [log line with encoding issue]")
     
     ssh.close()

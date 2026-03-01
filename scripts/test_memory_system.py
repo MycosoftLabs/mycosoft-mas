@@ -95,7 +95,7 @@ def get_ssh_client():
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
         return client
-    except:
+    except Exception:
         return None
 
 def run_ssh_command(client, cmd, timeout=60):
@@ -258,7 +258,7 @@ class MemorySystemTests:
                                  duration_ms=int((time.time() - start) * 1000))
             return TestResult("Memory Module", TestStatus.WARN, "No memory files in voice/",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Memory Module", TestStatus.FAIL, "Could not check",
                              duration_ms=int((time.time() - start) * 1000))
     

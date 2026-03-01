@@ -7,12 +7,23 @@ intelligent interrupts, and continuous conversation flow.
 """
 
 import asyncio
+import json
 import logging
-from typing import Dict, List, Optional, Any, Callable, Awaitable
+import os
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-import json
+from typing import Dict, List, Optional, Any, Callable, Awaitable
+from urllib.parse import urlencode
+from uuid import uuid4
+
+import aiohttp
+
+try:
+    from mycosoft_mas.consciousness.conversation_control import VoiceActivityDetector
+except Exception:  # pragma: no cover - fallback when dependency is unavailable
+    VoiceActivityDetector = None
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +35,13 @@ class VoiceState(Enum):
     SPEAKING = "speaking"
     PROCESSING = "processing"
     INTERRUPTED = "interrupted"
+
+
+class VoiceSessionState(Enum):
+    """Session lifecycle state."""
+    ACTIVE = "active"
+    PAUSED = "paused"
+    ENDED = "ended"
 
 
 class AnnouncementPriority(Enum):
@@ -78,9 +96,13 @@ class FullDuplexVoice:
         self,
         personaplex_url: str = "ws://localhost:8999/api/chat",
         speech_callback: Optional[Callable[[str], Awaitable[None]]] = None,
+        audio_callback: Optional[Callable[[bytes], Awaitable[None]]] = None,
+        text_callback: Optional[Callable[[str], Awaitable[None]]] = None,
     ):
         self.personaplex_url = personaplex_url
         self.speech_callback = speech_callback
+        self.audio_callback = audio_callback
+        self.text_callback = text_callback
         
         # State
         self.state = VoiceState.IDLE
@@ -92,15 +114,41 @@ class FullDuplexVoice:
         
         # Conversation history
         self.conversation: List[ConversationTurn] = []
+        self.conversation_id: Optional[str] = None
+        self.session_id: Optional[str] = None
+        self.user_id: Optional[str] = None
+        self.session_state = VoiceSessionState.ENDED
         
         # Settings
         self.allow_interrupts = True
+        self._current_can_interrupt = True
         self.interrupt_sensitivity = 0.7  # 0-1, higher = more sensitive
         self.min_speech_before_interrupt = 500  # ms
+        self.forward_audio_to_bridge = os.getenv("VOICE_FORWARD_AUDIO", "true").lower() == "true"
+        self.bridge_ws_base = os.getenv(
+            "PERSONAPLEX_BRIDGE_WS_URL",
+            self.personaplex_url.replace("/api/chat", ""),
+        ).rstrip("/")
         
         # Background processing
         self._running = False
         self._queue_task: Optional[asyncio.Task] = None
+        self._bridge_task: Optional[asyncio.Task] = None
+        self._bridge_http: Optional[aiohttp.ClientSession] = None
+        self._bridge_ws: Optional[aiohttp.ClientWebSocketResponse] = None
+        self._tts_reset_task: Optional[asyncio.Task] = None
+
+        self._vad = VoiceActivityDetector() if VoiceActivityDetector else None
+        self._speech_started_at: Optional[float] = None
+
+        if self._vad:
+            # Adjust VAD sensitivity based on configured interrupt sensitivity.
+            base_frames = 3
+            extra_frames = int(round((1.0 - self.interrupt_sensitivity) * 2.0))
+            self._vad.min_speech_frames = max(1, base_frames + extra_frames)
+            base_threshold = 0.02
+            scaled_threshold = base_threshold * (1.4 - (0.4 * self.interrupt_sensitivity))
+            self._vad.energy_threshold = max(0.008, min(0.08, scaled_threshold))
         
         logger.info("FullDuplexVoice initialized")
     
@@ -109,6 +157,8 @@ class FullDuplexVoice:
         self._running = True
         self._queue_task = asyncio.create_task(self._process_queue_loop())
         self.state = VoiceState.IDLE
+        if self.session_state == VoiceSessionState.ENDED:
+            await self.start_session()
         logger.info("FullDuplexVoice started")
     
     async def stop(self):
@@ -116,8 +166,140 @@ class FullDuplexVoice:
         self._running = False
         if self._queue_task:
             self._queue_task.cancel()
+        await self.end_session()
         self.state = VoiceState.IDLE
         logger.info("FullDuplexVoice stopped")
+
+    async def start_session(
+        self,
+        *,
+        session_id: Optional[str] = None,
+        conversation_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        connect_bridge: bool = True,
+    ):
+        """Start a voice session and optionally connect to PersonaPlex Bridge."""
+        if self.session_state == VoiceSessionState.ACTIVE:
+            return
+        if session_id:
+            self.session_id = session_id
+        if conversation_id:
+            self.conversation_id = conversation_id
+        if user_id:
+            self.user_id = user_id
+        if self.conversation_id is None:
+            self.conversation_id = str(uuid4())
+        if self.session_id is None:
+            self.session_id = str(uuid4())
+        self.session_state = VoiceSessionState.ACTIVE
+        if connect_bridge:
+            await self.connect_bridge()
+
+    async def pause_session(self):
+        """Pause the current voice session."""
+        if self.session_state != VoiceSessionState.ACTIVE:
+            return
+        self.session_state = VoiceSessionState.PAUSED
+        if self._vad:
+            self._vad.start_tts_cooldown()
+        logger.info("Voice session paused")
+
+    async def resume_session(self):
+        """Resume a paused voice session."""
+        if self.session_state != VoiceSessionState.PAUSED:
+            return
+        self.session_state = VoiceSessionState.ACTIVE
+        logger.info("Voice session resumed")
+
+    async def end_session(self):
+        """End the session and disconnect from PersonaPlex Bridge."""
+        self.session_state = VoiceSessionState.ENDED
+        await self._disconnect_bridge()
+
+    async def connect_bridge(self):
+        """Connect to PersonaPlex Bridge WebSocket for Moshi STT/TTS."""
+        if self._bridge_ws and not self._bridge_ws.closed:
+            return
+        if self.session_id is None:
+            self.session_id = str(uuid4())
+        params: Dict[str, str] = {}
+        if self.conversation_id:
+            params["conversation_id"] = self.conversation_id
+        if self.user_id:
+            params["user_id"] = self.user_id
+        query = f"?{urlencode(params)}" if params else ""
+        ws_url = f"{self.bridge_ws_base}/ws/{self.session_id}{query}"
+
+        if self._bridge_http is None or self._bridge_http.closed:
+            self._bridge_http = aiohttp.ClientSession()
+        try:
+            self._bridge_ws = await self._bridge_http.ws_connect(ws_url, heartbeat=30)
+            self._bridge_task = asyncio.create_task(self._bridge_listen_loop())
+            logger.info(f"Connected to PersonaPlex Bridge: {ws_url}")
+        except Exception as e:
+            logger.error(f"Failed to connect to PersonaPlex Bridge: {e}")
+
+    async def _disconnect_bridge(self):
+        if self._bridge_task:
+            self._bridge_task.cancel()
+            self._bridge_task = None
+        if self._bridge_ws and not self._bridge_ws.closed:
+            await self._bridge_ws.close()
+        self._bridge_ws = None
+        if self._bridge_http and not self._bridge_http.closed:
+            await self._bridge_http.close()
+        self._bridge_http = None
+
+    async def _bridge_listen_loop(self):
+        """Listen for Bridge messages (TTS audio + text)."""
+        if not self._bridge_ws:
+            return
+        try:
+            async for msg in self._bridge_ws:
+                if msg.type == aiohttp.WSMsgType.BINARY:
+                    if self.audio_callback:
+                        await self.audio_callback(msg.data)
+                elif msg.type == aiohttp.WSMsgType.TEXT:
+                    await self._handle_bridge_text(msg.data)
+                elif msg.type == aiohttp.WSMsgType.ERROR:
+                    break
+        except asyncio.CancelledError:
+            return
+        except Exception as e:
+            logger.warning(f"Bridge listen loop error: {e}")
+
+    async def _handle_bridge_text(self, payload: str):
+        try:
+            data = json.loads(payload)
+        except Exception:
+            return
+        if data.get("type") == "text" and self.text_callback:
+            await self.text_callback(data.get("text", ""))
+
+    async def _send_bridge_json(self, payload: Dict[str, Any]):
+        if not self._bridge_ws or self._bridge_ws.closed:
+            return
+        await self._bridge_ws.send_json(payload)
+
+    async def send_audio_chunk(self, audio_bytes: bytes):
+        """Forward audio to Bridge and perform local VAD for barge-in."""
+        if self.session_state != VoiceSessionState.ACTIVE:
+            return
+        if (
+            self.allow_interrupts
+            and self._current_can_interrupt
+            and self.state == VoiceState.SPEAKING
+            and self._vad
+        ):
+            if self._speech_started_at is not None:
+                elapsed_ms = (time.monotonic() - self._speech_started_at) * 1000.0
+                if elapsed_ms < self.min_speech_before_interrupt:
+                    return
+            if self._vad.detect(audio_bytes):
+                await self._handle_interrupt("barge-in")
+                await self._send_bridge_json({"type": "barge_in"})
+        if self.forward_audio_to_bridge and self._bridge_ws and not self._bridge_ws.closed:
+            await self._bridge_ws.send_bytes(audio_bytes)
     
     async def speak(self, text: str, can_interrupt: bool = True) -> bool:
         """
@@ -131,8 +313,10 @@ class FullDuplexVoice:
             True if completed, False if interrupted
         """
         self.state = VoiceState.SPEAKING
+        self._current_can_interrupt = can_interrupt
         self.current_speech = text
         self.speech_position = 0
+        self._speech_started_at = time.monotonic()
         
         # Add to conversation
         turn = ConversationTurn(role="assistant", content=text)
@@ -140,18 +324,24 @@ class FullDuplexVoice:
         
         logger.info(f"Speaking: {text[:50]}...")
         
-        # Send to speech system
-        if self.speech_callback:
-            try:
+        # Send to speech system (Bridge or custom callback)
+        try:
+            if self.speech_callback:
                 await self.speech_callback(text)
-            except asyncio.CancelledError:
-                turn.was_interrupted = True
-                self.state = VoiceState.INTERRUPTED
-                logger.info("Speech interrupted")
-                return False
-        
-        self.current_speech = None
-        self.state = VoiceState.IDLE
+            else:
+                await self._send_bridge_json({"text": text, "forward_to_moshi": True})
+        except asyncio.CancelledError:
+            turn.was_interrupted = True
+            self.state = VoiceState.INTERRUPTED
+            logger.info("Speech interrupted")
+            return False
+        except Exception as e:
+            logger.error(f"Speech callback failed: {e}")
+            self.state = VoiceState.IDLE
+            return False
+
+        # Fallback: estimate TTS completion for barge-in window
+        self._schedule_tts_reset(text)
         return True
     
     async def handle_user_input(self, transcript: str) -> Dict[str, Any]:
@@ -166,6 +356,11 @@ class FullDuplexVoice:
         """
         start_time = datetime.now()
         
+        if self.session_state == VoiceSessionState.PAUSED:
+            await self.resume_session()
+        if self.session_state != VoiceSessionState.ACTIVE:
+            await self.start_session()
+
         # Check if this is an interrupt
         is_interrupt = self.state == VoiceState.SPEAKING
         
@@ -197,18 +392,135 @@ class FullDuplexVoice:
         
         # Cancel current speech
         self.state = VoiceState.INTERRUPTED
+        if self.conversation and self.conversation[-1].role == "assistant":
+            self.conversation[-1].was_interrupted = True
         
         # Brief acknowledgment
-        if self.speech_callback:
-            await self.speech_callback("Got it.")
+        try:
+            if self.speech_callback:
+                await self.speech_callback("Got it.")
+            else:
+                await self._send_bridge_json({"text": "Got it.", "forward_to_moshi": True})
+        except Exception as e:
+            logger.warning(f"Interrupt acknowledgement failed: {e}")
+
+    def _schedule_tts_reset(self, text: str):
+        """Estimate TTS duration to keep SPEAKING state for barge-in."""
+        if self._tts_reset_task:
+            self._tts_reset_task.cancel()
+        # ~12 chars/sec baseline, min 1.2s, max 15s
+        seconds = max(1.2, min(15.0, len(text) / 12.0))
+        self._tts_reset_task = asyncio.create_task(self._reset_tts_state_after(seconds))
+
+    async def _reset_tts_state_after(self, seconds: float):
+        try:
+            await asyncio.sleep(seconds)
+        except asyncio.CancelledError:
+            return
+        if self.state == VoiceState.SPEAKING:
+            self.current_speech = None
+            self.state = VoiceState.IDLE
+            self._speech_started_at = None
+        if self._vad:
+            self._vad.start_tts_cooldown()
     
     async def _process_input(self, transcript: str) -> Dict[str, Any]:
         """Process user input and generate response."""
-        # Placeholder - would integrate with intent classifier and agents
-        return {
-            "intent": "unknown",
-            "response": f"I heard: {transcript}",
+        try:
+            from mycosoft_mas.voice.intent_classifier import classify_voice_command
+            from mycosoft_mas.voice.command_registry import get_command_registry
+        except Exception as e:
+            logger.error(f"Voice intent components unavailable: {e}")
+            return {
+                "intent": "unavailable",
+                "response": "Voice intent system is not available.",
+                "route": "error",
+            }
+
+        if self.conversation_id is None:
+            self.conversation_id = str(uuid4())
+        if self.session_id is None:
+            self.session_id = str(uuid4())
+
+        intent = classify_voice_command(transcript)
+        registry = get_command_registry()
+        command_match = registry.match(transcript)
+
+        context = {
+            "source": "voice-full-duplex",
+            "modality": "voice",
+            "conversation_id": self.conversation_id,
+            "session_id": self.session_id,
+            "user_id": self.user_id,
+            "voice_intent": {
+                "category": intent.intent_category,
+                "action": intent.intent_action,
+                "confidence": intent.confidence,
+                "priority": intent.priority.value,
+            },
         }
+
+        if command_match:
+            registry.record_usage(command_match.command_id)
+            command = registry.get_command(command_match.command_id)
+            context["voice_command"] = {
+                "command_id": command_match.command_id,
+                "confidence": command_match.confidence,
+                "handler_type": command.handler.handler_type if command else None,
+                "handler_id": command.handler.handler_id if command else None,
+                "endpoint": command.handler.endpoint if command else None,
+                "method": command.handler.method if command else None,
+                "matched_pattern": command_match.matched_pattern,
+                "captured_groups": command_match.captured_groups,
+            }
+            response = await self._route_via_unified_router(transcript, context)
+            return {
+                "intent": intent.intent_category,
+                "command_id": command_match.command_id,
+                "response": response,
+                "route": "unified_router",
+            }
+
+        response = await self._route_via_orchestrator(transcript, context)
+        return {
+            "intent": intent.intent_category,
+            "response": response,
+            "route": "voice_orchestrator",
+        }
+
+    async def _route_via_unified_router(self, transcript: str, context: Dict[str, Any]) -> str:
+        """Route via unified router for agent/workflow/tool dispatch."""
+        try:
+            from mycosoft_mas.consciousness.unified_router import get_unified_router
+            router = get_unified_router()
+            result = await router.route_sync(transcript, context=context)
+            return result.response or "No response available."
+        except Exception as e:
+            logger.error(f"Unified router failed: {e}")
+            return "Unable to route the request through the unified router."
+
+    async def _route_via_orchestrator(self, transcript: str, context: Dict[str, Any]) -> str:
+        """Route via voice orchestrator for standard voice handling."""
+        try:
+            from mycosoft_mas.core.routers.voice_orchestrator_api import (
+                VoiceOrchestratorRequest,
+                get_orchestrator,
+            )
+            orchestrator = get_orchestrator()
+            request = VoiceOrchestratorRequest(
+                message=transcript,
+                conversation_id=context.get("conversation_id"),
+                session_id=context.get("session_id"),
+                user_id=context.get("user_id"),
+                source=context.get("source", "voice-full-duplex"),
+                modality="voice",
+                want_audio=False,
+            )
+            response = await orchestrator.process(request)
+            return response.response_text
+        except Exception as e:
+            logger.error(f"Voice orchestrator failed: {e}")
+            return "Unable to process the voice request."
     
     async def queue_announcement(
         self,
@@ -342,10 +654,12 @@ class FullDuplexVoice:
         """Get voice system statistics."""
         return {
             "state": self.state.value,
+            "session_state": self.session_state.value,
             "queue_size": len(self.announcement_queue),
             "conversation_turns": len(self.conversation),
             "allow_interrupts": self.allow_interrupts,
             "running": self._running,
+            "bridge_connected": bool(self._bridge_ws and not self._bridge_ws.closed),
         }
 
 
@@ -423,6 +737,7 @@ __all__ = [
     "FullDuplexVoice",
     "VoiceFlowController",
     "VoiceState",
+    "VoiceSessionState",
     "AnnouncementPriority",
     "QueuedAnnouncement",
     "ConversationTurn",

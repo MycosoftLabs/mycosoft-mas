@@ -46,7 +46,7 @@ def test_webhook_myca_chat():
             try:
                 data = r.json()
                 log(f"Response: {json.dumps(data)[:200]}", "INFO")
-            except:
+            except Exception:
                 log(f"Response: {r.text[:200]}", "INFO")
             return True
         else:

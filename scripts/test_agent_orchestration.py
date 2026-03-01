@@ -80,7 +80,7 @@ def get_ssh_client():
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
         return client
-    except:
+    except Exception:
         return None
 
 def run_ssh_command(client, cmd, timeout=60):
@@ -140,7 +140,7 @@ class AgentOrchestrationTests:
             return TestResult("Agent Categories", TestStatus.WARN,
                              f"Only {count} category references",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Agent Categories", TestStatus.FAIL, "Could not count",
                              duration_ms=int((time.time() - start) * 1000))
     
@@ -161,7 +161,7 @@ class AgentOrchestrationTests:
             return TestResult("Orchestrator Module", TestStatus.WARN,
                              f"Only {count} Python files",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Orchestrator Module", TestStatus.FAIL, "Not found",
                              duration_ms=int((time.time() - start) * 1000))
     
@@ -193,7 +193,7 @@ class AgentOrchestrationTests:
                     return TestResult("n8n Workflows", TestStatus.PASS,
                                      f"{count} workflows",
                                      duration_ms=int((time.time() - start) * 1000))
-                except:
+                except Exception:
                     return TestResult("n8n Workflows", TestStatus.PASS,
                                      "Accessible",
                                      duration_ms=int((time.time() - start) * 1000))
@@ -243,7 +243,7 @@ class AgentOrchestrationTests:
             )
             try:
                 total_count += int(out.strip())
-            except:
+            except Exception:
                 pass
         
         if total_count > 20:
@@ -274,7 +274,7 @@ class AgentOrchestrationTests:
             return TestResult("Voice Agent Integration", TestStatus.WARN,
                              "No voice references",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Voice Agent Integration", TestStatus.FAIL, "Could not check",
                              duration_ms=int((time.time() - start) * 1000))
     

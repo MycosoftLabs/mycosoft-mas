@@ -40,7 +40,7 @@ def exec_cmd(cmd, timeout=60):
                     try:
                         if stdout and not stdout.isprintable():
                             stdout = base64.b64decode(stdout).decode('utf-8', errors='replace')
-                    except:
+                    except Exception:
                         pass
                     return stdout + stderr
         return "TIMEOUT"

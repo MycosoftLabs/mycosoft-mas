@@ -97,13 +97,13 @@ class MDPTelemetry:
     gas_resistance: Optional[float] = None
     
     # MOSFET states (0-3)
-    mosfet_states: List[bool] = None
-    
+    mosfet_states: Optional[List[bool]] = None
+
     # I²C sensor addresses detected
-    i2c_addresses: List[int] = None
-    
+    i2c_addresses: Optional[List[int]] = None
+
     # Power status
-    power_status: Dict[str, Any] = None
+    power_status: Optional[Dict[str, Any]] = None
     
     # Metadata
     firmware_version: Optional[str] = None
@@ -150,12 +150,12 @@ class MDPEvent:
     event_type: str  # "error", "state_change", "sensor_detected", etc.
     severity: str  # "info", "warning", "error", "critical"
     message: str
-    data: Dict[str, Any] = None
-    
+    data: Optional[Dict[str, Any]] = None
+
     def __post_init__(self):
         if self.data is None:
             self.data = {}
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)

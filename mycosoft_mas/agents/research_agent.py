@@ -33,6 +33,8 @@ except ImportError:
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.messaging.message_types import Message, MessageType, MessagePriority
 from mycosoft_mas.agents.enums import AgentStatus, TaskType, TaskStatus, TaskPriority
+from mycosoft_mas.integrations.pubpeer_client import PubPeerClient
+from mycosoft_mas.integrations.scholar_client import ScholarClient
 
 class ResearchType(Enum):
     LITERATURE_REVIEW = "literature_review"
@@ -103,6 +105,8 @@ class ResearchAgent(BaseAgent):
         # Create data directory
         self.data_dir = Path("data/research")
         self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.pubpeer_client = PubPeerClient()
+        self.scholar_client = ScholarClient()
         
         # Metrics
         self.metrics.update({
@@ -691,12 +695,15 @@ class ResearchAgent(BaseAgent):
             return []
     
     async def _search_scholar(self, query: str, max_results: int = 10) -> List[Dict]:
-        """Search Google Scholar (requires external service/API key).
-        
-        Returns empty list as direct Scholar API requires authentication.
-        """
-        self.logger.warning("Google Scholar search requires SerpAPI or similar service - not implemented")
-        return []
+        """Search Google Scholar (requires external service/API key)."""
+        if not self.scholar_client.is_configured():
+            self.logger.warning("SERPAPI_KEY not set - Google Scholar search disabled")
+            return []
+        try:
+            return await self.scholar_client.search(query, max_results=max_results)
+        except Exception as e:
+            self.logger.error(f"Google Scholar search error: {str(e)}")
+            return []
     
     async def _search_semantic_scholar(self, query: str, max_results: int = 10) -> List[Dict]:
         """Search Semantic Scholar API.
@@ -929,8 +936,14 @@ class ResearchAgent(BaseAgent):
     
     async def _get_pubpeer_comments(self, paper_id: str) -> Optional[Dict]:
         """Get PubPeer comments for a paper (requires API access)."""
-        self.logger.warning("PubPeer API integration not implemented")
-        return None
+        if not self.pubpeer_client.is_configured():
+            self.logger.warning("PUBPEER_API_URL not set - PubPeer lookup disabled")
+            return None
+        try:
+            return await self.pubpeer_client.get_comments(paper_id)
+        except Exception as e:
+            self.logger.error(f"PubPeer query error: {str(e)}")
+            return None
     
     async def _get_crossref_review(self, doi: str) -> Optional[Dict]:
         """Get Crossref review metadata."""
@@ -959,7 +972,10 @@ class ResearchAgent(BaseAgent):
     async def _get_mas_review_status(self, target_id: str) -> Optional[Dict]:
         """Get review status from MAS orchestrator."""
         try:
-            mas_url = os.getenv("MAS_API_URL", "http://192.168.0.188:8001")
+            mas_url = os.getenv("MAS_API_URL")
+            if not mas_url:
+                self.logger.warning("MAS_API_URL not set - MAS review lookup disabled")
+                return None
             if not AIOHTTP_AVAILABLE:
                 return None
             
@@ -1020,8 +1036,11 @@ class ResearchAgent(BaseAgent):
         """Get project data from external PM tools (Jira, GitHub Projects, etc.)."""
         try:
             # Try MAS API first
-            mas_url = os.getenv("MAS_API_URL", "http://192.168.0.188:8001")
+            mas_url = os.getenv("MAS_API_URL")
             if AIOHTTP_AVAILABLE:
+                if not mas_url:
+                    self.logger.warning("MAS_API_URL not set - external project lookup disabled")
+                    return None
                 async with aiohttp.ClientSession() as session:
                     async with session.get(f"{mas_url}/api/projects/{project_id}") as response:
                         if response.status == 200:

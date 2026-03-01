@@ -38,7 +38,7 @@ for endpoint in sandbox_endpoints:
             try:
                 data = response.json()
                 print(f"    Response keys: {list(data.keys())[:5] if isinstance(data, dict) else 'N/A'}")
-            except:
+            except Exception:
                 pass
     except requests.exceptions.ConnectionError:
         print(f"  {endpoint:40s} CONNECTION REFUSED")

@@ -8,13 +8,44 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timedelta
+from uuid import uuid4
 import logging
 import os
 import re
 
+from mycosoft_mas.llm.tool_pipeline import ToolCall, ToolStatus, create_tool_manager_for_skill
+from mycosoft_mas.myca.event_ledger import get_ledger, hash_args
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/voice/tools", tags=["voice-tools"])
+
+_voice_tool_manager = None
+
+
+def _get_voice_tool_manager():
+    global _voice_tool_manager
+    if _voice_tool_manager is None:
+        _voice_tool_manager = create_tool_manager_for_skill("voice")
+    else:
+        _voice_tool_manager.set_skill_context("voice")
+    return _voice_tool_manager
+
+
+def _log_voice_tool_response(tool_name: str, args: Dict[str, Any], response: "ToolCallResponse") -> None:
+    try:
+        ledger = get_ledger()
+        status = "success" if response.success else "error"
+        error_class = None if response.success else "tool_error"
+        ledger.log_tool_call(
+            agent="voice",
+            tool_name=tool_name,
+            args_hash=hash_args(args),
+            result_status=status,
+            error_class=error_class,
+        )
+    except Exception as e:
+        logger.debug("Voice tool ledger logging failed: %s", e)
 
 
 def _normalize_text(value: str) -> str:
@@ -35,6 +66,27 @@ def _get_mindex_base_url() -> str:
 
 def _get_n8n_base_url() -> str:
     return os.getenv("N8N_URL", "http://192.168.0.188:5678").rstrip("/")
+
+
+async def _execute_tool_pipeline(tool_name: str, arguments: Dict[str, Any]) -> ToolCall:
+    manager = _get_voice_tool_manager()
+    tool_call = ToolCall(
+        id=str(uuid4()),
+        name=tool_name,
+        arguments=arguments,
+        skill_name="voice",
+    )
+    result = await manager.executor.execute(tool_call)
+    return result
+
+
+async def _fetch_devices_payload() -> Dict[str, Any]:
+    import httpx
+    mas_base = _get_mas_base_url()
+    async with httpx.AsyncClient(timeout=6.0) as client:
+        response = await client.get(f"{mas_base}/api/devices", params={"include_offline": True})
+        response.raise_for_status()
+        return response.json()
 
 
 def _pick_device_match(devices: List[Dict[str, Any]], query: str) -> Optional[Dict[str, Any]]:
@@ -79,19 +131,19 @@ async def execute_tool(request: ToolCallRequest):
     
     try:
         if tool_name == "device_status":
-            return await _get_device_status(query)
+            response = await _get_device_status(query)
         elif tool_name == "agent_list":
-            return await _get_agent_list(query)
+            response = await _get_agent_list(query)
         elif tool_name == "query_mindex":
-            return await _query_mindex(query)
+            response = await _query_mindex(query)
         elif tool_name == "system_status":
-            return await _get_system_status(query)
+            response = await _get_system_status(query)
         elif tool_name == "run_myceliumseg_validation":
-            return await _run_myceliumseg_validation(query)
+            response = await _run_myceliumseg_validation(query)
         elif tool_name == "run_workflow":
-            return await _run_workflow_voice(query)
+            response = await _run_workflow_voice(query)
         elif tool_name in ("petri.monitor", "petri.adjust_env", "petri.contamination_response", "petri.multi_run"):
-            return await _run_petri_agent_tool(tool_name, query)
+            response = await _run_petri_agent_tool(tool_name, query)
         elif tool_name in (
             "natureos.analyze_zone",
             "natureos.forecast",
@@ -112,9 +164,9 @@ async def execute_tool(request: ToolCallRequest):
             "natureos.symbiosis_network",
             "natureos.track_spores",
         ):
-            return await _run_natureos_matlab_tool(tool_name, query)
+            response = await _run_natureos_matlab_tool(tool_name, query)
         else:
-            return ToolCallResponse(
+            response = ToolCallResponse(
                 success=False,
                 tool_name=tool_name,
                 result=f"Unknown tool: {tool_name}",
@@ -122,12 +174,14 @@ async def execute_tool(request: ToolCallRequest):
             )
     except Exception as e:
         logger.error(f"Tool execution error: {e}")
-        return ToolCallResponse(
+        response = ToolCallResponse(
             success=False,
             tool_name=tool_name,
             result=f"Tool execution failed: {str(e)}",
             timestamp=datetime.utcnow().isoformat()
         )
+    _log_voice_tool_response(tool_name, {"tool_name": tool_name, "query": request.query}, response)
+    return response
 
 
 async def _run_petri_agent_tool(tool_name: str, query: str) -> ToolCallResponse:
@@ -362,24 +416,24 @@ async def _run_workflow_voice(query: str) -> ToolCallResponse:
                 data={"available": names[:10]},
                 timestamp=datetime.utcnow().isoformat(),
             )
-        result = await agent.process_task({"type": "execute_workflow", "workflow_name": selected})
-        status = result.get("status", "unknown")
-        if status == "success":
+        tool_result = await _execute_tool_pipeline("execute_workflow", {"workflow_name": selected})
+        if tool_result.status == ToolStatus.COMPLETED:
+            result_data = tool_result.result if isinstance(tool_result.result, dict) else {"result": tool_result.result}
             msg = f"Workflow {selected} executed successfully."
-            if result.get("result"):
-                msg += " " + str(result.get("result"))[:200]
+            if result_data.get("result"):
+                msg += " " + str(result_data.get("result"))[:200]
             return ToolCallResponse(
                 success=True,
                 tool_name="run_workflow",
                 result=msg,
-                data=result,
+                data=result_data,
                 timestamp=datetime.utcnow().isoformat(),
             )
         return ToolCallResponse(
             success=False,
             tool_name="run_workflow",
-            result=f"Workflow {selected} returned: {status}. {result.get('message', '')}"[:300],
-            data=result,
+            result=f"Workflow {selected} failed: {tool_result.error or 'unknown error'}"[:300],
+            data={"error": tool_result.error, "status": tool_result.status.value},
             timestamp=datetime.utcnow().isoformat(),
         )
     except Exception as e:
@@ -394,13 +448,8 @@ async def _run_workflow_voice(query: str) -> ToolCallResponse:
 
 async def _get_device_status(query: str) -> ToolCallResponse:
     """Get status of a NatureOS device."""
-    import httpx
-    mas_base = _get_mas_base_url()
     try:
-        async with httpx.AsyncClient(timeout=6.0) as client:
-            response = await client.get(f"{mas_base}/api/devices", params={"include_offline": True})
-            response.raise_for_status()
-            devices_payload = response.json()
+        devices_payload = await _fetch_devices_payload()
         devices = devices_payload.get("devices", [])
         if not devices:
             return ToolCallResponse(
@@ -420,11 +469,30 @@ async def _get_device_status(query: str) -> ToolCallResponse:
                 data={"available": available},
                 timestamp=datetime.utcnow().isoformat(),
             )
+        device_id = matched.get("device_id") or matched.get("device_name") or matched.get("device_display_name")
+        if not device_id:
+            return ToolCallResponse(
+                success=False,
+                tool_name="device_status",
+                result="Matched a device but could not resolve its device_id.",
+                data=matched,
+                timestamp=datetime.utcnow().isoformat(),
+            )
+        tool_result = await _execute_tool_pipeline("device_status", {"device_id": device_id})
+        if tool_result.status != ToolStatus.COMPLETED:
+            return ToolCallResponse(
+                success=False,
+                tool_name="device_status",
+                result=tool_result.error or "Device status tool failed.",
+                data={"device_id": device_id},
+                timestamp=datetime.utcnow().isoformat(),
+            )
+        payload = tool_result.result if isinstance(tool_result.result, dict) else {}
         name = matched.get("device_display_name") or matched.get("device_name") or matched.get("device_id", "device")
-        status = matched.get("status", "unknown")
-        last_seen = matched.get("last_seen")
-        role = matched.get("device_role")
-        sensors = matched.get("sensors")
+        status = payload.get("status") or payload.get("state") or matched.get("status", "unknown")
+        last_seen = payload.get("last_seen") or matched.get("last_seen")
+        role = payload.get("device_role") or matched.get("device_role")
+        sensors = payload.get("sensors") or matched.get("sensors")
         result = f"{name} is {status}."
         if role:
             result += f" Role: {role}."
@@ -436,7 +504,7 @@ async def _get_device_status(query: str) -> ToolCallResponse:
             success=True,
             tool_name="device_status",
             result=result,
-            data=matched,
+            data=payload or matched,
             timestamp=datetime.utcnow().isoformat(),
         )
     except Exception as e:
@@ -500,6 +568,65 @@ async def _query_mindex(query: str) -> ToolCallResponse:
             result="Provide a search term for MINDEX.",
             timestamp=datetime.utcnow().isoformat(),
         )
+
+    try:
+        tool_result = await _execute_tool_pipeline("mindex_query", {"query": search_terms, "limit": 5})
+        if tool_result.status == ToolStatus.COMPLETED and isinstance(tool_result.result, dict):
+            payload = tool_result.result
+            results = payload.get("results") if isinstance(payload, dict) else {}
+            taxa = results.get("taxa") if isinstance(results, dict) else payload.get("taxa")
+            compounds = results.get("compounds") if isinstance(results, dict) else payload.get("compounds")
+            taxa = taxa or []
+            compounds = compounds or []
+            if taxa:
+                taxon = taxa[0]
+                name = taxon.get("scientific_name") or "Unknown taxon"
+                common = taxon.get("common_name")
+                rank = taxon.get("rank")
+                toxicity = taxon.get("toxicity")
+                edibility = taxon.get("edibility")
+                result = f"MINDEX found {name}."
+                if common:
+                    result += f" Common name: {common}."
+                if rank:
+                    result += f" Rank: {rank}."
+                if toxicity:
+                    result += f" Toxicity: {toxicity}."
+                if edibility:
+                    result += f" Edibility: {edibility}."
+                return ToolCallResponse(
+                    success=True,
+                    tool_name="query_mindex",
+                    result=result,
+                    data=taxon,
+                    timestamp=datetime.utcnow().isoformat(),
+                )
+            if compounds:
+                compound = compounds[0]
+                name = compound.get("name") or "Unknown compound"
+                formula = compound.get("formula")
+                mw = compound.get("molecular_weight")
+                result = f"MINDEX found compound {name}."
+                if formula:
+                    result += f" Formula: {formula}."
+                if mw:
+                    result += f" Molecular weight: {mw}."
+                return ToolCallResponse(
+                    success=True,
+                    tool_name="query_mindex",
+                    result=result,
+                    data=compound,
+                    timestamp=datetime.utcnow().isoformat(),
+                )
+            return ToolCallResponse(
+                success=False,
+                tool_name="query_mindex",
+                result=f"No data available for '{search_terms}'.",
+                data=payload,
+                timestamp=datetime.utcnow().isoformat(),
+            )
+    except Exception as e:
+        logger.debug("Tool pipeline MINDEX query failed: %s", e)
 
     mindex_base = _get_mindex_base_url()
     try:

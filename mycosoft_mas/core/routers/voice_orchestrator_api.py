@@ -140,6 +140,7 @@ class MYCAOrchestrator:
         self._session_manager = None
         self._voice_store = None
         self._memory_coordinator = None
+        self._tool_manager = None
         
         # Conversation context cache
         self._conversations: Dict[str, Dict[str, Any]] = {}
@@ -187,6 +188,21 @@ class MYCAOrchestrator:
             except ImportError:
                 logger.warning("SessionManager not available")
         return self._session_manager
+
+    def _get_tool_manager(self):
+        """Lazy load tool manager (voice skill)."""
+        if self._tool_manager is None:
+            try:
+                from mycosoft_mas.llm.tool_pipeline import create_tool_manager_for_skill
+                self._tool_manager = create_tool_manager_for_skill("voice")
+            except Exception as e:
+                logger.warning(f"ToolManager not available: {e}")
+        else:
+            try:
+                self._tool_manager.set_skill_context("voice")
+            except Exception:
+                pass
+        return self._tool_manager
     
     async def _get_voice_store(self):
         """Lazy load voice session store."""
@@ -308,6 +324,8 @@ class MYCAOrchestrator:
         conv_id = request.conversation_id or str(uuid4())
         session_id = request.session_id or str(uuid4())
         user_id = request.user_id or "morgan"
+
+        self._log_voice_turn(request, conv_id, session_id)
         
         # PHASE 2: Load history from DB if this is a new conversation context
         # but we have an existing conversation_id (resuming conversation)
@@ -537,6 +555,11 @@ class MYCAOrchestrator:
                 {"role": turn.get("role", "user"), "content": turn.get("content", "")}
                 for turn in history
             ]
+
+            tool_manager = self._get_tool_manager()
+            tools = None
+            if tool_manager:
+                tools = tool_manager.get_tool_definitions_for_llm(filter_by_permissions=True)
             
             response = await brain.get_response(
                 message=message,
@@ -544,6 +567,7 @@ class MYCAOrchestrator:
                 conversation_id=conv_id,
                 user_id=user_id,
                 history=formatted_history,
+                tools=tools,
                 provider="auto"
             )
             
@@ -559,6 +583,27 @@ class MYCAOrchestrator:
         
         # Final fallback to local responses
         return self._get_local_response(message, intent)
+
+    def _log_voice_turn(self, request: VoiceOrchestratorRequest, conv_id: str, session_id: str) -> None:
+        """Log a high-level voice turn to the event ledger."""
+        try:
+            from mycosoft_mas.myca.event_ledger import get_ledger
+            ledger = get_ledger()
+            ledger.log_risk_event(
+                agent="voice",
+                event_type="voice_turn",
+                description="Voice orchestrator turn",
+                risk_flags=["voice_turn"],
+                context={
+                    "conversation_id": conv_id,
+                    "session_id": session_id,
+                    "user_id": request.user_id,
+                    "source": request.source,
+                    "modality": request.modality,
+                },
+            )
+        except Exception as e:
+            logger.debug(f"Voice turn ledger logging failed: {e}")
     
     def _get_local_response(self, message: str, intent: Dict[str, Any]) -> str:
         """Generate local response based on intent."""

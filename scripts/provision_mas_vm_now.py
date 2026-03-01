@@ -60,7 +60,7 @@ def list_vms():
         if r.ok:
             return r.json().get("data", [])
         return []
-    except:
+    except Exception:
         return []
 
 def get_isos():
@@ -72,7 +72,7 @@ def get_isos():
             content = r.json().get("data", [])
             return [c for c in content if c.get("content") == "iso"]
         return []
-    except:
+    except Exception:
         return []
 
 def create_vm(config):

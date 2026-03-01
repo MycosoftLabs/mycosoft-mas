@@ -60,7 +60,7 @@ if not logged_in:
                     print(f"  => Login successful with {user}!")
                     logged_in = True
                     break
-            except:
+            except Exception:
                 pass
         if logged_in:
             break
@@ -137,7 +137,7 @@ for port in local_ports:
                 9090: "Prometheus",
             }.get(port, "Unknown")
             print(f"  Port {port}: {service} - RUNNING LOCALLY")
-    except:
+    except Exception:
         pass
 
 print("\n" + "=" * 70)

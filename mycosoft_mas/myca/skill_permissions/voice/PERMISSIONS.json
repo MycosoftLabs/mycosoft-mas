@@ -1,0 +1,68 @@
+{
+  "name": "voice",
+  "version": "0.1.0",
+  "description": "MYCA voice orchestration and tool use permissions",
+  "risk_tier": "medium",
+  "tools": {
+    "allow": [
+      "device_status",
+      "mindex_query",
+      "memory_recall",
+      "execute_workflow",
+      "generate_workflow",
+      "agent_invoke",
+      "calculator",
+      "search_documents",
+      "exa_search",
+      "weather"
+    ],
+    "deny": [
+      "exec_shell",
+      "exec_sandbox",
+      "secrets_get",
+      "delete_file"
+    ]
+  },
+  "filesystem": {
+    "read_paths": [],
+    "write_paths": [],
+    "deny_paths": [
+      "~/.ssh",
+      "~/.aws",
+      "~/.config",
+      "/etc",
+      "/var",
+      "/proc",
+      "./.git/",
+      "./.env",
+      "./.credentials*",
+      "./secrets/"
+    ]
+  },
+  "network": {
+    "enabled": true,
+    "allowlist": [
+      "192.168.0.188:8001",
+      "192.168.0.189:8000",
+      "192.168.0.188:5678",
+      "127.0.0.1:8998",
+      "127.0.0.1:8999",
+      "localhost:8998",
+      "localhost:8999"
+    ],
+    "denylist": [
+      "*.onion"
+    ]
+  },
+  "secrets": {
+    "allowed_scopes": []
+  },
+  "limits": {
+    "max_runtime_seconds": 120,
+    "max_files_written": 0,
+    "max_bytes_written": 0,
+    "sandbox_required": false
+  },
+  "dependencies": [],
+  "reviewers": ["security_agent"]
+}

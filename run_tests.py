@@ -19,7 +19,7 @@ def find_python():
                 )
                 if "Python 3" in result.stdout:
                     return python_path
-            except:
+            except Exception:
                 continue
     
     # Try common installation paths on Windows
@@ -55,7 +55,7 @@ def main():
             # Try to set up Poetry environment with detected Python
             try:
                 subprocess.run(["poetry", "env", "use", python_exe], check=False)
-            except:
+            except Exception:
                 print("Could not set Poetry Python version, using default...")
         else:
             print("Using default Poetry Python environment...")

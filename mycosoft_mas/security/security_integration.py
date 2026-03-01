@@ -346,7 +346,7 @@ class MINDEXCrypto:
             "algorithm": "AES-256-GCM",
         }
     
-    def decrypt_from_voice(self, ciphertext: str, key_id: str, nonce: str = None) -> str:
+    def decrypt_from_voice(self, ciphertext: str, key_id: str, nonce: Optional[str] = None) -> str:
         """Decrypt data from voice transmission using AES-GCM."""
         import os
         import base64

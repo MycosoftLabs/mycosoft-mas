@@ -20,7 +20,7 @@ try:
 except ImportError:
     # Fallback base class for development
     class BaseAgentV2:
-        def __init__(self, agent_id: str, config: Any = None):
+        def __init__(self, agent_id: str, config: Optional[Any] = None):
             self.agent_id = agent_id
             self.config = config
             self._task_handlers = {}
@@ -54,7 +54,7 @@ class Earth2OrchestratorAgent(BaseAgentV2):
     - Route requests to appropriate model agents
     """
     
-    def __init__(self, agent_id: str = "earth2-orchestrator", config: Any = None):
+    def __init__(self, agent_id: str = "earth2-orchestrator", config: Optional[Any] = None):
         super().__init__(agent_id, config)
         self._task_handlers.update({
             "schedule_forecast": self._handle_schedule_forecast,
@@ -233,7 +233,7 @@ class WeatherForecastAgent(BaseAgentV2):
     - Extract regional subsets
     """
     
-    def __init__(self, agent_id: str = "weather-forecast", config: Any = None):
+    def __init__(self, agent_id: str = "weather-forecast", config: Optional[Any] = None):
         super().__init__(agent_id, config)
         self._task_handlers.update({
             "run_forecast": self._handle_run_forecast,
@@ -314,7 +314,7 @@ class NowcastAgent(BaseAgentV2):
     - Detect severe weather threats
     """
     
-    def __init__(self, agent_id: str = "nowcast", config: Any = None):
+    def __init__(self, agent_id: str = "nowcast", config: Optional[Any] = None):
         super().__init__(agent_id, config)
         self._task_handlers.update({
             "run_nowcast": self._handle_run_nowcast,
@@ -383,7 +383,7 @@ class ClimateSimulationAgent(BaseAgentV2):
     - Regional climate impacts
     """
     
-    def __init__(self, agent_id: str = "climate-simulation", config: Any = None):
+    def __init__(self, agent_id: str = "climate-simulation", config: Optional[Any] = None):
         super().__init__(agent_id, config)
         self._task_handlers.update({
             "run_scenario": self._handle_run_scenario,
@@ -431,7 +431,7 @@ class SporeDispersalAgent(BaseAgentV2):
     - MINDEX species integration
     """
     
-    def __init__(self, agent_id: str = "spore-dispersal", config: Any = None):
+    def __init__(self, agent_id: str = "spore-dispersal", config: Optional[Any] = None):
         super().__init__(agent_id, config)
         self._task_handlers.update({
             "run_dispersal": self._handle_run_dispersal,

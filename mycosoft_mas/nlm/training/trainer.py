@@ -71,7 +71,7 @@ class DataCollator:
     
     def __init__(
         self,
-        tokenizer: Any = None,
+        tokenizer: Optional[Any] = None,
         max_length: int = 2048,
         padding: str = "longest",
         return_tensors: str = "pt",

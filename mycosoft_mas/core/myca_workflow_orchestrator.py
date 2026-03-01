@@ -214,7 +214,7 @@ class MYCAWorkflowOrchestrator:
         """Archive a workflow version"""
         return self.engine.archive_workflow(workflow_id, reason=reason)
     
-    def restore_workflow(self, workflow_id: str, version: int = None) -> dict:
+    def restore_workflow(self, workflow_id: str, version: Optional[int] = None) -> dict:
         """Restore a workflow from archive"""
         return self.engine.restore_workflow(workflow_id, version=version)
     

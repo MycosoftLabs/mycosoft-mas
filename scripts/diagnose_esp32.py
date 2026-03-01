@@ -47,7 +47,7 @@ def test_serial_read(port, baud=115200):
     finally:
         try:
             s.close()
-        except:
+        except Exception:
             pass
 
 def main():

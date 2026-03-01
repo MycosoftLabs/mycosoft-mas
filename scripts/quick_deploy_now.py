@@ -37,7 +37,7 @@ def exec_cmd(cmd, timeout=180):
                     out = sd.get('out-data', '')
                     try:
                         out = base64.b64decode(out).decode('utf-8', errors='replace') if out else ''
-                    except:
+                    except Exception:
                         pass
                     return out
         except Exception as e:

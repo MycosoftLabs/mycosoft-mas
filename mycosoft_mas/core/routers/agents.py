@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from ..security import get_current_user
 import logging
@@ -115,7 +115,7 @@ async def restart_agent(agent_id: str, current_user: Dict = Depends(get_current_
 @router.get("/anomalies")
 async def get_anomalies(
     limit: int = 50,
-    severity: str = None,
+    severity: Optional[str] = None,
     current_user: Dict = Depends(get_current_user)
 ) -> List[Dict[str, Any]]:
     """

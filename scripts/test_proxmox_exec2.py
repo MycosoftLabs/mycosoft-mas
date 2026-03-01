@@ -38,7 +38,7 @@ if pid:
         try:
             decoded = base64.b64decode(out).decode()
             print(f"Decoded output: {decoded}")
-        except:
+        except Exception:
             print(f"Raw output: {out}")
 
 # Try bash -c style via input-data
@@ -59,7 +59,7 @@ if resp.ok:
             try:
                 decoded = base64.b64decode(out).decode()
                 print(f"Output:\n{decoded}")
-            except:
+            except Exception:
                 print(f"Raw: {out}")
 else:
     print(f"Error: {resp.text[:300]}")

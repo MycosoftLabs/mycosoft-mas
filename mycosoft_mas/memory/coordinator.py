@@ -65,6 +65,7 @@ class MemoryCoordinator:
         self._conversation_memories: Dict[str, Any] = {}  # ConversationMemory by session
         self._cross_session = None  # CrossSessionMemory
         self._episodic = None  # EpisodicMemory
+        self._procedural = None  # ProceduralMemory
         self._personaplex_memory = None  # Voice session memory
         self._n8n_memory = None  # Workflow memory
         self._initialized = False
@@ -77,13 +78,14 @@ class MemoryCoordinator:
         
         try:
             # Import memory modules
-            from mycosoft_mas.memory.myca_memory import get_myca_memory, MYCAMemory, MemoryLayer
+            from mycosoft_mas.memory.myca_memory import get_myca_memory, MYCAMemory, MemoryLayer, MemoryQuery
             from mycosoft_mas.memory.memory_modules import (
                 ConversationMemory,
                 EpisodicMemory, 
                 EventType,
                 CrossSessionMemory
             )
+            from mycosoft_mas.memory.procedural_memory import ProceduralMemory
             
             # Initialize 6-layer memory
             self._myca_memory = await get_myca_memory()
@@ -94,11 +96,15 @@ class MemoryCoordinator:
             
             # Initialize episodic memory
             self._episodic = EpisodicMemory()
+
+            # Initialize procedural memory (persistent)
+            self._procedural = ProceduralMemory(self._myca_memory)
             
             # Store module references for internal use
             self._MemoryLayer = MemoryLayer
             self._ConversationMemory = ConversationMemory
             self._EventType = EventType
+            self._MemoryQuery = MemoryQuery
             
             self._initialized = True
             logger.info("MemoryCoordinator initialized successfully")
@@ -407,13 +413,54 @@ class MemoryCoordinator:
                 layer="episodic",
                 limit=limit
             )
-        else:
-            # Query from in-memory episodic
-            episodes = self._episodic.recall_by_type(
-                self._EventType(event_type) if event_type else None,
-                limit=limit
-            )
-            return [e.to_dict() for e in episodes]
+        query = self._MemoryQuery(
+            layer=self._MemoryLayer.EPISODIC,
+            tags=["episode"] + ([event_type] if event_type else []),
+            limit=limit,
+        )
+        entries = await self._myca_memory.recall(query=query)
+        return [entry.content for entry in entries]
+
+    # =========================================================================
+    # Procedural Memory Operations
+    # =========================================================================
+
+    async def store_procedure(
+        self,
+        *,
+        name: str,
+        steps: List[Dict[str, Any]],
+        description: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        source: str = "system",
+        importance: float = 0.6,
+    ) -> UUID:
+        """Store a procedural workflow."""
+        self._ensure_initialized()
+        if not self._procedural:
+            raise RuntimeError("ProceduralMemory not initialized.")
+        return await self._procedural.store_procedure(
+            name=name,
+            steps=steps,
+            description=description,
+            tags=tags,
+            source=source,
+            importance=importance,
+        )
+
+    async def get_procedure(self, name: str) -> Optional[Dict[str, Any]]:
+        """Fetch a procedure by name."""
+        self._ensure_initialized()
+        if not self._procedural:
+            return None
+        return await self._procedural.get_procedure(name)
+
+    async def list_procedures(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """List stored procedures."""
+        self._ensure_initialized()
+        if not self._procedural:
+            return []
+        return await self._procedural.list_procedures(limit=limit)
     
     # =========================================================================
     # Cross-Session / User Profile

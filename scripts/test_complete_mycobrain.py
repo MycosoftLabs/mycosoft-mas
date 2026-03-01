@@ -27,7 +27,7 @@ def test_endpoint(name, url, method="GET", data=None):
             try:
                 result = response.json()
                 return result
-            except:
+            except Exception:
                 return {"raw": response.text[:100]}
         else:
             return {"error": response.status_code}

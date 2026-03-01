@@ -65,7 +65,7 @@ def main():
                                     for addr in iface.get('ip-addresses', []):
                                         if addr.get('ip-address-type') == 'ipv4':
                                             print(f"    -> IP: {addr.get('ip-address')}")
-                        except:
+                        except Exception:
                             pass
                     
         else:

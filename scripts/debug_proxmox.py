@@ -76,7 +76,7 @@ for username, password in credentials:
                 error_data = r.json()
                 if error_data:
                     print(f"      Response: {error_data}")
-            except:
+            except Exception:
                 pass
         elif r.status_code == 500:
             print(f"      => Server error - PAM might be misconfigured")
@@ -108,9 +108,9 @@ for last_octet in [2, 90, 100, 202, 203, 204]:
                 )
                 if r.status_code == 200:
                     print(f"      => AUTH SUCCESS on {ip}!")
-            except:
+            except Exception:
                 pass
-    except:
+    except Exception:
         pass
 
 print("\n" + "=" * 60)

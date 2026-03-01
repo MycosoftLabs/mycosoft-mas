@@ -70,7 +70,7 @@ def check_port(port: int, host: str = "localhost") -> bool:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(2)
             return s.connect_ex((host, port)) == 0
-    except:
+    except Exception:
         return False
 
 
@@ -113,10 +113,10 @@ def stop_all():
             log(f"Stopping {name}...")
             proc.terminate()
             proc.wait(timeout=5)
-        except:
+        except Exception:
             try:
                 proc.kill()
-            except:
+            except Exception:
                 pass
     processes.clear()
     # Ensure containerized PhysicsNeMo service is also stopped.
@@ -147,7 +147,7 @@ def check_gpu() -> Dict[str, Any]:
                 "memory_gb": round(torch.cuda.get_device_properties(0).total_memory / (1024**3), 1),
                 "cuda_version": torch.version.cuda,
             }
-    except:
+    except Exception:
         pass
     return {"available": False}
 
@@ -355,7 +355,7 @@ def create_gateway():
                     "cuda_version": torch.version.cuda,
                     "cudnn_version": torch.backends.cudnn.version(),
                 }
-        except:
+        except Exception:
             pass
         return {"available": False}
     

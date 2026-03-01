@@ -42,11 +42,11 @@ def check_service(name, url, timeout=5):
     try:
         r = requests.get(f"{url}/health" if "/health" not in url else url, timeout=timeout)
         return r.status_code in [200, 426]
-    except:
+    except Exception:
         try:
             r = requests.get(url, timeout=timeout)
             return r.status_code in [200, 302, 401, 403]
-        except:
+        except Exception:
             return False
 
 

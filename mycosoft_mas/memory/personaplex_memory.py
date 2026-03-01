@@ -498,8 +498,8 @@ class PersonaPlexMemory:
                 async with self._pool.acquire() as conn:
                     row = await conn.fetchrow("SELECT COUNT(*) as total FROM voice.sessions")
                     stats["total_sessions"] = row["total"] if row else 0
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Non-critical error fetching session count: {e}")
         
         return stats
 

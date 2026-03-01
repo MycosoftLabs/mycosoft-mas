@@ -43,7 +43,7 @@ class AgentMemoryMixin:
     _memory_initialized: bool = False
     _memory = None  # MemoryCoordinator
     _conversation = None  # ConversationMemory
-    _agent_namespace: str = None
+    _agent_namespace: Optional[str] = None
     
     async def init_memory(self) -> None:
         """

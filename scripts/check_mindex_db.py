@@ -33,7 +33,7 @@ def exec_cmd(cmd, timeout=60):
                 try:
                     if out:
                         out = base64.b64decode(out).decode('utf-8', errors='replace')
-                except:
+                except Exception:
                     pass
                 return out
     return 'Timeout'

@@ -24,6 +24,7 @@ _samples: Dict[str, Dict[str, Any]] = {}
 _sample_results: Dict[str, Dict[str, Any]] = {}
 _calibrations: Dict[str, Dict[str, Any]] = {}
 _telemetry_store: Dict[str, List[Dict[str, Any]]] = {}
+_orders: Dict[str, Dict[str, Any]] = {}
 
 
 def _get_sporebase_devices() -> List[Dict[str, Any]]:
@@ -247,8 +248,25 @@ async def update_calibration(calibration_id: str, body: CalibrationCreate):
 
 @router.post("/order")
 async def sporebase_order(body: Dict[str, Any]):
-    """Pre-order integration. Not implemented; returns 501."""
-    raise HTTPException(
-        status_code=501,
-        detail="SporeBase pre-order not yet implemented. Contact sales@mycosoft.com.",
-    )
+    """Capture SporeBase pre-order requests for downstream fulfillment."""
+    email = (body.get("email") or body.get("contact_email") or "").strip().lower()
+    tier = (body.get("tier") or "").strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Valid contact email is required")
+    if not tier:
+        raise HTTPException(status_code=400, detail="Order tier is required")
+
+    order_id = f"order-{uuid.uuid4().hex[:10]}"
+    now = datetime.now(timezone.utc).isoformat()
+    _orders[order_id] = {
+        "id": order_id,
+        "status": "submitted",
+        "email": email,
+        "tier": tier,
+        "organization": body.get("organization"),
+        "notes": body.get("notes"),
+        "metadata": body.get("metadata", {}),
+        "submitted_at": now,
+        "source": "sporebase_api",
+    }
+    return {"id": order_id, "status": "submitted", "submitted_at": now}

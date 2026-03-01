@@ -1,4 +1,8 @@
 """Knowledge graph memory. Created: February 3, 2026"""
+import asyncio
+import json
+import os
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set, Tuple
 from uuid import UUID, uuid4
 
@@ -9,7 +13,7 @@ class GraphNode:
         self.properties = properties
 
 class GraphEdge:
-    def __init__(self, source: UUID, target: UUID, relationship: str, properties: Dict[str, Any] = None):
+    def __init__(self, source: UUID, target: UUID, relationship: str, properties: Optional[Dict[str, Any]] = None):
         self.source = source
         self.target = target
         self.relationship = relationship
@@ -18,10 +22,49 @@ class GraphEdge:
 class GraphMemory:
     """Knowledge graph for structured memory."""
     
-    def __init__(self):
+    def __init__(self, database_url: Optional[str] = None):
         self._nodes: Dict[UUID, GraphNode] = {}
         self._edges: List[GraphEdge] = []
         self._adjacency: Dict[UUID, Set[UUID]] = {}
+        self._database_url = database_url or os.getenv("MINDEX_DATABASE_URL")
+        self._pool = None
+        self._persistence_enabled = False
+    
+    async def initialize_persistence(self) -> None:
+        """Enable PostgreSQL-backed edge persistence (`mindex.knowledge_edges`)."""
+        if self._persistence_enabled or not self._database_url:
+            return
+        try:
+            import asyncpg
+        except Exception:
+            return
+        self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=3)
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS mindex.knowledge_edges (
+                    id UUID PRIMARY KEY,
+                    source_id UUID NOT NULL,
+                    target_id UUID NOT NULL,
+                    relationship TEXT NOT NULL,
+                    properties_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+                """
+            )
+            await conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_knowledge_edges_source
+                ON mindex.knowledge_edges (source_id);
+                """
+            )
+            await conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_knowledge_edges_target
+                ON mindex.knowledge_edges (target_id);
+                """
+            )
+        self._persistence_enabled = True
     
     def add_node(self, node_type: str, properties: Dict[str, Any]) -> UUID:
         node_id = uuid4()
@@ -29,12 +72,68 @@ class GraphMemory:
         self._adjacency[node_id] = set()
         return node_id
     
-    def add_edge(self, source: UUID, target: UUID, relationship: str, properties: Dict[str, Any] = None) -> bool:
+    def add_edge(self, source: UUID, target: UUID, relationship: str, properties: Optional[Dict[str, Any]] = None) -> bool:
         if source not in self._nodes or target not in self._nodes:
             return False
-        self._edges.append(GraphEdge(source, target, relationship, properties))
+        edge = GraphEdge(source, target, relationship, properties)
+        self._edges.append(edge)
         self._adjacency[source].add(target)
+        if self._persistence_enabled:
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self.persist_edge(edge))
+            except RuntimeError:
+                pass
         return True
+
+    async def persist_edge(self, edge: GraphEdge) -> bool:
+        """Persist one edge into PostgreSQL if persistence is enabled."""
+        if not self._persistence_enabled or not self._pool:
+            return False
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO mindex.knowledge_edges (
+                    id, source_id, target_id, relationship, properties_json, created_at
+                ) VALUES ($1, $2, $3, $4, $5::jsonb, $6)
+                ON CONFLICT (id) DO NOTHING;
+                """,
+                uuid4(),
+                edge.source,
+                edge.target,
+                edge.relationship,
+                json.dumps(edge.properties),
+                datetime.now(timezone.utc),
+            )
+        return True
+
+    async def load_edges_from_persistence(self, limit: int = 5000) -> int:
+        """Hydrate in-memory edges from PostgreSQL knowledge_edges table."""
+        if not self._persistence_enabled or not self._pool:
+            return 0
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT source_id, target_id, relationship, properties_json
+                FROM mindex.knowledge_edges
+                ORDER BY created_at DESC
+                LIMIT $1;
+                """,
+                max(1, limit),
+            )
+        loaded = 0
+        for row in rows:
+            source = row["source_id"]
+            target = row["target_id"]
+            if source not in self._nodes or target not in self._nodes:
+                continue
+            properties = row["properties_json"]
+            if isinstance(properties, str):
+                properties = json.loads(properties)
+            self._edges.append(GraphEdge(source, target, row["relationship"], properties or {}))
+            self._adjacency[source].add(target)
+            loaded += 1
+        return loaded
     
     def get_node(self, node_id: UUID) -> Optional[GraphNode]:
         return self._nodes.get(node_id)

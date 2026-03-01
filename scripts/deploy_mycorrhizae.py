@@ -61,7 +61,7 @@ def upload_directory(sftp, local_path, remote_path):
     # Create remote directory if it doesn't exist
     try:
         sftp.mkdir(remote_path)
-    except:
+    except Exception:
         pass  # Directory might already exist
     
     for item in os.listdir(local_path):

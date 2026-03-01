@@ -21,7 +21,7 @@ for key, value in rows:
     try:
         parsed = json.loads(value)
         print(json.dumps(parsed, indent=2)[:2000])
-    except:
+    except Exception:
         print(str(value)[:2000])
 
 # Also check workspace-level state

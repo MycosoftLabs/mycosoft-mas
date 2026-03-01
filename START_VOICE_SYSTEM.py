@@ -65,7 +65,7 @@ def check_port(port, host="localhost"):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.settimeout(2)
             return s.connect_ex((host, port)) == 0
-    except:
+    except Exception:
         return False
 
 
@@ -159,7 +159,7 @@ def check_mas():
         if r.status_code == 200:
             data = r.json()
             return data.get("status") == "ok"
-    except:
+    except Exception:
         pass
     return False
 
@@ -176,7 +176,7 @@ def test_voice_endpoint():
         if r.status_code == 200:
             data = r.json()
             return "MYCA" in data.get("response_text", "")
-    except:
+    except Exception:
         pass
     return False
 
@@ -198,7 +198,7 @@ async def test_full_pipeline():
             ) as ws:
                 msg = await asyncio.wait_for(ws.receive(), timeout=20)
                 return msg.type == aiohttp.WSMsgType.BINARY and msg.data == b"\x00"
-    except:
+    except Exception:
         return False
 
 
@@ -323,7 +323,7 @@ def main():
         for name, proc in processes:
             try:
                 proc.terminate()
-            except:
+            except Exception:
                 pass
         print("Done.")
 

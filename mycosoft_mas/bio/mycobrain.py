@@ -20,7 +20,7 @@ class MycoBrainProcessor:
         self._trained_networks: Dict[str, Any] = {}
         logger.info("MycoBrain Processor initialized")
     
-    async def submit_computation(self, mode: ComputeMode, input_data: Any, config: Dict[str, Any] = None) -> str:
+    async def submit_computation(self, mode: ComputeMode, input_data: Any, config: Optional[Dict[str, Any]] = None) -> str:
         comp_id = str(uuid4())
         self.active_computations[comp_id] = {"mode": mode.value, "status": "submitted", "input": input_data}
         logger.info(f"Submitted computation: {comp_id}")

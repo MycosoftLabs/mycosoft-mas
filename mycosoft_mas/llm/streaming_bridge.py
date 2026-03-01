@@ -19,8 +19,8 @@ class StreamingChunk:
     """A chunk of streamed response."""
     text: str
     is_final: bool = False
-    timestamp: datetime = None
-    
+    timestamp: Optional[datetime] = None
+
     def __post_init__(self):
         if self.timestamp is None:
             self.timestamp = datetime.now()

@@ -26,7 +26,7 @@ def run(cmd, timeout=120):
         if out.strip():
             print(out[:800])
         return out
-    except:
+    except Exception:
         print("(timeout)")
         return ""
 

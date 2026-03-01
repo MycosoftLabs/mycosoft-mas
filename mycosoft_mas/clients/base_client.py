@@ -47,8 +47,8 @@ class ClientResponse:
     error: Optional[str] = None
     status_code: Optional[int] = None
     response_time_ms: float = 0.0
-    timestamp: datetime = None
-    
+    timestamp: Optional[datetime] = None
+
     def __post_init__(self):
         if self.timestamp is None:
             self.timestamp = datetime.utcnow()
@@ -182,7 +182,8 @@ class BaseClient:
                         error_data = None
                         try:
                             error_data = response.json()
-                        except:
+                        except Exception as e:
+                            logger.debug(f"Non-critical error parsing error response JSON: {e}")
                             error_data = {"text": response.text}
                         
                         if response.status_code >= 500 and attempt < self.max_retries - 1:
@@ -308,5 +309,6 @@ class BaseClient:
             # Override this method in subclasses for service-specific health checks
             response = await self.get("/health")
             return response.success
-        except:
+        except Exception as e:
+            logger.debug(f"Non-critical error during health check: {e}")
             return False

@@ -17,7 +17,7 @@ old_connect = """            # Test read/write - send newline to wake device
             try:
                 ser.write(b'\\n')
                 time.sleep(0.1)
-            except:
+            except Exception:
                 pass  # Continue even if write fails
             
             # Store device info with serial handle
@@ -96,9 +96,9 @@ old_command = """        # Get or create serial connection
         try:
             ser.reset_input_buffer()
             ser.reset_output_buffer()
-        except:
+        except Exception:
             pass
-        
+
         # Send command as JSON string
         cmd_str = json.dumps(request.command) + "\\n"
         ser.write(cmd_str.encode('utf-8'))
@@ -121,7 +121,7 @@ new_command = """        # Get or create serial connection with better error han
                     # Test connection by checking if port is still accessible
                     try:
                         _ = ser.in_waiting  # This will raise if connection is bad
-                    except:
+                    except Exception:
                         ser = None  # Connection is bad, need to reconnect
                         logger.warning(f"Serial connection for {device_id} is invalid, reconnecting...")
                 else:
@@ -139,7 +139,7 @@ new_command = """        # Get or create serial connection with better error han
                         old_ser = device["serial_handle"]
                         if hasattr(old_ser, "close"):
                             old_ser.close()
-                    except:
+                    except Exception:
                         pass
                 
                 # Create new connection
@@ -162,9 +162,9 @@ new_command = """        # Get or create serial connection with better error han
         try:
             ser.reset_input_buffer()
             ser.reset_output_buffer()
-        except:
+        except Exception:
             pass
-        
+
         # Format command based on structure
         # Support both formats: {"command": {"cmd": "led rgb 255 0 0"}} and {"cmd": "led rgb 255 0 0"}
         cmd_dict = request.command

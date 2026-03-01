@@ -43,7 +43,7 @@ def check_vm():
         if r.ok:
             data = r.json().get("data", {})
             return data.get("status") == "running"
-    except:
+    except Exception:
         pass
     return False
 
@@ -95,7 +95,7 @@ def purge_cloudflare():
     try:
         r = requests.post(url, headers=headers, json={"purge_everything": True}, timeout=10)
         return r.ok
-    except:
+    except Exception:
         return False
 
 def main():

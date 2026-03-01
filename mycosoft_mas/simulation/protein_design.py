@@ -23,7 +23,7 @@ class ProteinSimulator:
         logger.info(f"Started structure prediction: {job_id}")
         return {"job_id": job_id, "method": self.method.value, "sequence_length": len(sequence), "estimated_time_min": len(sequence) // 100 + 5}
     
-    async def design_binder(self, target_pdb: str, hotspot_residues: List[int] = None) -> Dict[str, Any]:
+    async def design_binder(self, target_pdb: str, hotspot_residues: Optional[List[int]] = None) -> Dict[str, Any]:
         return {"design_id": str(uuid4()), "target": target_pdb, "candidates": [], "method": "boltzgen"}
     
     async def run_molecular_dynamics(self, pdb_path: str, duration_ns: float = 100, temperature_k: float = 300) -> Dict[str, Any]:

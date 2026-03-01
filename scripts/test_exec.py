@@ -51,7 +51,7 @@ def test_exec(desc, command_data):
             try:
                 decoded = base64.b64decode(out).decode()
                 print(f"Output (b64): {decoded[:200]}")
-            except:
+            except Exception:
                 print(f"Output: {out[:200]}")
         err = data.get("err-data", "")
         if err:

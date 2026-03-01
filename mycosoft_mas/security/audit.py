@@ -59,7 +59,7 @@ class AuditLogger:
         user_id: UUID,
         action: str,
         resource: str,
-        details: Dict[str, Any] = None,
+        details: Optional[Dict[str, Any]] = None,
         success: bool = True,
         ip_address: str = "",
     ) -> UUID:
@@ -137,9 +137,9 @@ class AuditLogger:
     
     def query(
         self,
-        user_id: UUID = None,
-        action: str = None,
-        start_time: datetime = None,
+        user_id: Optional[UUID] = None,
+        action: Optional[str] = None,
+        start_time: Optional[datetime] = None,
     ) -> List[AuditEntry]:
         """Query audit entries with optional filters."""
         results = self._entries

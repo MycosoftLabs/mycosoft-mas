@@ -46,7 +46,7 @@ def exec_cmd(cmd, timeout=180):
                             out = base64.b64decode(out).decode('utf-8', errors='replace')
                         if err:
                             err = base64.b64decode(err).decode('utf-8', errors='replace')
-                    except:
+                    except Exception:
                         pass
                     print(f"Exit code: {exitcode}")
                     if out:

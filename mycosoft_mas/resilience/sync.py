@@ -1,5 +1,5 @@
 """Edge-Cloud Synchronization. Created: February 3, 2026"""
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -8,7 +8,7 @@ class EdgeCloudSync:
     
     def __init__(self, cloud_url: str = "https://api.mycosoft.com"):
         self.cloud_url = cloud_url
-        self.last_sync: datetime = None
+        self.last_sync: Optional[datetime] = None
         self.sync_queue: List[Dict[str, Any]] = []
     
     def queue_for_sync(self, data_type: str, data: Any) -> str:
@@ -22,7 +22,7 @@ class EdgeCloudSync:
         self.last_sync = datetime.now(timezone.utc)
         return {"synced": synced, "timestamp": self.last_sync.isoformat()}
     
-    async def pull_updates(self, since: datetime = None) -> List[Dict[str, Any]]:
+    async def pull_updates(self, since: Optional[datetime] = None) -> List[Dict[str, Any]]:
         return []
     
     def get_sync_status(self) -> Dict[str, Any]:

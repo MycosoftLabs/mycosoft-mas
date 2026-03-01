@@ -44,6 +44,7 @@ from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.documents import router as documents_router
+from mycosoft_mas.core.routers.api_keys import router as api_keys_router
 from mycosoft_mas.core.routers.agents import router as agents_router
 from mycosoft_mas.core.routers.evolution_api import router as evolution_router
 
@@ -54,6 +55,9 @@ from mycosoft_mas.core.routers import fci_websocket as fci_websocket_router
 # Scientific platform routers
 from mycosoft_mas.core.routers.scientific_api import router as scientific_router
 from mycosoft_mas.core.routers.scientific_ws import router as scientific_ws_router
+from mycosoft_mas.core.routers.scientific_experiments_api import router as scientific_experiments_router
+from mycosoft_mas.core.routers.scientific_datasets_api import router as scientific_datasets_router
+from mycosoft_mas.core.routers.scientific_equipment_api import router as scientific_equipment_router
 from mycosoft_mas.core.routers.mindex_query import router as mindex_router
 from mycosoft_mas.core.routers.platform_api import router as platform_router
 from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
@@ -89,6 +93,14 @@ from mycosoft_mas.core.routers.crep_stream import router as crep_stream_router
 from mycosoft_mas.core.routers.devices_stream import router as devices_stream_router
 from mycosoft_mas.core.routers.security_stream import router as security_stream_router
 from mycosoft_mas.core.routers.entity_stream import router as entity_stream_router
+from mycosoft_mas.core.routers.agent_status_ws import router as agent_status_ws_router
+from mycosoft_mas.core.routers.device_telemetry_ws import router as device_telemetry_ws_router
+from mycosoft_mas.core.routers.memory_updates_ws import router as memory_updates_ws_router
+from mycosoft_mas.core.routers.task_progress_ws import router as task_progress_ws_router
+from mycosoft_mas.core.routers.voice_stream_ws import router as voice_stream_ws_router
+from mycosoft_mas.core.routers.earth2_predictions_ws import router as earth2_predictions_ws_router
+from mycosoft_mas.core.routers.scientific_data_ws import router as scientific_data_ws_router
+from mycosoft_mas.core.routers.system_health_ws import router as system_health_ws_router
 try:
     from mycosoft_mas.core.routers.iot_envelope_api import router as iot_router
     IOT_ENVELOPE_AVAILABLE = True
@@ -474,12 +486,16 @@ app.include_router(integrations_router)
 app.include_router(notifications_router)
 app.include_router(infrastructure_router)
 app.include_router(documents_router)
+app.include_router(api_keys_router, tags=["api-keys"])
 app.include_router(evolution_router)
 app.include_router(petri_sim_router)
 
 # Scientific platform routers
 app.include_router(scientific_router, prefix="/scientific", tags=["scientific"])
 app.include_router(scientific_ws_router, tags=["websocket"])
+app.include_router(scientific_experiments_router)
+app.include_router(scientific_datasets_router)
+app.include_router(scientific_equipment_router)
 app.include_router(mindex_router, prefix="/mindex", tags=["mindex"])
 app.include_router(platform_router, prefix="/platform", tags=["platform"])
 app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
@@ -528,6 +544,16 @@ app.include_router(crep_stream_router, tags=["crep-stream"])
 app.include_router(devices_stream_router, tags=["devices-stream"])
 app.include_router(security_stream_router, tags=["security-stream"])
 app.include_router(entity_stream_router, tags=["entity-stream"])
+
+# WebSocket stream routers (Phase 4.1)
+app.include_router(agent_status_ws_router, tags=["ws-agents-status"])
+app.include_router(device_telemetry_ws_router, tags=["ws-device-telemetry"])
+app.include_router(memory_updates_ws_router, tags=["ws-memory-updates"])
+app.include_router(task_progress_ws_router, tags=["ws-task-progress"])
+app.include_router(voice_stream_ws_router, tags=["ws-voice-stream"])
+app.include_router(earth2_predictions_ws_router, tags=["ws-earth2-predictions"])
+app.include_router(scientific_data_ws_router, tags=["ws-scientific-data"])
+app.include_router(system_health_ws_router, tags=["ws-system-health"])
 
 # Earth-2 AI Weather API
 if EARTH2_API_AVAILABLE:
@@ -860,7 +886,7 @@ class MASEventStore:
         self._max_events = max_events_per_session
         self._lock = threading.Lock()
     
-    def publish(self, event_type: str, message: str, session_id: str = None, 
+    def publish(self, event_type: str, message: str, session_id: Optional[str] = None,
                 priority: str = "normal", **extra):
         """
         Publish an event that PersonaPlex can poll.
@@ -889,7 +915,7 @@ class MASEventStore:
         
         return event
     
-    def get_events(self, session_id: str = None, since: float = 0) -> list[dict]:
+    def get_events(self, session_id: Optional[str] = None, since: float = 0) -> list[dict]:
         """Get events since a timestamp."""
         with self._lock:
             events = list(self._global_events)
@@ -915,7 +941,7 @@ _event_store = MASEventStore()
 def get_event_store() -> MASEventStore:
     return _event_store
 
-def publish_event(event_type: str, message: str, session_id: str = None, **extra):
+def publish_event(event_type: str, message: str, session_id: Optional[str] = None, **extra):
     """Convenience function to publish events."""
     return _event_store.publish(event_type, message, session_id, **extra)
 
@@ -927,7 +953,7 @@ class EventStreamQuery(BaseModel):
 
 
 @app.get("/events/stream")
-async def get_event_stream(session_id: str = None, conversation_id: str = None, since: float = 0):
+async def get_event_stream(session_id: Optional[str] = None, conversation_id: Optional[str] = None, since: float = 0):
     """
     Get pending events for PersonaPlex to inject into Moshi.
     Called by the bridge every few seconds.
@@ -961,23 +987,23 @@ async def publish_event_endpoint(req: PublishEventRequest):
 
 
 # Helper functions for common event types
-def notify_agent_update(agent_name: str, status: str, message: str, session_id: str = None):
+def notify_agent_update(agent_name: str, status: str, message: str, session_id: Optional[str] = None):
     """Notify PersonaPlex of an agent update."""
     return publish_event("agent_update", message, session_id, agent_name=agent_name, status=status)
 
-def notify_tool_result(tool_name: str, result_summary: str, session_id: str = None):
+def notify_tool_result(tool_name: str, result_summary: str, session_id: Optional[str] = None):
     """Notify PersonaPlex of a tool call result."""
     return publish_event("tool_result", result_summary, session_id, tool_name=tool_name)
 
-def notify_memory_insight(insight: str, session_id: str = None):
+def notify_memory_insight(insight: str, session_id: Optional[str] = None):
     """Notify PersonaPlex of a memory insight."""
     return publish_event("memory_insight", insight, session_id, insight=insight)
 
-def notify_knowledge(topic: str, info: str, session_id: str = None):
+def notify_knowledge(topic: str, info: str, session_id: Optional[str] = None):
     """Notify PersonaPlex of knowledge discovery."""
     return publish_event("knowledge", info, session_id, topic=topic, info=info)
 
-def notify_system_status(system: str, status: str, session_id: str = None):
+def notify_system_status(system: str, status: str, session_id: Optional[str] = None):
     """Notify PersonaPlex of system status change."""
     return publish_event("system_status", f"{system}: {status}", session_id, system=system, status=status)
 

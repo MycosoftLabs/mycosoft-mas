@@ -47,6 +47,11 @@ class Channel(str, Enum):
     AGENTS_TASKS = "agents:tasks"
     AGENTS_TOOL_CALLS = "agents:tool_calls"
 
+    # WebSocket stream channels (Phase 4.1)
+    TASK_PROGRESS = "tasks:progress"
+    EARTH2_PREDICTIONS = "earth2:predictions"
+    SYSTEM_HEALTH = "system:health"
+
 
 @dataclass
 class PubSubMessage:
@@ -436,19 +441,26 @@ class RedisPubSubClient:
 
 # Global client instance
 _client: Optional[RedisPubSubClient] = None
+_client_lock = asyncio.Lock()
 
 
 async def get_client() -> RedisPubSubClient:
     """
     Get or create the global Redis pub/sub client.
-    
+
+    Uses double-checked locking to prevent race conditions when
+    multiple coroutines call get_client() concurrently.
+
     Returns:
         RedisPubSubClient instance
     """
     global _client
-    if _client is None:
-        _client = RedisPubSubClient()
-        await _client.connect()
+    if _client is not None:
+        return _client
+    async with _client_lock:
+        if _client is None:
+            _client = RedisPubSubClient()
+            await _client.connect()
     return _client
 
 

@@ -35,7 +35,7 @@ def check_proxmox(ip):
         if sock.connect_ex((ip, 8006)) == 0:
             result["has_8006"] = True
         sock.close()
-    except:
+    except Exception:
         pass
     
     if not result["has_8006"]:
@@ -46,7 +46,7 @@ def check_proxmox(ip):
         r = requests.get(f"https://{ip}:8006/", verify=False, timeout=5)
         if "PVE" in r.text or "Proxmox" in r.text:
             result["is_proxmox"] = True
-    except:
+    except Exception:
         pass
     
     if not result["is_proxmox"]:
@@ -101,12 +101,12 @@ def check_proxmox(ip):
                                         for addr in iface.get("ip-addresses", []):
                                             if addr.get("ip-address-type") == "ipv4" and not addr.get("ip-address", "").startswith("127."):
                                                 vm_info["ip"] = addr.get("ip-address")
-                            except:
+                            except Exception:
                                 pass
                         
                         result["vms"].append(vm_info)
                 break
-        except:
+        except Exception:
             pass
     
     return result
@@ -147,7 +147,7 @@ for ip in ONLINE_IPS:
         if sock.connect_ex((ip, 22)) == 0:
             print(f"\n{ip}: SSH OPEN")
         sock.close()
-    except:
+    except Exception:
         pass
 
 print("\n" + "=" * 70)

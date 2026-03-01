@@ -45,8 +45,8 @@ class UniFiIntegration:
     
     def __init__(
         self,
-        host: str = None,
-        api_key: str = None,
+        host: Optional[str] = None,
+        api_key: Optional[str] = None,
         port: int = 443,
         site: str = "default",
         verify_ssl: bool = False

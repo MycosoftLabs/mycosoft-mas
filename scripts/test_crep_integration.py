@@ -51,7 +51,7 @@ def test_endpoint(name: str, url: str, method: str = "GET",
         
         try:
             data = response.json()
-        except:
+        except Exception:
             pass
         
         # Check for required fields

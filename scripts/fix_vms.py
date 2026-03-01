@@ -104,7 +104,7 @@ def list_and_start_vms(ticket, csrf):
                             for addr in iface.get("ip-addresses", []):
                                 if addr.get("ip-address-type") == "ipv4" and not addr.get("ip-address", "").startswith("127."):
                                     print(f"    -> IP: {addr.get('ip-address')}")
-                except:
+                except Exception:
                     pass
 
 def check_vm_ssh():

@@ -190,7 +190,7 @@ class InfrastructureTests:
         
         try:
             error_count = int(out.strip()) if out.strip().isdigit() else 0
-        except:
+        except Exception:
             error_count = 0
         
         if error_count == 0:
@@ -392,7 +392,7 @@ class InfrastructureTests:
                 message=f"{usage}% used (critical)",
                 duration_ms=int((time.time() - start) * 1000)
             )
-        except:
+        except Exception:
             return TestResult(
                 name="Disk Space",
                 status=TestStatus.FAIL,
@@ -430,7 +430,7 @@ class InfrastructureTests:
                 message=f"{usage}% used (critical)",
                 duration_ms=int((time.time() - start) * 1000)
             )
-        except:
+        except Exception:
             return TestResult(
                 name="Memory Usage",
                 status=TestStatus.FAIL,

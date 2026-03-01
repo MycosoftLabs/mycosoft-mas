@@ -42,7 +42,7 @@ else:
 if current_config and "File not found" not in current_config:
     try:
         config = yaml.safe_load(StringIO(current_config))
-    except:
+    except Exception:
         print("   [WARNING] Could not parse YAML, will create new config")
         config = {"tunnel": "", "credentials-file": ""}
 else:

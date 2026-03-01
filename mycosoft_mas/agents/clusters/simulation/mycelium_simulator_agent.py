@@ -73,9 +73,9 @@ class SimulationResult:
     data: SimulationData
     json_data: Dict[str, Any]
     video_path: Optional[str] = None
-    screenshots: List[str] = None
-    metrics: Dict[str, Any] = None
-    created_at: datetime = None
+    screenshots: Optional[List[str]] = None
+    metrics: Optional[Dict[str, Any]] = None
+    created_at: Optional[datetime] = None
 
 class MyceliumSimulatorAgent(BaseAgent):
     """

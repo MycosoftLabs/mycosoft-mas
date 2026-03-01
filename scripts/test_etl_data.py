@@ -81,7 +81,7 @@ def get_ssh_client():
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
         return client
-    except:
+    except Exception:
         return None
 
 def run_ssh_command(client, cmd, timeout=60):
@@ -203,7 +203,7 @@ class ETLDataTests:
             return TestResult("PostgreSQL Tables", TestStatus.WARN, "Could not count",
                              data_source="PostgreSQL",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("PostgreSQL Tables", TestStatus.FAIL, "Query failed",
                              data_source="PostgreSQL",
                              duration_ms=int((time.time() - start) * 1000))
@@ -270,7 +270,7 @@ class ETLDataTests:
             return TestResult("MINDEX Smell Data", TestStatus.WARN, "No data files",
                              data_source="MINDEX",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("MINDEX Smell Data", TestStatus.FAIL, "Could not check",
                              data_source="MINDEX",
                              duration_ms=int((time.time() - start) * 1000))

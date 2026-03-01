@@ -55,8 +55,8 @@ class MINDEXManager:
     async def search(
         self,
         query: str,
-        sources: List[str] = None,
-        kingdom: str = None,
+        sources: Optional[List[str]] = None,
+        kingdom: Optional[str] = None,
         limit: int = 50,
     ) -> Dict[str, Any]:
         """
@@ -233,7 +233,7 @@ class MINDEXManager:
 _manager: Optional[MINDEXManager] = None
 
 
-def get_mindex_manager(db_path: Path = None) -> MINDEXManager:
+def get_mindex_manager(db_path: Optional[Path] = None) -> MINDEXManager:
     """Get or create the MINDEX manager instance."""
     global _manager
     

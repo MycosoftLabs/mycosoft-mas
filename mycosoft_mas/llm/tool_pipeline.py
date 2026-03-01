@@ -12,6 +12,7 @@ MYCA Integration (Feb 17, 2026):
 
 import asyncio
 import logging
+import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -129,6 +130,22 @@ class ToolRegistry:
         self.register(ToolDefinition(
             name="device_status",
             description="Get current status and readings from a NatureOS device",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "device_id": {
+                        "type": "string",
+                        "description": "Device identifier (e.g., mushroom1, sporebase)"
+                    }
+                },
+                "required": ["device_id"]
+            }
+        ))
+
+        # Device Telemetry Tool
+        self.register(ToolDefinition(
+            name="query_device_telemetry",
+            description="Get live telemetry from a NatureOS device",
             parameters={
                 "type": "object",
                 "properties": {
@@ -391,6 +408,8 @@ class ToolExecutor:
     def __init__(self, registry: ToolRegistry):
         self.registry = registry
         self.mas_url = "http://192.168.0.188:8001"
+        self.mindex_url = os.environ.get("MINDEX_API_URL", "http://192.168.0.189:8000")
+        self.mindex_api_key = os.environ.get("MINDEX_API_KEY")
         self.execution_history: List[ToolCall] = []
         self._enable_permission_checks = True  # Can be disabled for testing
     
@@ -497,6 +516,8 @@ class ToolExecutor:
                 result = await self._execute_calculator(tool_call.arguments)
             elif tool_call.name == "device_status":
                 result = await self._execute_device_status(tool_call.arguments)
+            elif tool_call.name == "query_device_telemetry":
+                result = await self._execute_device_telemetry(tool_call.arguments)
             elif tool_call.name == "mindex_query":
                 result = await self._execute_mindex_query(tool_call.arguments)
             elif tool_call.name == "memory_recall":
@@ -579,6 +600,22 @@ class ToolExecutor:
                 return response.json()
             else:
                 return {"error": f"Device not found: {device_id}"}
+
+    async def _execute_device_telemetry(self, args: Dict[str, Any]) -> Any:
+        """Get latest telemetry from MINDEX for a device."""
+        device_id = (args.get("device_id") or "").strip()
+        if not device_id:
+            return {"error": "device_id is required"}
+
+        headers = {"X-API-Key": self.mindex_api_key} if self.mindex_api_key else None
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(
+                f"{self.mindex_url}/api/telemetry/devices/{device_id}/latest",
+                headers=headers,
+            )
+            if response.status_code == 200:
+                return response.json()
+            return {"error": f"Telemetry not found: {device_id}"}
     
     async def _execute_mindex_query(self, args: Dict[str, Any]) -> Any:
         """Query MINDEX knowledge base."""

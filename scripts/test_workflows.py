@@ -95,7 +95,7 @@ def get_ssh_client():
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
         return client
-    except:
+    except Exception:
         return None
 
 def run_ssh_command(client, cmd, timeout=60):
@@ -171,7 +171,7 @@ class WorkflowTests:
                                  duration_ms=int((time.time() - start) * 1000))
             return TestResult("Workflow Files", TestStatus.FAIL, "No workflow files found",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Workflow Files", TestStatus.FAIL, "Could not count files",
                              duration_ms=int((time.time() - start) * 1000))
     
@@ -222,7 +222,7 @@ class WorkflowTests:
                                  duration_ms=int((time.time() - start) * 1000))
             return TestResult("Webhook Workflows", TestStatus.WARN, "No webhook workflows found",
                              duration_ms=int((time.time() - start) * 1000))
-        except:
+        except Exception:
             return TestResult("Webhook Workflows", TestStatus.FAIL, "Could not check",
                              duration_ms=int((time.time() - start) * 1000))
     

@@ -137,7 +137,7 @@ async def _send_to_mas(session: BridgeSession, speaker: str, text: str):
             "text": text,
             "source": "personaplex"
         })
-    except:
+    except Exception:
         pass
 
 
@@ -308,7 +308,7 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
         logger.error(f"Bridge error: {e}")
         try:
             await websocket.send_json({"type": "error", "message": str(e)})
-        except:
+        except Exception:
             pass
     finally:
         logger.info(f"[{session_id[:8]}] Session ended. Audio: sent={audio_sent}, recv={audio_recv}")

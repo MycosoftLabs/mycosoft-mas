@@ -26,7 +26,7 @@ try:
     )
     print("  [OK] Existing services stopped")
     time.sleep(2)
-except:
+except Exception:
     print("  [INFO] No existing services found")
 
 # Step 2: Check if COM7 exists

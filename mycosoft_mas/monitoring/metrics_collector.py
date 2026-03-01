@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
 from mycosoft_mas.monitoring.prometheus_utils import (
@@ -76,13 +76,13 @@ class MetricsCollector:
         self.service_name = service_name
         self.logger = logging.getLogger(f'metrics.{service_name}')
 
-    def record_dependency_conflict(self, conflict_type: str, resolution_time: float = None):
+    def record_dependency_conflict(self, conflict_type: str, resolution_time: Optional[float] = None):
         """Record a dependency conflict and its resolution time."""
         dependency_conflicts.labels(service=self.service_name, conflict_type=conflict_type).inc()
         if resolution_time is not None:
             dependency_resolution_time.labels(service=self.service_name).observe(resolution_time)
 
-    def record_integration_failure(self, integration_type: str, latency: float = None):
+    def record_integration_failure(self, integration_type: str, latency: Optional[float] = None):
         """Record an integration failure and its latency."""
         integration_failures.labels(service=self.service_name, integration_type=integration_type).inc()
         if latency is not None:
@@ -101,7 +101,7 @@ class MetricsCollector:
         """Update the task queue length metric."""
         task_queue_length.labels(service=self.service_name).set(queue_length)
 
-    def record_security_vulnerability(self, vulnerability_id: str, severity: int, scan_duration: float = None):
+    def record_security_vulnerability(self, vulnerability_id: str, severity: int, scan_duration: Optional[float] = None):
         """Record security vulnerability metrics."""
         security_vulnerability_severity.labels(
             service=self.service_name,
@@ -115,7 +115,7 @@ class MetricsCollector:
         """Record security patch application time."""
         security_patch_time.labels(service=self.service_name).observe(duration)
 
-    def record_technology_update(self, update_type: str, impact_score: float, compatibility_score: float = None):
+    def record_technology_update(self, update_type: str, impact_score: float, compatibility_score: Optional[float] = None):
         """Record technology update metrics."""
         technology_update_impact.labels(
             service=self.service_name,

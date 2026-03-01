@@ -361,7 +361,8 @@ class GPUNodeClient:
         try:
             import json
             return {"status": "healthy", "response": json.loads(stdout)}
-        except:
+        except Exception as e:
+            logger.debug(f"Non-critical error parsing service health JSON: {e}")
             return {"status": "healthy", "response": stdout}
     
     async def get_system_info(self) -> Dict[str, Any]:

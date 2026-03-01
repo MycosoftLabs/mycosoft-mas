@@ -95,7 +95,7 @@ def main():
                 port = p
                 print(f"✓ Found available port: {port}")
                 break
-            except:
+            except Exception:
                 pass
     
     if not port:

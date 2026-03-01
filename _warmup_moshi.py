@@ -103,9 +103,9 @@ def main():
                 print("[ERROR] Moshi server not running on port 8998")
                 print("Start it with: python start_personaplex.py")
                 return False
-    except:
+    except Exception:
         pass
-    
+
     return asyncio.run(warmup_moshi())
 
 

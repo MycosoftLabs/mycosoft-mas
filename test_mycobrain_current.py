@@ -38,7 +38,7 @@ print("\n=== Testing Service ===")
 try:
     resp = requests.get('http://localhost:8003/health', timeout=2)
     print(f"Service: {resp.status_code} - {resp.json()}")
-except:
+except Exception:
     print("Service not responding")
 
 # Test website
@@ -46,5 +46,5 @@ print("\n=== Testing Website ===")
 try:
     resp = requests.get('http://localhost:3000', timeout=2)
     print(f"Website: {resp.status_code} - Running")
-except:
+except Exception:
     print("Website not responding")

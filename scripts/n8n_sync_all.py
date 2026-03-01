@@ -145,7 +145,7 @@ def sync_all(activate_core: bool = True):
                     client.activate(result_id)
                     print(f"✅ {action} & Activated: {name}")
                     activated += 1
-                except:
+                except Exception:
                     print(f"⚠️  {action}: {name} (activation failed)")
             else:
                 print(f"📥 {action}: {name}")

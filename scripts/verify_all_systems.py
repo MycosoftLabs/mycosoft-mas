@@ -117,7 +117,7 @@ def main():
             results["mindex_api"]["health"] = health
             is_healthy = health.get("status") == "healthy" or health.get("database") == True
             log(f"  Health: {out}", "OK" if is_healthy else "WARN")
-        except:
+        except Exception:
             results["mindex_api"]["health"] = {"error": out}
             log(f"  Health: {out}", "WARN")
         
@@ -129,7 +129,7 @@ def main():
             total_taxa = stats.get("total_taxa", 0)
             total_obs = stats.get("total_observations", 0)
             log(f"  Stats: {total_taxa} taxa, {total_obs} observations", "OK" if total_taxa > 0 else "WARN")
-        except:
+        except Exception:
             results["mindex_api"]["stats"] = {"error": out}
             log(f"  Stats: {out}", "WARN")
         
@@ -140,7 +140,7 @@ def main():
             taxa_count = int(out.strip()) if out else 0
             results["databases"]["postgres_taxa_count"] = taxa_count
             log(f"  PostgreSQL Taxa Count: {taxa_count}", "OK" if taxa_count > 0 else "WARN")
-        except:
+        except Exception:
             results["databases"]["postgres_error"] = err or out
             log(f"  PostgreSQL: {err or out}", "WARN")
         

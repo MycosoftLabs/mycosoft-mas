@@ -17,7 +17,7 @@ import networkx as nx
 from rdflib import Graph, Literal, RDF, URIRef, Namespace, BNode
 from rdflib.namespace import RDFS, XSD, OWL, DCTERMS, SKOS, DC, FOAF
 import owlready2
-from owlready2 import *
+from owlready2 import get_ontology, Thing, ObjectProperty, DataProperty, FunctionalProperty
 
 class DataCategory(Enum):
     BIOLOGY = "biology"
@@ -85,6 +85,36 @@ class TranslatedData:
     data: Dict
     metadata: Dict
     created_at: datetime
+
+# Safe transformation function registry - replaces dangerous eval()
+# Add new transformations here instead of passing arbitrary code strings
+SAFE_TRANSFORMS = {
+    "normalize_temperature": lambda data: {
+        **data, "temp_c": (data.get("temp_f", 32) - 32) * 5 / 9
+    } if "temp_f" in data else data,
+    "normalize_humidity": lambda data: {
+        **data, "humidity_pct": min(max(float(data.get("humidity", 0)), 0), 100)
+    } if "humidity" in data else data,
+    "uppercase_keys": lambda data: {k.upper(): v for k, v in data.items()},
+    "lowercase_keys": lambda data: {k.lower(): v for k, v in data.items()},
+    "strip_whitespace": lambda data: {
+        k: v.strip() if isinstance(v, str) else v for k, v in data.items()
+    },
+    "flatten_nested": lambda data: {
+        f"{k}.{sk}" if isinstance(v, dict) else k: sv if isinstance(v, dict) else v
+        for k, v in data.items()
+        for sk, sv in (v.items() if isinstance(v, dict) else [(k, v)])
+    },
+    "remove_nulls": lambda data: {k: v for k, v in data.items() if v is not None},
+    "to_iso_dates": lambda data: {
+        k: v.isoformat() if isinstance(v, datetime) else v for k, v in data.items()
+    },
+    "convert_units_mg_to_g": lambda data: {
+        k: v / 1000 if k.endswith("_mg") else v for k, v in data.items()
+    },
+    "identity": lambda data: data,
+}
+
 
 class BioDataTranslator:
     """
@@ -458,7 +488,7 @@ class BioDataTranslator:
             }
             
         except Exception as e:
-            this.logger.error(f"Failed to delete schema: {str(e)}")
+            self.logger.error(f"Failed to delete schema: {str(e)}")
             return {"success": False, "message": str(e)}
     
     async def create_translation_rule(self, rule_data: Dict) -> Dict:
@@ -471,13 +501,13 @@ class BioDataTranslator:
             source_schema_id = rule_data.get('source_schema_id', '')
             target_schema_id = rule_data.get('target_schema_id', '')
             
-            if source_schema_id not in this.schemas:
+            if source_schema_id not in self.schemas:
                 return {
                     "success": False,
                     "message": f"Source schema {source_schema_id} not found"
                 }
             
-            if target_schema_id not in this.schemas:
+            if target_schema_id not in self.schemas:
                 return {
                     "success": False,
                     "message": f"Target schema {target_schema_id} not found"
@@ -496,22 +526,22 @@ class BioDataTranslator:
             )
             
             # Save rule
-            this.translation_rules[rule_id] = rule
+            self.translation_rules[rule_id] = rule
             
-            rules_dir = this.data_directory / 'rules'
+            rules_dir = self.data_directory / 'rules'
             rules_dir.mkdir(exist_ok=True)
             
             rule_file = rules_dir / f"{rule_id}.json"
             async with aiofiles.open(rule_file, 'w') as f:
-                await f.write(json.dumps(this._rule_to_dict(rule)))
+                await f.write(json.dumps(self._rule_to_dict(rule)))
             
             # Add to rule queue for processing
-            await this.rule_queue.put({
+            await self.rule_queue.put({
                 'rule_id': rule_id,
                 'action': 'create'
             })
             
-            this.logger.info(f"Created translation rule {rule_id}")
+            self.logger.info(f"Created translation rule {rule_id}")
             
             return {
                 "success": True,
@@ -520,27 +550,27 @@ class BioDataTranslator:
             }
             
         except Exception as e:
-            this.logger.error(f"Failed to create translation rule: {str(e)}")
+            self.logger.error(f"Failed to create translation rule: {str(e)}")
             return {"success": False, "message": str(e)}
     
     async def update_translation_rule(self, rule_id: str, rule_data: Dict) -> Dict:
         """Update an existing translation rule."""
         try:
             # Check if rule exists
-            if rule_id not in this.translation_rules:
+            if rule_id not in self.translation_rules:
                 return {
                     "success": False,
                     "message": f"Translation rule {rule_id} not found"
                 }
             
             # Update rule
-            rule = this.translation_rules[rule_id]
+            rule = self.translation_rules[rule_id]
             
             if 'name' in rule_data:
                 rule.name = rule_data['name']
             if 'source_schema_id' in rule_data:
                 # Check if source schema exists
-                if rule_data['source_schema_id'] not in this.schemas:
+                if rule_data['source_schema_id'] not in self.schemas:
                     return {
                         "success": False,
                         "message": f"Source schema {rule_data['source_schema_id']} not found"
@@ -548,7 +578,7 @@ class BioDataTranslator:
                 rule.source_schema_id = rule_data['source_schema_id']
             if 'target_schema_id' in rule_data:
                 # Check if target schema exists
-                if rule_data['target_schema_id'] not in this.schemas:
+                if rule_data['target_schema_id'] not in self.schemas:
                     return {
                         "success": False,
                         "message": f"Target schema {rule_data['target_schema_id']} not found"
@@ -562,19 +592,19 @@ class BioDataTranslator:
             rule.updated_at = datetime.now()
             
             # Save updated rule
-            rules_dir = this.data_directory / 'rules'
+            rules_dir = self.data_directory / 'rules'
             rule_file = rules_dir / f"{rule_id}.json"
             
             async with aiofiles.open(rule_file, 'w') as f:
-                await f.write(json.dumps(this._rule_to_dict(rule)))
+                await f.write(json.dumps(self._rule_to_dict(rule)))
             
             # Add to rule queue for processing
-            await this.rule_queue.put({
+            await self.rule_queue.put({
                 'rule_id': rule_id,
                 'action': 'update'
             })
             
-            this.logger.info(f"Updated translation rule {rule_id}")
+            self.logger.info(f"Updated translation rule {rule_id}")
             
             return {
                 "success": True,
@@ -583,36 +613,36 @@ class BioDataTranslator:
             }
             
         except Exception as e:
-            this.logger.error(f"Failed to update translation rule: {str(e)}")
+            self.logger.error(f"Failed to update translation rule: {str(e)}")
             return {"success": False, "message": str(e)}
     
     async def delete_translation_rule(self, rule_id: str) -> Dict:
         """Delete a translation rule."""
         try:
             # Check if rule exists
-            if rule_id not in this.translation_rules:
+            if rule_id not in self.translation_rules:
                 return {
                     "success": False,
                     "message": f"Translation rule {rule_id} not found"
                 }
             
             # Remove rule
-            del this.translation_rules[rule_id]
+            del self.translation_rules[rule_id]
             
             # Remove rule file
-            rules_dir = this.data_directory / 'rules'
+            rules_dir = self.data_directory / 'rules'
             rule_file = rules_dir / f"{rule_id}.json"
             
             if rule_file.exists():
                 rule_file.unlink()
             
             # Add to rule queue for processing
-            await this.rule_queue.put({
+            await self.rule_queue.put({
                 'rule_id': rule_id,
                 'action': 'delete'
             })
             
-            this.logger.info(f"Deleted translation rule {rule_id}")
+            self.logger.info(f"Deleted translation rule {rule_id}")
             
             return {
                 "success": True,
@@ -621,20 +651,20 @@ class BioDataTranslator:
             }
             
         except Exception as e:
-            this.logger.error(f"Failed to delete translation rule: {str(e)}")
+            self.logger.error(f"Failed to delete translation rule: {str(e)}")
             return {"success": False, "message": str(e)}
     
     async def translate_data(self, data: Dict, source_schema_id: str, target_schema_id: str) -> Dict:
         """Translate data from one schema to another."""
         try:
             # Check if schemas exist
-            if source_schema_id not in this.schemas:
+            if source_schema_id not in self.schemas:
                 return {
                     "success": False,
                     "message": f"Source schema {source_schema_id} not found"
                 }
             
-            if target_schema_id not in this.schemas:
+            if target_schema_id not in self.schemas:
                 return {
                     "success": False,
                     "message": f"Target schema {target_schema_id} not found"
@@ -642,14 +672,14 @@ class BioDataTranslator:
             
             # Find applicable translation rule
             rule_id = None
-            for r_id, rule in this.translation_rules.items():
+            for r_id, rule in self.translation_rules.items():
                 if rule.source_schema_id == source_schema_id and rule.target_schema_id == target_schema_id:
                     rule_id = r_id
                     break
             
             if not rule_id:
                 # Try to find a path through intermediate schemas
-                path = await this._find_translation_path(source_schema_id, target_schema_id)
+                path = await self._find_translation_path(source_schema_id, target_schema_id)
                 
                 if not path:
                     return {
@@ -661,14 +691,14 @@ class BioDataTranslator:
                 rule_id = f"composite_{uuid.uuid4().hex[:8]}"
                 
                 # Create a composite rule
-                composite_rule = await this._create_composite_rule(path)
-                this.translation_rules[rule_id] = composite_rule
+                composite_rule = await self._create_composite_rule(path)
+                self.translation_rules[rule_id] = composite_rule
             
             # Generate translation ID
             translation_id = f"translation_{uuid.uuid4().hex[:8]}"
             
             # Add to translation queue
-            await this.translation_queue.put({
+            await self.translation_queue.put({
                 'translation_id': translation_id,
                 'data': data,
                 'source_schema_id': source_schema_id,
@@ -676,7 +706,7 @@ class BioDataTranslator:
                 'rule_id': rule_id
             })
             
-            this.logger.info(f"Queued data translation {translation_id}")
+            self.logger.info(f"Queued data translation {translation_id}")
             
             return {
                 "success": True,
@@ -685,21 +715,21 @@ class BioDataTranslator:
             }
             
         except Exception as e:
-            this.logger.error(f"Failed to queue data translation: {str(e)}")
+            self.logger.error(f"Failed to queue data translation: {str(e)}")
             return {"success": False, "message": str(e)}
     
     async def get_translation_status(self, translation_id: str) -> Dict:
         """Get the status of a data translation."""
         try:
             # Check if translation exists
-            if translation_id not in this.translated_data:
+            if translation_id not in self.translated_data:
                 return {
                     "success": False,
                     "message": f"Translation {translation_id} not found"
                 }
             
             # Get translation
-            translation = this.translated_data[translation_id]
+            translation = self.translated_data[translation_id]
             
             return {
                 "success": True,
@@ -713,21 +743,21 @@ class BioDataTranslator:
             }
             
         except Exception as e:
-            this.logger.error(f"Failed to get translation status: {str(e)}")
+            self.logger.error(f"Failed to get translation status: {str(e)}")
             return {"success": False, "message": str(e)}
     
     async def get_translated_data(self, translation_id: str) -> Dict:
         """Get the translated data."""
         try:
             # Check if translation exists
-            if translation_id not in this.translated_data:
+            if translation_id not in self.translated_data:
                 return {
                     "success": False,
                     "message": f"Translation {translation_id} not found"
                 }
             
             # Get translation
-            translation = this.translated_data[translation_id]
+            translation = self.translated_data[translation_id]
             
             return {
                 "success": True,
@@ -737,14 +767,14 @@ class BioDataTranslator:
             }
             
         except Exception as e:
-            this.logger.error(f"Failed to get translated data: {str(e)}")
+            self.logger.error(f"Failed to get translated data: {str(e)}")
             return {"success": False, "message": str(e)}
     
     async def _process_translation_queue(self):
         """Process the translation queue."""
         while True:
             try:
-                translation_item = await this.translation_queue.get()
+                translation_item = await self.translation_queue.get()
                 
                 # Process translation
                 translation_id = translation_item['translation_id']
@@ -754,10 +784,10 @@ class BioDataTranslator:
                 rule_id = translation_item['rule_id']
                 
                 # Get rule
-                rule = this.translation_rules[rule_id]
+                rule = self.translation_rules[rule_id]
                 
                 # Translate data
-                translated_data = await this._apply_translation_rule(data, rule)
+                translated_data = await self._apply_translation_rule(data, rule)
                 
                 # Create translation record
                 translation = TranslatedData(
@@ -768,29 +798,29 @@ class BioDataTranslator:
                     translation_rule_id=rule_id,
                     data=translated_data,
                     metadata={
-                        'source_schema': this.schemas[source_schema_id].name,
-                        'target_schema': this.schemas[target_schema_id].name,
+                        'source_schema': self.schemas[source_schema_id].name,
+                        'target_schema': self.schemas[target_schema_id].name,
                         'rule_name': rule.name
                     },
                     created_at=datetime.now()
                 )
                 
                 # Save translation
-                this.translated_data[translation_id] = translation
+                self.translated_data[translation_id] = translation
                 
-                translated_dir = this.data_directory / 'translated'
+                translated_dir = self.data_directory / 'translated'
                 translated_dir.mkdir(exist_ok=True)
                 
                 translation_file = translated_dir / f"{translation_id}.json"
                 async with aiofiles.open(translation_file, 'w') as f:
-                    await f.write(json.dumps(this._translated_data_to_dict(translation)))
+                    await f.write(json.dumps(self._translated_data_to_dict(translation)))
                 
-                this.logger.info(f"Completed data translation {translation_id}")
+                self.logger.info(f"Completed data translation {translation_id}")
                 
-                this.translation_queue.task_done()
+                self.translation_queue.task_done()
                 
             except Exception as e:
-                this.logger.error(f"Error processing translation queue: {str(e)}")
+                self.logger.error(f"Error processing translation queue: {str(e)}")
             
             await asyncio.sleep(1)
     
@@ -798,7 +828,7 @@ class BioDataTranslator:
         """Process the schema queue."""
         while True:
             try:
-                schema_item = await this.schema_queue.get()
+                schema_item = await self.schema_queue.get()
                 
                 # Process schema
                 schema_id = schema_item['schema_id']
@@ -806,18 +836,18 @@ class BioDataTranslator:
                 
                 if action == 'register':
                     # Update ontology with new schema
-                    await this._update_ontology_with_schema(schema_id)
+                    await self._update_ontology_with_schema(schema_id)
                 elif action == 'update':
                     # Update ontology with updated schema
-                    await this._update_ontology_with_schema(schema_id)
+                    await self._update_ontology_with_schema(schema_id)
                 elif action == 'delete':
                     # Remove schema from ontology
-                    await this._remove_schema_from_ontology(schema_id)
+                    await self._remove_schema_from_ontology(schema_id)
                 
-                this.schema_queue.task_done()
+                self.schema_queue.task_done()
                 
             except Exception as e:
-                this.logger.error(f"Error processing schema queue: {str(e)}")
+                self.logger.error(f"Error processing schema queue: {str(e)}")
             
             await asyncio.sleep(1)
     
@@ -825,7 +855,7 @@ class BioDataTranslator:
         """Process the rule queue."""
         while True:
             try:
-                rule_item = await this.rule_queue.get()
+                rule_item = await self.rule_queue.get()
                 
                 # Process rule
                 rule_id = rule_item['rule_id']
@@ -833,18 +863,18 @@ class BioDataTranslator:
                 
                 if action == 'create':
                     # Update ontology with new rule
-                    await this._update_ontology_with_rule(rule_id)
+                    await self._update_ontology_with_rule(rule_id)
                 elif action == 'update':
                     # Update ontology with updated rule
-                    await this._update_ontology_with_rule(rule_id)
+                    await self._update_ontology_with_rule(rule_id)
                 elif action == 'delete':
                     # Remove rule from ontology
-                    await this._remove_rule_from_ontology(rule_id)
+                    await self._remove_rule_from_ontology(rule_id)
                 
-                this.rule_queue.task_done()
+                self.rule_queue.task_done()
                 
             except Exception as e:
-                this.logger.error(f"Error processing rule queue: {str(e)}")
+                self.logger.error(f"Error processing rule queue: {str(e)}")
             
             await asyncio.sleep(1)
     
@@ -855,11 +885,11 @@ class BioDataTranslator:
             G = nx.DiGraph()
             
             # Add nodes for schemas
-            for schema_id in this.schemas:
+            for schema_id in self.schemas:
                 G.add_node(schema_id, type='schema')
             
             # Add edges for rules
-            for rule_id, rule in this.translation_rules.items():
+            for rule_id, rule in self.translation_rules.items():
                 G.add_edge(rule.source_schema_id, rule.target_schema_id, rule_id=rule_id)
             
             # Find shortest path
@@ -873,7 +903,7 @@ class BioDataTranslator:
                     target = path[i + 1]
                     
                     # Find rule ID for this edge
-                    for rule_id, rule in this.translation_rules.items():
+                    for rule_id, rule in self.translation_rules.items():
                         if rule.source_schema_id == source and rule.target_schema_id == target:
                             rule_path.append(rule_id)
                             break
@@ -883,15 +913,15 @@ class BioDataTranslator:
             return []
             
         except Exception as e:
-            this.logger.error(f"Error finding translation path: {str(e)}")
+            self.logger.error(f"Error finding translation path: {str(e)}")
             return []
     
     async def _create_composite_rule(self, rule_path: List[str]) -> TranslationRule:
         """Create a composite translation rule from a path of rules."""
         try:
             # Get first and last rules
-            first_rule = this.translation_rules[rule_path[0]]
-            last_rule = this.translation_rules[rule_path[-1]]
+            first_rule = self.translation_rules[rule_path[0]]
+            last_rule = self.translation_rules[rule_path[-1]]
             
             # Create composite rule
             composite_rule = TranslationRule(
@@ -907,7 +937,7 @@ class BioDataTranslator:
             
             # Combine mappings and transformation functions
             for rule_id in rule_path:
-                rule = this.translation_rules[rule_id]
+                rule = self.translation_rules[rule_id]
                 
                 # Add mappings
                 for source_key, target_key in rule.mapping.items():
@@ -920,7 +950,7 @@ class BioDataTranslator:
             return composite_rule
             
         except Exception as e:
-            this.logger.error(f"Error creating composite rule: {str(e)}")
+            self.logger.error(f"Error creating composite rule: {str(e)}")
             raise
     
     async def _apply_translation_rule(self, data: Dict, rule: TranslationRule) -> Dict:
@@ -934,28 +964,30 @@ class BioDataTranslator:
                 if source_key in translated_data:
                     translated_data[target_key] = translated_data.pop(source_key)
             
-            # Apply transformation functions
+            # Apply transformation functions using safe registry
             for func_name, func_code in rule.transformation_functions.items():
-                # Create a function from the code
-                func = eval(func_code)
-                
-                # Apply the function to the data
+                if func_name not in SAFE_TRANSFORMS:
+                    raise ValueError(
+                        f"Unknown transformation function: '{func_name}'. "
+                        f"Available: {list(SAFE_TRANSFORMS.keys())}"
+                    )
+                func = SAFE_TRANSFORMS[func_name]
                 translated_data = func(translated_data)
             
             return translated_data
             
         except Exception as e:
-            this.logger.error(f"Error applying translation rule: {str(e)}")
+            self.logger.error(f"Error applying translation rule: {str(e)}")
             raise
     
     async def _update_ontology_with_schema(self, schema_id: str):
         """Update the ontology with a new or updated schema."""
         try:
             # Get schema
-            schema = this.schemas[schema_id]
+            schema = self.schemas[schema_id]
             
             # Create a class for the schema
-            with this.ontology:
+            with self.ontology:
                 # Create a new class for the schema
                 schema_class = type(schema.name, (Thing,), {})
                 
@@ -969,71 +1001,71 @@ class BioDataTranslator:
                     })
             
             # Save the ontology
-            this.ontology.save(file=str(this.ontology_path / 'bio_ontology.owl'), format="rdfxml")
+            self.ontology.save(file=str(self.ontology_path / 'bio_ontology.owl'), format="rdfxml")
             
         except Exception as e:
-            this.logger.error(f"Error updating ontology with schema: {str(e)}")
+            self.logger.error(f"Error updating ontology with schema: {str(e)}")
     
     async def _remove_schema_from_ontology(self, schema_id: str):
         """Remove a schema from the ontology."""
         try:
             # Get schema
-            schema = this.schemas[schema_id]
+            schema = self.schemas[schema_id]
             
             # Remove the class for the schema
-            if hasattr(this.ontology, schema.name):
-                delattr(this.ontology, schema.name)
+            if hasattr(self.ontology, schema.name):
+                delattr(self.ontology, schema.name)
             
             # Save the ontology
-            this.ontology.save(file=str(this.ontology_path / 'bio_ontology.owl'), format="rdfxml")
+            self.ontology.save(file=str(self.ontology_path / 'bio_ontology.owl'), format="rdfxml")
             
         except Exception as e:
-            this.logger.error(f"Error removing schema from ontology: {str(e)}")
+            self.logger.error(f"Error removing schema from ontology: {str(e)}")
     
     async def _update_ontology_with_rule(self, rule_id: str):
         """Update the ontology with a new or updated rule."""
         try:
             # Get rule
-            rule = this.translation_rules[rule_id]
+            rule = self.translation_rules[rule_id]
             
             # Get source and target schemas
-            source_schema = this.schemas[rule.source_schema_id]
-            target_schema = this.schemas[rule.target_schema_id]
+            source_schema = self.schemas[rule.source_schema_id]
+            target_schema = self.schemas[rule.target_schema_id]
             
             # Create a property for the rule
-            with this.ontology:
+            with self.ontology:
                 # Create a new property for the rule
                 rule_property = type(f"transforms_to_{target_schema.name}", (ObjectProperty,), {
-                    "domain": [getattr(this.ontology, source_schema.name)],
-                    "range": [getattr(this.ontology, target_schema.name)]
+                    "domain": [getattr(self.ontology, source_schema.name)],
+                    "range": [getattr(self.ontology, target_schema.name)]
                 })
             
             # Save the ontology
-            this.ontology.save(file=str(this.ontology_path / 'bio_ontology.owl'), format="rdfxml")
+            self.ontology.save(file=str(self.ontology_path / 'bio_ontology.owl'), format="rdfxml")
             
         except Exception as e:
-            this.logger.error(f"Error updating ontology with rule: {str(e)}")
+            self.logger.error(f"Error updating ontology with rule: {str(e)}")
     
     async def _remove_rule_from_ontology(self, rule_id: str):
         """Remove a rule from the ontology."""
         try:
             # Get rule
-            rule = this.translation_rules[rule_id]
+            rule = self.translation_rules[rule_id]
             
             # Get source and target schemas
-            source_schema = this.schemas[rule.source_schema_id]
-            target_schema = this.schemas[rule.target_schema_id]
+            source_schema = self.schemas[rule.source_schema_id]
+            target_schema = self.schemas[rule.target_schema_id]
             
             # Remove the property for the rule
             property_name = f"transforms_to_{target_schema.name}"
-            if hasattr(this.ontology, property_name):
-                delattr(this.ontology, property_name)
+            if hasattr(self.ontology, property_name):
+                delattr(self.ontology, property_name)
             
             # Save the ontology
-            this.ontology.save(file=str(this.ontology_path / 'bio_ontology.owl'), format="rdfxml")
+            self.ontology.save(file=str(self.ontology_path / 'bio_ontology.owl'), format="rdfxml")
             
         except Exception as e:
-            this.logger.error(f"Error removing rule from ontology: {str(e)}")
+            self.logger.error(f"Error removing rule from ontology: {str(e)}")
     
     def _schema_to_dict(self, schema: DataSchema) -> Dict:
         """Convert a DataSchema object to a dictionary."""

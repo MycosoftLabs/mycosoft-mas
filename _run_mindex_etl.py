@@ -169,7 +169,7 @@ def populate_research():
                         )
                         if cur.rowcount > 0:
                             inserted += 1
-                    except:
+                    except Exception:
                         conn.rollback()
 
             time.sleep(0.5)  # Rate limit

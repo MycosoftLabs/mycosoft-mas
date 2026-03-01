@@ -68,8 +68,18 @@ LOGGING_CONFIG = {
 }
 
 # Security Settings
+_secret_key = os.getenv("SECRET_KEY", "")
+if not _secret_key or _secret_key in ("your-secret-key-here", "CHANGE_ME"):
+    import warnings
+    warnings.warn(
+        "SECRET_KEY is not set or uses a placeholder value. "
+        "Generate one with: python -c 'import secrets; print(secrets.token_hex(32))'",
+        RuntimeWarning,
+        stacklevel=1,
+    )
+
 SECURITY_CONFIG = {
-    "secret_key": os.getenv("SECRET_KEY", "your-secret-key-here"),
+    "secret_key": _secret_key,
     "algorithm": os.getenv("JWT_ALGORITHM", "HS256"),
     "access_token_expire_minutes": int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
 }

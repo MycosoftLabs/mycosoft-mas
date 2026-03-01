@@ -106,7 +106,7 @@ def http_get(url: str, timeout: float = 10.0) -> Tuple[int, Optional[Dict]]:
         r = requests.get(url, timeout=timeout)
         try:
             return r.status_code, r.json()
-        except:
+        except Exception:
             return r.status_code, {"text": r.text[:500]}
     except Exception as e:
         return -1, {"error": str(e)}
@@ -119,7 +119,7 @@ def http_post(url: str, data: Dict, timeout: float = 10.0) -> Tuple[int, Optiona
         r = requests.post(url, json=data, timeout=timeout)
         try:
             return r.status_code, r.json()
-        except:
+        except Exception:
             return r.status_code, {"text": r.text[:500]}
     except Exception as e:
         return -1, {"error": str(e)}

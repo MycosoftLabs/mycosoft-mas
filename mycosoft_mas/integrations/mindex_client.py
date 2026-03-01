@@ -72,8 +72,14 @@ class MINDEXClient:
         # Database connection (PostgreSQL/PostGIS)
         self.database_url = self.config.get(
             "database_url",
-            os.getenv("MINDEX_DATABASE_URL", "postgresql://mindex:mindex@localhost:5432/mindex")
+            os.getenv("MINDEX_DATABASE_URL", "")
         )
+        if not self.database_url:
+            import logging
+            logging.getLogger(__name__).warning(
+                "MINDEX_DATABASE_URL not set. Database features will be unavailable. "
+                "Set it in .env: MINDEX_DATABASE_URL=postgresql://user:pass@host:port/db"
+            )
         
         # REST API endpoint
         self.api_url = self.config.get(

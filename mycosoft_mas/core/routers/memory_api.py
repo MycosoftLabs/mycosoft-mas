@@ -155,7 +155,7 @@ class NamespacedMemoryManager:
                 return None
         return self._redis
     
-    async def _memory_set(self, key: str, value: str, ttl: int = None):
+    async def _memory_set(self, key: str, value: str, ttl: Optional[int] = None):
         """Set value in Redis or in-memory fallback."""
         redis = await self._get_redis()
         if redis:

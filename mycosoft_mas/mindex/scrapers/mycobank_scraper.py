@@ -116,9 +116,9 @@ class MycoBankScraper:
     
     async def fetch_species(
         self,
-        search_term: str = None,
+        search_term: Optional[str] = None,
         limit: int = 10000,
-        start_letter: str = None,
+        start_letter: Optional[str] = None,
         genus_list: Optional[List[str]] = None,
     ) -> List[Dict[str, Any]]:
         """

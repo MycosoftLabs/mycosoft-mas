@@ -60,7 +60,7 @@ def check_n8n():
     try:
         r = requests.get(N8N_URL, timeout=5)
         return r.status_code in [200, 302, 401]
-    except:
+    except Exception:
         return False
 
 

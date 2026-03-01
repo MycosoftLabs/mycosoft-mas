@@ -96,9 +96,9 @@ for ip in ips_to_check:
                     r = requests.get(f"https://{ip}:{port}/", verify=False, timeout=3)
                     if "UniFi" in r.text or "ubnt" in r.text.lower():
                         print(f"\n[FOUND] {ip}:{port} - UniFi Controller!")
-                except:
+                except Exception:
                     pass
-        except:
+        except Exception:
             pass
 
 print("\n" + "=" * 60)

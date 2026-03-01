@@ -96,7 +96,7 @@ def stats():
                 try:
                     cur.execute(f"SELECT COUNT(*) FROM {table}")
                     counts[table] = cur.fetchone()[0]
-                except:
+                except Exception:
                     counts[table] = 0
                     conn.rollback()
             return {"tables": counts, "status": "live"}
@@ -151,7 +151,7 @@ def species_search(
                 if isinstance(habitat, str):
                     try:
                         habitat = json.loads(habitat)
-                    except:
+                    except Exception:
                         habitat = [habitat] if habitat else []
 
                 results.append({

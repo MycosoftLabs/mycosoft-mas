@@ -1,6 +1,5 @@
 """Encryption Service. Created: February 3, 2026"""
 import base64
-import hashlib
 import os
 from typing import Optional
 
@@ -23,16 +22,25 @@ class EncryptionService:
             self.key = key
     
     def encrypt(self, plaintext: str) -> str:
-        from cryptography.fernet import Fernet
-        key = base64.urlsafe_b64encode(hashlib.sha256(self.key).digest())
-        f = Fernet(key)
-        return f.encrypt(plaintext.encode()).decode()
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        import hashlib
+
+        aes_key = hashlib.sha256(self.key).digest()
+        aesgcm = AESGCM(aes_key)
+        nonce = os.urandom(12)
+        ciphertext = aesgcm.encrypt(nonce, plaintext.encode(), None)
+        return base64.b64encode(nonce + ciphertext).decode()
     
     def decrypt(self, ciphertext: str) -> str:
-        from cryptography.fernet import Fernet
-        key = base64.urlsafe_b64encode(hashlib.sha256(self.key).digest())
-        f = Fernet(key)
-        return f.decrypt(ciphertext.encode()).decode()
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        import hashlib
+
+        aes_key = hashlib.sha256(self.key).digest()
+        aesgcm = AESGCM(aes_key)
+        data = base64.b64decode(ciphertext)
+        nonce = data[:12]
+        payload = data[12:]
+        return aesgcm.decrypt(nonce, payload, None).decode()
     
     def hash_password(self, password: str) -> str:
         import bcrypt

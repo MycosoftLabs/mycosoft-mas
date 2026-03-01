@@ -106,12 +106,12 @@ def exec_via_agent(command, timeout=120):
                 if out_data:
                     try:
                         out_data = base64.b64decode(out_data).decode('utf-8', errors='replace')
-                    except:
+                    except Exception:
                         pass
                 if err_data:
                     try:
                         err_data = base64.b64decode(err_data).decode('utf-8', errors='replace')
-                    except:
+                    except Exception:
                         pass
                 
                 log(f"  Exit code: {exit_code}")

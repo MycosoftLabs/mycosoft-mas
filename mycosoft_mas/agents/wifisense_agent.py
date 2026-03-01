@@ -11,8 +11,13 @@ class WiFiSenseAnalysisAgent:
     """Agent for analyzing WiFi Sense presence and motion data."""
     
     def __init__(self):
-        self.mindex_base_url = os.getenv("MINDEX_API_BASE_URL", "http://localhost:8002")
-        self.mindex_api_key = os.getenv("MINDEX_API_KEY", "dev-secret")
+        self.mindex_base_url = os.getenv("MINDEX_API_BASE_URL", "http://192.168.0.189:8000")
+        self.mindex_api_key = os.getenv("MINDEX_API_KEY", "")
+
+    def _headers(self) -> Dict[str, str]:
+        if self.mindex_api_key:
+            return {"X-API-Key": self.mindex_api_key}
+        return {}
     
     async def analyze_presence_patterns(
         self,
@@ -34,7 +39,7 @@ class WiFiSenseAnalysisAgent:
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.mindex_base_url}/wifisense/events",
-                headers={"X-API-Key": self.mindex_api_key},
+                headers=self._headers(),
                 params={
                     "zone_id": zone_id,
                     "since": start_time.isoformat(),
@@ -90,7 +95,7 @@ class WiFiSenseAnalysisAgent:
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.mindex_base_url}/wifisense/events",
-                headers={"X-API-Key": self.mindex_api_key},
+                headers=self._headers(),
                 params={
                     "zone_id": zone_id,
                     "since": since.isoformat(),
@@ -135,7 +140,7 @@ class WiFiSenseAnalysisAgent:
             # Get active tracks
             tracks_response = await client.get(
                 f"{self.mindex_base_url}/wifisense/tracks",
-                headers={"X-API-Key": self.mindex_api_key},
+                headers=self._headers(),
                 params={"zone_id": zone_id, "active": True},
             )
             tracks_response.raise_for_status()
@@ -145,7 +150,7 @@ class WiFiSenseAnalysisAgent:
             since = datetime.utcnow() - timedelta(minutes=5)
             events_response = await client.get(
                 f"{self.mindex_base_url}/wifisense/events",
-                headers={"X-API-Key": self.mindex_api_key},
+                headers=self._headers(),
                 params={"zone_id": zone_id, "since": since.isoformat()},
             )
             events_response.raise_for_status()

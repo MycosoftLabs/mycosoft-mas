@@ -99,7 +99,7 @@ The Mycosoft Multi-Agent System (MAS) consists of 215+ specialized AI agents org
 | ID | Name | Status | Description |
 |----|------|--------|-------------|
 | 11 | `financial` | Active | Master financial orchestrator |
-| 12 | `mercury` | Active | Mercury bank API integration |
+| 12 | `relay_financial` | Active | Relay Financial API integration |
 | 13 | `stripe` | Active | Stripe payment processing |
 | 14 | `accounting` | Active | QuickBooks/Xero integration |
 | 15 | `invoice` | Active | Automated invoice generation |

@@ -793,7 +793,7 @@ class MycologyKnowledgeAgent(BaseAgent):
             self.logger.error(f"Error in path query: {str(e)}")
             return []
 
-    async def _semantic_search(self, query: str, node_type: str = None, threshold: float = 0.5) -> List[Dict]:
+    async def _semantic_search(self, query: str, node_type: Optional[str] = None, threshold: float = 0.5) -> List[Dict]:
         """Perform semantic search over the knowledge graph."""
         try:
             if not self.semantic_model:
@@ -1202,7 +1202,7 @@ class MycologyKnowledgeAgent(BaseAgent):
             'updated_at': relation.updated_at.isoformat()
         }
 
-    async def scrape_data_sources(self, sources: List[str] = None) -> Dict:
+    async def scrape_data_sources(self, sources: Optional[List[str]] = None) -> Dict:
         """Scrape data from specified fungal data sources."""
         try:
             if sources is None:
@@ -2366,7 +2366,7 @@ class MycologyKnowledgeAgent(BaseAgent):
                 'error': str(e)
             }
 
-    async def reject_source(self, source_id: str, reason: str = None) -> Dict:
+    async def reject_source(self, source_id: str, reason: Optional[str] = None) -> Dict:
         """Reject a discovered source."""
         try:
             # Get the source

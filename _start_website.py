@@ -36,7 +36,7 @@ def run(cmd, timeout=60):
         if out.strip():
             print(out[:500])
         return out
-    except:
+    except Exception:
         print("(timeout)")
         return ""
 

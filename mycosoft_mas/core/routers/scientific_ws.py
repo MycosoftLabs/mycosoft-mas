@@ -11,6 +11,8 @@ import logging
 from datetime import datetime
 from enum import Enum
 
+from mycosoft_mas.scientific.db_models import ScientificDataStore
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -107,6 +109,15 @@ class ScientificWSManager:
 
 
 ws_manager = ScientificWSManager()
+_scientific_store: Optional[ScientificDataStore] = None
+
+
+async def get_scientific_store() -> ScientificDataStore:
+    global _scientific_store
+    if _scientific_store is None:
+        _scientific_store = ScientificDataStore()
+        await _scientific_store.initialize()
+    return _scientific_store
 
 
 @router.websocket("/ws/scientific")
@@ -158,13 +169,29 @@ async def scientific_websocket(websocket: WebSocket):
 
 @router.get("/ws/scientific/status")
 async def websocket_status():
+    persisted = {
+        "experiments": None,
+        "observations": None,
+        "datasets": None,
+        "equipment": None,
+    }
+    try:
+        store = await get_scientific_store()
+        persisted["experiments"] = len(await store.list_experiments())
+        persisted["observations"] = len(await store.list_observations())
+        persisted["datasets"] = len(await store.list_datasets())
+        persisted["equipment"] = len(await store.list_equipment())
+    except Exception as exc:
+        logger.debug("Scientific persistence status unavailable: %s", exc)
+
     return {
         "status": "online",
         "totalConnections": ws_manager.get_total_connections(),
         "subscriptions": {
             event_type.value: ws_manager.get_subscriber_count(event_type.value)
             for event_type in EventType
-        }
+        },
+        "persistence": persisted,
     }
 
 
@@ -174,7 +201,7 @@ async def broadcast_simulation_progress(simulation_id: str, progress: int, eta: 
         "id": simulation_id, "progress": progress, "eta": eta, "status": status
     })
 
-async def broadcast_experiment_step(experiment_id: str, step: int, total_steps: int, status: str, message: str = None):
+async def broadcast_experiment_step(experiment_id: str, step: int, total_steps: int, status: str, message: Optional[str] = None):
     await ws_manager.broadcast(EventType.EXPERIMENT_STEP.value, {
         "id": experiment_id, "step": step, "totalSteps": total_steps, "status": status, "message": message
     })
@@ -200,7 +227,7 @@ async def broadcast_safety_alert(alert_type: str, message: str, severity: str):
         "timestamp": int(datetime.utcnow().timestamp() * 1000)
     })
 
-async def broadcast_mycobrain_result(job_id: str, status: str, result: Any = None):
+async def broadcast_mycobrain_result(job_id: str, status: str, result: Optional[Any] = None):
     await ws_manager.broadcast(EventType.MYCOBRAIN_RESULT.value, {
         "jobId": job_id, "status": status, "result": result
     })

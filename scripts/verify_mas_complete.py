@@ -343,7 +343,7 @@ class MASVerifier:
                 
                 try:
                     response_data = await resp.json()
-                except:
+                except Exception:
                     response_data = await resp.text()
                 
                 if resp.status in expected_status or (alt_success_check and alt_success_check(resp)):

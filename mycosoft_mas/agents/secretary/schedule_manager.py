@@ -211,7 +211,7 @@ class ScheduleManager:
         activity: ActivityType,
         start_time: time,
         end_time: time,
-        days: List[str] = None
+        days: Optional[List[str]] = None
     ) -> None:
         """
         Set a daily schedule for an activity.

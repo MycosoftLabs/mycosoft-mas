@@ -63,7 +63,7 @@ class FungiDBScraper:
     
     async def fetch_genes(
         self,
-        organism: str = None,
+        organism: Optional[str] = None,
         limit: int = 1000,
     ) -> List[Dict[str, Any]]:
         """

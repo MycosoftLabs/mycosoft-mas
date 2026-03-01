@@ -38,6 +38,8 @@ if BaseAgent is None:
     __all__.append("BaseAgent")
 
 
+_safe_import(".manager_agent", "ManagerAgent")
+_safe_import(".guardian_agent", "GuardianAgent")
 _safe_import(".mycology_bio_agent", "MycologyBioAgent")
 _safe_import(".mycology_knowledge_agent", "MycologyKnowledgeAgent")
 _safe_import(".ip_tokenization_agent", "IPTokenizationAgent")

@@ -50,7 +50,7 @@ for endpoint in endpoints:
     try:
         data = json.loads(stdout) if stdout.strip() else {}
         print(f"  {endpoint:15s} - Status: OK, Response: {json.dumps(data)[:80]}")
-    except:
+    except Exception:
         print(f"  {endpoint:15s} - Response: {stdout.strip()[:80]}")
 
 # 3. Check website API endpoints
@@ -71,7 +71,7 @@ for endpoint in website_endpoints:
         status = data.get('service_status', 'unknown')
         devices = data.get('devices', [])
         print(f"  {endpoint:35s} - Status: {status}, Devices: {len(devices)}")
-    except:
+    except Exception:
         print(f"  {endpoint:35s} - Response: {stdout.strip()[:80]}")
 
 # 4. Check for device detection service/process
@@ -126,7 +126,7 @@ for endpoint in sandbox_endpoints:
             devices = data.get('devices', []) if isinstance(data.get('devices'), list) else []
             count = data.get('count', len(devices))
             print(f"  {endpoint:50s} - HTTP {r.status_code}, Devices: {count}, Status: {status}")
-        except:
+        except Exception:
             print(f"  {endpoint:50s} - HTTP {r.status_code}, Response: {r.text[:80]}")
     except Exception as e:
         print(f"  {endpoint:50s} - ERROR: {str(e)[:50]}")

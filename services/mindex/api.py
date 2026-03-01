@@ -273,14 +273,14 @@ async def reconcile_taxon(name: str):
             result["gbif_id"] = gbif_result.get("gbif_id")
             result["canonical_name"] = gbif_result.get("canonical_name")
             result["reconciled"] = True
-    except:
+    except Exception:
         pass
-    
+
     if result.get("gbif_match", {}).get("kingdom") == "Fungi":
         try:
             if_result = await lookup_index_fungorum(name)
             result["index_fungorum"] = if_result
-        except:
+        except Exception:
             pass
     
     return result

@@ -47,6 +47,7 @@ todos:
   - id: defense-connector
     content: Create 30_defense_connector.json for Palantir, Anduril, Platform One (secure/restricted)
     status: completed
+isProject: false
 ---
 
 # Global Service Integration for Mycosoft MAS
@@ -91,6 +92,8 @@ flowchart TB
     MCPHub --> Tier2
     Orchestrator --> Tier3
 ```
+
+
 
 ---
 
@@ -254,30 +257,23 @@ Create comprehensive `.env` template with all API keys:
 ## Implementation Priority
 
 1. **Immediate (Free/Easy APIs)**
-
-   - NASA Open APIs (free, no key required for some)
-   - USGS Earthquake API (free)
-   - NOAA Weather/Tides (free)
-   - OpenAQ (free tier)
-
+  - NASA Open APIs (free, no key required for some)
+  - USGS Earthquake API (free)
+  - NOAA Weather/Tides (free)
+  - OpenAQ (free tier)
 2. **Short-term (API key required)**
-
-   - CoinMarketCap
-   - Amplitude
-   - Zapier webhooks
-   - IFTTT
-
+  - CoinMarketCap
+  - Amplitude
+  - Zapier webhooks
+  - IFTTT
 3. **Medium-term (Complex setup)**
-
-   - Robinhood (unofficial API)
-   - Custom sensor integrations
-   - Port/harbor data
-
+  - Robinhood (unofficial API)
+  - Custom sensor integrations
+  - Port/harbor data
 4. **Long-term (Restricted access)**
-
-   - Palantir Foundry
-   - Anduril SDK
-   - Platform One
+  - Palantir Foundry
+  - Anduril SDK
+  - Platform One
 
 ---
 
@@ -312,3 +308,4 @@ app/api/mas/
 ├── financial/route.ts
 └── earth-science/route.ts
 ```
+

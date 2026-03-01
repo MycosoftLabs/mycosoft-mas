@@ -23,6 +23,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.llm.error_sanitizer import sanitize_for_user, sanitize_for_log
+from mycosoft_mas.llm.tool_pipeline import create_tool_manager_for_skill
+from mycosoft_mas.myca.event_ledger import get_ledger
 
 logger = logging.getLogger("BrainAPI")
 
@@ -70,6 +72,7 @@ class MemoryContextResponse(BaseModel):
 # ============================================================================
 
 _brain = None
+_voice_tool_manager = None
 
 
 async def get_brain():
@@ -79,6 +82,34 @@ async def get_brain():
         from mycosoft_mas.llm.memory_brain import get_memory_brain
         _brain = await get_memory_brain()
     return _brain
+
+
+def _get_voice_tool_manager():
+    global _voice_tool_manager
+    if _voice_tool_manager is None:
+        _voice_tool_manager = create_tool_manager_for_skill("voice")
+    else:
+        _voice_tool_manager.set_skill_context("voice")
+    return _voice_tool_manager
+
+
+def _log_voice_brain_turn(session_id: str, conversation_id: str, user_id: str, source: str = "brain") -> None:
+    try:
+        ledger = get_ledger()
+        ledger.log_risk_event(
+            agent="voice",
+            event_type="voice_brain_turn",
+            description="Voice brain turn",
+            risk_flags=["voice_turn"],
+            context={
+                "session_id": session_id,
+                "conversation_id": conversation_id,
+                "user_id": user_id,
+                "source": source,
+            },
+        )
+    except Exception as e:
+        logger.debug("Voice brain ledger logging failed: %s", e)
 
 
 @router.post("/chat", response_model=BrainChatResponse)
@@ -99,6 +130,10 @@ async def brain_chat(request: BrainChatRequest):
         # Ensure IDs
         session_id = request.session_id or str(uuid4())
         conversation_id = request.conversation_id or str(uuid4())
+        _log_voice_brain_turn(session_id, conversation_id, request.user_id, source="voice_brain_chat")
+
+        tool_manager = _get_voice_tool_manager()
+        tools = tool_manager.get_tool_definitions_for_llm(filter_by_permissions=True) if tool_manager else None
         
         # Get response
         response = await brain.get_response(
@@ -107,6 +142,7 @@ async def brain_chat(request: BrainChatRequest):
             conversation_id=conversation_id,
             user_id=request.user_id,
             history=request.history,
+            tools=tools,
             provider=request.provider
         )
         
@@ -160,6 +196,10 @@ async def brain_stream(request: BrainChatRequest):
         
         session_id = request.session_id or str(uuid4())
         conversation_id = request.conversation_id or str(uuid4())
+        _log_voice_brain_turn(session_id, conversation_id, request.user_id, source="voice_brain_stream")
+
+        tool_manager = _get_voice_tool_manager()
+        tools = tool_manager.get_tool_definitions_for_llm(filter_by_permissions=True) if tool_manager else None
         
         async def generate():
             try:
@@ -169,6 +209,7 @@ async def brain_stream(request: BrainChatRequest):
                     conversation_id=conversation_id,
                     user_id=request.user_id,
                     history=request.history,
+                    tools=tools,
                     provider=request.provider
                 ):
                     # Send as SSE event

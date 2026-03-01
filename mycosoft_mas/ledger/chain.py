@@ -42,7 +42,7 @@ class BlockchainLedger:
     def _hash_data(self, data: Any) -> str:
         return hashlib.sha256(json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()
     
-    def add_entry(self, entry_type: str, data: Any, metadata: Dict[str, Any] = None) -> LedgerEntry:
+    def add_entry(self, entry_type: str, data: Any, metadata: Optional[Dict[str, Any]] = None) -> LedgerEntry:
         entry = LedgerEntry(entry_id=uuid4(), entry_type=entry_type, data_hash=self._hash_data(data), metadata=metadata or {}, created_at=datetime.now(timezone.utc))
         self._pending_entries.append(entry)
         return entry

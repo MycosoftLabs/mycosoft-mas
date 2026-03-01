@@ -218,7 +218,8 @@ class SystemMonitor:
                             check.status = HealthStatus.HEALTHY
                             try:
                                 check.details = await resp.json()
-                            except:
+                            except Exception as e:
+                                logger.debug(f"Non-critical error parsing health check JSON: {e}")
                                 check.details = {"body": await resp.text()}
                         elif resp.status < 500:
                             check.status = HealthStatus.DEGRADED

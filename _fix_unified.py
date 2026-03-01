@@ -48,22 +48,22 @@ def unified_search(
     try:
         if include_species:
             results["species"] = species_search(q=q, limit=limit).get("results", [])
-    except:
+    except Exception:
         pass
     try:
         if include_compounds:
             results["compounds"] = compounds_search(q=q, limit=limit).get("results", [])
-    except:
+    except Exception:
         pass
     try:
         if include_sequences:
             results["genetics"] = sequences_search(q=q, limit=limit).get("results", [])
-    except:
+    except Exception:
         pass
     try:
         if include_research:
             results["research"] = research_search(q=q, limit=limit).get("results", [])
-    except:
+    except Exception:
         pass
 
     total = sum(len(v) for v in results.values())

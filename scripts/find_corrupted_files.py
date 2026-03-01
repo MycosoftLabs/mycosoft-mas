@@ -16,7 +16,7 @@ for filepath in glob.glob('mycosoft_mas/**/*.py', recursive=True):
             # Check for obvious corruption
             if '\x00' in content or '\ufeff' in content[1:] or '\u2222' in content:
                 corrupted.append(filepath)
-        except:
+        except Exception:
             corrupted.append(filepath)
 
 print(f"Found {len(corrupted)} corrupted files:")

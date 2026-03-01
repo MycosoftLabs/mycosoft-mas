@@ -89,11 +89,11 @@ def exec_cmd(cmd, timeout=120, show_output=False):
                     # Decode base64 if present
                     try:
                         out = base64.b64decode(out_b64).decode() if out_b64 else ""
-                    except:
+                    except Exception:
                         out = out_b64
                     try:
                         err = base64.b64decode(err_b64).decode() if err_b64 else ""
-                    except:
+                    except Exception:
                         err = err_b64
                     
                     if show_output and (out or err):
@@ -117,7 +117,7 @@ def purge_cloudflare():
     try:
         r = requests.post(url, headers=cf_headers, json={"purge_everything": True}, timeout=10)
         return r.ok
-    except:
+    except Exception:
         return False
 
 

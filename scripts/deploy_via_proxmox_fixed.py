@@ -83,12 +83,12 @@ def run_command(command, timeout=600):
                 try:
                     if out_data:
                         out_data = base64.b64decode(out_data).decode('utf-8', errors='replace')
-                except:
+                except Exception:
                     pass
                 try:
                     if err_data:
                         err_data = base64.b64decode(err_data).decode('utf-8', errors='replace')
-                except:
+                except Exception:
                     pass
                 print(f"  Exit: {exit_code}")
                 if out_data:

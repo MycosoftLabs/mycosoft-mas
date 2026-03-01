@@ -277,7 +277,7 @@ class NotificationManager:
         title: Optional[str] = None,
         scheduled_for: Optional[datetime] = None,
         expires_at: Optional[datetime] = None,
-        metadata: Dict[str, Any] = None
+        metadata: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Create a new notification.

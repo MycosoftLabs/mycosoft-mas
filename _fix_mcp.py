@@ -60,7 +60,7 @@ if os.path.exists(partitions_dir):
                     try:
                         shutil.rmtree(target, ignore_errors=True)
                         cleared_partitions += 1
-                    except:
+                    except Exception:
                         pass
             # Also clear cookie files directly
             for fname in os.listdir(partition_path):
@@ -70,7 +70,7 @@ if os.path.exists(partitions_dir):
                         if os.path.isfile(fpath):
                             os.remove(fpath)
                             cleared_partitions += 1
-                    except:
+                    except Exception:
                         pass
 print(f"\n[4] Cleared {cleared_partitions} browser partition caches")
 
@@ -81,7 +81,7 @@ for subdir in ["Session Storage", "Local Storage", "Cache", "Code Cache"]:
         try:
             shutil.rmtree(target, ignore_errors=True)
             print(f"    Cleared {subdir}")
-        except:
+        except Exception:
             print(f"    Could not clear {subdir} (may be locked)")
 
 # Step 6: Write clean mcp.json

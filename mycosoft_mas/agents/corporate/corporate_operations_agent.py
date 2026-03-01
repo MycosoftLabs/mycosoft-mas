@@ -10,6 +10,9 @@ import logging
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from pathlib import Path
+import json
+import os
+import uuid
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.messaging.message_types import Message, MessageType, MessagePriority
@@ -71,18 +74,25 @@ class CorporateOperationsAgent(BaseAgent):
     
     async def _initialize_clerky(self) -> Any:
         """Initialize Clerky client."""
-        # TODO: Implement Clerky API client
-        pass
+        api_key = os.getenv("CLERKY_API_KEY")
+        base_url = os.getenv("CLERKY_API_BASE_URL", "https://api.clerky.com").rstrip("/")
+        if not api_key:
+            self.logger.warning("CLERKY_API_KEY not set - Clerky integration disabled")
+            return None
+        return {"api_key": api_key, "base_url": base_url}
     
     async def _load_corporate_records(self) -> None:
         """Load corporate records from storage."""
-        # TODO: Implement corporate records loading
-        pass
+        records_file = self.data_dir / "corporate_records.json"
+        if records_file.exists():
+            self.corporate_records = json.loads(records_file.read_text(encoding="utf-8"))
+        else:
+            self.corporate_records = {"documents": {}, "resolutions": {}, "meetings": {}}
     
     async def _initialize_document_management(self) -> None:
         """Initialize document management system."""
-        # TODO: Implement document management
-        pass
+        self.active_documents = self.corporate_records.get("documents", {})
+        self.pending_resolutions = list(self.corporate_records.get("resolutions", {}).keys())
     
     async def process_board_resolution(self, resolution: Dict[str, Any]) -> bool:
         """
@@ -191,33 +201,100 @@ class CorporateOperationsAgent(BaseAgent):
     
     async def _create_resolution_record(self, resolution: Dict[str, Any]) -> str:
         """Create a record for a board resolution."""
-        # TODO: Implement resolution record creation
-        pass
+        resolution_id = f"res-{uuid.uuid4().hex[:10]}"
+        self.corporate_records.setdefault("resolutions", {})[resolution_id] = {
+            "id": resolution_id,
+            "title": resolution["title"],
+            "content": resolution["content"],
+            "voting_requirements": resolution["voting_requirements"],
+            "status": "pending_vote",
+            "created_at": datetime.now().isoformat(),
+        }
+        await self._persist_corporate_records()
+        return resolution_id
     
     async def _notify_board_members(self, resolution: Dict[str, Any]) -> None:
         """Notify board members about a new resolution."""
-        # TODO: Implement board member notification
-        pass
+        self.logger.info(
+            "Board notification prepared for resolution '%s' to %d members",
+            resolution.get("title", "untitled"),
+            len(self.board_members),
+        )
     
     async def _create_clerky_document(self, document: Dict[str, Any]) -> str:
         """Create a document through Clerky."""
-        # TODO: Implement Clerky document creation
-        pass
+        document_id = f"doc-{uuid.uuid4().hex[:10]}"
+        payload = {
+            "id": document_id,
+            "type": document.get("type"),
+            "content": document.get("content"),
+            "metadata": document.get("metadata", {}),
+            "created_at": datetime.now().isoformat(),
+            "source": "local",
+            "clerky_synced": False,
+        }
+
+        if self.clerky_client:
+            try:
+                import aiohttp
+
+                async with aiohttp.ClientSession(
+                    headers={
+                        "Authorization": f"Bearer {self.clerky_client['api_key']}",
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    }
+                ) as session:
+                    async with session.post(
+                        f"{self.clerky_client['base_url']}/v1/documents",
+                        json=document,
+                        timeout=aiohttp.ClientTimeout(total=20),
+                    ) as response:
+                        if response.status in (200, 201):
+                            remote = await response.json()
+                            payload["source"] = "clerky"
+                            payload["clerky_synced"] = True
+                            payload["remote_id"] = remote.get("id")
+                        else:
+                            self.logger.warning("Clerky document create returned status %s", response.status)
+            except Exception as exc:
+                self.logger.warning("Clerky document create failed, using local record: %s", exc)
+
+        self.active_documents[document_id] = payload
+        return document_id
     
     async def _store_document_record(self, document_id: str, document: Dict[str, Any]) -> None:
         """Store a record of a corporate document."""
-        # TODO: Implement document record storage
-        pass
+        self.corporate_records.setdefault("documents", {})[document_id] = {
+            "id": document_id,
+            "type": document.get("type"),
+            "metadata": document.get("metadata", {}),
+            "created_at": datetime.now().isoformat(),
+        }
+        await self._persist_corporate_records()
     
     async def _create_meeting_record(self, meeting: Dict[str, Any]) -> str:
         """Create a record for a board meeting."""
-        # TODO: Implement meeting record creation
-        pass
+        meeting_id = f"mtg-{uuid.uuid4().hex[:10]}"
+        self.corporate_records.setdefault("meetings", {})[meeting_id] = {
+            "id": meeting_id,
+            "date": meeting["date"],
+            "time": meeting["time"],
+            "agenda": meeting["agenda"],
+            "attendees": meeting["attendees"],
+            "created_at": datetime.now().isoformat(),
+        }
+        await self._persist_corporate_records()
+        return meeting_id
     
     async def _send_meeting_invitations(self, meeting: Dict[str, Any]) -> None:
         """Send meeting invitations to board members."""
-        # TODO: Implement meeting invitation sending
-        pass
+        attendees = meeting.get("attendees", [])
+        self.logger.info("Prepared %d board meeting invitations", len(attendees))
+
+    async def _persist_corporate_records(self) -> None:
+        records_file = self.data_dir / "corporate_records.json"
+        records_file.write_text(json.dumps(self.corporate_records, indent=2), encoding="utf-8")
 
     async def _handle_error_type(self, error_type: str, error: Dict) -> Dict:
         """

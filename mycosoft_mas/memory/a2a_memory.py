@@ -455,8 +455,8 @@ class A2AMemoryIntegration:
             try:
                 stream_len = await self._broker.get_stream_length(self.STREAM_SHARED)
                 stats["shared_memories_count"] = stream_len
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Non-critical error fetching shared memories count: {e}")
         
         return stats
     

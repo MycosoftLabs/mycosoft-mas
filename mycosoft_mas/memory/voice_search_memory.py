@@ -26,8 +26,8 @@ logger = logging.getLogger("VoiceSearchMemory")
 class VoiceSearchLink:
     """Links a voice session to a search session."""
     id: UUID = field(default_factory=uuid4)
-    voice_session_id: UUID = None
-    search_session_id: UUID = None
+    voice_session_id: Optional[UUID] = None
+    search_session_id: Optional[UUID] = None
     user_id: str = ""
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     last_activity: datetime = field(default_factory=lambda: datetime.now(timezone.utc))

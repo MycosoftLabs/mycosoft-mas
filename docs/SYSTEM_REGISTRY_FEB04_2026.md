@@ -11,6 +11,24 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (Feb 28, 2026)
+
+- Added scientific persistence service and models:
+  - `mycosoft_mas/scientific/db_models.py`
+  - `mycosoft_mas/scientific/__init__.py`
+- Added scientific MAS routers:
+  - `mycosoft_mas/core/routers/scientific_experiments_api.py`
+  - `mycosoft_mas/core/routers/scientific_datasets_api.py`
+  - `mycosoft_mas/core/routers/scientific_equipment_api.py`
+- Added financial integration services:
+  - `mycosoft_mas/integrations/mercury_client.py`
+  - `mycosoft_mas/integrations/safe_agreement_client.py`
+  - `mycosoft_mas/integrations/cap_table_service.py`
+- Added research integration services:
+  - `mycosoft_mas/integrations/pubpeer_client.py`
+  - `mycosoft_mas/integrations/scholar_client.py`
+- Replaced SporeBase order 501 response with order intake logic in `mycosoft_mas/core/routers/sporebase_api.py`.
+
 ## Architecture
 
 ```
@@ -181,6 +199,24 @@ WebSocket endpoint for agent-to-agent real-time messaging. Bridges to Redis pub/
 **Redis channels**: `agents:tasks`, `agents:tool_calls`  
 **Router**: `mycosoft_mas/realtime/agent_bus.py`, `mycosoft_mas/core/routers/a2a_websocket.py`  
 **Docs**: `docs/WEBSOCKET_AGENT_BUS_FEB09_2026.md`, `docs/AGENT_BUS_MIGRATION_GUIDE_FEB09_2026.md`
+
+### MAS WebSocket Streams (Feb 28, 2026)
+
+Live streams for agents, devices, memory, tasks, voice, Earth2, scientific telemetry, and system health.
+
+| Endpoint | Transport | Description |
+|----------|-----------|-------------|
+| `/ws/agents/status` | WebSocket | Live agent state stream |
+| `/ws/devices/telemetry` | WebSocket | All device telemetry stream |
+| `/ws/memory/updates` | WebSocket | Memory layer update stream |
+| `/ws/tasks/progress` | WebSocket | Task execution progress |
+| `/ws/voice/stream` | WebSocket | Bidirectional voice audio/text |
+| `/ws/earth2/predictions` | WebSocket | Earth2 prediction stream |
+| `/ws/scientific/data` | WebSocket | Scientific experiment telemetry |
+| `/ws/system/health` | WebSocket | Infrastructure/system health |
+
+**Redis channels**: `agents:status`, `devices:telemetry`, `memory:updates`, `tasks:progress`, `earth2:predictions`, `experiments:data`, `system:health`  
+**Routers**: `mycosoft_mas/core/routers/agent_status_ws.py`, `device_telemetry_ws.py`, `memory_updates_ws.py`, `task_progress_ws.py`, `voice_stream_ws.py`, `earth2_predictions_ws.py`, `scientific_data_ws.py`, `system_health_ws.py`
 
 ### Petri Dish Simulation API (Feb 20, 2026)
 
@@ -408,6 +444,38 @@ System (MycoBrain) â”€â”€managesâ”€â”€> Device (SporeBase)
 - [API Catalog](./API_CATALOG_FEB04_2026.md)
 - [Memory Integration Guide](./MEMORY_INTEGRATION_GUIDE_FEB04_2026.md)
 - [Cryptographic Integrity](./CRYPTOGRAPHIC_INTEGRITY_FEB04_2026.md)
+
+---
+
+## Manager Agent (Feb 28, 2026)
+
+### Registered Agent
+
+| Agent ID | Class | Category | Capabilities |
+|----------|-------|----------|--------------|
+| `manager-agent` | `ManagerAgent` | core | `routing`, `intent_classification`, `agent_selection` |
+
+### Module
+
+| File | Purpose |
+|------|---------|
+| `mycosoft_mas/agents/manager_agent.py` | Task routing, intent classification, and agent selection |
+
+---
+
+## Guardian Agent (Feb 28, 2026)
+
+### Registered Agent
+
+| Agent ID | Class | Category | Capabilities |
+|----------|-------|----------|--------------|
+| `guardian-agent` | `GuardianAgent` | security | `safety_classification`, `pii_filter`, `tool_risk_gating` |
+
+### Module
+
+| File | Purpose |
+|------|---------|
+| `mycosoft_mas/agents/guardian_agent.py` | Safety classification, PII filtering, tool risk gating |
 
 ---
 

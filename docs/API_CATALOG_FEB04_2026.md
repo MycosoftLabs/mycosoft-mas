@@ -49,6 +49,16 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/security/audit/stats` | GET | Audit statistics |
 | `/api/security/health` | GET | Security service health |
 
+### API Keys (`/api/keys/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/keys/health` | GET | API keys service health |
+| `/api/keys` | POST | Create a new API key |
+| `/api/keys` | GET | List API keys for a user |
+| `/api/keys/{key_id}` | DELETE | Revoke an API key |
+| `/api/keys/verify` | POST | Verify API key and return metadata |
+
 ### Registry API (`/api/registry/*`)
 
 | Endpoint | Method | Description |
@@ -106,6 +116,44 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 **Router**: `mycosoft_mas/core/routers/presence_api.py`  
 **Upstream**: Website `http://192.168.0.187:3000/api/presence` (PRESENCE_API_URL)
+
+### WebSocket Streams (`/ws/*`) – Feb 28, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/ws/agents/status` | WS | Live agent state stream |
+| `/ws/devices/telemetry` | WS | All device telemetry stream |
+| `/ws/memory/updates` | WS | Memory layer update stream |
+| `/ws/tasks/progress` | WS | Task execution progress |
+| `/ws/voice/stream` | WS | Bidirectional voice audio/text |
+| `/ws/earth2/predictions` | WS | Earth2 prediction stream |
+| `/ws/scientific/data` | WS | Scientific experiment telemetry |
+| `/ws/system/health` | WS | Infrastructure/system health |
+
+### Scientific API (`/api/scientific/*`) – Feb 28, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/scientific/experiments` | GET, POST | List/create experiments (PostgreSQL-backed) |
+| `/api/scientific/observations` | GET, POST | List/create observations (PostgreSQL-backed) |
+| `/api/scientific/observations/live` | GET | Proxy live observations from NatureOS telemetry |
+| `/api/scientific/datasets` | GET, POST | List/create datasets (PostgreSQL-backed) |
+| `/api/scientific/datasets/species` | GET | Species/taxonomy query proxy to MINDEX |
+| `/api/scientific/equipment/status` | GET | Equipment status from persisted lab equipment table |
+| `/api/scientific/equipment` | POST | Register/create lab equipment |
+| `/api/scientific/simulations/live` | GET | Live simulation status aggregation (PhysicsNeMo + Earth2) |
+
+### SporeBase API (`/api/sporebase/*`) – Feb 28, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/sporebase/order` | POST | Submit SporeBase order intake (replaces previous 501 response) |
+
+### FCI API (`/api/fci/*`) – Feb 28, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/fci/hpl/execute` | POST | Execute HPL program (execution-lite parser + optional device dispatch) |
 
 ### Evolution API (`/api/evolution/*`) – Feb 10, 2026
 
@@ -333,6 +381,7 @@ Manages mycosoft-gpu01 compute node (192.168.0.190): status, containers, deploy 
 | `/api/bio/sensors` | GET | Biosensor data |
 | `/api/mindex/telemetry` | GET, POST | MINDEX telemetry proxy + envelope ingest |
 | `/api/mindex/telemetry/samples` | GET | MINDEX samples proxy (verified flags) |
+| `/api/mindex/research/search` | GET | MINDEX research search proxy |
 
 ---
 

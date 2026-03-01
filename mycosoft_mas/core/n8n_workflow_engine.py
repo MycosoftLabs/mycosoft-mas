@@ -23,6 +23,11 @@ N8N_URL = os.getenv("N8N_URL", "http://192.168.0.188:5678")
 N8N_CLOUD_URL = os.getenv("N8N_CLOUD_URL", "https://mycosoft.app.n8n.cloud")
 N8N_API_KEY = os.getenv("N8N_API_KEY", "")
 N8N_CLOUD_API_KEY = os.getenv("N8N_CLOUD_API_KEY", "")
+N8N_BASIC_AUTH_USER = os.getenv("N8N_BASIC_AUTH_USER", "")
+N8N_BASIC_AUTH_PASSWORD = os.getenv("N8N_BASIC_AUTH_PASSWORD", "")
+N8N_USER = os.getenv("N8N_USER", "")
+N8N_PASSWORD = os.getenv("N8N_PASSWORD", "")
+N8N_API_BASE = os.getenv("N8N_API_BASE", "/api/v1")
 
 BASE_DIR = Path(__file__).parent.parent.parent
 WORKFLOWS_DIR = BASE_DIR / "n8n" / "workflows"
@@ -142,7 +147,7 @@ def clean_workflow_for_api(workflow_data: dict, for_update: bool = False) -> dic
 class N8NWorkflowEngine:
     """N8N Workflow Management Engine for MYCA 24/7/365 automation"""
     
-    def __init__(self, base_url: str = None, api_key: str = None, use_cloud: bool = False):
+    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None, use_cloud: bool = False):
         if use_cloud:
             self.base_url = (base_url or N8N_CLOUD_URL).rstrip("/")
             self.api_key = api_key or N8N_CLOUD_API_KEY
@@ -151,7 +156,12 @@ class N8NWorkflowEngine:
             self.api_key = api_key or N8N_API_KEY
         
         self.headers = {"X-N8N-API-KEY": self.api_key, "Content-Type": "application/json"}
-        self.client = httpx.Client(timeout=60.0)
+        auth_user = N8N_BASIC_AUTH_USER or N8N_USER
+        auth_password = N8N_BASIC_AUTH_PASSWORD or N8N_PASSWORD
+        auth = None
+        if auth_user and auth_password:
+            auth = httpx.BasicAuth(auth_user, auth_password)
+        self.client = httpx.Client(timeout=60.0, auth=auth)
         self._version_registry: Dict[str, List[WorkflowVersion]] = {}
         self._load_version_registry()
         
@@ -176,7 +186,8 @@ class N8NWorkflowEngine:
             logger.error(f"Failed to save version registry: {e}")
         
     def _request(self, method: str, endpoint: str, **kwargs) -> dict:
-        url = f"{self.base_url}/api/v1{endpoint}"
+        api_base = N8N_API_BASE if N8N_API_BASE.startswith("/") else f"/{N8N_API_BASE}"
+        url = f"{self.base_url}{api_base}{endpoint}"
         try:
             response = self.client.request(method, url, headers=self.headers, **kwargs)
             response.raise_for_status()
@@ -266,7 +277,7 @@ class N8NWorkflowEngine:
         logger.info(f"Deactivated workflow: {workflow_id}")
         return result
     
-    def archive_workflow(self, workflow_id: str, workflow_data: dict = None, reason: str = "") -> WorkflowVersion:
+    def archive_workflow(self, workflow_id: str, workflow_data: Optional[dict] = None, reason: str = "") -> WorkflowVersion:
         if not workflow_data:
             workflow_data = self.get_workflow(workflow_id)
         if workflow_id not in self._version_registry:
@@ -288,7 +299,7 @@ class N8NWorkflowEngine:
         logger.info(f"Archived workflow {workflow_data['name']} v{version}")
         return version_record
     
-    def restore_workflow(self, workflow_id: str, version: int = None) -> dict:
+    def restore_workflow(self, workflow_id: str, version: Optional[int] = None) -> dict:
         if workflow_id not in self._version_registry:
             raise ValueError(f"No archived versions for workflow {workflow_id}")
         versions = self._version_registry[workflow_id]
@@ -309,7 +320,7 @@ class N8NWorkflowEngine:
     def list_versions(self, workflow_id: str) -> List[WorkflowVersion]:
         return self._version_registry.get(workflow_id, [])
     
-    def export_workflow(self, workflow_id: str, filepath: Path = None) -> Path:
+    def export_workflow(self, workflow_id: str, filepath: Optional[Path] = None) -> Path:
         workflow = self.get_workflow(workflow_id)
         if not filepath:
             safe_name = "".join(c if c.isalnum() or c in "._-" else "_" for c in workflow["name"])
@@ -319,7 +330,7 @@ class N8NWorkflowEngine:
         logger.info(f"Exported workflow to {filepath}")
         return filepath
     
-    def export_all_workflows(self, output_dir: Path = None) -> List[Path]:
+    def export_all_workflows(self, output_dir: Optional[Path] = None) -> List[Path]:
         output_dir = output_dir or BACKUP_DIR
         output_dir.mkdir(parents=True, exist_ok=True)
         exported = []
@@ -397,7 +408,7 @@ class N8NWorkflowEngine:
         logger.info(f"Sync complete: {len(result.imported)} imported, {len(result.skipped)} skipped, {len(result.activated)} activated, {len(result.errors)} errors")
         return result
     
-    def get_executions(self, workflow_id: str = None, limit: int = 50, status: str = None) -> List[dict]:
+    def get_executions(self, workflow_id: Optional[str] = None, limit: int = 50, status: Optional[str] = None) -> List[dict]:
         params = {"limit": limit}
         if workflow_id:
             params["workflowId"] = workflow_id
@@ -433,8 +444,8 @@ class N8NWorkflowEngine:
                     exec_time = datetime.fromisoformat(started.replace("Z", "+00:00"))
                     if exec_time.replace(tzinfo=None) > cutoff:
                         failed.append(e)
-                except:
-                    pass
+                except Exception as parse_err:
+                    logger.debug(f"Non-critical error parsing execution time: {parse_err}")
         return failed
     
     def clone_workflow(self, workflow_id: str, new_name: str) -> dict:

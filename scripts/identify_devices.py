@@ -15,7 +15,7 @@ def scan_ports(ip, ports):
             sock.close()
             if result == 0:
                 open_ports.append(port)
-        except:
+        except Exception:
             pass
     return open_ports
 

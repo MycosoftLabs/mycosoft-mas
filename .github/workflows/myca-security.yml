@@ -1,0 +1,76 @@
+name: myca-security
+
+on:
+  push:
+    paths:
+      - "mycosoft_mas/myca/**"
+      - "mycosoft_mas/voice/**"
+      - "mycosoft_mas/core/routers/voice_*.py"
+      - "mycosoft_mas/myca/skill_permissions/voice/**"
+      - "mycosoft_mas/security/**"
+      - "mycosoft_mas/llm/tool_pipeline.py"
+      - "services/personaplex-local/**"
+      - "scripts/myca_skill_lint.py"
+      - ".github/workflows/myca-security.yml"
+  pull_request:
+    paths:
+      - "mycosoft_mas/myca/**"
+      - "mycosoft_mas/voice/**"
+      - "mycosoft_mas/core/routers/voice_*.py"
+      - "mycosoft_mas/myca/skill_permissions/voice/**"
+      - "mycosoft_mas/security/**"
+      - "mycosoft_mas/llm/tool_pipeline.py"
+      - "services/personaplex-local/**"
+      - "scripts/myca_skill_lint.py"
+      - ".github/workflows/myca-security.yml"
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies (dev)
+        run: poetry install --with dev
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Lint MYCA skill permissions (strict)
+        run: python scripts/myca_skill_lint.py --strict
+
+      - name: Basic secret pattern scan
+        run: |
+          if rg -n "sk-[A-Za-z0-9]{48}|sk-ant-[A-Za-z0-9-]{93}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}" .; then
+            echo "Potential secrets detected in repository."
+            exit 1
+          fi
+
+      - name: Run prompt injection evals
+        run: python -m mycosoft_mas.myca.evals.run_evals --category prompt_injection --report myca-prompt-injection.json
+
+      - name: Run jailbreak evals
+        run: python -m mycosoft_mas.myca.evals.run_evals --category jailbreak --report myca-jailbreak.json
+
+      - name: Run permission boundary evals
+        run: python -m mycosoft_mas.myca.evals.run_evals --category permission_boundary --report myca-permission-boundary.json
+
+      - name: Upload eval reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: myca-security-evals
+          path: |
+            myca-prompt-injection.json
+            myca-jailbreak.json
+            myca-permission-boundary.json

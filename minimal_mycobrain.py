@@ -60,7 +60,7 @@ def list_devices():
             ser = dev.get("serial")
             if ser and ser.is_open:
                 is_connected = True
-        except:
+        except Exception:
             pass
         
         safe_devices.append({
@@ -241,7 +241,7 @@ def disconnect_device(port: str):
     if port in devices:
         try:
             devices[port]["serial"].close()
-        except:
+        except Exception:
             pass
         del devices[port]
         return {"status": "disconnected", "port": port}
@@ -366,7 +366,7 @@ def get_smell_detection(device_id: str):
                     data = json.loads(line)
                     devices[port]["last_seen_at"] = time.time()
                     return {"status": "ok", "data": data}
-                except:
+                except Exception:
                     pass
         
         devices[port]["last_seen_at"] = time.time()
@@ -401,7 +401,7 @@ def get_bsec_status(device_id: str):
                     data = json.loads(line)
                     devices[port]["last_seen_at"] = time.time()
                     return {"status": "ok", "data": data}
-                except:
+                except Exception:
                     pass
         
         devices[port]["last_seen_at"] = time.time()

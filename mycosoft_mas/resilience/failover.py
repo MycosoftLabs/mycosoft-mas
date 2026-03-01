@@ -1,6 +1,6 @@
 """Service Failover Manager. Created: February 3, 2026"""
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class FailoverManager:
         self.services: Dict[str, ServiceStatus] = {}
         self.backup_endpoints: Dict[str, List[str]] = {}
     
-    def register_service(self, service_name: str, backups: List[str] = None) -> None:
+    def register_service(self, service_name: str, backups: Optional[List[str]] = None) -> None:
         self.services[service_name] = ServiceStatus.HEALTHY
         self.backup_endpoints[service_name] = backups or []
     

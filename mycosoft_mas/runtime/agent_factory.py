@@ -35,8 +35,8 @@ class AgentTemplate:
         description: str = "",
         cpu_limit: float = 1.0,
         memory_limit: int = 512,
-        capabilities: List[str] = None,
-        settings: Dict[str, Any] = None,
+        capabilities: Optional[List[str]] = None,
+        settings: Optional[Dict[str, Any]] = None,
     ):
         self.template_id = template_id
         self.agent_type = agent_type

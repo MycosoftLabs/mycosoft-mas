@@ -504,35 +504,40 @@ class InfrastructureOpsService:
                 }
             else:
                 status["services"]["vault"] = {"status": "error"}
-        except:
+        except Exception as e:
+            logger.warning(f"Vault status check failed: {e}")
             status["services"]["vault"] = {"status": "unavailable"}
-        
+
         # Check Proxmox
         try:
             await self.proxmox_inventory()
             status["services"]["proxmox"] = {"status": "ok"}
-        except:
+        except Exception as e:
+            logger.warning(f"Proxmox status check failed: {e}")
             status["services"]["proxmox"] = {"status": "error"}
-        
+
         # Check UniFi
         try:
             await self.unifi_topology()
             status["services"]["unifi"] = {"status": "ok"}
-        except:
+        except Exception as e:
+            logger.warning(f"UniFi status check failed: {e}")
             status["services"]["unifi"] = {"status": "error"}
-        
+
         # Check NAS
         try:
             nas = await self.nas_status()
             status["services"]["nas"] = {"status": nas["status"]}
-        except:
+        except Exception as e:
+            logger.warning(f"NAS status check failed: {e}")
             status["services"]["nas"] = {"status": "error"}
-        
+
         # Check GPU
         try:
             await self.gpu_run_test()
             status["services"]["gpu"] = {"status": "ok"}
-        except:
+        except Exception as e:
+            logger.warning(f"GPU status check failed: {e}")
             status["services"]["gpu"] = {"status": "unavailable"}
         
         return status

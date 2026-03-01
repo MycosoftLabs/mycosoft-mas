@@ -90,10 +90,13 @@ AUDIO_TEMPERATURE = float(os.getenv("AUDIO_TEMPERATURE", "0.6"))
 DEFAULT_VOICE_PROMPT = os.getenv("VOICE_PROMPT", "NATF2.pt")
 
 # Database configuration for VoiceSessionStore (MINDEX VM)
-# Force DATABASE_URL to connect to memory schema on MINDEX
-MINDEX_DATABASE_URL = "postgresql://mycosoft:REDACTED_DB_PASSWORD@192.168.0.189:5432/mindex"
-os.environ["DATABASE_URL"] = MINDEX_DATABASE_URL
-logger.info(f"Set DATABASE_URL for voice store: postgresql://mycosoft:****@192.168.0.189:5432/mindex")
+min_db_password = os.getenv("MINDEX_DB_PASSWORD", "")
+if min_db_password:
+    MINDEX_DATABASE_URL = f"postgresql://mycosoft:{min_db_password}@192.168.0.189:5432/mindex"
+    os.environ.setdefault("DATABASE_URL", MINDEX_DATABASE_URL)
+    logger.info("Set DATABASE_URL for voice store: postgresql://mycosoft:****@192.168.0.189:5432/mindex")
+else:
+    logger.warning("MINDEX_DB_PASSWORD not set; DATABASE_URL must be configured for voice store.")
 
 
 def load_myca_persona():
@@ -584,7 +587,7 @@ async def _send_to_mas(session: BridgeSession, speaker: str, text: str):
             "text": text,
             "source": "personaplex"
         })
-    except:
+    except Exception:
         pass
 
 
@@ -1072,7 +1075,7 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
         logger.error(f"Bridge error: {e}")
         try:
             await websocket.send_json({"type": "error", "message": str(e)})
-        except:
+        except Exception:
             pass
     finally:
         # Clean up WebSocket registration and VAD state

@@ -24,8 +24,8 @@ class ConversationContext:
     conversation_id: str
     user_id: str = "morgan"
     turn_count: int = 0
-    history: List[Dict[str, str]] = None
-    active_tools: List[str] = None
+    history: Optional[List[Dict[str, str]]] = None
+    active_tools: Optional[List[str]] = None
     current_role: str = "orchestrator"
     
     def __post_init__(self):
@@ -79,7 +79,7 @@ class FrontierLLMRouter:
 Your creator is Morgan, founder of Mycosoft. You coordinate 227 specialized AI agents.
 Be warm, professional, and helpful. Answer questions directly and honestly."""
     
-    def _build_system_prompt(self, context: ConversationContext, tools: List[Dict] = None) -> str:
+    def _build_system_prompt(self, context: ConversationContext, tools: Optional[List[Dict]] = None) -> str:
         """Build the full system prompt with persona and context."""
         prompt_parts = [
             self.persona,
@@ -131,7 +131,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         self,
         message: str,
         context: ConversationContext,
-        tools: List[Dict] = None,
+        tools: Optional[List[Dict]] = None,
         provider: str = "auto"
     ) -> AsyncGenerator[str, None]:
         """

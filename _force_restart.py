@@ -34,7 +34,7 @@ stdout.channel.settimeout(15)
 try:
     result = stdout.read().decode()
     print(f"Website health: {result}")
-except:
+except Exception:
     print("Timeout reading result - container might still be starting")
 
 ssh2.close()

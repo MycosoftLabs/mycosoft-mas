@@ -124,7 +124,7 @@ def check_vm():
             cpu = data.get("cpu", 0) * 100
             log(f"VM 103: CPU={cpu:.1f}% MEM={mem_used:.1f}/{mem_max:.0f}GB", "INFO")
             return data.get("status") == "running"
-    except:
+    except Exception:
         pass
     return False
 

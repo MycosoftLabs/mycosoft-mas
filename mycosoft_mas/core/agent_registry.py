@@ -78,6 +78,39 @@ class AgentRegistry:
         
         # ========== CORE AGENTS ==========
         self.register(AgentDefinition(
+            agent_id="manager-agent",
+            name="ManagerAgent",
+            display_name="Manager Agent",
+            description="Routes tasks, classifies intent, and selects the best-fit agent",
+            category=AgentCategory.CORE,
+            capabilities=[
+                AgentCapability.MANAGE,
+                AgentCapability.ANALYZE,
+            ],
+            module_path="mycosoft_mas.agents.manager_agent",
+            class_name="ManagerAgent",
+            keywords=["route", "routing", "manager", "intent", "triage", "delegate"],
+            voice_triggers=["route task", "manager agent", "delegate task"],
+            config_key="manager"
+        ))
+        
+        self.register(AgentDefinition(
+            agent_id="guardian-agent",
+            name="GuardianAgent",
+            display_name="Guardian Agent",
+            description="Enforces safety policies, PII filtering, and tool risk gating",
+            category=AgentCategory.SECURITY,
+            capabilities=[
+                AgentCapability.ANALYZE,
+                AgentCapability.MANAGE,
+            ],
+            module_path="mycosoft_mas.agents.guardian_agent",
+            class_name="GuardianAgent",
+            keywords=["guardian", "safety", "pii", "risk", "moderation", "policy"],
+            voice_triggers=["guardian check", "safety check", "pii scan"],
+            config_key="guardian"
+        ))
+        self.register(AgentDefinition(
             agent_id="mycology_bio",
             name="MycologyBioAgent",
             display_name="Mycology Bio Agent",

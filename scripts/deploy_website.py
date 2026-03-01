@@ -49,11 +49,11 @@ def exec_cmd(cmd, timeout=300, show_output=True):
                     
                     try:
                         out = base64.b64decode(out_b64).decode() if out_b64 else ""
-                    except:
+                    except Exception:
                         out = out_b64
                     try:
                         err = base64.b64decode(err_b64).decode() if err_b64 else ""
-                    except:
+                    except Exception:
                         err = err_b64
                     
                     if show_output and (out or err):

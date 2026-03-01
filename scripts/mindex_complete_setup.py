@@ -98,7 +98,7 @@ for i, taxon_id in enumerate(taxa_ids[:100]):
                         ('inat', str(obs['id']), obs.get('user', {}).get('login'), obs.get('observed_on'), coords[1], coords[0], obs.get('place_guess'), obs.get('quality_grade'), 'inat', taxon_id))
                     obs_inserted += 1
         conn.commit()
-    except:
+    except Exception:
         pass
     time.sleep(0.3)
 
@@ -386,7 +386,7 @@ echo "Backup completed: mindex_backup_$DATE.sql.gz"
     │  NAS Backups:          ENABLED (daily 2 AM)                 │
     └─────────────────────────────────────────────────────────────┘
 """)
-    except:
+    except Exception:
         print(f"      Stats: {out}")
     
     print("""

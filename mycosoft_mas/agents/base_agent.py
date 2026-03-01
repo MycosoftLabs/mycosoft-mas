@@ -281,7 +281,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
             priority=priority,
         )
 
-    async def initialize(self, integration_service: Any = None, **_: Any) -> bool:
+    async def initialize(self, integration_service: Optional[Any] = None, **_: Any) -> bool:
         """
         Initialize the agent and its components including memory.
 

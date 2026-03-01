@@ -283,7 +283,7 @@ class DashboardAgent:
         theme: DashboardTheme = DashboardTheme.MYCOLOGY,
         is_default: bool = False,
         owner: Optional[str] = None,
-        permissions: Dict[str, List[str]] = None
+        permissions: Optional[Dict[str, List[str]]] = None
     ) -> str:
         """
         Create a new dashboard.
@@ -465,10 +465,10 @@ class DashboardAgent:
         component_type: DashboardComponentType,
         title: str,
         description: Optional[str] = None,
-        position: Dict[str, int] = None,
+        position: Optional[Dict[str, int]] = None,
         data_source: Optional[str] = None,
         refresh_interval: Optional[int] = None,
-        config: Dict[str, Any] = None
+        config: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Add a component to a dashboard.

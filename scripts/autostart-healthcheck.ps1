@@ -355,6 +355,28 @@ if ($allHealthy -and $missingSvcs.Count -eq 0) {
     Write-Host "All autostart services are healthy." -ForegroundColor Green
 }
 
+# ── Memory Cache Health (local runtime, never sync/commit) ────────────────────
+
+$memoryCacheDir = Join-Path $DataDir "memory"
+Write-Host ""
+Write-Host "─── Memory Cache ───" -ForegroundColor Cyan
+if (Test-Path $memoryCacheDir) {
+    try {
+        $files = Get-ChildItem -Path $memoryCacheDir -Recurse -File -ErrorAction SilentlyContinue
+        $fileCount = ($files | Measure-Object).Count
+        $totalBytes = ($files | Measure-Object -Property Length -Sum).Sum
+        $totalMB = if ($totalBytes) { [math]::Round($totalBytes / 1MB, 2) } else { 0 }
+        Write-Host "[OK]     data/memory contains $fileCount file(s), ${totalMB}MB total"
+        if ($totalMB -gt 200) {
+            Write-Host "[WARN]   data/memory size is above 200MB. Consider pruning old cache files." -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "[WARN]   Could not read data/memory: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "[OK]     data/memory not present"
+}
+
 # ── Docker Health Check (periodic) ────────────────────────────────────────────
 
 Write-Host ""

@@ -604,8 +604,8 @@ class MYCAMemoryBrain:
             try:
                 mem_stats = await self._memory_coordinator.get_stats()
                 stats["memory"] = mem_stats
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Non-critical error fetching memory stats: {e}")
         
         return stats
 

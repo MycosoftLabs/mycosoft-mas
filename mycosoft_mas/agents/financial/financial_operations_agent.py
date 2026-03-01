@@ -19,6 +19,9 @@ from aiohttp import ClientSession, ClientTimeout
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.messaging.message_types import Message, MessageType, MessagePriority
 from mycosoft_mas.agents.enums import AgentStatus, TaskType, TaskStatus, TaskPriority
+from mycosoft_mas.integrations.mercury_client import MercuryClient
+from mycosoft_mas.integrations.safe_agreement_client import SafeAgreementClient
+from mycosoft_mas.integrations.cap_table_service import CapTableService
 
 class FinancialOperationsAgent(BaseAgent):
     """
@@ -50,6 +53,11 @@ class FinancialOperationsAgent(BaseAgent):
         # Create data directory
         self.data_dir = Path("data/financial")
         self.data_dir.mkdir(parents=True, exist_ok=True)
+
+        # Financial integration services
+        self.mercury_api_client = MercuryClient()
+        self.safe_agreement_client = SafeAgreementClient(self.data_dir)
+        self.cap_table_service = CapTableService()
         
         # Metrics
         self.metrics.update({
@@ -61,6 +69,11 @@ class FinancialOperationsAgent(BaseAgent):
     
     async def _initialize_services(self) -> None:
         """Initialize financial services."""
+        try:
+            await self.cap_table_service.initialize()
+        except Exception as exc:
+            self.logger.warning("Cap table persistence unavailable: %s", exc)
+
         # Initialize Mercury client
         self.mercury_client = await self._initialize_mercury()
         
@@ -473,6 +486,12 @@ class FinancialOperationsAgent(BaseAgent):
         Returns:
             Balance data with available and current balances
         """
+        if self.mercury_api_client and self.mercury_api_client.is_configured():
+            try:
+                return await self.mercury_api_client.get_account_balance(account_id)
+            except Exception as exc:
+                self.logger.warning("Mercury API client balance lookup failed, falling back: %s", exc)
+
         if not self.mercury_client:
             self.logger.error("Mercury client not initialized")
             return None
@@ -523,6 +542,17 @@ class FinancialOperationsAgent(BaseAgent):
         Returns:
             List of transactions if successful, None otherwise
         """
+        if self.mercury_api_client and self.mercury_api_client.is_configured():
+            try:
+                return await self.mercury_api_client.get_transactions(
+                    account_id,
+                    start_date=start_date,
+                    end_date=end_date,
+                    limit=limit,
+                )
+            except Exception as exc:
+                self.logger.warning("Mercury API client transaction lookup failed, falling back: %s", exc)
+
         if not self.mercury_client:
             self.logger.error("Mercury client not initialized")
             return None
@@ -964,8 +994,10 @@ class FinancialOperationsAgent(BaseAgent):
     
     async def _generate_safe_agreement(self, details: Dict[str, Any]) -> str:
         """Generate a SAFE agreement."""
-        # TODO: Implement SAFE agreement generation
-        pass
+        record = await self.safe_agreement_client.create_safe_agreement(details)
+        agreement_id = record["agreement_id"]
+        self.safe_agreements[agreement_id] = record
+        return agreement_id
     
     async def _update_cap_table(self, details: Dict[str, Any]) -> bool:
         """
@@ -977,9 +1009,31 @@ class FinancialOperationsAgent(BaseAgent):
         Returns:
             True if update was successful, False otherwise
         """
-        if not self.pulley_client:
-            self.logger.error("Pulley client not initialized")
+        agreement_id = details.get("agreement_id")
+        agreement = self.safe_agreements.get(agreement_id) if agreement_id else None
+        if agreement is None:
+            agreement = await self.safe_agreement_client.create_safe_agreement(details)
+            self.safe_agreements[agreement["agreement_id"]] = agreement
+
+        try:
+            entry_id = await self.cap_table_service.record_safe_investment(agreement)
+            self.cap_table[entry_id] = {
+                "entry_id": entry_id,
+                "instrument_type": "SAFE",
+                "investor": agreement.get("investor"),
+                "amount": agreement.get("amount"),
+                "valuation_cap": agreement.get("valuation_cap"),
+                "discount": agreement.get("discount"),
+                "effective_at": agreement.get("issue_date"),
+            }
+        except Exception as exc:
+            self.logger.error("Cap table persistence failed: %s", exc)
             return False
+
+        # If Pulley is configured, mirror the update there as well.
+        if not self.pulley_client:
+            self.logger.info("Pulley client not configured; cap table persisted locally only")
+            return True
         
         try:
             base_url = self.pulley_client["base_url"]
@@ -1009,7 +1063,7 @@ class FinancialOperationsAgent(BaseAgent):
                 else:
                     error_text = await response.text()
                     self.logger.error(f"Pulley SAFE creation failed: status {response.status}, {error_text}")
-                    return False
+                    return True
                     
         except Exception as e:
             self.logger.error(f"Error updating Pulley cap table: {str(e)}")
@@ -1087,6 +1141,9 @@ class FinancialOperationsAgent(BaseAgent):
             
             if hasattr(self, "pulley_session") and self.pulley_session:
                 await self.pulley_session.close()
+
+            if self.mercury_api_client:
+                await self.mercury_api_client.close()
             
             self.logger.info("Financial operations agent cleaned up successfully")
             

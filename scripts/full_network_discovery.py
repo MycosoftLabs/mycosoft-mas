@@ -57,7 +57,7 @@ def ping_host(ip, timeout=1):
             capture_output=True, text=True, timeout=timeout + 1
         )
         return "Reply from" in result.stdout and "Destination host unreachable" not in result.stdout
-    except:
+    except Exception:
         return False
 
 def scan_ports(ip, ports, timeout=0.5):
@@ -70,7 +70,7 @@ def scan_ports(ip, ports, timeout=0.5):
             if sock.connect_ex((ip, port)) == 0:
                 open_ports.append(port)
             sock.close()
-        except:
+        except Exception:
             pass
     return open_ports
 
@@ -84,7 +84,7 @@ def get_mac_from_arp(ip):
                 for part in parts:
                     if '-' in part and len(part) == 17:
                         return part.replace('-', ':').upper()
-    except:
+    except Exception:
         pass
     return None
 
@@ -125,10 +125,10 @@ def check_proxmox_api(ip):
                     )
                     if r2.status_code == 200:
                         return {"accessible": True, "auth": True, "password": password[:3] + "***"}
-                except:
+                except Exception:
                     pass
             return {"accessible": True, "auth": False}
-    except:
+    except Exception:
         pass
     return {"accessible": False, "auth": False}
 
@@ -138,7 +138,7 @@ def check_unifi_api(ip):
         # Try the default UniFi API endpoint
         r = requests.get(f"https://{ip}/api/self", verify=False, timeout=3)
         return r.status_code in [200, 401]
-    except:
+    except Exception:
         return False
 
 # ============================================================
@@ -253,7 +253,7 @@ if proxmox_servers:
                                             for addr in iface.get("ip-addresses", []):
                                                 if addr.get("ip-address-type") == "ipv4" and not addr.get("ip-address", "").startswith("127."):
                                                     print(f"      -> IP: {addr.get('ip-address')}")
-                                except:
+                                except Exception:
                                     pass
             except Exception as e:
                 print(f"  Error getting VMs: {e}")
@@ -271,7 +271,7 @@ else:
                 api_status = check_proxmox_api(ip)
                 print(f"    Auth: {'SUCCESS' if api_status['auth'] else 'FAILED'}")
             sock.close()
-        except:
+        except Exception:
             pass
 
 # ============================================================

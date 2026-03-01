@@ -118,7 +118,7 @@ async def check_personaplex():
         async with websockets.connect(PERSONAPLEX_URL, close_timeout=2) as ws:
             await ws.send(json.dumps({"type": "ping"}))
             return True
-    except:
+    except Exception:
         return False
 
 async def call_mas_orchestrator(text):

@@ -148,7 +148,7 @@ class IntegrityService:
             results[filepath] = self.verify_file(filepath)
         return results
     
-    def scan_directory(self, directory: str, extensions: List[str] = None) -> List[str]:
+    def scan_directory(self, directory: str, extensions: Optional[List[str]] = None) -> List[str]:
         """Scan a directory for files to add to baseline."""
         extensions = extensions or ['.py', '.json', '.yaml', '.yml']
         files = []

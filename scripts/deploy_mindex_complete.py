@@ -187,7 +187,7 @@ async def health():
             async with pool.acquire() as conn:
                 await conn.execute("SELECT 1")
                 db_ok = True
-        except:
+        except Exception:
             pass
     return {"status": "healthy" if db_ok else "degraded", "database": db_ok}
 
@@ -420,7 +420,7 @@ def exec_cmd(cmd, timeout=300, show_output=True):
                                 out = base64.b64decode(out).decode('utf-8', errors='replace')
                             if err:
                                 err = base64.b64decode(err).decode('utf-8', errors='replace')
-                        except:
+                        except Exception:
                             pass
                         
                         if show_output and out:

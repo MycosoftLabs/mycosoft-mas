@@ -30,7 +30,7 @@ for ip in servers:
             if sock.connect_ex((ip, port)) == 0:
                 open_ports.append(port)
             sock.close()
-        except:
+        except Exception:
             pass
     
     print(f"  Open ports: {open_ports}")

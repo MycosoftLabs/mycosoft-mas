@@ -80,7 +80,7 @@ for ext in ["*.ts", "*.tsx", "*.js", "*.json", "*.yml", "*.yaml"]:
                 content = file.read_text(errors='ignore')
                 if "3000" in content or "3001" in content:
                     port_files.append(file)
-        except:
+        except Exception:
             pass
 
 for f in port_files[:10]:

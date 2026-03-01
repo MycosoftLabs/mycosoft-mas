@@ -8,7 +8,7 @@ Coordinates PhysicsNeMo service lifecycle and physics inference requests.
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import httpx
 
@@ -17,7 +17,7 @@ try:
     from .base_agent_v2 import BaseAgentV2
 except ImportError:
     class BaseAgentV2:  # type: ignore[override]
-        def __init__(self, agent_id: str, config: Any = None):
+        def __init__(self, agent_id: str, config: Optional[Any] = None):
             self.agent_id = agent_id
             self.config = config
             self._task_handlers: Dict[str, Any] = {}
@@ -41,7 +41,7 @@ except ImportError:
 
 
 class PhysicsNeMoAgent(BaseAgentV2):
-    def __init__(self, agent_id: str = "physicsnemo-agent", config: Any = None):
+    def __init__(self, agent_id: str = "physicsnemo-agent", config: Optional[Any] = None):
         super().__init__(agent_id, config)
         self.service_url = os.getenv("PHYSICSNEMO_API_URL", "http://localhost:8400").rstrip("/")
         self._task_handlers.update(

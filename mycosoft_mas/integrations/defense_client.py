@@ -306,7 +306,7 @@ class AndurilClient:
             logger.error(f"Tracking initiation failed: {e}")
             return {"error": str(e)}
     
-    async def deploy_asset(self, asset_id: str, mission_type: str, waypoints: List[Dict] = None) -> Dict[str, Any]:
+    async def deploy_asset(self, asset_id: str, mission_type: str, waypoints: Optional[List[Dict]] = None) -> Dict[str, Any]:
         """Deploy an asset on a mission."""
         try:
             client = await self._get_client()

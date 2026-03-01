@@ -5,6 +5,18 @@
 
 ## Platform Upgrade Audit (Feb 27, 2026)
 - `docs/PLATFORM_UPGRADE_AUDIT_FEB27_2026.md` – **Upgrade audit**: Node outdated inventory, ikonate lockfile SSH resolution, Node engine mismatch, VM apt backlog, Docker versions and running containers.
+- `docs/PLATFORM_UPGRADE_COMPLETE_FEB28_2026.md` – **Upgrade execution complete**: Tier 1 deps, Node 20 Docker base, VM updates, sandbox rebuild, Cloudflare purge, smoke tests.
+
+## MYCA Public Alpha Monday Launch (Feb 28, 2026)
+- `docs/MYCA_PUBLIC_ALPHA_MONDAY_LAUNCH_COMPLETE_FEB28_2026.md` – **Plan complete**: Telemetry tool demo loop and end-to-end voice test readiness with local Moshi/Bridge verification.
+
+## System Gaps Execution Complete (Feb 28, 2026)
+- `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` – **Execution complete**: Memory layers (procedural/episodic/semantic/graph), scientific PostgreSQL APIs, financial/corporate/research/infrastructure stub replacement, and SporeBase 501 flow removal.
+- `docs/WORK_ITEMIZATION_AND_PUSH_PLAN_FEB28_2026.md` – **Itemization**: Full cross-repo change list, plan mapping, and push sequence before deploying.
+
+## Tron GitHub Visualization Complete (Feb 27, 2026)
+- `../WEBSITE/website/docs/TRON_GITHUB_VISUALIZATION_COMPLETE_FEB27_2026.md` – **Tron demo complete**: 2D canvas GitHub activity visualization (actions, deployments, repos, events), no interaction, no mock data; integrated into `/demo/viz-test`.
+- `../WEBSITE/website/docs/TECHNOLOGY_TEAM_TRON_CODE_STREAM_UPDATE_FEB27_2026.md` – **Technology team update**: Tron Code Stream embedded in the GitHub Activity Visualization section on `/about/technology-team`.
 
 ## Agent Event Bus (Feb 9, 2026)
 - `docs/WEBSOCKET_AGENT_BUS_FEB09_2026.md` – **WebSocket Agent Bus**: Architecture, endpoints, event schema, BaseAgent mixin, MCP progress, feature flags.

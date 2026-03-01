@@ -42,7 +42,7 @@ try:
         print("  [ACTION] Will restart it")
     else:
         print("  [INFO] Service not running")
-except:
+except Exception:
     print("  [INFO] Could not check service status")
 
 # 4. Create startup script

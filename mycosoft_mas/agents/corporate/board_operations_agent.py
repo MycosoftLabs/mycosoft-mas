@@ -7,6 +7,8 @@ including meeting management, voting, and board communications.
 
 import asyncio
 import logging
+import json
+import uuid
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from pathlib import Path
@@ -65,18 +67,25 @@ class BoardOperationsAgent(BaseAgent):
     
     async def _load_board_members(self) -> None:
         """Load board member information."""
-        # TODO: Implement board member loading
-        pass
+        members_file = self.data_dir / "board_members.json"
+        members = await self._load_json_file(members_file, default=[])
+        self.board_members = members if isinstance(members, list) else []
     
     async def _initialize_communication_channels(self) -> None:
         """Initialize board communication channels."""
-        # TODO: Implement communication channel initialization
-        pass
+        channels = self.communication_config.get("channels", [])
+        self.communication_config["channels"] = channels
+        self.logger.info("Board communication channels configured: %d", len(channels))
     
     async def _load_board_records(self) -> None:
         """Load existing board meetings and resolutions."""
-        # TODO: Implement board records loading
-        pass
+        records_file = self.data_dir / "board_records.json"
+        records = await self._load_json_file(records_file, default={})
+        if not isinstance(records, dict):
+            records = {}
+        self.meetings = records.get("meetings", {})
+        self.resolutions = records.get("resolutions", {})
+        self.votes = records.get("votes", {})
     
     async def schedule_meeting(self, meeting_details: Dict[str, Any]) -> Optional[str]:
         """
@@ -210,38 +219,119 @@ class BoardOperationsAgent(BaseAgent):
         """Validate communication format."""
         required_fields = ["type", "content", "recipients"]
         return all(field in communication for field in required_fields)
+
+    async def _load_json_file(self, path: Path, default: Any) -> Any:
+        if not path.exists():
+            return default
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            self.logger.error("Failed to read %s: %s", path, exc)
+            return default
+
+    async def _write_json_file(self, path: Path, payload: Any) -> None:
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    async def _persist_board_records(self) -> None:
+        records_file = self.data_dir / "board_records.json"
+        payload = {
+            "meetings": self.meetings,
+            "resolutions": self.resolutions,
+            "votes": self.votes,
+        }
+        await self._write_json_file(records_file, payload)
     
     async def _create_meeting(self, details: Dict[str, Any]) -> str:
         """Create a board meeting."""
-        # TODO: Implement meeting creation
-        pass
+        meeting_id = f"mtg-{uuid.uuid4().hex[:10]}"
+        self.meetings[meeting_id] = {
+            "id": meeting_id,
+            "date": details["date"],
+            "time": details["time"],
+            "agenda": details["agenda"],
+            "attendees": details["attendees"],
+            "status": "scheduled",
+            "created_at": datetime.now().isoformat(),
+        }
+        await self._persist_board_records()
+        return meeting_id
     
     async def _send_meeting_invitations(self, meeting_id: str, details: Dict[str, Any]) -> None:
         """Send meeting invitations to board members."""
-        # TODO: Implement meeting invitation sending
-        pass
+        communications_file = self.data_dir / "communications_log.json"
+        current = await self._load_json_file(communications_file, default=[])
+        recipients = details.get("attendees", [])
+        current.append({
+            "type": "meeting_invite",
+            "meeting_id": meeting_id,
+            "recipients": recipients,
+            "sent_at": datetime.now().isoformat(),
+        })
+        await self._write_json_file(communications_file, current)
+        self.logger.info("Prepared meeting invitations for %d attendees", len(recipients))
     
     async def _create_resolution(self, details: Dict[str, Any]) -> str:
         """Create a board resolution."""
-        # TODO: Implement resolution creation
-        pass
+        resolution_id = f"res-{uuid.uuid4().hex[:10]}"
+        self.resolutions[resolution_id] = {
+            "id": resolution_id,
+            "title": details["title"],
+            "content": details["content"],
+            "voting_requirements": details["voting_requirements"],
+            "status": "pending_vote",
+            "created_at": datetime.now().isoformat(),
+        }
+        await self._persist_board_records()
+        return resolution_id
     
     async def _notify_resolution(self, resolution_id: str, details: Dict[str, Any]) -> None:
         """Notify board members about a new resolution."""
-        # TODO: Implement resolution notification
-        pass
+        communications_file = self.data_dir / "communications_log.json"
+        current = await self._load_json_file(communications_file, default=[])
+        recipients = [m.get("id") for m in self.board_members if m.get("id")]
+        current.append({
+            "type": "resolution_notice",
+            "resolution_id": resolution_id,
+            "recipients": recipients,
+            "sent_at": datetime.now().isoformat(),
+        })
+        await self._write_json_file(communications_file, current)
+        self.logger.info("Prepared resolution notice for %d members", len(recipients))
     
     async def _record_vote(self, details: Dict[str, Any]) -> None:
         """Record a board member's vote."""
-        # TODO: Implement vote recording
-        pass
+        resolution_id = details["resolution_id"]
+        member_id = details["member_id"]
+        vote_value = details["vote"]
+        self.votes.setdefault(resolution_id, {})
+        self.votes[resolution_id][member_id] = {
+            "vote": vote_value,
+            "recorded_at": datetime.now().isoformat(),
+        }
+        await self._persist_board_records()
     
     async def _check_resolution_completion(self, resolution_id: str) -> None:
         """Check if a resolution's voting is complete."""
-        # TODO: Implement resolution completion check
-        pass
+        resolution = self.resolutions.get(resolution_id)
+        if not resolution:
+            return
+        required = resolution.get("voting_requirements", {})
+        required_count = required.get("min_votes")
+        votes_for_resolution = self.votes.get(resolution_id, {})
+        if required_count and len(votes_for_resolution) >= required_count:
+            resolution["status"] = "vote_complete"
+            resolution["completed_at"] = datetime.now().isoformat()
+            await self._persist_board_records()
     
     async def _send_communication(self, communication: Dict[str, Any]) -> None:
         """Send a communication to board members."""
-        # TODO: Implement communication sending
-        pass 
+        communications_file = self.data_dir / "communications_log.json"
+        current = await self._load_json_file(communications_file, default=[])
+        current.append({
+            "type": communication.get("type"),
+            "content": communication.get("content"),
+            "recipients": communication.get("recipients"),
+            "sent_at": datetime.now().isoformat(),
+        })
+        await self._write_json_file(communications_file, current)
+        self.logger.info("Prepared board communication to %d recipients", len(communication.get("recipients", [])))

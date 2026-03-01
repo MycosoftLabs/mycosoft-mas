@@ -200,7 +200,7 @@ class FrontendTests:
                     response = self.session.get(f"{WEBSITE_URL}{path}", timeout=5)
                     if response.status_code in [200, 301, 302]:
                         accessible += 1
-                except:
+                except Exception:
                     pass
             
             response_time = int((time.time() - start) * 1000)
@@ -231,7 +231,7 @@ class FrontendTests:
                     response = self.session.get(f"{WEBSITE_URL}{path}", timeout=5)
                     if response.status_code in [200, 404]:
                         accessible += 1
-                except:
+                except Exception:
                     pass
             
             response_time = int((time.time() - start) * 1000)

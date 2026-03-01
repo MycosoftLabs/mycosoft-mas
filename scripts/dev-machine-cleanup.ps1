@@ -18,13 +18,12 @@ $stalePatterns = @(
     'local_gpu_services',
     'start_personaplex',
     'personaplex_bridge_nvidia',
-    'earth2_api_server',
-    'mycobrain_service'
+    'earth2_api_server'
 )
 
-function Get-ProcessCommandLine($pid) {
+function Get-ProcessCommandLine($processId) {
     try {
-        $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId = $pid").CommandLine
+        $cmd = (Get-CimInstance Win32_Process -Filter "ProcessId = $processId").CommandLine
         return $cmd
     } catch {
         return $null

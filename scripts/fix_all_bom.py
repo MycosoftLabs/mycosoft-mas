@@ -23,7 +23,7 @@ def fix_bom(filepath):
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write(text)
                 return True
-            except:
+            except Exception:
                 print(f"  Warning: Could not decode UTF-16 LE for {filepath}")
                 return False
         return False

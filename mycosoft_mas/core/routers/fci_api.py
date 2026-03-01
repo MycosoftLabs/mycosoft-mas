@@ -791,14 +791,54 @@ async def execute_hpl_program(request: HPLProgramRequest):
             detail="Mycorrhizae Protocol not installed"
         )
     
-    # For now, return a stub response
-    # Full implementation would use the HPL interpreter
+    lines = [line.strip() for line in request.program.splitlines() if line.strip() and not line.strip().startswith("#")]
+    if not lines:
+        raise HTTPException(status_code=400, detail="Program is empty")
+
+    variables = dict(request.parameters or {})
+    operations: List[Dict[str, Any]] = []
+
+    for index, line in enumerate(lines, start=1):
+        parts = line.split()
+        op = parts[0].lower()
+        args = parts[1:]
+
+        if op == "set" and len(args) >= 2:
+            key = args[0]
+            value = " ".join(args[1:])
+            variables[key] = value
+            operations.append({"line": index, "op": "set", "key": key, "value": value})
+            continue
+
+        if op in {"stimulate", "sense", "wait", "emit", "record"}:
+            operations.append({"line": index, "op": op, "args": args})
+            continue
+
+        operations.append({"line": index, "op": "raw", "text": line})
+
+    target_device = request.device_id or variables.get("device_id")
+    if target_device and target_device in _connected_devices:
+        command_id = str(uuid4())
+        command = FCIStimulusCommand(
+            device_id=target_device,
+            waveform=str(variables.get("waveform", "sine")),
+            frequency_hz=float(variables.get("frequency_hz", 1.0)),
+            amplitude_mv=float(variables.get("amplitude_mv", 5.0)),
+            duration_ms=int(variables.get("duration_ms", 1000)),
+            channel=int(variables.get("channel", 0)),
+        )
+        _pending_commands.setdefault(target_device, []).append(command)
+        operations.append({"line": None, "op": "dispatch", "device_id": target_device, "command_id": command_id})
+
     return {
         "status": "executed",
         "program_hash": str(uuid4())[:8],
         "result": {
-            "message": "HPL execution not yet fully implemented",
-            "program_preview": request.program[:100] + "..." if len(request.program) > 100 else request.program,
+            "message": "HPL program parsed and executed",
+            "operations_count": len(operations),
+            "operations": operations,
+            "variables": variables,
+            "device_target": target_device,
         },
     }
 

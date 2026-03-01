@@ -55,7 +55,7 @@ def upload_files(client, local_dir, remote_dir, extensions=None):
     # Ensure remote directory exists
     try:
         sftp.stat(remote_dir)
-    except:
+    except Exception:
         run_command(client, f"mkdir -p {remote_dir}")
     
     local_path = Path(local_dir)

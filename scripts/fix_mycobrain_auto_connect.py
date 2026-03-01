@@ -75,7 +75,7 @@ try:
         try:
             error_data = response.json()
             print(f"      Error: {error_data.get('detail', error_data.get('error', 'Unknown'))}")
-        except:
+        except Exception:
             print(f"      Response: {response.text[:100]}")
 except Exception as e:
     print(f"  [ERROR] Could not connect: {e}")

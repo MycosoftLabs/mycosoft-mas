@@ -5,7 +5,7 @@ Agents for managing data operations, ETL, and search.
 """
 
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import httpx
 
 from mycosoft_mas.nlm.inference.service import get_nlm_service, PredictionRequest, QueryType
@@ -202,7 +202,7 @@ class RouteMonitorAgent(BaseAgentV2):
     Generic agent for monitoring specific API routes.
     """
     
-    def __init__(self, agent_id: str, route: str = None, **kwargs):
+    def __init__(self, agent_id: str, route: Optional[str] = None, **kwargs):
         self.monitored_route = route or "/api"
         super().__init__(agent_id, **kwargs)
     

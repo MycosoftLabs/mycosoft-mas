@@ -267,7 +267,7 @@ class VisualizationAgent:
         description: Optional[str] = None,
         data_source: Optional[str] = None,
         color_scheme: ColorScheme = ColorScheme.MYCOLOGY,
-        config: Dict[str, Any] = None
+        config: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Create a new visualization.
@@ -393,7 +393,7 @@ class VisualizationAgent:
         self,
         visualization_id: str,
         transformation_type: DataTransformationType,
-        config: Dict[str, Any] = None
+        config: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         Add a transformation to a visualization.

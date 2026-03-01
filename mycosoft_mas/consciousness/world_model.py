@@ -591,7 +591,7 @@ class WorldModel:
         
         return context
     
-    async def query(self, query_type: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def query(self, query_type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Query specific world data.
         

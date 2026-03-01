@@ -6,7 +6,7 @@ import sys
 
 try:
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-except:
+except Exception:
     pass
 
 VM_IP = "192.168.0.187"

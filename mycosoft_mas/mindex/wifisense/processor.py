@@ -31,7 +31,7 @@ class RSSIBuffer:
         self.readings: deque = deque(maxlen=max_size)
         self.window_seconds = window_seconds
     
-    def add(self, rssi: float, timestamp: datetime = None):
+    def add(self, rssi: float, timestamp: Optional[datetime] = None):
         if timestamp is None:
             timestamp = datetime.utcnow()
         self.readings.append((timestamp, rssi))

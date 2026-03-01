@@ -241,7 +241,7 @@ def _query_device_info(ser, side: str) -> Dict[str, Any]:
                         if "version" in data:
                             info["firmware_version"] = data["version"]
                         break
-                    except:
+                    except Exception:
                         pass
         
         ser.timeout = 2  # Restore normal timeout
@@ -329,7 +329,7 @@ async def disconnect_device(device_id: str):
     if "serial_handle" in device:
         try:
             device["serial_handle"].close()
-        except: pass
+        except Exception: pass
     
     # Clear telemetry cache
     if device_id in telemetry_cache:
@@ -469,7 +469,7 @@ async def get_telemetry(device_id: str):
             try:
                 telemetry_data = json.loads(response)
                 return {"status": "ok", "device_id": device_id, "telemetry": telemetry_data, "timestamp": datetime.now().isoformat()}
-            except:
+            except Exception:
                 return {"status": "ok", "device_id": device_id, "telemetry": {"raw": response}, "timestamp": datetime.now().isoformat()}
         return {"status": "no_data", "device_id": device_id, "message": "No telemetry received"}
     except Exception as e:

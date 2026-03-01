@@ -28,6 +28,15 @@ from uuid import UUID, uuid4
 
 logger = logging.getLogger("MYCAMemory")
 
+try:
+    from qdrant_client import QdrantClient
+    from qdrant_client.http import models as qmodels
+except Exception:  # pragma: no cover - optional dependency
+    QdrantClient = None
+    qmodels = None
+
+from .embeddings import BaseEmbedder, get_embedder
+
 
 class MemoryLayer(str, Enum):
     """The six layers of MYCA memory."""
@@ -37,6 +46,7 @@ class MemoryLayer(str, Enum):
     SEMANTIC = "semantic"      # Permanent - knowledge facts
     EPISODIC = "episodic"      # Permanent - event memories
     SYSTEM = "system"          # Permanent - config and behaviors
+    PROCEDURAL = "procedural"  # Permanent - learned procedures/skills
 
 
 class MemoryStatus(str, Enum):
@@ -281,6 +291,11 @@ class PostgresBackend(MemoryBackend):
                     sql += f" AND created_at >= ${param_idx}"
                     params.append(query.since)
                     param_idx += 1
+
+                if query.tags:
+                    sql += f" AND tags && ${param_idx}"
+                    params.append(query.tags)
+                    param_idx += 1
                 
                 sql += f" ORDER BY importance DESC, accessed_at DESC LIMIT ${param_idx}"
                 params.append(query.limit)
@@ -340,6 +355,103 @@ class PostgresBackend(MemoryBackend):
             return False
 
 
+class QdrantSemanticIndex:
+    """Qdrant-backed semantic index for long-term memory search."""
+
+    def __init__(
+        self,
+        *,
+        collection_name: Optional[str] = None,
+        embedder: Optional[BaseEmbedder] = None,
+    ):
+        self._collection = collection_name or os.getenv("QDRANT_COLLECTION", "myca_semantic_memory")
+        self._embedder = embedder or get_embedder(os.getenv("EMBEDDER_PROVIDER", "openai"))
+        self._client = self._build_client()
+
+    def _build_client(self) -> Optional[QdrantClient]:
+        if QdrantClient is None:
+            return None
+        url = os.getenv("QDRANT_URL")
+        host = os.getenv("QDRANT_HOST", "192.168.0.189")
+        port = int(os.getenv("QDRANT_PORT", "6333"))
+        api_key = os.getenv("QDRANT_API_KEY")
+        try:
+            if url:
+                return QdrantClient(url=url, api_key=api_key, timeout=30.0)
+            return QdrantClient(host=host, port=port, api_key=api_key, timeout=30.0)
+        except Exception as e:
+            logger.warning(f"Qdrant client init failed: {e}")
+            return None
+
+    async def initialize(self) -> None:
+        if not self._client or qmodels is None:
+            return
+        dimension = self._embedder.dimension
+        try:
+            await asyncio.to_thread(self._client.get_collection, self._collection)
+        except Exception:
+            await asyncio.to_thread(
+                self._client.create_collection,
+                collection_name=self._collection,
+                vectors_config=qmodels.VectorParams(size=dimension, distance=qmodels.Distance.COSINE),
+            )
+
+    async def upsert(self, entry: MemoryEntry) -> None:
+        if not self._client or qmodels is None:
+            return
+        text = (
+            entry.content.get("text")
+            or entry.content.get("content")
+            or json.dumps(entry.content, sort_keys=True)
+        )
+        vector = await self._embedder.embed_text(text)
+        payload = {
+            "layer": entry.layer.value,
+            "content": entry.content,
+            "metadata": entry.metadata,
+            "tags": entry.tags,
+            "importance": entry.importance,
+            "created_at": entry.created_at.isoformat(),
+        }
+        await asyncio.to_thread(
+            self._client.upsert,
+            collection_name=self._collection,
+            points=[
+                qmodels.PointStruct(
+                    id=str(entry.id),
+                    vector=vector,
+                    payload=payload,
+                )
+            ],
+        )
+
+    async def search(
+        self,
+        text: str,
+        *,
+        limit: int = 10,
+        tags: Optional[List[str]] = None,
+        min_score: float = 0.2,
+    ) -> List[str]:
+        if not self._client or qmodels is None:
+            return []
+        vector = await self._embedder.embed_text(text)
+        query_filter = None
+        if tags:
+            query_filter = qmodels.Filter(
+                must=[qmodels.FieldCondition(key="tags", match=qmodels.MatchAny(any=tags))]
+            )
+        results = await asyncio.to_thread(
+            self._client.search,
+            collection_name=self._collection,
+            query_vector=vector,
+            query_filter=query_filter,
+            limit=limit,
+            score_threshold=min_score,
+        )
+        return [str(hit.id) for hit in results]
+
+
 class MYCAMemory:
     """
     MYCA 6-Layer Memory System.
@@ -356,6 +468,7 @@ class MYCAMemory:
         MemoryLayer.SEMANTIC: None,  # Permanent
         MemoryLayer.EPISODIC: None,  # Permanent
         MemoryLayer.SYSTEM: None,    # Permanent
+        MemoryLayer.PROCEDURAL: None,  # Permanent
     }
     
     def __init__(self):
@@ -366,6 +479,7 @@ class MYCAMemory:
         
         # Persistent backends for long-term memory
         self._persistent = PostgresBackend()
+        self._semantic_index = QdrantSemanticIndex()
         
         self._initialized = False
         self._decay_task: Optional[asyncio.Task] = None
@@ -376,6 +490,7 @@ class MYCAMemory:
             return
         
         await self._persistent.initialize()
+        await self._semantic_index.initialize()
         
         # Start decay background task
         self._decay_task = asyncio.create_task(self._decay_loop())
@@ -414,6 +529,8 @@ class MYCAMemory:
         
         backend = self._get_backend(layer)
         await backend.store(entry)
+        if layer == MemoryLayer.SEMANTIC:
+            await self._semantic_index.upsert(entry)
         
         logger.debug(f"Stored memory {entry.id} in {layer.value} layer")
         return entry.id
@@ -433,6 +550,22 @@ class MYCAMemory:
             return []
         
         if query:
+            if query.layer == MemoryLayer.SEMANTIC and query.text:
+                ids = await self._semantic_index.search(
+                    query.text,
+                    limit=query.limit,
+                    tags=query.tags,
+                )
+                if ids:
+                    results = []
+                    for entry_id in ids:
+                        try:
+                            entry = await self._persistent.retrieve(UUID(entry_id))
+                            if entry:
+                                results.append(entry)
+                        except Exception:
+                            continue
+                    return results
             backend = self._get_backend(query.layer) if query.layer else None
             
             if backend:

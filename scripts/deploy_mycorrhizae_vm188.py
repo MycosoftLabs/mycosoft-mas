@@ -400,7 +400,7 @@ def step5_bootstrap_api_keys(bootstrap_token: str) -> Tuple[str, str]:
             data = json.loads(out)
             admin_key = data.get('key', '')
             print(f"  [OK] Admin key created: {admin_key[:20]}...")
-        except:
+        except Exception:
             print("  Could not parse response as JSON")
     elif 'keys already exist' in out.lower():
         print("  Keys already exist, skipping bootstrap")
@@ -431,7 +431,7 @@ def step5_bootstrap_api_keys(bootstrap_token: str) -> Tuple[str, str]:
                 data = json.loads(out)
                 mas_key = data.get('key', '')
                 print(f"  [OK] MAS service key created: {mas_key[:20]}...")
-            except:
+            except Exception:
                 pass
     
     return admin_key, mas_key
