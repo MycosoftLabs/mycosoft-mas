@@ -653,6 +653,16 @@ except NameError:
     pass
 
 
+# Cryptocurrency API - multi-chain crypto, DeFi, wallets, DAO, x402
+try:
+    from mycosoft_mas.core.routers.crypto_api import router as crypto_router
+    CRYPTO_API_AVAILABLE = True
+except ImportError:
+    CRYPTO_API_AVAILABLE = False
+
+if CRYPTO_API_AVAILABLE:
+    app.include_router(crypto_router, tags=["crypto"])
+
 # ---------------------------------------------------------------------------
 # Health & version
 # ---------------------------------------------------------------------------

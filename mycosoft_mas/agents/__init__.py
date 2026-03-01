@@ -64,6 +64,33 @@ _safe_import(".corporate.legal_compliance_agent", "LegalComplianceAgent")
 # Financial Agents
 _safe_import(".financial.financial_agent", "FinancialAgent")
 
+# Cryptocurrency Agents
+_safe_import(".crypto.crypto_base", "CryptoBaseAgent")
+_safe_import(".crypto.crypto_coordinator", "CryptoCoordinatorAgent")
+_safe_import(".crypto.wallet_manager", "WalletManager")
+_safe_import(".crypto.x402_protocol", "X402ProtocolAgent")
+_safe_import(".crypto.token_agents", "BitcoinAgent")
+_safe_import(".crypto.token_agents", "EthereumAgent")
+_safe_import(".crypto.token_agents", "SolanaAgent")
+_safe_import(".crypto.token_agents", "AvalancheAgent")
+_safe_import(".crypto.token_agents", "AaveAgent")
+_safe_import(".crypto.token_agents", "TetherAgent")
+_safe_import(".crypto.token_agents", "USDCoinAgent")
+_safe_import(".crypto.token_agents", "RippleAgent")
+_safe_import(".crypto.token_agents", "BNBAgent")
+_safe_import(".crypto.token_agents", "TetherGoldAgent")
+_safe_import(".crypto.token_agents", "UniswapAgent")
+_safe_import(".crypto.defi_agents", "LiquidityPoolAgent")
+_safe_import(".crypto.defi_agents", "RaydiumAgent")
+_safe_import(".crypto.defi_agents", "DEXAggregatorAgent")
+_safe_import(".crypto.wallet_agents", "PhantomWalletAgent")
+_safe_import(".crypto.wallet_agents", "MetaMaskWalletAgent")
+_safe_import(".crypto.wallet_agents", "CoinbaseWalletAgent")
+_safe_import(".crypto.wallet_agents", "EdgeWalletAgent")
+_safe_import(".crypto.wallet_agents", "AgenticWalletAgent")
+_safe_import(".crypto.dao_agents", "RealmsDAOAgent")
+_safe_import(".crypto.dao_agents", "GovernanceToolsAgent")
+
 # Security Agents
 _safe_import(".crep_security_agent", "CREPSecurityAgent")
 
