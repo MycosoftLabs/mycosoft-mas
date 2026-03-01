@@ -8,13 +8,15 @@ import paramiko
 import requests
 import json
 import sys
+import os
+from pathlib import Path
 from datetime import datetime
 
 # Configuration
 SANDBOX_VM_IP = "192.168.0.187"
 MAS_VM_IP = "192.168.0.187"  # Same VM hosts both for now
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = ""
 SANDBOX_URL = "https://sandbox.mycosoft.com"
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -23,6 +25,15 @@ def log(msg, level="INFO"):
     ts = datetime.now().strftime("%H:%M:%S")
     icons = {"INFO": "•", "OK": "✓", "WARN": "⚠", "ERROR": "✗", "HEAD": "▶"}
     print(f"[{ts}] {icons.get(level, '•')} {msg}")
+
+def load_credentials():
+    creds_file = Path(__file__).resolve().parent.parent / ".credentials.local"
+    if creds_file.exists():
+        for line in creds_file.read_text().splitlines():
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                os.environ[key.strip()] = value.strip()
+    return os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD") or ""
 
 def run_ssh_cmd(ssh, cmd, timeout=30):
     try:
@@ -72,6 +83,12 @@ def main():
     print("  SECTION 1: Sandbox VM Status (192.168.0.187)")
     print("-"*70)
     
+    global VM_PASSWORD
+    VM_PASSWORD = load_credentials()
+    if not VM_PASSWORD:
+        log("Missing VM_PASSWORD or VM_SSH_PASSWORD env var", "ERROR")
+        return 1
+
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
