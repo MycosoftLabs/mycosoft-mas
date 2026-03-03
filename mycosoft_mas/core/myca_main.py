@@ -773,6 +773,13 @@ try:
 except ImportError:
     pass
 
+# MYCA Daily Rhythm API (autonomous daily schedule)
+try:
+    from mycosoft_mas.core.routers.daily_rhythm_api import router as rhythm_router
+    app.include_router(rhythm_router, tags=["rhythm"])
+except ImportError:
+    pass
+
 
 # ---------------------------------------------------------------------------
 # Health & version

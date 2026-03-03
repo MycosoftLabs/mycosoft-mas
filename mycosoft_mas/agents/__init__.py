@@ -88,6 +88,8 @@ _safe_import(".v2.taxonomy_ingestion_agent", "TaxonomyIngestionAgent")
 
 # MYCA Workspace (VM 191)
 _safe_import(".workspace_agent", "WorkspaceAgent")
+_safe_import(".daily_rhythm_agent", "DailyRhythmAgent")
+_safe_import(".workspace_security_agent", "WorkspaceSecurityAgent")
 
 # Dynamically create runtime-safe agent modules/classes for compatibility.
 import sys

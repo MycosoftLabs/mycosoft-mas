@@ -1,0 +1,151 @@
+{
+  "name": "MYCA Daily Rhythm",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {"field": "cronExpression", "expression": "0 8 * * 1-5"}
+          ]
+        }
+      },
+      "id": "cron-morning",
+      "name": "Morning Brief (8 AM PT)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {"field": "cronExpression", "expression": "0 9-16 * * 1-5"}
+          ]
+        }
+      },
+      "id": "cron-hourly",
+      "name": "Hourly Status (9AM-4PM PT)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 400]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {"field": "cronExpression", "expression": "0 12 * * 1-5"}
+          ]
+        }
+      },
+      "id": "cron-midday",
+      "name": "Midday Sync (12 PM PT)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 600]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {"field": "cronExpression", "expression": "0 17 * * 1-5"}
+          ]
+        }
+      },
+      "id": "cron-eod",
+      "name": "End of Day (5 PM PT)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 800]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {"field": "cronExpression", "expression": "0 22 * * *"}
+          ]
+        }
+      },
+      "id": "cron-night",
+      "name": "Night Mode (10 PM PT)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 1000]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.191:8100/api/rhythm/morning-brief",
+        "options": {"timeout": 30000}
+      },
+      "id": "http-morning",
+      "name": "Call Morning Brief",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.191:8100/api/rhythm/hourly-status",
+        "options": {"timeout": 15000}
+      },
+      "id": "http-hourly",
+      "name": "Call Hourly Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.191:8100/api/rhythm/midday-sync",
+        "options": {"timeout": 30000}
+      },
+      "id": "http-midday",
+      "name": "Call Midday Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.191:8100/api/rhythm/end-of-day",
+        "options": {"timeout": 30000}
+      },
+      "id": "http-eod",
+      "name": "Call End of Day",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.191:8100/api/rhythm/night-mode",
+        "options": {"timeout": 10000}
+      },
+      "id": "http-night",
+      "name": "Call Night Mode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 1000]
+    }
+  ],
+  "connections": {
+    "Morning Brief (8 AM PT)": {"main": [[{"node": "Call Morning Brief", "type": "main", "index": 0}]]},
+    "Hourly Status (9AM-4PM PT)": {"main": [[{"node": "Call Hourly Status", "type": "main", "index": 0}]]},
+    "Midday Sync (12 PM PT)": {"main": [[{"node": "Call Midday Sync", "type": "main", "index": 0}]]},
+    "End of Day (5 PM PT)": {"main": [[{"node": "Call End of Day", "type": "main", "index": 0}]]},
+    "Night Mode (10 PM PT)": {"main": [[{"node": "Call Night Mode", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles"
+  },
+  "tags": [
+    {"name": "myca"},
+    {"name": "daily-rhythm"},
+    {"name": "autonomous"}
+  ]
+}

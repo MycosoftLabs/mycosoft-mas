@@ -286,7 +286,7 @@ class WorldModel:
             from mycosoft_mas.consciousness.sensors import (
                 CREPSensor, Earth2Sensor, NatureOSSensor,
                 MINDEXSensor, MycoBrainSensor, NLMSensor,
-                EarthLIVESensor, PresenceSensor
+                EarthLIVESensor, PresenceSensor, WorkspaceSensor
             )
 
             self._crep_sensor = CREPSensor(self)
@@ -297,6 +297,7 @@ class WorldModel:
             self._nlm_sensor = NLMSensor(self)
             self._earthlive_sensor = EarthLIVESensor(self)
             self._presence_sensor = PresenceSensor(self)
+            self._workspace_sensor = WorkspaceSensor(self)
             
             logger.info("World sensors initialized")
         except ImportError as e:
@@ -588,7 +589,24 @@ class WorldModel:
         if any(word in focus_content for word in ["who", "user", "online", "staff", "presence", "session"]):
             if self._current_state.presence_data:
                 context["presence"] = self._current_state.presence_data
-        
+
+        # Workspace state for task/work/team/schedule queries
+        workspace_keywords = [
+            "task", "work", "email", "schedule", "team", "morgan", "rj",
+            "garret", "slack", "discord", "send", "asana", "status",
+            "briefing", "daily", "doing", "busy", "plan", "todo",
+            "message", "notify", "check", "meeting",
+        ]
+        if any(word in focus_content for word in workspace_keywords):
+            workspace_sensor = getattr(self, "_workspace_sensor", None)
+            if workspace_sensor:
+                try:
+                    reading = await workspace_sensor.read()
+                    if reading:
+                        context["workspace"] = reading.data
+                except Exception as e:
+                    logger.debug("Workspace sensor read failed: %s", e)
+
         return context
     
     async def query(self, query_type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
