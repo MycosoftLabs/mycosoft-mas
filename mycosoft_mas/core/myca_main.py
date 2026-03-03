@@ -879,6 +879,14 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
+
+# Unified Latents API - image/video generation via UL diffusion framework
+try:
+    from mycosoft_mas.core.routers.unified_latents_api import router as unified_latents_router
+    app.include_router(unified_latents_router, tags=["unified-latents"])
+except ImportError:
+    pass
+
 # Health & version
 # ---------------------------------------------------------------------------
 
