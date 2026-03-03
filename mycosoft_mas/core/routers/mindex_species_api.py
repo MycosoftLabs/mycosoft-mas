@@ -342,20 +342,33 @@ async def get_sequences_for_species(
     limit: int = Query(20, ge=1, le=100),
 ):
     """Get DNA sequences for a species by ID."""
+    # Validate gene_region against STATIC constraint index
+    if gene_region:
+        try:
+            from mycosoft_mas.llm.constrained.validator import get_static_validator
+            validator = get_static_validator()
+            if not validator.is_valid_gene_region(gene_region):
+                raise HTTPException(
+                    400,
+                    f"Invalid gene_region '{gene_region}'. "
+                    f"Valid regions include: ITS, LSU, SSU, COX1, TEF1, RPB2, etc."
+                )
+        except ImportError:
+            pass
     try:
         db = await get_db()
-        
+
         query = """
-        SELECT 
+        SELECT
             ds.id, ds.accession, ds.scientific_name, ds.gene_region,
             ds.sequence_length, ds.gc_content, ds.organism, ds.strain,
             ds.country, ds.source, ds.source_url
         FROM core.dna_sequences ds
         WHERE ds.taxon_id = $1
         """
-        
+
         params = [species_id]
-        
+
         if gene_region:
             query += " AND ds.gene_region = $2"
             params.append(gene_region)
@@ -585,20 +598,34 @@ async def search_compounds(
     limit: int = Query(20, ge=1, le=100),
 ):
     """Search chemical compounds by name or class."""
+    # Validate compound_class against STATIC constraint index
+    if compound_class:
+        try:
+            from mycosoft_mas.llm.constrained.validator import get_static_validator
+            validator = get_static_validator()
+            if not validator.is_valid_compound_class(compound_class):
+                raise HTTPException(
+                    400,
+                    f"Invalid compound_class '{compound_class}'. "
+                    f"Valid classes include: Alkaloid, Terpenoid, Polyketide, "
+                    f"Polysaccharide, Flavonoid, Beta-glucan, etc."
+                )
+        except ImportError:
+            pass
     try:
         db = await get_db()
-        
+
         query = """
-        SELECT 
+        SELECT
             c.id, c.name, c.iupac_name, c.molecular_formula, c.molecular_weight,
             c.smiles, c.compound_class, c.producing_species, c.bioactivity,
             c.toxicity_class, c.source, c.source_url
         FROM core.compounds c
         WHERE c.name ILIKE $1 OR c.iupac_name ILIKE $1
         """
-        
+
         params = [f"%{q}%"]
-        
+
         if compound_class:
             query += " AND c.compound_class = $2"
             params.append(compound_class)

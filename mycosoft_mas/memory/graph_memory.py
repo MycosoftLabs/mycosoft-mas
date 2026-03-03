@@ -67,14 +67,36 @@ class GraphMemory:
         self._persistence_enabled = True
     
     def add_node(self, node_type: str, properties: Dict[str, Any]) -> UUID:
+        # Validate node_type against STATIC constraint index
+        try:
+            from mycosoft_mas.llm.constrained.validator import get_static_validator
+            validator = get_static_validator()
+            if validator.is_initialized and not validator.is_valid_graph_node_type(node_type):
+                import logging
+                logging.getLogger(__name__).warning(
+                    f"Unknown graph node_type '{node_type}' — not in STATIC index"
+                )
+        except ImportError:
+            pass
         node_id = uuid4()
         self._nodes[node_id] = GraphNode(node_id, node_type, properties)
         self._adjacency[node_id] = set()
         return node_id
-    
+
     def add_edge(self, source: UUID, target: UUID, relationship: str, properties: Optional[Dict[str, Any]] = None) -> bool:
         if source not in self._nodes or target not in self._nodes:
             return False
+        # Validate relationship type against STATIC constraint index
+        try:
+            from mycosoft_mas.llm.constrained.validator import get_static_validator
+            validator = get_static_validator()
+            if validator.is_initialized and not validator.is_valid_graph_edge_type(relationship):
+                import logging
+                logging.getLogger(__name__).warning(
+                    f"Unknown graph edge type '{relationship}' — not in STATIC index"
+                )
+        except ImportError:
+            pass
         edge = GraphEdge(source, target, relationship, properties)
         self._edges.append(edge)
         self._adjacency[source].add(target)

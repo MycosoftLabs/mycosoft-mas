@@ -692,6 +692,20 @@ try:
 except NameError:
     pass
 
+# STATIC Constrained Decoding API - sparse trie-based constraint masking
+try:
+    from mycosoft_mas.core.routers.static_decoding_api import router as static_decoding_router
+    STATIC_DECODING_API_AVAILABLE = True
+except ImportError:
+    static_decoding_router = None
+    STATIC_DECODING_API_AVAILABLE = False
+
+try:
+    if STATIC_DECODING_API_AVAILABLE:
+        app.include_router(static_decoding_router, tags=["static-decoding"])
+except NameError:
+    pass
+
 
 # ---------------------------------------------------------------------------
 # Health & version
@@ -1149,6 +1163,52 @@ async def startup_event():
         logger.info("✓ Gateway Control Plane and Sandbox Manager initialized")
     except Exception as exc:
         logger.warning("Gateway/Sandbox init skipped: %s", exc)
+
+    # Build STATIC constraint indexes for all domains (anti-hallucination)
+    if os.getenv("STATIC_BUILD_ON_STARTUP", "1") == "1":
+        try:
+            from mycosoft_mas.llm.constrained.domain_builders import (
+                build_all_domain_indexes,
+                MINDEXConstraintConfig,
+            )
+            from mycosoft_mas.llm.constrained.validator import get_static_validator
+            from mycosoft_mas.llm.constrained.token_masker import TokenMasker
+
+            mindex_config = None
+            mindex_db = os.getenv("MINDEX_DB_PATH", "")
+            if mindex_db:
+                mindex_config = MINDEXConstraintConfig(db_path=mindex_db)
+
+            report = await build_all_domain_indexes(mindex_config=mindex_config)
+
+            # Register all indexes in the global validator
+            validator = get_static_validator()
+            for name, index in report.indexes.items():
+                validator.register_index(name, index)
+            validator.mark_initialized()
+
+            # Also register in the API's shared engine if available
+            try:
+                from mycosoft_mas.core.routers.static_decoding_api import (
+                    _engine,
+                    _maskers,
+                )
+
+                for name, index in report.indexes.items():
+                    _engine.register_index(name, index)
+                    _maskers[name] = TokenMasker(index)
+            except ImportError:
+                pass
+
+            app.state.static_validator = validator
+            logger.info(
+                f"✓ STATIC constraint indexes built: "
+                f"{len(report.indexes)} indexes across "
+                f"{len(report.domains_built)} domains "
+                f"({report.build_time_ms:.0f}ms)"
+            )
+        except Exception as exc:
+            logger.warning(f"STATIC index build skipped: {exc}")
 
     logger.info("✓ MAS ready - all agents operational 24/7")
 

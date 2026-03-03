@@ -79,6 +79,7 @@ _safe_import(".v2.physicsnemo_agent", "PhysicsNeMoAgent")
 _safe_import(".v2.grounding_agent", "GroundingAgent")
 _safe_import(".v2.intention_agent", "IntentionAgent")
 _safe_import(".v2.reflection_agent", "ReflectionAgent")
+_safe_import(".v2.static_decoding_agent", "STATICDecodingAgent")
 
 # Dynamically create runtime-safe agent modules/classes for compatibility.
 import sys

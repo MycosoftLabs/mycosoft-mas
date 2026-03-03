@@ -241,11 +241,12 @@ class LLMRouter:
         max_tokens: Optional[int] = None,
         tools: Optional[list[dict[str, Any]]] = None,
         tool_choice: Optional[str | dict[str, Any]] = None,
+        constrained_index_name: Optional[str] = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """
         Send a chat completion request with automatic routing.
-        
+
         Args:
             messages: List of chat messages
             task_type: Type of task for model selection
@@ -255,8 +256,11 @@ class LLMRouter:
             max_tokens: Maximum tokens to generate
             tools: Tool definitions for function calling
             tool_choice: Tool selection strategy
+            constrained_index_name: Optional STATIC constraint index name.
+                If provided, the response will be validated/reranked against
+                the named constraint index to prevent hallucinated entities.
             **kwargs: Additional provider-specific parameters
-            
+
         Returns:
             LLMResponse with generated content
         """
@@ -295,7 +299,13 @@ class LLMRouter:
                 tokens=response.usage.total_tokens,
                 cost=response.estimated_cost,
             )
-            
+
+            # Post-hoc constraint validation if index specified
+            if constrained_index_name and response.content:
+                response = self._apply_constraint_validation(
+                    response, constrained_index_name
+                )
+
             return response
             
         except LLMError as e:
@@ -467,6 +477,49 @@ class LLMRouter:
             "budget_remaining": self.config.daily_budget - self._usage.daily_cost,
         }
     
+    def _apply_constraint_validation(
+        self,
+        response: LLMResponse,
+        index_name: str,
+    ) -> LLMResponse:
+        """
+        Validate/annotate LLM response against a STATIC constraint index.
+
+        For API-based providers where we cannot apply logit masking,
+        this performs post-hoc validation: checks if the generated
+        content matches any valid entity in the constraint index.
+
+        The response metadata is annotated with validation results
+        so callers can decide how to handle invalid entities.
+        """
+        try:
+            from mycosoft_mas.llm.constrained.validator import get_static_validator
+
+            validator = get_static_validator()
+            if not validator.has_index(index_name):
+                return response
+
+            result = validator.validate(response.content.strip(), index_name)
+
+            # Store validation info in response metadata
+            if not hasattr(response, "metadata") or response.metadata is None:
+                response.metadata = {}
+            response.metadata["static_constraint"] = {
+                "index_name": index_name,
+                "valid": result.valid,
+                "message": result.message,
+            }
+
+            if not result.valid:
+                self.logger.warning(
+                    f"LLM output failed STATIC constraint validation: "
+                    f"'{response.content[:80]}' not in index '{index_name}'"
+                )
+        except Exception as e:
+            self.logger.debug(f"Constraint validation skipped: {e}")
+
+        return response
+
     def get_provider_status(self) -> dict[str, dict[str, Any]]:
         """Get status of all providers."""
         return {
