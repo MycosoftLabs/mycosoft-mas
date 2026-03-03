@@ -299,6 +299,14 @@ except ImportError as e:
     logging.warning(f"Could not import N8NClient: {e}")
     N8NClient = None
 
+# Sandbox WebSocket router for Gateway tool execution
+try:
+    from mycosoft_mas.core.routers.sandbox_ws import router as sandbox_ws_router
+    SANDBOX_WS_AVAILABLE = True
+except ImportError:
+    sandbox_ws_router = None
+    SANDBOX_WS_AVAILABLE = False
+
 
 def load_config() -> dict[str, Any]:
     """Load config from env and (optionally) config.yaml. Kept minimal for now."""
@@ -576,6 +584,10 @@ try:
         app.include_router(tools_router, tags=["myca-tools"])
 except NameError:
     pass
+
+# Sandbox WebSocket router (Gateway tool execution)
+if SANDBOX_WS_AVAILABLE and sandbox_ws_router:
+    app.include_router(sandbox_ws_router, tags=["sandbox"])
 
 # A2A (Agent2Agent) Protocol Gateway - agent card, message/send
 try:
@@ -1118,6 +1130,25 @@ async def startup_event():
             logger.info("✓ WorkflowAutoMonitor started (health 60s, drift 15m)")
         except Exception as exc:
             logger.warning("WorkflowAutoMonitor failed to start: %s", exc)
+
+    # Initialize Gateway Control Plane and Sandbox Manager
+    try:
+        from mycosoft_mas.gateway.control_plane import GatewayControlPlane
+        from mycosoft_mas.gateway.session_manager import SessionManager
+        from mycosoft_mas.sandbox.container_manager import SandboxManager
+
+        session_mgr = SessionManager()
+        sandbox_mgr = SandboxManager()
+        gateway = GatewayControlPlane(
+            session_manager=session_mgr,
+            sandbox_manager=sandbox_mgr,
+        )
+        app.state.gateway = gateway
+        app.state.sandbox_manager = sandbox_mgr
+        app.state.session_manager = session_mgr
+        logger.info("✓ Gateway Control Plane and Sandbox Manager initialized")
+    except Exception as exc:
+        logger.warning("Gateway/Sandbox init skipped: %s", exc)
 
     logger.info("✓ MAS ready - all agents operational 24/7")
 

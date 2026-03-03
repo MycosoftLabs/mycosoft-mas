@@ -15,6 +15,8 @@
 | **Sandbox** | 192.168.0.187 | Website (Docker), optional services | Website 3000, Redis 6379?, Mycorrhizae 8002?, n8n 5678? (see compose on VM) |
 | **MAS** | 192.168.0.188 | Multi-Agent System, orchestrator | Orchestrator **8001**, n8n 5678, NatureOS 5000?, NLM 8200? |
 | **MINDEX** | 192.168.0.189 | Database + vector store | Postgres 5432, Redis 6379, Qdrant 6333/6334, **MINDEX API 8000** (if deployed) |
+| **GPU node** | 192.168.0.190 | GPU workloads (voice, Earth2, inference) | TBD |
+| **MYCA** | 192.168.0.191 | MYCA AI Secretary, n8n workflows, omnichannel connectors | n8n 5678, FastAPI 8000, Caddy 443, signal-cli 8089, Node Daemon WS 9000 |
 
 **MAS Orchestrator** is a systemd service on the MAS VM; it stays on and is the main entry for agents/voice/scientific APIs.
 

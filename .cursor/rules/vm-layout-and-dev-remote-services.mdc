@@ -16,6 +16,7 @@ alwaysApply: true
 | **MAS** | 192.168.0.188 | Multi-Agent System, orchestrator | **8001** (orchestrator), n8n 5678, Ollama 11434 |
 | **MINDEX** | 192.168.0.189 | Database + vector store | Postgres 5432, Redis 6379, Qdrant 6333, **MINDEX API 8000** |
 | **GPU node** | 192.168.0.190 | GPU workloads (voice, Earth2, inference) | TBD |
+| **MYCA** | 192.168.0.191 | MYCA AI Secretary, n8n, platform connectors | n8n 5678, FastAPI 8000, Caddy 443, signal-cli 8089, Node Daemon WS 9000 |
 
 - **MAS Orchestrator** is a systemd service on MAS VM (188); always on. Health: `http://192.168.0.188:8001/health`.
 - **MINDEX** has its own VM (189); MINDEX API runs at 189:8000 in production.

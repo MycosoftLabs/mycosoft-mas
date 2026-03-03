@@ -407,27 +407,46 @@ class DeliberateReasoning:
         focus: "AttentionFocus",
         token: Optional["CancellationToken"] = None,
     ) -> Dict[str, Any]:
-        """Check if we should use any tools."""
+        """Check if we should use any tools, routing through Gateway when available."""
         results = {}
         content_lower = content.lower()
-        
-        # MINDEX query
+
+        gateway = self._get_gateway()
+
+        # MINDEX semantic search (always available as a builtin tool)
         if any(word in content_lower for word in ["find", "search", "look up", "what is"]):
             try:
                 if token:
                     token.check()
-                # Query MINDEX if available
-                if self._consciousness._memory_coordinator:
+                if gateway:
+                    gw_result = await gateway.intercept_tool_call(
+                        "mindex_query", {"query": content, "limit": 3},
+                    )
+                    if gw_result.success and gw_result.output:
+                        results["mindex_search"] = gw_result.output
+                elif self._consciousness._memory_coordinator:
                     search_results = await self._consciousness._memory_coordinator.semantic_search(
-                        query=content,
-                        limit=3
+                        query=content, limit=3,
                     )
                     if search_results:
                         results["mindex_search"] = search_results
             except Exception as e:
-                logger.warning(f"MINDEX search failed: {e}")
-        
+                logger.warning("Tool use check failed: %s", e)
+
         return results
+
+    def _get_gateway(self):
+        """Lazy-load GatewayControlPlane (avoids circular imports)."""
+        if not hasattr(self, "_gateway"):
+            self._gateway = None
+            try:
+                from mycosoft_mas.gateway.control_plane import GatewayControlPlane
+                from mycosoft_mas.llm.tool_pipeline import ToolRegistry
+                registry = ToolRegistry()
+                self._gateway = GatewayControlPlane(tool_registry=registry)
+            except Exception as exc:
+                logger.debug("GatewayControlPlane not available: %s", exc)
+        return self._gateway
 
     def _build_additive_refinement(
         self,

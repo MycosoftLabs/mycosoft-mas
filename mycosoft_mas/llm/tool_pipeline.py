@@ -106,13 +106,15 @@ class ToolDefinition:
     handler: Optional[Callable] = None
     requires_confirmation: bool = False
     max_timeout_seconds: int = 30
+    requires_sandbox: bool = False
     
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
             "description": self.description,
             "parameters": self.parameters,
-            "requires_confirmation": self.requires_confirmation
+            "requires_confirmation": self.requires_confirmation,
+            "requires_sandbox": self.requires_sandbox,
         }
 
 
@@ -268,10 +270,10 @@ class ToolRegistry:
             }
         ))
         
-        # Code Execute Tool
+        # Code Execute Tool (routes through Gateway sandbox)
         self.register(ToolDefinition(
             name="code_execute",
-            description="Execute code in a sandboxed environment",
+            description="Execute code in a sandboxed Docker container via Gateway",
             parameters={
                 "type": "object",
                 "properties": {
@@ -287,7 +289,52 @@ class ToolRegistry:
                 },
                 "required": ["language", "code"]
             },
-            requires_confirmation=True
+            requires_confirmation=True,
+            requires_sandbox=True,
+        ))
+
+        # Exec Tool (shell commands in sandbox)
+        self.register(ToolDefinition(
+            name="exec",
+            description="Execute shell commands in an isolated sandbox container",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "command": {
+                        "type": "string",
+                        "description": "Shell command to execute"
+                    },
+                    "cwd": {
+                        "type": "string",
+                        "description": "Working directory (default: /workspace)",
+                        "default": "/workspace"
+                    }
+                },
+                "required": ["command"]
+            },
+            requires_confirmation=True,
+            requires_sandbox=True,
+        ))
+
+        # Browser Tool (headless browser in sandbox)
+        self.register(ToolDefinition(
+            name="browser",
+            description="Navigate and interact with web pages in a sandboxed browser",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": ["navigate", "click", "type", "screenshot", "get_content"],
+                        "description": "Browser action"
+                    },
+                    "url": {"type": "string", "description": "URL to navigate to"},
+                    "selector": {"type": "string", "description": "CSS selector"},
+                    "text": {"type": "string", "description": "Text to type"}
+                },
+                "required": ["action"]
+            },
+            requires_sandbox=True,
         ))
         
         # Search Documents Tool
