@@ -9,6 +9,8 @@ from mycosoft_mas.integrations.natureos_client import NATUREOSClient
 from mycosoft_mas.integrations.mycorrhizae_client import MycorrhizaeClient
 from mycosoft_mas.integrations.a2a_client import A2AClient
 from mycosoft_mas.integrations.supabase_client import SupabaseClient
+from mycosoft_mas.integrations.elevenlabs_client import ElevenLabsClient
+from mycosoft_mas.integrations.inaturalist_client import INaturalistClient, INaturalistConfig
 
 __all__ = [
     "NotionClient",
@@ -20,4 +22,7 @@ __all__ = [
     "MycorrhizaeClient",
     "A2AClient",
     "SupabaseClient",
+    "ElevenLabsClient",
+    "INaturalistClient",
+    "INaturalistConfig",
 ]
