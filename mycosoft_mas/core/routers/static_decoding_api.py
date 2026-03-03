@@ -2,9 +2,9 @@
 STATIC Constrained Decoding API
 
 REST API for building and using STATIC constraint indexes for
-constrained LLM decoding / generative retrieval.
+constrained LLM decoding / generative retrieval across ALL MAS domains.
 
-Endpoints:
+Core Endpoints:
     POST /api/static/indexes           - Build new index from sequences
     POST /api/static/indexes/strings   - Build new index from strings
     GET  /api/static/indexes           - List all indexes
@@ -15,6 +15,13 @@ Endpoints:
     POST /api/static/rerank            - Rerank candidates
     POST /api/static/mask              - Get logit mask for a step
     GET  /api/static/health            - Health check
+
+Domain Endpoints:
+    POST /api/static/domains/build-all - Build indexes for all data domains
+    POST /api/static/domains/build     - Build indexes for a single domain
+    GET  /api/static/domains           - List available domains and status
+    GET  /api/static/domains/report    - Get last domain build report
+    POST /api/static/domains/validate  - Validate entity against domain index
 
 Created: March 3, 2026
 """
@@ -34,6 +41,12 @@ from mycosoft_mas.llm.constrained.static_index import (
 )
 from mycosoft_mas.llm.constrained.constraint_engine import ConstraintEngine
 from mycosoft_mas.llm.constrained.token_masker import MaskingStrategy, TokenMasker
+from mycosoft_mas.llm.constrained.domain_builders import (
+    build_all_domain_indexes,
+    DOMAIN_BUILDERS,
+    DomainIndexReport,
+    MINDEXConstraintConfig,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/static", tags=["static-decoding"])
@@ -41,6 +54,7 @@ router = APIRouter(prefix="/api/static", tags=["static-decoding"])
 # Shared engine instance
 _engine = ConstraintEngine()
 _maskers: Dict[str, TokenMasker] = {}
+_domain_report: Optional[DomainIndexReport] = None
 
 
 # --- Request/Response Models ---
@@ -295,4 +309,212 @@ async def get_logit_mask(req: MaskRequest):
         "step": req.step,
         "valid_tokens_per_beam": valid_per_beam,
         "total_valid": [len(v) for v in valid_per_beam],
+    }
+
+
+# --- Domain-Specific Request Models ---
+
+
+class BuildAllDomainsRequest(BaseModel):
+    domains: Optional[List[str]] = Field(
+        None,
+        description="Domains to build. None = all. "
+        "Valid: mindex, taxonomy, crep, nlm, agents, devices, signals, users",
+    )
+    mindex_db_path: Optional[str] = Field(
+        None, description="Path to MINDEX SQLite DB"
+    )
+
+
+class BuildDomainRequest(BaseModel):
+    domain: str = Field(
+        ...,
+        description="Domain to build: mindex, taxonomy, crep, nlm, "
+        "agents, devices, signals, users",
+    )
+    mindex_db_path: Optional[str] = Field(
+        None, description="Path to MINDEX SQLite DB (for mindex/taxonomy)"
+    )
+
+
+class DomainValidateRequest(BaseModel):
+    entity: str = Field(..., description="Entity string to validate")
+    index_name: str = Field(
+        ...,
+        description="Index to validate against (e.g. mindex_species_scientific, "
+        "agent_ids, crep_flights, sensor_types)",
+    )
+
+
+# --- Domain Endpoints ---
+
+
+@router.get("/domains")
+async def list_domains():
+    """
+    List all available STATIC constraint domains and their current status.
+
+    Each domain can contain multiple constraint indexes covering different
+    entity types within that domain.
+    """
+    domain_status = {}
+    all_indexes = _engine.list_indexes()
+
+    for domain in DOMAIN_BUILDERS:
+        # Find indexes belonging to this domain
+        prefix_map = {
+            "mindex": "mindex_",
+            "taxonomy": "taxonomy_",
+            "crep": "crep_",
+            "nlm": "nlm_",
+            "agents": "agent_",
+            "devices": ["device_", "sensor_", "mycobrain_", "stimulation_", "electrode_"],
+            "signals": ["signal_", "sdr_", "fci_"],
+            "users": ["user_", "access_"],
+        }
+
+        prefixes = prefix_map.get(domain, [domain + "_"])
+        if isinstance(prefixes, str):
+            prefixes = [prefixes]
+
+        domain_indexes = {
+            name: info
+            for name, info in all_indexes.items()
+            if any(name.startswith(p) for p in prefixes)
+        }
+
+        domain_status[domain] = {
+            "available": True,
+            "indexes_loaded": len(domain_indexes),
+            "index_names": list(domain_indexes.keys()),
+        }
+
+    return {
+        "status": "success",
+        "domains": domain_status,
+        "total_domains": len(DOMAIN_BUILDERS),
+        "total_indexes_loaded": len(all_indexes),
+    }
+
+
+@router.post("/domains/build-all")
+async def build_all_domains(req: BuildAllDomainsRequest):
+    """
+    Build STATIC constraint indexes for all (or selected) MAS data domains.
+
+    Pulls live data from MINDEX, CREP, NLM, agent registry, device
+    registry, and builds constraint indexes for every entity type.
+    Domains run concurrently for maximum performance.
+
+    Available domains: mindex, taxonomy, crep, nlm, agents, devices,
+    signals, users
+    """
+    global _domain_report
+
+    mindex_config = None
+    if req.mindex_db_path:
+        mindex_config = MINDEXConstraintConfig(db_path=req.mindex_db_path)
+
+    report = await build_all_domain_indexes(
+        domains=req.domains,
+        mindex_config=mindex_config,
+    )
+
+    # Register all indexes
+    for name, index in report.indexes.items():
+        _engine.register_index(name, index)
+        _maskers[name] = TokenMasker(index)
+
+    _domain_report = report
+
+    return {
+        "status": "success",
+        "report": report.to_dict(),
+    }
+
+
+@router.post("/domains/build")
+async def build_single_domain(req: BuildDomainRequest):
+    """
+    Build STATIC constraint indexes for a single data domain.
+
+    This is useful for rebuilding just one domain's indexes without
+    affecting others (e.g. refreshing CREP flight data).
+    """
+    global _domain_report
+
+    if req.domain not in DOMAIN_BUILDERS:
+        raise HTTPException(
+            400,
+            f"Unknown domain '{req.domain}'. "
+            f"Valid: {list(DOMAIN_BUILDERS.keys())}",
+        )
+
+    mindex_config = None
+    if req.mindex_db_path:
+        mindex_config = MINDEXConstraintConfig(db_path=req.mindex_db_path)
+
+    report = await build_all_domain_indexes(
+        domains=[req.domain],
+        mindex_config=mindex_config,
+    )
+
+    for name, index in report.indexes.items():
+        _engine.register_index(name, index)
+        _maskers[name] = TokenMasker(index)
+
+    _domain_report = report
+
+    return {
+        "status": "success",
+        "domain": req.domain,
+        "indexes_built": list(report.indexes.keys()),
+        "report": report.to_dict(),
+    }
+
+
+@router.get("/domains/report")
+async def get_domain_report():
+    """Get the last domain build report with full statistics."""
+    if _domain_report:
+        return {
+            "status": "success",
+            "report": _domain_report.to_dict(),
+        }
+    return {
+        "status": "success",
+        "report": None,
+        "message": "No domain build has been run yet. "
+        "POST /api/static/domains/build-all to build all indexes.",
+        "available_domains": list(DOMAIN_BUILDERS.keys()),
+    }
+
+
+@router.post("/domains/validate")
+async def validate_domain_entity(req: DomainValidateRequest):
+    """
+    Validate whether an entity string exists in a domain constraint index.
+
+    This is the primary hallucination-prevention endpoint: before using
+    any LLM-generated identifier, validate it here to guarantee it exists.
+
+    Example: validate "Agaricus bisporus" against "mindex_species_scientific"
+    """
+    index = _engine.get_index(req.index_name)
+    if not index:
+        available = list(_engine.list_indexes().keys())
+        raise HTTPException(
+            404,
+            f"Index '{req.index_name}' not found. "
+            f"Available indexes: {available}",
+        )
+
+    tokens = list(req.entity.encode("utf-8"))
+    is_valid = _engine._validate_sequence(index, tokens)
+
+    return {
+        "status": "success",
+        "entity": req.entity,
+        "index_name": req.index_name,
+        "valid": is_valid,
     }

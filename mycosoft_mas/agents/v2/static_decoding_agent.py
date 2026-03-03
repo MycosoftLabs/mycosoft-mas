@@ -3,13 +3,17 @@ STATIC Decoding Agent
 
 BaseAgentV2 agent that manages STATIC constraint indexes for the MAS.
 Handles building, storing, loading, and applying constrained decoding
-indexes for generative retrieval tasks.
+indexes for generative retrieval tasks across ALL MAS data domains.
 
-Use cases:
-- Species taxonomy retrieval (constrain to valid taxonomic names)
-- Entity ID generation (constrain to valid database IDs)
-- Structured output (constrain to valid JSON paths/schemas)
-- URL/path generation (constrain to valid URL structures)
+Data domains:
+- MINDEX: Species scientific/common names, IDs, compounds, genetic accessions
+- Taxonomy: Hierarchical classification (Kingdom → Species), species-agnostic
+- CREP: Flight callsigns, vessel IDs, satellite names, weather stations
+- NLM: Prediction types, entity types, model IDs
+- Agents: All 117+ agent IDs, categories, capabilities
+- Devices/MycoBrain: Device types, sensor types, compute modes, electrodes
+- Signals: Bio-signal types, SDR encodings, FCI channels, signal features
+- Users: Roles, permissions, access levels (agnostic to identity provider)
 
 Based on: Google STATIC framework (Su et al., 2026)
 Created: March 3, 2026
@@ -37,6 +41,12 @@ from mycosoft_mas.llm.constrained.constraint_engine import (
 from mycosoft_mas.llm.constrained.token_masker import (
     TokenMasker,
     MaskingStrategy,
+)
+from mycosoft_mas.llm.constrained.domain_builders import (
+    build_all_domain_indexes,
+    DOMAIN_BUILDERS,
+    DomainIndexReport,
+    MINDEXConstraintConfig,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,19 +76,31 @@ class STATICDecodingAgent(BaseAgentV2):
     @property
     def description(self) -> str:
         return (
-            "Manages STATIC constraint indexes for constrained LLM decoding. "
-            "Ensures generated outputs match valid entity sets using sparse "
-            "trie-based constraint masking (948x faster than naive approaches)."
+            "Manages STATIC constraint indexes across all MAS data domains "
+            "(MINDEX, CREP, NLM, taxonomy, agents, devices, signals, users, "
+            "MycoBrain). Ensures generated outputs match valid entity sets "
+            "using sparse trie-based constraint masking (948x speedup). "
+            "Eliminates hallucinated IDs, invalid taxonomy, and non-existent "
+            "entity references across the entire Mycosoft ecosystem."
         )
 
     def get_capabilities(self) -> List[str]:
         return [
             "build_constraint_index",
+            "build_domain_indexes",
             "constrained_decode",
             "validate_sequence",
             "rerank_candidates",
             "index_management",
             "constrained_retrieval",
+            "mindex_constraints",
+            "taxonomy_constraints",
+            "crep_constraints",
+            "nlm_constraints",
+            "agent_constraints",
+            "device_constraints",
+            "signal_constraints",
+            "user_constraints",
         ]
 
     def __init__(self, agent_id: str = "static-decoding-agent", config=None):
@@ -90,7 +112,10 @@ class STATICDecodingAgent(BaseAgentV2):
         )
         self._maskers: Dict[str, TokenMasker] = {}
 
-        # Register task handlers
+        # Domain index build report (populated on build_all_domains)
+        self._domain_report: Optional[DomainIndexReport] = None
+
+        # Register task handlers — generic
         self.register_handler("build_index", self._handle_build_index)
         self.register_handler("build_index_from_strings", self._handle_build_from_strings)
         self.register_handler("constrained_decode", self._handle_constrained_decode)
@@ -99,6 +124,12 @@ class STATICDecodingAgent(BaseAgentV2):
         self.register_handler("list_indexes", self._handle_list_indexes)
         self.register_handler("remove_index", self._handle_remove_index)
         self.register_handler("index_stats", self._handle_index_stats)
+
+        # Register task handlers — domain-specific
+        self.register_handler("build_all_domains", self._handle_build_all_domains)
+        self.register_handler("build_domain", self._handle_build_domain)
+        self.register_handler("domain_report", self._handle_domain_report)
+        self.register_handler("validate_entity", self._handle_validate_entity)
 
     async def on_start(self):
         """Load any persisted indexes on startup."""
@@ -390,3 +421,154 @@ class STATICDecodingAgent(BaseAgentV2):
                     for idx in self.engine._indexes.values()
                 ),
             }
+
+    # --- Domain-Specific Task Handlers ---
+
+    async def _handle_build_all_domains(self, task) -> Dict[str, Any]:
+        """
+        Build STATIC indexes for ALL MAS data domains at once.
+
+        Pulls live data from MINDEX, CREP, NLM, agent registry, device
+        registry, and builds constraint indexes for every entity type.
+
+        Payload:
+            domains: List[str] (optional) - Subset of domains to build.
+                     Valid: mindex, taxonomy, crep, nlm, agents, devices,
+                            signals, users
+            mindex_db_path: str (optional) - Path to MINDEX SQLite DB
+        """
+        payload = task.payload
+        domains = payload.get("domains")
+        mindex_db = payload.get("mindex_db_path", "")
+
+        mindex_config = MINDEXConstraintConfig(db_path=mindex_db) if mindex_db else None
+
+        report = await build_all_domain_indexes(
+            domains=domains,
+            mindex_config=mindex_config,
+        )
+
+        # Register all built indexes
+        for name, index in report.indexes.items():
+            self.engine.register_index(name, index)
+            self._maskers[name] = TokenMasker(index)
+            # Persist to disk
+            path = os.path.join(self._index_dir, f"{name}.npz")
+            try:
+                index.save(path)
+            except Exception as e:
+                logger.warning(f"Failed to persist domain index '{name}': {e}")
+
+        self._domain_report = report
+
+        await self.log_to_mindex(
+            "build_all_domain_indexes",
+            {
+                "domains_built": report.domains_built,
+                "total_indexes": len(report.indexes),
+                "total_states": report.total_states,
+                "total_memory_mb": report.total_memory_mb,
+                "build_time_ms": report.build_time_ms,
+            },
+        )
+
+        return {
+            "status": "success",
+            "report": report.to_dict(),
+        }
+
+    async def _handle_build_domain(self, task) -> Dict[str, Any]:
+        """
+        Build STATIC indexes for a single domain.
+
+        Payload:
+            domain: str - Domain name (mindex, taxonomy, crep, nlm,
+                          agents, devices, signals, users)
+            mindex_db_path: str (optional)
+        """
+        payload = task.payload
+        domain = payload.get("domain", "")
+
+        if domain not in DOMAIN_BUILDERS:
+            return {
+                "status": "error",
+                "message": f"Unknown domain '{domain}'",
+                "valid_domains": list(DOMAIN_BUILDERS.keys()),
+            }
+
+        mindex_db = payload.get("mindex_db_path", "")
+        mindex_config = MINDEXConstraintConfig(db_path=mindex_db) if mindex_db else None
+
+        report = await build_all_domain_indexes(
+            domains=[domain],
+            mindex_config=mindex_config,
+        )
+
+        # Register indexes
+        for name, index in report.indexes.items():
+            self.engine.register_index(name, index)
+            self._maskers[name] = TokenMasker(index)
+            path = os.path.join(self._index_dir, f"{name}.npz")
+            try:
+                index.save(path)
+            except Exception as e:
+                logger.warning(f"Persist failed for '{name}': {e}")
+
+        return {
+            "status": "success",
+            "domain": domain,
+            "indexes_built": list(report.indexes.keys()),
+            "report": report.to_dict(),
+        }
+
+    async def _handle_domain_report(self, task) -> Dict[str, Any]:
+        """Get the last domain build report."""
+        if self._domain_report:
+            return {
+                "status": "success",
+                "report": self._domain_report.to_dict(),
+            }
+        return {
+            "status": "success",
+            "report": None,
+            "message": "No domain build has been run yet",
+            "available_domains": list(DOMAIN_BUILDERS.keys()),
+        }
+
+    async def _handle_validate_entity(self, task) -> Dict[str, Any]:
+        """
+        Validate an entity string against a domain constraint index.
+
+        Payload:
+            entity: str - The entity string to validate
+            index_name: str - Which index to validate against
+                              (e.g. "mindex_species_scientific",
+                               "agent_ids", "crep_flights")
+        """
+        payload = task.payload
+        entity = payload.get("entity", "")
+        index_name = payload.get("index_name", "")
+
+        if not entity or not index_name:
+            return {
+                "status": "error",
+                "message": "Both 'entity' and 'index_name' required",
+            }
+
+        index = self.engine.get_index(index_name)
+        if not index:
+            return {
+                "status": "error",
+                "message": f"Index '{index_name}' not found",
+                "available": list(self.engine.list_indexes().keys()),
+            }
+
+        tokens = list(entity.encode("utf-8"))
+        is_valid = self.engine._validate_sequence(index, tokens)
+
+        return {
+            "status": "success",
+            "entity": entity,
+            "index_name": index_name,
+            "valid": is_valid,
+        }

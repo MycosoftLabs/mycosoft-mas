@@ -30,6 +30,19 @@ from mycosoft_mas.llm.constrained.token_masker import (
     TokenMasker,
     MaskingStrategy,
 )
+from mycosoft_mas.llm.constrained.domain_builders import (
+    build_all_domain_indexes,
+    build_mindex_species_index,
+    build_taxonomy_index,
+    build_crep_index,
+    build_nlm_index,
+    build_agent_index,
+    build_device_index,
+    build_signal_index,
+    build_user_index,
+    DomainIndexReport,
+    DOMAIN_BUILDERS,
+)
 
 __all__ = [
     "STATICIndex",
@@ -39,4 +52,15 @@ __all__ = [
     "ConstrainedGenerationResult",
     "TokenMasker",
     "MaskingStrategy",
+    "build_all_domain_indexes",
+    "build_mindex_species_index",
+    "build_taxonomy_index",
+    "build_crep_index",
+    "build_nlm_index",
+    "build_agent_index",
+    "build_device_index",
+    "build_signal_index",
+    "build_user_index",
+    "DomainIndexReport",
+    "DOMAIN_BUILDERS",
 ]
