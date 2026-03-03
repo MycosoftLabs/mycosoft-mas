@@ -246,6 +246,81 @@ actionable steps. Be thorough but concise. Consider dependencies between steps."
             **kwargs,
         )
     
+    async def constrained_chat(
+        self,
+        prompt: str,
+        constraint_index: str,
+        system_prompt: Optional[str] = None,
+        task_type: str = "execution",
+        model: Optional[str] = None,
+        temperature: float = 0.3,
+        max_tokens: Optional[int] = None,
+        **kwargs: Any,
+    ) -> str:
+        """
+        Chat with STATIC constraint validation.
+
+        The response is validated against the named constraint index.
+        For API-based providers this is post-hoc validation; for local
+        models this enables logit-level constraint masking.
+
+        Args:
+            prompt: User message
+            constraint_index: Name of the STATIC constraint index
+                (e.g. "mindex_species_scientific", "agent_ids")
+            system_prompt: Optional system prompt
+            task_type: Task type for model selection
+            model: Override model
+            temperature: Sampling temperature (lower = more deterministic)
+            max_tokens: Maximum tokens
+            **kwargs: Additional parameters
+
+        Returns:
+            Generated text response (validated against constraint index)
+        """
+        messages = []
+
+        if system_prompt:
+            messages.append(Message(role="system", content=system_prompt))
+
+        messages.append(Message(role="user", content=prompt))
+
+        response = await self.router.chat(
+            messages=messages,
+            task_type=task_type,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            constrained_index_name=constraint_index,
+            **kwargs,
+        )
+
+        return response.content
+
+    async def validate_entity(
+        self,
+        entity: str,
+        index_name: str,
+    ) -> bool:
+        """
+        Validate an entity against a STATIC constraint index.
+
+        Convenience method for checking if an entity string is valid
+        without needing to import the validator directly.
+
+        Args:
+            entity: Entity string to validate
+            index_name: Name of the constraint index
+
+        Returns:
+            True if entity is valid (or index not loaded)
+        """
+        try:
+            from mycosoft_mas.llm.constrained.validator import get_static_validator
+            return get_static_validator().is_valid(entity, index_name)
+        except ImportError:
+            return True
+
     async def embed(
         self,
         texts: list[str],
