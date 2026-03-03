@@ -396,4 +396,4 @@ def get_memory_bridge() -> UnifiedMemoryBridge:
     global _bridge
     if _bridge is None:
         _bridge = UnifiedMemoryBridge()
-    return _bridge
+    return _bridge
