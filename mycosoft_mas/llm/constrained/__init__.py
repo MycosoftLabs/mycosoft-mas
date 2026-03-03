@@ -49,6 +49,12 @@ from mycosoft_mas.llm.constrained.domain_builders import (
     DomainIndexReport,
     DOMAIN_BUILDERS,
 )
+from mycosoft_mas.llm.constrained.validator import (
+    STATICValidator,
+    ValidationResult,
+    get_static_validator,
+    set_static_validator,
+)
 
 __all__ = [
     "STATICIndex",
@@ -75,4 +81,8 @@ __all__ = [
     "build_search_index",
     "DomainIndexReport",
     "DOMAIN_BUILDERS",
+    "STATICValidator",
+    "ValidationResult",
+    "get_static_validator",
+    "set_static_validator",
 ]

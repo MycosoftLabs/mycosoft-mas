@@ -155,6 +155,56 @@ async def build_mindex_species_index(
             species_data["genetic_ids"],
         )
 
+    # Gene regions used in DNA sequence queries
+    gene_regions = [
+        "ITS", "ITS1", "ITS2", "LSU", "SSU",
+        "28S", "18S", "5.8S", "16S", "26S",
+        "COX1", "COI", "COX2", "COX3",
+        "TEF1", "TEF1-alpha", "EF1-alpha",
+        "RPB1", "RPB2", "ACT", "TUB2", "beta-tubulin",
+        "CAL", "calmodulin", "GAPDH", "HIS3",
+        "MCM7", "TOP1", "ATP6", "NAD1",
+        "matK", "rbcL", "trnL", "psbA-trnH",
+        "cytb", "ND1", "ND2", "ND4", "ND5",
+        "12S", "D-loop", "control_region",
+    ]
+    indexes["mindex_gene_regions"] = _build_string_index(
+        "mindex_gene_regions", gene_regions
+    )
+
+    # Compound classes used in compound search filters
+    compound_classes = [
+        "Alkaloid", "Terpenoid", "Polyketide", "Peptide",
+        "Polysaccharide", "Lipid", "Phenol", "Flavonoid",
+        "Steroid", "Terpene", "Sesquiterpene", "Diterpene",
+        "Triterpene", "Monoterpene", "Lactone", "Quinone",
+        "Coumarin", "Xanthone", "Anthraquinone", "Indole",
+        "Beta-glucan", "Chitin", "Ergosterol", "Lovastatin",
+        "Psilocybin", "Muscarine", "Amatoxin", "Phallotoxin",
+        "Orellanine", "Coprine", "Ibotenic_acid", "Muscimol",
+        "Lentinan", "Schizophyllan", "Grifolan", "Pleuran",
+        "Ganoderic_acid", "Cordycepin", "Hericenone", "Erinacine",
+    ]
+    indexes["mindex_compound_classes"] = _build_string_index(
+        "mindex_compound_classes", compound_classes
+    )
+
+    # Bioactivity types for compound analysis
+    bioactivity_types = [
+        "antimicrobial", "antifungal", "antibacterial", "antiviral",
+        "antitumor", "anticancer", "cytotoxic", "antiproliferative",
+        "immunomodulatory", "immunostimulant", "immunosuppressant",
+        "anti-inflammatory", "antioxidant", "neuroprotective",
+        "hepatoprotective", "cardioprotective", "nephroprotective",
+        "hypoglycemic", "hypocholesterolemic", "antihypertensive",
+        "anticoagulant", "antithrombotic", "prebiotic",
+        "nootropic", "adaptogenic", "anxiolytic", "antidepressant",
+        "wound_healing", "radioprotective", "antiallergic",
+    ]
+    indexes["mindex_bioactivity_types"] = _build_string_index(
+        "mindex_bioactivity_types", bioactivity_types
+    )
+
     logger.info(f"Built {len(indexes)} MINDEX constraint indexes")
     return indexes
 
@@ -1816,6 +1866,37 @@ async def build_search_index() -> Dict[str, STATICIndex]:
     ]
     indexes["search_entity_types"] = _build_string_index(
         "search_entity_types", entity_types
+    )
+
+    # Knowledge graph node types
+    graph_node_types = [
+        "species", "genus", "family", "order", "class", "phylum", "kingdom",
+        "compound", "gene", "protein", "pathway", "habitat",
+        "observation", "experiment", "publication", "person",
+        "organization", "device", "agent", "location",
+        "substrate", "symbiont", "cultivation_protocol",
+        "environmental_reading", "telemetry_point", "dataset",
+        "image", "sequence", "sample", "culture",
+    ]
+    indexes["search_graph_node_types"] = _build_string_index(
+        "search_graph_node_types", graph_node_types
+    )
+
+    # Knowledge graph edge/relationship types
+    graph_edge_types = [
+        "produces", "inhibits", "activates", "binds_to",
+        "is_a", "part_of", "has_part", "derived_from",
+        "found_in", "grows_on", "symbiotic_with", "parasitic_on",
+        "cultivated_by", "discovered_by", "published_in",
+        "observed_at", "collected_from", "analyzed_by",
+        "similar_to", "homologous_to", "orthologous_to",
+        "encodes", "regulates", "catalyzes", "transports",
+        "contains", "measured_by", "correlated_with",
+        "precedes", "follows", "co_occurs_with",
+        "treats", "causes", "prevents", "associated_with",
+    ]
+    indexes["search_graph_edge_types"] = _build_string_index(
+        "search_graph_edge_types", graph_edge_types
     )
 
     logger.info(f"Built {len(indexes)} search/MINDEX constraint indexes")

@@ -102,12 +102,24 @@ async def search_nodes(
     limit: int = Query(50, le=100),
 ):
     """Search nodes by criteria."""
+    # Validate node_type against STATIC constraint index
+    if node_type:
+        try:
+            from mycosoft_mas.llm.constrained.validator import get_static_validator
+            validator = get_static_validator()
+            if not validator.is_valid_graph_node_type(node_type):
+                raise HTTPException(
+                    400,
+                    f"Invalid node_type '{node_type}'. Use a valid graph node type."
+                )
+        except ImportError:
+            pass
     try:
         from mycosoft_mas.memory.mindex_graph import get_graph
         from mycosoft_mas.memory.graph_schema import NodeType
-        
+
         graph = await get_graph()
-        
+
         nt = NodeType(node_type) if node_type else None
         nodes = await graph.find_nodes(
             node_type=nt,
