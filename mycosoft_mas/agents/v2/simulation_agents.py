@@ -5,6 +5,7 @@ Created: February 3, 2026
 """
 
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
@@ -218,7 +219,7 @@ class UnifiedLatentsAgent(BaseScientificAgent):
     evaluate_model      : Compute FID / FVD / PSNR metrics for a checkpoint.
     """
 
-    GPU_NODE = "192.168.0.190"
+    GPU_NODE = os.getenv("UNIFIED_LATENTS_GPU_NODE", "192.168.0.190")
 
     def __init__(self):
         super().__init__(

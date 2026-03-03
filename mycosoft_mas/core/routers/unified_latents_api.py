@@ -8,18 +8,24 @@ UL jointly regularises latent representations with a diffusion prior and
 decodes them with a diffusion model, yielding SOTA quality on both images
 (FID 1.4 on ImageNet-512) and video (FVD 1.3 on Kinetics-600).
 
-All heavy inference is dispatched to the GPU node (192.168.0.190).
+All heavy inference is dispatched to the GPU node.
 """
 
 import logging
+import os
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/unified-latents", tags=["unified-latents"])
+
+GPU_NODE = os.getenv("UNIFIED_LATENTS_GPU_NODE", "192.168.0.190")
 
 
 # ---------------------------------------------------------------------------
@@ -75,15 +81,53 @@ class EvaluateModelRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Agent accessor
+# Agent singleton
 # ---------------------------------------------------------------------------
+
+_agent_instance = None
 
 
 def _get_agent():
-    """Lazily instantiate the UnifiedLatentsAgent."""
-    from mycosoft_mas.agents.v2.simulation_agents import UnifiedLatentsAgent
+    """Return the module-level UnifiedLatentsAgent singleton.
 
-    return UnifiedLatentsAgent()
+    A single instance is reused across requests so that stateful data
+    (e.g. ``active_runs``) persists for the lifetime of the process.
+    """
+    global _agent_instance
+    if _agent_instance is None:
+        from mycosoft_mas.agents.v2.simulation_agents import UnifiedLatentsAgent
+
+        _agent_instance = UnifiedLatentsAgent()
+    return _agent_instance
+
+
+# ---------------------------------------------------------------------------
+# Shared helper
+# ---------------------------------------------------------------------------
+
+
+async def _run_ul_task(
+    task_type: str,
+    description: str,
+    input_data: dict,
+    priority: TaskPriority = TaskPriority.MEDIUM,
+    error_status: int = 400,
+) -> dict:
+    """Build a ScientificTask, execute it on the singleton agent, and return
+    the result or raise an HTTPException on error."""
+    agent = _get_agent()
+    task = ScientificTask(
+        task_id=uuid4(),
+        task_type=task_type,
+        description=description,
+        priority=priority,
+        input_data=input_data,
+        created_at=datetime.now(timezone.utc),
+    )
+    result = await agent.execute_task(task)
+    if "error" in result:
+        raise HTTPException(status_code=error_status, detail=result["error"])
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -116,159 +160,80 @@ async def info():
             "imagenet_512_fid": 1.4,
             "kinetics_600_fvd": 1.3,
         },
-        "gpu_node": "192.168.0.190",
+        "gpu_node": GPU_NODE,
     }
 
 
 @router.post("/generate/image")
 async def generate_image(request: GenerateImageRequest):
     """Generate images using the Unified Latents diffusion pipeline."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
-    from datetime import datetime, timezone
-    from uuid import uuid4 as _uuid4
-
-    agent = _get_agent()
-    task = ScientificTask(
-        task_id=_uuid4(),
+    return await _run_ul_task(
         task_type="generate_image",
         description=f"Generate image: {request.prompt[:80]}",
-        priority=TaskPriority.HIGH,
         input_data=request.model_dump(),
-        created_at=datetime.now(timezone.utc),
+        priority=TaskPriority.HIGH,
     )
-    result = await agent.execute_task(task)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result
 
 
 @router.post("/generate/video")
 async def generate_video(request: GenerateVideoRequest):
     """Generate video using the Unified Latents diffusion pipeline."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
-    from datetime import datetime, timezone
-    from uuid import uuid4 as _uuid4
-
-    agent = _get_agent()
-    task = ScientificTask(
-        task_id=_uuid4(),
+    return await _run_ul_task(
         task_type="generate_video",
         description=f"Generate video: {request.prompt[:80]}",
-        priority=TaskPriority.HIGH,
         input_data=request.model_dump(),
-        created_at=datetime.now(timezone.utc),
+        priority=TaskPriority.HIGH,
     )
-    result = await agent.execute_task(task)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result
 
 
 @router.post("/encode")
 async def encode_to_latent(request: EncodeRequest):
     """Encode an image or video into the unified latent space."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
-    from datetime import datetime, timezone
-    from uuid import uuid4 as _uuid4
-
-    agent = _get_agent()
-    task = ScientificTask(
-        task_id=_uuid4(),
+    return await _run_ul_task(
         task_type="encode_to_latent",
         description=f"Encode to latent: {request.input_path}",
-        priority=TaskPriority.MEDIUM,
         input_data=request.model_dump(),
-        created_at=datetime.now(timezone.utc),
     )
-    result = await agent.execute_task(task)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result
 
 
 @router.post("/decode")
 async def decode_from_latent(request: DecodeRequest):
     """Decode a latent representation back to pixel space."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
-    from datetime import datetime, timezone
-    from uuid import uuid4 as _uuid4
-
-    agent = _get_agent()
-    task = ScientificTask(
-        task_id=_uuid4(),
+    return await _run_ul_task(
         task_type="decode_from_latent",
         description=f"Decode latent: {request.latent_id}",
-        priority=TaskPriority.MEDIUM,
         input_data=request.model_dump(),
-        created_at=datetime.now(timezone.utc),
     )
-    result = await agent.execute_task(task)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result
 
 
 @router.post("/train")
 async def train_model(request: TrainModelRequest):
     """Launch a Unified Latents training run on the GPU node."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
-    from datetime import datetime, timezone
-    from uuid import uuid4 as _uuid4
-
-    agent = _get_agent()
-    task = ScientificTask(
-        task_id=_uuid4(),
+    return await _run_ul_task(
         task_type="train_model",
         description=f"Train UL model on {request.dataset}",
-        priority=TaskPriority.HIGH,
         input_data=request.model_dump(),
-        created_at=datetime.now(timezone.utc),
+        priority=TaskPriority.HIGH,
     )
-    result = await agent.execute_task(task)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result
 
 
 @router.get("/train/{run_id}")
 async def get_training_status(run_id: str):
     """Get status of a training run."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
-    from datetime import datetime, timezone
-    from uuid import uuid4 as _uuid4
-
-    agent = _get_agent()
-    task = ScientificTask(
-        task_id=_uuid4(),
+    return await _run_ul_task(
         task_type="get_model_status",
         description=f"Get training status: {run_id}",
-        priority=TaskPriority.LOW,
         input_data={"run_id": run_id},
-        created_at=datetime.now(timezone.utc),
+        priority=TaskPriority.LOW,
+        error_status=404,
     )
-    result = await agent.execute_task(task)
-    if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"])
-    return result
 
 
 @router.post("/evaluate")
 async def evaluate_model(request: EvaluateModelRequest):
     """Evaluate a UL checkpoint computing FID, FVD, PSNR metrics."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
-    from datetime import datetime, timezone
-    from uuid import uuid4 as _uuid4
-
-    agent = _get_agent()
-    task = ScientificTask(
-        task_id=_uuid4(),
+    return await _run_ul_task(
         task_type="evaluate_model",
         description=f"Evaluate checkpoint: {request.checkpoint}",
-        priority=TaskPriority.MEDIUM,
         input_data=request.model_dump(),
-        created_at=datetime.now(timezone.utc),
     )
-    result = await agent.execute_task(task)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result

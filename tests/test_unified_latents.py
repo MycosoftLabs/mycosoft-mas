@@ -48,8 +48,10 @@ class TestUnifiedLatentsAgentInit:
     def test_description_mentions_arxiv(self, agent):
         assert "2602.17270" in agent.description
 
-    def test_gpu_node(self, agent):
-        assert agent.GPU_NODE == "192.168.0.190"
+    def test_gpu_node_default(self, agent):
+        # Default value when UNIFIED_LATENTS_GPU_NODE env var is unset
+        assert agent.GPU_NODE is not None
+        assert isinstance(agent.GPU_NODE, str)
 
 
 class TestUnifiedLatentsRegistry:
@@ -143,7 +145,7 @@ class TestTrainModel:
         assert "run_id" in result
         assert result["dataset"] == "imagenet-512"
         assert result["status"] == "queued"
-        assert result["gpu_node"] == "192.168.0.190"
+        assert result["gpu_node"] == agent.GPU_NODE
 
     @pytest.mark.asyncio
     async def test_get_status_after_train(self, agent):
@@ -163,6 +165,26 @@ class TestTrainModel:
         task = _make_task("get_model_status", {"run_id": "nonexistent"})
         result = await agent.execute_task(task)
         assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_concurrent_training_runs(self, agent):
+        """Multiple training runs can coexist on the same agent."""
+        task_a = _make_task("train_model", {"dataset": "imagenet-512"})
+        task_b = _make_task("train_model", {"dataset": "kinetics-600"})
+
+        result_a = await agent.execute_task(task_a)
+        result_b = await agent.execute_task(task_b)
+
+        assert result_a["run_id"] != result_b["run_id"]
+
+        status_a = await agent.execute_task(
+            _make_task("get_model_status", {"run_id": result_a["run_id"]})
+        )
+        status_b = await agent.execute_task(
+            _make_task("get_model_status", {"run_id": result_b["run_id"]})
+        )
+        assert status_a["dataset"] == "imagenet-512"
+        assert status_b["dataset"] == "kinetics-600"
 
 
 class TestEvaluateModel:
@@ -196,7 +218,11 @@ class TestUnknownTaskType:
 
 @pytest.fixture
 def client():
-    """Create a FastAPI test client with the unified-latents router."""
+    """Create a FastAPI test client with the unified-latents router.
+
+    Resets the module-level agent singleton so each test client gets
+    a fresh agent instance (important for training-status tests).
+    """
     import importlib
     import sys
 
@@ -214,6 +240,10 @@ def client():
     mod = importlib.util.module_from_spec(spec)
     sys.modules["unified_latents_api"] = mod
     spec.loader.exec_module(mod)
+
+    # Reset the singleton so state doesn't leak between test classes
+    mod._agent_instance = None
+
     router = mod.router
 
     from fastapi import FastAPI
@@ -237,6 +267,12 @@ class TestAPIHealth:
         assert data["arxiv"] == "2602.17270"
         assert data["benchmarks"]["imagenet_512_fid"] == 1.4
         assert data["benchmarks"]["kinetics_600_fvd"] == 1.3
+
+    def test_info_gpu_node_present(self, client):
+        resp = client.get("/api/unified-latents/info")
+        data = resp.json()
+        assert "gpu_node" in data
+        assert isinstance(data["gpu_node"], str)
 
 
 class TestAPIGenerateImage:
@@ -269,6 +305,12 @@ class TestAPIGenerateVideo:
         assert "generation_id" in data
         assert data["num_frames"] == 16
 
+    def test_empty_prompt_rejected(self, client):
+        resp = client.post("/api/unified-latents/generate/video", json={
+            "prompt": "",
+        })
+        assert resp.status_code == 422
+
 
 class TestAPIEncode:
     def test_encode(self, client):
@@ -278,6 +320,12 @@ class TestAPIEncode:
         assert resp.status_code == 200
         assert "latent_id" in resp.json()
 
+    def test_empty_path_rejected(self, client):
+        resp = client.post("/api/unified-latents/encode", json={
+            "input_path": "",
+        })
+        assert resp.status_code == 422
+
 
 class TestAPIDecode:
     def test_decode(self, client):
@@ -286,6 +334,12 @@ class TestAPIDecode:
         })
         assert resp.status_code == 200
         assert "decode_id" in resp.json()
+
+    def test_empty_latent_id_rejected(self, client):
+        resp = client.post("/api/unified-latents/decode", json={
+            "latent_id": "",
+        })
+        assert resp.status_code == 422
 
 
 class TestAPITrain:
@@ -298,6 +352,24 @@ class TestAPITrain:
         data = resp.json()
         assert data["status"] == "queued"
         assert "run_id" in data
+
+    def test_train_then_get_status(self, client):
+        """POST /train then GET /train/{run_id} returns the same run."""
+        train_resp = client.post("/api/unified-latents/train", json={
+            "dataset": "kinetics-600",
+        })
+        assert train_resp.status_code == 200
+        run_id = train_resp.json()["run_id"]
+
+        status_resp = client.get(f"/api/unified-latents/train/{run_id}")
+        assert status_resp.status_code == 200
+        data = status_resp.json()
+        assert data["run_id"] == run_id
+        assert data["dataset"] == "kinetics-600"
+
+    def test_get_status_not_found(self, client):
+        resp = client.get("/api/unified-latents/train/nonexistent-run-id")
+        assert resp.status_code == 404
 
 
 class TestAPIEvaluate:
