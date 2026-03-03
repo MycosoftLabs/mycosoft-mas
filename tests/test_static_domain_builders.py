@@ -3,7 +3,8 @@ Tests for STATIC Domain Constraint Builders
 
 Tests the domain-specific constraint index builders that pull data from
 all MAS subsystems (MINDEX, CREP, NLM, taxonomy, agents, devices,
-signals, users, MycoBrain) and build STATIC indexes for each.
+signals, users, MycoBrain) and universal domain builders (biosphere,
+environment, infrastructure, geospatial, observation, search).
 
 Created: March 3, 2026
 """
@@ -22,9 +23,15 @@ from mycosoft_mas.llm.constrained.domain_builders import (
     _byte_tokenize,
     build_agent_index,
     build_all_domain_indexes,
+    build_biosphere_index,
     build_crep_index,
     build_device_index,
+    build_environment_index,
+    build_geospatial_index,
+    build_infrastructure_index,
     build_nlm_index,
+    build_observation_index,
+    build_search_index,
     build_signal_index,
     build_taxonomy_index,
     build_user_index,
@@ -189,6 +196,151 @@ class TestUserIndex:
         assert indexes["access_levels"].num_sequences == 6
 
 
+# --- Universal Domain Builder Tests (v2) ---
+
+
+class TestBiosphereIndex:
+    @pytest.mark.asyncio
+    async def test_biosphere_index_builds(self):
+        indexes = await build_biosphere_index()
+
+        assert "bio_kingdoms" in indexes
+        assert "bio_phyla" in indexes
+        assert "bio_animalia_classes" in indexes
+        assert "bio_organism_forms" in indexes
+        assert "bio_conservation_status" in indexes
+        assert "bio_ecological_roles" in indexes
+        assert "bio_trophic_levels" in indexes
+
+        # 12 kingdoms/domains of life
+        assert indexes["bio_kingdoms"].num_sequences == 12
+        # 7 trophic levels
+        assert indexes["bio_trophic_levels"].num_sequences == 7
+
+    @pytest.mark.asyncio
+    async def test_biosphere_contains_all_life(self):
+        indexes = await build_biosphere_index()
+        # Verify major organism forms are constrained
+        forms_idx = indexes["bio_organism_forms"]
+        for form in ["mammal", "insect", "bird", "fish", "mushroom",
+                      "bacterium", "virus", "tree"]:
+            assert forms_idx.start_mask[ord(form[0])], (
+                f"Organism form '{form}' start char not in index"
+            )
+
+
+class TestEnvironmentIndex:
+    @pytest.mark.asyncio
+    async def test_environment_index_builds(self):
+        indexes = await build_environment_index()
+
+        assert "env_atmospheric" in indexes
+        assert "env_oceanic" in indexes
+        assert "env_terrestrial" in indexes
+        assert "env_space" in indexes
+        assert "env_biological" in indexes
+        assert "env_units" in indexes
+        assert "env_data_quality" in indexes
+        assert "env_temporal" in indexes
+
+        # Should have substantial entry counts
+        assert indexes["env_atmospheric"].num_sequences >= 30
+        assert indexes["env_units"].num_sequences >= 50
+
+    @pytest.mark.asyncio
+    async def test_environment_units_valid(self):
+        indexes = await build_environment_index()
+        idx = indexes["env_units"]
+        # 'c' for celsius should be valid start
+        assert idx.start_mask[ord("c")]
+
+
+class TestInfrastructureIndex:
+    @pytest.mark.asyncio
+    async def test_infrastructure_index_builds(self):
+        indexes = await build_infrastructure_index()
+
+        assert "infra_ai_model_types" in indexes
+        assert "infra_frontier_models" in indexes
+        assert "infra_robot_types" in indexes
+        assert "infra_vehicle_types" in indexes
+        assert "infra_app_types" in indexes
+        assert "infra_org_types" in indexes
+        assert "infra_protocols" in indexes
+
+        # Should have many AI model types
+        assert indexes["infra_ai_model_types"].num_sequences >= 30
+        # Should have major frontier models
+        assert indexes["infra_frontier_models"].num_sequences >= 20
+
+    @pytest.mark.asyncio
+    async def test_frontier_models_valid(self):
+        indexes = await build_infrastructure_index()
+        idx = indexes["infra_frontier_models"]
+        # 'c' for claude_* should be valid start
+        assert idx.start_mask[ord("c")]
+        # 'm' for myca should be valid start
+        assert idx.start_mask[ord("m")]
+
+
+class TestGeospatialIndex:
+    @pytest.mark.asyncio
+    async def test_geospatial_index_builds(self):
+        indexes = await build_geospatial_index()
+
+        assert "geo_biomes" in indexes
+        assert "geo_climate_zones" in indexes
+        assert "geo_ocean_zones" in indexes
+        assert "geo_habitats" in indexes
+
+        # Many biomes
+        assert indexes["geo_biomes"].num_sequences >= 30
+        # Koppen-Geiger + descriptive
+        assert indexes["geo_climate_zones"].num_sequences >= 30
+
+
+class TestObservationIndex:
+    @pytest.mark.asyncio
+    async def test_observation_index_builds(self):
+        indexes = await build_observation_index()
+
+        assert "obs_methods" in indexes
+        assert "obs_data_formats" in indexes
+        assert "obs_compression" in indexes
+        assert "obs_storage_tiers" in indexes
+        assert "obs_pipeline_stages" in indexes
+
+        # Many data formats
+        assert indexes["obs_data_formats"].num_sequences >= 40
+        # Many compression algorithms
+        assert indexes["obs_compression"].num_sequences >= 20
+
+
+class TestSearchIndex:
+    @pytest.mark.asyncio
+    async def test_search_index_builds(self):
+        indexes = await build_search_index()
+
+        assert "search_query_types" in indexes
+        assert "search_result_types" in indexes
+        assert "search_ranking_signals" in indexes
+        assert "search_entity_types" in indexes
+
+        # Many entity types (the master MINDEX taxonomy)
+        assert indexes["search_entity_types"].num_sequences >= 40
+        # Many query types
+        assert indexes["search_query_types"].num_sequences >= 20
+
+    @pytest.mark.asyncio
+    async def test_search_entity_types_comprehensive(self):
+        indexes = await build_search_index()
+        idx = indexes["search_entity_types"]
+        # 's' for species, signal_stream, sensor, etc.
+        assert idx.start_mask[ord("s")]
+        # 'a' for ai_model, agent, application, etc.
+        assert idx.start_mask[ord("a")]
+
+
 # --- Master Builder Tests ---
 
 
@@ -204,8 +356,8 @@ class TestBuildAllDomains:
         assert report.total_memory_mb > 0
         assert report.build_time_ms > 0
 
-        # All 8 domains should succeed (live API failures are non-fatal)
-        assert len(report.domains_built) == 8
+        # All 14 domains should succeed (live API failures are non-fatal)
+        assert len(report.domains_built) == 14
         assert len(report.domains_failed) == 0
 
     @pytest.mark.asyncio
@@ -241,6 +393,8 @@ class TestDomainBuildersRegistry:
         expected = {
             "mindex", "taxonomy", "crep", "nlm",
             "agents", "devices", "signals", "users",
+            "biosphere", "environment", "infrastructure",
+            "geospatial", "observation", "search",
         }
         assert set(DOMAIN_BUILDERS.keys()) == expected
 
@@ -337,3 +491,72 @@ class TestConstraintValidation:
 
         tokens = _byte_tokenize("XX-CH99")
         assert not engine._validate_sequence(indexes["fci_channels"], tokens)
+
+    @pytest.mark.asyncio
+    async def test_validate_biosphere_kingdom(self):
+        """Validate biosphere kingdoms against constraint index."""
+        from mycosoft_mas.llm.constrained.constraint_engine import ConstraintEngine
+
+        indexes = await build_biosphere_index()
+        engine = ConstraintEngine()
+        engine.register_index("bio_kingdoms", indexes["bio_kingdoms"])
+
+        tokens = _byte_tokenize("Animalia")
+        assert engine._validate_sequence(indexes["bio_kingdoms"], tokens)
+
+        tokens = _byte_tokenize("Fungi")
+        assert engine._validate_sequence(indexes["bio_kingdoms"], tokens)
+
+        tokens = _byte_tokenize("FakeKingdom")
+        assert not engine._validate_sequence(indexes["bio_kingdoms"], tokens)
+
+    @pytest.mark.asyncio
+    async def test_validate_climate_zone(self):
+        """Validate Koppen-Geiger climate zones."""
+        from mycosoft_mas.llm.constrained.constraint_engine import ConstraintEngine
+
+        indexes = await build_geospatial_index()
+        engine = ConstraintEngine()
+        engine.register_index("geo_climate_zones", indexes["geo_climate_zones"])
+
+        tokens = _byte_tokenize("Cfa")
+        assert engine._validate_sequence(indexes["geo_climate_zones"], tokens)
+
+        tokens = _byte_tokenize("XYZ")
+        assert not engine._validate_sequence(indexes["geo_climate_zones"], tokens)
+
+    @pytest.mark.asyncio
+    async def test_validate_frontier_model(self):
+        """Validate frontier model names against constraint index."""
+        from mycosoft_mas.llm.constrained.constraint_engine import ConstraintEngine
+
+        indexes = await build_infrastructure_index()
+        engine = ConstraintEngine()
+        engine.register_index("infra_frontier_models", indexes["infra_frontier_models"])
+
+        tokens = _byte_tokenize("claude_opus")
+        assert engine._validate_sequence(indexes["infra_frontier_models"], tokens)
+
+        tokens = _byte_tokenize("myca")
+        assert engine._validate_sequence(indexes["infra_frontier_models"], tokens)
+
+        tokens = _byte_tokenize("hallucinated_model_xyz")
+        assert not engine._validate_sequence(indexes["infra_frontier_models"], tokens)
+
+    @pytest.mark.asyncio
+    async def test_validate_data_format(self):
+        """Validate data format identifiers."""
+        from mycosoft_mas.llm.constrained.constraint_engine import ConstraintEngine
+
+        indexes = await build_observation_index()
+        engine = ConstraintEngine()
+        engine.register_index("obs_data_formats", indexes["obs_data_formats"])
+
+        tokens = _byte_tokenize("parquet")
+        assert engine._validate_sequence(indexes["obs_data_formats"], tokens)
+
+        tokens = _byte_tokenize("fasta")
+        assert engine._validate_sequence(indexes["obs_data_formats"], tokens)
+
+        tokens = _byte_tokenize("nonexistent_format")
+        assert not engine._validate_sequence(indexes["obs_data_formats"], tokens)

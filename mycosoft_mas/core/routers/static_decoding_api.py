@@ -319,7 +319,8 @@ class BuildAllDomainsRequest(BaseModel):
     domains: Optional[List[str]] = Field(
         None,
         description="Domains to build. None = all. "
-        "Valid: mindex, taxonomy, crep, nlm, agents, devices, signals, users",
+        "Valid: mindex, taxonomy, crep, nlm, agents, devices, signals, users, "
+        "biosphere, environment, infrastructure, geospatial, observation, search",
     )
     mindex_db_path: Optional[str] = Field(
         None, description="Path to MINDEX SQLite DB"
@@ -330,7 +331,8 @@ class BuildDomainRequest(BaseModel):
     domain: str = Field(
         ...,
         description="Domain to build: mindex, taxonomy, crep, nlm, "
-        "agents, devices, signals, users",
+        "agents, devices, signals, users, biosphere, environment, "
+        "infrastructure, geospatial, observation, search",
     )
     mindex_db_path: Optional[str] = Field(
         None, description="Path to MINDEX SQLite DB (for mindex/taxonomy)"
@@ -363,6 +365,7 @@ async def list_domains():
     for domain in DOMAIN_BUILDERS:
         # Find indexes belonging to this domain
         prefix_map = {
+            # Core domains (v1)
             "mindex": "mindex_",
             "taxonomy": "taxonomy_",
             "crep": "crep_",
@@ -371,6 +374,13 @@ async def list_domains():
             "devices": ["device_", "sensor_", "mycobrain_", "stimulation_", "electrode_"],
             "signals": ["signal_", "sdr_", "fci_"],
             "users": ["user_", "access_"],
+            # Universal domains (v2)
+            "biosphere": "bio_",
+            "environment": "env_",
+            "infrastructure": "infra_",
+            "geospatial": "geo_",
+            "observation": "obs_",
+            "search": "search_",
         }
 
         prefixes = prefix_map.get(domain, [domain + "_"])
@@ -407,7 +417,8 @@ async def build_all_domains(req: BuildAllDomainsRequest):
     Domains run concurrently for maximum performance.
 
     Available domains: mindex, taxonomy, crep, nlm, agents, devices,
-    signals, users
+    signals, users, biosphere, environment, infrastructure, geospatial,
+    observation, search
     """
     global _domain_report
 

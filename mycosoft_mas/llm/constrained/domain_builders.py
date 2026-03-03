@@ -1,7 +1,12 @@
 """
 Domain Constraint Builders for STATIC Framework
 
-Builds STATIC constraint indexes from all Mycosoft MAS data domains:
+Universal constraint index layer for the entire Mycosoft ecosystem.
+Every entity that MINDEX can hold — every living creature, every AI agent,
+every signal stream, every vehicle, every company, every molecule — gets a
+STATIC constraint index so LLMs can never hallucinate invalid references.
+
+Core Domains (v1):
 - MINDEX: Fungal species, taxonomy, compounds, genetic data
 - CREP: Flight callsigns, vessel IDs, satellite designators, weather stations
 - NLM: Nature Learning Model entity identifiers, prediction categories
@@ -10,11 +15,21 @@ Builds STATIC constraint indexes from all Mycosoft MAS data domains:
 - Devices: MycoBrain devices, sensors, electrode arrays
 - Users: User identifiers for access-controlled generation
 - Signals: Bio-signal types, SDR channels, FCI electrode IDs
-- MycoBrain: Compute modes, network IDs, stimulation protocols
 
-Each builder produces a named STATICIndex that the ConstraintEngine can use
-to enforce valid-only generation for its domain. This eliminates hallucinated
-IDs, invalid taxonomy paths, non-existent device names, etc.
+Universal Domains (v2):
+- Biosphere: ALL kingdoms of life — every animal, insect, bird, mammal,
+  marine organism, plant, fungus, virus, bacterium, protozoan, archaea.
+  Conservation status, ecological roles, trophic levels.
+- Environment: 24/7 environmental signal types, measurement units,
+  atmospheric/oceanic/terrestrial/space monitoring parameters.
+- Infrastructure: AI models, frontier LLMs, robots, vehicles, applications,
+  companies, organizations, protocols, services.
+- Geospatial: Biomes, ecosystems, habitats, climate zones, ocean zones,
+  coordinate systems, administrative regions.
+- Observation: Observation methods, data formats, compression algorithms,
+  storage tiers, freshness categories, quality metrics.
+- Search: MINDEX query types, result types, ranking signals, index
+  categories, data pipeline stages.
 
 Created: March 3, 2026
 """
@@ -907,6 +922,906 @@ async def build_user_index() -> Dict[str, STATICIndex]:
     return indexes
 
 
+# ===========================================================================
+# UNIVERSAL DOMAINS (v2) — Every entity class that exists
+# ===========================================================================
+
+
+# ---------------------------------------------------------------------------
+# Domain: BIOSPHERE (every kingdom of life on Earth)
+# ---------------------------------------------------------------------------
+
+
+async def build_biosphere_index() -> Dict[str, STATICIndex]:
+    """
+    Build STATIC indexes for ALL biological life on Earth.
+
+    This is the species-agnostic, kingdom-agnostic universal biological
+    constraint layer. Every animal, insect, bird, mammal, marine organism,
+    plant, fungus, virus, bacterium, protozoan, and archaeon must be
+    addressable through constrained generation.
+
+    Indexes:
+    - bio_kingdoms: All domains/kingdoms of life
+    - bio_animalia_classes: Major animal classes (Mammalia, Aves, etc.)
+    - bio_phyla: All recognized phyla across kingdoms
+    - bio_conservation_status: IUCN and custom conservation statuses
+    - bio_ecological_roles: Ecological function identifiers
+    - bio_trophic_levels: Trophic level classifications
+    - bio_reproduction_types: Reproductive strategy identifiers
+    - bio_habitat_types: Habitat classification for organisms
+    - bio_organism_forms: Life form categories across all kingdoms
+    """
+    indexes: Dict[str, STATICIndex] = {}
+
+    # All domains and kingdoms of life (3-domain / 7-kingdom merged)
+    kingdoms = [
+        # Domains of life
+        "Bacteria", "Archaea", "Eukarya",
+        # Traditional kingdoms
+        "Animalia", "Plantae", "Fungi", "Protista",
+        "Chromista", "Protozoa",
+        # Acellular
+        "Virus", "Viroid", "Prion",
+    ]
+    indexes["bio_kingdoms"] = _build_string_index("bio_kingdoms", kingdoms)
+
+    # All major phyla across ALL kingdoms
+    phyla = [
+        # Animalia
+        "Chordata", "Arthropoda", "Mollusca", "Annelida", "Cnidaria",
+        "Echinodermata", "Platyhelminthes", "Nematoda", "Porifera",
+        "Bryozoa", "Rotifera", "Tardigrada", "Onychophora",
+        "Hemichordata", "Ctenophora", "Chaetognatha", "Nemertea",
+        "Brachiopoda", "Sipuncula", "Priapulida", "Loricifera",
+        # Plantae
+        "Tracheophyta", "Bryophyta", "Marchantiophyta", "Anthocerotophyta",
+        "Chlorophyta", "Charophyta", "Rhodophyta", "Glaucophyta",
+        # Fungi
+        "Ascomycota", "Basidiomycota", "Zygomycota", "Chytridiomycota",
+        "Glomeromycota", "Microsporidia", "Blastocladiomycota",
+        "Neocallimastigomycota", "Cryptomycota", "Mucoromycota",
+        # Protista / Chromista
+        "Apicomplexa", "Ciliophora", "Euglenozoa", "Amoebozoa",
+        "Foraminifera", "Radiolaria", "Dinoflagellata", "Bacillariophyta",
+        "Phaeophyta", "Oomycota", "Haptophyta", "Cryptophyta",
+        # Bacteria
+        "Proteobacteria", "Firmicutes", "Actinobacteria", "Bacteroidetes",
+        "Cyanobacteria", "Spirochaetes", "Tenericutes", "Fusobacteria",
+        "Acidobacteria", "Verrucomicrobia", "Planctomycetes",
+        "Chlamydiae", "Deinococcus-Thermus", "Chloroflexi",
+        # Archaea
+        "Euryarchaeota", "Crenarchaeota", "Thaumarchaeota",
+        "Korarchaeota", "Nanoarchaeota", "Asgardarchaeota",
+        # Viruses (Baltimore groups as pseudo-phyla)
+        "dsDNA_viruses", "ssDNA_viruses", "dsRNA_viruses",
+        "ssRNA_positive", "ssRNA_negative", "ssRNA_RT", "dsDNA_RT",
+    ]
+    indexes["bio_phyla"] = _build_string_index("bio_phyla", phyla)
+
+    # Major animal classes (for constrained animal identification)
+    animalia_classes = [
+        # Mammals
+        "Mammalia",
+        # Birds
+        "Aves",
+        # Reptiles
+        "Reptilia",
+        # Amphibians
+        "Amphibia",
+        # Fish
+        "Actinopterygii", "Chondrichthyes", "Sarcopterygii",
+        "Myxini", "Hyperoartia",
+        # Insects & Arthropods
+        "Insecta", "Arachnida", "Crustacea", "Chilopoda",
+        "Diplopoda", "Merostomata", "Pycnogonida", "Remipedia",
+        # Mollusks
+        "Gastropoda", "Bivalvia", "Cephalopoda", "Polyplacophora",
+        # Marine invertebrates
+        "Anthozoa", "Scyphozoa", "Hydrozoa", "Echinoidea",
+        "Asteroidea", "Holothuroidea", "Ophiuroidea", "Crinoidea",
+        # Worms
+        "Polychaeta", "Oligochaeta", "Hirudinea",
+        # Microscopic animals
+        "Bdelloidea", "Eutardigrada",
+    ]
+    indexes["bio_animalia_classes"] = _build_string_index(
+        "bio_animalia_classes", animalia_classes
+    )
+
+    # Organism life form categories (species-agnostic classification)
+    organism_forms = [
+        # By size/complexity
+        "microbe", "unicellular", "multicellular", "colonial",
+        # Animals
+        "mammal", "bird", "reptile", "amphibian", "fish",
+        "insect", "arachnid", "crustacean", "mollusk",
+        "coral", "jellyfish", "sponge", "worm", "echinoderm",
+        # Marine
+        "marine_mammal", "shark", "ray", "bony_fish",
+        "cephalopod", "sea_turtle", "marine_invertebrate",
+        "plankton", "nekton", "benthos",
+        # Plants
+        "tree", "shrub", "herb", "grass", "vine", "fern",
+        "moss", "liverwort", "algae", "seaweed", "lichen",
+        "succulent", "epiphyte", "aquatic_plant",
+        # Fungi
+        "mushroom", "mold", "yeast", "bracket_fungus",
+        "mycorrhiza", "endophyte", "saprotroph",
+        # Microorganisms
+        "bacterium", "archaeon", "protozoan", "virus",
+        "viroid", "prion", "phage",
+        # Ecological forms
+        "parasite", "symbiont", "commensal", "decomposer",
+        "producer", "consumer", "predator", "prey",
+        "pollinator", "seed_disperser", "nitrogen_fixer",
+    ]
+    indexes["bio_organism_forms"] = _build_string_index(
+        "bio_organism_forms", organism_forms
+    )
+
+    # IUCN Conservation statuses
+    conservation_status = [
+        "NE", "DD", "LC", "NT", "VU", "EN", "CR", "EW", "EX",
+        "not_evaluated", "data_deficient", "least_concern",
+        "near_threatened", "vulnerable", "endangered",
+        "critically_endangered", "extinct_in_wild", "extinct",
+        "CITES_I", "CITES_II", "CITES_III",
+        "protected", "threatened", "invasive", "endemic",
+    ]
+    indexes["bio_conservation_status"] = _build_string_index(
+        "bio_conservation_status", conservation_status
+    )
+
+    # Ecological roles
+    ecological_roles = [
+        "autotroph", "heterotroph", "mixotroph",
+        "producer", "primary_consumer", "secondary_consumer",
+        "tertiary_consumer", "apex_predator", "decomposer",
+        "detritivore", "herbivore", "carnivore", "omnivore",
+        "parasitoid", "hyperparasite", "mutualist",
+        "pollinator", "seed_disperser", "nitrogen_fixer",
+        "mycorrhizal_partner", "biofilm_former", "bioluminescent",
+        "keystone_species", "indicator_species", "pioneer_species",
+        "foundation_species", "umbrella_species", "flagship_species",
+        "ecosystem_engineer", "invasive_species",
+    ]
+    indexes["bio_ecological_roles"] = _build_string_index(
+        "bio_ecological_roles", ecological_roles
+    )
+
+    # Trophic levels
+    trophic_levels = [
+        "T0_decomposer", "T1_producer", "T2_primary_consumer",
+        "T3_secondary_consumer", "T4_tertiary_consumer",
+        "T5_apex_predator", "detrital",
+    ]
+    indexes["bio_trophic_levels"] = _build_string_index(
+        "bio_trophic_levels", trophic_levels
+    )
+
+    logger.info(f"Built {len(indexes)} biosphere constraint indexes")
+    return indexes
+
+
+# ---------------------------------------------------------------------------
+# Domain: ENVIRONMENT (24/7 global environmental monitoring parameters)
+# ---------------------------------------------------------------------------
+
+
+async def build_environment_index() -> Dict[str, STATICIndex]:
+    """
+    Build STATIC indexes for 24/7 environmental monitoring.
+
+    Every environmental signal logged, analyzed, compressed, stored,
+    and referenced by MINDEX needs constrained identifiers.
+
+    Indexes:
+    - env_atmospheric: Atmospheric measurement parameters
+    - env_oceanic: Ocean monitoring parameters
+    - env_terrestrial: Land/soil monitoring parameters
+    - env_space: Space weather and cosmic monitoring
+    - env_biological: Biological monitoring signals
+    - env_units: Valid measurement units across all domains
+    - env_data_quality: Data quality and freshness indicators
+    - env_temporal: Time-series and observation window identifiers
+    """
+    indexes: Dict[str, STATICIndex] = {}
+
+    # Atmospheric parameters
+    atmospheric = [
+        "temperature", "humidity", "pressure", "wind_speed", "wind_direction",
+        "precipitation", "precipitation_rate", "dew_point", "cloud_cover",
+        "cloud_base_height", "visibility", "uv_index", "solar_radiation",
+        "photosynthetically_active_radiation", "net_radiation",
+        "air_quality_index", "pm2_5", "pm10", "ozone_concentration",
+        "co2_concentration", "methane_concentration", "nox_concentration",
+        "sulfur_dioxide", "carbon_monoxide", "volatile_organic_compounds",
+        "pollen_count", "lightning_density", "atmospheric_stability",
+        "boundary_layer_height", "aerosol_optical_depth",
+        "total_column_water_vapor", "convective_available_potential_energy",
+    ]
+    indexes["env_atmospheric"] = _build_string_index(
+        "env_atmospheric", atmospheric
+    )
+
+    # Oceanic parameters
+    oceanic = [
+        "sea_surface_temperature", "sea_surface_salinity",
+        "ocean_current_speed", "ocean_current_direction",
+        "wave_height", "wave_period", "wave_direction",
+        "tidal_level", "tidal_range", "storm_surge",
+        "ocean_ph", "dissolved_oxygen", "chlorophyll_a",
+        "turbidity", "sea_ice_extent", "sea_ice_thickness",
+        "sea_level_anomaly", "ocean_heat_content",
+        "mixed_layer_depth", "thermocline_depth",
+        "primary_productivity", "phytoplankton_biomass",
+        "coral_bleaching_index", "harmful_algal_bloom",
+        "deep_ocean_temperature", "abyssal_pressure",
+    ]
+    indexes["env_oceanic"] = _build_string_index("env_oceanic", oceanic)
+
+    # Terrestrial parameters
+    terrestrial = [
+        "soil_moisture", "soil_temperature", "soil_ph",
+        "groundwater_level", "river_discharge", "stream_flow",
+        "lake_level", "reservoir_storage",
+        "snow_depth", "snow_water_equivalent",
+        "frost_depth", "permafrost_temperature",
+        "land_surface_temperature", "vegetation_index_ndvi",
+        "leaf_area_index", "evapotranspiration",
+        "gross_primary_productivity", "net_ecosystem_exchange",
+        "seismic_activity", "volcanic_activity",
+        "landslide_risk", "flood_level",
+        "fire_weather_index", "drought_index",
+        "erosion_rate", "sediment_transport",
+    ]
+    indexes["env_terrestrial"] = _build_string_index(
+        "env_terrestrial", terrestrial
+    )
+
+    # Space weather and cosmic parameters
+    space = [
+        "solar_wind_speed", "solar_wind_density",
+        "interplanetary_magnetic_field", "solar_flux_f10_7",
+        "sunspot_number", "solar_flare_class",
+        "geomagnetic_kp_index", "geomagnetic_dst_index",
+        "auroral_electrojet", "cosmic_ray_flux",
+        "proton_flux", "electron_flux",
+        "magnetopause_standoff", "radiation_belt_flux",
+        "total_electron_content", "scintillation_index",
+        "galactic_cosmic_ray_intensity",
+        "coronal_mass_ejection_speed",
+    ]
+    indexes["env_space"] = _build_string_index("env_space", space)
+
+    # Biological monitoring parameters
+    biological = [
+        "species_count", "population_density",
+        "biodiversity_index_shannon", "biodiversity_index_simpson",
+        "migration_event", "breeding_season_start",
+        "phenological_stage", "bloom_detection",
+        "invasive_species_detection", "disease_outbreak",
+        "antibiotic_resistance_level", "zoonotic_risk",
+        "pollinator_activity", "bird_call_frequency",
+        "bat_echolocation_activity", "whale_song_detection",
+        "fish_stock_estimate", "coral_health_index",
+        "forest_canopy_density", "deforestation_rate",
+        "wetland_extent", "mangrove_coverage",
+        "microbiome_diversity", "soil_organism_activity",
+    ]
+    indexes["env_biological"] = _build_string_index(
+        "env_biological", biological
+    )
+
+    # Measurement units (universal)
+    units = [
+        # Temperature
+        "celsius", "fahrenheit", "kelvin",
+        # Pressure
+        "hPa", "mbar", "mmHg", "atm", "psi", "Pa", "kPa",
+        # Speed
+        "m_s", "km_h", "mph", "knots", "ft_s",
+        # Distance / Depth
+        "meters", "kilometers", "miles", "nautical_miles",
+        "feet", "inches", "centimeters", "millimeters",
+        "micrometers", "nanometers", "fathoms",
+        # Mass / Concentration
+        "kg", "g", "mg", "ug", "ng", "ppm", "ppb", "ppt",
+        "mg_L", "ug_L", "mol_L", "mmol_L",
+        # Area / Volume
+        "m2", "km2", "ha", "acres", "L", "mL", "m3",
+        # Radiation / Energy
+        "W_m2", "J", "kJ", "MJ", "eV", "keV", "MeV",
+        "sfu", "dB", "dBm",
+        # Time
+        "seconds", "minutes", "hours", "days",
+        # Biological
+        "cells_mL", "cfu_mL", "individuals_km2",
+        "species_per_sample", "nats", "bits",
+        # Dimensionless
+        "percent", "fraction", "index", "ratio", "count", "boolean",
+    ]
+    indexes["env_units"] = _build_string_index("env_units", units)
+
+    # Data quality and freshness
+    data_quality = [
+        # Freshness categories
+        "realtime", "near_realtime", "hourly", "daily",
+        "weekly", "monthly", "seasonal", "annual", "historical",
+        # Quality flags
+        "validated", "provisional", "estimated", "interpolated",
+        "modeled", "satellite_derived", "in_situ", "reanalysis",
+        "quality_controlled", "raw", "calibrated",
+        "suspect", "erroneous", "missing", "gap_filled",
+    ]
+    indexes["env_data_quality"] = _build_string_index(
+        "env_data_quality", data_quality
+    )
+
+    # Temporal identifiers
+    temporal = [
+        "observation", "forecast_1h", "forecast_3h", "forecast_6h",
+        "forecast_12h", "forecast_24h", "forecast_48h", "forecast_72h",
+        "forecast_5d", "forecast_7d", "forecast_10d", "forecast_14d",
+        "forecast_30d", "forecast_seasonal", "forecast_annual",
+        "climatology", "anomaly", "trend", "running_mean",
+        "rolling_24h", "rolling_7d", "rolling_30d",
+        "peak", "trough", "threshold_exceedance",
+        "onset", "cessation", "duration", "recurrence_interval",
+    ]
+    indexes["env_temporal"] = _build_string_index("env_temporal", temporal)
+
+    logger.info(f"Built {len(indexes)} environment constraint indexes")
+    return indexes
+
+
+# ---------------------------------------------------------------------------
+# Domain: INFRASTRUCTURE (AI, robots, vehicles, apps, companies, protocols)
+# ---------------------------------------------------------------------------
+
+
+async def build_infrastructure_index() -> Dict[str, STATICIndex]:
+    """
+    Build STATIC indexes for all artificial/organizational entities.
+
+    Every AI model, robot, vehicle, application, company, organization,
+    and protocol that MINDEX tracks needs constrained identifiers.
+
+    Indexes:
+    - infra_ai_model_types: AI/ML model categories (LLM, AGI, ASI, etc.)
+    - infra_frontier_models: Known frontier model families
+    - infra_robot_types: Robot and autonomous system types
+    - infra_vehicle_types: Vehicle classification
+    - infra_app_types: Application and service categories
+    - infra_org_types: Organization and entity type classifications
+    - infra_protocols: Communication and data protocols
+    - infra_compute_tiers: Compute and infrastructure tiers
+    """
+    indexes: Dict[str, STATICIndex] = {}
+
+    # AI/ML model types and capability tiers
+    ai_model_types = [
+        # Capability tiers
+        "narrow_ai", "general_ai", "artificial_general_intelligence",
+        "artificial_superintelligence", "frontier_model",
+        "foundation_model", "large_language_model",
+        # Architecture types
+        "transformer", "diffusion", "gan", "vae", "rnn", "cnn",
+        "graph_neural_network", "reinforcement_learning",
+        "neuro_symbolic", "mixture_of_experts", "state_space_model",
+        "multimodal_model", "vision_language_model",
+        "world_model", "embodied_agent",
+        # Function types
+        "text_generation", "image_generation", "video_generation",
+        "audio_generation", "code_generation", "reasoning",
+        "planning", "tool_use", "retrieval_augmented",
+        "classification", "regression", "clustering",
+        "anomaly_detection", "recommendation", "translation",
+        "speech_recognition", "speech_synthesis",
+        "object_detection", "segmentation",
+        "protein_folding", "molecular_design",
+        "weather_prediction", "climate_modeling",
+        # Deployment
+        "cloud_hosted", "edge_deployed", "on_device",
+        "federated", "distilled", "quantized", "fine_tuned",
+    ]
+    indexes["infra_ai_model_types"] = _build_string_index(
+        "infra_ai_model_types", ai_model_types
+    )
+
+    # Known frontier model families (for constrained model references)
+    frontier_models = [
+        # Anthropic
+        "claude_opus", "claude_sonnet", "claude_haiku",
+        "claude_4", "claude_4_5", "claude_4_6",
+        # OpenAI
+        "gpt_4", "gpt_4o", "gpt_4_turbo", "gpt_5",
+        "o1", "o1_mini", "o1_pro", "o3", "o3_mini",
+        # Google
+        "gemini_ultra", "gemini_pro", "gemini_nano",
+        "gemini_2", "gemini_2_5",
+        # Meta
+        "llama_3", "llama_3_1", "llama_4",
+        # Mistral
+        "mistral_large", "mistral_medium", "mistral_small",
+        "mixtral", "codestral",
+        # xAI
+        "grok_2", "grok_3",
+        # NVIDIA
+        "nemotron", "physicsnemo",
+        # Open source
+        "deepseek_v3", "deepseek_r1", "qwen_2_5", "yi_large",
+        "command_r", "command_r_plus",
+        # Mycosoft
+        "myca", "nlm", "natureos_model",
+    ]
+    indexes["infra_frontier_models"] = _build_string_index(
+        "infra_frontier_models", frontier_models
+    )
+
+    # Robot and autonomous system types
+    robot_types = [
+        "humanoid", "quadruped", "hexapod", "wheeled",
+        "tracked", "aerial_drone", "underwater_rov",
+        "underwater_auv", "surface_vessel_autonomous",
+        "manipulator_arm", "mobile_manipulator",
+        "swarm_robot", "soft_robot", "bio_hybrid_robot",
+        "nanobot", "microbot", "surgical_robot",
+        "warehouse_robot", "delivery_robot",
+        "agricultural_robot", "forestry_robot",
+        "inspection_robot", "search_rescue_robot",
+        "space_rover", "satellite_servicer",
+        "companion_robot", "telepresence_robot",
+        # Mycosoft specific
+        "trufflebot", "mycobot", "sporebot",
+    ]
+    indexes["infra_robot_types"] = _build_string_index(
+        "infra_robot_types", robot_types
+    )
+
+    # Vehicle classifications
+    vehicle_types = [
+        # Air
+        "fixed_wing", "rotary_wing", "tiltrotor",
+        "lighter_than_air", "glider", "uav", "evtol",
+        "commercial_aircraft", "military_aircraft",
+        "general_aviation", "space_launch_vehicle",
+        # Ground
+        "automobile", "truck", "bus", "motorcycle",
+        "bicycle", "train", "tram", "subway",
+        "autonomous_vehicle", "electric_vehicle",
+        # Water
+        "cargo_ship", "tanker", "container_ship",
+        "cruise_ship", "ferry", "fishing_vessel",
+        "sailboat", "motorboat", "submarine",
+        "research_vessel", "icebreaker",
+        # Space
+        "satellite", "space_station", "space_probe",
+        "crewed_spacecraft", "cargo_spacecraft",
+        "space_debris",
+    ]
+    indexes["infra_vehicle_types"] = _build_string_index(
+        "infra_vehicle_types", vehicle_types
+    )
+
+    # Application and service types
+    app_types = [
+        "web_application", "mobile_application", "desktop_application",
+        "api_service", "microservice", "serverless_function",
+        "database", "cache", "message_queue", "event_stream",
+        "monitoring_service", "logging_service", "alerting_service",
+        "authentication_service", "authorization_service",
+        "search_engine", "recommendation_engine",
+        "data_pipeline", "etl_service", "ml_pipeline",
+        "ci_cd_pipeline", "container_orchestrator",
+        "load_balancer", "cdn", "dns_service",
+        "iot_platform", "edge_computing_node",
+        "blockchain_node", "smart_contract",
+        "digital_twin", "simulation_engine",
+    ]
+    indexes["infra_app_types"] = _build_string_index(
+        "infra_app_types", app_types
+    )
+
+    # Organization and entity types
+    org_types = [
+        "corporation", "startup", "nonprofit",
+        "government_agency", "military_organization",
+        "university", "research_institute", "hospital",
+        "school", "museum", "library",
+        "international_organization", "ngo",
+        "cooperative", "foundation", "trust",
+        "consortium", "joint_venture", "subsidiary",
+        "regulatory_body", "standards_organization",
+        "open_source_project", "community",
+        "ai_lab", "national_lab", "space_agency",
+        "weather_service", "conservation_organization",
+        "individual", "family", "household",
+    ]
+    indexes["infra_org_types"] = _build_string_index(
+        "infra_org_types", org_types
+    )
+
+    # Communication and data protocols
+    protocols = [
+        # Network
+        "http", "https", "websocket", "grpc", "mqtt",
+        "amqp", "coap", "lorawan", "zigbee", "bluetooth",
+        "bluetooth_le", "wifi", "ethernet", "tcp", "udp",
+        "quic", "ipv4", "ipv6",
+        # Data formats
+        "json", "protobuf", "avro", "parquet", "arrow",
+        "msgpack", "cbor", "xml", "csv", "hdf5", "netcdf",
+        "geojson", "geopackage", "shapefile",
+        # Scientific / Bio
+        "fasta", "fastq", "bam", "vcf", "pdb", "mmcif",
+        "newick", "nexus", "phyloxml",
+        # Streaming
+        "kafka", "nats", "redis_streams", "sse",
+        "rtmp", "hls", "webrtc",
+        # IoT
+        "modbus", "opcua", "bacnet", "canbus",
+    ]
+    indexes["infra_protocols"] = _build_string_index(
+        "infra_protocols", protocols
+    )
+
+    logger.info(f"Built {len(indexes)} infrastructure constraint indexes")
+    return indexes
+
+
+# ---------------------------------------------------------------------------
+# Domain: GEOSPATIAL (biomes, ecosystems, habitats, climate zones)
+# ---------------------------------------------------------------------------
+
+
+async def build_geospatial_index() -> Dict[str, STATICIndex]:
+    """
+    Build STATIC indexes for geospatial and ecological classification.
+
+    Every geographic entity that MINDEX references needs constrained
+    identifiers — biomes, ecosystems, climate zones, ocean zones, etc.
+
+    Indexes:
+    - geo_biomes: Major terrestrial and aquatic biome types
+    - geo_ecosystems: Ecosystem classification
+    - geo_habitats: Habitat types for organism placement
+    - geo_climate_zones: Climate zone identifiers
+    - geo_ocean_zones: Ocean depth and region zones
+    - geo_coordinate_systems: Valid coordinate reference systems
+    - geo_admin_levels: Administrative boundary levels
+    """
+    indexes: Dict[str, STATICIndex] = {}
+
+    # WWF terrestrial and aquatic biomes
+    biomes = [
+        # Terrestrial
+        "tropical_moist_broadleaf", "tropical_dry_broadleaf",
+        "tropical_coniferous", "temperate_broadleaf_mixed",
+        "temperate_coniferous", "boreal_taiga",
+        "tropical_grassland_savanna", "temperate_grassland",
+        "flooded_grassland", "montane_grassland",
+        "tundra", "mediterranean",
+        "desert_xeric_shrubland", "mangrove",
+        # Freshwater
+        "large_river", "small_river", "large_lake",
+        "small_lake", "wetland", "xeric_basin",
+        "endorheic_basin", "floodplain",
+        # Marine
+        "polar_sea", "temperate_shelf", "temperate_upwelling",
+        "tropical_upwelling", "tropical_coral",
+        "pelagic_open_ocean", "deep_sea", "hydrothermal_vent",
+        "cold_seep", "continental_shelf", "abyssal_plain",
+        "ocean_trench", "seamount", "mid_ocean_ridge",
+        # Transitional
+        "estuary", "intertidal", "salt_marsh",
+        "seagrass_bed", "kelp_forest", "coastal_dune",
+        "riparian", "cave_subterranean",
+    ]
+    indexes["geo_biomes"] = _build_string_index("geo_biomes", biomes)
+
+    # Climate zones (Koppen-Geiger)
+    climate_zones = [
+        "Af", "Am", "Aw", "As",  # Tropical
+        "BWh", "BWk", "BSh", "BSk",  # Arid
+        "Csa", "Csb", "Csc",  # Temperate dry summer
+        "Cwa", "Cwb", "Cwc",  # Temperate dry winter
+        "Cfa", "Cfb", "Cfc",  # Temperate no dry season
+        "Dsa", "Dsb", "Dsc", "Dsd",  # Continental dry summer
+        "Dwa", "Dwb", "Dwc", "Dwd",  # Continental dry winter
+        "Dfa", "Dfb", "Dfc", "Dfd",  # Continental no dry season
+        "ET", "EF",  # Polar
+        "tropical", "arid", "temperate", "continental", "polar",
+        "equatorial", "subtropical", "subarctic", "alpine",
+        "maritime", "monsoon", "steppe", "tundra_climate",
+    ]
+    indexes["geo_climate_zones"] = _build_string_index(
+        "geo_climate_zones", climate_zones
+    )
+
+    # Ocean zones
+    ocean_zones = [
+        # Depth zones
+        "epipelagic", "mesopelagic", "bathypelagic",
+        "abyssopelagic", "hadopelagic",
+        # Benthic zones
+        "supralittoral", "intertidal_zone", "sublittoral",
+        "bathyal", "abyssal", "hadal",
+        # Ocean regions
+        "pacific", "atlantic", "indian",
+        "southern_ocean", "arctic_ocean",
+        "mediterranean_sea", "caribbean_sea",
+        "south_china_sea", "bering_sea",
+        # Features
+        "continental_margin", "abyssal_plain",
+        "mid_ocean_ridge", "ocean_trench",
+        "seamount", "guyot", "coral_reef",
+        "atoll", "barrier_reef", "fringing_reef",
+    ]
+    indexes["geo_ocean_zones"] = _build_string_index(
+        "geo_ocean_zones", ocean_zones
+    )
+
+    # Habitat types (IUCN habitat classification)
+    habitats = [
+        "forest", "savanna", "shrubland", "grassland",
+        "wetland_inland", "rocky_areas", "caves_subterranean",
+        "desert", "marine_neritic", "marine_oceanic",
+        "marine_deep_benthic", "marine_intertidal",
+        "marine_coastal_supratidal", "artificial_terrestrial",
+        "artificial_aquatic", "introduced_vegetation",
+        "urban", "suburban", "rural", "agricultural",
+        "plantation", "pasture", "arable_land",
+        "garden", "park", "cemetery",
+        "mine", "quarry", "landfill",
+    ]
+    indexes["geo_habitats"] = _build_string_index("geo_habitats", habitats)
+
+    logger.info(f"Built {len(indexes)} geospatial constraint indexes")
+    return indexes
+
+
+# ---------------------------------------------------------------------------
+# Domain: OBSERVATION (data lifecycle — formats, compression, storage)
+# ---------------------------------------------------------------------------
+
+
+async def build_observation_index() -> Dict[str, STATICIndex]:
+    """
+    Build STATIC indexes for the observation and data lifecycle.
+
+    Every piece of data flowing through MINDEX has metadata about how
+    it was collected, formatted, compressed, stored, and queried.
+
+    Indexes:
+    - obs_methods: Observation and measurement methods
+    - obs_data_formats: Data serialization and file formats
+    - obs_compression: Compression algorithms and strategies
+    - obs_storage_tiers: Storage tier classifications
+    - obs_pipeline_stages: Data pipeline stage identifiers
+    - obs_quality_metrics: Data quality metric names
+    """
+    indexes: Dict[str, STATICIndex] = {}
+
+    # Observation methods
+    methods = [
+        # Remote sensing
+        "satellite_optical", "satellite_radar", "satellite_lidar",
+        "aerial_survey", "drone_survey", "photogrammetry",
+        # In-situ
+        "weather_station", "buoy", "tide_gauge", "seismometer",
+        "rain_gauge", "radiosonde", "dropsonde",
+        "argo_float", "glider", "mooring",
+        # Biological
+        "field_observation", "camera_trap", "acoustic_monitoring",
+        "edna_sampling", "transect_survey", "point_count",
+        "mark_recapture", "telemetry_tracking", "citizen_science",
+        "microscopy", "spectroscopy", "chromatography",
+        "flow_cytometry", "electrophoresis", "pcr",
+        "dna_sequencing", "rna_sequencing", "proteomics",
+        "metabolomics", "metagenomics",
+        # IoT / Automated
+        "iot_sensor", "edge_device", "scada",
+        "smart_meter", "traffic_sensor", "air_quality_monitor",
+        # AI-assisted
+        "computer_vision", "nlp_extraction", "anomaly_detector",
+        "classification_model", "regression_model",
+    ]
+    indexes["obs_methods"] = _build_string_index("obs_methods", methods)
+
+    # Data formats
+    data_formats = [
+        # Structured
+        "json", "jsonl", "csv", "tsv", "parquet", "avro", "orc",
+        "protobuf", "msgpack", "cbor", "arrow", "feather",
+        # Scientific
+        "hdf5", "netcdf", "zarr", "grib", "bufr",
+        "fits", "dicom", "nifti",
+        # Geospatial
+        "geojson", "geotiff", "shapefile", "geopackage",
+        "kml", "wkt", "wkb", "cog",
+        # Biological
+        "fasta", "fastq", "bam", "sam", "vcf", "gff", "bed",
+        "pdb", "mmcif", "sdf", "mol2",
+        "newick", "nexus", "phyloxml",
+        # Media
+        "png", "jpeg", "tiff", "webp", "svg",
+        "mp3", "wav", "flac", "ogg",
+        "mp4", "webm", "mkv",
+        # Document
+        "pdf", "markdown", "latex", "html", "xml",
+        # Database
+        "sqlite", "postgresql_dump", "mongodb_bson",
+    ]
+    indexes["obs_data_formats"] = _build_string_index(
+        "obs_data_formats", data_formats
+    )
+
+    # Compression algorithms
+    compression = [
+        "none", "gzip", "bzip2", "xz", "lz4", "zstd",
+        "snappy", "lzo", "brotli", "deflate",
+        "delta_encoding", "run_length_encoding",
+        "dictionary_encoding", "bit_packing",
+        "gorilla_compression", "chimp_compression",
+        "simple8b", "pfor", "varint",
+        "blosc", "fpzip", "sz", "zfp",
+        "lossy_jpeg", "lossy_quantization",
+        "static_csr_compression",  # Our own STATIC sparse compression
+    ]
+    indexes["obs_compression"] = _build_string_index(
+        "obs_compression", compression
+    )
+
+    # Storage tiers
+    storage_tiers = [
+        "hot", "warm", "cold", "archive", "deep_archive",
+        "in_memory", "ssd_cache", "nvme", "ssd", "hdd",
+        "object_storage", "tape", "glacier",
+        "distributed", "replicated", "erasure_coded",
+        "local", "regional", "global",
+        "qdrant_vector", "redis_cache", "postgres_primary",
+        "timescaledb", "influxdb", "clickhouse",
+    ]
+    indexes["obs_storage_tiers"] = _build_string_index(
+        "obs_storage_tiers", storage_tiers
+    )
+
+    # Pipeline stages
+    pipeline_stages = [
+        "ingest", "validate", "deduplicate", "normalize",
+        "enrich", "transform", "aggregate", "downsample",
+        "compress", "encrypt", "index", "store",
+        "replicate", "backup", "archive",
+        "query", "retrieve", "decompress", "deserialize",
+        "filter", "join", "window", "compute",
+        "alert", "publish", "export", "visualize",
+        "train", "evaluate", "predict", "explain",
+    ]
+    indexes["obs_pipeline_stages"] = _build_string_index(
+        "obs_pipeline_stages", pipeline_stages
+    )
+
+    logger.info(f"Built {len(indexes)} observation constraint indexes")
+    return indexes
+
+
+# ---------------------------------------------------------------------------
+# Domain: SEARCH (MINDEX query optimization, search and retrieval)
+# ---------------------------------------------------------------------------
+
+
+async def build_search_index() -> Dict[str, STATICIndex]:
+    """
+    Build STATIC indexes for MINDEX search and retrieval operations.
+
+    MINDEX as the universal index needs constrained identifiers for
+    query types, result categories, ranking signals, and index
+    management operations.
+
+    Indexes:
+    - search_query_types: Valid query type identifiers
+    - search_result_types: Result category identifiers
+    - search_ranking_signals: Ranking and scoring signal names
+    - search_index_types: Index type identifiers
+    - search_entity_types: Universal entity type taxonomy for MINDEX
+    """
+    indexes: Dict[str, STATICIndex] = {}
+
+    # Query types
+    query_types = [
+        "keyword", "semantic", "vector_similarity",
+        "full_text", "fuzzy", "prefix", "wildcard", "regex",
+        "range", "geospatial_radius", "geospatial_bbox",
+        "temporal_range", "taxonomic_path",
+        "nearest_neighbor", "hybrid_search",
+        "faceted", "filtered", "aggregation",
+        "graph_traversal", "path_query",
+        "constrained_generation", "reranking",
+        "multi_index", "cross_domain", "federated",
+        "autocomplete", "suggestion", "spell_correct",
+        "question_answering", "summarization",
+    ]
+    indexes["search_query_types"] = _build_string_index(
+        "search_query_types", query_types
+    )
+
+    # Result types
+    result_types = [
+        "species_record", "observation_record",
+        "environmental_reading", "signal_stream",
+        "agent_record", "device_record", "user_record",
+        "document", "image", "audio", "video",
+        "dataset", "model_artifact", "experiment_result",
+        "taxonomy_node", "geographic_feature",
+        "chemical_compound", "genetic_sequence",
+        "protein_structure", "pathway",
+        "organization", "person", "event",
+        "publication", "patent", "regulation",
+        "vector_embedding", "knowledge_graph_node",
+        "time_series", "spatial_raster", "spatial_vector",
+    ]
+    indexes["search_result_types"] = _build_string_index(
+        "search_result_types", result_types
+    )
+
+    # Ranking signals
+    ranking_signals = [
+        "relevance_score", "semantic_similarity",
+        "bm25_score", "tf_idf_score",
+        "recency", "freshness", "popularity",
+        "authority", "citation_count",
+        "data_quality_score", "completeness",
+        "geographic_proximity", "taxonomic_distance",
+        "genetic_similarity", "ecological_affinity",
+        "user_preference", "collaborative_filtering",
+        "constraint_compliance", "diversity_score",
+        "novelty_score", "serendipity_score",
+        "coverage_score", "precision_score",
+    ]
+    indexes["search_ranking_signals"] = _build_string_index(
+        "search_ranking_signals", ranking_signals
+    )
+
+    # Universal MINDEX entity type taxonomy
+    # This is THE master list of everything MINDEX can store
+    entity_types = [
+        # Biological
+        "species", "genus", "family", "order", "class",
+        "phylum", "kingdom", "domain_of_life",
+        "population", "community", "ecosystem",
+        "gene", "protein", "metabolite", "compound",
+        "pathway", "genome", "metagenome",
+        # Environmental
+        "observation", "measurement", "signal_stream",
+        "time_series", "spatial_raster", "spatial_vector",
+        "weather_event", "climate_record", "natural_disaster",
+        # Artificial
+        "ai_model", "agent", "robot", "vehicle",
+        "device", "sensor", "actuator",
+        "application", "service", "api_endpoint",
+        "database", "dataset", "model_artifact",
+        # Organizational
+        "organization", "person", "team", "project",
+        "experiment", "protocol", "publication",
+        "patent", "regulation", "standard",
+        # Geospatial
+        "location", "region", "biome", "habitat",
+        "protected_area", "watershed", "geological_formation",
+        # Informational
+        "document", "image", "audio", "video",
+        "knowledge_graph_node", "vector_embedding",
+        "constraint_index", "taxonomy_node",
+    ]
+    indexes["search_entity_types"] = _build_string_index(
+        "search_entity_types", entity_types
+    )
+
+    logger.info(f"Built {len(indexes)} search/MINDEX constraint indexes")
+    return indexes
+
+
 # ---------------------------------------------------------------------------
 # Master builder — builds ALL domain indexes in one call
 # ---------------------------------------------------------------------------
@@ -941,6 +1856,7 @@ class DomainIndexReport:
 
 # Map of domain name → async builder function
 DOMAIN_BUILDERS: Dict[str, Callable] = {
+    # Core domains (v1)
     "mindex": build_mindex_species_index,
     "taxonomy": build_taxonomy_index,
     "crep": build_crep_index,
@@ -949,6 +1865,13 @@ DOMAIN_BUILDERS: Dict[str, Callable] = {
     "devices": build_device_index,
     "signals": build_signal_index,
     "users": build_user_index,
+    # Universal domains (v2)
+    "biosphere": build_biosphere_index,
+    "environment": build_environment_index,
+    "infrastructure": build_infrastructure_index,
+    "geospatial": build_geospatial_index,
+    "observation": build_observation_index,
+    "search": build_search_index,
 }
 
 
@@ -964,7 +1887,9 @@ async def build_all_domain_indexes(
 
     Args:
         domains: Optional list of domain names to build. If None, builds all.
-                 Valid: mindex, taxonomy, crep, nlm, agents, devices, signals, users
+                 Valid: mindex, taxonomy, crep, nlm, agents, devices, signals,
+                 users, biosphere, environment, infrastructure, geospatial,
+                 observation, search
         mindex_config: Optional MINDEX-specific configuration.
 
     Returns:

@@ -5,7 +5,7 @@ BaseAgentV2 agent that manages STATIC constraint indexes for the MAS.
 Handles building, storing, loading, and applying constrained decoding
 indexes for generative retrieval tasks across ALL MAS data domains.
 
-Data domains:
+Core domains (v1):
 - MINDEX: Species scientific/common names, IDs, compounds, genetic accessions
 - Taxonomy: Hierarchical classification (Kingdom → Species), species-agnostic
 - CREP: Flight callsigns, vessel IDs, satellite names, weather stations
@@ -14,6 +14,14 @@ Data domains:
 - Devices/MycoBrain: Device types, sensor types, compute modes, electrodes
 - Signals: Bio-signal types, SDR encodings, FCI channels, signal features
 - Users: Roles, permissions, access levels (agnostic to identity provider)
+
+Universal domains (v2):
+- Biosphere: All kingdoms of life, phyla, conservation, ecological roles
+- Environment: 24/7 environmental monitoring — atmospheric, oceanic, terrestrial, space
+- Infrastructure: AI models, frontier LLMs, robots, vehicles, apps, orgs, protocols
+- Geospatial: Biomes, ecosystems, habitats, climate zones, ocean zones
+- Observation: Data lifecycle — formats, compression, storage tiers, pipelines
+- Search: MINDEX query types, result types, ranking signals, entity taxonomy
 
 Based on: Google STATIC framework (Su et al., 2026)
 Created: March 3, 2026
@@ -76,12 +84,13 @@ class STATICDecodingAgent(BaseAgentV2):
     @property
     def description(self) -> str:
         return (
-            "Manages STATIC constraint indexes across all MAS data domains "
+            "Manages STATIC constraint indexes across all 14 MAS data domains "
             "(MINDEX, CREP, NLM, taxonomy, agents, devices, signals, users, "
-            "MycoBrain). Ensures generated outputs match valid entity sets "
+            "biosphere, environment, infrastructure, geospatial, observation, "
+            "search). Ensures generated outputs match valid entity sets "
             "using sparse trie-based constraint masking (948x speedup). "
             "Eliminates hallucinated IDs, invalid taxonomy, and non-existent "
-            "entity references across the entire Mycosoft ecosystem."
+            "entity references across the entire Mycosoft universal ecosystem."
         )
 
     def get_capabilities(self) -> List[str]:
@@ -93,6 +102,7 @@ class STATICDecodingAgent(BaseAgentV2):
             "rerank_candidates",
             "index_management",
             "constrained_retrieval",
+            # Core domains (v1)
             "mindex_constraints",
             "taxonomy_constraints",
             "crep_constraints",
@@ -101,6 +111,13 @@ class STATICDecodingAgent(BaseAgentV2):
             "device_constraints",
             "signal_constraints",
             "user_constraints",
+            # Universal domains (v2)
+            "biosphere_constraints",
+            "environment_constraints",
+            "infrastructure_constraints",
+            "geospatial_constraints",
+            "observation_constraints",
+            "search_constraints",
         ]
 
     def __init__(self, agent_id: str = "static-decoding-agent", config=None):
@@ -434,7 +451,8 @@ class STATICDecodingAgent(BaseAgentV2):
         Payload:
             domains: List[str] (optional) - Subset of domains to build.
                      Valid: mindex, taxonomy, crep, nlm, agents, devices,
-                            signals, users
+                            signals, users, biosphere, environment,
+                            infrastructure, geospatial, observation, search
             mindex_db_path: str (optional) - Path to MINDEX SQLite DB
         """
         payload = task.payload
@@ -483,7 +501,9 @@ class STATICDecodingAgent(BaseAgentV2):
 
         Payload:
             domain: str - Domain name (mindex, taxonomy, crep, nlm,
-                          agents, devices, signals, users)
+                          agents, devices, signals, users, biosphere,
+                          environment, infrastructure, geospatial,
+                          observation, search)
             mindex_db_path: str (optional)
         """
         payload = task.payload
