@@ -692,6 +692,20 @@ try:
 except NameError:
     pass
 
+# STATIC Constrained Decoding API - sparse trie-based constraint masking
+try:
+    from mycosoft_mas.core.routers.static_decoding_api import router as static_decoding_router
+    STATIC_DECODING_API_AVAILABLE = True
+except ImportError:
+    static_decoding_router = None
+    STATIC_DECODING_API_AVAILABLE = False
+
+try:
+    if STATIC_DECODING_API_AVAILABLE:
+        app.include_router(static_decoding_router, tags=["static-decoding"])
+except NameError:
+    pass
+
 
 # ---------------------------------------------------------------------------
 # Health & version
