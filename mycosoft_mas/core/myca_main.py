@@ -291,6 +291,38 @@ try:
 except ImportError:
     INTENTION_API_AVAILABLE = False
 
+# MYCA Economy API - autonomous economic system (wallets, pricing, revenue)
+try:
+    from mycosoft_mas.core.routers.economy_api import router as economy_router
+    ECONOMY_API_AVAILABLE = True
+except ImportError:
+    economy_router = None
+    ECONOMY_API_AVAILABLE = False
+
+# MYCA Widget API - interactive visualizations (maps, molecules, taxonomy trees)
+try:
+    from mycosoft_mas.core.routers.widget_api import router as widget_router
+    WIDGET_API_AVAILABLE = True
+except ImportError:
+    widget_router = None
+    WIDGET_API_AVAILABLE = False
+
+# MYCA Taxonomy API - universal life data access (iNaturalist, MINDEX)
+try:
+    from mycosoft_mas.core.routers.taxonomy_api import router as taxonomy_router
+    TAXONOMY_API_AVAILABLE = True
+except ImportError:
+    taxonomy_router = None
+    TAXONOMY_API_AVAILABLE = False
+
+# MYCA Knowledge API - universal expert knowledge across all sciences
+try:
+    from mycosoft_mas.core.routers.knowledge_api import router as knowledge_router
+    KNOWLEDGE_API_AVAILABLE = True
+except ImportError:
+    knowledge_router = None
+    KNOWLEDGE_API_AVAILABLE = False
+
 # N8N Client - use mycosoft_mas path
 try:
     from mycosoft_mas.integrations.n8n_client import N8NClient
@@ -689,6 +721,34 @@ except NameError:
 try:
     if INTENTION_API_AVAILABLE:
         app.include_router(intention_router, tags=["myca-intention"])
+except NameError:
+    pass
+
+# MYCA Economy API - autonomous economic system (wallets, pricing, revenue)
+try:
+    if ECONOMY_API_AVAILABLE and economy_router:
+        app.include_router(economy_router, tags=["myca-economy"])
+except NameError:
+    pass
+
+# MYCA Widget API - interactive visualizations (maps, molecules, taxonomy trees)
+try:
+    if WIDGET_API_AVAILABLE and widget_router:
+        app.include_router(widget_router, tags=["myca-widgets"])
+except NameError:
+    pass
+
+# MYCA Taxonomy API - universal life data access (iNaturalist, MINDEX)
+try:
+    if TAXONOMY_API_AVAILABLE and taxonomy_router:
+        app.include_router(taxonomy_router, tags=["myca-taxonomy"])
+except NameError:
+    pass
+
+# MYCA Knowledge API - universal expert knowledge across all sciences
+try:
+    if KNOWLEDGE_API_AVAILABLE and knowledge_router:
+        app.include_router(knowledge_router, tags=["myca-knowledge"])
 except NameError:
     pass
 

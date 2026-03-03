@@ -110,6 +110,29 @@ except Exception as e:
     GuardianAgentV2 = SecurityMonitorAgentV2 = ThreatResponseAgentV2 = None  # type: ignore[misc, assignment]
     RiskLevel = ThreatCategory = None  # type: ignore[misc, assignment]
 
+try:
+    from .autonomous_economy_agent import (
+        AutonomousEconomyAgent,
+        WalletType,
+        TransactionType,
+        ServicePricing,
+        ResourceMarketplace,
+    )
+except Exception as e:
+    _log.warning("v2 autonomous_economy_agent unavailable: %s", e)
+    AutonomousEconomyAgent = WalletType = TransactionType = None  # type: ignore[misc, assignment]
+    ServicePricing = ResourceMarketplace = None  # type: ignore[misc, assignment]
+
+try:
+    from .taxonomy_ingestion_agent import (
+        TaxonomyIngestionAgent,
+        IngestionTarget,
+        IngestionState,
+    )
+except Exception as e:
+    _log.warning("v2 taxonomy_ingestion_agent unavailable: %s", e)
+    TaxonomyIngestionAgent = IngestionTarget = IngestionState = None  # type: ignore[misc, assignment]
+
 
 __all__ = [
     # Base
@@ -166,6 +189,16 @@ __all__ = [
     "ThreatResponseAgentV2",
     "RiskLevel",
     "ThreatCategory",
+    # Financial / Economy
+    "AutonomousEconomyAgent",
+    "WalletType",
+    "TransactionType",
+    "ServicePricing",
+    "ResourceMarketplace",
+    # Taxonomy / Ingestion
+    "TaxonomyIngestionAgent",
+    "IngestionTarget",
+    "IngestionState",
 ]
 
 
@@ -184,6 +217,10 @@ def _build_registry():
         reg.update({"n8n-agent": N8NAgent, "elevenlabs-agent": ElevenLabsAgent, "zapier-agent": ZapierAgent, "ifttt-agent": IFTTTAgent, "openai-agent": OpenAIAgent, "anthropic-agent": AnthropicAgent, "gemini-agent": GeminiAgent, "grok-agent": GrokAgent, "supabase-agent": SupabaseAgent, "notion-agent": NotionAgent, "website-agent": WebsiteAgent})
     if GuardianAgentV2 is not None:
         reg.update({"guardian-agent-v2": GuardianAgentV2, "security-monitor-agent-v2": SecurityMonitorAgentV2, "threat-response-agent-v2": ThreatResponseAgentV2})
+    if AutonomousEconomyAgent is not None:
+        reg.update({"autonomous-economy-agent": AutonomousEconomyAgent})
+    if TaxonomyIngestionAgent is not None:
+        reg.update({"taxonomy-ingestion-agent": TaxonomyIngestionAgent})
     return reg
 
 
