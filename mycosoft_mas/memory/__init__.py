@@ -23,7 +23,7 @@ from .coordinator import MemoryCoordinator, get_memory_coordinator
 from .user_context import UserContext, UserContextManager, get_context_manager
 from .session_memory import SessionMemory, SessionMemoryManager, get_session_manager
 from .temporal_patterns import TemporalPattern, TemporalPatternStore
-from .procedural_memory import ProceduralMemory, ProceduralSkill
+from .procedural_memory import ProceduralMemory
 from .episodic_memory import EpisodicMemory as PostgresEpisodicMemory, Episode
 from .semantic_memory import SemanticMemory, Fact as SemanticFact
 
@@ -67,7 +67,6 @@ __all__ = [
     "TemporalPatternStore",
     # Procedural memory
     "ProceduralMemory",
-    "ProceduralSkill",
     # Persistent episodic memory
     "PostgresEpisodicMemory",
     "Episode",

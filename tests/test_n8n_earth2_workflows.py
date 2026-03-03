@@ -180,7 +180,7 @@ class TestWeatherAutomationWorkflow:
                 headers=headers,
                 timeout=10
             )
-            if response.status_code == 401:
+            if response.status_code in (401, 403):
                 pytest.skip("n8n API requires authentication")
             elif response.status_code == 404:
                 pytest.skip(f"Workflow {workflow_id} not found - needs to be created")
@@ -271,7 +271,7 @@ class TestSporeAlertWorkflow:
                 headers=headers,
                 timeout=10
             )
-            if response.status_code == 401:
+            if response.status_code in (401, 403):
                 pytest.skip("n8n API requires authentication")
             elif response.status_code == 404:
                 pytest.skip(f"Workflow {workflow_id} not found - needs to be created")
@@ -357,7 +357,7 @@ class TestNowcastAlertWorkflow:
                 headers=headers,
                 timeout=10
             )
-            if response.status_code == 401:
+            if response.status_code in (401, 403):
                 pytest.skip("n8n API requires authentication")
             elif response.status_code == 404:
                 pytest.skip(f"Workflow {workflow_id} not found - needs to be created")

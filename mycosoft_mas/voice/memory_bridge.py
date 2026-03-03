@@ -712,18 +712,22 @@ _bridge_lock = asyncio.Lock()
 async def get_voice_memory_bridge() -> VoiceMemoryBridge:
     """
     Get or create the singleton VoiceMemoryBridge instance.
-    
+
     Returns:
         Initialized VoiceMemoryBridge
+
+    Raises:
+        ValueError/RuntimeError: If required infrastructure is unavailable.
     """
     global _bridge
-    
+
     if _bridge is None:
         async with _bridge_lock:
             if _bridge is None:
-                _bridge = VoiceMemoryBridge()
-                await _bridge.initialize()
-    
+                bridge = VoiceMemoryBridge()
+                await bridge.initialize()
+                _bridge = bridge
+
     return _bridge
 
 
