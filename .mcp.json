@@ -51,6 +51,16 @@
         "SLACK_OAUTH_TOKEN": "${SLACK_OAUTH_TOKEN}"
       }
     },
+    "mycosoft-ssh": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mycosoft_mas.mcp.ssh_server"],
+      "env": {
+        "SSH_DEFAULT_USER": "mycosoft",
+        "SSH_KEY_PATH": "${SSH_KEY_PATH}",
+        "SSH_PASSWORD": "${VM_PASSWORD}"
+      }
+    },
     "Notion": {
       "type": "stdio",
       "command": "npx",
