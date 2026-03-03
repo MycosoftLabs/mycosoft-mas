@@ -20,11 +20,7 @@ LEADERSHIP: Dict[str, str] = {
     "garret@mycosoft.org": "CTO",
 }
 
-TEAM: Set[str] = {
-    "chris@mycosoft.org",
-    "alberto@mycosoft.org",
-    "abelardo@mycosoft.org",
-}
+TEAM: Set[str] = set()
 
 LEADERSHIP_PERMISSIONS = frozenset({
     "read", "write", "delete", "deploy", "modify", "bulk_update",

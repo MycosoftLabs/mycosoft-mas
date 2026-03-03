@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: myca-postgres
+    environment:
+      POSTGRES_USER: myca
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: n8n
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - myca-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myca"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    expose:
+      - "5432"
+    labels:
+      com.mycosoft.myca.type: "database"
+      com.mycosoft.myca.description: "PostgreSQL database for n8n"
+
+  redis:
+    image: redis:7-alpine
+    container_name: myca-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - myca-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      com.mycosoft.myca.type: "cache"
+      com.mycosoft.myca.description: "Redis session store and cache"
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: myca-n8n
+    ports:
+      - "5678:5678"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      N8N_HOST: 0.0.0.0
+      N8N_PORT: 5678
+      N8N_PROTOCOL: https
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: myca_admin
+      WEBHOOK_URL: https://myca.mycosoft.org/n8n/
+      GENERIC_TIMEZONE: America/Los_Angeles
+      NODE_ENV: production
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: myca
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - /opt/myca/n8n/workflows:/home/node/.n8n/workflows
+    restart: unless-stopped
+    networks:
+      - myca-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      com.mycosoft.myca.type: "workflow"
+      com.mycosoft.myca.description: "n8n workflow automation engine"
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: myca-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/myca/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    networks:
+      - myca-net
+    labels:
+      com.mycosoft.myca.type: "proxy"
+      com.mycosoft.myca.description: "Caddy reverse proxy and TLS termination"
+
+  signal-api:
+    image: bbernhard/signal-cli-rest-api:latest
+    container_name: myca-signal-api
+    ports:
+      - "8089:8080"
+    volumes:
+      - /opt/myca/signal:/home/.local/share/signal-cli
+    environment:
+      MODE: json-rpc
+    restart: unless-stopped
+    networks:
+      - myca-net
+    labels:
+      com.mycosoft.myca.type: "messaging"
+      com.mycosoft.myca.description: "Signal messaging API"
+
+  whatsapp-api:
+    image: codertx/whatsapp-web-api:latest
+    container_name: myca-whatsapp-api
+    ports:
+      - "3000:3000"
+    volumes:
+      - /opt/myca/whatsapp:/app/auth
+    restart: unless-stopped
+    networks:
+      - myca-net
+    labels:
+      com.mycosoft.myca.type: "messaging"
+      com.mycosoft.myca.description: "Baileys-based WhatsApp Web API"
+
+networks:
+  myca-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  n8n_data:
+  caddy_data:
+  caddy_config:
+  redis_data:
+  postgres_data:

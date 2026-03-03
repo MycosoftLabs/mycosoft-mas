@@ -1,0 +1,324 @@
+{
+  "name": "MYCA - Response Router",
+  "nodes": [
+    {
+      "id": "webhook-response-router",
+      "name": "Webhook Response Router",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "path": "myca/route-response",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "id": "parse-routing-request",
+      "name": "Parse Routing Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "values": [
+          {
+            "name": "platform_source",
+            "type": "string",
+            "value": "={{ $node[\"Webhook Response Router\"].json.body.platform_source }}"
+          },
+          {
+            "name": "channel_id",
+            "type": "string",
+            "value": "={{ $node[\"Webhook Response Router\"].json.body.channel_id }}"
+          },
+          {
+            "name": "response_text",
+            "type": "string",
+            "value": "={{ $node[\"Webhook Response Router\"].json.body.response_text }}"
+          },
+          {
+            "name": "metadata",
+            "type": "json",
+            "value": "={{ $node[\"Webhook Response Router\"].json.body.metadata }}"
+          },
+          {
+            "name": "request_id",
+            "type": "string",
+            "value": "={{ $node[\"Webhook Response Router\"].json.body.metadata.request_id || \"unknown\" }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "switch-by-platform",
+      "name": "Switch by Platform",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "mode": "expression",
+        "cases": [
+          {
+            "condition": "=lower($node[\"Parse Routing Request\"].json.platform_source) === \"discord\"",
+            "output": 1
+          },
+          {
+            "condition": "=lower($node[\"Parse Routing Request\"].json.platform_source) === \"slack\"",
+            "output": 2
+          },
+          {
+            "condition": "=lower($node[\"Parse Routing Request\"].json.platform_source) === \"email\"",
+            "output": 3
+          },
+          {
+            "condition": "=lower($node[\"Parse Routing Request\"].json.platform_source) === \"signal\"",
+            "output": 4
+          },
+          {
+            "condition": "=lower($node[\"Parse Routing Request\"].json.platform_source) === \"whatsapp\"",
+            "output": 5
+          }
+        ],
+        "fallbackOutput": 6
+      }
+    },
+    {
+      "id": "format-discord-response",
+      "name": "Format Discord Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [650, 0],
+      "parameters": {
+        "language": "javascript",
+        "code": "const response = $node[\"Parse Routing Request\"].json.response_text;\nconst maxLength = 2000;\nconst messages = [];\n\nif (response.length > maxLength) {\n  let current = \"\";\n  const words = response.split(\" \");\n  for (const word of words) {\n    if ((current + word).length > maxLength) {\n      messages.push(current.trim());\n      current = word + \" \";\n    } else {\n      current += word + \" \";\n    }\n  }\n  if (current.trim()) messages.push(current.trim());\n} else {\n  messages.push(response);\n}\n\nreturn { formatted_messages: messages };"
+      }
+    },
+    {
+      "id": "format-slack-response",
+      "name": "Format Slack Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 80],
+      "parameters": {
+        "values": [
+          {
+            "name": "formatted_text",
+            "type": "string",
+            "value": "={{ $node[\"Parse Routing Request\"].json.response_text }}"
+          },
+          {
+            "name": "thread_ts",
+            "type": "string",
+            "value": "={{ $node[\"Parse Routing Request\"].json.metadata.thread_ts }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "format-email-response",
+      "name": "Format Email Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [650, 160],
+      "parameters": {
+        "language": "javascript",
+        "code": "const response = $node[\"Parse Routing Request\"].json.response_text;\nconst signature = `---\\nMYCA Multi-Agent System\\nschedule@mycosoft.org`;\n\nreturn {\n  email_body: `${response}\\n\\n${signature}`,\n  email_subject: `RE: {{ $node[\"Parse Routing Request\"].json.metadata.original_subject || \"MYCA Query\" }}`\n};"
+      }
+    },
+    {
+      "id": "format-signal-response",
+      "name": "Format Signal Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 240],
+      "parameters": {
+        "values": [
+          {
+            "name": "formatted_text",
+            "type": "string",
+            "value": "={{ $node[\"Parse Routing Request\"].json.response_text }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "format-whatsapp-response",
+      "name": "Format WhatsApp Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 320],
+      "parameters": {
+        "values": [
+          {
+            "name": "formatted_text",
+            "type": "string",
+            "value": "={{ $node[\"Parse Routing Request\"].json.response_text }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "send-discord-messages",
+      "name": "Send Discord Messages",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 1,
+      "position": [850, 0],
+      "parameters": {
+        "resource": "message",
+        "action": "create",
+        "channelId": "={{ $node[\"Parse Routing Request\"].json.channel_id }}",
+        "textInput": "={{ $node[\"Format Discord Response\"].json.formatted_messages[0] }}"
+      }
+    },
+    {
+      "id": "send-slack-message",
+      "name": "Send Slack Message",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [850, 80],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "={{ $node[\"Parse Routing Request\"].json.channel_id }}",
+        "text": "={{ $node[\"Format Slack Response\"].json.formatted_text }}",
+        "threadTs": "={{ $node[\"Format Slack Response\"].json.thread_ts }}"
+      }
+    },
+    {
+      "id": "send-email-message",
+      "name": "Send Email Message",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [850, 160],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toEmail": "={{ $node[\"Parse Routing Request\"].json.channel_id }}",
+        "subject": "={{ $node[\"Format Email Response\"].json.email_subject }}",
+        "message": "={{ $node[\"Format Email Response\"].json.email_body }}"
+      }
+    },
+    {
+      "id": "send-signal-message",
+      "name": "Send Signal Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 240],
+      "parameters": {
+        "url": "http://localhost:8089/v2/send",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyType": "json",
+        "body": {
+          "recipient": "={{ $node[\"Parse Routing Request\"].json.channel_id }}",
+          "message": "={{ $node[\"Format Signal Response\"].json.formatted_text }}"
+        }
+      }
+    },
+    {
+      "id": "send-whatsapp-message",
+      "name": "Send WhatsApp Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 320],
+      "parameters": {
+        "url": "={{ env[\"WHATSAPP_API_ENDPOINT\"] }}/messages",
+        "method": "POST",
+        "headers": {
+          "Authorization": "=Bearer {{ env[\"WHATSAPP_API_TOKEN\"] }}",
+          "Content-Type": "application/json"
+        },
+        "bodyType": "json",
+        "body": {
+          "messaging_product": "whatsapp",
+          "to": "={{ $node[\"Parse Routing Request\"].json.channel_id }}",
+          "type": "text",
+          "text": {
+            "body": "={{ $node[\"Format WhatsApp Response\"].json.formatted_text }}"
+          }
+        }
+      }
+    },
+    {
+      "id": "error-handler-retry",
+      "name": "Error Handler Retry",
+      "type": "n8n-nodes-base.errorHandler",
+      "typeVersion": 1,
+      "position": [850, 400],
+      "parameters": {
+        "options": {
+          "continueOnFail": true
+        }
+      }
+    },
+    {
+      "id": "retry-with-backoff",
+      "name": "Retry with Backoff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "parameters": {
+        "language": "javascript",
+        "code": "const maxRetries = 3;\nconst baseDelay = 1000; // 1 second\nconst error = $node[\"Error Handler Retry\"].json;\n\nif (!context.retryCount) context.retryCount = 0;\n\nif (context.retryCount < maxRetries) {\n  const delay = baseDelay * Math.pow(2, context.retryCount);\n  context.retryCount++;\n  console.log(`Retry attempt ${context.retryCount} after ${delay}ms`);\n  // Would normally use sleep/wait here\n  return { should_retry: true, attempt: context.retryCount, delay };\n} else {\n  return { should_retry: false, max_retries_exceeded: true };\n}"
+      }
+    },
+    {
+      "id": "fallback-alert-slack",
+      "name": "Fallback Alert Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1050, 450],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#myca-alerts",
+        "text": "=MYCA Response Router failed for request {{ $node[\"Parse Routing Request\"].json.request_id }} on platform {{ $node[\"Parse Routing Request\"].json.platform_source }}"
+      }
+    },
+    {
+      "id": "unhandled-platform",
+      "name": "Unhandled Platform",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [650, 400],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#myca-alerts",
+        "text": "=Warning: MYCA received response for unhandled platform: {{ $node[\"Parse Routing Request\"].json.platform_source }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Response Router": [{"node": ["Parse Routing Request"], "type": "main", "index": [0, 0]}],
+    "Parse Routing Request": [{"node": ["Switch by Platform"], "type": "main", "index": [0, 0]}],
+    "Switch by Platform": [
+      {"node": ["Format Discord Response"], "type": "main", "index": [1, 0]},
+      {"node": ["Format Slack Response"], "type": "main", "index": [2, 0]},
+      {"node": ["Format Email Response"], "type": "main", "index": [3, 0]},
+      {"node": ["Format Signal Response"], "type": "main", "index": [4, 0]},
+      {"node": ["Format WhatsApp Response"], "type": "main", "index": [5, 0]},
+      {"node": ["Unhandled Platform"], "type": "main", "index": [6, 0]}
+    ],
+    "Format Discord Response": [{"node": ["Send Discord Messages"], "type": "main", "index": [0, 0]}],
+    "Format Slack Response": [{"node": ["Send Slack Message"], "type": "main", "index": [0, 0]}],
+    "Format Email Response": [{"node": ["Send Email Message"], "type": "main", "index": [0, 0]}],
+    "Format Signal Response": [{"node": ["Send Signal Message"], "type": "main", "index": [0, 0]}],
+    "Format WhatsApp Response": [{"node": ["Send WhatsApp Message"], "type": "main", "index": [0, 0]}],
+    "Send Discord Messages": [{"node": ["Error Handler Retry"], "type": "main", "index": [0, 0]}],
+    "Send Slack Message": [{"node": ["Error Handler Retry"], "type": "main", "index": [0, 0]}],
+    "Send Email Message": [{"node": ["Error Handler Retry"], "type": "main", "index": [0, 0]}],
+    "Send Signal Message": [{"node": ["Error Handler Retry"], "type": "main", "index": [0, 0]}],
+    "Send WhatsApp Message": [{"node": ["Error Handler Retry"], "type": "main", "index": [0, 0]}],
+    "Error Handler Retry": [
+      {"node": ["Retry with Backoff"], "type": "main", "index": [0, 0]},
+      {"node": ["Fallback Alert Slack"], "type": "main", "index": [0, 0]}
+    ]
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{"name": "MYCA"}, {"name": "Router"}, {"name": "Core"}]
+}

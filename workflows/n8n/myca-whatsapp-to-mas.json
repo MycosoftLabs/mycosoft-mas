@@ -1,0 +1,130 @@
+{
+  "name": "MYCA - WhatsApp to MAS",
+  "nodes": [
+    {
+      "id": "whatsapp-webhook-trigger",
+      "name": "WhatsApp Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "path": "myca/whatsapp",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "id": "parse-whatsapp-message",
+      "name": "Parse WhatsApp Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "values": [
+          {
+            "name": "sender_number",
+            "type": "string",
+            "value": "={{ $node[\"WhatsApp Webhook Trigger\"].json.body.from }}"
+          },
+          {
+            "name": "message_text",
+            "type": "string",
+            "value": "={{ $node[\"WhatsApp Webhook Trigger\"].json.body.text }}"
+          },
+          {
+            "name": "message_id",
+            "type": "string",
+            "value": "={{ $node[\"WhatsApp Webhook Trigger\"].json.body.id }}"
+          },
+          {
+            "name": "timestamp",
+            "type": "number",
+            "value": "={{ $node[\"WhatsApp Webhook Trigger\"].json.body.timestamp }}"
+          },
+          {
+            "name": "session_id",
+            "type": "string",
+            "value": "=whatsapp_{{ $node[\"WhatsApp Webhook Trigger\"].json.body.from }}_{{ Date.now() }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "http-post-whatsapp-mas",
+      "name": "HTTP POST to MAS Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 100],
+      "parameters": {
+        "url": "http://localhost:8001/voice/orchestrator/chat",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyType": "json",
+        "body": {
+          "message": "={{ $node[\"Parse WhatsApp Message\"].json.message_text }}",
+          "session_id": "={{ $node[\"Parse WhatsApp Message\"].json.session_id }}",
+          "platform": "whatsapp",
+          "sender": "={{ $node[\"Parse WhatsApp Message\"].json.sender_number }}",
+          "message_id": "={{ $node[\"Parse WhatsApp Message\"].json.message_id }}"
+        }
+      }
+    },
+    {
+      "id": "format-whatsapp-response",
+      "name": "Format WhatsApp Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "values": [
+          {
+            "name": "response_text",
+            "type": "string",
+            "value": "={{ $node[\"HTTP POST to MAS Orchestrator\"].json.response || \"No response received\" }}"
+          },
+          {
+            "name": "recipient_number",
+            "type": "string",
+            "value": "={{ $node[\"Parse WhatsApp Message\"].json.sender_number }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "whatsapp-send-message",
+      "name": "WhatsApp Send Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 100],
+      "parameters": {
+        "url": "={{ env[\"WHATSAPP_API_ENDPOINT\"] }}/messages",
+        "method": "POST",
+        "headers": {
+          "Authorization": "=Bearer {{ env[\"WHATSAPP_API_TOKEN\"] }}",
+          "Content-Type": "application/json"
+        },
+        "bodyType": "json",
+        "body": {
+          "messaging_product": "whatsapp",
+          "to": "={{ $node[\"Format WhatsApp Response\"].json.recipient_number }}",
+          "type": "text",
+          "text": {
+            "body": "={{ $node[\"Format WhatsApp Response\"].json.response_text }}"
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WhatsApp Webhook Trigger": [{"node": ["Parse WhatsApp Message"], "type": "main", "index": [0, 0]}],
+    "Parse WhatsApp Message": [{"node": ["HTTP POST to MAS Orchestrator"], "type": "main", "index": [0, 0]}],
+    "HTTP POST to MAS Orchestrator": [{"node": ["Format WhatsApp Response"], "type": "main", "index": [0, 0]}],
+    "Format WhatsApp Response": [{"node": ["WhatsApp Send Message"], "type": "main", "index": [0, 0]}]
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{"name": "MYCA"}, {"name": "WhatsApp"}, {"name": "Integration"}]
+}

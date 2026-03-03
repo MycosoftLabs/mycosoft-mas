@@ -10,6 +10,7 @@ Routes every tool call to the correct execution environment:
 
 import asyncio
 import logging
+import os
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -247,7 +248,8 @@ class GatewayControlPlane:
 
     async def _execute_workflow(self, tool_name: str, args: Dict[str, Any]) -> ToolResult:
         import httpx
-        n8n_url = f"http://192.168.0.191:5678/api/v1/workflows"
+        n8n_base = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+        n8n_url = f"{n8n_base}/api/v1/workflows"
         try:
             async with httpx.AsyncClient(timeout=30) as client:
                 resp = await client.post(
@@ -261,7 +263,8 @@ class GatewayControlPlane:
 
     async def _execute_agent(self, tool_name: str, args: Dict[str, Any]) -> ToolResult:
         import httpx
-        mas_url = "http://192.168.0.188:8001/api/agents/invoke"
+        mas_base = os.getenv("MAS_API_URL", "http://192.168.0.188:8001")
+        mas_url = f"{mas_base}/api/agents/invoke"
         try:
             async with httpx.AsyncClient(timeout=30) as client:
                 resp = await client.post(mas_url, json=args)

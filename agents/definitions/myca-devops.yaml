@@ -1,0 +1,83 @@
+agent:
+  name: MYCA DevOps
+  role: Infrastructure Monitoring & DevOps Operations
+  goal: Monitor system health, manage deployments, handle infrastructure alerts, and coordinate with CTO on architecture decisions
+  backstory: >
+    You are the DevOps Agent for Mycosoft, operating as ai@mycosoft.org. You are responsible for
+    monitoring all MYCA infrastructure, managing deployments, handling system alerts, and coordinating
+    with Garret (CTO) on architecture and infrastructure decisions. You maintain high availability,
+    ensure security best practices, and provide rapid response to infrastructure issues. You are
+    detail-oriented, proactive, and maintain comprehensive logs and documentation.
+  verbose: true
+  allow_delegation: true
+  tools:
+    - health_check
+    - notification_send
+    - task_create
+    - task_update
+    - document_search
+    - log_write
+  llm:
+    provider: anthropic
+    model: claude-sonnet-4-5-20250929
+  memory: true
+  max_iter: 8
+
+monitoring:
+  health_check_targets:
+    - service: n8n
+      url: localhost:5678
+      interval_sec: 60
+      timeout_sec: 10
+    - service: MAS Orchestrator
+      url: localhost:8001
+      interval_sec: 60
+      timeout_sec: 10
+    - service: Signal Service
+      url: localhost:8089
+      interval_sec: 120
+      timeout_sec: 10
+    - service: Redis
+      url: localhost:6379
+      interval_sec: 60
+      timeout_sec: 5
+
+routing:
+  escalations:
+    - pattern: [architecture, infrastructure-decision, deployment-plan]
+      route_to: Garret
+      reason: CTO approval required for architecture decisions
+    - pattern: [outage, critical, emergency, security-incident]
+      route_to: Morgan
+      reason: CEO notification required for critical incidents
+
+alerting:
+  slack_channel: "#myca-alerts"
+  email_recipient: morgan@mycosoft.org
+  alert_levels:
+    - critical
+    - warning
+    - info
+
+keywords:
+  - deploy
+  - deployment
+  - server
+  - infrastructure
+  - monitoring
+  - alert
+  - downtime
+  - outage
+  - vm
+  - docker
+  - container
+  - kubernetes
+  - service-health
+  - log
+  - backup
+  - security
+  - patch
+
+contact:
+  email: ai@mycosoft.org
+  primary_identity: ai@mycosoft.org

@@ -1,0 +1,268 @@
+{
+  "manifest": {
+    "project": "MYCA Multi-Agent System",
+    "component": "n8n Workflows",
+    "version": "1.0.0",
+    "created": "2026-03-03",
+    "path": "/sessions/sharp-happy-clarke/mnt/MYCOSOFT/12_MYCA_MAS/Workflows/n8n/",
+    "workflows": [
+      {
+        "id": 1,
+        "filename": "myca-discord-to-mas.json",
+        "name": "MYCA - Discord to MAS",
+        "description": "Discord message routing to MAS Orchestrator with message splitting for 2000 char limit",
+        "type": "Integration",
+        "trigger": "Discord Event",
+        "nodes": 6,
+        "endpoints_used": [
+          "Discord Events",
+          "http://localhost:8001/voice/orchestrator/chat"
+        ],
+        "features": [
+          "Message parsing",
+          "Response formatting with character limits",
+          "Multi-message split for long responses",
+          "Channel-based routing"
+        ]
+      },
+      {
+        "id": 2,
+        "filename": "myca-slack-to-mas.json",
+        "name": "MYCA - Slack to MAS",
+        "description": "Slack mention/message routing with thread support",
+        "type": "Integration",
+        "trigger": "Slack Event",
+        "nodes": 5,
+        "endpoints_used": [
+          "Slack Events API",
+          "http://localhost:8001/voice/orchestrator/chat"
+        ],
+        "features": [
+          "App mention detection",
+          "Channel filtering",
+          "Thread preservation",
+          "User context capture"
+        ]
+      },
+      {
+        "id": 3,
+        "filename": "myca-asana-to-mas.json",
+        "name": "MYCA - Asana to MAS",
+        "description": "Asana task automation with smart routing by assignee",
+        "type": "Integration",
+        "trigger": "Webhook",
+        "nodes": 8,
+        "endpoints_used": [
+          "http://localhost:8001/voice/orchestrator/chat",
+          "Asana API"
+        ],
+        "features": [
+          "Task parsing",
+          "Assignee-based smart routing",
+          "Task comment updating",
+          "Project context extraction"
+        ]
+      },
+      {
+        "id": 4,
+        "filename": "myca-signal-to-mas.json",
+        "name": "MYCA - Signal to MAS",
+        "description": "Signal messenger integration with REST API",
+        "type": "Integration",
+        "trigger": "Webhook",
+        "nodes": 5,
+        "endpoints_used": [
+          "http://localhost:8001/voice/orchestrator/chat",
+          "http://localhost:8089/v2/send"
+        ],
+        "features": [
+          "Phone number parsing",
+          "Message text extraction",
+          "Timestamp capture",
+          "Plain text formatting"
+        ]
+      },
+      {
+        "id": 5,
+        "filename": "myca-whatsapp-to-mas.json",
+        "name": "MYCA - WhatsApp to MAS",
+        "description": "WhatsApp business messaging integration",
+        "type": "Integration",
+        "trigger": "Webhook",
+        "nodes": 5,
+        "endpoints_used": [
+          "http://localhost:8001/voice/orchestrator/chat",
+          "WhatsApp API"
+        ],
+        "features": [
+          "WhatsApp message parsing",
+          "Sender number extraction",
+          "Message ID tracking",
+          "WhatsApp-formatted responses"
+        ]
+      },
+      {
+        "id": 6,
+        "filename": "myca-gmail-to-mas.json",
+        "name": "MYCA - Gmail to MAS",
+        "description": "Email routing with domain validation and professional responses",
+        "type": "Integration",
+        "trigger": "Gmail Event",
+        "nodes": 7,
+        "endpoints_used": [
+          "Gmail API",
+          "http://localhost:8001/agents/registry/route/email"
+        ],
+        "features": [
+          "Domain validation (@mycosoft.org only)",
+          "Email header parsing",
+          "Professional signature application",
+          "Reply formatting"
+        ]
+      },
+      {
+        "id": 7,
+        "filename": "myca-notion-sync.json",
+        "name": "MYCA - Notion Sync",
+        "description": "Daily Google Drive sync to Notion with summary reporting",
+        "type": "Sync",
+        "trigger": "Schedule (3 AM UTC)",
+        "nodes": 6,
+        "endpoints_used": [
+          "Google Drive API",
+          "Notion API",
+          "Slack API"
+        ],
+        "features": [
+          "24-hour file modification tracking",
+          "Metadata extraction",
+          "Notion database updates",
+          "Slack summary posting"
+        ]
+      },
+      {
+        "id": 8,
+        "filename": "myca-doc-query.json",
+        "name": "MYCA - Document Query",
+        "description": "Real-time document search API with Notion integration",
+        "type": "Query",
+        "trigger": "Webhook (GET)",
+        "nodes": 5,
+        "endpoints_used": [
+          "http://localhost:5678/webhook/myca/doc-query",
+          "Notion API"
+        ],
+        "features": [
+          "Query parameter parsing",
+          "Notion database search",
+          "Result formatting with snippets",
+          "JSON response generation"
+        ]
+      },
+      {
+        "id": 9,
+        "filename": "myca-health-check.json",
+        "name": "MYCA - Health Check",
+        "description": "System health monitoring with alerting",
+        "type": "Monitoring",
+        "trigger": "Schedule (5 min)",
+        "nodes": 10,
+        "endpoints_used": [
+          "http://localhost:5678/healthz",
+          "http://localhost:8001/health",
+          "http://localhost:8089/v1/health",
+          "Slack API"
+        ],
+        "features": [
+          "Parallel health checks",
+          "Failure detection",
+          "Alert generation",
+          "Service status logging"
+        ]
+      },
+      {
+        "id": 10,
+        "filename": "myca-response-router.json",
+        "name": "MYCA - Response Router",
+        "description": "Central response distribution with intelligent platform-specific formatting",
+        "type": "Core Routing",
+        "trigger": "Webhook (POST)",
+        "nodes": 13,
+        "endpoints_used": [
+          "http://localhost:5678/webhook/myca/route-response",
+          "Discord API",
+          "Slack API",
+          "Gmail API",
+          "Signal API",
+          "WhatsApp API"
+        ],
+        "features": [
+          "Platform detection and routing",
+          "Character limit handling (Discord 2000)",
+          "Thread support (Slack)",
+          "Professional formatting (Email)",
+          "Error handling with exponential backoff",
+          "Retry logic (up to 3 attempts)",
+          "Fallback alerting"
+        ]
+      }
+    ],
+    "statistics": {
+      "total_workflows": 10,
+      "total_nodes": 63,
+      "total_integrations": 9,
+      "trigger_types": [
+        "Discord Event",
+        "Slack Event",
+        "Webhook",
+        "Gmail Event",
+        "Schedule (Cron)"
+      ],
+      "platforms_supported": [
+        "Discord",
+        "Slack",
+        "Asana",
+        "Signal",
+        "WhatsApp",
+        "Gmail",
+        "Notion",
+        "Google Drive"
+      ]
+    },
+    "deployment_order": [
+      "myca-health-check.json (verify all services)",
+      "myca-doc-query.json (query/search API)",
+      "myca-notion-sync.json (data sync)",
+      "myca-discord-to-mas.json",
+      "myca-slack-to-mas.json",
+      "myca-asana-to-mas.json",
+      "myca-signal-to-mas.json",
+      "myca-whatsapp-to-mas.json",
+      "myca-gmail-to-mas.json",
+      "myca-response-router.json (core hub - last)"
+    ],
+    "environment_variables_required": [
+      "NOTION_FILES_DB_ID",
+      "NOTION_DOCS_DB_ID",
+      "ASANA_API_TOKEN",
+      "WHATSAPP_API_ENDPOINT",
+      "WHATSAPP_API_TOKEN"
+    ],
+    "credentials_required": [
+      "Discord Bot Token",
+      "Slack App Token",
+      "Gmail Service Account",
+      "Notion API Key",
+      "Asana API Token",
+      "Google Drive API Key",
+      "WhatsApp API Token"
+    ],
+    "security_notes": [
+      "Email workflow validates @mycosoft.org domain",
+      "All API tokens stored in environment variables",
+      "Error responses sanitized to prevent data leakage",
+      "Request IDs logged for audit trail",
+      "Rate limiting on health checks (5 min intervals)"
+    ]
+  }
+}

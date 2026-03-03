@@ -1,0 +1,165 @@
+{
+  "name": "MYCA - Gmail to MAS",
+  "nodes": [
+    {
+      "id": "gmail-trigger-node",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "queries": ["to:schedule@mycosoft.org"]
+      }
+    },
+    {
+      "id": "parse-email-node",
+      "name": "Parse Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "values": [
+          {
+            "name": "from_email",
+            "type": "string",
+            "value": "={{ $node[\"Gmail Trigger\"].json.from }}"
+          },
+          {
+            "name": "to_email",
+            "type": "string",
+            "value": "={{ $node[\"Gmail Trigger\"].json.to }}"
+          },
+          {
+            "name": "subject",
+            "type": "string",
+            "value": "={{ $node[\"Gmail Trigger\"].json.subject }}"
+          },
+          {
+            "name": "body",
+            "type": "string",
+            "value": "={{ $node[\"Gmail Trigger\"].json.body }}"
+          },
+          {
+            "name": "message_id",
+            "type": "string",
+            "value": "={{ $node[\"Gmail Trigger\"].json.id }}"
+          },
+          {
+            "name": "session_id",
+            "type": "string",
+            "value": "=email_{{ $node[\"Gmail Trigger\"].json.id }}_{{ Date.now() }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "filter-domain-check",
+      "name": "Filter Domain Check",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "compareOperation": "contains"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $node[\"Parse Email\"].json.from_email }}",
+              "operator": "contains",
+              "rightValue": "@mycosoft.org"
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "http-post-email-registry",
+      "name": "HTTP POST to Email Registry Route",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 100],
+      "parameters": {
+        "url": "http://localhost:8001/agents/registry/route/email",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyType": "json",
+        "body": {
+          "from": "={{ $node[\"Parse Email\"].json.from_email }}",
+          "to": "={{ $node[\"Parse Email\"].json.to_email }}",
+          "subject": "={{ $node[\"Parse Email\"].json.subject }}",
+          "body": "={{ $node[\"Parse Email\"].json.body }}",
+          "message_id": "={{ $node[\"Parse Email\"].json.message_id }}",
+          "session_id": "={{ $node[\"Parse Email\"].json.session_id }}"
+        }
+      }
+    },
+    {
+      "id": "format-email-response",
+      "name": "Format Professional Email Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "language": "javascript",
+        "code": "const response = $node[\"HTTP POST to Email Registry Route\"].json.response || \"No response received\";\nconst originalSubject = $node[\"Parse Email\"].json.subject || \"MYCA Query\";\n\nconst replySubject = `RE: ${originalSubject}`;\nconst signature = `---\\nMYCA Multi-Agent System\\nScheduling and Coordination\\nschedule@mycosoft.org`;\nconst professionalBody = `${response}\\n\\n${signature}`;\n\nreturn {\n  reply_subject: replySubject,\n  reply_body: professionalBody,\n  recipient: $node[\"Parse Email\"].json.from_email\n};"
+      }
+    },
+    {
+      "id": "gmail-send-reply",
+      "name": "Gmail Send Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1050, 100],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toEmail": "={{ $node[\"Format Email Response\"].json.recipient }}",
+        "subject": "={{ $node[\"Format Email Response\"].json.reply_subject }}",
+        "message": "={{ $node[\"Format Email Response\"].json.reply_body }}",
+        "include_html": false
+      }
+    },
+    {
+      "id": "rejected-domain-node",
+      "name": "Log Rejected Domain",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 250],
+      "parameters": {
+        "values": [
+          {
+            "name": "rejection_reason",
+            "type": "string",
+            "value": "Email from non-@mycosoft.org domain rejected"
+          },
+          {
+            "name": "rejected_sender",
+            "type": "string",
+            "value": "={{ $node[\"Parse Email\"].json.from_email }}"
+          }
+        ]
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": [{"node": ["Parse Email"], "type": "main", "index": [0, 0]}],
+    "Parse Email": [{"node": ["Filter Domain Check"], "type": "main", "index": [0, 0]}],
+    "Filter Domain Check": [
+      {"node": ["HTTP POST to Email Registry Route"], "type": "true", "index": [0, 0]},
+      {"node": ["Log Rejected Domain"], "type": "false", "index": [0, 0]}
+    ],
+    "HTTP POST to Email Registry Route": [{"node": ["Format Email Response"], "type": "main", "index": [0, 0]}],
+    "Format Email Response": [{"node": ["Gmail Send Reply"], "type": "main", "index": [0, 0]}]
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{"name": "MYCA"}, {"name": "Gmail"}, {"name": "Integration"}]
+}

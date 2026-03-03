@@ -1,0 +1,103 @@
+{
+  "name": "MYCA - Notion Sync",
+  "nodes": [
+    {
+      "id": "schedule-trigger-node",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "rule": {
+          "interval": [3],
+          "intervalUnit": "hour",
+          "triggerAtHour": 3,
+          "triggerAtMinute": 0,
+          "timezone": "UTC"
+        }
+      }
+    },
+    {
+      "id": "google-drive-list",
+      "name": "List Google Drive Files",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 2,
+      "position": [250, 100],
+      "parameters": {
+        "resource": "file",
+        "operation": "list",
+        "useQueryString": true,
+        "queryString": "modifiedTime>'{{ new Date(Date.now() - 86400000).toISOString() }}'"
+      }
+    },
+    {
+      "id": "parse-drive-files",
+      "name": "Parse Drive Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "language": "javascript",
+        "code": "const files = $node[\"List Google Drive Files\"].json.files || [];\n\nconst parsed = files.map(file => ({\n  file_id: file.id,\n  file_name: file.name,\n  file_type: file.mimeType,\n  modified_time: file.modifiedTime,\n  owner: file.owners ? file.owners[0].displayName : 'Unknown',\n  web_link: file.webViewLink,\n  size: file.size\n}));\n\nreturn { files: parsed, file_count: parsed.length };"
+      }
+    },
+    {
+      "id": "update-notion-database",
+      "name": "Update Notion Database",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "resource": "databaseItem",
+        "operation": "upsert",
+        "databaseId": "={{ env[\"NOTION_FILES_DB_ID\"] }}",
+        "title": "={{ $node[\"Parse Drive Files\"].json.files[0].file_name }}",
+        "properties": {
+          "File Name": "={{ $node[\"Parse Drive Files\"].json.files[0].file_name }}",
+          "File Type": "={{ $node[\"Parse Drive Files\"].json.files[0].file_type }}",
+          "Modified": "={{ $node[\"Parse Drive Files\"].json.files[0].modified_time }}",
+          "Owner": "={{ $node[\"Parse Drive Files\"].json.files[0].owner }}",
+          "Link": "={{ $node[\"Parse Drive Files\"].json.files[0].web_link }}"
+        }
+      }
+    },
+    {
+      "id": "create-summary-text",
+      "name": "Create Summary Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "language": "javascript",
+        "code": "const files = $node[\"Parse Drive Files\"].json.files || [];\nconst summary = `Daily Sync Report\\n\\nFiles modified in last 24 hours: ${files.length}\\n\\n`;\nconst details = files.map(f => `- ${f.file_name} (${f.file_type}) - Modified by ${f.owner}`).join('\\n');\n\nreturn { summary_text: summary + details };"
+      }
+    },
+    {
+      "id": "slack-post-summary",
+      "name": "Slack Post Summary",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1050, 100],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#myca-logs",
+        "text": "={{ $node[\"Create Summary Text\"].json.summary_text }}"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger Node": [{"node": ["List Google Drive Files"], "type": "main", "index": [0, 0]}],
+    "List Google Drive Files": [{"node": ["Parse Drive Files"], "type": "main", "index": [0, 0]}],
+    "Parse Drive Files": [
+      {"node": ["Update Notion Database"], "type": "main", "index": [0, 0]},
+      {"node": ["Create Summary Text"], "type": "main", "index": [0, 0]}
+    ],
+    "Create Summary Text": [{"node": ["Slack Post Summary"], "type": "main", "index": [0, 0]}]
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{"name": "MYCA"}, {"name": "Sync"}, {"name": "Integration"}]
+}
