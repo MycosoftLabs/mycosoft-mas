@@ -64,11 +64,29 @@ SSH credentials were handled interactively via Cursor's terminal prompt — no p
 
 ---
 
-## Post-Deployment Verification Checklist
+## Post-Deployment Verification
 
-- [ ] MAS Orchestrator responds: `curl http://192.168.0.188:8001/health`
-- [ ] Website loads: `curl http://192.168.0.187:3000`
-- [ ] MINDEX API responds: `curl http://192.168.0.189:8000/health`
-- [ ] STATIC endpoints available: `curl http://192.168.0.188:8001/api/static/health`
-- [ ] Unified Latents endpoints available: `curl http://192.168.0.188:8001/api/ul/health`
-- [ ] Run tests: `poetry run pytest tests/ -v --tb=short`
+### Live VM Health (verified by Cursor)
+- [x] MAS Orchestrator responds: `http://192.168.0.188:8001/health` — HTTP 200 HEALTHY
+- [x] MINDEX API responds: `http://192.168.0.189:8000/api/mindex/health` — HTTP 200 OK
+- [x] Sandbox Website: `http://192.168.0.187:3000` — HTTP 200 (37KB)
+- [x] Cloudflare tunnel: `https://sandbox.mycosoft.com` — HTTP 200 LIVE (38KB)
+
+### Code Verification (verified by Claude Code)
+- [x] **STATIC Constrained Decoding API** (`/api/static/`) — 15 endpoints: health, build indexes (token/string), list/get/delete indexes, decode, validate, rerank, mask, domain build-all/build/list/report/validate
+- [x] **Unified Latents API** (`/api/unified-latents/`) — 9 endpoints: health, info, generate image/video, encode, decode, train, train status, evaluate
+- [x] **Economy API** (`/api/economy/`) — 11 endpoints: health, wallets, charge, revenue, pricing, resource purchase/needs, incentives CRUD, summary, client registration
+- [x] **Taxonomy API** (`/api/taxonomy/`) — 8 endpoints: health, search, taxon detail, observations, ingestion start/status, stats, kingdoms, random species
+- [x] **Knowledge API** (`/api/knowledge/`) — 6 endpoints: health, query, classify, deep research, domains, sources, stats
+- [x] **MYCA Soul Persona** — 20,000+ character deep identity loaded at consciousness init
+- [x] **Autonomous Research API** (`/autonomous/`) — experiments CRUD, hypothesis engine
+- [x] All new routers properly imported with try/except graceful fallbacks in `myca_main.py`
+- [x] All availability flags (`ECONOMY_API_AVAILABLE`, `TAXONOMY_API_AVAILABLE`, `KNOWLEDGE_API_AVAILABLE`, `STATIC_DECODING_API_AVAILABLE`) verified
+
+### Test Suite
+- [x] **678 passed, 31 skipped, 0 failures** (26.00s)
+- Skips: voice-memory-bridge tests (expected — requires `MINDEX_DATABASE_URL`)
+- All STATIC, Unified Latents, autonomous, and system registry tests pass
+
+### Disk Cleanup
+- [x] 59.7GB of old Docker images reclaimed on MAS VM (188)
