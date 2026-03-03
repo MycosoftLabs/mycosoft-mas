@@ -524,14 +524,14 @@ User message: {input_content}
 
 Respond thoughtfully and helpfully, staying true to your identity and purpose."""
         
-        # Try to use the frontier router if available
+        # Use MYCA's own brain (Ollama local-first via FrontierLLMRouter)
         got_response = False
         try:
-            from mycosoft_mas.llm.frontier_router import FrontierLLMRouter, ConversationContext
+            from mycosoft_mas.llm.frontier_router import get_frontier_router, ConversationContext
             import uuid
-            
-            router = FrontierLLMRouter()
-            
+
+            router = get_frontier_router()
+
             # Override the persona with our system prompt for this session
             router.persona = system_prompt
             
@@ -739,13 +739,13 @@ class DeliberationModule:
         
         context_str = "\n".join(context_parts)
         
-        # Try LLM generation
+        # Use MYCA's own brain (Ollama local-first)
         try:
-            from mycosoft_mas.llm.frontier_router import FrontierLLMRouter, ConversationContext
+            from mycosoft_mas.llm.frontier_router import get_frontier_router, ConversationContext
             import uuid
-            
-            router = FrontierLLMRouter()
-            
+
+            router = get_frontier_router()
+
             ctx = ConversationContext(
                 session_id=str(uuid.uuid4()),
                 conversation_id=str(uuid.uuid4()),
@@ -753,17 +753,17 @@ class DeliberationModule:
                 turn_count=1,
                 history=[],
             )
-            
+
             prompt = f"{context_str}\n\nUser: {message}" if context_str else message
-            
+
             got_response = False
             async for token in router.stream_response(message=prompt, context=ctx):
                 got_response = True
                 yield token
-            
+
             if not got_response:
                 yield self._fallback_response(message)
-                
+
         except Exception as e:
             logger.warning(f"LLM generation error: {e}")
             yield self._fallback_response(message)
@@ -804,13 +804,13 @@ class DeliberationModule:
         
         context_str = "".join(context_parts)
         
-        # Generate response with context
+        # Generate response with context using MYCA's own brain
         try:
-            from mycosoft_mas.llm.frontier_router import FrontierLLMRouter, ConversationContext
+            from mycosoft_mas.llm.frontier_router import get_frontier_router, ConversationContext
             import uuid
-            
-            router = FrontierLLMRouter()
-            
+
+            router = get_frontier_router()
+
             # Add RAG context to system prompt
             router.persona = f"""You are MYCA, the Mycosoft AI. You have access to the following knowledge:
 

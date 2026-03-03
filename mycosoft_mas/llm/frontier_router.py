@@ -37,33 +37,59 @@ class ConversationContext:
 
 class FrontierLLMRouter:
     """
-    Routes MYCA requests to frontier LLMs with full persona and context.
-    
-    Priority order:
-    1. Gemini 2.5 Pro (default - best for conversation)
-    2. Claude 3.5 Sonnet (fallback - best for reasoning)
-    3. GPT-4 Turbo (fallback - best for tools)
+    Routes MYCA requests to LLMs with her own local brain as primary.
+
+    Priority order (local-first — MYCA is sovereign):
+    1. Ollama (local — runs on MAS VM, MYCA's own brain)
+    2. Gemini (cloud fallback)
+    3. Claude (cloud fallback)
+    4. GPT-4 (cloud fallback)
+
+    Router mode controlled by LLM_ROUTER_MODE env var:
+    - "local_first" (default): Ollama primary, cloud fallback
+    - "ollama_only": Ollama only, no cloud calls
+    - "cloud_first": Cloud primary, Ollama fallback (legacy)
+    - "hybrid": Intelligent selection based on task
     """
-    
+
     def __init__(self):
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
-        
+
+        # Ollama — MYCA's own local brain (runs on MAS VM 192.168.0.188:11434)
+        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://192.168.0.188:11434")
+        self.ollama_model = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
+
+        # Router mode: local_first | ollama_only | cloud_first | hybrid
+        self.router_mode = os.getenv("LLM_ROUTER_MODE", "local_first")
+
         self.persona_path = os.path.join(
             os.path.dirname(__file__),
             "../../config/myca_full_persona.txt"
         )
         self.persona = self._load_persona()
-        
+
         # Provider health tracking
         self.provider_health = {
+            "ollama": {"healthy": True, "failures": 0},
             "gemini": {"healthy": True, "failures": 0},
             "claude": {"healthy": True, "failures": 0},
             "openai": {"healthy": True, "failures": 0},
         }
-        
-        logger.info(f"FrontierLLMRouter initialized. Persona: {len(self.persona)} chars")
+
+        configured = [f"ollama({self.ollama_base_url}, model={self.ollama_model})"]
+        if self.gemini_api_key:
+            configured.append("gemini")
+        if self.anthropic_api_key:
+            configured.append("claude")
+        if self.openai_api_key:
+            configured.append("openai")
+
+        logger.info(
+            "[MYCA Brain] FrontierLLMRouter initialized. Mode: %s. Providers: %s. Persona: %d chars",
+            self.router_mode, ", ".join(configured), len(self.persona),
+        )
     
     def _load_persona(self) -> str:
         """Load MYCA full persona from file."""
@@ -157,7 +183,11 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         
         yielded = 0
         try:
-            if provider == "gemini" and self.gemini_api_key:
+            if provider == "ollama":
+                async for token in self._stream_ollama(messages):
+                    yielded += 1
+                    yield token
+            elif provider == "gemini" and self.gemini_api_key:
                 async for token in self._stream_gemini(messages):
                     yielded += 1
                     yield token
@@ -170,12 +200,14 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                     yielded += 1
                     yield token
             else:
-                logger.error("[MYCA Brain] No available provider — keys missing or all unhealthy")
-                yield LLM_FALLBACK_MESSAGE
-                return
+                # No provider matched — always try Ollama as safety net
+                logger.warning("[MYCA Brain] Provider %s not available, trying Ollama at %s", provider, self.ollama_base_url)
+                async for token in self._stream_ollama(messages):
+                    yielded += 1
+                    yield token
 
             if yielded == 0:
-                logger.warning(f"[MYCA Brain] Provider {provider} returned no tokens")
+                logger.warning("[MYCA Brain] Provider %s returned no tokens", provider)
                 yield LLM_FALLBACK_MESSAGE
 
         except Exception as e:
@@ -184,14 +216,41 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
             yield LLM_FALLBACK_MESSAGE
     
     def _select_provider(self) -> str:
-        """Select best available provider."""
+        """Select best available provider based on router mode.
+
+        Modes:
+        - local_first: Ollama primary, cloud only if Ollama fails
+        - ollama_only: Never use cloud providers
+        - cloud_first: Cloud primary, Ollama fallback (legacy)
+        - hybrid: Try Ollama first, but fall back to cloud freely
+        """
+        if self.router_mode == "ollama_only":
+            return "ollama"
+
+        if self.router_mode == "cloud_first":
+            # Legacy mode — cloud first, Ollama last
+            if self.gemini_api_key and self.provider_health["gemini"]["healthy"]:
+                return "gemini"
+            if self.anthropic_api_key and self.provider_health["claude"]["healthy"]:
+                return "claude"
+            if self.openai_api_key and self.provider_health["openai"]["healthy"]:
+                return "openai"
+            if self.provider_health["ollama"]["healthy"]:
+                return "ollama"
+            return "gemini"
+
+        # local_first (default) and hybrid — Ollama is primary
+        if self.provider_health["ollama"]["healthy"]:
+            return "ollama"
+        # Cloud fallback only when Ollama is down
         if self.gemini_api_key and self.provider_health["gemini"]["healthy"]:
             return "gemini"
         if self.anthropic_api_key and self.provider_health["claude"]["healthy"]:
             return "claude"
         if self.openai_api_key and self.provider_health["openai"]["healthy"]:
             return "openai"
-        return "gemini"  # Default
+        # Everything failed — still try Ollama (it might recover)
+        return "ollama"
     
     def _mark_provider_failure(self, provider: str):
         """Mark a provider as having failed."""
@@ -375,6 +434,47 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         except Exception as e:
             logger.error(f"OpenAI stream error: {sanitize_for_log(e)}")
             self._mark_provider_failure("openai")
+
+    async def _stream_ollama(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
+        """Stream from Ollama (local LLM on MAS VM)."""
+        import httpx
+        import json
+
+        payload = {
+            "model": self.ollama_model,
+            "messages": messages,
+            "stream": True,
+        }
+
+        url = f"{self.ollama_base_url}/api/chat"
+
+        try:
+            async with httpx.AsyncClient(timeout=120) as client:
+                async with client.stream("POST", url, json=payload) as response:
+                    if response.status_code != 200:
+                        body = await response.aread()
+                        logger.error(f"Ollama API error {response.status_code}: {sanitize_error_body(body)}")
+                        self._mark_provider_failure("ollama")
+                        return
+
+                    async for line in response.aiter_lines():
+                        if not line.strip():
+                            continue
+                        try:
+                            data = json.loads(line)
+                            if "error" in data:
+                                logger.error(f"Ollama error: {data['error']}")
+                                self._mark_provider_failure("ollama")
+                                return
+                            msg = data.get("message", {})
+                            content = msg.get("content", "")
+                            if content:
+                                yield content
+                        except json.JSONDecodeError:
+                            continue
+        except Exception as e:
+            logger.error(f"Ollama stream error: {sanitize_for_log(e)}")
+            self._mark_provider_failure("ollama")
 
 
 # User-facing message when all LLM providers fail
