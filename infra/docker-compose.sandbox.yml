@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  sandbox:
+    build:
+      context: ./sandbox
+      dockerfile: Dockerfile.sandbox
+    container_name: myca-sandbox
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /workspace:rw,size=512m
+      - /tmp:rw,size=256m
+    mem_limit: 512m
+    cpus: "0.5"
+    networks:
+      - sandbox-net
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      com.mycosoft.myca.type: "sandbox"
+      com.mycosoft.myca.auto-destroy: "30m"
+      com.mycosoft.myca.description: "Isolated execution sandbox with security constraints"
+    environment:
+      SANDBOX_TIMEOUT: "1800"
+      NODE_ENV: production
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"process.exit(0)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  sandbox-manager:
+    build:
+      context: ./sandbox-manager
+    container_name: myca-sandbox-manager
+    ports:
+      - "8082:8082"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      MAX_SANDBOXES: "10"
+      SANDBOX_IMAGE: myca-sandbox:latest
+      CLEANUP_INTERVAL: "300"
+      NODE_ENV: production
+    networks:
+      - myca-net
+      - sandbox-net
+    restart: unless-stopped
+    depends_on:
+      sandbox:
+        condition: service_healthy
+        required: false
+    labels:
+      com.mycosoft.myca.type: "manager"
+      com.mycosoft.myca.description: "Sandbox lifecycle management service"
+
+networks:
+  sandbox-net:
+    driver: bridge
+    internal: true
+    labels:
+      com.mycosoft.myca.network: "isolated-sandbox"
+
+  myca-net:
+    driver: bridge
+    external: true
+    labels:
+      com.mycosoft.myca.network: "main"

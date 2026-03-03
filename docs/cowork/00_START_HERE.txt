@@ -1,0 +1,302 @@
+================================================================================
+                     MYCA CURSOR CLI COMMAND SHEET
+                              START HERE
+================================================================================
+
+WELCOME MORGAN!
+
+You have just received a comprehensive, copy-paste-ready command sheet for
+implementing the entire MYCA 17-phase architecture using Cursor's Claude Code.
+
+This folder now contains:
+
+  1. CURSOR_CLI_QUICK_REFERENCE.md (READ THIS FIRST)
+     └─ Fast, scannable prompts for copy-pasting into Cursor
+     └─ ~310 lines, optimized for active development
+
+  2. CURSOR_CLI_COMMANDS.md (REFERENCE WHILE BUILDING)
+     └─ Complete specifications, API signatures, error handling
+     └─ ~650 lines, detailed architecture documentation
+
+  3. README_CURSOR_IMPLEMENTATION.md (GUIDANCE & WORKFLOWS)
+     └─ How to use both documents together
+     └─ Phase dependencies, pro tips, troubleshooting
+     └─ Document cross-reference table
+
+================================================================================
+                           QUICK START (5 MINUTES)
+================================================================================
+
+1. Open: CURSOR_CLI_QUICK_REFERENCE.md
+
+2. Scroll to: "Phase 2: Gateway Control Plane (Start Here)"
+
+3. Copy the entire "Ask Claude Code:" section (the prompt)
+
+4. Open Cursor IDE with your mycosoft_mas project
+
+5. Open Claude Code chat (keyboard shortcut or menu)
+
+6. Paste the prompt and press Enter
+
+7. Watch Claude generate your gateway control plane code in the workspace
+
+That's it! Repeat for Phases 3-13, then apply 3 code fixes, then deploy.
+
+================================================================================
+                              WHAT YOU GET
+================================================================================
+
+This command sheet includes:
+
+✓ Gateway Control Plane (tool routing & session management)
+✓ Node.js WebSocket Daemon (TypeScript - exec, browser, fs, pty)
+✓ Python Tool Wrappers (exec_tool, browser_tool)
+✓ 7 Platform Integrations (Discord, Slack, Asana, Signal, WhatsApp, Notion, Google)
+✓ MycoBrain Coordinator (MQTT edge devices)
+✓ Deployment checklist (9 steps to get MYCA running)
+✓ Security & firewall configuration
+✓ Health monitoring & audit logging
+✓ 3 critical code fixes (tool_pipeline.py, deliberation.py, myca_main.py)
+✓ Troubleshooting quick reference
+✓ Complete file & credential location mapping
+
+================================================================================
+                         THE THREE FILES EXPLAINED
+================================================================================
+
+DOCUMENT 1: CURSOR_CLI_QUICK_REFERENCE.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Purpose: FAST, COPY-PASTE PROMPTS
+Use When: Actively coding, need to generate a component
+Format: Condensed one-liners optimized for pasting
+Length: ~310 lines
+Sections:
+  • Phase 2-13 prompts (one per section)
+  • Deployment checklist with SSH commands
+  • Troubleshooting quick table
+  • Credential locations
+  • Implementation sequence
+
+Example:
+  "Ask Claude Code: Create mycosoft_mas/tools/exec_tool.py - ExecTool class..."
+
+DOCUMENT 2: CURSOR_CLI_COMMANDS.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Purpose: COMPLETE REFERENCE & VALIDATION
+Use When: Want to understand what should be implemented, validating code
+Format: Full specifications with all method signatures
+Length: ~650 lines
+Sections:
+  • Phase 1-17 detailed requirements
+  • Complete API signatures (parameters, return types)
+  • Error handling specifications
+  • Logging requirements
+  • Credential setup docs
+  • Full deployment procedures
+  • File location mappings
+
+Example:
+  ExecTool.run_command(command: str, cwd: str = None, timeout: int = 30) -> dict
+    Returns: {"stdout": str, "stderr": str, "exit_code": int, "duration_ms": int}
+    Raises: ExecTimeoutError, ExecError
+
+DOCUMENT 3: README_CURSOR_IMPLEMENTATION.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Purpose: GUIDANCE, WORKFLOWS, INTEGRATION
+Use When: Understanding how to approach the whole project
+Format: Roadmap, pro tips, cross-reference tables
+Sections:
+  • How to use both documents together
+  • Phase dependencies (what must be done first)
+  • Implementation workflow (4-step process per phase)
+  • Key paths & endpoints
+  • 3 critical code fixes
+  • Deployment steps
+  • Pro tips for Morgan
+
+================================================================================
+                       THE RECOMMENDED WORKFLOW
+================================================================================
+
+For EACH Phase (2-13):
+
+STEP 1: Understand (5 minutes)
+  └─ Read detailed section in CURSOR_CLI_COMMANDS.md
+  └─ Understand what needs to be built
+  └─ Know dependencies & error handling
+
+STEP 2: Generate (2 minutes)
+  └─ Copy prompt from CURSOR_CLI_QUICK_REFERENCE.md
+  └─ Paste into Cursor's Claude Code chat
+  └─ Wait for code generation
+
+STEP 3: Validate (3 minutes)
+  └─ Cross-check generated code against CURSOR_CLI_COMMANDS.md
+  └─ Verify all required methods
+  └─ Check error handling & logging
+
+STEP 4: Commit (1 minute)
+  └─ git add . && git commit -m "Phase X: [Component Name]"
+  └─ Move to next phase
+
+TOTAL PER PHASE: ~11 minutes
+PHASES 2-13 (12 phases): ~2-3 hours
+Code Fixes (3 files): ~30 minutes
+Deployment: ~30 minutes
+TOTAL PROJECT: ~4-5 hours
+
+================================================================================
+                         KEY FILE LOCATIONS
+================================================================================
+
+Codebase:
+  /home/myca/mycosoft_mas/
+  ├── gateway/control_plane.py (Phase 2)
+  ├── gateway/session_manager.py (Phase 2)
+  ├── sandbox/node-daemon/src/ (Phase 3)
+  ├── tools/exec_tool.py (Phase 4)
+  ├── tools/browser_tool.py (Phase 4)
+  ├── integrations/ (Phases 6-13)
+  ├── devices/mycobrain_coordinator.py (Phase 5)
+  ├── core/myca_main.py (FIX 3)
+  ├── llm/tool_pipeline.py (FIX 1)
+  └── consciousness/deliberation.py (FIX 2)
+
+Credentials (Secure, chmod 600):
+  /opt/myca/credentials/
+  ├── google/service_account.json
+  ├── discord/bot_token
+  ├── slack/bot_token
+  ├── asana/pat
+  └── notion/integration_token
+
+Logs:
+  /opt/myca/logs/
+  ├── gateway_router.log
+  ├── tool_pipeline.log
+  ├── exec_tool.log
+  └── [one per integration]
+
+Network Endpoints:
+  FastAPI Core      : 192.168.0.191:8000
+  n8n Workflows     : 192.168.0.191:3000
+  Node Daemon WS    : 192.168.0.191:9000
+  Redis             : 192.168.0.189:6379
+  MQTT              : 192.168.0.189:1883
+
+================================================================================
+                         PHASE DEPENDENCIES
+================================================================================
+
+Must follow this order (dependencies critical):
+
+  Phase 1: VM Provisioning (Proxmox) [MANUAL]
+    ↓ (prerequisite - gateway depends on Redis)
+  Phase 2: Gateway Control Plane [CURSOR]
+    ↓ (prerequisite - daemon connects to gateway)
+  Phase 3: Node WebSocket Daemon [CURSOR]
+    ↓ (prerequisite - tools use daemon)
+  Phase 4: Exec/Browser Tools [CURSOR]
+    ↓
+  Phases 5-13 can run in parallel:
+    ├─ Phase 5: MycoBrain (MQTT)
+    ├─ Phase 6: Google Workspace
+    ├─ Phase 7-13: Integrations
+    └─ Phase 14-17: Optional/Final
+
+  Then: FIX EXISTING CODE (3 critical files)
+  Then: DEPLOY & VERIFY
+  Finally: REGISTER WITH ORCHESTRATOR
+
+================================================================================
+                    THREE CRITICAL CODE FIXES
+================================================================================
+
+After generating Phases 2-13, you MUST apply these 3 fixes:
+
+FIX 1: mycosoft_mas/llm/tool_pipeline.py
+  What: Register tools with GatewayControlPlane, route through gateway
+  Why: Connects tool execution to sandbox routing
+  Where: Prompt in CURSOR_CLI_QUICK_REFERENCE.md under "Fix 1"
+
+FIX 2: mycosoft_mas/consciousness/deliberation.py
+  What: Update tool validation to check GatewayControlPlane
+  Why: Ensures deliberation respects sandbox requirements
+  Where: Prompt in CURSOR_CLI_QUICK_REFERENCE.md under "Fix 2"
+
+FIX 3: mycosoft_mas/core/myca_main.py
+  What: Register WebSocket endpoint for sandbox communication
+  Why: Makes FastAPI listen on ws://192.168.0.191:9000
+  Where: Prompt in CURSOR_CLI_QUICK_REFERENCE.md under "Fix 3"
+
+These fixes are the glue that connects your generated code to existing system.
+
+================================================================================
+                           NEXT STEPS
+================================================================================
+
+1. Open CURSOR_CLI_QUICK_REFERENCE.md in your editor
+
+2. Scroll to "Phase 2: Gateway Control Plane (Start Here)"
+
+3. Copy the "Ask Claude Code:" prompt
+
+4. Open Cursor with mycosoft_mas workspace
+
+5. Open Claude Code chat
+
+6. Paste the prompt and press Enter
+
+7. Wait for code generation (usually 1-2 minutes per phase)
+
+8. Commit the generated code to git
+
+9. Repeat for Phases 3-13
+
+10. Apply 3 critical code fixes
+
+11. Deploy using deployment checklist
+
+12. Register with MAS orchestrator
+
+================================================================================
+
+Questions about architecture?
+  → Read CURSOR_CLI_COMMANDS.md section for that phase
+
+Need to generate code?
+  → Copy prompt from CURSOR_CLI_QUICK_REFERENCE.md
+
+How do I validate what was generated?
+  → Compare against CURSOR_CLI_COMMANDS.md specifications
+
+Where do credentials go?
+  → /opt/myca/credentials/ (see credential locations section)
+
+How do I deploy?
+  → Follow "Deployment Checklist" in CURSOR_CLI_QUICK_REFERENCE.md
+
+Need to troubleshoot?
+  → Check "Troubleshooting Quick Links" table in CURSOR_CLI_QUICK_REFERENCE.md
+
+================================================================================
+                         YOU'RE READY TO BUILD!
+================================================================================
+
+This is a complete, production-ready implementation guide. Everything you need
+to build MYCA is in these three documents.
+
+The commands are optimized for Cursor's Claude Code. Just copy, paste, and let
+Claude generate your code. Follow the sequence, apply the fixes, deploy, and
+you'll have a fully functional MYCA agent running on 192.168.0.191.
+
+Estimated total time: 4-5 hours from start to production deployment.
+
+Let's build MYCA!
+
+================================================================================
+                    Files Created: 2026-03-03
+                    For: Morgan (MYCOSOFT team)
+                    Status: READY FOR IMPLEMENTATION
+================================================================================

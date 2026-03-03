@@ -1,0 +1,147 @@
+{
+  "name": "MYCA - Health Check",
+  "nodes": [
+    {
+      "id": "schedule-health-trigger",
+      "name": "Schedule Health Check",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "rule": {
+          "interval": [5],
+          "intervalUnit": "minutes"
+        }
+      }
+    },
+    {
+      "id": "check-n8n-health",
+      "name": "Check n8n Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [250, 50],
+      "parameters": {
+        "url": "http://localhost:5678/healthz",
+        "method": "GET",
+        "options": {}
+      }
+    },
+    {
+      "id": "check-mas-health",
+      "name": "Check MAS Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [250, 150],
+      "parameters": {
+        "url": "http://localhost:8001/health",
+        "method": "GET",
+        "options": {}
+      }
+    },
+    {
+      "id": "check-signal-health",
+      "name": "Check Signal Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [250, 250],
+      "parameters": {
+        "url": "http://localhost:8089/v1/health",
+        "method": "GET",
+        "options": {}
+      }
+    },
+    {
+      "id": "evaluate-health-results",
+      "name": "Evaluate Health Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [450, 150],
+      "parameters": {
+        "language": "javascript",
+        "code": "const results = {\n  n8n: {\n    status: $node[\"Check n8n Health\"].json.status === 200 ? \"healthy\" : \"unhealthy\",\n    code: $node[\"Check n8n Health\"].json.status\n  },\n  mas: {\n    status: $node[\"Check MAS Health\"].json.status === 200 ? \"healthy\" : \"unhealthy\",\n    code: $node[\"Check MAS Health\"].json.status\n  },\n  signal: {\n    status: $node[\"Check Signal Health\"].json.status === 200 ? \"healthy\" : \"unhealthy\",\n    code: $node[\"Check Signal Health\"].json.status\n  }\n};\n\nconst failures = Object.entries(results).filter(([key, val]) => val.status === \"unhealthy\");\nconst hasFailures = failures.length > 0;\n\nreturn { results, has_failures: hasFailures, failures: failures };"
+      }
+    },
+    {
+      "id": "if-health-failures",
+      "name": "If Health Failures",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 150],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "compareOperation": "is"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $node[\"Evaluate Health Results\"].json.has_failures }}",
+              "operator": "is",
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "format-failure-message",
+      "name": "Format Failure Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "language": "javascript",
+        "code": "const failures = $node[\"Evaluate Health Results\"].json.failures || [];\nlet message = \"MYCA Health Check Alert\\n\\n\";\nmessage += \"Failed Services:\\n\";\n\nfor (const [service, details] of failures) {\n  message += `- ${service.toUpperCase()}: Status Code ${details[1].code}\\n`;\n}\n\nmessage += `\\nTimestamp: ${new Date().toISOString()}`;\n\nreturn { alert_message: message };"
+      }
+    },
+    {
+      "id": "slack-alert-failures",
+      "name": "Slack Alert Failures",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1050, 100],
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#myca-alerts",
+        "text": "={{ $node[\"Format Failure Message\"].json.alert_message }}"
+      }
+    },
+    {
+      "id": "log-all-results",
+      "name": "Log All Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [850, 250],
+      "parameters": {
+        "language": "javascript",
+        "code": "const results = $node[\"Evaluate Health Results\"].json.results;\nconst logEntry = {\n  timestamp: new Date().toISOString(),\n  services: results\n};\n\nreturn logEntry;"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Health Trigger": [
+      {"node": ["Check n8n Health"], "type": "main", "index": [0, 0]},
+      {"node": ["Check MAS Health"], "type": "main", "index": [0, 0]},
+      {"node": ["Check Signal Health"], "type": "main", "index": [0, 0]}
+    ],
+    "Check n8n Health": [{"node": ["Evaluate Health Results"], "type": "main", "index": [0, 0]}],
+    "Check MAS Health": [{"node": ["Evaluate Health Results"], "type": "main", "index": [0, 0]}],
+    "Check Signal Health": [{"node": ["Evaluate Health Results"], "type": "main", "index": [0, 0]}],
+    "Evaluate Health Results": [
+      {"node": ["If Health Failures"], "type": "main", "index": [0, 0]},
+      {"node": ["Log All Results"], "type": "main", "index": [0, 0]}
+    ],
+    "If Health Failures": [
+      {"node": ["Format Failure Message"], "type": "true", "index": [0, 0]}
+    ],
+    "Format Failure Message": [{"node": ["Slack Alert Failures"], "type": "main", "index": [0, 0]}]
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{"name": "MYCA"}, {"name": "Health"}, {"name": "Monitoring"}]
+}

@@ -1,0 +1,83 @@
+{
+  "name": "MYCA - Document Query",
+  "nodes": [
+    {
+      "id": "webhook-doc-query",
+      "name": "Webhook Doc Query",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "path": "myca/doc-query",
+        "httpMethod": "GET"
+      }
+    },
+    {
+      "id": "extract-query-parameter",
+      "name": "Extract Query Parameter",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "values": [
+          {
+            "name": "query_text",
+            "type": "string",
+            "value": "={{ $node[\"Webhook Doc Query\"].json.query.q || $node[\"Webhook Doc Query\"].json.query.query }}"
+          },
+          {
+            "name": "request_id",
+            "type": "string",
+            "value": "=doc_query_{{ Date.now() }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "search-notion-database",
+      "name": "Search Notion Database",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 1,
+      "position": [450, 100],
+      "parameters": {
+        "resource": "databaseItem",
+        "operation": "search",
+        "databaseId": "={{ env[\"NOTION_DOCS_DB_ID\"] }}",
+        "query": "={{ $node[\"Extract Query Parameter\"].json.query_text }}"
+      }
+    },
+    {
+      "id": "format-search-results",
+      "name": "Format Search Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "language": "javascript",
+        "code": "const results = $node[\"Search Notion Database\"].json.results || [];\n\nconst formatted = results.map(item => ({\n  title: item.properties.Title?.title?.[0]?.text?.content || \"Untitled\",\n  link: item.url,\n  snippet: item.properties.Content?.rich_text?.[0]?.text?.content?.substring(0, 200) || \"No preview\",\n  created: item.created_time,\n  updated: item.last_edited_time\n}));\n\nreturn {\n  query: $node[\"Extract Query Parameter\"].json.query_text,\n  results: formatted,\n  result_count: formatted.length,\n  request_id: $node[\"Extract Query Parameter\"].json.request_id\n};"
+      }
+    },
+    {
+      "id": "http-return-results",
+      "name": "HTTP Return Results",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [850, 100],
+      "parameters": {
+        "code": 200,
+        "responseBody": "={{ JSON.stringify($node[\"Format Search Results\"].json) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Doc Query": [{"node": ["Extract Query Parameter"], "type": "main", "index": [0, 0]}],
+    "Extract Query Parameter": [{"node": ["Search Notion Database"], "type": "main", "index": [0, 0]}],
+    "Search Notion Database": [{"node": ["Format Search Results"], "type": "main", "index": [0, 0]}],
+    "Format Search Results": [{"node": ["HTTP Return Results"], "type": "main", "index": [0, 0]}]
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{"name": "MYCA"}, {"name": "Query"}, {"name": "Integration"}]
+}

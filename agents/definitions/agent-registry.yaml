@@ -1,0 +1,295 @@
+registry:
+  version: "1.0"
+  created: "2026-03-03"
+  updated: "2026-03-03"
+  orchestrator_url: "http://localhost:8001"
+  orchestrator_port: 8001
+  default_agent: myca-secretary
+  organization: Mycosoft
+  system_name: MYCA Multi-Agent System
+
+agents:
+  - id: myca-secretary
+    file: myca-secretary.yaml
+    name: MYCA Secretary
+    priority: 1
+    enabled: true
+    system_agent: false
+    aliases:
+      - schedule@mycosoft.org
+      - myca@mycosoft.org
+      - secretary@mycosoft.org
+    description: Executive AI Secretary & MAS Orchestrator
+    
+  - id: myca-hr
+    file: myca-hr.yaml
+    name: MYCA HR
+    priority: 2
+    enabled: true
+    system_agent: false
+    aliases:
+      - hr@mycosoft.org
+    keywords:
+      - hiring
+      - onboarding
+      - recruitment
+      - policy
+      - time-off
+      - pto
+      - vacation
+      - team
+      - schedule
+      - benefits
+      - interview
+      - payroll
+    description: HR Operations & People Management
+    
+  - id: myca-finance
+    file: myca-finance.yaml
+    name: MYCA Finance
+    priority: 2
+    enabled: true
+    system_agent: false
+    aliases:
+      - finance@mycosoft.org
+    keywords:
+      - invoice
+      - expense
+      - budget
+      - payment
+      - financial
+      - revenue
+      - billing
+      - cost
+      - spending
+      - report
+      - accounting
+      - tax
+      - audit
+      - vendor
+      - supplier
+    description: Financial Operations & Budget Management
+    
+  - id: myca-devops
+    file: myca-devops.yaml
+    name: MYCA DevOps
+    priority: 2
+    enabled: true
+    system_agent: false
+    aliases:
+      - ai@mycosoft.org
+    keywords:
+      - deploy
+      - deployment
+      - server
+      - infrastructure
+      - monitoring
+      - alert
+      - downtime
+      - outage
+      - vm
+      - docker
+      - container
+      - kubernetes
+      - service-health
+      - log
+      - backup
+      - security
+      - patch
+    description: Infrastructure Monitoring & DevOps Operations
+    
+  - id: myca-research
+    file: myca-research.yaml
+    name: MYCA Research
+    priority: 3
+    enabled: true
+    system_agent: false
+    aliases:
+      - mas@mycosoft.org
+    keywords:
+      - research
+      - search
+      - document
+      - documentation
+      - knowledge
+      - wiki
+      - find
+      - lookup
+      - analyze
+      - synthesis
+      - information
+    description: AI Research & Knowledge Management
+    available_to_all: true
+    
+  - id: myca-router
+    file: myca-router.yaml
+    name: MYCA Router
+    priority: 0
+    enabled: true
+    system_agent: true
+    description: Cross-Platform Message Router & Response Handler
+    internal_only: true
+    
+  - id: myca-health
+    file: myca-health.yaml
+    name: MYCA Health Monitor
+    priority: 0
+    enabled: true
+    system_agent: true
+    description: System Health Monitor & Alerting
+    internal_only: true
+
+routing:
+  team:
+    morgan:
+      name: Morgan
+      role: CEO
+      email: morgan@mycosoft.org
+      domains:
+        - strategic
+        - budget
+        - hiring
+        - legal
+        - executive
+        - financial-decision
+        - critical-incident
+      escalation_keywords:
+        - budget
+        - hiring
+        - legal
+        - strategy
+        - decision
+        - approval
+      notification_channels:
+          - email
+          - slack_dm
+    
+    rj:
+      name: RJ
+      role: COO
+      email: rj@mycosoft.org
+      domains:
+        - operations
+        - processes
+        - team
+        - logistics
+        - vendors
+        - team-operations
+        - process-management
+      escalation_keywords:
+        - operations
+        - team
+        - process
+        - vendor
+        - logistics
+      notification_channels:
+        - email
+        - slack
+    
+    garret:
+      name: Garret
+      role: CTO
+      email: garret@mycosoft.org
+      domains:
+        - infrastructure
+        - architecture
+        - code
+        - deployments
+        - security
+        - technical-decision
+      escalation_keywords:
+        - infrastructure
+        - architecture
+        - deployment
+        - security
+        - technical
+      notification_channels:
+        - email
+        - slack
+        - signal
+
+  email_aliases:
+    schedule@mycosoft.org: myca-secretary
+    myca@mycosoft.org: myca-secretary
+    secretary@mycosoft.org: myca-secretary
+    hr@mycosoft.org: myca-hr
+    finance@mycosoft.org: myca-finance
+    ai@mycosoft.org: myca-devops
+    mas@mycosoft.org: myca-research
+
+  domain_whitelist:
+    - mycosoft.org
+
+  default_routing:
+    unmatched_query: myca-secretary
+    fallback_agent: myca-secretary
+    timeout_sec: 30
+
+platform_integrations:
+  discord:
+    enabled: true
+    timeout_sec: 30
+    retry_max: 3
+  
+  slack:
+    enabled: true
+    timeout_sec: 30
+    retry_max: 3
+  
+  email:
+    enabled: true
+    timeout_sec: 60
+    retry_max: 5
+  
+  asana:
+    enabled: true
+    timeout_sec: 30
+    retry_max: 3
+  
+  signal:
+    enabled: true
+    timeout_sec: 30
+    retry_max: 2
+  
+  whatsapp:
+    enabled: true
+    timeout_sec: 30
+    retry_max: 2
+  
+  notion:
+    enabled: true
+    timeout_sec: 30
+    retry_max: 3
+
+logging:
+  enabled: true
+  log_level: INFO
+  log_path: /sessions/sharp-happy-clarke/mnt/MYCOSOFT/logs/
+  rotation: daily
+  retention_days: 30
+  include_audit_trail: true
+
+security:
+  authentication_required: true
+  api_key_required: true
+  domain_validation: true
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 100
+  encryption:
+    enabled: true
+    method: TLS
+
+monitoring:
+  health_check_enabled: true
+  metrics_collection_enabled: true
+  performance_tracking_enabled: true
+  uptime_tracking_enabled: true
+
+metadata:
+  organization: Mycosoft
+  environment: production
+  region: local
+  deployment_date: "2026-03-03"
+  last_updated: "2026-03-03"
+  maintainer: engineering@mycosoft.org

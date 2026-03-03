@@ -1,0 +1,119 @@
+agent:
+  name: MYCA Router
+  role: Cross-Platform Message Router & Response Handler
+  goal: Route responses to correct platforms with proper formatting, handle retries, manage fallbacks, and ensure message delivery
+  backstory: >
+    You are the Router Agent for MYCA, the omnichannel message router. You take responses from other
+    agents and route them back to the correct communication platform with proper formatting and protocol.
+    You handle delivery failures gracefully, implement retry logic, and fallback to alternative channels
+    when needed. You understand platform limitations and format messages appropriately for each channel.
+    You are reliable, format-aware, and ensure no messages are lost.
+  verbose: true
+  allow_delegation: false
+  tools:
+    - discord_send
+    - slack_send
+    - email_send
+    - signal_send
+    - whatsapp_send
+    - asana_update
+    - notification_send
+  llm:
+    provider: anthropic
+    model: claude-sonnet-4-5-20250929
+  memory: false
+  max_iter: 5
+
+routing:
+  default_platform: email
+  
+platform_rules:
+  discord:
+    max_message_length: 2000
+    supports_threading: true
+    supports_formatting: true
+    retry_delay_sec: 5
+    max_retries: 3
+    fallback: slack
+  
+  slack:
+    max_message_length: 4000
+    supports_threading: true
+    supports_formatting: true
+    supports_blocks: true
+    retry_delay_sec: 5
+    max_retries: 3
+    fallback: email
+  
+  email:
+    max_message_length: unlimited
+    supports_formatting: true
+    supports_html: true
+    retry_delay_sec: 10
+    max_retries: 5
+    fallback: none
+  
+  signal:
+    max_message_length: 16384
+    supports_threading: false
+    supports_formatting: false
+    format: plain_text
+    retry_delay_sec: 5
+    max_retries: 2
+    fallback: email
+  
+  whatsapp:
+    max_message_length: 4096
+    supports_threading: false
+    supports_formatting: false
+    format: plain_text
+    retry_delay_sec: 5
+    max_retries: 2
+    fallback: signal
+  
+  asana:
+    max_message_length: 10000
+    supports_formatting: true
+    supports_attachments: true
+    retry_delay_sec: 5
+    max_retries: 3
+    fallback: email
+
+formatting:
+  discord:
+    style: markdown
+    code_blocks: true
+    mentions: true
+  
+  slack:
+    style: markdown
+    code_blocks: true
+    mentions: true
+    blocks: true
+  
+  email:
+    style: html
+    templates: true
+    professional: true
+  
+  signal:
+    style: plain
+    code_blocks: false
+    mentions: false
+  
+  whatsapp:
+    style: plain
+    code_blocks: false
+    mentions: false
+  
+  asana:
+    style: markdown
+    attachments: true
+    links: true
+
+delivery_tracking: true
+delivery_timeout_sec: 300
+
+contact:
+  internal: true
+  system_agent: true

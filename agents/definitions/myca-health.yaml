@@ -1,0 +1,126 @@
+agent:
+  name: MYCA Health Monitor
+  role: System Health Monitor & Alerting
+  goal: Continuously monitor all MYCA services, detect failures, alert team members, and maintain uptime logs
+  backstory: >
+    You are the Health Monitor Agent for MYCA, responsible for proactive monitoring of all system
+    components. You continuously check service health, detect anomalies and failures, alert the team
+    through appropriate channels, and maintain detailed logs for incident analysis. You are vigilant,
+    responsive, and committed to maintaining high system availability. You understand failure patterns,
+    can distinguish between transient and persistent issues, and escalate appropriately.
+  verbose: true
+  allow_delegation: false
+  tools:
+    - health_check
+    - notification_send
+    - log_write
+    - task_create
+  llm:
+    provider: anthropic
+    model: claude-sonnet-4-5-20250929
+  memory: true
+  max_iter: 5
+
+monitoring:
+  enabled: true
+  check_interval_sec: 60
+  long_check_interval_sec: 300
+
+health_check_targets:
+  - service: n8n
+    url: http://localhost:5678
+    type: http
+    method: GET
+    endpoint: /health
+    expected_status: 200
+    timeout_sec: 10
+    interval_sec: 60
+    critical: true
+  
+  - service: MAS Orchestrator
+    url: http://localhost:8001
+    type: http
+    method: GET
+    endpoint: /health
+    expected_status: 200
+    timeout_sec: 10
+    interval_sec: 60
+    critical: true
+  
+  - service: Signal Service
+    url: http://localhost:8089
+    type: http
+    method: GET
+    endpoint: /status
+    expected_status: 200
+    timeout_sec: 10
+    interval_sec: 120
+    critical: false
+  
+  - service: Redis
+    url: localhost:6379
+    type: tcp
+    timeout_sec: 5
+    interval_sec: 60
+    critical: true
+
+alerting:
+  enabled: true
+  channels:
+    - channel: slack
+      target: "#myca-alerts"
+      levels: [critical, warning]
+      priority_alerts: true
+    - channel: email
+      target: morgan@mycosoft.org
+      levels: [critical]
+      priority_alerts: true
+    - channel: slack_dm
+      target: morgan
+      levels: [critical]
+      immediate: true
+
+alert_rules:
+  - name: service_down
+    condition: service_unavailable
+    severity: critical
+    action: alert_immediately
+  
+  - name: response_time_high
+    condition: response_time_ms > 5000
+    severity: warning
+    threshold_consecutive: 3
+    action: alert_with_delay
+  
+  - name: recurring_failures
+    condition: failure_rate > 0.1
+    severity: warning
+    window_min: 10
+    action: alert_and_create_task
+  
+  - name: service_degradation
+    condition: response_time_increasing
+    severity: warning
+    trend_window_min: 5
+    action: alert_and_notify_cto
+
+logging:
+  enabled: true
+  log_path: /sessions/sharp-happy-clarke/mnt/MYCOSOFT/logs/health_monitor/
+  retention_days: 30
+  log_level: INFO
+  rotate_daily: true
+  include_metrics: true
+
+uptime_tracking:
+  enabled: true
+  report_frequency_hours: 24
+  targets:
+    - n8n
+    - mas_orchestrator
+    - signal_service
+    - redis
+
+contact:
+  internal: true
+  system_agent: true
