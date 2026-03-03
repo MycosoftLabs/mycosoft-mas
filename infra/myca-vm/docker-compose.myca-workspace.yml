@@ -1,0 +1,201 @@
+version: '3.8'
+
+# MYCA Workspace VM (192.168.0.191) — Production Docker Compose
+# All services MYCA needs to operate as an autonomous staff member
+
+services:
+  # ──────────────────────────────────────────────────────────────
+  # Core: MYCA FastAPI workspace service
+  # ──────────────────────────────────────────────────────────────
+  myca-workspace:
+    build:
+      context: /opt/myca/mycosoft-mas
+      dockerfile: Dockerfile
+    container_name: myca-workspace
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: myca-workspace
+      APP_HOST: 0.0.0.0
+      APP_PORT: "8000"
+      MYCA_VM_IP: "192.168.0.191"
+      MAS_API_URL: "http://192.168.0.188:8001"
+      MINDEX_API_URL: "http://192.168.0.189:8000"
+      REDIS_URL: "redis://redis:6379/0"
+      N8N_URL: "http://n8n:5678"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: myca
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: myca_workspace
+      OLLAMA_URL: "http://192.168.0.188:11434"
+      LOG_LEVEL: INFO
+    env_file:
+      - /opt/myca/.env
+    volumes:
+      - /opt/myca/credentials:/opt/myca/credentials:ro
+      - /opt/myca/logs/api:/app/logs
+      - /opt/myca/config:/opt/myca/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - myca-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      com.mycosoft.myca.type: "core"
+      com.mycosoft.myca.description: "MYCA workspace FastAPI service"
+
+  # ──────────────────────────────────────────────────────────────
+  # Database: PostgreSQL for workspace state, n8n, task logs
+  # ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: myca-postgres
+    environment:
+      POSTGRES_USER: myca
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: myca_workspace
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+    networks:
+      - myca-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myca"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    expose:
+      - "5432"
+    labels:
+      com.mycosoft.myca.type: "database"
+
+  # ──────────────────────────────────────────────────────────────
+  # Cache: Redis for sessions, pub/sub, rate limiting
+  # ──────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: myca-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - myca-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      com.mycosoft.myca.type: "cache"
+
+  # ──────────────────────────────────────────────────────────────
+  # Workflow: n8n for automation and platform integrations
+  # ──────────────────────────────────────────────────────────────
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: myca-n8n
+    ports:
+      - "5678:5678"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      N8N_HOST: 0.0.0.0
+      N8N_PORT: 5678
+      N8N_PROTOCOL: https
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_USER:-myca_admin}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD:-changeme}
+      WEBHOOK_URL: https://myca.mycosoft.org/n8n/
+      GENERIC_TIMEZONE: America/Los_Angeles
+      NODE_ENV: production
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: myca_workspace
+      DB_POSTGRESDB_USER: myca
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: 168
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - /opt/myca/n8n/workflows:/home/node/.n8n/workflows
+    restart: unless-stopped
+    networks:
+      - myca-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      com.mycosoft.myca.type: "workflow"
+
+  # ──────────────────────────────────────────────────────────────
+  # Reverse Proxy: Caddy (auto-TLS, routing)
+  # ──────────────────────────────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    container_name: myca-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /opt/myca/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    networks:
+      - myca-net
+    depends_on:
+      - myca-workspace
+      - n8n
+    labels:
+      com.mycosoft.myca.type: "proxy"
+
+  # ──────────────────────────────────────────────────────────────
+  # Messaging: Signal CLI REST API
+  # ──────────────────────────────────────────────────────────────
+  signal-api:
+    image: bbernhard/signal-cli-rest-api:latest
+    container_name: myca-signal-api
+    ports:
+      - "8089:8080"
+    volumes:
+      - /opt/myca/credentials/signal:/home/.local/share/signal-cli
+    environment:
+      MODE: json-rpc
+    restart: unless-stopped
+    networks:
+      - myca-net
+    labels:
+      com.mycosoft.myca.type: "messaging"
+
+networks:
+  myca-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+  redis_data:
+  n8n_data:
+  caddy_data:
+  caddy_config:

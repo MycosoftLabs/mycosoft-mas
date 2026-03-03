@@ -766,6 +766,13 @@ try:
 except NameError:
     pass
 
+# MYCA Workspace API (VM 191 staff interactions)
+try:
+    from mycosoft_mas.core.routers.workspace_api import router as workspace_router
+    app.include_router(workspace_router, tags=["workspace"])
+except ImportError:
+    pass
+
 
 # ---------------------------------------------------------------------------
 # Health & version

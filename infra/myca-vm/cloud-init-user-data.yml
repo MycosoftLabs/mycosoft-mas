@@ -1,0 +1,139 @@
+#cloud-config
+# MYCA VM 191 Cloud-Init Configuration
+# Auto-configures Ubuntu 22.04 on first boot
+# Run date: 2026-03-03
+
+hostname: myca-191
+fqdn: myca-191.mycosoft.local
+manage_etc_hosts: true
+
+users:
+  - name: mycosoft
+    groups: [sudo, docker]
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys: []  # Add SSH pubkey here before provisioning
+  - name: myca
+    system: true
+    groups: [docker]
+    shell: /bin/bash
+    home: /home/myca
+
+# Static IP on the LAN
+write_files:
+  - path: /etc/netplan/01-static.yaml
+    content: |
+      network:
+        version: 2
+        ethernets:
+          ens18:
+            dhcp4: false
+            addresses:
+              - 192.168.0.191/24
+            routes:
+              - to: default
+                via: 192.168.0.1
+            nameservers:
+              addresses:
+                - 192.168.0.1
+                - 1.1.1.1
+            mtu: 1500
+    permissions: "0644"
+
+  - path: /etc/sysctl.d/99-myca.conf
+    content: |
+      # Allow more connections for n8n/FastAPI
+      net.core.somaxconn = 65535
+      net.ipv4.tcp_max_syn_backlog = 65535
+      net.ipv4.ip_local_port_range = 1024 65535
+      # Better memory usage
+      vm.swappiness = 10
+      vm.overcommit_memory = 1
+    permissions: "0644"
+
+  - path: /opt/myca/config/vm-identity.json
+    content: |
+      {
+        "vm_id": 191,
+        "hostname": "myca-191",
+        "ip": "192.168.0.191",
+        "role": "myca-workspace",
+        "provisioned_at": "2026-03-03",
+        "services": {
+          "fastapi": 8000,
+          "n8n": 5678,
+          "caddy_http": 80,
+          "caddy_https": 443,
+          "signal_api": 8089,
+          "node_daemon_ws": 9000,
+          "redis": 6379
+        },
+        "network": {
+          "gateway": "192.168.0.1",
+          "mas_vm": "192.168.0.188",
+          "mindex_vm": "192.168.0.189",
+          "sandbox_vm": "192.168.0.187",
+          "gpu_vm": "192.168.0.190"
+        }
+      }
+    permissions: "0644"
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - ufw
+  - jq
+  - htop
+  - tmux
+  - git
+  - python3-pip
+  - python3-venv
+  - unzip
+  - apt-transport-https
+
+runcmd:
+  # Apply static IP
+  - netplan apply
+
+  # Apply sysctl
+  - sysctl --system
+
+  # Install Docker (official repo)
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update -qq
+  - apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - systemctl enable docker
+  - systemctl start docker
+
+  # Create MYCA directory structure
+  - mkdir -p /opt/myca/{credentials/{discord,slack,asana,signal,whatsapp,google,notion,github},logs/{api,workflows,security,gateway},config,data,sandbox,n8n/workflows,caddy}
+  - chown -R myca:myca /opt/myca
+  - chmod -R 750 /opt/myca/credentials
+
+  # Configure UFW firewall
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow 22/tcp comment 'SSH'
+  - ufw allow 80/tcp comment 'Caddy HTTP'
+  - ufw allow 443/tcp comment 'Caddy HTTPS'
+  - ufw allow 5678/tcp comment 'n8n'
+  - ufw allow 8000/tcp comment 'FastAPI'
+  - ufw allow 8089/tcp comment 'Signal API'
+  - ufw allow 9000/tcp comment 'Node Daemon WS'
+  - ufw allow 6379/tcp comment 'Redis'
+  - ufw allow from 192.168.0.0/24 comment 'LAN traffic'
+  - ufw --force enable
+
+  # Signal that cloud-init is done
+  - echo "MYCA VM 191 cloud-init complete at $(date -Iseconds)" > /opt/myca/config/cloud-init-done.txt
+  - chown myca:myca /opt/myca/config/cloud-init-done.txt
+
+final_message: "MYCA VM 191 ready. Cloud-init took $UPTIME seconds."

@@ -1,0 +1,60 @@
+# MYCA Workspace Reverse Proxy
+# VM: 192.168.0.191
+
+# Internal access via IP
+:80 {
+    # MYCA Workspace API
+    handle /api/* {
+        reverse_proxy myca-workspace:8000
+    }
+
+    # Health endpoint
+    handle /health {
+        reverse_proxy myca-workspace:8000
+    }
+
+    # n8n workflows
+    handle /n8n/* {
+        uri strip_prefix /n8n
+        reverse_proxy n8n:5678
+    }
+
+    # n8n webhooks (n8n needs these at root)
+    handle /webhook/* {
+        reverse_proxy n8n:5678
+    }
+    handle /webhook-test/* {
+        reverse_proxy n8n:5678
+    }
+
+    # Default -> workspace API
+    handle {
+        reverse_proxy myca-workspace:8000
+    }
+
+    log {
+        output file /data/access.log {
+            roll_size 50mb
+            roll_keep 5
+        }
+    }
+}
+
+# If you set up DNS for myca.mycosoft.org -> 192.168.0.191,
+# uncomment below for auto-TLS:
+#
+# myca.mycosoft.org {
+#     handle /api/* {
+#         reverse_proxy myca-workspace:8000
+#     }
+#     handle /n8n/* {
+#         uri strip_prefix /n8n
+#         reverse_proxy n8n:5678
+#     }
+#     handle /webhook/* {
+#         reverse_proxy n8n:5678
+#     }
+#     handle {
+#         reverse_proxy myca-workspace:8000
+#     }
+# }
