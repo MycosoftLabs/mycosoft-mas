@@ -33,6 +33,7 @@ class GPUModelType(str, Enum):
     EARTH2_STORMSCOPE = "earth2_stormscope"
     WHISPER = "whisper"
     STABLE_DIFFUSION = "stable_diffusion"
+    UNIFIED_LATENTS = "unified_latents"
     CUSTOM = "custom"
 
 
