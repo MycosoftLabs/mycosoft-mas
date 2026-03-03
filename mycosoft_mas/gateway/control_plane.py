@@ -247,7 +247,8 @@ class GatewayControlPlane:
 
     async def _execute_workflow(self, tool_name: str, args: Dict[str, Any]) -> ToolResult:
         import httpx
-        n8n_url = f"http://192.168.0.191:5678/api/v1/workflows"
+        import os
+        n8n_url = os.getenv("N8N_URL", "http://192.168.0.191:5678") + "/api/v1/workflows"
         try:
             async with httpx.AsyncClient(timeout=30) as client:
                 resp = await client.post(
@@ -261,7 +262,8 @@ class GatewayControlPlane:
 
     async def _execute_agent(self, tool_name: str, args: Dict[str, Any]) -> ToolResult:
         import httpx
-        mas_url = "http://192.168.0.188:8001/api/agents/invoke"
+        import os
+        mas_url = os.getenv("MAS_API_URL", "http://192.168.0.191:8001") + "/api/agents/invoke"
         try:
             async with httpx.AsyncClient(timeout=30) as client:
                 resp = await client.post(mas_url, json=args)
