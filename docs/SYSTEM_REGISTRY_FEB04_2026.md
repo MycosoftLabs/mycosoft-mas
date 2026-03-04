@@ -187,6 +187,26 @@ Three-gate ethics pipeline (Truth → Incentive → Horizon), Incentive Auditor,
 **Agent**: IncentiveAuditorAgent (`mycosoft_mas/agents/incentive_auditor_agent.py`)  
 **Doc**: `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md`
 
+### Ethics Training API (Mar 4, 2026)
+
+Sandbox MYCA instances for ethics training; scenarios; grading; Observer integration.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/ethics/training/sandbox` | POST | Create sandbox session |
+| `/api/ethics/training/sandbox` | GET | List sessions |
+| `/api/ethics/training/sandbox/{id}` | GET/DELETE | Get/destroy session |
+| `/api/ethics/training/sandbox/{id}/chat` | POST | Chat with sandboxed MYCA |
+| `/api/ethics/training/scenarios` | GET | List scenarios |
+| `/api/ethics/training/scenarios/{id}` | GET | Get scenario details |
+| `/api/ethics/training/run` | POST | Run scenario on session |
+| `/api/ethics/training/grades/{session_id}` | GET | Get grades |
+| `/api/ethics/training/report` | POST | Aggregate report |
+| `/api/ethics/training/observations` | GET | Observer MYCA notes |
+
+**Router**: `mycosoft_mas/core/routers/ethics_training_api.py`  
+**Doc**: `docs/MYCA_ETHICS_TRAINING_SYSTEM_MAR04_2026.md`
+
 ### Presence API (Feb 24, 2026)
 
 MYCA live awareness of online users, active sessions, and staff presence. Proxies to Website presence API. Used by consciousness world model and deliberation.

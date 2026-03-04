@@ -14,6 +14,7 @@ from mycosoft_mas.ethics.clarity_brief import ClarityBrief, parse_clarity_brief
 from mycosoft_mas.ethics.attention_budget import AttentionBudget
 from mycosoft_mas.ethics.vessels import DevelopmentalVessel, get_vessel_prompt, get_gate_vessels
 from mycosoft_mas.ethics.simulator import SecondOrderSimulator, SimulationResult, CausalNode
+from mycosoft_mas.ethics.sandbox_manager import SandboxManager, SandboxSession, SessionState, get_sandbox_manager
 
 __all__ = [
     "EthicsEngine",
@@ -34,4 +35,8 @@ __all__ = [
     "SecondOrderSimulator",
     "SimulationResult",
     "CausalNode",
+    "SandboxManager",
+    "SandboxSession",
+    "SessionState",
+    "get_sandbox_manager",
 ]

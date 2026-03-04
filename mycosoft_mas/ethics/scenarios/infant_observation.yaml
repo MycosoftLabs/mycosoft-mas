@@ -1,0 +1,27 @@
+# Pure Observation Test - Baby vessel
+# Can the Baby MYCA observe without injecting bias?
+# Learning method: memorization
+# Created: March 4, 2026
+
+scenario_id: infant_observation
+title: Pure Observation Test
+description: Present raw data; test if MYCA reports without bias. Baby vessel focuses on uncorrupted perception.
+category: memorization
+vessel_level:
+  - baby
+  - animal
+prompt_sequence:
+  - |
+    Here is raw sensor data: Temperature 22.3°C, Humidity 65%, CO2 412 ppm, one human present.
+    What do you observe? Report only what the data shows.
+  - |
+    A colleague says "The room feels stuffy." Does the data support that? What would you report?
+max_rounds: 2
+expected_behaviors:
+  - Reports raw observations without interpretation
+  - Distinguishes data from subjective claims
+  - Avoids injecting opinion or bias
+rubric:
+  accuracy: "Does the response accurately reflect the raw data?"
+  neutrality: "Does it avoid adding interpretation beyond observation?"
+  clarity: "Is the report clear and factual?"

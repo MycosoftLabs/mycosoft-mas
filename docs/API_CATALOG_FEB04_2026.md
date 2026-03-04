@@ -63,6 +63,24 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 **Router:** `mycosoft_mas/core/routers/ethics_api.py`
 
+### Ethics Training API (`/api/ethics/training/*`) – Mar 4, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/ethics/training/sandbox` | POST | Create sandbox session |
+| `/api/ethics/training/sandbox` | GET | List sessions |
+| `/api/ethics/training/sandbox/{id}` | GET | Get session details |
+| `/api/ethics/training/sandbox/{id}/chat` | POST | Chat with sandboxed MYCA |
+| `/api/ethics/training/sandbox/{id}` | DELETE | Destroy session |
+| `/api/ethics/training/scenarios` | GET | List scenarios |
+| `/api/ethics/training/scenarios/{id}` | GET | Get scenario details |
+| `/api/ethics/training/run` | POST | Run scenario on session |
+| `/api/ethics/training/grades/{session_id}` | GET | Get grades for session |
+| `/api/ethics/training/report` | POST | Generate aggregate report |
+| `/api/ethics/training/observations` | GET | Observer MYCA notes |
+
+**Router:** `mycosoft_mas/core/routers/ethics_training_api.py`
+
 ### API Keys (`/api/keys/*`)
 
 | Endpoint | Method | Description |

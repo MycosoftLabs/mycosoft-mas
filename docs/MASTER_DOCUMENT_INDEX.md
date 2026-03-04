@@ -1,5 +1,11 @@
 # Master Document Index
 
+## MYCA Ethics Training System (Mar 4, 2026)
+- `docs/MYCA_ETHICS_TRAINING_SYSTEM_MAR04_2026.md` – **Complete**: Sandbox MYCA instances, training scenarios, grading, Observer integration, website at `/ethics-training/*`.
+
+## Perplexity Audit Response (Mar 3, 2026)
+- `docs/PERPLEXITY_AUDIT_RESPONSE_MAR03_2026.md` – **Audit correction**: Corrects false claims about health layer; documents actual health, watchdog, heartbeat, graceful shutdown infrastructure.
+
 ## MYCA Ethics Philosophy Baseline (Mar 3, 2026)
 - `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md` – **Implemented**: Three-gate pipeline (Truth/Incentive/Horizon), IncentiveAuditorAgent, Clarity Brief, System Constitution 9–12, 4 new instincts, n8n ethics workflow, orchestrator + deliberation integration.
 
@@ -8,6 +14,9 @@
 
 ## MYCA Desktop Workstation (Mar 3, 2026)
 - `docs/MYCA_DESKTOP_WORKSTATION_COMPLETE_MAR03_2026.md` – **Implementation complete**: XFCE desktop, noVNC (6080), XRDP (3389), Node v20, Chrome/Cursor/VS Code/Discord/Slack/Signal, Claude Code/gh/Playwright/signal-cli, AI Python libs. Access: http://192.168.0.191:6080/vnc.html. Scripts: `_install_myca_desktop_191.py`, `_verify_myca_191.py`.
+
+## Claude Cowork VM Windows Troubleshooting (Mar 3, 2026)
+- `docs/CLAUDE_COWORK_VM_TROUBLESHOOTING_MAR03_2026.md` – **Cowork VM fix**: "VM service not running" regression; MSIX path bug, DCOM, Hyper-V; run `scripts/fix-claude-cowork-vm.ps1`; use exe installer from claude.ai/download to avoid MSIX.
 
 ## Mycosoft SSH MCP (Mar 3, 2026)
 - `docs/MYCOSOFT_SSH_MCP_MAR03_2026.md` – **SSH MCP**: Secure VM access for Claude Code, Cursor, Claude Cowork — ssh_exec, ssh_upload, ssh_download, ssh_status; host aliases sandbox/mas/mindex/gpu/myca; setup, credentials, adding future VMs.

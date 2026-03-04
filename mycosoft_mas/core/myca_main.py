@@ -65,6 +65,7 @@ from mycosoft_mas.core.routers.bio_api import router as bio_router
 from mycosoft_mas.core.routers.fusarium_api import router as fusarium_router
 from mycosoft_mas.core.routers.redteam_api import router as redteam_router
 from mycosoft_mas.core.routers.ethics_api import router as ethics_router
+from mycosoft_mas.core.routers.ethics_training_api import router as ethics_training_router
 from mycosoft_mas.core.routers.network_api import router as network_api_router
 from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
@@ -560,6 +561,7 @@ app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(fusarium_router, prefix="/api/fusarium", tags=["fusarium"])
 app.include_router(redteam_router, tags=["redteam"])
 app.include_router(ethics_router)
+app.include_router(ethics_training_router)
 app.include_router(network_api_router, tags=["network"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])

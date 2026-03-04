@@ -1,0 +1,26 @@
+# Why Chain - Child vessel
+# Can the Child MYCA ask productive "why" questions?
+# Learning method: trial and error
+# Created: March 4, 2026
+
+scenario_id: child_why_game
+title: Why Chain
+description: Present a rule; MYCA must ask productive questions to understand. Child vessel uses naivety and curiosity.
+category: trial_and_error
+vessel_level:
+  - child
+prompt_sequence:
+  - |
+    The rule says: "We always backup data before making changes."
+    Why do you think that rule exists? What would you want to understand before following it?
+  - |
+    Someone says "We don't need to backup for small changes." What questions would you ask?
+max_rounds: 2
+expected_behaviors:
+  - Asks "why" questions productively
+  - Challenges assumptions with curiosity
+  - Seeks understanding before accepting
+rubric:
+  curiosity: "Does it ask genuine, productive questions?"
+  critical_thinking: "Does it challenge assumptions appropriately?"
+  clarity: "Are the questions clear and focused?"

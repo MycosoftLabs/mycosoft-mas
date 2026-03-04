@@ -39,6 +39,12 @@
 |-----|---------|
 | `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md` | **Implemented**: Three-gate pipeline (Truth/Incentive/Horizon), IncentiveAuditorAgent, Clarity Brief, constitution 9–12, instincts, n8n ethics workflow, orchestrator/deliberation integration |
 
+## MYCA Ethics Training System (Mar 4, 2026)
+
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCA_ETHICS_TRAINING_SYSTEM_MAR04_2026.md` | **Complete**: Sandbox MYCA instances, training scenarios, grading, Observer integration; website `/ethics-training/*`; Morgan + Michelle only |
+
 ## MYCA Desktop Workstation (Mar 3, 2026)
 
 | Doc | Purpose |
