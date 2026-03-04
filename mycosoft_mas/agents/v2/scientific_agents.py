@@ -200,10 +200,20 @@ class SimulationAgent(BaseScientificAgent):
 
 
 class ProteinDesignAgent(BaseScientificAgent):
-    """Interfaces with AlphaFold and BoltzGen for protein design."""
+    """Interfaces with ESMFold (Hugging Face) and RFdiffusion (NVIDIA NIM) for protein design."""
     def __init__(self):
-        super().__init__("protein_design_agent", "Protein Design Agent", "Designs proteins using AlphaFold, BoltzGen, and Rosetta")
-    
+        super().__init__("protein_design_agent", "Protein Design Agent", "Designs proteins using ESMFold, RFdiffusion")
+        self._client = None
+
+    def _get_client(self):
+        if self._client is None:
+            try:
+                from mycosoft_mas.integrations.protein_design_client import ProteinDesignClient
+                self._client = ProteinDesignClient()
+            except ImportError:
+                pass
+        return self._client
+
     async def execute_task(self, task: ScientificTask) -> Dict[str, Any]:
         task_type = task.task_type
         if task_type == "predict_structure":
@@ -214,21 +224,39 @@ class ProteinDesignAgent(BaseScientificAgent):
             return await self._optimize_sequence(task.input_data)
         else:
             return {"error": f"Unknown task type: {task_type}"}
-    
+
     async def _predict_structure(self, data: Dict[str, Any]) -> Dict[str, Any]:
         sequence = data.get("sequence", "")
-        logger.info(f"Predicting structure for sequence of length {len(sequence)}")
-        return {"prediction_id": str(uuid4()), "sequence_length": len(sequence), "confidence": 0.85, "pdb_path": None}
-    
+        client = self._get_client()
+        if client and sequence:
+            result = await client.predict_structure(sequence)
+            if "error" not in result:
+                return {"prediction_id": str(uuid4()), **result}
+            return result
+        logger.info("Predicting structure for sequence of length %s", len(sequence))
+        return {"prediction_id": str(uuid4()), "sequence_length": len(sequence), "note": "Provide sequence and HUGGINGFACE_TOKEN for ESMFold"}
+
     async def _design_binder(self, data: Dict[str, Any]) -> Dict[str, Any]:
         target = data.get("target")
-        logger.info(f"Designing binder for target: {target}")
-        return {"design_id": str(uuid4()), "target": target, "candidates": [], "top_score": 0.0}
-    
+        target_pdb = data.get("target_pdb")
+        target_pdb_url = data.get("target_pdb_url")
+        hotspot_residues = data.get("hotspot_residues")
+        client = self._get_client()
+        if client:
+            result = await client.design_binder(
+                target_pdb=target_pdb or (target if isinstance(target, str) and len(target) > 100 else None),
+                target_pdb_url=target_pdb_url or (target if isinstance(target, str) and target.startswith("http") else None),
+                hotspot_residues=hotspot_residues,
+            )
+            if "error" not in result:
+                return {"design_id": str(uuid4()), **result}
+            return result
+        return {"design_id": str(uuid4()), "target": target, "note": "RFdiffusion requires NVIDIA_NIM_URL and NGC_API_KEY"}
+
     async def _optimize_sequence(self, data: Dict[str, Any]) -> Dict[str, Any]:
         sequence = data.get("sequence", "")
         objective = data.get("objective", "stability")
-        return {"optimized_sequence": sequence, "objective": objective, "improvement": 0.1}
+        return {"optimized_sequence": sequence, "objective": objective, "note": "Sequence optimization requires ProteinMPNN or local tools"}
 
 
 class MetabolicPathwayAgent(BaseScientificAgent):

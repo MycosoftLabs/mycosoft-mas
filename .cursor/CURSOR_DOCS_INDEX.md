@@ -45,11 +45,12 @@
 |-----|---------|
 | `docs/MYCA_ETHICS_TRAINING_SYSTEM_MAR04_2026.md` | **Complete**: Sandbox MYCA instances, training scenarios, grading, Observer integration; website `/ethics-training/*`; Morgan + Michelle only |
 
-## MYCA Desktop Workstation (Mar 3, 2026)
+## MYCA Desktop Workstation (Mar 3–4, 2026)
 
 | Doc | Purpose |
 |-----|---------|
 | `docs/MYCA_DESKTOP_WORKSTATION_COMPLETE_MAR03_2026.md` | **Complete**: VM 191 full desktop — XFCE, noVNC, XRDP, Node v20, Chrome/Cursor/VS Code/Discord/Slack/Signal, Claude Code/gh/Playwright/signal-cli, AI libs. Access: http://192.168.0.191:6080. Scripts: `_install_myca_desktop_191.py`, `_verify_myca_191.py` |
+| `docs/MYCA_SELF_PROVISIONING_PLAYBOOK_MAR04_2026.md` | **MYCA self-provisioning**: Commands MYCA can run on VM 191 to finish setup — Claude Code (official installer), Cursor admin, MAS/MINDEX env, gh auth. Playbook lives at `~/myca-workspace/PLAYBOOK.md` on 191. |
 
 ## MYCA Live Presence (Feb 24, 2026)
 

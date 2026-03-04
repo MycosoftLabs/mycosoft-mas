@@ -19,6 +19,16 @@ Environment Variables:
     PLATFORM_ONE_TOKEN: Platform One authentication token
     TACTICAL_API_URL: Tactical Data Link gateway
     TACTICAL_API_KEY: Tactical authentication key
+    LOCKHEED_PORTAL_URL: Lockheed Martin Supplier Portal API/base URL
+    LOCKHEED_PORTAL_TOKEN: Lockheed portal token
+    RAYTHEON_PORTAL_URL: Raytheon procurement portal API
+    RAYTHEON_PORTAL_TOKEN: Raytheon portal token
+    NORTHROP_PORTAL_URL: Northrop Grumman vendor portal API
+    NORTHROP_PORTAL_TOKEN: Northrop portal token
+    BAE_PORTAL_URL: BAE Systems vendor portal API
+    BAE_PORTAL_TOKEN: BAE portal token
+    SAIC_PORTAL_URL: SAIC vendor portal API
+    SAIC_PORTAL_TOKEN: SAIC portal token
 """
 
 import os
@@ -556,6 +566,155 @@ class TacticalDataLinkClient:
             self._client = None
 
 
+class ContractorPortalClient:
+    """
+    Base-style client for defense prime contractor supplier/vendor portals.
+    Lockheed Martin, Raytheon, Northrop Grumman, BAE Systems, SAIC.
+    Each portal typically requires vendor registration and CAC/SSO.
+    """
+
+    def __init__(
+        self,
+        portal_name: str,
+        api_url_key: str,
+        token_key: str,
+        config: Optional[Dict[str, Any]] = None,
+    ):
+        self.portal_name = portal_name
+        self.config = config or {}
+        self.api_url = self.config.get("api_url") or os.getenv(api_url_key, "")
+        self.token = self.config.get("token") or os.getenv(token_key, "")
+        self.timeout = self.config.get("timeout", 30)
+        self._client: Optional[httpx.AsyncClient] = None
+
+    def _is_configured(self) -> bool:
+        return bool(self.api_url and self.token)
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        if self._client is None or self._client.is_closed:
+            headers = {
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+            self._client = httpx.AsyncClient(
+                base_url=self.api_url.rstrip("/"),
+                headers=headers,
+                timeout=self.timeout,
+            )
+        return self._client
+
+    async def health_check(self) -> Dict[str, Any]:
+        """Check portal connectivity."""
+        if not self._is_configured():
+            return {"status": "not_configured", "portal": self.portal_name}
+        try:
+            client = await self._get_client()
+            r = await client.get("/health")
+            return {
+                "status": "connected" if r.status_code == 200 else "error",
+                "portal": self.portal_name,
+                "status_code": r.status_code,
+            }
+        except Exception as e:
+            return {"status": "error", "portal": self.portal_name, "error": str(e)}
+
+    async def list_rfqs(self, status: Optional[str] = None, limit: int = 25) -> Dict[str, Any]:
+        """List RFQs/RFPs for the vendor."""
+        if not self._is_configured():
+            return {"status": "not_configured", "rfqs": [], "portal": self.portal_name}
+        try:
+            client = await self._get_client()
+            params = {"limit": limit}
+            if status:
+                params["status"] = status
+            r = await client.get("/rfqs", params=params)
+            if r.is_success:
+                data = r.json()
+                return {"status": "success", "rfqs": data.get("rfqs", data.get("items", [])), "portal": self.portal_name}
+            return {"status": "error", "rfqs": [], "status_code": r.status_code, "portal": self.portal_name}
+        except Exception as e:
+            return {"status": "error", "rfqs": [], "error": str(e), "portal": self.portal_name}
+
+    async def get_rfq(self, rfq_id: str) -> Dict[str, Any]:
+        """Fetch RFQ details."""
+        if not self._is_configured():
+            return {"status": "not_configured", "portal": self.portal_name}
+        try:
+            client = await self._get_client()
+            r = await client.get(f"/rfqs/{rfq_id}")
+            if r.is_success:
+                return {"status": "success", "rfq": r.json(), "portal": self.portal_name}
+            return {"status": "error", "status_code": r.status_code, "portal": self.portal_name}
+        except Exception as e:
+            return {"status": "error", "error": str(e), "portal": self.portal_name}
+
+    async def submit_quote(self, rfq_id: str, quote_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Submit a quote for an RFQ."""
+        if not self._is_configured():
+            return {"status": "not_configured", "portal": self.portal_name}
+        try:
+            client = await self._get_client()
+            r = await client.post(f"/rfqs/{rfq_id}/quotes", json=quote_data)
+            if r.is_success:
+                return {"status": "success", "response": r.json(), "portal": self.portal_name}
+            return {"status": "error", "status_code": r.status_code, "portal": self.portal_name}
+        except Exception as e:
+            return {"status": "error", "error": str(e), "portal": self.portal_name}
+
+    async def list_purchase_orders(self, limit: int = 25) -> Dict[str, Any]:
+        """List purchase orders for the vendor."""
+        if not self._is_configured():
+            return {"status": "not_configured", "pos": [], "portal": self.portal_name}
+        try:
+            client = await self._get_client()
+            r = await client.get("/purchase-orders", params={"limit": limit})
+            if r.is_success:
+                data = r.json()
+                return {"status": "success", "pos": data.get("purchase_orders", data.get("items", [])), "portal": self.portal_name}
+            return {"status": "error", "pos": [], "status_code": r.status_code, "portal": self.portal_name}
+        except Exception as e:
+            return {"status": "error", "pos": [], "error": str(e), "portal": self.portal_name}
+
+    async def submit_invoice(self, po_id: str, invoice_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Submit an invoice for a purchase order."""
+        if not self._is_configured():
+            return {"status": "not_configured", "portal": self.portal_name}
+        try:
+            client = await self._get_client()
+            r = await client.post(f"/purchase-orders/{po_id}/invoices", json=invoice_data)
+            if r.is_success:
+                return {"status": "success", "response": r.json(), "portal": self.portal_name}
+            return {"status": "error", "status_code": r.status_code, "portal": self.portal_name}
+        except Exception as e:
+            return {"status": "error", "error": str(e), "portal": self.portal_name}
+
+    async def close(self) -> None:
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
+            self._client = None
+
+
+def _lockheed_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
+    return ContractorPortalClient("Lockheed Martin Supplier Portal", "LOCKHEED_PORTAL_URL", "LOCKHEED_PORTAL_TOKEN", config)
+
+
+def _raytheon_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
+    return ContractorPortalClient("Raytheon Procurement", "RAYTHEON_PORTAL_URL", "RAYTHEON_PORTAL_TOKEN", config)
+
+
+def _northrop_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
+    return ContractorPortalClient("Northrop Grumman Vendor Portal", "NORTHROP_PORTAL_URL", "NORTHROP_PORTAL_TOKEN", config)
+
+
+def _bae_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
+    return ContractorPortalClient("BAE Systems Vendor Portal", "BAE_PORTAL_URL", "BAE_PORTAL_TOKEN", config)
+
+
+def _saic_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
+    return ContractorPortalClient("SAIC Vendor Portal", "SAIC_PORTAL_URL", "SAIC_PORTAL_TOKEN", config)
+
+
 class DefenseIntegrationManager:
     """
     Unified manager for all defense integrations.
@@ -565,6 +724,7 @@ class DefenseIntegrationManager:
     - Anduril Lattice
     - Platform One
     - Tactical Data Links
+    - Contractor Portals (Lockheed, Raytheon, Northrop Grumman, BAE, SAIC)
     """
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
@@ -573,6 +733,11 @@ class DefenseIntegrationManager:
         self._anduril: Optional[AndurilClient] = None
         self._platform_one: Optional[PlatformOneClient] = None
         self._tactical: Optional[TacticalDataLinkClient] = None
+        self._lockheed: Optional[ContractorPortalClient] = None
+        self._raytheon: Optional[ContractorPortalClient] = None
+        self._northrop: Optional[ContractorPortalClient] = None
+        self._bae: Optional[ContractorPortalClient] = None
+        self._saic: Optional[ContractorPortalClient] = None
         logger.info("Defense Integration Manager initialized")
     
     @property
@@ -598,6 +763,36 @@ class DefenseIntegrationManager:
         if self._tactical is None:
             self._tactical = TacticalDataLinkClient(self.config.get("tactical", {}))
         return self._tactical
+
+    @property
+    def lockheed(self) -> ContractorPortalClient:
+        if self._lockheed is None:
+            self._lockheed = _lockheed_portal(self.config.get("lockheed", {}))
+        return self._lockheed
+
+    @property
+    def raytheon(self) -> ContractorPortalClient:
+        if self._raytheon is None:
+            self._raytheon = _raytheon_portal(self.config.get("raytheon", {}))
+        return self._raytheon
+
+    @property
+    def northrop(self) -> ContractorPortalClient:
+        if self._northrop is None:
+            self._northrop = _northrop_portal(self.config.get("northrop", {}))
+        return self._northrop
+
+    @property
+    def bae(self) -> ContractorPortalClient:
+        if self._bae is None:
+            self._bae = _bae_portal(self.config.get("bae", {}))
+        return self._bae
+
+    @property
+    def saic(self) -> ContractorPortalClient:
+        if self._saic is None:
+            self._saic = _saic_portal(self.config.get("saic", {}))
+        return self._saic
     
     async def check_all_health(self) -> Dict[str, Any]:
         """Check health of all defense platforms."""
@@ -607,7 +802,12 @@ class DefenseIntegrationManager:
             ("palantir", self.palantir),
             ("anduril", self.anduril),
             ("platform_one", self.platform_one),
-            ("tactical", self.tactical)
+            ("tactical", self.tactical),
+            ("lockheed", self.lockheed),
+            ("raytheon", self.raytheon),
+            ("northrop", self.northrop),
+            ("bae", self.bae),
+            ("saic", self.saic),
         ]:
             try:
                 results[name] = await client_prop.health_check()
@@ -617,9 +817,10 @@ class DefenseIntegrationManager:
         return {
             "platforms": results,
             "summary": {
-                "total": 4,
+                "total": 9,
                 "connected": sum(1 for r in results.values() if r.get("status") == "connected"),
                 "restricted": sum(1 for r in results.values() if r.get("status") == "restricted"),
+                "not_configured": sum(1 for r in results.values() if r.get("status") == "not_configured"),
                 "error": sum(1 for r in results.values() if r.get("status") == "error")
             },
             "timestamp": datetime.utcnow().isoformat()
@@ -627,7 +828,10 @@ class DefenseIntegrationManager:
     
     async def close(self):
         """Close all client connections."""
-        for client in [self._palantir, self._anduril, self._platform_one, self._tactical]:
+        for client in [
+            self._palantir, self._anduril, self._platform_one, self._tactical,
+            self._lockheed, self._raytheon, self._northrop, self._bae, self._saic,
+        ]:
             if client:
                 await client.close()
         logger.info("Defense Integration Manager closed")

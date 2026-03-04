@@ -66,8 +66,21 @@ _safe_import(".corporate.legal_compliance_agent", "LegalComplianceAgent")
 # Financial Agents
 _safe_import(".financial.financial_agent", "FinancialAgent")
 
+# Bio Agents (Track 3 - Full Platform Integration)
+_safe_import(".bio.culture_vision_agent", "CultureVisionAgent")
+
+# Business Agents (Track 4 - SBIR/STTR Grant Agent)
+_safe_import(".business.grant_agent", "GrantAgent")
+
+# Crypto Agents (Track 2 - Full Platform Integration)
+_safe_import(".crypto.x401_agent_wallet", "X401AgentWalletAgent")
+_safe_import(".crypto.myco_token_agent", "MycoTokenAgent")
+_safe_import(".crypto.dao_treasury_agent", "DAOTreasuryAgent")
+
 # Security Agents
 _safe_import(".crep_security_agent", "CREPSecurityAgent")
+_safe_import(".security.compliance_agent", "CmmcComplianceAgent")
+_safe_import(".security.export_control_agent", "ExportControlAgent")
 
 # Network Agents
 _safe_import(".network_monitor_agent", "NetworkMonitorAgent")

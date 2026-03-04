@@ -12,8 +12,9 @@
 ## MYCA N8N Autonomy (Mar 3, 2026)
 - `docs/MYCA_N8N_AUTONOMY_COMPLETE_MAR03_2026.md` – **Plan complete**: All 7 phases — platform connectors (Discord, WhatsApp, Signal), omnichannel API, ingestion/orchestrator/response workflows, n8n bridge, loop mitigation, MYCA VM docker-compose and provision script. Deploy when VM 191 reachable.
 
-## MYCA Desktop Workstation (Mar 3, 2026)
+## MYCA Desktop Workstation (Mar 3–4, 2026)
 - `docs/MYCA_DESKTOP_WORKSTATION_COMPLETE_MAR03_2026.md` – **Implementation complete**: XFCE desktop, noVNC (6080), XRDP (3389), Node v20, Chrome/Cursor/VS Code/Discord/Slack/Signal, Claude Code/gh/Playwright/signal-cli, AI Python libs. Access: http://192.168.0.191:6080/vnc.html. Scripts: `_install_myca_desktop_191.py`, `_verify_myca_191.py`.
+- `docs/MYCA_SELF_PROVISIONING_PLAYBOOK_MAR04_2026.md` – **MYCA self-provisioning**: Steps for MYCA to fully operate VM 191 (Claude Code official, Cursor admin, MAS/MINDEX env, gh auth). Playbook copied to `~/myca-workspace/PLAYBOOK.md` on 191. Phase 8 of install script deploys it.
 
 ## Claude Cowork VM Windows Troubleshooting (Mar 3, 2026)
 - `docs/CLAUDE_COWORK_VM_TROUBLESHOOTING_MAR03_2026.md` – **Cowork VM fix**: "VM service not running" regression; MSIX path bug, DCOM, Hyper-V; run `scripts/fix-claude-cowork-vm.ps1`; use exe installer from claude.ai/download to avoid MSIX.

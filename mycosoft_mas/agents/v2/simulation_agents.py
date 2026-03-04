@@ -32,10 +32,20 @@ class SimulationStatus(str, Enum):
 
 
 class AlphaFoldAgent(BaseScientificAgent):
-    """Interfaces with AlphaFold for protein structure prediction."""
+    """Interfaces with AlphaFold for protein structure prediction via EBI AlphaFold DB API."""
     def __init__(self):
-        super().__init__("alphafold_agent", "AlphaFold Agent", "Predicts protein structures using AlphaFold2/3")
-    
+        super().__init__("alphafold_agent", "AlphaFold Agent", "Predicts protein structures using AlphaFold2/3 via EBI AlphaFold DB")
+        self._client = None
+
+    def _get_client(self):
+        if self._client is None:
+            try:
+                from mycosoft_mas.integrations.alphafold_client import AlphaFoldClient
+                self._client = AlphaFoldClient()
+            except ImportError:
+                pass
+        return self._client
+
     async def execute_task(self, task: ScientificTask) -> Dict[str, Any]:
         task_type = task.task_type
         if task_type == "predict_monomer":
@@ -44,22 +54,80 @@ class AlphaFoldAgent(BaseScientificAgent):
             return await self._predict_multimer(task.input_data)
         elif task_type == "refine_structure":
             return await self._refine_structure(task.input_data)
+        elif task_type == "fetch_prediction":
+            return await self._fetch_prediction(task.input_data)
         else:
             return {"error": f"Unknown task type: {task_type}"}
-    
+
     async def _predict_monomer(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        uniprot_id = data.get("uniprot_id")
         sequence = data.get("sequence", "")
-        logger.info(f"Predicting monomer structure for {len(sequence)} residues")
-        return {"prediction_id": str(uuid4()), "sequence_length": len(sequence), "pLDDT": 85.0, "pdb_path": None, "confidence_scores": []}
-    
+        client = self._get_client()
+        if client and uniprot_id:
+            pred = await client.get_prediction(uniprot_id)
+            if pred:
+                urls = await client.get_prediction_urls(uniprot_id)
+                return {
+                    "prediction_id": pred.get("entryId", str(uuid4())),
+                    "uniprot_id": uniprot_id,
+                    "sequence_length": len(pred.get("uniprotSequence", sequence) or sequence),
+                    "pdb_url": urls.get("pdb"),
+                    "cif_url": urls.get("cif"),
+                    "pae_image_url": urls.get("pae_image"),
+                    "metadata": {k: v for k, v in pred.items() if k not in ("entryId", "uniprotSequence")},
+                }
+        if client and sequence:
+            summary = await client.search_by_sequence(sequence)
+            if summary:
+                return {"sequence_summary": summary, "sequence_length": len(sequence)}
+        if not uniprot_id and sequence:
+            return {
+                "message": "For new predictions provide uniprot_id to fetch from AlphaFold DB, or use ColabFold locally for raw sequences",
+                "sequence_length": len(sequence),
+                "sequence": sequence[:50] + "..." if len(sequence) > 50 else sequence,
+            }
+        logger.info("Predicting monomer structure for %s residues", len(sequence) or 0)
+        return {"prediction_id": str(uuid4()), "sequence_length": len(sequence), "pLDDT": None, "pdb_path": None, "note": "Provide uniprot_id for EBI AlphaFold DB lookup"}
+
     async def _predict_multimer(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        uniprot_ids = data.get("uniprot_ids", [])
         sequences = data.get("sequences", [])
-        logger.info(f"Predicting multimer with {len(sequences)} chains")
-        return {"prediction_id": str(uuid4()), "num_chains": len(sequences), "iPTM": 0.8, "pdb_path": None}
-    
+        client = self._get_client()
+        if client and uniprot_ids:
+            results = []
+            for uid in uniprot_ids[:10]:
+                pred = await client.get_prediction(str(uid))
+                if pred:
+                    urls = await client.get_prediction_urls(str(uid))
+                    results.append({"uniprot_id": uid, "entry_id": pred.get("entryId"), "pdb_url": urls.get("pdb"), "cif_url": urls.get("cif")})
+            if results:
+                return {"predictions": results, "num_chains": len(results)}
+        logger.info("Predicting multimer with %s chains", len(sequences) or len(uniprot_ids) or 0)
+        return {"prediction_id": str(uuid4()), "num_chains": len(sequences) or len(uniprot_ids), "note": "Provide uniprot_ids for EBI AlphaFold DB lookup"}
+
+    async def _fetch_prediction(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Fetch existing AlphaFold prediction by UniProt ID."""
+        uniprot_id = data.get("uniprot_id")
+        fetch_pdb = data.get("fetch_pdb", False)
+        if not uniprot_id:
+            return {"error": "uniprot_id required"}
+        client = self._get_client()
+        if not client:
+            return {"error": "AlphaFoldClient not available"}
+        pred = await client.get_prediction(uniprot_id)
+        if not pred:
+            return {"error": f"No AlphaFold prediction for {uniprot_id}"}
+        out = {"uniprot_id": uniprot_id, "entry_id": pred.get("entryId"), "metadata": pred}
+        if fetch_pdb:
+            pdb_content = await client.fetch_pdb_content(uniprot_id)
+            out["pdb_content"] = pdb_content[:5000] + "..." if pdb_content and len(pdb_content) > 5000 else pdb_content
+        urls = await client.get_prediction_urls(uniprot_id)
+        out["urls"] = urls
+        return out
+
     async def _refine_structure(self, data: Dict[str, Any]) -> Dict[str, Any]:
         pdb_path = data.get("pdb_path")
-        return {"refined_id": str(uuid4()), "original": pdb_path, "rmsd_improvement": 0.5}
+        return {"refined_id": str(uuid4()), "original": pdb_path, "note": "Structure refinement requires local tools (e.g. OpenMM, Rosetta)"}
 
 
 class BoltzGenAgent(BaseScientificAgent):
