@@ -91,6 +91,9 @@ _safe_import(".workspace_agent", "WorkspaceAgent")
 _safe_import(".daily_rhythm_agent", "DailyRhythmAgent")
 _safe_import(".workspace_security_agent", "WorkspaceSecurityAgent")
 
+# Ethics and philosophy (March 2026)
+_safe_import(".incentive_auditor_agent", "IncentiveAuditorAgent")
+
 # Dynamically create runtime-safe agent modules/classes for compatibility.
 import sys
 import types

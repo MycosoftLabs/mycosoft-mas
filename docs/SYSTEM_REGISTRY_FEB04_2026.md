@@ -169,6 +169,24 @@ MYCA has full view and full access to n8n workflows. Source of truth: repo `n8n/
 **Rule**: `.cursor/rules/n8n-management.mdc`  
 **Agents**: n8n-workflow, n8n-ops, n8n-workflow-sync
 
+### Ethics API (Mar 3, 2026)
+
+Three-gate ethics pipeline (Truth → Incentive → Horizon), Incentive Auditor, Clarity Brief, Stoic attention budgeting.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/ethics/evaluate` | POST | Run three-gate pipeline on content |
+| `/api/ethics/audit` | POST | Incentive audit; logs to Event Ledger |
+| `/api/ethics/audit/{task_id}` | GET | Retrieve audit record |
+| `/api/ethics/attention-budget/{channel}` | GET | Attention budget status |
+| `/api/ethics/simulate` | POST | Second-order simulation |
+| `/api/ethics/constitution` | GET | System Constitution |
+| `/api/ethics/health` | GET | Ethics engine health |
+
+**Router**: `mycosoft_mas/core/routers/ethics_api.py`  
+**Agent**: IncentiveAuditorAgent (`mycosoft_mas/agents/incentive_auditor_agent.py`)  
+**Doc**: `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md`
+
 ### Presence API (Feb 24, 2026)
 
 MYCA live awareness of online users, active sessions, and staff presence. Proxies to Website presence API. Used by consciousness world model and deliberation.

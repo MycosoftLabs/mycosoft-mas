@@ -12,6 +12,19 @@ from mycosoft_mas.integrations.supabase_client import SupabaseClient
 from mycosoft_mas.integrations.elevenlabs_client import ElevenLabsClient
 from mycosoft_mas.integrations.inaturalist_client import INaturalistClient, INaturalistConfig
 
+try:
+    from mycosoft_mas.integrations.discord_client import DiscordClient
+except ImportError:
+    DiscordClient = None
+try:
+    from mycosoft_mas.integrations.whatsapp_client import WhatsAppClient
+except ImportError:
+    WhatsAppClient = None
+try:
+    from mycosoft_mas.integrations.signal_client import SignalClient
+except ImportError:
+    SignalClient = None
+
 __all__ = [
     "NotionClient",
     "NCBIClient",
@@ -25,4 +38,7 @@ __all__ = [
     "ElevenLabsClient",
     "INaturalistClient",
     "INaturalistConfig",
+    "DiscordClient",
+    "WhatsAppClient",
+    "SignalClient",
 ]

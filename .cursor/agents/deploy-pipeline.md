@@ -25,6 +25,16 @@ Local Dev (port 3010) -> Git Commit/Push -> SSH to VM 187
 | MAS | 192.168.0.188 | MAS Orchestrator (systemd) | mycosoft |
 | MINDEX | 192.168.0.189 | Database + Vector Store | mycosoft |
 
+## SSH MCP (Preferred When Available)
+
+When the **mycosoft-ssh** MCP is available (Cursor, Claude Code, Claude Cowork), use it for VM commands:
+
+- `ssh_exec(host="sandbox", command="docker ps")` — run any command
+- `ssh_exec(host="mas", command="sudo systemctl restart mas-orchestrator", sudo=True)` — with sudo
+- `ssh_status()` — check connectivity to all VMs
+
+Host aliases: `sandbox` (187), `mas` (188), `mindex` (189), `gpu` (190), `myca` (191). See rule `vm-ssh-mcp.mdc` and `docs/MYCOSOFT_SSH_MCP_MAR03_2026.md`. Fallback: scripts + paramiko as below.
+
 ## CRITICAL: SSH/Sudo Credentials
 
 **NEVER ASK THE USER FOR THE PASSWORD.** Credentials are stored locally:

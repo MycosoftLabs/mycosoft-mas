@@ -357,6 +357,33 @@ class ToolRegistry:
             }
         ))
 
+        # Omnichannel Send Tool (Phase 5 - MYCA autonomous omnichannel)
+        self.register(ToolDefinition(
+            name="omnichannel_send",
+            description="Send a message to Slack, Discord, WhatsApp, Signal, Email, or Asana",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "platform": {
+                        "type": "string",
+                        "enum": ["slack", "discord", "whatsapp", "signal", "email", "asana"],
+                        "description": "Target platform"
+                    },
+                    "channel_id": {"type": "string", "description": "Channel ID for slack/discord"},
+                    "recipient": {"type": "string", "description": "Phone for whatsapp/signal, email address, or Asana task GID"},
+                    "thread_id": {"type": "string", "description": "Thread ID for slack/discord"},
+                    "text": {"type": "string", "description": "Message text"},
+                    "subject": {"type": "string", "description": "Email subject when platform=email"},
+                    "attachments": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Attachment URLs"
+                    }
+                },
+                "required": ["platform", "text"]
+            }
+        ))
+
         # Exa Semantic Web Search Tool
         self.register(ToolDefinition(
             name="exa_search",
@@ -575,6 +602,8 @@ class ToolExecutor:
                 result = await self._execute_workflow_tool(tool_call.arguments)
             elif tool_call.name == "generate_workflow":
                 result = await self._generate_workflow_tool(tool_call.arguments)
+            elif tool_call.name == "omnichannel_send":
+                result = await self._execute_omnichannel_send(tool_call.arguments)
             else:
                 # Call MAS API for other tools
                 result = await self._call_mas_tool(tool_call.name, tool_call.arguments)
@@ -764,7 +793,39 @@ class ToolExecutor:
         except Exception as e:
             logger.exception("generate_workflow tool failed: %s", e)
             return {"status": "error", "message": str(e)}
-    
+
+    async def _execute_omnichannel_send(self, args: Dict[str, Any]) -> Any:
+        """Send a message to Slack, Discord, WhatsApp, Signal, Email, or Asana via omnichannel API."""
+        platform = (args.get("platform") or "").strip().lower()
+        text = (args.get("text") or "").strip()
+        if not platform or not text:
+            return {"status": "error", "message": "platform and text are required"}
+        payload = {
+            "platform": platform,
+            "text": text,
+            "channel_id": args.get("channel_id") or None,
+            "recipient": args.get("recipient") or None,
+            "thread_id": args.get("thread_id") or None,
+            "subject": args.get("subject") or None,
+            "attachments": args.get("attachments") or None,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.post(
+                    f"{self.mas_url}/api/omnichannel/send",
+                    json=payload,
+                )
+                if response.status_code == 200:
+                    return response.json()
+                return {
+                    "status": "error",
+                    "message": f"Omnichannel send failed: {response.status_code}",
+                    "detail": response.text[:500] if response.text else None,
+                }
+        except Exception as e:
+            logger.exception("omnichannel_send tool failed: %s", e)
+            return {"status": "error", "message": str(e)}
+
     async def _call_mas_tool(self, tool_name: str, args: Dict[str, Any]) -> Any:
         """Call a generic MAS tool endpoint."""
         async with httpx.AsyncClient(timeout=30) as client:

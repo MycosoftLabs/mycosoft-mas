@@ -1,0 +1,276 @@
+{
+  "name": "MYCA Intent Orchestrator",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "exec-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [200, 200]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/intent/orchestrator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook: Intent Orchestrator",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 380],
+      "webhookId": "myca-intent-orchestrator"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Router: input from trigger or loop recursion (Phase 6: session_start_time, iteration_history)\nconst raw = $input.first().json;\nconst fromWebhook = !!raw.body;\nconst input = raw.body || raw;\nif (!input) return [{ json: { error: 'No input' } }];\nconst payload = typeof input === 'object' ? { ...input } : { message_text: String(input) };\npayload.trigger_source = fromWebhook ? 'webhook' : 'executeWorkflow';\npayload.goal = payload.goal || payload.message_text || payload.text || '';\npayload.iteration = typeof payload.iteration === 'number' ? payload.iteration : 0;\nif (payload.iteration === 0) {\n  payload.session_start_time = Math.floor(Date.now() / 1000);\n  payload.iteration_history = [];\n} else {\n  payload.session_start_time = payload.session_start_time || Math.floor(Date.now() / 1000);\n  payload.iteration_history = Array.isArray(payload.iteration_history) ? payload.iteration_history : [];\n}\nreturn [{ json: payload }];"
+      },
+      "id": "router",
+      "name": "Input Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Intent classifier: keyword-based mapping to plan intents\nconst ctx = $input.item.json;\nconst msg = ctx.message_text || ctx.text || ctx.message || ctx.next_prompt || '';\nconst lower = msg.toLowerCase();\nlet intent = 'casual_chat';\nif (/\\b(status|health|check|running|up|down)\\b/.test(lower)) intent = 'status_query';\nelse if (/\\b(task|todo|asana|create task)\\b/.test(lower)) intent = 'task_creation';\nelse if (/\\b(code|run|execute|script|sandbox)\\b/.test(lower)) intent = 'code_request';\nelse if (/\\b(search|find|lookup|mindex|species|fungus)\\b/.test(lower)) intent = 'info_retrieval';\nelse if (/\\b(vm|proxmox|restart|deploy|infrastructure)\\b/.test(lower)) intent = 'infrastructure_action';\nelse if (/\\b(calendar|schedule|meeting|book)\\b/.test(lower)) intent = 'scheduling';\nelse if (/\\b(file|upload|download|document)\\b/.test(lower)) intent = 'file_operation';\n\nreturn [{ json: { ...ctx, intent, message_text: msg || ctx.message_text } }];"
+      },
+      "id": "intent-classifier",
+      "name": "Intent Classifier",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/voice/orchestrator/chat",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{"name": "Content-Type", "value": "application/json"}]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"message\": {{ JSON.stringify($json.message_text || $json.text || '') }},\n  \"actor\": {{ JSON.stringify($json.sender_id || $json.sender_email || 'omnichannel') }},\n  \"conversation_id\": {{ JSON.stringify($json.thread_id || $json.channel_id || 'myca-' + Date.now()) }}\n}",
+        "options": {"timeout": 30000}
+      },
+      "id": "mas-chat",
+      "name": "MAS Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare evaluate-task-completion request body (Phase 6: session_start_time, tokens_used, iteration_history)\nconst ctx = $('Intent Classifier').first().json;\nconst mas = $input.item.json;\nconst result = mas.response_text || mas.message || mas.response || (mas.error ? String(mas.error) : JSON.stringify(mas));\nconst session_start_time = ctx.session_start_time || Date.now();\nconst iteration_history = Array.isArray(ctx.iteration_history) ? ctx.iteration_history.slice(-3) : [];\nreturn [{ json: {\n  goal: ctx.goal || ctx.message_text,\n  result,\n  iteration: ctx.iteration || 0,\n  max_iterations: 5,\n  session_start_time,\n  tokens_used: ctx.tokens_used || 0,\n  iteration_history,\n  _ctx: ctx,\n  _response_text: result\n} }];"
+      },
+      "id": "prepare-evaluate",
+      "name": "Prepare Evaluate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/n8n/evaluate-task-completion",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{"name": "Content-Type", "value": "application/json"}]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"goal\": {{ JSON.stringify($json.goal) }},\n  \"result\": {{ JSON.stringify($json.result) }},\n  \"iteration\": {{ $json.iteration }},\n  \"max_iterations\": {{ $json.max_iterations }},\n  \"session_start_time\": {{ $json.session_start_time || 0 }},\n  \"tokens_used\": {{ $json.tokens_used || 0 }},\n  \"iteration_history\": {{ JSON.stringify($json.iteration_history || []) }}\n}",
+        "options": {"timeout": 15000}
+      },
+      "id": "evaluate-task",
+      "name": "Evaluate Task Completion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge evaluate result with context for branching\nconst evalOut = $input.item.json;\nconst prep = $('Prepare Evaluate').first().json;\nconst ctx = prep._ctx || {};\nconst responseText = prep._response_text || '';\nreturn [{ json: { ...ctx, ...evalOut, response_text: responseText } }];"
+      },
+      "id": "merge-eval-context",
+      "name": "Merge Eval With Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1220, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "loose"},
+          "conditions": [
+            {
+              "id": "complete",
+              "leftValue": "={{ $json.complete }}",
+              "rightValue": true,
+              "operator": {"type": "boolean", "operation": "equals"}
+            },
+            {
+              "id": "max-iter",
+              "leftValue": "={{ $json.iteration }}",
+              "rightValue": 5,
+              "operator": {"type": "number", "operation": "gte"}
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "if-complete",
+      "name": "If Complete or Max Iter",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format for response router (receives merged data from If Complete)\nconst d = $input.item.json;\nreturn [{\n  json: {\n    platform_source: d.platform_source || 'slack',\n    channel_id: d.channel_id || null,\n    thread_id: d.thread_id || null,\n    response_text: d.response_text || '',\n    attachments: [],\n    sender_id: d.sender_id,\n    intent: d.intent,\n    trigger_source: d.trigger_source || 'executeWorkflow'\n  }\n}];"
+      },
+      "id": "format-for-response",
+      "name": "Format for Response Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1460, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare loop payload for next iteration (Phase 6: accumulate iteration_history for duplicate detection)\nconst m = $input.item.json;\nconst nextPrompt = m.next_prompt || m.message_text;\nconst prevHistory = Array.isArray(m.iteration_history) ? m.iteration_history : [];\nconst newEntry = { intent: m.intent, prompt: m.message_text || m.goal, result: m.response_text || m.result || '' };\nconst iteration_history = [...prevHistory, newEntry].slice(-3);\nconst base = { ...m, trigger_source: 'executeWorkflow', iteration: (m.iteration || 0) + 1, session_start_time: m.session_start_time, iteration_history };\nif (!nextPrompt) return [{ json: { ...base, message_text: 'Continue from previous result.' } }];\nreturn [{ json: { ...base, message_text: nextPrompt, next_prompt: nextPrompt, goal: m.goal } }];"
+      },
+      "id": "prepare-loop",
+      "name": "Prepare Loop Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1460, 400]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $env.MYCA_INTENT_ORCHESTRATOR_ID || 'MYCA Intent Orchestrator' }}",
+        "source": "database"
+      },
+      "id": "loop-back",
+      "name": "Loop Back to Orchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [1580, 400]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $env.MYCA_RESPONSE_ROUTER_ID || 'MYCA Response Router' }}",
+        "source": "database"
+      },
+      "id": "pass-to-response",
+      "name": "Pass to Response Router",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [1300, 300]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "merge-format-and-response",
+      "name": "Merge Format and Response",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1520, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [{
+            "id": "from-webhook",
+            "leftValue": "={{ $json.trigger_source }}",
+            "rightValue": "webhook",
+            "operator": {"type": "string", "operation": "equals"}
+          }]
+        }
+      },
+      "id": "if-webhook",
+      "name": "If Webhook Trigger",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1740, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ { success: true, message: 'Processed by orchestrator' } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Respond Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1960, 200]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{"node": "Input Router", "type": "main", "index": 0}]]
+    },
+    "Webhook: Intent Orchestrator": {
+      "main": [[{"node": "Input Router", "type": "main", "index": 0}]]
+    },
+    "Input Router": {
+      "main": [[{"node": "Intent Classifier", "type": "main", "index": 0}]]
+    },
+    "Intent Classifier": {
+      "main": [[{"node": "MAS Chat", "type": "main", "index": 0}]]
+    },
+    "MAS Chat": {
+      "main": [[{"node": "Prepare Evaluate", "type": "main", "index": 0}]]
+    },
+    "Prepare Evaluate": {
+      "main": [[{"node": "Evaluate Task Completion", "type": "main", "index": 0}]]
+    },
+    "Evaluate Task Completion": {
+      "main": [[{"node": "Merge Eval With Context", "type": "main", "index": 0}]]
+    },
+    "Merge Eval With Context": {
+      "main": [[{"node": "If Complete or Max Iter", "type": "main", "index": 0}]]
+    },
+    "If Complete or Max Iter": {
+      "main": [
+        [{"node": "Format for Response Router", "type": "main", "index": 0}],
+        [{"node": "Prepare Loop Payload", "type": "main", "index": 0}]
+      ]
+    },
+    "Prepare Loop Payload": {
+      "main": [[{"node": "Loop Back to Orchestrator", "type": "main", "index": 0}]]
+    },
+    "Loop Back to Orchestrator": {
+      "main": [[{"node": "Respond Webhook", "type": "main", "index": 0}]]
+    },
+    "Format for Response Router": {
+      "main": [
+        [{"node": "Pass to Response Router", "type": "main", "index": 0}],
+        [{"node": "Merge Format and Response", "type": "main", "index": 0}]
+      ]
+    },
+    "Pass to Response Router": {
+      "main": [[{"node": "Merge Format and Response", "type": "main", "index": 1}]]
+    },
+    "Merge Format and Response": {
+      "main": [[{"node": "If Webhook Trigger", "type": "main", "index": 0}]]
+    },
+    "If Webhook Trigger": {
+      "main": [
+        [{"node": "Respond Webhook", "type": "main", "index": 0}],
+        []
+      ]
+    }
+  },
+  "settings": {"executionOrder": "v1"},
+  "tags": [{"id": "myca-omnichannel", "name": "MYCA Omnichannel"}],
+  "triggerCount": 2,
+  "versionId": "1"
+}

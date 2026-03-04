@@ -49,6 +49,20 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/security/audit/stats` | GET | Audit statistics |
 | `/api/security/health` | GET | Security service health |
 
+### Ethics API (`/api/ethics/*`) – Mar 3, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/ethics/evaluate` | POST | Run three-gate ethics pipeline on content |
+| `/api/ethics/audit` | POST | Incentive audit; logs to Event Ledger |
+| `/api/ethics/audit/{task_id}` | GET | Retrieve audit record |
+| `/api/ethics/attention-budget/{channel}` | GET | Attention budget status |
+| `/api/ethics/simulate` | POST | Second-order simulation |
+| `/api/ethics/constitution` | GET | System Constitution (transparency) |
+| `/api/ethics/health` | GET | Ethics engine health |
+
+**Router:** `mycosoft_mas/core/routers/ethics_api.py`
+
 ### API Keys (`/api/keys/*`)
 
 | Endpoint | Method | Description |

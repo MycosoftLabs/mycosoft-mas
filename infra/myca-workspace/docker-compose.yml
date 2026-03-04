@@ -1,0 +1,94 @@
+version: "3.9"
+
+# MYCA Autonomous Workspace Stack — VM 191 (192.168.0.191)
+# Brain: VM 188. Desk: VM 191.
+
+services:
+
+  myca-workspace-api:
+    image: python:3.11-slim
+    container_name: myca-workspace-api
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - /opt/myca/workspace-api:/app
+      - /opt/myca/credentials:/opt/myca/credentials:ro
+      - /opt/myca/data:/opt/myca/data
+      - /opt/myca/logs:/opt/myca/logs
+    env_file: /opt/myca/.env
+    environment:
+      - PYTHONPATH=/app
+    command: bash -c "pip install -q fastapi uvicorn httpx google-auth google-auth-httplib2 google-api-python-client asyncpg redis aiofiles python-multipart pydantic && uvicorn workspace_api:app --host 0.0.0.0 --port 8100 --reload"
+    ports:
+      - "8100:8100"
+    networks:
+      - myca-net
+    depends_on:
+      - myca-postgres
+      - myca-redis
+
+  myca-n8n:
+    image: n8nio/n8n:latest
+    container_name: myca-n8n
+    restart: unless-stopped
+    env_file: /opt/myca/.env
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5679
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://192.168.0.191:5679
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=myca-postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=myca_n8n
+      - DB_POSTGRESDB_USER=myca
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+      - GENERIC_TIMEZONE=America/Los_Angeles
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - EXECUTIONS_MODE=regular
+      - N8N_RUNNERS_BROKER_PORT=5680
+    ports:
+      - "5679:5679"
+    volumes:
+      - myca-n8n-data:/home/node/.n8n
+    networks:
+      - myca-net
+    depends_on:
+      - myca-postgres
+
+  myca-postgres:
+    image: postgres:15-alpine
+    container_name: myca-postgres
+    restart: unless-stopped
+    env_file: /opt/myca/.env
+    environment:
+      - POSTGRES_USER=myca
+      - POSTGRES_DB=myca_workspace
+    volumes:
+      - myca-postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - myca-net
+
+  myca-redis:
+    image: redis:7-alpine
+    container_name: myca-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - myca-redis-data:/data
+    ports:
+      - "6380:6379"
+    networks:
+      - myca-net
+
+volumes:
+  myca-postgres-data:
+  myca-redis-data:
+  myca-n8n-data:
+
+networks:
+  myca-net:
+    driver: bridge

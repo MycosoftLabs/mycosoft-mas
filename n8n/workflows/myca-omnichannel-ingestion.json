@@ -1,0 +1,151 @@
+{
+  "name": "MYCA Omnichannel Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/omnichannel/intake",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-intake",
+      "name": "Webhook: Omnichannel Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "myca-omnichannel-ingestion"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Message Normalizer: Extract common format from platform-specific payloads\nconst raw = $input.item.json.body || $input.item.json;\nconst now = new Date().toISOString();\n\n// If already normalized (has platform_source), pass through with defaults\nif (raw.platform_source && raw.sender_id && raw.message_text) {\n  return [{\n    json: {\n      platform_source: raw.platform_source,\n      channel_id: raw.channel_id || raw.channel || null,\n      sender_id: raw.sender_id,\n      sender_email: raw.sender_email || null,\n      message_text: raw.message_text,\n      attachments: raw.attachments || [],\n      timestamp: raw.timestamp || now,\n      thread_id: raw.thread_id || raw.thread_ts || null\n    }\n  }];\n}\n\n// Slack Events API\nif (raw.event?.type === 'app_mention' || raw.event?.type === 'message' || raw.event?.channel) {\n  const ev = raw.event;\n  return [{\n    json: {\n      platform_source: 'slack',\n      channel_id: ev.channel || null,\n      sender_id: ev.user || ev.bot_id || 'unknown',\n      sender_email: ev.user_profile?.email || null,\n      message_text: ev.text || ev.message?.text || '',\n      attachments: ev.files || [],\n      timestamp: ev.ts ? new Date(parseFloat(ev.ts) * 1000).toISOString() : now,\n      thread_id: ev.thread_ts || null\n    }\n  }];\n}\n\n// Discord webhook payload\nif (raw.author?.id || raw.channel_id) {\n  return [{\n    json: {\n      platform_source: 'discord',\n      channel_id: raw.channel_id || null,\n      sender_id: raw.author?.id || raw.member?.user?.id || 'unknown',\n      sender_email: null,\n      message_text: raw.content || '',\n      attachments: raw.attachments || [],\n      timestamp: raw.timestamp || now,\n      thread_id: raw.thread?.id || null\n    }\n  }];\n}\n\n// Evolution API (WhatsApp) webhook\nif (raw.key?.remoteJid || raw.from) {\n  const from = raw.key?.remoteJid || raw.from;\n  const msg = raw.message?.conversation || raw.message?.extendedTextMessage?.text || raw.body?.message || '';\n  return [{\n    json: {\n      platform_source: 'whatsapp',\n      channel_id: from,\n      sender_id: from,\n      sender_email: null,\n      message_text: msg,\n      attachments: [],\n      timestamp: now,\n      thread_id: null\n    }\n  }];\n}\n\n// signal-cli REST webhook\nif (raw.envelope?.source || raw.dataMessage) {\n  const src = raw.envelope?.source || raw.source || 'unknown';\n  const txt = raw.dataMessage?.message || raw.envelope?.dataMessage?.message || '';\n  return [{\n    json: {\n      platform_source: 'signal',\n      channel_id: src,\n      sender_id: src,\n      sender_email: null,\n      message_text: txt,\n      attachments: [],\n      timestamp: now,\n      thread_id: null\n    }\n  }];\n}\n\n// Gmail / email payload\nif (raw.from?.address || raw.sender) {\n  const addr = raw.from?.address || raw.from || raw.sender;\n  const subj = raw.subject || '';\n  const body = raw.snippet || raw.body || raw.textPlain || '';\n  return [{\n    json: {\n      platform_source: 'email',\n      channel_id: null,\n      sender_id: addr,\n      sender_email: addr,\n      message_text: subj ? `${subj}\\n\\n${body}` : body,\n      attachments: raw.attachments || [],\n      timestamp: raw.internalDate ? new Date(parseInt(raw.internalDate)).toISOString() : now,\n      thread_id: raw.threadId || null\n    }\n  }];\n}\n\n// Asana webhook\nif (raw.resource?.gid || raw.events) {\n  const evts = raw.events || [raw];\n  const first = Array.isArray(evts) ? evts[0] : evts;\n  const resource = first?.resource || raw.resource || {};\n  return [{\n    json: {\n      platform_source: 'asana',\n      channel_id: resource.gid || null,\n      sender_id: first?.user?.gid || resource.gid || 'unknown',\n      sender_email: first?.user?.email || null,\n      message_text: resource.name || JSON.stringify(resource),\n      attachments: [],\n      timestamp: now,\n      thread_id: resource.gid || null\n    }\n  }];\n}\n\n// Fallback: treat as generic with platform from body or query\nconst platform = raw.platform || raw.platform_source || 'unknown';\nreturn [{\n  json: {\n    platform_source: platform,\n    channel_id: raw.channel_id || raw.channel || null,\n    sender_id: raw.sender_id || raw.user_id || raw.user || 'unknown',\n    sender_email: raw.sender_email || null,\n    message_text: raw.message_text || raw.text || raw.message || JSON.stringify(raw),\n    attachments: raw.attachments || [],\n    timestamp: raw.timestamp || now,\n    thread_id: raw.thread_id || null\n  }\n}];"
+      },
+      "id": "normalizer",
+      "name": "Message Normalizer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/omnichannel/verify-sender",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { platform: $json.platform_source, sender_id: $json.sender_id } }}",
+        "options": {"timeout": 5000}
+      },
+      "id": "verify-sender",
+      "name": "Verify Sender",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "auth-check",
+              "leftValue": "={{ $json.authorized }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "if-authorized",
+      "name": "IF Authorized",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [860, 300]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $env.MYCA_INTENT_ORCHESTRATOR_ID || 'MYCA Intent Orchestrator' }}",
+        "source": "database"
+      },
+      "id": "pass-to-orchestrator",
+      "name": "Pass to Orchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [1080, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge normalized message with verify response for orchestrator\nconst norm = $('Message Normalizer').first().json;\nconst verify = $('Verify Sender').first().json;\nreturn [{ json: { ...norm, sender_role: verify.role || 'none', sender_email_resolved: verify.email || norm.sender_email } }];"
+      },
+      "id": "merge-for-orch",
+      "name": "Merge for Orchestrator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ { success: true, message: 'Received and forwarded to orchestrator' } }}"
+      },
+      "id": "respond-ok",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1300, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 403,
+        "responseBody": "={{ { success: false, error: 'Sender not authorized' } }}"
+      },
+      "id": "respond-403",
+      "name": "Respond 403 Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1300, 400]
+    }
+  ],
+  "connections": {
+    "Webhook: Omnichannel Intake": {
+      "main": [[{ "node": "Message Normalizer", "type": "main", "index": 0 }]]
+    },
+    "Message Normalizer": {
+      "main": [[{ "node": "Verify Sender", "type": "main", "index": 0 }]]
+    },
+    "Verify Sender": {
+      "main": [[{ "node": "IF Authorized", "type": "main", "index": 0 }]]
+    },
+    "IF Authorized": {
+      "main": [
+        [{ "node": "Merge for Orchestrator", "type": "main", "index": 0 }],
+        [{ "node": "Respond 403 Unauthorized", "type": "main", "index": 0 }]
+      ]
+    },
+    "Merge for Orchestrator": {
+      "main": [[{ "node": "Pass to Orchestrator", "type": "main", "index": 0 }]]
+    },
+    "Pass to Orchestrator": {
+      "main": [[{ "node": "Respond 200 OK", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "id": "myca-omnichannel", "name": "MYCA Omnichannel" }],
+  "triggerCount": 1,
+  "versionId": "1"
+}

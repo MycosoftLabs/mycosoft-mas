@@ -1,8 +1,14 @@
 """
 MYCA Frontier LLM Router
 
-Routes requests to frontier LLMs (Gemini, Claude, GPT-4) for intelligent responses.
-This is the "brain" of MYCA - all voice queries go through here before PersonaPlex speaks.
+Routes requests to the best available LLM — Ollama (local, sovereign) first,
+then cloud providers (Gemini, Claude, OpenAI) as fallback.
+
+LLM_ROUTER_MODE env var controls routing:
+  local_first  (default) — Ollama primary, cloud fallback
+  ollama_only             — Never call cloud APIs
+  cloud_first             — Legacy: Gemini → Claude → OpenAI
+  hybrid                  — Intelligent routing based on task type
 """
 
 import asyncio
@@ -15,6 +21,11 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 from mycosoft_mas.llm.error_sanitizer import sanitize_for_log, sanitize_error_body
 
 logger = logging.getLogger(__name__)
+
+# Ollama config — MYCA's sovereign local brain on the MAS VM
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://192.168.0.188:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
+LLM_ROUTER_MODE = os.getenv("LLM_ROUTER_MODE", "local_first")
 
 
 @dataclass
@@ -37,18 +48,22 @@ class ConversationContext:
 
 class FrontierLLMRouter:
     """
-    Routes MYCA requests to frontier LLMs with full persona and context.
+    Routes MYCA requests to the best available LLM.
     
-    Priority order:
-    1. Gemini 2.5 Pro (default - best for conversation)
-    2. Claude 3.5 Sonnet (fallback - best for reasoning)
-    3. GPT-4 Turbo (fallback - best for tools)
+    Default priority (local_first mode):
+    1. Ollama on MAS VM (192.168.0.188:11434) — no API key, sovereign
+    2. Gemini 2.5 Flash (cloud fallback)
+    3. Claude 3.5 Sonnet (cloud fallback)
+    4. GPT-4 Turbo (cloud fallback)
     """
     
     def __init__(self):
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        self.ollama_base_url = OLLAMA_BASE_URL
+        self.ollama_model = OLLAMA_MODEL
+        self.router_mode = LLM_ROUTER_MODE
         
         self.persona_path = os.path.join(
             os.path.dirname(__file__),
@@ -58,12 +73,17 @@ class FrontierLLMRouter:
         
         # Provider health tracking
         self.provider_health = {
+            "ollama": {"healthy": True, "failures": 0},
             "gemini": {"healthy": True, "failures": 0},
             "claude": {"healthy": True, "failures": 0},
             "openai": {"healthy": True, "failures": 0},
         }
         
-        logger.info(f"FrontierLLMRouter initialized. Persona: {len(self.persona)} chars")
+        logger.info(
+            f"FrontierLLMRouter initialized. Mode={self.router_mode}, "
+            f"Ollama={self.ollama_base_url}/{self.ollama_model}, "
+            f"Persona={len(self.persona)} chars"
+        )
     
     def _load_persona(self) -> str:
         """Load MYCA full persona from file."""
@@ -157,7 +177,11 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         
         yielded = 0
         try:
-            if provider == "gemini" and self.gemini_api_key:
+            if provider == "ollama":
+                async for token in self._stream_ollama(messages):
+                    yielded += 1
+                    yield token
+            elif provider == "gemini" and self.gemini_api_key:
                 async for token in self._stream_gemini(messages):
                     yielded += 1
                     yield token
@@ -176,22 +200,56 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
 
             if yielded == 0:
                 logger.warning(f"[MYCA Brain] Provider {provider} returned no tokens")
+                # Fallback chain: if Ollama returned nothing, try cloud
+                if provider == "ollama":
+                    self._mark_provider_failure("ollama")
+                    fallback = self._select_provider()
+                    if fallback != "ollama":
+                        logger.info(f"[MYCA Brain] Ollama empty — falling back to {fallback}")
+                        async for token in self.stream_response(message, context, tools, fallback):
+                            yield token
+                        return
                 yield LLM_FALLBACK_MESSAGE
 
         except Exception as e:
             logger.error(f"[MYCA Brain] Error with {provider}: {sanitize_for_log(e)}")
             self._mark_provider_failure(provider)
+            # Auto-fallback for Ollama failures
+            if provider == "ollama":
+                fallback = self._select_provider()
+                if fallback != "ollama":
+                    logger.info(f"[MYCA Brain] Ollama failed — falling back to {fallback}")
+                    async for token in self.stream_response(message, context, tools, fallback):
+                        yield token
+                    return
             yield LLM_FALLBACK_MESSAGE
     
     def _select_provider(self) -> str:
-        """Select best available provider."""
+        """Select best available provider based on router mode."""
+        if self.router_mode == "ollama_only":
+            return "ollama"
+
+        if self.router_mode == "cloud_first":
+            # Legacy order: Gemini → Claude → OpenAI → Ollama
+            if self.gemini_api_key and self.provider_health["gemini"]["healthy"]:
+                return "gemini"
+            if self.anthropic_api_key and self.provider_health["claude"]["healthy"]:
+                return "claude"
+            if self.openai_api_key and self.provider_health["openai"]["healthy"]:
+                return "openai"
+            return "ollama"
+
+        # local_first (default) and hybrid: Ollama → cloud
+        if self.provider_health["ollama"]["healthy"]:
+            return "ollama"
         if self.gemini_api_key and self.provider_health["gemini"]["healthy"]:
             return "gemini"
         if self.anthropic_api_key and self.provider_health["claude"]["healthy"]:
             return "claude"
         if self.openai_api_key and self.provider_health["openai"]["healthy"]:
             return "openai"
-        return "gemini"  # Default
+        # Last resort: try Ollama even if marked unhealthy
+        return "ollama"
     
     def _mark_provider_failure(self, provider: str):
         """Mark a provider as having failed."""
@@ -200,6 +258,56 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
             if self.provider_health[provider]["failures"] >= 3:
                 self.provider_health[provider]["healthy"] = False
     
+    async def _stream_ollama(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
+        """Stream from Ollama — MYCA's sovereign local brain on the MAS VM."""
+        import httpx
+        import json
+
+        # Convert messages: Ollama uses OpenAI-compatible format
+        ollama_messages = []
+        for msg in messages:
+            role = msg["role"]
+            # Ollama supports system/user/assistant roles
+            ollama_messages.append({"role": role, "content": msg["content"]})
+
+        payload = {
+            "model": self.ollama_model,
+            "messages": ollama_messages,
+            "stream": True,
+            "options": {
+                "temperature": 0.7,
+                "num_predict": 2048,
+            }
+        }
+
+        url = f"{self.ollama_base_url}/api/chat"
+
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                async with client.stream("POST", url, json=payload) as response:
+                    if response.status_code != 200:
+                        body = await response.aread()
+                        logger.error(f"Ollama error {response.status_code}: {sanitize_error_body(body)}")
+                        self._mark_provider_failure("ollama")
+                        return
+
+                    async for line in response.aiter_lines():
+                        if not line:
+                            continue
+                        try:
+                            data = json.loads(line)
+                            if data.get("done"):
+                                break
+                            content = data.get("message", {}).get("content", "")
+                            if content:
+                                yield content
+                        except json.JSONDecodeError:
+                            continue
+
+        except Exception as e:
+            logger.error(f"Ollama stream error ({self.ollama_base_url}): {sanitize_for_log(e)}")
+            self._mark_provider_failure("ollama")
+
     async def _stream_gemini(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
         """Stream from Gemini with fast failure."""
         import httpx

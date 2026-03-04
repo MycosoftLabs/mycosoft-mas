@@ -64,6 +64,7 @@ from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
 from mycosoft_mas.core.routers.bio_api import router as bio_router
 from mycosoft_mas.core.routers.fusarium_api import router as fusarium_router
 from mycosoft_mas.core.routers.redteam_api import router as redteam_router
+from mycosoft_mas.core.routers.ethics_api import router as ethics_router
 from mycosoft_mas.core.routers.network_api import router as network_api_router
 from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
@@ -248,6 +249,22 @@ try:
 except ImportError:
     n8n_workflows_router = None
     N8N_WORKFLOWS_API_AVAILABLE = False
+
+# Omnichannel API - MYCA platform connectors (Slack, Discord, WhatsApp, Signal, etc.)
+try:
+    from mycosoft_mas.core.routers.omnichannel_api import router as omnichannel_router
+    OMNICHANNEL_API_AVAILABLE = True
+except ImportError:
+    omnichannel_router = None
+    OMNICHANNEL_API_AVAILABLE = False
+
+# N8N Bridge API - memory/sandbox/MINDEX endpoints for n8n workflows (Phase 5)
+try:
+    from mycosoft_mas.core.routers.n8n_bridge_api import router as n8n_bridge_router
+    N8N_BRIDGE_AVAILABLE = True
+except ImportError:
+    n8n_bridge_router = None
+    N8N_BRIDGE_AVAILABLE = False
 try:
     from mycosoft_mas.services.workflow_auto_monitor import get_workflow_auto_monitor
 except ImportError:
@@ -542,6 +559,7 @@ app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
 app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(fusarium_router, prefix="/api/fusarium", tags=["fusarium"])
 app.include_router(redteam_router, tags=["redteam"])
+app.include_router(ethics_router)
 app.include_router(network_api_router, tags=["network"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(security_router, tags=["security"])
@@ -686,6 +704,20 @@ except NameError:
 try:
     if N8N_WORKFLOWS_API_AVAILABLE:
         app.include_router(n8n_workflows_router, prefix="/api", tags=["n8n-workflows"])
+except NameError:
+    pass
+
+# Omnichannel API - MYCA platform connectors (send/receive/verify/status)
+try:
+    if OMNICHANNEL_API_AVAILABLE and omnichannel_router:
+        app.include_router(omnichannel_router, prefix="/api", tags=["omnichannel"])
+except NameError:
+    pass
+
+# N8N Bridge API - memory/sandbox/MINDEX for n8n orchestrator (Phase 5)
+try:
+    if N8N_BRIDGE_AVAILABLE and n8n_bridge_router:
+        app.include_router(n8n_bridge_router, tags=["n8n-bridge"])
 except NameError:
     pass
 
