@@ -65,7 +65,7 @@ class N8NClient:
         # Webhook URL (for triggering workflows)
         self.webhook_url = self.config.get(
             "webhook_url",
-            os.getenv("N8N_WEBHOOK_URL", "http://localhost:5678")
+            os.getenv("N8N_WEBHOOK_URL", "http://192.168.0.191:5679")
         ).rstrip('/')
         
         # API URL (for management operations)

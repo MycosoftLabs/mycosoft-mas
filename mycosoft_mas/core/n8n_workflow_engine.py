@@ -19,7 +19,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 # Configuration
-N8N_URL = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+N8N_URL = os.getenv("N8N_URL", "http://192.168.0.191:5679")
 N8N_CLOUD_URL = os.getenv("N8N_CLOUD_URL", "https://mycosoft.app.n8n.cloud")
 N8N_API_KEY = os.getenv("N8N_API_KEY", "")
 N8N_CLOUD_API_KEY = os.getenv("N8N_CLOUD_API_KEY", "")

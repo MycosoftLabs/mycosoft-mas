@@ -57,7 +57,7 @@ class OrchestratorMCPServer:
         )
         self._n8n_url = os.getenv(
             "N8N_URL",
-            "http://192.168.0.188:5678"
+            "http://192.168.0.191:5679"
         )
         self._mindex_url = os.getenv(
             "MINDEX_API_URL",

@@ -108,7 +108,7 @@ class WorkflowAutoMonitor:
 
     async def _health_loop(self) -> None:
         local_url = os.getenv("N8N_LOCAL_URL", "http://localhost:5678")
-        cloud_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+        cloud_url = os.getenv("N8N_URL", "http://192.168.0.191:5679")
         local_key = os.getenv("N8N_LOCAL_API_KEY", os.getenv("N8N_API_KEY", ""))
         cloud_key = os.getenv("N8N_API_KEY", "")
         while self._running:
@@ -142,7 +142,7 @@ class WorkflowAutoMonitor:
 
     async def _drift_loop(self) -> None:
         local_url = os.getenv("N8N_LOCAL_URL", "http://localhost:5678")
-        cloud_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+        cloud_url = os.getenv("N8N_URL", "http://192.168.0.191:5679")
         local_key = os.getenv("N8N_LOCAL_API_KEY", os.getenv("N8N_API_KEY", ""))
         cloud_key = os.getenv("N8N_API_KEY", "")
         while self._running:
