@@ -14,11 +14,12 @@ import base64
 class N8NWorkflowImporter:
     def __init__(self):
         self.n8n_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
-        self.username = os.getenv("N8N_USERNAME", "admin")
-        self.password = os.getenv("N8N_PASSWORD", "Mushroom1!")
+        self.api_key = os.getenv("N8N_API_KEY", "")
+        self.username = os.getenv("N8N_USERNAME", "")
+        self.password = os.getenv("N8N_PASSWORD", "")
         self.workflows_dir = Path(__file__).parent.parent / "n8n" / "workflows"
         self._session = None
-    
+
     @property
     def auth_header(self) -> str:
         credentials = f"{self.username}:{self.password}"
@@ -33,13 +34,22 @@ class N8NWorkflowImporter:
         if self._session and not self._session.closed:
             await self._session.close()
     
+    def _get_auth_headers(self) -> dict:
+        """Get authentication headers, preferring API key over basic auth."""
+        if self.api_key:
+            return {"X-N8N-API-KEY": self.api_key}
+        elif self.username and self.password:
+            return {"Authorization": f"Basic {self.auth_header}"}
+        else:
+            raise ValueError("No auth configured. Set N8N_API_KEY or N8N_USERNAME/N8N_PASSWORD env vars.")
+
     async def get_existing_workflows(self):
         """Get list of existing workflows."""
         session = await self._get_session()
         try:
             async with session.get(
                 f"{self.n8n_url}/api/v1/workflows",
-                headers={"Authorization": f"Basic {self.auth_header}"}
+                headers=self._get_auth_headers()
             ) as response:
                 if response.status == 200:
                     data = await response.json()
@@ -62,7 +72,7 @@ class N8NWorkflowImporter:
             async with session.post(
                 f"{self.n8n_url}/api/v1/workflows",
                 headers={
-                    "Authorization": f"Basic {self.auth_header}",
+                    **self._get_auth_headers(),
                     "Content-Type": "application/json"
                 },
                 json=workflow_data
@@ -87,7 +97,7 @@ class N8NWorkflowImporter:
             async with session.patch(
                 f"{self.n8n_url}/api/v1/workflows/{workflow_id}",
                 headers={
-                    "Authorization": f"Basic {self.auth_header}",
+                    **self._get_auth_headers(),
                     "Content-Type": "application/json"
                 },
                 json=workflow_data
