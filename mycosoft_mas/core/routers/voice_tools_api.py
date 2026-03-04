@@ -65,7 +65,7 @@ def _get_mindex_base_url() -> str:
 
 
 def _get_n8n_base_url() -> str:
-    return os.getenv("N8N_URL", "http://192.168.0.191:5679").rstrip("/")
+    return os.getenv("N8N_URL", "http://192.168.0.188:5678").rstrip("/")
 
 
 async def _execute_tool_pipeline(tool_name: str, arguments: Dict[str, Any]) -> ToolCall:

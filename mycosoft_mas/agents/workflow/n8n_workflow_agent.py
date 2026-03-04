@@ -23,7 +23,7 @@ def _get_engine():
     """Create N8NWorkflowEngine for cloud/production n8n (sync)."""
     from mycosoft_mas.core.n8n_workflow_engine import N8NWorkflowEngine
 
-    base_url = os.getenv("N8N_URL", "http://192.168.0.191:5679")
+    base_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
     api_key = os.getenv("N8N_API_KEY", "")
     return N8NWorkflowEngine(base_url=base_url, api_key=api_key)
 

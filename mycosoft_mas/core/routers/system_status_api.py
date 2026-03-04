@@ -129,7 +129,7 @@ async def get_system_status():
     tasks.append(("mindex", check_http_health(f"{mindex_url}/health")))
     
     # Check N8N
-    n8n_url = os.environ.get("N8N_WEBHOOK_URL", "http://192.168.0.191:5679")
+    n8n_url = os.environ.get("N8N_WEBHOOK_URL", "http://192.168.0.188:5678")
     tasks.append(("n8n", check_http_health(f"{n8n_url.rstrip('/')}/healthz")))
     
     # Check LLM providers
@@ -350,7 +350,7 @@ async def get_world_status():
 @router.get("/n8n")
 async def get_n8n_status():
     """Get N8N workflow automation status."""
-    n8n_url = os.environ.get("N8N_WEBHOOK_URL", "http://192.168.0.191:5679")
+    n8n_url = os.environ.get("N8N_WEBHOOK_URL", "http://192.168.0.188:5678")
     
     connected, error = await check_http_health(f"{n8n_url.rstrip('/')}/healthz")
     

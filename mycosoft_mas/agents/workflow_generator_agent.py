@@ -352,7 +352,7 @@ _agent_instance: Optional[WorkflowGeneratorAgent] = None
 def get_workflow_generator() -> WorkflowGeneratorAgent:
     global _agent_instance
     if _agent_instance is None:
-        n8n_url = os.getenv("N8N_URL", "http://192.168.0.191:5679")
+        n8n_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
         n8n_key = os.getenv("N8N_API_KEY", "")
         _agent_instance = WorkflowGeneratorAgent(n8n_api_url=n8n_url, n8n_api_key=n8n_key)
     return _agent_instance
@@ -384,7 +384,7 @@ async def generate_save_and_sync_workflow(
     # Sync to both local and cloud — read env vars at call time (not import time)
     # to match the sync-both pattern used in n8n_workflows_api.py.
     local_url = os.getenv("N8N_LOCAL_URL", "http://localhost:5678")
-    cloud_url = os.getenv("N8N_URL", "http://192.168.0.191:5679")
+    cloud_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
     local_key = os.getenv("N8N_LOCAL_API_KEY", os.getenv("N8N_API_KEY", ""))
     cloud_key = os.getenv("N8N_API_KEY", "")
 

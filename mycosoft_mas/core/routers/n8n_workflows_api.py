@@ -125,7 +125,7 @@ async def workflow_registry(
     engine = get_workflow_engine()
     cat = WorkflowCategory(category) if category else None
     workflows = engine.list_workflows(active_only=active_only, category=cat)
-    base_url = getattr(engine, "base_url", "") or os.getenv("N8N_URL", "http://192.168.0.191:5679")
+    base_url = getattr(engine, "base_url", "") or os.getenv("N8N_URL", "http://192.168.0.188:5678")
     items = []
     for w in workflows:
         d = w.to_dict()
@@ -144,7 +144,7 @@ async def sync_both_local_and_cloud(request: SyncRequest):
     """Sync repo workflows (n8n/workflows/*.json) to BOTH local (N8N_LOCAL_URL) and cloud (N8N_URL).
     Keeps local dev and production forever in sync. Use after any workflow change."""
     local_url = os.getenv("N8N_LOCAL_URL", "http://localhost:5678")
-    cloud_url = os.getenv("N8N_URL", "http://192.168.0.191:5679")
+    cloud_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
     local_key = os.getenv("N8N_LOCAL_API_KEY", os.getenv("N8N_API_KEY", ""))
     cloud_key = os.getenv("N8N_API_KEY", "")
     results = {"local": None, "cloud": None, "errors": []}

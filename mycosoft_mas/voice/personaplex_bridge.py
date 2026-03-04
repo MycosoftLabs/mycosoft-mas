@@ -53,7 +53,7 @@ class PersonaPlexBridge:
     def __init__(self, personaplex_url=None, mas_url=None, n8n_url=None):
         self.personaplex_url = personaplex_url or os.getenv("PERSONAPLEX_URL", "wss://localhost:8998")
         self.mas_url = mas_url or os.getenv("MAS_ORCHESTRATOR_URL", "http://192.168.0.188:8001")
-        self.n8n_url = n8n_url or os.getenv("N8N_WEBHOOK_URL", "http://192.168.0.191:5679/webhook")
+        self.n8n_url = n8n_url or os.getenv("N8N_WEBHOOK_URL", "http://192.168.0.188:5678/webhook")
         self.sessions: dict[str, DuplexSession] = {}
         self._http: Optional[aiohttp.ClientSession] = None
         self.action_keywords = ["turn on", "turn off", "set", "create", "delete", "start", "stop", "run", "check", "status"]
