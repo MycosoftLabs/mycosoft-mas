@@ -1,0 +1,33 @@
+[Unit]
+Description=MYCA Operating System — Autonomous Employee Daemon
+Documentation=https://github.com/MycosoftLabs/mycosoft-mas
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mycosoft
+Group=mycosoft
+WorkingDirectory=/home/mycosoft/repos/mycosoft-mas
+EnvironmentFile=/opt/myca/.env
+ExecStart=/home/mycosoft/repos/mycosoft-mas/.venv/bin/python -m mycosoft_mas.myca.os
+Restart=always
+RestartSec=10
+StandardOutput=append:/opt/myca/logs/myca_os.log
+StandardError=append:/opt/myca/logs/myca_os_error.log
+
+# Watchdog — restart if unresponsive for 5 minutes
+WatchdogSec=300
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=2G
+
+# Security hardening (allow network + docker but restrict system access)
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/myca /home/mycosoft/repos /tmp
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

@@ -89,6 +89,8 @@ class MycaOS:
         self._executive: Optional["ExecutiveSystem"] = None
         self._mas_bridge: Optional["MASBridge"] = None
         self._mindex_bridge: Optional["MINDEXBridge"] = None
+        self._scheduler: Optional["Scheduler"] = None
+        self._file_manager: Optional["FileManager"] = None
 
     # ── Subsystem accessors (lazy-load) ──────────────────────────
 
@@ -127,6 +129,20 @@ class MycaOS:
             self._mindex_bridge = MINDEXBridge(self)
         return self._mindex_bridge
 
+    @property
+    def scheduler(self) -> "Scheduler":
+        if self._scheduler is None:
+            from mycosoft_mas.myca.os.scheduler import Scheduler
+            self._scheduler = Scheduler(self)
+        return self._scheduler
+
+    @property
+    def file_manager(self) -> "FileManager":
+        if self._file_manager is None:
+            from mycosoft_mas.myca.os.file_manager import FileManager
+            self._file_manager = FileManager(self)
+        return self._file_manager
+
     # ── Lifecycle ────────────────────────────────────────────────
 
     async def boot(self):
@@ -153,8 +169,14 @@ class MycaOS:
             logger.info("[4/5] Initializing tool orchestrator...")
             await self.tools.initialize()
 
-            logger.info("[5/5] Initializing executive system...")
+            logger.info("[5/7] Initializing executive system...")
             await self.executive.initialize()
+
+            logger.info("[6/7] Initializing scheduler...")
+            await self.scheduler.initialize()
+
+            logger.info("[7/7] Initializing file manager...")
+            await self.file_manager.initialize()
 
         except Exception as e:
             logger.error(f"Boot failed at subsystem init: {e}")
@@ -241,7 +263,7 @@ class MycaOS:
         })
 
         # Cleanup subsystems
-        for subsystem in [self._comms, self._tools, self._executive, self._mas_bridge, self._mindex_bridge]:
+        for subsystem in [self._comms, self._tools, self._executive, self._scheduler, self._file_manager, self._mas_bridge, self._mindex_bridge]:
             if subsystem and hasattr(subsystem, "cleanup"):
                 try:
                     await subsystem.cleanup()
@@ -342,7 +364,7 @@ class MycaOS:
                 self.ctx.state = MycaState.AWAKE
 
     async def _daily_rhythm_loop(self):
-        """Check the daily schedule and trigger time-based actions."""
+        """Check the daily schedule, scheduler, and trigger time-based actions."""
         last_triggered = {}
         while self._running:
             try:
@@ -359,6 +381,25 @@ class MycaOS:
                     logger.info(f"Daily rhythm: {action}")
                     await self.executive.trigger_daily_action(action)
                     last_triggered[hour] = True
+
+                # Check persistent scheduler for due items
+                try:
+                    fired = await self.scheduler.check_and_fire()
+                    if fired:
+                        logger.info(f"Scheduler fired {len(fired)} items")
+                except Exception as e:
+                    logger.error(f"Scheduler check error: {e}")
+
+                # Daily file scan at 3 AM
+                if hour == 3 and "file_scan" not in last_triggered:
+                    try:
+                        new_files = await self.file_manager.scan()
+                        if new_files > 0:
+                            logger.info(f"Daily file scan: {new_files} new files indexed")
+                        await self.file_manager.cleanup_temp()
+                        last_triggered["file_scan"] = True
+                    except Exception as e:
+                        logger.error(f"File scan error: {e}")
 
                 # Reset at midnight
                 if hour == 0:
