@@ -39,6 +39,12 @@
 |-----|---------|
 | `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md` | **Implemented**: Three-gate pipeline (Truth/Incentive/Horizon), IncentiveAuditorAgent, Clarity Brief, constitution 9–12, instincts, n8n ethics workflow, orchestrator/deliberation integration |
 
+## MYCA Desktop Workstation (Mar 3, 2026)
+
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCA_DESKTOP_WORKSTATION_COMPLETE_MAR03_2026.md` | **Complete**: VM 191 full desktop — XFCE, noVNC, XRDP, Node v20, Chrome/Cursor/VS Code/Discord/Slack/Signal, Claude Code/gh/Playwright/signal-cli, AI libs. Access: http://192.168.0.191:6080. Scripts: `_install_myca_desktop_191.py`, `_verify_myca_191.py` |
+
 ## MYCA Live Presence (Feb 24, 2026)
 
 | Doc | Purpose |
