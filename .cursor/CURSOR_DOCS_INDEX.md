@@ -33,6 +33,12 @@
 |-----|---------|
 | `docs/MYCA_FIRST_LIGHT_AND_SESSION_COMPLETE_FEB25_2026.md` | **Session complete**: Full First Light plan (Phases 0–3), Jetson body, NLM, instincts, safety gates, MYCA chat fix, LLM keys, deployment |
 
+## MYCA Ethics Philosophy Baseline (Mar 3, 2026)
+
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md` | **Implemented**: Three-gate pipeline (Truth/Incentive/Horizon), IncentiveAuditorAgent, Clarity Brief, constitution 9–12, instincts, n8n ethics workflow, orchestrator/deliberation integration |
+
 ## MYCA Live Presence (Feb 24, 2026)
 
 | Doc | Purpose |
@@ -58,6 +64,7 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/MYCA_N8N_AUTONOMY_COMPLETE_MAR03_2026.md` | **MYCA N8N Autonomy complete**: All 7 phases — platform connectors, omnichannel API, ingestion/orchestrator/response workflows, n8n bridge, safety/loop mitigation, MYCA VM stack. Deploy via `scripts/provision_myca_vm.py` when VM 191 reachable. |
 | `docs/MYCA_PUBLIC_ALPHA_MONDAY_LAUNCH_COMPLETE_FEB28_2026.md` | **Plan complete**: Telemetry tool demo loop and end-to-end voice test readiness with local Moshi/Bridge verification. |
 | `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` | **Execution complete**: System gaps phases 5–8 delivered (memory, scientific DB/API, stubs, 501-route fixes) with verification checklist. |
 | `docs/WEBSOCKET_AGENT_BUS_VERIFICATION_REPORT_FEB17_2026.md` | **WebSocket Agent Bus verification**: MAS health, ws-handshake, browser pages, integration test, Cloudflare wss; enable MYCA_AGENT_BUS_ENABLED for agent-bus |
@@ -74,6 +81,7 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/MYCOSOFT_SSH_MCP_MAR03_2026.md` | **SSH MCP**: Secure VM access for Claude Code/Cursor/Cowork — ssh_exec, ssh_upload, ssh_download, ssh_status; host aliases; credentials; adding VMs |
 | `docs/MYCA_ASANA_HANDOFF_REPORT_FEB23_2026.md` | **MYCA Asana handoff**: Full report, architecture, file inventory, next tasks; copy-paste into Claude CoWorker for Asana |
 | `docs/MYCA_ECOSYSTEM_UNIFICATION_FEB17_2026.md` | **MYCA unification complete**: A2A/WebMCP/UCP, Exa, NLQ parse/execute, intention persistence, NatureOS routing, protocol rules |
 | `docs/MYCA_THUMB_PHASE2_PHASE5_COMPLETE_FEB17_2026.md` | **MYCA Opposable Thumb Phase 2–5 complete**: Ensemble orchestration, A2A federation client/adapters, provenance integrity API, governance gates, constitution extension |

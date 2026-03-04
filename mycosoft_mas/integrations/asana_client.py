@@ -112,3 +112,20 @@ class AsanaClient:
         except Exception as e:
             logger.warning("Asana get_workspaces failed: %s", e)
             return []
+
+    async def add_comment(self, task_gid: str, text: str) -> Optional[Dict[str, Any]]:
+        """Add a comment (story) to an Asana task."""
+        if not self.api_key:
+            logger.warning("Asana client: no ASANA_API_KEY set")
+            return None
+        client = await self._get_client()
+        try:
+            r = await client.post(
+                f"/tasks/{task_gid}/stories",
+                json={"data": {"text": text}},
+            )
+            r.raise_for_status()
+            return r.json().get("data")
+        except Exception as e:
+            logger.warning("Asana add_comment failed: %s", e)
+            return None

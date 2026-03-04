@@ -262,6 +262,16 @@ class OrchestratorService:
         logger.info(f"Restarting agent: {agent_id}")
         return await self.agent_pool.restart_agent(agent_id)
     
+    def _extract_task_content(self, task: AgentTask) -> Optional[str]:
+        """Extract text content from task for ethics evaluation."""
+        if not task.payload:
+            return None
+        for key in ("content", "text", "message", "input", "body"):
+            v = task.payload.get(key)
+            if isinstance(v, str) and v.strip():
+                return v.strip()
+        return None
+
     async def get_agent(self, agent_id: str) -> Optional[AgentState]:
         """Get agent state"""
         return await self.agent_pool.get_agent_state(agent_id)
@@ -271,9 +281,42 @@ class OrchestratorService:
         return await self.agent_pool.get_all_agents()
     
     async def submit_task(self, task: AgentTask) -> str:
-        """Submit a task to an agent"""
+        """Submit a task to an agent. Ethics evaluation runs when MYCA_ETHICS_ENABLED=1."""
         agent_id = task.agent_id
-        
+
+        # Ethics gate: evaluate before routing (optional, env-gated)
+        if os.getenv("MYCA_ETHICS_ENABLED", "0") == "1":
+            content = self._extract_task_content(task)
+            if content:
+                try:
+                    from mycosoft_mas.ethics import EthicsEngine, EthicsRiskLevel
+                    engine = EthicsEngine()
+                    result = await engine.evaluate(content, {"task_type": task.task_type, "agent_id": agent_id})
+                    if result.risk_level == EthicsRiskLevel.CRITICAL:
+                        raise ValueError(f"Ethics CRITICAL: task blocked. {result.blocked_reason or 'High risk'}")
+                    if result.risk_level == EthicsRiskLevel.HIGH:
+                        try:
+                            from mycosoft_mas.security.safety_gates import SafetyGates
+                            gates = SafetyGates()
+                            req_id = await gates.request_confirmation(
+                                action="ethics_high_risk_task",
+                                context={"task_id": task.id, "risk_score": result.risk_score, "blocked_reason": result.blocked_reason},
+                                approver_id="orchestrator",
+                            )
+                            approved = await gates.await_confirmation(req_id, timeout=30)
+                            if not approved:
+                                raise ValueError(f"Ethics HIGH: task blocked (confirmation denied or timed out). request_id={req_id}")
+                        except ImportError:
+                            raise ValueError(f"Ethics HIGH: task blocked. {result.blocked_reason or 'Confirmation required'}")
+                    # LOW/MEDIUM: attach ethics metadata to payload
+                    if task.payload is None:
+                        task.payload = {}
+                    task.payload["_ethics"] = result.to_dict()
+                except ValueError:
+                    raise
+                except Exception as e:
+                    logger.warning("Ethics evaluation failed, proceeding: %s", e)
+
         # Check agent exists and is active
         state = await self.agent_pool.get_agent_state(agent_id)
         if not state:

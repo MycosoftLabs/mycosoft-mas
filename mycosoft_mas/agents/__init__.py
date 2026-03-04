@@ -86,6 +86,9 @@ _safe_import(".v2.knowledge_domain_agent", "KnowledgeDomainAgent")
 _safe_import(".v2.autonomous_economy_agent", "AutonomousEconomyAgent")
 _safe_import(".v2.taxonomy_ingestion_agent", "TaxonomyIngestionAgent")
 
+# Ethics and philosophy (March 2026)
+_safe_import(".incentive_auditor_agent", "IncentiveAuditorAgent")
+
 # Dynamically create runtime-safe agent modules/classes for compatibility.
 import sys
 import types

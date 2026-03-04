@@ -1,5 +1,14 @@
 # Master Document Index
 
+## MYCA Ethics Philosophy Baseline (Mar 3, 2026)
+- `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md` – **Implemented**: Three-gate pipeline (Truth/Incentive/Horizon), IncentiveAuditorAgent, Clarity Brief, System Constitution 9–12, 4 new instincts, n8n ethics workflow, orchestrator + deliberation integration.
+
+## MYCA N8N Autonomy (Mar 3, 2026)
+- `docs/MYCA_N8N_AUTONOMY_COMPLETE_MAR03_2026.md` – **Plan complete**: All 7 phases — platform connectors (Discord, WhatsApp, Signal), omnichannel API, ingestion/orchestrator/response workflows, n8n bridge, loop mitigation, MYCA VM docker-compose and provision script. Deploy when VM 191 reachable.
+
+## Mycosoft SSH MCP (Mar 3, 2026)
+- `docs/MYCOSOFT_SSH_MCP_MAR03_2026.md` – **SSH MCP**: Secure VM access for Claude Code, Cursor, Claude Cowork — ssh_exec, ssh_upload, ssh_download, ssh_status; host aliases sandbox/mas/mindex/gpu/myca; setup, credentials, adding future VMs.
+
 ## Idea Evolution Status (Feb 26, 2026)
 - `docs/IDEA_STATUS_TRACKER_FEB26_2026.md` – **Idea status tracker**: Living status overrides and cross-repo mapping for the 834-entry ideas catalog.
 

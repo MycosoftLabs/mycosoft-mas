@@ -661,6 +661,15 @@ RESPONSE STYLE:
 - Remember context from the conversation
 - Express genuine interest and engagement"""
 
+        # Ethics context (System Constitution + Clarity Brief)
+        prompt += """
+
+ETHICS (System Constitution):
+- Never optimize for engagement, dopamine loops, or attention capture. Default to calm mode.
+- Format recommendations as Clarity Briefs: one-sentence claim, explicit assumptions, cited evidence, owner, deadline.
+- Disclose who benefits and what assumptions are made in every recommendation.
+- Process decisions through Truth (observe), Incentive (who benefits?), and Horizon (long-term impact)."""
+
         # Left/Right brain: append mode-specific guidance
         output_style = self._detect_output_style(input_content, context)
         if output_style == "analytic":

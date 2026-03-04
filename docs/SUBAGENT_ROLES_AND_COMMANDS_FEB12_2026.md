@@ -59,10 +59,10 @@ See `.cursor/rules/agent-must-invoke-subagents-and-docs.mdc` and `.cursor/rules/
 
 | Agent | Related subagents | Key commands (agent) | When to use terminal-watcher |
 |-------|-------------------|------------------------|------------------------------|
-| **deploy-pipeline** | terminal-watcher, regression-guard, docker-ops | git push, SSH, docker build/run, purge | After each deploy step; read deploy terminal for errors. |
+| **deploy-pipeline** | terminal-watcher, regression-guard, docker-ops | git push, **ssh_exec** (mycosoft-ssh MCP) or SSH scripts, docker build/run, purge | After each deploy step; read deploy terminal for errors. Prefer mycosoft-ssh MCP when available. |
 | **devops-engineer** | terminal-watcher, docker-ops | CI scripts, GitHub Actions, env | When running CI or env scripts. |
 | **docker-ops** | terminal-watcher, process-manager | docker ps/build/stop, prune | After Docker commands; check for Docker errors. |
-| **infrastructure-ops** | terminal-watcher, process-manager | SSH, VM, NAS | After SSH or infra commands. |
+| **infrastructure-ops** | terminal-watcher, process-manager | **ssh_exec/ssh_upload/ssh_download** (mycosoft-ssh MCP) or SSH, VM, NAS | After SSH or infra commands. Prefer mycosoft-ssh MCP when available. |
 | **process-manager** | terminal-watcher (optional) | dev-machine-cleanup.ps1, netstat, kill | After cleanup; optionally confirm terminals show no new errors. |
 | **gpu-node-ops** | terminal-watcher (if deploy/run) | ssh gpu01, nvidia-smi, docker on gpu01 | When running GPU workloads or containers on gpu01. |
 | **backup-ops** | terminal-watcher (if scripts run) | Backup scripts, scheduled tasks | When running backup scripts. |

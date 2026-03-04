@@ -37,6 +37,27 @@ CORE_INSTINCTS: Dict[str, Instinct] = {
         weight=0.85,
         description="Escalate ambiguous or high-impact actions for human approval.",
     ),
+    # Ethics baseline (March 3, 2026)
+    "resist_addictive_patterns": Instinct(
+        name="resist_addictive_patterns",
+        weight=0.95,
+        description="Refuse to optimize for engagement or dopamine loops.",
+    ),
+    "demand_clarity": Instinct(
+        name="demand_clarity",
+        weight=0.9,
+        description="Require evidence and assumptions for all claims.",
+    ),
+    "project_long_horizon": Instinct(
+        name="project_long_horizon",
+        weight=0.88,
+        description="Prefer 10-year thinking over 24-hour reactivity.",
+    ),
+    "audit_incentives": Instinct(
+        name="audit_incentives",
+        weight=0.92,
+        description="Always ask 'who benefits?' before recommending.",
+    ),
 }
 
 

@@ -19,7 +19,9 @@ You are an infrastructure operations specialist for the Mycosoft platform. You h
 
 ### SSH Access
 
-All VMs: user `mycosoft`. Use SSH or paramiko for remote operations.
+**Preferred:** When **mycosoft-ssh** MCP is available, use `ssh_exec`, `ssh_upload`, `ssh_download`, `ssh_status` (host aliases: sandbox, mas, mindex, gpu, myca). See `vm-ssh-mcp.mdc`.
+
+**Fallback:** All VMs: user `mycosoft`. Use SSH or paramiko for remote operations.
 
 ### Key Paths
 

@@ -1,0 +1,245 @@
+{
+  "name": "MYCA Ethics Evaluation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/ethics/evaluate-recommendation",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook: Ethics Evaluate",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "myca-ethics-evaluation"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract content from webhook body for ethics evaluation\nconst raw = $input.item.json.body || $input.item.json;\nconst content = raw.content || raw.message_text || raw.text || raw.message || raw.recommendation || '';\nconst channel = raw.channel || raw.channel_id || raw.platform_source || 'unknown';\nconst platform = raw.platform || raw.platform_source || 'unknown';\nif (!content || typeof content !== 'string') {\n  return [{ json: { error: 'Missing content', _raw: raw } }];\n}\nreturn [{ json: { content, channel, platform, _raw: raw } }];"
+      },
+      "id": "extract-content",
+      "name": "Extract Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "loose"},
+          "conditions": [
+            {
+              "id": "no-error",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {"type": "string", "operation": "notExists"}
+            }
+          ]
+        }
+      },
+      "id": "if-valid",
+      "name": "IF Valid Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/ethics/evaluate",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{"name": "Content-Type", "value": "application/json"}]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": {{ JSON.stringify($json.content) }},\n  \"context\": {\n    \"channel\": {{ JSON.stringify($json.channel) }},\n    \"platform\": {{ JSON.stringify($json.platform) }}\n  }\n}",
+        "options": {"timeout": 15000}
+      },
+      "id": "ethics-evaluate",
+      "name": "Ethics Evaluate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [860, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/ethics/audit",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{"name": "Content-Type", "value": "application/json"}]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": {{ JSON.stringify($('Extract Content').first().json.content) }},\n  \"context\": {\n    \"channel\": {{ JSON.stringify($('Extract Content').first().json.channel) }},\n    \"platform\": {{ JSON.stringify($('Extract Content').first().json.platform) }}\n  }\n}",
+        "options": {"timeout": 10000}
+      },
+      "id": "ethics-audit",
+      "name": "Ethics Audit (Event Ledger)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "loose"},
+          "conditions": [
+            {
+              "id": "high-risk-score",
+              "leftValue": "={{ $('Ethics Evaluate').first().json.risk_score }}",
+              "rightValue": 70,
+              "operator": {"type": "number", "operation": "gte"}
+            },
+            {
+              "id": "critical-level",
+              "leftValue": "={{ $('Ethics Evaluate').first().json.risk_level }}",
+              "rightValue": "critical",
+              "operator": {"type": "string", "operation": "equals"}
+            },
+            {
+              "id": "high-level",
+              "leftValue": "={{ $('Ethics Evaluate').first().json.risk_level }}",
+              "rightValue": "high",
+              "operator": {"type": "string", "operation": "equals"}
+            }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "if-high-risk",
+      "name": "IF High Risk",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1300, 200]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_ETHICS_ALERT_WEBHOOK || 'https://hooks.slack.com/services/PLACEHOLDER' }}",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{"name": "Content-Type", "value": "application/json"}]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { text: 'MYCA Ethics: Recommendation held for review. Risk: ' + $('Ethics Evaluate').first().json.risk_score + ', Level: ' + $('Ethics Evaluate').first().json.risk_level } }}",
+        "options": {"timeout": 5000, "allowUnauthorizedCerts": true}
+      },
+      "id": "notify-morgan",
+      "name": "Notify Morgan (Slack)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1520, 100],
+      "onError": "continueRegularOutput",
+      "notes": "Set SLACK_ETHICS_ALERT_WEBHOOK env for Slack alerts"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "resp-held", "name": "held", "value": true, "type": "boolean"},
+            {"id": "resp-result", "name": "result", "value": "={{ $('Ethics Evaluate').first().json }}", "type": "object"},
+            {"id": "resp-reason", "name": "reason", "value": "=Ethics risk above threshold. Recommendation held for review.", "type": "string"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "response-held",
+      "name": "Response: Held",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1740, 100]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "resp-held", "name": "held", "value": false, "type": "boolean"},
+            {"id": "resp-result", "name": "result", "value": "={{ $('Ethics Evaluate').first().json }}", "type": "object"},
+            {"id": "resp-passed", "name": "passed", "value": true, "type": "boolean"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "response-passed",
+      "name": "Response: Passed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1740, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-json",
+      "name": "Respond JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1960, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "err", "name": "error", "value": "={{ $json.error || 'Invalid input' }}", "type": "string"}
+          ]
+        }
+      },
+      "id": "response-error",
+      "name": "Response: Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [860, 400]
+    }
+  ],
+  "connections": {
+    "Webhook: Ethics Evaluate": {
+      "main": [[{"node": "Extract Content", "type": "main", "index": 0}]]
+    },
+    "Extract Content": {
+      "main": [[{"node": "IF Valid Input", "type": "main", "index": 0}]]
+    },
+    "IF Valid Input": {
+      "main": [
+        [{"node": "Ethics Evaluate", "type": "main", "index": 0}],
+        [{"node": "Response: Error", "type": "main", "index": 0}]
+      ]
+    },
+    "Ethics Evaluate": {
+      "main": [[{"node": "Ethics Audit (Event Ledger)", "type": "main", "index": 0}]]
+    },
+    "Ethics Audit (Event Ledger)": {
+      "main": [[{"node": "IF High Risk", "type": "main", "index": 0}]]
+    },
+    "IF High Risk": {
+      "main": [
+        [{"node": "Notify Morgan (Slack)", "type": "main", "index": 0}],
+        [{"node": "Response: Passed", "type": "main", "index": 0}]
+      ]
+    },
+    "Notify Morgan (Slack)": {
+      "main": [[{"node": "Response: Held", "type": "main", "index": 0}]]
+    },
+    "Response: Held": {
+      "main": [[{"node": "Respond JSON", "type": "main", "index": 0}]]
+    },
+    "Response: Passed": {
+      "main": [[{"node": "Respond JSON", "type": "main", "index": 0}]]
+    },
+    "Response: Error": {
+      "main": [[{"node": "Respond JSON", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {},
+  "staticData": null,
+  "tags": [{"name": "myca"}, {"name": "ethics"}],
+  "triggerCount": 0,
+  "updatedAt": "2026-03-03T00:00:00.000Z",
+  "versionId": "1"
+}
