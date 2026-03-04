@@ -1,5 +1,8 @@
 # Master Document Index
 
+## Signal Spam Fix (Mar 4, 2026)
+- `docs/SIGNAL_SPAM_FIX_MAR04_2026.md` – **Signal spam fix**: MYCA OS heartbeat no longer sends critical health alerts to Signal (was every 30s). Signal is for conversation only. Health issues logged only.
+
 ## MYCA Ethics Training System (Mar 4, 2026)
 - `docs/MYCA_ETHICS_TRAINING_SYSTEM_MAR04_2026.md` – **Complete**: Sandbox MYCA instances, training scenarios, grading, Observer integration, website at `/ethics-training/*`.
 

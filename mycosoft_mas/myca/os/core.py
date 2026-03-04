@@ -91,6 +91,9 @@ class MycaOS:
         self._mindex_bridge: Optional["MINDEXBridge"] = None
         self._scheduler: Optional["Scheduler"] = None
         self._file_manager: Optional["FileManager"] = None
+        self._discord_gateway: Optional["DiscordGateway"] = None
+        self._slack_gateway: Optional["SlackGateway"] = None
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
 
     # ── Subsystem accessors (lazy-load) ──────────────────────────
 
@@ -211,6 +214,7 @@ class MycaOS:
     async def run(self):
         """Main run loop — MYCA's heartbeat."""
         await self.boot()
+        self._loop = asyncio.get_running_loop()
 
         # Register signal handlers for graceful shutdown
         loop = asyncio.get_event_loop()
@@ -219,17 +223,20 @@ class MycaOS:
 
         logger.info("Entering main loop...")
 
-        # Run all cycles concurrently
+        # Run all cycles concurrently (including Discord bot if configured)
+        tasks = [
+            self._message_loop(),
+            self._heartbeat_loop(),
+            self._task_loop(),
+            self._intention_loop(),
+            self._reflection_loop(),
+            self._daily_rhythm_loop(),
+            self._discord_bot_task(),
+            self._slack_bot_task(),
+            self._shutdown_event.wait(),
+        ]
         try:
-            await asyncio.gather(
-                self._message_loop(),
-                self._heartbeat_loop(),
-                self._task_loop(),
-                self._intention_loop(),
-                self._reflection_loop(),
-                self._daily_rhythm_loop(),
-                self._shutdown_event.wait(),
-            )
+            await asyncio.gather(*tasks)
         except asyncio.CancelledError:
             logger.info("Main loop cancelled.")
         except Exception as e:
@@ -262,6 +269,22 @@ class MycaOS:
             "cycles": self.ctx.cycle_count,
         })
 
+        # Stop Discord bot first (so it releases the event loop)
+        if self._discord_gateway:
+            try:
+                await self._discord_gateway.stop()
+            except Exception as e:
+                logger.warning(f"Discord gateway stop error: {e}")
+            self._discord_gateway = None
+
+        # Stop Slack bot
+        if self._slack_gateway:
+            try:
+                self._slack_gateway.stop()
+            except Exception as e:
+                logger.warning(f"Slack gateway stop error: {e}")
+            self._slack_gateway = None
+
         # Cleanup subsystems
         for subsystem in [self._comms, self._tools, self._executive, self._scheduler, self._file_manager, self._mas_bridge, self._mindex_bridge]:
             if subsystem and hasattr(subsystem, "cleanup"):
@@ -274,6 +297,35 @@ class MycaOS:
         logger.info("MYCA OS shutdown complete.")
 
     # ── Core Loops ───────────────────────────────────────────────
+
+    async def _discord_bot_task(self):
+        """Run Discord bot for two-way conversations. Exits when bot is stopped."""
+        if not os.getenv("DISCORD_BOT_TOKEN"):
+            await self._shutdown_event.wait()
+            return
+        try:
+            from mycosoft_mas.myca.os.discord_gateway import DiscordGateway
+            self._discord_gateway = DiscordGateway(self)
+            await self._discord_gateway.start()
+        except asyncio.CancelledError:
+            if self._discord_gateway:
+                await self._discord_gateway.stop()
+            raise
+        except Exception as e:
+            logger.error(f"Discord bot error: {e}")
+
+    async def _slack_bot_task(self):
+        """Run Slack bot for two-way conversations. Runs in background thread."""
+        if not os.getenv("SLACK_BOT_TOKEN") or not os.getenv("SLACK_APP_TOKEN"):
+            await self._shutdown_event.wait()
+            return
+        try:
+            from mycosoft_mas.myca.os.slack_gateway import SlackGateway
+            self._slack_gateway = SlackGateway(self)
+            self._slack_gateway.start()
+        except Exception as e:
+            logger.error(f"Slack bot error: {e}")
+        await self._shutdown_event.wait()
 
     async def _message_loop(self):
         """Poll all communication channels for new messages."""
@@ -289,18 +341,21 @@ class MycaOS:
             await asyncio.sleep(self.MESSAGE_POLL_INTERVAL)
 
     async def _heartbeat_loop(self):
-        """Monitor system health across all VMs."""
+        """Monitor system health across all VMs.
+
+        Health issues are LOGGED only. Do NOT send to Signal — Signal is for
+        back-and-forth conversation, not automated health spam. Alerts were
+        previously sent every 30s, causing spam. Use dashboards or logs for
+        health visibility.
+        """
         while self._running:
             try:
                 health = await self._check_health()
                 if health.get("issues"):
                     for issue in health["issues"]:
                         logger.warning(f"Health issue: {issue}")
-                        if issue.get("severity") == "critical":
-                            await self.comms.send_to_morgan(
-                                f"CRITICAL: {issue['description']}",
-                                channel="signal"  # Critical goes to Signal
-                            )
+                        # No send_to_morgan here — Signal/Slack/Discord stay
+                        # for actual conversation, not heartbeat spam
             except Exception as e:
                 logger.error(f"Heartbeat error: {e}")
             await asyncio.sleep(self.HEARTBEAT_INTERVAL)

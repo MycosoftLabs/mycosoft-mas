@@ -182,6 +182,12 @@ asyncio.run(check_all())
 
 ---
 
+## Signal / Comms Policy (Mar 4, 2026)
+
+**Signal is for conversation only.** MYCA OS heartbeat was previously sending critical health alerts to Signal every 30 seconds, causing spam. Fixed: health issues are logged only. See `docs/SIGNAL_SPAM_FIX_MAR04_2026.md`.
+
+---
+
 ## Follow-Up / Known Gaps
 
 1. **ML Framework Client** (Track 6.8) -- plan-only; implement when specific framework conversion is needed
