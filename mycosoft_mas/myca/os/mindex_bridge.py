@@ -1,0 +1,256 @@
+"""
+MINDEX Bridge — Connection to all databases on VM 189.
+
+MINDEX (189) is the sole data layer for the entire Mycosoft system:
+- PostgreSQL (5432) — persistent memory, knowledge graph, agent state
+- Redis (6379) — session memory, pub/sub, A2A messaging, caching
+- Qdrant (6333) — vector embeddings, semantic search
+- MINDEX API (8000) — species database, taxonomy, compounds
+
+This bridge provides MYCA OS with memory, knowledge, and state persistence.
+
+Date: 2026-03-04
+"""
+
+import os
+import json
+import logging
+from typing import Optional
+from datetime import datetime, timezone
+
+import aiohttp
+
+logger = logging.getLogger("myca.os.mindex_bridge")
+
+
+class MINDEXBridge:
+    """Bridge to MINDEX databases on VM 189."""
+
+    def __init__(self, os_ref):
+        self._os = os_ref
+        self._session: Optional[aiohttp.ClientSession] = None
+        self._mindex_api = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000")
+        self._redis_url = os.getenv("MINDEX_REDIS_URL", "redis://192.168.0.189:6379")
+        self._pg_host = os.getenv("MINDEX_PG_HOST", "192.168.0.189")
+        self._pg_port = int(os.getenv("MINDEX_PG_PORT", "5432"))
+        self._qdrant_url = os.getenv("QDRANT_URL", "http://192.168.0.189:6333")
+
+        self._redis = None
+        self._pg_pool = None
+
+    async def initialize(self):
+        self._session = aiohttp.ClientSession()
+
+        # Try MINDEX API
+        health = await self.health_check()
+        if health.get("healthy"):
+            logger.info(f"MINDEX Bridge connected to {self._mindex_api}")
+        else:
+            logger.warning(f"MINDEX API not reachable at {self._mindex_api}")
+
+        # Try Redis
+        try:
+            import redis.asyncio as aioredis
+            self._redis = aioredis.from_url(self._redis_url, decode_responses=True)
+            await self._redis.ping()
+            logger.info("Redis connected")
+        except Exception as e:
+            logger.warning(f"Redis not available: {e}")
+            self._redis = None
+
+        # Try PostgreSQL
+        try:
+            import asyncpg
+            self._pg_pool = await asyncpg.create_pool(
+                host=self._pg_host,
+                port=self._pg_port,
+                user=os.getenv("MINDEX_PG_USER", "mycosoft"),
+                password=os.getenv("MINDEX_PG_PASSWORD", ""),
+                database=os.getenv("MINDEX_PG_DB", "mycosoft_mas"),
+                min_size=1,
+                max_size=5,
+            )
+            logger.info("PostgreSQL connected")
+        except Exception as e:
+            logger.warning(f"PostgreSQL not available: {e}")
+            self._pg_pool = None
+
+    async def cleanup(self):
+        if self._session and not self._session.closed:
+            await self._session.close()
+        if self._redis:
+            await self._redis.close()
+        if self._pg_pool:
+            await self._pg_pool.close()
+
+    async def health_check(self) -> dict:
+        """Check MINDEX services health."""
+        checks = {}
+
+        # MINDEX API
+        try:
+            async with self._session.get(
+                f"{self._mindex_api}/health",
+                timeout=aiohttp.ClientTimeout(total=5),
+            ) as resp:
+                checks["api"] = resp.status == 200
+        except Exception:
+            checks["api"] = False
+
+        # Redis
+        if self._redis:
+            try:
+                await self._redis.ping()
+                checks["redis"] = True
+            except Exception:
+                checks["redis"] = False
+        else:
+            checks["redis"] = False
+
+        # PostgreSQL
+        if self._pg_pool:
+            try:
+                async with self._pg_pool.acquire() as conn:
+                    await conn.fetchval("SELECT 1")
+                checks["postgres"] = True
+            except Exception:
+                checks["postgres"] = False
+        else:
+            checks["postgres"] = False
+
+        # Qdrant
+        try:
+            async with self._session.get(
+                f"{self._qdrant_url}/healthz",
+                timeout=aiohttp.ClientTimeout(total=5),
+            ) as resp:
+                checks["qdrant"] = resp.status == 200
+        except Exception:
+            checks["qdrant"] = False
+
+        checks["healthy"] = all(checks.values())
+        return checks
+
+    # ── Memory Operations ────────────────────────────────────────
+
+    async def remember(self, key: str, value: str, ttl: int = None, layer: str = "working"):
+        """Store a memory in the appropriate layer."""
+        if self._redis and layer in ("ephemeral", "session", "working"):
+            ttl_map = {"ephemeral": 1800, "session": 86400, "working": 604800}
+            effective_ttl = ttl or ttl_map.get(layer, 604800)
+            await self._redis.setex(f"myca:memory:{layer}:{key}", effective_ttl, value)
+        elif self._pg_pool and layer in ("semantic", "episodic", "system"):
+            async with self._pg_pool.acquire() as conn:
+                await conn.execute(
+                    """INSERT INTO agent_memory (agent_id, memory_key, memory_value, memory_layer, created_at)
+                       VALUES ($1, $2, $3, $4, $5)
+                       ON CONFLICT (agent_id, memory_key, memory_layer)
+                       DO UPDATE SET memory_value = EXCLUDED.memory_value""",
+                    "myca_os", key, value, layer, datetime.now(timezone.utc),
+                )
+
+    async def recall(self, key: str, layer: str = None) -> Optional[str]:
+        """Recall a memory by key, searching layers if not specified."""
+        if layer:
+            return await self._recall_from_layer(key, layer)
+
+        # Search all layers, most recent first
+        for l in ["ephemeral", "session", "working", "semantic", "episodic", "system"]:
+            result = await self._recall_from_layer(key, l)
+            if result:
+                return result
+        return None
+
+    async def _recall_from_layer(self, key: str, layer: str) -> Optional[str]:
+        if layer in ("ephemeral", "session", "working") and self._redis:
+            return await self._redis.get(f"myca:memory:{layer}:{key}")
+        elif layer in ("semantic", "episodic", "system") and self._pg_pool:
+            async with self._pg_pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "SELECT memory_value FROM agent_memory WHERE agent_id = $1 AND memory_key = $2 AND memory_layer = $3",
+                    "myca_os", key, layer,
+                )
+                return row["memory_value"] if row else None
+        return None
+
+    async def learn_fact(self, fact: str, category: str = "general", confidence: float = 1.0):
+        """Store a learned fact in semantic memory."""
+        await self.remember(
+            f"fact:{category}:{hash(fact) % 100000}",
+            json.dumps({"fact": fact, "category": category, "confidence": confidence,
+                        "learned_at": datetime.now(timezone.utc).isoformat()}),
+            layer="semantic",
+        )
+
+    # ── Event Logging ────────────────────────────────────────────
+
+    async def store_event(self, event: dict):
+        """Store an event in the event ledger."""
+        if self._pg_pool:
+            try:
+                async with self._pg_pool.acquire() as conn:
+                    await conn.execute(
+                        """INSERT INTO myca_events (event_type, event_data, created_at)
+                           VALUES ($1, $2, $3)""",
+                        event.get("action", "unknown"),
+                        json.dumps(event),
+                        datetime.now(timezone.utc),
+                    )
+            except Exception as e:
+                logger.warning(f"Event store failed: {e}")
+
+        # Also publish to Redis for real-time subscribers
+        if self._redis:
+            try:
+                await self._redis.publish("myca:events", json.dumps(event))
+            except Exception:
+                pass
+
+    # ── Knowledge Query ──────────────────────────────────────────
+
+    async def search_knowledge(self, query: str, limit: int = 10) -> list:
+        """Search the MINDEX knowledge base."""
+        try:
+            async with self._session.get(
+                f"{self._mindex_api}/api/search",
+                params={"q": query, "limit": limit},
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status == 200:
+                    return (await resp.json()).get("results", [])
+        except Exception:
+            pass
+        return []
+
+    async def vector_search(self, query: str, collection: str = "knowledge", limit: int = 5) -> list:
+        """Semantic vector search via Qdrant."""
+        # This would use an embedding model — simplified for now
+        try:
+            async with self._session.post(
+                f"{self._qdrant_url}/collections/{collection}/points/search",
+                json={
+                    "vector": [0.0] * 384,  # Placeholder — needs real embedding
+                    "limit": limit,
+                },
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status == 200:
+                    return (await resp.json()).get("result", [])
+        except Exception:
+            pass
+        return []
+
+    # ── Pub/Sub ──────────────────────────────────────────────────
+
+    async def publish(self, channel: str, message: dict):
+        """Publish a message to Redis pub/sub."""
+        if self._redis:
+            await self._redis.publish(f"myca:{channel}", json.dumps(message))
+
+    async def subscribe(self, channel: str):
+        """Subscribe to a Redis pub/sub channel. Returns async iterator."""
+        if self._redis:
+            pubsub = self._redis.pubsub()
+            await pubsub.subscribe(f"myca:{channel}")
+            return pubsub
+        return None
