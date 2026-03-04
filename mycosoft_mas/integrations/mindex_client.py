@@ -1,4 +1,4 @@
-﻿"""
+"""
 MINDEX (Mycological Index Database) Integration Client
 
 This module provides integration with the MINDEX database system (https://github.com/MycosoftLabs/mindex).
@@ -75,8 +75,7 @@ class MINDEXClient:
             os.getenv("MINDEX_DATABASE_URL", "")
         )
         if not self.database_url:
-            import logging
-            logging.getLogger(__name__).warning(
+            logger.warning(
                 "MINDEX_DATABASE_URL not set. Database features will be unavailable. "
                 "Set it in .env: MINDEX_DATABASE_URL=postgresql://user:pass@host:port/db"
             )
