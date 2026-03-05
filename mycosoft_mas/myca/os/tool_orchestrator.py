@@ -42,7 +42,7 @@ class ToolOrchestrator:
         # Service URLs
         self._n8n_url = os.getenv("MYCA_N8N_URL", "http://localhost:5679")
         self._n8n_api_key = os.getenv("MYCA_N8N_API_KEY", "")
-        self._workspace_url = os.getenv("MYCA_WORKSPACE_URL", "http://localhost:8000")
+        self._workspace_url = os.getenv("MYCA_WORKSPACE_URL", "http://localhost:8100")
 
         # Working directories
         self._repos_dir = Path(os.getenv("MYCA_REPOS_DIR", "/home/mycosoft/repos"))
