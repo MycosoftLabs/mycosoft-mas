@@ -1,0 +1,48 @@
+# VM SSH MCP – Cross-Platform VM Access (All Agents)
+
+## Purpose
+
+When Claude Code, Claude Cowork, or Cursor needs to run commands on VMs, upload/download files, or check connectivity, use the **mycosoft-ssh** MCP server.
+
+## When to Use
+
+- Run commands on sandbox, MAS, MINDEX, GPU, or MYCA VMs
+- Upload files (e.g. deploy scripts, configs) to VMs
+- Download logs or configs from VMs
+- Check VM SSH connectivity before deployments
+
+## Tools (MCP mycosoft-ssh)
+
+| Tool | Example |
+|------|---------|
+| `ssh_exec` | `ssh_exec(host="mas", command="docker ps")` |
+| `ssh_exec` (sudo) | `ssh_exec(host="sandbox", command="systemctl restart docker", sudo=True)` |
+| `ssh_upload` | `ssh_upload(host="myca", local_path="./config.env", remote_path="/opt/myca/config.env")` |
+| `ssh_download` | `ssh_download(host="mindex", remote_path="/var/log/mindex.log")` |
+| `ssh_status` | `ssh_status()` — connectivity check for all 5 VMs |
+
+## Host Aliases
+
+- `sandbox` → 192.168.0.187  
+- `mas` → 192.168.0.188  
+- `mindex` → 192.168.0.189  
+- `gpu` → 192.168.0.190  
+- `myca` → 192.168.0.191  
+
+## Cursor Fallback
+
+If the mycosoft-ssh MCP is not available in Cursor, use existing patterns:
+
+- Load credentials from `.credentials.local`
+- Use Python scripts (e.g. `scripts/deploy-mas.ps1`, `_deploy_sandbox.py`) that SSH via paramiko
+- Follow `agent-must-execute-operations.mdc` — agents execute deploy/SSH themselves
+
+## Adding New VMs
+
+Add to `mcp/mycosoft_ssh/server.py` in `VM_HOSTS`. Only `192.168.0.x` IPs are allowed. See `docs/MYCOSOFT_SSH_MCP_MAR03_2026.md`.
+
+## Cross-References
+
+- `vm-credentials.mdc` — credential storage
+- `vm-layout-and-dev-remote-services.mdc` — VM IPs and roles
+- `docs/MYCOSOFT_SSH_MCP_MAR03_2026.md` — full setup and usage

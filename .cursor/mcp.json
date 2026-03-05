@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mycosoft-ssh": {
+      "command": "python",
+      "args": ["C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\mcp\\run_mycosoft_ssh.py"]
+    }
+  }
+}

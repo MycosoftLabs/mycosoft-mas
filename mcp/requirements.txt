@@ -1,0 +1,4 @@
+# Mycosoft SSH MCP Server dependencies
+# Install: pip install -r mcp/requirements.txt
+fastmcp>=2.0.0
+paramiko>=3.0.0
