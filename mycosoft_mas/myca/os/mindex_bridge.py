@@ -84,20 +84,29 @@ class MINDEXBridge:
             await self._pg_pool.close()
 
     async def health_check(self) -> dict:
-        """Check MINDEX services health."""
+        """Check MINDEX services health.
+
+        Primary gate: MINDEX API must be reachable (http://189:8000).
+        Redis, Postgres, Qdrant are optional — they live inside VM 189's
+        Docker network and may not be reachable from MYCA (e.g. on VM 191).
+        If the API is up, MINDEX is considered healthy for MYCA's purposes.
+        """
         checks = {}
 
-        # MINDEX API
-        try:
-            async with self._session.get(
-                f"{self._mindex_api}/health",
-                timeout=aiohttp.ClientTimeout(total=5),
-            ) as resp:
-                checks["api"] = resp.status == 200
-        except Exception:
+        # MINDEX API — primary interface, must be reachable from MYCA VM
+        if self._session and not self._session.closed:
+            try:
+                async with self._session.get(
+                    f"{self._mindex_api.rstrip('/')}/health",
+                    timeout=aiohttp.ClientTimeout(total=5),
+                ) as resp:
+                    checks["api"] = resp.status == 200
+            except Exception:
+                checks["api"] = False
+        else:
             checks["api"] = False
 
-        # Redis
+        # Redis — optional; often not exposed cross-VM
         if self._redis:
             try:
                 await self._redis.ping()
@@ -107,7 +116,7 @@ class MINDEXBridge:
         else:
             checks["redis"] = False
 
-        # PostgreSQL
+        # PostgreSQL — optional; often not exposed cross-VM
         if self._pg_pool:
             try:
                 async with self._pg_pool.acquire() as conn:
@@ -118,17 +127,21 @@ class MINDEXBridge:
         else:
             checks["postgres"] = False
 
-        # Qdrant
-        try:
-            async with self._session.get(
-                f"{self._qdrant_url}/healthz",
-                timeout=aiohttp.ClientTimeout(total=5),
-            ) as resp:
-                checks["qdrant"] = resp.status == 200
-        except Exception:
+        # Qdrant — optional; often not exposed cross-VM
+        if self._session and not self._session.closed:
+            try:
+                async with self._session.get(
+                    f"{self._qdrant_url.rstrip('/')}/healthz",
+                    timeout=aiohttp.ClientTimeout(total=5),
+                ) as resp:
+                    checks["qdrant"] = resp.status == 200
+            except Exception:
+                checks["qdrant"] = False
+        else:
             checks["qdrant"] = False
 
-        checks["healthy"] = all(checks.values())
+        # Healthy if MINDEX API is reachable (primary interface for MYCA)
+        checks["healthy"] = checks.get("api", False)
         return checks
 
     # ── Memory Operations ────────────────────────────────────────

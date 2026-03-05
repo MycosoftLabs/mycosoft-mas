@@ -1,5 +1,8 @@
 # Master Document Index
 
+## MINDEX Health Check Fix (Mar 2, 2026)
+- `docs/MINDEX_HEALTH_CHECK_FIX_MAR02_2026.md` – **MINDEX health fix**: MYCA no longer reports "MINDEX databases unreachable" when Redis/Postgres/Qdrant are not cross-VM reachable. Healthy = MINDEX API reachable only.
+
 ## Signal Spam Fix (Mar 4, 2026)
 - `docs/SIGNAL_SPAM_FIX_MAR04_2026.md` – **Signal spam fix**: MYCA OS heartbeat no longer sends critical health alerts to Signal (was every 30s). Signal is for conversation only. Health issues logged only.
 
