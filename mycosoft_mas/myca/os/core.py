@@ -19,6 +19,7 @@ Date: 2026-03-04
 import asyncio
 import os
 import signal
+import socket
 import logging
 from datetime import datetime, timezone
 from typing import Optional
@@ -341,12 +342,10 @@ class MycaOS:
             await asyncio.sleep(self.MESSAGE_POLL_INTERVAL)
 
     async def _heartbeat_loop(self):
-        """Monitor system health across all VMs.
+        """Monitor system health and notify systemd watchdog.
 
         Health issues are LOGGED only. Do NOT send to Signal — Signal is for
-        back-and-forth conversation, not automated health spam. Alerts were
-        previously sent every 30s, causing spam. Use dashboards or logs for
-        health visibility.
+        back-and-forth conversation, not automated health spam.
         """
         while self._running:
             try:
@@ -354,11 +353,26 @@ class MycaOS:
                 if health.get("issues"):
                     for issue in health["issues"]:
                         logger.warning(f"Health issue: {issue}")
-                        # No send_to_morgan here — Signal/Slack/Discord stay
-                        # for actual conversation, not heartbeat spam
             except Exception as e:
                 logger.error(f"Heartbeat error: {e}")
+
+            self._notify_watchdog()
             await asyncio.sleep(self.HEARTBEAT_INTERVAL)
+
+    @staticmethod
+    def _notify_watchdog():
+        """Send sd_notify WATCHDOG=1 so systemd knows we're alive."""
+        addr = os.environ.get("NOTIFY_SOCKET")
+        if not addr:
+            return
+        try:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+            if addr.startswith("@"):
+                addr = "\0" + addr[1:]
+            sock.sendto(b"WATCHDOG=1", addr)
+            sock.close()
+        except Exception:
+            pass
 
     async def _task_loop(self):
         """Process the task queue."""
