@@ -22,6 +22,7 @@ Date: 2026-03-04
 import os
 import asyncio
 import logging
+from email.parser import BytesParser
 from typing import Optional
 from dataclasses import dataclass
 from enum import Enum
@@ -89,6 +90,12 @@ class CommsHub:
         self._asana_token = os.getenv("ASANA_PAT", "")
         self._workspace_url = os.getenv("MYCA_WORKSPACE_URL", "http://localhost:8000")
         self._message_queue: asyncio.Queue = asyncio.Queue()
+        self._imap_host = os.getenv("IMAP_HOST", "imap.gmail.com")
+        self._imap_port = int(os.getenv("IMAP_PORT", "993"))
+        self._imap_user = os.getenv("IMAP_USER") or os.getenv("SMTP_USER", "")
+        self._imap_password = os.getenv("IMAP_PASSWORD") or os.getenv("SMTP_PASSWORD", "")
+        self._asana_workspace = os.getenv("ASANA_WORKSPACE_ID", "")
+        self._asana_seen_stories: set = set()
 
     async def initialize(self):
         """Initialize communication clients."""
@@ -135,13 +142,40 @@ class CommsHub:
         sender = original_msg.get("sender", "")
 
         if source == "discord":
+            channel_id = original_msg.get("discord_channel_id")
+            gateway = getattr(self._os, "_discord_gateway", None)
+            if channel_id and gateway and gateway._client and gateway._client.is_ready():
+                ok = await gateway.send_message(
+                    channel_id=channel_id,
+                    content=response,
+                    thread_id=original_msg.get("discord_thread_id"),
+                    reply_to_id=original_msg.get("discord_message_id"),
+                )
+                if ok:
+                    return
             await self._send_discord(response, thread_id=original_msg.get("thread_id"))
+        elif source == "slack":
+            channel_id = original_msg.get("slack_channel_id")
+            gateway = getattr(self._os, "_slack_gateway", None)
+            if channel_id and gateway:
+                ok = gateway.send_message(
+                    channel_id=channel_id,
+                    content=response,
+                    thread_ts=original_msg.get("slack_thread_ts"),
+                )
+                if ok:
+                    return
+            await self._send_slack_dm(sender, response)
         elif source == "signal":
             await self._send_signal(sender, response)
         elif source == "whatsapp":
             await self._send_whatsapp(sender, response)
-        elif source == "slack":
-            await self._send_slack_dm(sender, response)
+        elif source == "asana":
+            task_gid = original_msg.get("asana_task_gid")
+            if task_gid:
+                await self._post_asana_comment(task_gid, response)
+            else:
+                logger.warning("Asana reply: no asana_task_gid in message")
         elif source == "email":
             await self._send_email(sender, "Re: " + original_msg.get("subject", ""), response)
 
@@ -199,6 +233,20 @@ class CommsHub:
             messages.extend(workspace_msgs)
         except Exception as e:
             logger.debug(f"Workspace inbox poll: {e}")
+
+        # Poll IMAP (schedule@mycosoft.org or SMTP_USER inbox)
+        try:
+            email_msgs = await self._poll_imap()
+            messages.extend(email_msgs)
+        except Exception as e:
+            logger.debug(f"IMAP poll: {e}")
+
+        # Poll Asana (task comments assigned to MYCA)
+        try:
+            asana_msgs = await self._poll_asana()
+            messages.extend(asana_msgs)
+        except Exception as e:
+            logger.debug(f"Asana poll: {e}")
 
         return messages
 
@@ -361,3 +409,185 @@ class CommsHub:
         except Exception:
             pass
         return []
+
+    async def _poll_imap(self) -> list:
+        """Poll IMAP inbox (schedule@mycosoft.org or SMTP_USER) for new emails."""
+        if not self._imap_user or not self._imap_password:
+            return []
+
+        try:
+            import aioimaplib
+        except ImportError:
+            logger.debug("aioimaplib not installed — IMAP polling disabled")
+            return []
+
+        messages = []
+        client = None
+        try:
+            client = aioimaplib.IMAP4_SSL(host=self._imap_host, port=self._imap_port, timeout=30)
+            await client.wait_hello_from_server()
+            await client.login(self._imap_user, self._imap_password)
+            await client.select("INBOX")
+
+            # Search for UNSEEN messages
+            response = await client.uid("search", None, "UNSEEN")
+            if response.result != "OK" or not response.lines:
+                return []
+
+            # Parse UIDs from response (e.g. b'1 2 3' or similar)
+            uid_line = response.lines[0] if response.lines else b""
+            if isinstance(uid_line, bytes):
+                uid_line = uid_line.decode("utf-8", errors="replace")
+            uids = [u.strip() for u in uid_line.split() if u.strip().isdigit()]
+            if not uids:
+                return []
+
+            for uid in uids:
+                try:
+                    fetch_resp = await client.uid("fetch", uid, "BODY.PEEK[]")
+                    if fetch_resp.result != "OK" or len(fetch_resp.lines) < 2:
+                        continue
+                    raw = fetch_resp.lines[1]
+                    if isinstance(raw, (list, tuple)):
+                        raw = b"".join(raw) if raw else b""
+                    msg_obj = BytesParser().parsebytes(raw)
+                    from_addr = msg_obj.get("From", "")
+                    subject = msg_obj.get("Subject", "")
+                    body = ""
+                    if msg_obj.is_multipart():
+                        for part in msg_obj.walk():
+                            ct = part.get_content_type()
+                            if ct == "text/plain":
+                                payload = part.get_payload(decode=True)
+                                if payload:
+                                    body = payload.decode("utf-8", errors="replace")
+                                break
+                    else:
+                        payload = msg_obj.get_payload(decode=True)
+                        if payload:
+                            body = payload.decode("utf-8", errors="replace")
+                    content = (subject + "\n\n" + body).strip() if subject else body.strip()
+                    if not content:
+                        content = "(no content)"
+                    is_morgan = MORGAN_IDS.get(Channel.EMAIL, "").lower() in (from_addr or "").lower()
+                    messages.append({
+                        "source": "email",
+                        "sender": from_addr,
+                        "content": content,
+                        "subject": subject,
+                        "is_morgan": is_morgan,
+                        "email_uid": uid,
+                        "raw": {"From": from_addr, "Subject": subject},
+                    })
+                    # Mark as seen so we don't reprocess
+                    await client.uid("store", uid, "+FLAGS", "\\Seen")
+                except Exception as e:
+                    logger.warning(f"IMAP fetch uid {uid} failed: {e}")
+        except Exception as e:
+            logger.debug(f"IMAP poll error: {e}")
+        finally:
+            if client:
+                try:
+                    await client.logout()
+                except Exception:
+                    pass
+        return messages
+
+    async def _poll_asana(self) -> list:
+        """Poll Asana for new comments on tasks assigned to MYCA."""
+        if not self._asana_token or not self._asana_workspace:
+            return []
+
+        messages = []
+        headers = {
+            "Authorization": f"Bearer {self._asana_token}",
+            "Content-Type": "application/json",
+        }
+        try:
+            # Get current user (MYCA) GID
+            async with self._session.get(
+                "https://app.asana.com/api/1.0/users/me",
+                headers=headers,
+            ) as resp:
+                if resp.status != 200:
+                    return []
+                me_data = await resp.json()
+                me_gid = me_data.get("data", {}).get("gid", "")
+
+            # Get tasks assigned to me in workspace
+            async with self._session.get(
+                "https://app.asana.com/api/1.0/tasks",
+                headers=headers,
+                params={
+                    "workspace": self._asana_workspace,
+                    "assignee": me_gid,
+                    "opt_fields": "gid,name",
+                },
+            ) as resp:
+                if resp.status != 200:
+                    return []
+                tasks_data = await resp.json()
+                tasks = tasks_data.get("data", [])[:20]
+
+            for task in tasks:
+                task_gid = task.get("gid")
+                task_name = task.get("name", "")
+                try:
+                    async with self._session.get(
+                        f"https://app.asana.com/api/1.0/tasks/{task_gid}/stories",
+                        headers=headers,
+                        params={"opt_fields": "gid,created_by,resource_subtype,text,created_at"},
+                    ) as resp:
+                        if resp.status != 200:
+                            continue
+                        stories_data = await resp.json()
+                        stories = stories_data.get("data", [])
+                    for s in stories:
+                        if s.get("resource_subtype") != "comment_added":
+                            continue
+                        sgid = s.get("gid", "")
+                        if sgid in self._asana_seen_stories:
+                            continue
+                        created_by = s.get("created_by", {})
+                        created_by_gid = created_by.get("gid", "")
+                        if created_by_gid == me_gid:
+                            continue
+                        text = (s.get("text") or "").strip()
+                        if not text:
+                            continue
+                        self._asana_seen_stories.add(sgid)
+                        creator_name = created_by.get("name", "unknown")
+                        messages.append({
+                            "source": "asana",
+                            "sender": creator_name,
+                            "content": text,
+                            "is_morgan": False,
+                            "thread_id": task_gid,
+                            "asana_task_gid": task_gid,
+                            "asana_task_name": task_name,
+                            "asana_story_gid": sgid,
+                        })
+                except Exception as e:
+                    logger.debug(f"Asana task {task_gid} stories: {e}")
+        except Exception as e:
+            logger.debug(f"Asana poll error: {e}")
+        return messages
+
+    async def _post_asana_comment(self, task_gid: str, text: str) -> None:
+        """Post a comment on an Asana task."""
+        if not self._asana_token:
+            return
+        headers = {
+            "Authorization": f"Bearer {self._asana_token}",
+            "Content-Type": "application/json",
+        }
+        try:
+            async with self._session.post(
+                f"https://app.asana.com/api/1.0/tasks/{task_gid}/stories",
+                headers=headers,
+                json={"data": {"text": text}},
+            ) as resp:
+                if resp.status not in (200, 201):
+                    logger.warning(f"Asana comment failed: {resp.status}")
+        except Exception as e:
+            logger.error(f"Asana comment error: {e}")

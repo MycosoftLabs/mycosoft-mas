@@ -104,6 +104,14 @@ class ExecutiveSystem:
         self._decisions_log: list[dict] = []
         self._current_priorities: list[str] = []
         self._daily_plan: Optional[dict] = None
+        self._llm_brain: Optional["LLMBrain"] = None
+
+    @property
+    def llm_brain(self) -> "LLMBrain":
+        if self._llm_brain is None:
+            from mycosoft_mas.myca.os.llm_brain import LLMBrain
+            self._llm_brain = LLMBrain()
+        return self._llm_brain
 
     async def initialize(self):
         logger.info("ExecutiveSystem initialized")
@@ -366,9 +374,15 @@ class ExecutiveSystem:
         return "general"
 
     async def _generate_executive_response(self, content: str) -> str:
-        """Generate a response as an executive (COO/Co-CEO/Co-CTO)."""
-        # Simple for now — enhance with LLM integration
-        return (
-            f"I hear you. Let me think about this and get back to you with a plan. "
-            f"If this is urgent, just say so."
-        )
+        """Generate a response as an executive using Claude (SOUL + MEMORY context)."""
+        status = self._os.status() if hasattr(self._os, "status") else {}
+        context = {
+            "sender": "Morgan",
+            "source": "direct",
+            "status": (
+                f"State: {status.get('state', 'unknown')}, "
+                f"Tasks today: {status.get('tasks_completed_today', 0)}, "
+                f"Queue: {len([t for t in self._task_queue if t.status == 'pending'])} pending"
+            ),
+        }
+        return await self.llm_brain.respond(content, context=context)
