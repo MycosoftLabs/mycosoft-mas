@@ -237,7 +237,10 @@ class MycaOS:
             self._shutdown_event.wait(),
         ]
         try:
-            await asyncio.gather(*tasks)
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for i, result in enumerate(results):
+                if isinstance(result, Exception) and not isinstance(result, asyncio.CancelledError):
+                    logger.error(f"Loop task {i} failed: {result}")
         except asyncio.CancelledError:
             logger.info("Main loop cancelled.")
         except Exception as e:

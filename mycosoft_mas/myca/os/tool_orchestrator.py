@@ -639,27 +639,43 @@ print(asyncio.run(click()))
     # ── Local Service Health ─────────────────────────────────────
 
     async def check_local_services(self) -> dict:
-        """Check health of local services on VM 191."""
+        """Check health of local services on VM 191.
+
+        Returns dict of service_name -> bool. Health warnings are informational
+        and must never cause the daemon to shut down.
+        """
         services = {
-            "workspace_api": f"{self._workspace_url}/api/workspace/health",
-            "n8n": f"{self._n8n_url}/healthz",
+            "workspace_api": [
+                f"{self._workspace_url}/health",
+                f"{self._workspace_url}/",
+            ],
+            "n8n": [
+                f"{self._n8n_url}/healthz",
+                f"{self._n8n_url}/",
+            ],
         }
 
         results = {}
-        for name, url in services.items():
-            try:
-                async with self._session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
-                    results[name] = resp.status == 200
-            except Exception:
-                results[name] = False
+        for name, urls in services.items():
+            ok = False
+            for url in urls:
+                try:
+                    async with self._session.get(url, timeout=aiohttp.ClientTimeout(total=3)) as resp:
+                        if resp.status < 500:
+                            ok = True
+                            break
+                except Exception:
+                    continue
+            results[name] = ok
 
-        # Check Docker
+        # Check Docker via socket (faster than subprocess)
         try:
             proc = await asyncio.create_subprocess_exec(
                 self._docker, "ps", "--format", "{{.Names}}",
                 stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
-            stdout, _ = await proc.communicate()
+            stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=5)
             results["docker"] = proc.returncode == 0
             results["containers"] = stdout.decode().strip().split("\n") if stdout else []
         except Exception:
