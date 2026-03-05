@@ -1,0 +1,29 @@
+# MAS Orchestrator - systemd unit for VM 192.168.0.188
+# Install: sudo cp deploy/mas-orchestrator.service /etc/systemd/system/
+#         sudo systemctl daemon-reload && sudo systemctl enable mas-orchestrator
+#
+# Adjust paths for your VM: WorkingDirectory, ExecStart, EnvironmentFile
+
+[Unit]
+Description=MYCA MAS Orchestrator (port 8001)
+Documentation=https://github.com/MycosoftLabs/mycosoft-mas
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mycosoft
+Group=mycosoft
+WorkingDirectory=/home/mycosoft/mycosoft/mas
+Environment=PYTHONPATH=/home/mycosoft/mycosoft/mas
+EnvironmentFile=-/home/mycosoft/mycosoft/mas/.env
+ExecStart=/home/mycosoft/mycosoft/mas/venv/bin/python -m mycosoft_mas.core.myca_main
+Restart=always
+RestartSec=10
+
+# Optional: redirect logs
+# StandardOutput=append:/var/log/mas/orchestrator.log
+# StandardError=append:/var/log/mas/orchestrator_error.log
+
+[Install]
+WantedBy=multi-user.target

@@ -8,6 +8,12 @@
 
 ---
 
+## Request Flow Architecture (Mar 5, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/REQUEST_FLOW_ARCHITECTURE_MAR05_2026.md` | **Request flows**: Browser → Cloudflare → VMs; Website → MAS/MINDEX; MycoBrain heartbeat; VM layout. Use for deployment and debugging. |
+| `infra/network/vlan_config.yaml` | **VLAN config as code**: VLAN 10/20/30/40 CIDRs, flat 192.168.0.x assignments. Reference for firewall and deployment. |
+
 ## 1. Master indexes (read first)
 
 | Doc | Purpose |
@@ -38,6 +44,11 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md` | **Implemented**: Three-gate pipeline (Truth/Incentive/Horizon), IncentiveAuditorAgent, Clarity Brief, constitution 9–12, instincts, n8n ethics workflow, orchestrator/deliberation integration |
+
+## MYCA Living Employee Full Integration Phase 0 (Mar 2, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCA_LIVING_EMPLOYEE_FULL_INTEGRATION_PHASE0_COMPLETE_MAR02_2026.md` | **Phase 0 complete**: Memory, MINDEX KG, CREP, Earth2, MycoBrain bridges; context assembly; llm_brain injection. Full platform wiring before computer-use. |
 
 ## MYCA Ethics Training System (Mar 4, 2026)
 
@@ -77,6 +88,7 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/MYCA_PLATFORM_STATUS_AND_GAPS_MAR05_2026.md` | **Consolidated status (Mar 5)**: Single source of truth — what's done (plans, fixes, integrations), what's blocked (VM 191 SSH), user inputs needed (Slack, Discord, Asana, Signal, WhatsApp), next steps. Use first for planning and handoffs. |
 | `docs/MYCA_N8N_AUTONOMY_COMPLETE_MAR03_2026.md` | **MYCA N8N Autonomy complete**: All 7 phases — platform connectors, omnichannel API, ingestion/orchestrator/response workflows, n8n bridge, safety/loop mitigation, MYCA VM stack. Deploy via `scripts/provision_myca_vm.py` when VM 191 reachable. |
 | `docs/MYCA_PUBLIC_ALPHA_MONDAY_LAUNCH_COMPLETE_FEB28_2026.md` | **Plan complete**: Telemetry tool demo loop and end-to-end voice test readiness with local Moshi/Bridge verification. |
 | `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` | **Execution complete**: System gaps phases 5–8 delivered (memory, scientific DB/API, stubs, 501-route fixes) with verification checklist. |

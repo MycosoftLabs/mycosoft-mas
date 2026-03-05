@@ -60,7 +60,16 @@ class ToolOrchestrator:
         if self._session and not self._session.closed:
             await self._session.close()
 
-    # ── Claude Code ──────────────────────────────────────────────
+    # ── Claude Code / OpenWork ───────────────────────────────────
+
+    async def run_openwork_task(self, task: dict) -> dict:
+        """Run coding task via OpenWork (OpenCode) if available, else Claude Code."""
+        bridge = self._os.openwork_bridge
+        health = await bridge.health_check()
+        if health.get("healthy"):
+            prompt = task.get("prompt", task.get("description", ""))
+            return await bridge.run_task(prompt, title=task.get("title"))
+        return await self.run_claude_code(task)
 
     async def run_claude_code(self, task: dict) -> dict:
         """Run a coding task using Claude Code CLI."""
@@ -96,6 +105,10 @@ class ToolOrchestrator:
             return {"status": "failed", "error": str(e)}
 
     # ── Browser Automation ───────────────────────────────────────
+
+    async def run_browser_task(self, task: dict) -> dict:
+        """Run goal-driven browser task using CDP control loop."""
+        return await self._os.browser_cdp.run_browser_task(task)
 
     async def run_browser_research(self, task: dict) -> dict:
         """Run browser-based research using Playwright."""
@@ -625,6 +638,41 @@ print(asyncio.run(click()))
             "output": stdout.decode()[:2000],
             "summary": f"Deployed {target}: {action}",
         }
+
+    # ── Desktop / Computer Use ───────────────────────────────────
+
+    async def run_desktop_task(self, task: dict) -> dict:
+        """Run desktop/computer-use tasks via desktop tools."""
+        from mycosoft_mas.myca.os.desktop import (
+            desktop_screenshot,
+            desktop_click,
+            desktop_type,
+            desktop_key,
+            app_launch,
+            system_run,
+        )
+        action = task.get("action", "screenshot")
+        if action == "screenshot":
+            return await desktop_screenshot(task.get("path"))
+        elif action == "click":
+            x, y = task.get("x", 0), task.get("y", 0)
+            return await desktop_click(x, y)
+        elif action == "type":
+            return await desktop_type(task.get("text", ""))
+        elif action == "key":
+            return await desktop_key(task.get("key_sequence", ""))
+        elif action == "launch":
+            return await app_launch(task.get("app_name", ""))
+        elif action == "run":
+            return await system_run(task.get("command", ""), task.get("timeout", 30))
+        return {"status": "failed", "error": f"Unknown desktop action: {action}"}
+
+    async def run_skill_task(self, task: dict) -> dict:
+        """Run a skill by ID."""
+        from mycosoft_mas.myca.os.skills_manager import run_skill
+        skill_id = task.get("skill_id", task.get("skill", ""))
+        args = task.get("args", {})
+        return await run_skill(skill_id, args, self._os)
 
     # ── General Task ─────────────────────────────────────────────
 

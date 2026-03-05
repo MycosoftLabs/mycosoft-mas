@@ -17,6 +17,7 @@ Date: 2026-03-04
 """
 
 import asyncio
+import json
 import os
 import signal
 import socket
@@ -50,6 +51,7 @@ class MycaContext:
     messages_processed_today: int = 0
     decisions_made_today: int = 0
     last_morgan_contact: Optional[datetime] = None
+    last_checkin_sent: Optional[datetime] = None
     last_reflection: Optional[datetime] = None
     last_intention_cycle: Optional[datetime] = None
     cycle_count: int = 0
@@ -74,6 +76,7 @@ class MycaOS:
     # Cycle intervals (seconds)
     MESSAGE_POLL_INTERVAL = 5        # Check messages every 5s
     HEARTBEAT_INTERVAL = 30          # System health every 30s
+    MORGAN_CHECKIN_INTERVAL = 1800   # Proactive check-in to Morgan every 30 min
     TASK_PROCESS_INTERVAL = 10       # Process task queue every 10s
     INTENTION_INTERVAL = 900         # Review goals every 15min
     REFLECTION_INTERVAL = 3600       # Learn from outcomes every 1hr
@@ -90,6 +93,11 @@ class MycaOS:
         self._executive: Optional["ExecutiveSystem"] = None
         self._mas_bridge: Optional["MASBridge"] = None
         self._mindex_bridge: Optional["MINDEXBridge"] = None
+        self._crep_bridge: Optional["CREPBridge"] = None
+        self._earth2_bridge: Optional["Earth2Bridge"] = None
+        self._mycobrain_bridge: Optional["MycoBrainBridge"] = None
+        self._openwork_bridge: Optional["OpenWorkBridge"] = None
+        self._browser_cdp: Optional["BrowserCDP"] = None
         self._scheduler: Optional["Scheduler"] = None
         self._file_manager: Optional["FileManager"] = None
         self._discord_gateway: Optional["DiscordGateway"] = None
@@ -134,6 +142,41 @@ class MycaOS:
         return self._mindex_bridge
 
     @property
+    def crep_bridge(self) -> "CREPBridge":
+        if self._crep_bridge is None:
+            from mycosoft_mas.myca.os.crep_bridge import CREPBridge
+            self._crep_bridge = CREPBridge(self)
+        return self._crep_bridge
+
+    @property
+    def earth2_bridge(self) -> "Earth2Bridge":
+        if self._earth2_bridge is None:
+            from mycosoft_mas.myca.os.earth2_bridge import Earth2Bridge
+            self._earth2_bridge = Earth2Bridge(self)
+        return self._earth2_bridge
+
+    @property
+    def mycobrain_bridge(self) -> "MycoBrainBridge":
+        if self._mycobrain_bridge is None:
+            from mycosoft_mas.myca.os.mycobrain_bridge import MycoBrainBridge
+            self._mycobrain_bridge = MycoBrainBridge(self)
+        return self._mycobrain_bridge
+
+    @property
+    def openwork_bridge(self) -> "OpenWorkBridge":
+        if self._openwork_bridge is None:
+            from mycosoft_mas.myca.os.openwork_bridge import OpenWorkBridge
+            self._openwork_bridge = OpenWorkBridge(self)
+        return self._openwork_bridge
+
+    @property
+    def browser_cdp(self) -> "BrowserCDP":
+        if self._browser_cdp is None:
+            from mycosoft_mas.myca.os.browser_cdp import BrowserCDP
+            self._browser_cdp = BrowserCDP(self)
+        return self._browser_cdp
+
+    @property
     def scheduler(self) -> "Scheduler":
         if self._scheduler is None:
             from mycosoft_mas.myca.os.scheduler import Scheduler
@@ -167,7 +210,12 @@ class MycaOS:
             logger.info("[2/5] Initializing MAS bridge (orchestrator)...")
             await self.mas_bridge.initialize()
 
-            logger.info("[3/5] Initializing communication hub...")
+            logger.info("[2a/7] Initializing CREP, Earth2, MycoBrain bridges...")
+            await self.crep_bridge.initialize()
+            await self.earth2_bridge.initialize()
+            await self.mycobrain_bridge.initialize()
+
+            logger.info("[3/7] Initializing communication hub...")
             await self.comms.initialize()
 
             logger.info("[4/5] Initializing tool orchestrator...")
@@ -181,6 +229,13 @@ class MycaOS:
 
             logger.info("[7/7] Initializing file manager...")
             await self.file_manager.initialize()
+
+            logger.info("[7a/8] Ensuring built-in skills...")
+            try:
+                from mycosoft_mas.myca.os.skills_manager import ensure_builtin_skills
+                ensure_builtin_skills()
+            except Exception as e:
+                logger.warning("Skills init: %s", e)
 
         except Exception as e:
             logger.error(f"Boot failed at subsystem init: {e}")
@@ -224,6 +279,15 @@ class MycaOS:
 
         logger.info("Entering main loop...")
 
+        # Start the gateway (HTTP/WS on port 8100)
+        gateway_runner = None
+        try:
+            from mycosoft_mas.myca.os.gateway import run_gateway
+            gateway_runner = await run_gateway(self)
+        except Exception as e:
+            logger.error("Gateway failed to start: %s", e)
+            gateway_runner = None
+
         # Run all cycles concurrently (including Discord bot if configured)
         tasks = [
             self._message_loop(),
@@ -246,6 +310,12 @@ class MycaOS:
         except Exception as e:
             logger.error(f"Main loop error: {e}", exc_info=True)
             self.ctx.errors_today += 1
+        finally:
+            if gateway_runner is not None:
+                try:
+                    await gateway_runner.cleanup()
+                except Exception as e:
+                    logger.warning("Gateway cleanup error: %s", e)
 
     async def shutdown(self):
         """Graceful shutdown."""
@@ -290,7 +360,11 @@ class MycaOS:
             self._slack_gateway = None
 
         # Cleanup subsystems
-        for subsystem in [self._comms, self._tools, self._executive, self._scheduler, self._file_manager, self._mas_bridge, self._mindex_bridge]:
+        for subsystem in [
+            self._comms, self._tools, self._executive, self._scheduler, self._file_manager,
+            self._mas_bridge, self._mindex_bridge, self._crep_bridge, self._earth2_bridge, self._mycobrain_bridge,
+            self._openwork_bridge, self._browser_cdp,
+        ]:
             if subsystem and hasattr(subsystem, "cleanup"):
                 try:
                     await subsystem.cleanup()
@@ -345,10 +419,11 @@ class MycaOS:
             await asyncio.sleep(self.MESSAGE_POLL_INTERVAL)
 
     async def _heartbeat_loop(self):
-        """Monitor system health and notify systemd watchdog.
+        """Monitor system health, notify systemd watchdog, and proactive 30-min check-in to Morgan.
 
         Health issues are LOGGED only. Do NOT send to Signal — Signal is for
         back-and-forth conversation, not automated health spam.
+        Proactive check-in goes to Discord only.
         """
         while self._running:
             try:
@@ -356,6 +431,25 @@ class MycaOS:
                 if health.get("issues"):
                     for issue in health["issues"]:
                         logger.warning(f"Health issue: {issue}")
+
+                # Proactive 30-min check-in to Morgan via Discord
+                now = datetime.now(timezone.utc)
+                last = self.ctx.last_checkin_sent
+                if last is None or (now - last).total_seconds() >= self.MORGAN_CHECKIN_INTERVAL:
+                    try:
+                        pending = len([t for t in self.executive._task_queue if t.status == "pending"])
+                        msg = (
+                            f"Check-in: {self.ctx.tasks_completed_today} tasks completed today, "
+                            f"{pending} in queue, {self.ctx.messages_processed_today} messages. "
+                        )
+                        if health.get("issues"):
+                            msg += f" Issues: {[i.get('description','?') for i in health['issues'][:3]]}. "
+                        else:
+                            msg += "All systems nominal."
+                        await self.comms.send_to_morgan(msg, channel="discord")
+                        self.ctx.last_checkin_sent = now
+                    except Exception as e:
+                        logger.warning("Check-in to Morgan failed: %s", e)
             except Exception as e:
                 logger.error(f"Heartbeat error: {e}")
 
@@ -380,6 +474,7 @@ class MycaOS:
     async def _task_loop(self):
         """Process the task queue."""
         while self._running:
+            task = None
             try:
                 if self.ctx.state == MycaState.AWAKE:
                     task = await self.executive.get_next_task()
@@ -388,19 +483,51 @@ class MycaOS:
                         self.ctx.current_task = task.get("title", "Unknown task")
                         logger.info(f"Working on: {self.ctx.current_task}")
 
+                        # Store working:current_task for memory recall (Phase 0)
+                        try:
+                            mb = self.mindex_bridge
+                            if hasattr(mb, "remember"):
+                                await mb.remember(
+                                    "working:current_task",
+                                    json.dumps({"task": self.ctx.current_task, "desc": task.get("description", "")[:200]}),
+                                    layer="working",
+                                )
+                        except Exception:
+                            pass
+
                         result = await self._execute_task(task)
 
                         if result.get("status") == "completed":
                             self.ctx.tasks_completed_today += 1
+                            self.executive.mark_task_completed(task, result)
                             await self._log_event("task", "completed", {
                                 "task": task.get("title"),
                                 "result": result.get("summary"),
                             })
+                            # Remember task outcome in episodic memory (Phase 0)
+                            try:
+                                mb = self.mindex_bridge
+                                if hasattr(mb, "remember"):
+                                    await mb.remember(
+                                        f"episodic:task_completed:{task.get('title', '')[:40]}",
+                                        json.dumps({
+                                            "title": task.get("title"),
+                                            "result": result.get("summary", ""),
+                                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                                        }),
+                                        layer="episodic",
+                                    )
+                            except Exception:
+                                pass
 
+                        if result.get("status") == "failed":
+                            self.executive.mark_task_failed(task, result.get("error", "Unknown error"))
                         self.ctx.current_task = None
                         self.ctx.state = MycaState.AWAKE
             except Exception as e:
                 logger.error(f"Task loop error: {e}")
+                if task:
+                    self.executive.mark_task_failed(task, str(e))
                 self.ctx.state = MycaState.AWAKE
                 self.ctx.errors_today += 1
             await asyncio.sleep(self.TASK_PROCESS_INTERVAL)
@@ -502,6 +629,15 @@ class MycaOS:
             self.ctx.state = MycaState.MEETING
             response = await self.executive.handle_morgan_directive(msg)
             await self.comms.reply(msg, response)
+            # Store session:last_topic for memory recall (Phase 0)
+            try:
+                mb = self.mindex_bridge
+                if hasattr(mb, "remember"):
+                    topic = f"{content[:100]} → {response[:100]}" if content and response else content or response or ""
+                    if topic:
+                        await mb.remember("session:last_topic", topic[:500], layer="session")
+            except Exception:
+                pass
             self.ctx.state = MycaState.AWAKE
         else:
             # Route to appropriate handler based on content
@@ -524,7 +660,9 @@ class MycaOS:
 
         try:
             if task_type == "coding":
-                return await self.tools.run_claude_code(task)
+                return await self.tools.run_openwork_task(task)
+            elif task_type == "browser_task":
+                return await self.tools.run_browser_task(task)
             elif task_type == "research":
                 return await self.tools.run_browser_research(task)
             elif task_type == "workflow":
@@ -539,6 +677,10 @@ class MycaOS:
                 result = await self.executive.make_decision(task)
                 self.ctx.decisions_made_today += 1
                 return result
+            elif task_type in ("desktop", "computer_use"):
+                return await self.tools.run_desktop_task(task)
+            elif task_type == "skill":
+                return await self.tools.run_skill_task(task)
             else:
                 # General task — use Claude to figure out the approach
                 return await self.tools.run_general_task(task)

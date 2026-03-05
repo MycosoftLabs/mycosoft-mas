@@ -9,9 +9,13 @@ N8N is used for:
 - Event-driven actions
 - Integration between systems
 
+Integrates with N8NMemory to persist workflow execution history for analysis,
+failure tracking, and performance monitoring.
+
 Environment Variables:
     N8N_WEBHOOK_URL: N8N webhook base URL (default: http://localhost:5678)
     N8N_API_KEY: N8N API key for authenticated requests (optional)
+    MINDEX_DATABASE_URL: PostgreSQL URL for workflow memory persistence (optional)
 
 Usage:
     from mycosoft_mas.integrations.n8n_client import N8NClient
@@ -87,6 +91,10 @@ class N8NClient:
         self._webhook_client = None
         self._api_client = None
         
+        # Workflow memory (optional - persists execution history when MINDEX_DATABASE_URL is set)
+        self._n8n_memory = None
+        self._memory_initialized = False
+        
         self.logger = logging.getLogger(__name__)
         self.logger.info(f"N8N client initialized - Webhook: {self.webhook_url}, API: {self.api_url}")
     
@@ -130,6 +138,23 @@ class N8NClient:
         
         return self._api_client
     
+    async def _ensure_memory(self):
+        """Lazily initialize N8N memory if database is configured."""
+        if self._memory_initialized:
+            return
+        self._memory_initialized = True
+        if not os.getenv("MINDEX_DATABASE_URL"):
+            return
+        try:
+            from mycosoft_mas.memory.n8n_memory import N8NMemory, WorkflowCategory, ExecutionStatus
+            self._n8n_memory = N8NMemory()
+            await self._n8n_memory.initialize()
+            self._WorkflowCategory = WorkflowCategory
+            self._ExecutionStatus = ExecutionStatus
+            self.logger.info("N8N memory integration enabled")
+        except Exception as e:
+            self.logger.warning(f"N8N memory integration disabled: {e}")
+    
     async def trigger_workflow(
         self,
         workflow_id: str,
@@ -159,6 +184,20 @@ class N8NClient:
             - Workflow ID: "abc123" (requires API access)
             - Full webhook URL path
         """
+        execution_record = None
+        await self._ensure_memory()
+        if self._n8n_memory:
+            try:
+                execution_record = await self._n8n_memory.record_execution(
+                    workflow_id=workflow_id,
+                    workflow_name=workflow_id,
+                    category=self._WorkflowCategory.WEBHOOK,
+                    trigger="webhook",
+                    input_data=data
+                )
+            except Exception as e:
+                self.logger.debug(f"Could not record execution start: {e}")
+        
         try:
             client = await self._get_webhook_client()
             
@@ -178,10 +217,31 @@ class N8NClient:
             
             response.raise_for_status()
             
+            result = response.json() if response.content else {"status": "success"}
+            
+            if execution_record and self._n8n_memory:
+                try:
+                    await self._n8n_memory.complete_execution(
+                        execution_id=execution_record.id,
+                        status=self._ExecutionStatus.SUCCESS,
+                        output_data=result if isinstance(result, dict) else {"result": result}
+                    )
+                except Exception as e:
+                    self.logger.debug(f"Could not record execution completion: {e}")
+            
             self.logger.info(f"Triggered workflow {workflow_id}")
-            return response.json() if response.content else {"status": "success"}
+            return result
         
         except httpx.HTTPError as e:
+            if execution_record and self._n8n_memory:
+                try:
+                    await self._n8n_memory.complete_execution(
+                        execution_id=execution_record.id,
+                        status=self._ExecutionStatus.ERROR,
+                        error_message=str(e)
+                    )
+                except Exception as ex:
+                    self.logger.debug(f"Could not record execution failure: {ex}")
             self.logger.error(f"Error triggering workflow {workflow_id}: {e}")
             raise
     
@@ -248,6 +308,20 @@ class N8NClient:
             API execution provides more control than webhook triggers.
             Can pass data directly to workflow input nodes.
         """
+        execution_record = None
+        await self._ensure_memory()
+        if self._n8n_memory:
+            try:
+                execution_record = await self._n8n_memory.record_execution(
+                    workflow_id=workflow_id,
+                    workflow_name=workflow_id,
+                    category=self._WorkflowCategory.CUSTOM,
+                    trigger="api",
+                    input_data=data or {}
+                )
+            except Exception as e:
+                self.logger.debug(f"Could not record execution start: {e}")
+        
         try:
             client = await self._get_api_client()
             payload = {}
@@ -257,10 +331,31 @@ class N8NClient:
             response = await client.post(f"/api/v1/workflows/{workflow_id}/execute", json=payload)
             response.raise_for_status()
             
+            result = response.json()
+            
+            if execution_record and self._n8n_memory:
+                try:
+                    await self._n8n_memory.complete_execution(
+                        execution_id=execution_record.id,
+                        status=self._ExecutionStatus.SUCCESS,
+                        output_data=result if isinstance(result, dict) else {"result": result}
+                    )
+                except Exception as e:
+                    self.logger.debug(f"Could not record execution completion: {e}")
+            
             self.logger.info(f"Executed workflow {workflow_id} via API")
-            return response.json()
+            return result
         
         except httpx.HTTPError as e:
+            if execution_record and self._n8n_memory:
+                try:
+                    await self._n8n_memory.complete_execution(
+                        execution_id=execution_record.id,
+                        status=self._ExecutionStatus.ERROR,
+                        error_message=str(e)
+                    )
+                except Exception as ex:
+                    self.logger.debug(f"Could not record execution failure: {ex}")
             self.logger.error(f"Error executing workflow {workflow_id}: {e}")
             raise
     

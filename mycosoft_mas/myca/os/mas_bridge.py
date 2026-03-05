@@ -127,6 +127,45 @@ class MASBridge:
             pass
         return {"status": "unknown"}
 
+    async def recall_memory(self, query: str, agent_id: str = "myca_os", layer: str = None, limit: int = 10) -> list:
+        """Recall memories via MAS 6-layer memory API (POST /api/memory/recall)."""
+        try:
+            payload = {"agent_id": agent_id, "query": query, "limit": limit}
+            if layer:
+                payload["layer"] = layer
+            async with self._session.post(
+                f"{self._orchestrator_url}/api/memory/recall",
+                json=payload,
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    return data.get("memories", [])
+        except Exception as e:
+            logger.debug("MAS memory recall failed: %s", e)
+        return []
+
+    async def remember_memory(self, key: str, content: dict, agent_id: str = "myca_os",
+                             layer: str = "working", importance: float = 0.5, tags: list = None) -> bool:
+        """Store a memory via MAS 6-layer memory API (POST /api/memory/remember)."""
+        try:
+            payload = {
+                "agent_id": agent_id,
+                "content": {"key": key, **content},
+                "layer": layer,
+                "importance": importance,
+                "tags": tags or [],
+            }
+            async with self._session.post(
+                f"{self._orchestrator_url}/api/memory/remember",
+                json=payload,
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                return resp.status in (200, 201)
+        except Exception as e:
+            logger.debug("MAS memory remember failed: %s", e)
+        return False
+
     async def trigger_mas_workflow(self, workflow_name: str, data: dict = None) -> dict:
         """Trigger a workflow on MAS n8n (188:5678)."""
         if not self._mas_n8n_key:

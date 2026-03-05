@@ -48,6 +48,10 @@ biopython = "^1.80"
 langgraph = "^0.2.0"
 langchain = "^0.3.0"
 langchain-openai = "^0.2.0"
+anthropic = "^0.39.0"
+"discord.py" = "^2.3.0"
+slack-bolt = "^1.18.0"
+aioimaplib = "^2.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.0"

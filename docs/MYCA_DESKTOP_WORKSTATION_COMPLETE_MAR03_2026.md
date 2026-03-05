@@ -34,6 +34,7 @@ VM 191 (192.168.0.191) is now a full MYCA desktop workstation with XFCE, noVNC, 
 |--------|---------|
 | `scripts/_install_myca_desktop_191.py` | Full 7-phase install via SSH (Paramiko). Uses `~/.ssh/myca_vm191` or `.credentials.local` for auth. |
 | `scripts/_verify_myca_191.py` | Quick verification: node version, paths (chrome, code, gh), service status (xrdp, novnc), noVNC HTTP. |
+| `scripts/_fix_myca_191_console_desktop.py` | Fix Proxmox console to show XFCE desktop instead of terminal. See `docs/MYCA_191_PROXMOX_CONSOLE_DESKTOP_FIX_MAR04_2026.md`. |
 
 ### Running the installer
 

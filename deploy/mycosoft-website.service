@@ -1,0 +1,26 @@
+# Mycosoft Website - systemd unit for VM 192.168.0.187 (Sandbox)
+# Ensures website Docker container is up on boot.
+# Install: sudo cp deploy/mycosoft-website.service /etc/systemd/system/
+#         sudo systemctl daemon-reload && sudo systemctl enable mycosoft-website
+#
+# Requires: Docker. Path: /opt/mycosoft/website
+# Note: Include NAS volume mount for media: -v /opt/mycosoft/media/website/assets:/app/public/assets:ro
+
+[Unit]
+Description=Mycosoft Website (port 3000)
+Documentation=https://github.com/MycosoftLabs/website
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=mycosoft
+Group=docker
+WorkingDirectory=/opt/mycosoft/website
+ExecStart=/usr/bin/docker compose -p mycosoft-production up -d mycosoft-website
+ExecStop=/usr/bin/docker compose -p mycosoft-production stop mycosoft-website
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

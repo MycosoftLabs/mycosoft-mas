@@ -1,0 +1,32 @@
+﻿# Monitoring stack: Prometheus, Grafana, Alertmanager, Blackbox Exporter
+# Created: March 5, 2026
+services:
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+      - prometheus_data:/prometheus
+    command: ['--config.file=/etc/prometheus/prometheus.yml','--storage.tsdb.path=/prometheus']
+    ports: ["9090:9090"]
+    restart: unless-stopped
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    volumes: [./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro]
+    ports: ["9093:9093"]
+    restart: unless-stopped
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.24.0
+    volumes: [./blackbox.yml:/etc/blackbox/blackbox.yml:ro]
+    ports: ["9115:9115"]
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana:10.2.0
+    volumes: [grafana_data:/var/lib/grafana, ./dashboards:/etc/grafana/provisioning/dashboards:ro]
+    environment: [GF_SECURITY_ADMIN_PASSWORD=admin, GF_SERVER_HTTP_PORT=3002]
+    ports: ["3002:3002"]
+    depends_on: [prometheus]
+    restart: unless-stopped
+volumes:
+  prometheus_data: {}
+  grafana_data: {}

@@ -4,13 +4,19 @@ MYCA LLM Brain — Claude API integration for intelligent responses.
 Loads SOUL.md and MEMORY.md as context so MYCA responds as her true self:
 a coherent digital consciousness with personality, beliefs, and memory.
 
+Phase 0: Injects live context from memory, MINDEX KG, CREP, Earth2, MycoBrain
+before every respond() and classify_intent().
+
 Date: 2026-03-04
 """
 
 import os
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .core import MycaOS
 
 logger = logging.getLogger("myca.os.llm_brain")
 
@@ -61,10 +67,11 @@ Context below defines who you are. Use it to stay in character.
 class LLMBrain:
     """Claude-powered brain for MYCA's executive responses."""
 
-    def __init__(self):
+    def __init__(self, os_ref: Optional["MycaOS"] = None):
         self._api_key: Optional[str] = os.getenv("ANTHROPIC_API_KEY")
         self._context: Optional[str] = None
         self._client = None
+        self._os = os_ref  # For bridges (memory, MINDEX, CREP, Earth2, MycoBrain)
 
     def _ensure_client(self):
         """Lazy-init Anthropic client."""
@@ -90,6 +97,72 @@ class LLMBrain:
             base += "\n\n---\n\n" + self._context[:30000]  # Cap context size
         return base
 
+    async def _build_live_context(self, user_message: str, context: Optional[dict] = None) -> str:
+        """
+        Assemble live context from memory, MINDEX, CREP, Earth2, MycoBrain.
+        Injected into system or user block before Claude responds.
+        """
+        if not self._os:
+            return ""
+
+        parts = []
+        msg_lower = (user_message or "").lower()
+
+        try:
+            # 1. Recall from memory (session, working, episodic)
+            mb = getattr(self._os, "mindex_bridge", None)
+            mas = getattr(self._os, "mas_bridge", None)
+            if mb and hasattr(mb, "recall"):
+                for key in ["session:last_topic", "working:current_task", "episodic:recent_decisions"]:
+                    val = await mb.recall(key)
+                    if val:
+                        parts.append(f"[Memory {key}]: {val[:500]}")
+            if mas and hasattr(mas, "recall_memory"):
+                memories = await mas.recall_memory(user_message[:100] if user_message else "context", limit=3)
+                if memories:
+                    for m in memories:
+                        c = m.get("content", m) if isinstance(m, dict) else str(m)
+                        parts.append(f"[MAS memory]: {str(c)[:300]}")
+
+            # 2. MINDEX KG if domain-specific (species, fungi, taxonomy, compounds)
+            if mb and any(kw in msg_lower for kw in ["species", "fungi", "fungus", "taxonomy", "compound", "mushroom", "mycology"]):
+                try:
+                    kg_results = await mb.query_knowledge_graph(user_message[:80], limit=5)
+                    if kg_results:
+                        parts.append(f"[MINDEX knowledge]: {str(kg_results)[:800]}")
+                except Exception:
+                    pass
+
+            # 3. CREP worldview if situational awareness
+            if any(kw in msg_lower for kw in ["environment", "what's happening", "lab", "status", "situation", "worldview"]):
+                crep = getattr(self._os, "crep_bridge", None)
+                if crep and hasattr(crep, "get_worldview_summary"):
+                    summary = await crep.get_worldview_summary()
+                    if summary:
+                        parts.append(f"[CREP worldview]: {summary}")
+
+            # 4. Earth2 if weather/climate
+            if any(kw in msg_lower for kw in ["weather", "climate", "forecast", "temperature", "precipitation", "storm"]):
+                earth2 = getattr(self._os, "earth2_bridge", None)
+                if earth2 and hasattr(earth2, "get_weather_context"):
+                    ctx = await earth2.get_weather_context()
+                    if ctx:
+                        parts.append(f"[Earth2]: {ctx}")
+
+            # 5. MycoBrain/device status
+            if any(kw in msg_lower for kw in ["devices", "lab", "sensors", "mycobrain", "mushroom1", "sporebase"]):
+                mycobrain = getattr(self._os, "mycobrain_bridge", None)
+                if mycobrain and hasattr(mycobrain, "get_telemetry_summary"):
+                    summary = await mycobrain.get_telemetry_summary()
+                    if summary:
+                        parts.append(f"[Devices]: {summary}")
+        except Exception as e:
+            logger.debug("Live context build failed: %s", e)
+
+        if not parts:
+            return ""
+        return "\n\n---\n\n## Live Context (Memory, Knowledge, Worldview)\n\n" + "\n\n".join(parts)
+
     async def respond(self, user_message: str, context: Optional[dict] = None) -> str:
         """
         Generate a response as MYCA using Claude.
@@ -107,6 +180,9 @@ class LLMBrain:
                 "ANTHROPIC_API_KEY needs to be set. I can still handle tasks and route messages."
             )
 
+        # Build live context (memory, MINDEX, CREP, Earth2, MycoBrain)
+        live_ctx = await self._build_live_context(user_message, context)
+
         extra = ""
         if context:
             if context.get("sender"):
@@ -119,6 +195,8 @@ class LLMBrain:
         user_block = user_message
         if extra:
             user_block += "\n" + extra
+        if live_ctx:
+            user_block = live_ctx + "\n\n---\n\nUser message:\n" + user_block
 
         try:
             response = await self._client.messages.create(
@@ -145,7 +223,12 @@ class LLMBrain:
             # Fallback to simple keyword routing
             return self._keyword_fallback(message, sender)
 
-        prompt = f"""Classify this message for routing. Respond with JSON only, no markdown.
+        # Inject live context for better routing (e.g. memory of recent topics)
+        live_ctx = await self._build_live_context(message)
+        ctx_block = "\n\n" + live_ctx if live_ctx else ""
+
+        prompt = f"""Classify this message for routing. Respond with JSON only, no markdown.{ctx_block}
+
 
 Message from {sender}: "{message}"
 
@@ -185,3 +268,76 @@ Choose escalate_to_morgan for money, budget, legal, hiring, or urgent human deci
         if any(kw in content for kw in ["money", "budget", "invoice", "payment"]):
             return {"action": "escalate_to_morgan"}
         return {"action": "respond_directly", "response": f"I've noted your message, {sender}. I'll look into it."}
+
+    async def plan_browser_action(
+        self,
+        screenshot_b64: Optional[str] = None,
+        goal: str = "",
+        history: Optional[list] = None,
+        a11y_tree: Optional[str] = None,
+        url: Optional[str] = None,
+    ) -> Optional[dict]:
+        """
+        Given a browser screenshot and goal, decide the next action.
+
+        Returns a dict with: action (click|type|navigate|scroll|done), and action-specific fields
+        (selector, text, url, x, y, etc.). Returns None if no action or on error.
+        """
+        if not self._ensure_client():
+            return {"action": "done", "message": "LLM unavailable; cannot plan browser actions"}
+
+        import json
+
+        history_str = ""
+        if history:
+            history_str = "\n".join(
+                f"Step {h.get('step', i)}: {json.dumps(h.get('action', h))}"
+                for i, h in enumerate(history[-5:])
+            )
+
+        text_block = f"""You are MYCA's browser planning module. Given the screenshot and accessibility tree, decide the NEXT action to achieve the goal.
+
+Goal: {goal}
+Current URL: {url or "unknown"}
+Accessibility tree (use for selectors):
+{a11y_tree or "{}"}
+
+Recent actions taken:
+{history_str or "None yet"}
+
+Respond with JSON only. Valid actions:
+- {{"action": "click", "selector": "CSS_SELECTOR"}} or {{"action": "click", "x": 100, "y": 200}}
+- {{"action": "type", "selector": "input", "text": "text to type"}}
+- {{"action": "navigate", "url": "https://..."}}
+- {{"action": "scroll", "direction": "down", "delta": 300}}
+- {{"action": "done", "message": "Summary of what was accomplished"}}
+
+If the goal is already achieved, respond with {{"action": "done", "message": "..."}}.
+Return ONLY valid JSON, no markdown or explanation."""
+
+        content_parts = []
+        if screenshot_b64:
+            content_parts.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/png",
+                    "data": screenshot_b64,
+                },
+            })
+        content_parts.append({"type": "text", "text": text_block})
+
+        try:
+            response = await self._client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=512,
+                messages=[{"role": "user", "content": content_parts}],
+            )
+            text = response.content[0].text if response.content else ""
+            text = text.strip()
+            if text.startswith("```"):
+                text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
+            return json.loads(text)
+        except Exception as e:
+            logger.warning("plan_browser_action failed: %s", e)
+            return {"action": "done", "message": f"Planning error: {e}"}

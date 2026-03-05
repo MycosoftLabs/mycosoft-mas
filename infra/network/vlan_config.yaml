@@ -1,0 +1,35 @@
+# VLAN Configuration - March 5, 2026
+# Reference for deployment scripts, firewall, and network planning.
+# See docs/PROXMOX_DEPLOYMENT.md for full topology.
+
+vlans:
+  - id: 10
+    name: Internal
+    cidr: 10.10.10.0/24
+    purpose: Backend services (MAS, MINDEX, n8n, Postgres, Redis, Qdrant)
+
+  - id: 20
+    name: DMZ
+    cidr: 10.10.20.0/24
+    purpose: Web-facing services (Website, public APIs)
+
+  - id: 30
+    name: Management
+    cidr: 10.10.30.0/24
+    purpose: Monitoring (Grafana, Prometheus), admin
+
+  - id: 40
+    name: IoT
+    cidr: 10.10.40.0/24
+    purpose: MycoBrain devices, sensors
+
+# Current deployment uses 192.168.0.x (flat). VLAN config above is for future segmentation.
+flat_network:
+  cidr: 192.168.0.0/24
+  gateway: 192.168.0.1
+  vm_assignments:
+    sandbox: 192.168.0.187
+    mas: 192.168.0.188
+    mindex: 192.168.0.189
+    gpu: 192.168.0.190
+    myca: 192.168.0.191

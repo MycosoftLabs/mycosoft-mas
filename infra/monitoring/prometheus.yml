@@ -1,0 +1,47 @@
+# Prometheus configuration for Mycosoft platform
+# Scrape targets: MAS /metrics, HTTP probes for MINDEX/Website/MycoBrain/n8n
+# Created: March 5, 2026
+# Requires: blackbox_exporter for HTTP health probes
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - /etc/prometheus/alert_rules.yml
+
+scrape_configs:
+  # MAS Orchestrator (192.168.0.188:8001) - exposes /metrics
+  - job_name: 'mas-orchestrator'
+    static_configs:
+      - targets: ['192.168.0.188:8001']
+    metrics_path: /metrics
+
+  # HTTP probes via blackbox_exporter (probe_success = 1 if up)
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://192.168.0.189:8000/health
+          - http://192.168.0.187:3000/api/health
+          - http://192.168.0.187:8003/health
+          - http://192.168.0.188:5678/healthz
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

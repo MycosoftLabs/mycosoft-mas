@@ -201,4 +201,59 @@ print("  node:", out)
 out, _ = run("which google-chrome code 2>/dev/null")
 print("  chrome, code:", out[:100] if out else "missing")
 print("Phase 7 done: verification complete")
+
+print("\n=== Phase 8: MYCA Full Operation (Claude Code, Integrations, Cursor Admin, Playbook) ===")
+# 8.1: Claude Code official installer (replaces npm-based if present)
+out, _ = run("which claude 2>/dev/null || echo MISSING")
+if "MISSING" in out or "claude-code" in run("claude --version 2>/dev/null || true")[0]:
+    run("curl -fsSL https://claude.ai/install.sh | bash 2>/dev/null || true")
+    run("echo 'export PATH=\"$HOME/.local/bin:$PATH\"' >> ~/.bashrc")
+run("export PATH=$HOME/.local/bin:$PATH; claude --version 2>/dev/null || echo 'claude: run manually: curl -fsSL https://claude.ai/install.sh | bash'")
+
+# 8.2: MYCA workspace + integrations env
+run("mkdir -p ~/myca-workspace")
+env_content = """# MAS & MINDEX (required for full MYCA operation)
+MAS_API_URL=http://192.168.0.188:8001
+MINDEX_API_URL=http://192.168.0.189:8000
+
+# Claude / Anthropic (for Claude Code CLI)
+ANTHROPIC_API_KEY=
+
+# GitHub (for gh CLI, Cursor)
+GITHUB_TOKEN=
+"""
+sftp = ssh.open_sftp()
+with sftp.open("/home/mycosoft/myca-workspace/.env", "w") as f:
+    f.write(env_content)
+run("chmod 600 ~/myca-workspace/.env")
+# Load env in bashrc
+run("grep -q 'myca-workspace/.env' ~/.bashrc || echo 'if [ -f ~/myca-workspace/.env ]; then set -a; source ~/myca-workspace/.env; set +a; fi' >> ~/.bashrc")
+
+# 8.3: Cursor desktop shortcut
+run("mkdir -p ~/.local/share/applications")
+cursor_desktop = """[Desktop Entry]
+Name=Cursor
+Exec=/home/mycosoft/Applications/cursor.AppImage
+Icon=code
+Type=Application
+Categories=Development;IDE;
+"""
+with sftp.open("/home/mycosoft/.local/share/applications/cursor.desktop", "w") as f:
+    f.write(cursor_desktop)
+
+# 8.4: Copy playbook to VM 191
+script_dir = os.path.dirname(os.path.abspath(__file__))
+playbook_local = os.path.join(script_dir, "../docs/MYCA_SELF_PROVISIONING_PLAYBOOK_MAR04_2026.md")
+if os.path.exists(playbook_local):
+    with open(playbook_local, encoding="utf-8") as f:
+        playbook_content = f.read()
+    with sftp.open("/home/mycosoft/myca-workspace/PLAYBOOK.md", "w") as f:
+        f.write(playbook_content)
+    print("  Playbook copied to ~/myca-workspace/PLAYBOOK.md")
+else:
+    print("  Playbook not found locally, skipped copy")
+sftp.close()
+
+print("Phase 8 done: Claude Code, MYCA env, Cursor shortcut, playbook")
 print("\n=== All phases complete. Access: http://192.168.0.191:6080 (noVNC) or RDP to 192.168.0.191:3389 ===")
+print("MYCA: Read ~/myca-workspace/PLAYBOOK.md to self-provision (claude auth, gh auth, etc.)")

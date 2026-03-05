@@ -1,0 +1,32 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "title": "Website Up" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [{ "expr": "probe_success{instance=~\"*3000*\"}", "refId": "A" }],
+      "title": "Website Health",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "title": "Probe Duration (s)" }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 4 },
+      "id": 2,
+      "targets": [{ "expr": "probe_duration_seconds{instance=~\"*3000*\"}", "legendFormat": "{{instance}}", "refId": "A" }],
+      "title": "Response Time",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["mycosoft", "website"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Website Performance",
+  "uid": "mycosoft-website-performance",
+  "version": 1
+}

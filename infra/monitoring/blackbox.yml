@@ -1,0 +1,9 @@
+# Blackbox exporter modules for HTTP probes
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      valid_status_codes: []
+      method: GET
+      follow_redirects: true

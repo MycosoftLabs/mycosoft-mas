@@ -53,6 +53,7 @@ class ExecutiveTask:
     due: Optional[datetime] = None
     status: str = "pending"     # pending, in_progress, completed, blocked, cancelled
     result: Optional[dict] = None
+    db_id: Optional[int] = None  # myca_task_queue.id for persistence
 
 
 # Decision classification rules
@@ -110,12 +111,36 @@ class ExecutiveSystem:
     def llm_brain(self) -> "LLMBrain":
         if self._llm_brain is None:
             from mycosoft_mas.myca.os.llm_brain import LLMBrain
-            self._llm_brain = LLMBrain()
+            self._llm_brain = LLMBrain(os_ref=self._os)
         return self._llm_brain
 
     async def initialize(self):
+        """Load pending tasks from DB if available."""
         logger.info("ExecutiveSystem initialized")
         logger.info("Roles: COO, Co-CEO, Co-CTO")
+        try:
+            bridge = getattr(self._os, "mindex_bridge", None)
+            if bridge and getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
+                async with bridge._pg_pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        """SELECT id, title, description, priority, task_type, source, status
+                           FROM myca_task_queue WHERE status IN ('pending', 'in_progress')
+                           ORDER BY assigned_at"""
+                    )
+                    for row in rows:
+                        self._task_queue.append(ExecutiveTask(
+                            title=row["title"],
+                            description=row.get("description") or "",
+                            priority=TaskPriority(row.get("priority", "medium")),
+                            task_type=row.get("task_type", "general"),
+                            source=row.get("source", "self"),
+                            status=row.get("status", "pending"),
+                            db_id=row["id"],
+                        ))
+                    if rows:
+                        logger.info("Loaded %d tasks from DB", len(rows))
+        except Exception as e:
+            logger.warning("Could not load tasks from DB: %s", e)
 
     async def cleanup(self):
         pass
@@ -123,7 +148,7 @@ class ExecutiveSystem:
     # ── Task Queue ───────────────────────────────────────────────
 
     async def get_next_task(self) -> Optional[dict]:
-        """Get the next task to execute, sorted by priority."""
+        """Get the next task to execute, sorted by priority. Recalls task-related context from memory."""
         pending = [t for t in self._task_queue if t.status == "pending"]
         if not pending:
             return None
@@ -140,6 +165,17 @@ class ExecutiveSystem:
 
         task = pending[0]
         task.status = "in_progress"
+        asyncio.create_task(self._persist_task_status(task, "in_progress"))
+
+        # Recall task-related context from memory (Phase 0)
+        mindex = getattr(self._os, "mindex_bridge", None)
+        if mindex and hasattr(mindex, "recall"):
+            try:
+                ctx = await mindex.recall(f"working:task:{task.title[:50]}")
+                if ctx:
+                    task.description = f"{task.description}\n[Context from memory]: {ctx[:500]}"
+            except Exception:
+                pass
 
         return {
             "title": task.title,
@@ -147,6 +183,7 @@ class ExecutiveSystem:
             "priority": task.priority.value,
             "type": task.task_type,
             "source": task.source,
+            "_task_obj": task,  # for core to call mark_task_completed
         }
 
     def add_task(self, title: str, description: str, priority: str = "medium",
@@ -160,8 +197,81 @@ class ExecutiveSystem:
             source=source,
         )
         self._task_queue.append(task)
+        asyncio.create_task(self._persist_task_add(task))
         logger.info(f"Task added [{priority}]: {title}")
         return task
+
+    async def _persist_task_add(self, task: ExecutiveTask):
+        """Insert task into myca_task_queue."""
+        try:
+            bridge = getattr(self._os, "mindex_bridge", None)
+            if bridge and getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
+                async with bridge._pg_pool.acquire() as conn:
+                    task.db_id = await conn.fetchval(
+                        """INSERT INTO myca_task_queue (title, description, priority, task_type, source, status)
+                           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id""",
+                        task.title, task.description, task.priority.value, task.task_type, task.source, task.status,
+                    )
+        except Exception as e:
+            logger.warning("Task DB insert failed: %s", e)
+
+    async def _persist_task_status(self, task: ExecutiveTask, status: str, result: dict = None):
+        """Update task status in DB."""
+        if not task.db_id:
+            return
+        try:
+            bridge = getattr(self._os, "mindex_bridge", None)
+            if bridge and getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
+                import json
+                async with bridge._pg_pool.acquire() as conn:
+                    now = datetime.now(timezone.utc)
+                    if status == "in_progress":
+                        await conn.execute(
+                            "UPDATE myca_task_queue SET status = $1, started_at = $2 WHERE id = $3",
+                            status, now, task.db_id,
+                        )
+                    elif status in ("completed", "blocked", "cancelled"):
+                        await conn.execute(
+                            """UPDATE myca_task_queue SET status = $1, completed_at = $2, result = $3
+                               WHERE id = $4""",
+                            status, now, json.dumps(result or {}) if result else None, task.db_id,
+                        )
+        except Exception as e:
+            logger.warning("Task DB update failed: %s", e)
+
+    async def _persist_decision(self, decision: dict):
+        """Insert decision into myca_decisions."""
+        try:
+            bridge = getattr(self._os, "mindex_bridge", None)
+            if bridge and getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
+                async with bridge._pg_pool.acquire() as conn:
+                    await conn.execute(
+                        """INSERT INTO myca_decisions (decision_type, decision_level, description, action_taken, rationale)
+                           VALUES ($1, $2, $3, $4, $5)""",
+                        decision.get("type", ""),
+                        decision.get("level", ""),
+                        decision.get("description", ""),
+                        decision.get("action", ""),
+                        decision.get("rationale", ""),
+                    )
+        except Exception as e:
+            logger.warning("Decision DB insert failed: %s", e)
+
+    def mark_task_completed(self, task_dict: dict, result: dict):
+        """Mark the task returned by get_next_task as completed."""
+        task = task_dict.get("_task_obj")
+        if task:
+            task.status = "completed"
+            task.result = result
+            asyncio.create_task(self._persist_task_status(task, "completed", result))
+
+    def mark_task_failed(self, task_dict: dict, error: str):
+        """Mark the task as failed."""
+        task = task_dict.get("_task_obj")
+        if task:
+            task.status = "blocked"
+            task.result = {"error": error}
+            asyncio.create_task(self._persist_task_status(task, "blocked", {"error": error}))
 
     # ── Morgan Interaction ───────────────────────────────────────
 
@@ -262,6 +372,7 @@ class ExecutiveSystem:
             )
 
         self._decisions_log.append(decision)
+        asyncio.create_task(self._persist_decision(decision))
         return {"status": "completed", "decision": decision}
 
     # ── Intention & Reflection ───────────────────────────────────

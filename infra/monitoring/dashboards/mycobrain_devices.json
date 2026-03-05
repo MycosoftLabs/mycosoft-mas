@@ -1,0 +1,23 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "title": "MycoBrain Service Up" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [{ "expr": "probe_success{instance=~\"*8003/health*\"}", "refId": "A" }],
+      "title": "MycoBrain Health",
+      "type": "stat"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "tags": ["mycosoft", "mycobrain"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "MycoBrain Devices",
+  "uid": "mycosoft-mycobrain-devices",
+  "version": 1
+}

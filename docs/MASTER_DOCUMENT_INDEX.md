@@ -1,5 +1,23 @@
 # Master Document Index
 
+## Request Flow Architecture (Mar 5, 2026)
+- `docs/REQUEST_FLOW_ARCHITECTURE_MAR05_2026.md` – **Request flows**: Browser → Cloudflare → VMs; Website → MAS/MINDEX; MycoBrain heartbeat; VM layout summary. Use for deployment and debugging.
+
+## Organizational Structure Update (Mar 5, 2026)
+- `docs/ORGANIZATIONAL_STRUCTURE_UPDATE_COMPLETE_MAR05_2026.md` – **Roles corrected**: Morgan = CEO/CTO/COO; RJ = Board Member + MYCA 2nd Key; Garret = Business Development. Memory, CLAUDE.md, website team-data updated.
+
+## MYCA Living Employee Full Integration Phase 0 (Mar 2, 2026)
+- `docs/MYCA_LIVING_EMPLOYEE_FULL_INTEGRATION_PHASE0_COMPLETE_MAR02_2026.md` – **Phase 0 complete**: Memory injection, MAS memory API, MINDEX KG, CREP, Earth2, MycoBrain bridges; context assembly pipeline in llm_brain. MYCA OS now grounded in all platform systems before computer-use.
+
+## MYCA Living Employee Phases 1–5 (Mar 5, 2026)
+- `docs/MYCA_LIVING_EMPLOYEE_PHASES_1_5_COMPLETE_MAR05_2026.md` – **Phases 1–5 complete**: Gateway (8100), task/decision persistence, desktop tools, skills manager, 30-min Discord check-in, deploy_myca_191_v2.py, myca_cli.py.
+
+## MYCA Platform Status and Gaps (Mar 5, 2026)
+- `docs/MYCA_PLATFORM_STATUS_AND_GAPS_MAR05_2026.md` – **Consolidated status report**: Single source of truth for what's done (infrastructure, plans, fixes), what's not (VM 191 SSH blocker, MYCA channels), user inputs needed (Slack token, Discord, Asana, Signal, WhatsApp), and next steps. Use for planning, handoffs, and quick reference.
+
+## MYCA E2E Usability Test (Mar 5, 2026)
+- `docs/MYCA_E2E_USABILITY_TEST_COMPLETE_MAR05_2026.md` – **Pipeline USABLE**: 10/10 tests passed. You can ask MYCA to do work on her PC (VM 191). Workspace API at 191:8100, /workspace/think, MAS chat, agents registry. Run `python scripts/_test_myca_e2e.py` to verify.
+
 ## MINDEX Health Check Fix (Mar 2, 2026)
 - `docs/MINDEX_HEALTH_CHECK_FIX_MAR02_2026.md` – **MINDEX health fix**: MYCA no longer reports "MINDEX databases unreachable" when Redis/Postgres/Qdrant are not cross-VM reachable. Healthy = MINDEX API reachable only.
 

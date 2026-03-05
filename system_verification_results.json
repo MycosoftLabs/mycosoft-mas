@@ -1,0 +1,65 @@
+{
+  "sandbox_vm": {
+    "connected": true,
+    "uptime": "08:09:11 up 11 min,  2 users,  load average: 13.46, 5.02, 2.14",
+    "nas_mount": "total 16\ndrwxrwxr-x  4 mycosoft mycosoft 4096 Jan 25 03:12 .\ndrwxr-xr-x 11 mycosoft mycosoft 4096 Feb 28 09:21 ..\ndrwxrwxr-x  2 mycosoft mycosoft 4096 Jan 25 03:12 mindex-backups\ndrwxrwxr-x  3 mycosoft mycosoft 4096 Jan 19 20:28 website"
+  },
+  "containers": {
+    "list": [],
+    "mindex-postgres-data": false,
+    "mindex-api": false,
+    "mindex-etl-scheduler": false,
+    "etl_logs": "[2026-03-01 07:17:39] Schedule: Every 30 minutes\n[2026-03-01 07:17:39] Starting scheduled ETL run...\n[2026-03-01 07:17:39] ETL error: connection to server at \"host.docker.internal\" (172.17.0.1), port 5434 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?"
+  },
+  "mindex_api": {
+    "health": {},
+    "stats": {}
+  },
+  "website": {
+    "local_http": "000"
+  },
+  "external_endpoints": {
+    "Sandbox Homepage": {
+      "status": 502,
+      "url": "https://sandbox.mycosoft.com/"
+    },
+    "MINDEX Dashboard": {
+      "status": 502,
+      "url": "https://sandbox.mycosoft.com/natureos/mindex"
+    },
+    "MINDEX API Stats": {
+      "status": 502,
+      "url": "https://sandbox.mycosoft.com/api/natureos/mindex/stats"
+    },
+    "MINDEX API Health": {
+      "status": 502,
+      "url": "https://sandbox.mycosoft.com/api/natureos/mindex/health"
+    },
+    "Ancestry Page": {
+      "status": 502,
+      "url": "https://sandbox.mycosoft.com/ancestry"
+    },
+    "Security Incidents": {
+      "status": 502,
+      "url": "https://sandbox.mycosoft.com/security/incidents"
+    },
+    "API Health": {
+      "status": 502,
+      "url": "https://sandbox.mycosoft.com/api/health"
+    },
+    "Earth Sim": {
+      "status": 502,
+      "url": "https://sandbox.mycosoft.com/natureos/earth-sim"
+    }
+  },
+  "databases": {
+    "postgres_taxa_count": 0
+  },
+  "integrations": {
+    "crep": false,
+    "natureos": false,
+    "taxa_list": false,
+    "observations": false,
+    "search": false
+  }
+}

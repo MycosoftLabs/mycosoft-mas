@@ -17,13 +17,21 @@ Safety Features:
 - All operations are logged for audit
 """
 
+import asyncio
 import json
 import logging
 import os
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
+
+# SSE for streaming
+try:
+    from sse_starlette.sse import EventSourceResponse
+    SSE_AVAILABLE = True
+except ImportError:
+    SSE_AVAILABLE = False
 
 # Cryptographic Integrity Service import
 try:
@@ -498,6 +506,16 @@ class NamespacedMemoryManager:
     def get_audit_log(self, limit: int = 100) -> List[Dict[str, Any]]:
         """Get recent audit log entries."""
         return self._audit_log[-limit:]
+    
+    def get_audit_log_since_index(self, since_index: int, limit: int = 100) -> Tuple[List[Dict[str, Any]], int]:
+        """Get audit log entries since the given index. Returns (entries, new_last_index)."""
+        if since_index < 0:
+            since_index = 0
+        entries = self._audit_log[since_index:]
+        if len(entries) > limit:
+            entries = entries[-limit:]
+        new_index = since_index + len(entries)
+        return entries, new_index
 
 
 # Singleton instance
@@ -693,6 +711,48 @@ async def memory_health():
     }
 
 
+@router.get("/stream/{agent_id}")
+async def memory_stream(agent_id: str, layer: Optional[str] = None, session_id: Optional[str] = None):
+    """
+    SSE stream of memory updates for real-time dashboard monitoring.
+    
+    Streams new memory events (writes, episodes) filtered by agent_id.
+    Optional query params: layer, session_id for additional filtering.
+    
+    Connect with EventSource: new EventSource('/api/memory/stream/agent_123')
+    """
+    if not SSE_AVAILABLE:
+        raise HTTPException(500, "SSE not available: sse-starlette not installed")
+    
+    manager = get_memory_manager()
+    last_index = len(manager._audit_log)  # Start from current end
+    
+    def _matches_filter(entry: Dict[str, Any]) -> bool:
+        namespace = entry.get("namespace", "")
+        if agent_id and agent_id not in namespace and namespace != agent_id:
+            return False
+        if layer and entry.get("scope") != layer:
+            return False
+        if session_id and session_id not in namespace:
+            return False
+        return True
+    
+    async def event_generator():
+        nonlocal last_index
+        while True:
+            try:
+                entries, last_index = manager.get_audit_log_since_index(last_index, limit=50)
+                for entry in entries:
+                    if _matches_filter(entry):
+                        yield {"data": json.dumps(entry)}
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.warning(f"Memory stream error: {e}")
+                yield {"data": json.dumps({"error": str(e)})}
+            await asyncio.sleep(2)
+    
+    return EventSourceResponse(event_generator())
 
 
 # ============================================================================

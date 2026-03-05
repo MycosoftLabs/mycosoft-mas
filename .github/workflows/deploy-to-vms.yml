@@ -1,0 +1,90 @@
+# Deploy to Mycosoft VMs - SSH + pull + rebuild + restart
+# Runs on push to main. Requires self-hosted runner on LAN or bastion reachable to 192.168.0.x
+#
+# Secrets (Settings → Secrets and variables → Actions):
+#   VM_SSH_PRIVATE_KEY  - SSH private key for mycosoft user
+#   VM_SANDBOX_HOST     - 192.168.0.187 (or bastion)
+#   VM_MAS_HOST         - 192.168.0.188
+#   VM_MINDEX_HOST      - 192.168.0.189
+#   CLOUDFLARE_ZONE_ID  - For purge after website deploy (optional)
+#   CLOUDFLARE_API_TOKEN - For purge (optional)
+
+name: Deploy to VMs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target to deploy (mas, mindex, website, all)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - mas
+          - mindex
+          - website
+
+jobs:
+  deploy-mas:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.target == 'mas' || github.event.inputs.target == 'all' || (github.event_name == 'push')
+    steps:
+      - name: Deploy MAS to VM 188
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_MAS_HOST }}
+          username: mycosoft
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/mycosoft/mycosoft/mas || cd /opt/mycosoft/mas || exit 1
+            git fetch origin && git reset --hard origin/main
+            source venv/bin/activate 2>/dev/null || true
+            sudo systemctl restart mas-orchestrator 2>/dev/null || pip install -e . && python -m mycosoft_mas.core.myca_main &
+            sleep 5
+            curl -sf http://localhost:8001/health || exit 1
+
+  deploy-mindex:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.target == 'mindex' || github.event.inputs.target == 'all'
+    steps:
+      - name: Deploy MINDEX to VM 189
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_MINDEX_HOST }}
+          username: mycosoft
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/mycosoft/mindex || exit 1
+            git fetch origin && git reset --hard origin/main
+            docker compose pull 2>/dev/null || true
+            docker compose up -d --build
+            sleep 10
+            curl -sf http://localhost:8000/health || exit 1
+
+  deploy-website:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.target == 'website' || github.event.inputs.target == 'all'
+    steps:
+      - name: Deploy Website to VM 187
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_SANDBOX_HOST }}
+          username: mycosoft
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/mycosoft/website || exit 1
+            git fetch origin && git reset --hard origin/main
+            docker compose -p mycosoft-production build --no-cache mycosoft-website
+            docker compose -p mycosoft-production up -d mycosoft-website
+            sleep 5
+            curl -sf http://localhost:3000 -o /dev/null || exit 1
+      - name: Purge Cloudflare cache
+        if: success() && secrets.CLOUDFLARE_ZONE_ID != ''
+        run: |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CLOUDFLARE_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'

@@ -222,10 +222,31 @@ class MINDEXBridge:
     # ── Knowledge Query ──────────────────────────────────────────
 
     async def search_knowledge(self, query: str, limit: int = 10) -> list:
-        """Search the MINDEX knowledge base."""
+        """Search the MINDEX knowledge base via unified-search or /api/search."""
+        if not self._session or self._session.closed:
+            return []
+        try:
+            # Try MINDEX unified-search first (taxa, compounds, genetics, etc.)
+            async with self._session.get(
+                f"{self._mindex_api.rstrip('/')}/api/mindex/unified-search",
+                params={"q": query, "limit": limit},
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    results = data.get("results", {})
+                    if isinstance(results, dict):
+                        flat = []
+                        for k, v in results.items():
+                            if isinstance(v, list):
+                                flat.extend(v[:3])
+                        return flat[:limit] if flat else []
+                    return results.get("results", []) if isinstance(results, dict) else []
+        except Exception:
+            pass
         try:
             async with self._session.get(
-                f"{self._mindex_api}/api/search",
+                f"{self._mindex_api.rstrip('/')}/api/search",
                 params={"q": query, "limit": limit},
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
@@ -234,6 +255,14 @@ class MINDEXBridge:
         except Exception:
             pass
         return []
+
+    async def query_knowledge_graph(self, query: str, limit: int = 5) -> list:
+        """Query MINDEX for taxonomy, species, compounds when the question is domain-specific."""
+        return await self.search_knowledge(query, limit=limit)
+
+    async def recall_semantic(self, query: str, limit: int = 5) -> list:
+        """Vector/semantic search for relevant past context. Uses search_knowledge as proxy."""
+        return await self.search_knowledge(query, limit=limit)
 
     async def vector_search(self, query: str, collection: str = "knowledge", limit: int = 5) -> list:
         """Semantic vector search via Qdrant."""

@@ -1,22 +1,23 @@
 # MYCA Pipeline Status -- Full Diagnostic Report
 
 **Date:** March 5, 2026  
-**Status:** Partially Operational -- 3 items fixed, 2 remain
+**Status:** USABLE — E2E test passed Mar 5. You can ask MYCA to do work on her PC (VM 191).
 
 ---
 
 ## Executive Summary
 
-Ran a full pipeline diagnostic across every layer of the MYCA system -- from brain/consciousness through intention, memory, agents, MAS, inputs, capabilities, persona, and tool interactions.
+Ran a full pipeline diagnostic and **end-to-end usability test** across every layer of the MYCA system.
 
 **Fixed this session:**
-1. MAS Orchestrator Postgres connection -- was failing with wrong password; fixed by updating `.env` on VM 188 and recreating the container with `--env-file`
-2. MAS Orchestrator health -- now reports PostgreSQL **healthy**, Redis **healthy**
-3. Full Platform Integration -- 90+ services committed and pushed to GitHub
+1. MAS Orchestrator Postgres connection — fixed `.env` on VM 188
+2. MAS Orchestrator health — PostgreSQL **healthy**, Redis **healthy**
+3. Full Platform Integration — 90+ services committed and pushed to GitHub
+4. **VM 191 SSH** — password auth re-enabled (was key-only)
+5. **MYCA Workspace API** — running on VM 191 port **8100**
+6. **MYCA OS daemon** — systemd `myca-os` active on 191
 
-**Remaining issues (need manual intervention):**
-1. VM 191 (MYCA) SSH is key-only auth -- password login disabled; Proxmox console needed to re-enable
-2. MYCA services on VM 191 not running (FastAPI 8000, n8n 5679)
+**E2E Test (Mar 5):** 10/10 passed. Pipeline is USABLE. See `docs/MYCA_E2E_USABILITY_TEST_COMPLETE_MAR05_2026.md`.
 
 ---
 
@@ -30,15 +31,16 @@ Ran a full pipeline diagnostic across every layer of the MYCA system -- from bra
 | MYCA | 192.168.0.191 | 22 | OPEN (key-only) |
 | Sandbox | 192.168.0.187 | 22 | OPEN |
 
-### 2. Service Health -- MIXED
+### 2. Service Health
 | Service | URL | Status | Notes |
 |---------|-----|--------|-------|
-| MAS Orchestrator | 188:8001 | DEGRADED (was UNHEALTHY, fixed PG) | Collectors not running (non-critical) |
+| MAS Orchestrator | 188:8001 | HEALTHY | Postgres + Redis connected |
 | MINDEX API | 189:8000 | HEALTHY | All containers up |
 | n8n (MAS) | 188:5678 | HEALTHY | Running |
 | Website | 187:3000 | HEALTHY | Running |
-| MYCA FastAPI | 191:8000 | DOWN | Service not started |
-| MYCA n8n | 191:5679 | DOWN | Service not started |
+| **MYCA Workspace API** | **191:8100** | **HEALTHY** | Workspace tools (email, Discord, Asana) |
+| MYCA OS daemon | 191 | HEALTHY | systemd myca-os active |
+| MYCA n8n | 191:5679 | WARN | May be Docker-internal only |
 | Proxmox | 105:8006 | UNREACHABLE | May be firewall or down |
 
 ### 3. MAS Orchestrator (VM 188) -- FIXED

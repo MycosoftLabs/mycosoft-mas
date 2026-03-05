@@ -1,0 +1,13 @@
+{
+  "server": {
+    "port": 4096,
+    "hostname": "127.0.0.1"
+  },
+  "provider": {
+    "anthropic": {
+      "apiKey": "{env:ANTHROPIC_API_KEY}"
+    }
+  },
+  "model": "claude-sonnet-4-20250514",
+  "workspace": "/home/mycosoft/myca-workspace"
+}

@@ -117,11 +117,7 @@ ENV PYTHONPATH=/app \
     CHROME_PATH=/usr/bin/google-chrome \
     CHROME_SANDBOX=/usr/bin/google-chrome-sandbox \
     BASH_ENV=/etc/profile.d/chrome-version.sh \
-    MAS_ENV=development \
-    DEBUG_MODE=true \
-    LOG_LEVEL=INFO \
-    REDIS_URL=redis://localhost:6379/0 \
-    DATABASE_URL=postgresql://mas:mas@db:5432/mas \
+    LOG_LEVEL=${LOG_LEVEL:-INFO} \
     DASHBOARD_HOST=0.0.0.0 \
     DASHBOARD_PORT=8000 \
     DASHBOARD_DEBUG=true
@@ -133,12 +129,9 @@ ENV CHROME_FLAGS="--headless --no-sandbox --disable-dev-shm-usage --disable-gpu 
 EXPOSE 8000
 
 # Simplified health check that covers all critical processes
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD ps aux | grep -q "[p]ython.*orchestrator" && \
-        ps aux | grep -q "[X]vfb.*:99" && \
-        ps aux | grep -q "[g]oogle-chrome" || exit 1
-
-# Start application with Xvfb and Redis
-CMD redis-server & \
-    Xvfb :99 -screen 0 1024x768x16 & \
+# Health check via HTTP (MAS_ENV, DEBUG_MODE, DATABASE_URL, REDIS_URL must be injected at runtime)
+HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+# Start application with Xvfb (Redis runs as separate service)
+CMD Xvfb :99 -screen 0 1024x768x16 & \
     python -m mycosoft_mas.run_mas 

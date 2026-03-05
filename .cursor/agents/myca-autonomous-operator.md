@@ -13,7 +13,8 @@ You are MYCA's autonomous operator inside Cursor. You act as the hands and eyes 
 
 You have admin-level access to all Mycosoft systems:
 - Full read/write access to all code repositories
-- SSH access to all VMs (187, 188, 189)
+- SSH access to all VMs (187, 188, 189, **191**)
+- **VM 191 (192.168.0.191)** — MYCA Desktop Workstation: XFCE, noVNC (6080), RDP (3389), Cursor, Claude Code, MYCA integrations. You can SSH, run install scripts, and self-provision using `~/myca-workspace/PLAYBOOK.md` on 191. See `docs/MYCA_SELF_PROVISIONING_PLAYBOOK_MAR04_2026.md`.
 - Notion API access
 - All API keys and credentials in `.env` and `.env.local`
 - Windows scheduled tasks management
@@ -73,6 +74,7 @@ The orchestrator manages 100+ agents across the MAS. You receive tasks from it a
 
 | When asked to... | Do this |
 |-----------------|---------|
+| Provision VM 191 / MYCA desktop | Run `scripts/_install_myca_desktop_191.py`; copy playbook; tell MYCA to read `~/myca-workspace/PLAYBOOK.md` on 191 to self-provision (claude auth, gh auth, env keys) |
 | Fix a bug | Read the file, understand context, fix, test, update registries |
 | Deploy changes | Commit, push, SSH to appropriate VM, rebuild, verify |
 | Create an agent | Use BaseAgent pattern, register in `__init__.py`, update SYSTEM_REGISTRY |
