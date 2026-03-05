@@ -363,6 +363,7 @@ def create_app(os_ref=None) -> web.Application:
     app.router.add_get("/skills", handle_skills)
     app.router.add_post("/skills/run", handle_skills_run)
     app.router.add_post("/skills/install", handle_skills_install)
+    app.router.add_post(r"/webhooks/{source}", handle_webhooks)
     app.router.add_post("/webhooks/{source}", handle_webhooks)
 
     return app

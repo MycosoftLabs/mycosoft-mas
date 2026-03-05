@@ -1,0 +1,119 @@
+{
+  "name": "MYCA Asana Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca-asana",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-asana",
+      "name": "Asana Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 240],
+      "webhookId": "myca-asana-sync"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract task from Asana webhook payload and build gateway payload with HMAC\nconst crypto = require('crypto');\nconst input = $input.item.json;\n\n// Asana webhook sends: { events: [{ resource: { gid, name, ... }, ... }] }\n// Or direct task: { data: { gid, name, notes, assignee, ... } }\nlet title = 'Asana task';\nlet description = '';\nlet body = input.body || input;\n\nif (body.events && Array.isArray(body.events) && body.events.length > 0) {\n  const ev = body.events[0];\n  const res = ev.resource || {};\n  title = res.name || title;\n  description = res.notes || JSON.stringify(ev).slice(0, 2000);\n} else if (body.data) {\n  const d = body.data;\n  title = d.name || title;\n  description = d.notes || JSON.stringify(d).slice(0, 2000);\n} else {\n  title = body.name || body.title || title;\n  description = body.notes || body.description || JSON.stringify(body).slice(0, 2000);\n}\n\nconst payload = {\n  title: String(title),\n  description: String(description),\n  priority: 'high',\n  task_type: 'asana'\n};\n\nconst bodyStr = JSON.stringify(payload);\nconst secret = $env.WEBHOOK_SECRET || '';\nconst sig = secret ? crypto.createHmac('sha256', secret).update(bodyStr).digest('hex') : '';\n\nreturn [{ json: { _rawBody: bodyStr, _signature: sig } }];"
+      },
+      "id": "code-hmac",
+      "name": "Build Payload + HMAC",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 240]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MYCA_GATEWAY_URL || 'http://192.168.0.191:8100' }}/webhooks/asana",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Content-Type", "value": "application/json"},
+            {"name": "X-Webhook-Signature", "value": "={{ $json._signature }}"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "raw",
+        "contentType": "application/json",
+        "bodyParameters": {
+          "parameters": []
+        },
+        "options": {
+          "bodyContentType": "raw",
+          "rawBody": "={{ $json._rawBody }}"
+        }
+      },
+      "id": "http-gateway",
+      "name": "POST to MYCA Gateway",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 240],
+      "notesInFlow": true,
+      "notes": "Uses X-Webhook-Signature from prior node"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [960, 240]
+    }
+  ],
+  "connections": {
+    "Asana Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Payload + HMAC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Payload + HMAC": {
+      "main": [
+        [
+          {
+            "node": "POST to MYCA Gateway",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST to MYCA Gateway": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "MYCA",
+      "id": "myca"
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {}
+}

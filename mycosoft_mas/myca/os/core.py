@@ -98,6 +98,7 @@ class MycaOS:
         self._mycobrain_bridge: Optional["MycoBrainBridge"] = None
         self._openwork_bridge: Optional["OpenWorkBridge"] = None
         self._browser_cdp: Optional["BrowserCDP"] = None
+        self._n8n_bridge: Optional["N8NBridge"] = None
         self._scheduler: Optional["Scheduler"] = None
         self._file_manager: Optional["FileManager"] = None
         self._discord_gateway: Optional["DiscordGateway"] = None
@@ -175,6 +176,13 @@ class MycaOS:
             from mycosoft_mas.myca.os.browser_cdp import BrowserCDP
             self._browser_cdp = BrowserCDP(self)
         return self._browser_cdp
+
+    @property
+    def n8n_bridge(self) -> "N8NBridge":
+        if self._n8n_bridge is None:
+            from mycosoft_mas.myca.os.n8n_bridge import N8NBridge
+            self._n8n_bridge = N8NBridge(self)
+        return self._n8n_bridge
 
     @property
     def scheduler(self) -> "Scheduler":
@@ -363,7 +371,7 @@ class MycaOS:
         for subsystem in [
             self._comms, self._tools, self._executive, self._scheduler, self._file_manager,
             self._mas_bridge, self._mindex_bridge, self._crep_bridge, self._earth2_bridge, self._mycobrain_bridge,
-            self._openwork_bridge, self._browser_cdp,
+            self._openwork_bridge, self._browser_cdp, self._n8n_bridge,
         ]:
             if subsystem and hasattr(subsystem, "cleanup"):
                 try:

@@ -104,9 +104,12 @@ def main():
     print("\n[4] Installing Python deps (discord.py, aioimaplib)...")
     run(f"cd {REPO_PATH} && .venv/bin/pip install -q discord.py aioimaplib 2>/dev/null || true", check=False)
 
-    print("\n[5] Ensuring gateway port 8100 is in use...")
+    print("\n[5] Ensuring gateway port 8100 and Ollama fallback env...")
     # Gateway is started by MYCA OS; ensure systemd service has MYCA_GATEWAY_PORT
     run("grep -q MYCA_GATEWAY_PORT /opt/myca/.env 2>/dev/null || echo 'MYCA_GATEWAY_PORT=8100' | sudo tee -a /opt/myca/.env", check=False)
+    # Phase 4: Ollama fallback for llm_brain when Claude API fails (MAS VM 188)
+    run("grep -q OLLAMA_URL /opt/myca/.env 2>/dev/null || echo 'OLLAMA_URL=http://192.168.0.188:11434' | sudo tee -a /opt/myca/.env", check=False)
+    run("grep -q OLLAMA_MODEL /opt/myca/.env 2>/dev/null || echo 'OLLAMA_MODEL=llama3.1:8b' | sudo tee -a /opt/myca/.env", check=False)
 
     print("\n[6] Restarting MYCA OS...")
     run("sudo systemctl restart myca-os 2>/dev/null || true", check=False)

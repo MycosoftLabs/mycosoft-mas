@@ -445,125 +445,27 @@ print(asyncio.run(click()))
 
     # ── n8n Workflows ────────────────────────────────────────────
 
-    # Known workflow name → webhook path (from n8n/workflows/*.json)
-    _N8N_WEBHOOK_PATHS: dict[str, str] = {
-        "MYCA Ethics Evaluation": "myca/ethics/evaluate-recommendation",
-        "MYCA Proactive Monitor": "myca/monitor/check",
-        "MYCA Intent Orchestrator": "myca/intent/orchestrator",
-    }
-
-    def _get_webhook_path_from_nodes(self, nodes: list) -> Optional[str]:
-        """Extract webhook path from workflow nodes."""
-        for node in nodes or []:
-            if node.get("type") == "n8n-nodes-base.webhook":
-                params = node.get("parameters", {})
-                path = params.get("path") or params.get("webhookPath")
-                if path:
-                    return path
-        return None
-
     async def trigger_n8n_workflow(self, task: dict) -> dict:
         """Execute an n8n workflow via webhook trigger (or activate if no webhook).
 
-        Task params:
+        Delegates to n8n_bridge when available. Task params:
           - workflow: Workflow name
           - webhook_path: Optional. If set, used directly (skips lookup)
           - data: Payload to POST to webhook (default {})
         """
         workflow_name = task.get("workflow", "")
-        webhook_path = task.get("webhook_path", "")
+        webhook_path = task.get("webhook_path", "") or None
         data = task.get("data", {})
 
         if not workflow_name and not webhook_path:
             return {"status": "failed", "error": "Missing workflow name or webhook_path"}
 
-        if not self._n8n_api_key:
-            return {"status": "failed", "error": "MYCA n8n API key not configured"}
-
-        headers = {"X-N8N-API-KEY": self._n8n_api_key, "Content-Type": "application/json"}
-
-        try:
-            # Resolve webhook path
-            if webhook_path:
-                path = webhook_path
-                wf_id = None
-            elif workflow_name:
-                # Find workflow by name
-                async with self._session.get(
-                    f"{self._n8n_url}/api/v1/workflows",
-                    headers=headers,
-                ) as resp:
-                    workflows = (await resp.json()).get("data", [])
-                    wf = next((w for w in workflows if w["name"] == workflow_name), None)
-
-                if not wf:
-                    return {"status": "failed", "error": f"Workflow '{workflow_name}' not found"}
-
-                wf_id = wf["id"]
-
-                # Prefer static map, else fetch workflow and parse nodes
-                path = self._N8N_WEBHOOK_PATHS.get(workflow_name)
-                if not path:
-                    async with self._session.get(
-                        f"{self._n8n_url}/api/v1/workflows/{wf_id}",
-                        headers=headers,
-                    ) as wf_resp:
-                        wf_detail = await wf_resp.json()
-                        nodes = wf_detail.get("data", {}).get("nodes", [])
-                    path = self._get_webhook_path_from_nodes(nodes)
-
-                if not path:
-                    # No webhook — activate only (workflow will listen for manual/scheduled triggers)
-                    async with self._session.post(
-                        f"{self._n8n_url}/api/v1/workflows/{wf_id}/activate",
-                        headers=headers,
-                    ) as act_resp:
-                        pass
-                    return {
-                        "status": "completed",
-                        "summary": f"Activated workflow '{workflow_name}' (no webhook trigger)",
-                        "workflow_id": wf_id,
-                        "note": "Workflow has no webhook. Use webhook_path for workflows with webhook nodes.",
-                    }
-
-                # Ensure workflow is activated so webhook is listening
-                async with self._session.post(
-                    f"{self._n8n_url}/api/v1/workflows/{wf_id}/activate",
-                    headers=headers,
-                ) as act_resp:
-                    pass
-            else:
-                return {"status": "failed", "error": "Missing workflow name or webhook_path"}
-
-            # Execute via webhook POST
-            webhook_url = f"{self._n8n_url.rstrip('/')}/webhook/{path.lstrip('/')}"
-            payload = data if isinstance(data, dict) else {"body": data}
-
-            async with self._session.post(
-                webhook_url,
-                json=payload,
-                headers={"Content-Type": "application/json"},
-                timeout=aiohttp.ClientTimeout(total=60),
-            ) as web_resp:
-                body = await web_resp.text()
-                try:
-                    result = json.loads(body) if body else {}
-                except json.JSONDecodeError:
-                    result = {"raw": body[:1000]}
-
-            out = {
-                "status": "completed",
-                "summary": f"Executed workflow via webhook: {path}",
-                "webhook_path": path,
-                "response": result,
-            }
-            if wf_id is not None:
-                out["workflow_id"] = wf_id
-            return out
-        except aiohttp.ClientError as e:
-            return {"status": "failed", "error": f"n8n request failed: {e}"}
-        except Exception as e:
-            return {"status": "failed", "error": str(e)}
+        bridge = self._os.n8n_bridge
+        return await bridge.trigger_workflow(
+            workflow_name or "webhook",
+            data=data if isinstance(data, dict) else {},
+            webhook_path=webhook_path,
+        )
 
     # ── Git / GitHub ─────────────────────────────────────────────
 

@@ -1,5 +1,8 @@
 # Master Document Index
 
+## MYCA OpenWork Integration (Mar 5, 2026)
+- `docs/MYCA_OPENWORK_INTEGRATION_MAR05_2026.md` – **Phases 1–5 complete**: OpenWork orchestrator, CDP browser, skills manager, webhooks, n8n bridge, 3 workflows, Ollama fallback, deploy script. Use for MYCA VM 191 integration.
+
 ## Request Flow Architecture (Mar 5, 2026)
 - `docs/REQUEST_FLOW_ARCHITECTURE_MAR05_2026.md` – **Request flows**: Browser → Cloudflare → VMs; Website → MAS/MINDEX; MycoBrain heartbeat; VM layout summary. Use for deployment and debugging.
 

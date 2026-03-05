@@ -7,16 +7,25 @@ a coherent digital consciousness with personality, beliefs, and memory.
 Phase 0: Injects live context from memory, MINDEX KG, CREP, Earth2, MycoBrain
 before every respond() and classify_intent().
 
+Phase 4: Ollama fallback when Claude API fails or is rate-limited.
+Uses OLLAMA_URL (default http://192.168.0.188:11434) and OLLAMA_MODEL (default llama3.1:8b).
+
 Date: 2026-03-04
 """
 
+import json
 import os
 import logging
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 
+import aiohttp
+
 if TYPE_CHECKING:
     from .core import MycaOS
+
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://192.168.0.188:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 
 logger = logging.getLogger("myca.os.llm_brain")
 
@@ -96,6 +105,32 @@ class LLMBrain:
         if self._context:
             base += "\n\n---\n\n" + self._context[:30000]  # Cap context size
         return base
+
+    async def _respond_ollama(self, messages: list) -> Optional[str]:
+        """
+        Call Ollama /api/chat as fallback when Claude fails.
+        messages: list of {"role": "user"|"system"|"assistant", "content": "..."}
+        Returns response text or None on failure.
+        """
+        url = f"{OLLAMA_URL.rstrip('/')}/api/chat"
+        payload = {"model": OLLAMA_MODEL, "messages": messages, "stream": False}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    url,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=60),
+                ) as resp:
+                    if resp.status != 200:
+                        logger.warning("Ollama returned status %s", resp.status)
+                        return None
+                    data = await resp.json()
+                    msg = data.get("message", {})
+                    content = msg.get("content", "")
+                    return content.strip() if content else None
+        except Exception as e:
+            logger.warning("Ollama fallback failed: %s", e)
+            return None
 
     async def _build_live_context(self, user_message: str, context: Optional[dict] = None) -> str:
         """
@@ -198,17 +233,26 @@ class LLMBrain:
         if live_ctx:
             user_block = live_ctx + "\n\n---\n\nUser message:\n" + user_block
 
+        system_prompt = self._get_system_prompt()
+        messages_ollama = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_block},
+        ]
+
         try:
             response = await self._client.messages.create(
                 model="claude-sonnet-4-20250514",
                 max_tokens=512,
-                system=self._get_system_prompt(),
+                system=system_prompt,
                 messages=[{"role": "user", "content": user_block}],
             )
             text = response.content[0].text if response.content else ""
             return text.strip() if text else "I'm here. What would you like me to do?"
         except Exception as e:
-            logger.error("Claude API error: %s", e)
+            logger.warning("Claude API error: %s; trying Ollama fallback", e)
+            fallback = await self._respond_ollama(messages_ollama)
+            if fallback:
+                return fallback
             return (
                 f"I ran into a temporary issue with my AI brain: {type(e).__name__}. "
                 "Try again in a moment, or I'll keep working on other tasks."
@@ -242,6 +286,11 @@ Choose delegate_to_agent only for deploy/restart/server/docker requests.
 Choose escalate_to_morgan for money, budget, legal, hiring, or urgent human decisions.
 """
 
+        messages_ollama = [
+            {"role": "system", "content": "You are MYCA's routing classifier. Output valid JSON only."},
+            {"role": "user", "content": prompt},
+        ]
+
         try:
             response = await self._client.messages.create(
                 model="claude-sonnet-4-20250514",
@@ -250,14 +299,22 @@ Choose escalate_to_morgan for money, budget, legal, hiring, or urgent human deci
                 messages=[{"role": "user", "content": prompt}],
             )
             text = response.content[0].text if response.content else ""
-            import json
             # Strip markdown code blocks if present
             text = text.strip()
             if text.startswith("```"):
                 text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
             return json.loads(text)
         except Exception as e:
-            logger.warning("Intent classification failed: %s", e)
+            logger.warning("Intent classification failed: %s; trying Ollama fallback", e)
+            fallback_text = await self._respond_ollama(messages_ollama)
+            if fallback_text:
+                text = fallback_text.strip()
+                if text.startswith("```"):
+                    text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
+                try:
+                    return json.loads(text)
+                except json.JSONDecodeError:
+                    pass
             return self._keyword_fallback(message, sender)
 
     def _keyword_fallback(self, message: str, sender: str) -> dict:
