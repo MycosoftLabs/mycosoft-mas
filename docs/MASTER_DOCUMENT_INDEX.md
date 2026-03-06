@@ -67,6 +67,9 @@
 ## MYCA E2E Usability Test (Mar 5, 2026)
 - `docs/MYCA_E2E_USABILITY_TEST_COMPLETE_MAR05_2026.md` – **Pipeline USABLE**: 10/10 tests passed. You can ask MYCA to do work on her PC (VM 191). Workspace API at 191:8100, /workspace/think, MAS chat, agents registry. Run `python scripts/_test_myca_e2e.py` to verify.
 
+## GitHub MCP Token Setup (Mar 2, 2026)
+- `docs/GITHUB_MCP_TOKEN_SETUP_MAR02_2026.md` – **GitHub MCP for issue comments**: Switched to @modelcontextprotocol/server-github; token with repo scope for add_issue_comment; config at ~/.cursor/mcp.json.
+
 ## MINDEX Health Check Fix (Mar 2, 2026)
 - `docs/MINDEX_HEALTH_CHECK_FIX_MAR02_2026.md` – **MINDEX health fix**: MYCA no longer reports "MINDEX databases unreachable" when Redis/Postgres/Qdrant are not cross-VM reachable. Healthy = MINDEX API reachable only.
 

@@ -11,7 +11,7 @@
 
 | Server | Type | Purpose | Env / config |
 |--------|------|---------|--------------|
-| **github** | http | GitHub API (PRs, issues, repos, search) | `GITHUB_PAT` in env |
+| **github** | stdio (npx) | GitHub API (PRs, issues, repos, search, add_issue_comment) | `GITHUB_PERSONAL_ACCESS_TOKEN` in mcp.json env; see `docs/GITHUB_MCP_TOKEN_SETUP_MAR02_2026.md` |
 | **mindex-db** | stdio | MINDEX DB access via @bytebase/dbhub | `MINDEX_DATABASE_URL` in env |
 
 Ensure `GITHUB_PAT` and `MINDEX_DATABASE_URL` are set (e.g. in Cursor settings or `.env`) so these MCPs work.

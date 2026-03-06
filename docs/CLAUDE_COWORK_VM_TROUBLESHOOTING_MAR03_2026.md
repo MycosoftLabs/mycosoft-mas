@@ -1,8 +1,34 @@
 # Claude Cowork VM — Windows Troubleshooting
 
-**Date:** March 3, 2026  
-**Issues:** VM service not running; connection abort / ECONNRESET / exit code 255  
-**Cause:** Known regressions in Claude Desktop v1.1.3189+ (Feb 2026); MSIX installs; API unreachable from VM
+**Date:** March 3, 2026 (updated Mar 6)  
+**Issues:** VM service not running; connection abort / ECONNRESET / exit code 255; **process already running**  
+**Cause:** Known regressions in Claude Desktop v1.1.3189+ (Feb 2026); MSIX installs; API unreachable from VM; stale session state
+
+---
+
+## Error: "process with name already running" (RPC error -1)
+
+**Symptom:** `RPC error -1: process with name "nifty-trusting-gauss" already running (id: ...)` — Cowork won't start or follow-up messages fail.
+
+**Cause:** A previous Cowork VM session did not shut down cleanly. Claude thinks that session is still running and blocks starting a new one. This is a **local state bug**, not a Claude status page outage. [status.claude.com](https://status.claude.com/) shows systems operational.
+
+### Fix (run in order)
+
+1. **Run the dedicated fix script:**
+   ```powershell
+   cd C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas
+   .\scripts\fix-claude-cowork-process-already-running.ps1
+   ```
+   If the service restart fails, run the script **as Administrator**.
+
+2. **Manual steps** (if script doesn't work):
+   - Close Claude Desktop completely
+   - Task Manager → Details → End all `Claude.exe` and any `claude-code`, `CoworkVM` processes
+   - In **elevated** PowerShell: `Restart-Service CoworkVMService -Force`
+   - Delete: `%APPDATA%\Claude\vm_bundles`, `%LOCALAPPDATA%\Claude\claude-code-vm`, `%APPDATA%\Claude\cowork`
+   - Reopen Claude Desktop
+
+3. If it persists: force-close and restart Claude 2–3 times; some users report this clears the stale state.
 
 ---
 
@@ -82,6 +108,7 @@ Remove-Item -Recurse -Force "$env:LOCALAPPDATA\Claude\claude-code-vm" -ErrorActi
 
 | Cause | Symptom | Fix |
 |-------|---------|-----|
+| **Stale session / process already running** | "process with name 'nifty-trusting-gauss' already running", RPC error -1 | Run `fix-claude-cowork-process-already-running.ps1`; kill Claude, restart CoworkVMService, clear vm_bundles |
 | **ECONNRESET / connection abort** | "failed to write data", "connection aborted by software in host", exit 255 | Firewall rules, disable Defender temporarily, exe install |
 | **CSP blocks a-api.anthropic.com** | VM starts but API unreachable; "violates Content Security Policy" in logs | Update Claude or use exe installer (fixed in newer builds) |
 | **MSIX path resolution** | "signature verification initialization failed: failed to get service executable path" | Use exe installer instead of MSIX |

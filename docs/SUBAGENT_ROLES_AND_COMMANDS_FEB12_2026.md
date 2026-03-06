@@ -79,7 +79,8 @@ See `.cursor/rules/agent-must-invoke-subagents-and-docs.mdc` and `.cursor/rules/
 | **regression-guard** | terminal-watcher, deploy-pipeline | Build, health checks, pre-deploy | **Always** read terminal during build and health checks. |
 | **test-engineer** | terminal-watcher, backend-dev, website-dev | pytest, npm test, coverage | **Always** read test terminal for failures and stack traces. |
 | **security-auditor** | terminal-watcher (if scan run) | Secret scan, RBAC check | When running scans that output to terminal. |
-| **bug-fixer** | terminal-watcher, test-engineer | Reproduce, diagnose, patch, run tests | When reproducing or running tests; read terminal for stack traces. |
+| **bug-fixer** | terminal-watcher, test-engineer, issue-response-agent | Reproduce, diagnose, patch, run tests | When reproducing or running tests; read terminal for stack traces. |
+| **issue-response-agent** | (none) | mcp_github_add_issue_comment | After fixing a GitHub issue: post thanks, fix summary, where fixed, future reward note. Use when user asks to respond to issue or thank reporter. |
 
 ### Domain agents
 

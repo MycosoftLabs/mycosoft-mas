@@ -177,6 +177,11 @@
 | `docs/DEVICE_MANAGER_AND_GATEWAY_ARCHITECTURE_FEB10_2026.md` | Gateway, multi-transport |
 | `docs/MYCORRHIZAE_AND_MAS_DEPLOYMENT_COMPLETE_FEB10_2026.md` | Mycorrhizae + MAS deploy |
 
+## GitHub MCP (Mar 2, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/GITHUB_MCP_TOKEN_SETUP_MAR02_2026.md` | **GitHub MCP for issue comments**: Token setup, add_issue_comment, 403 fix; ~/.cursor/mcp.json config |
+
 ## 7. Cursor system & registries
 
 | Doc | Purpose |
