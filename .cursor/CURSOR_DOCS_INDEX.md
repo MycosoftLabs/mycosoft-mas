@@ -21,6 +21,9 @@
 | `docs/MYCA_FULL_OMNICHANNEL_EXECUTION_COMPLETE_MAR06_2026.md` | **Full execution complete**: tests fixed, full suite passing, pushed to GitHub, VM 191 deployed, VM 188 refreshed, core health verified, remaining issues documented. |
 | `infra/network/vlan_config.yaml` | **VLAN config as code**: VLAN 10/20/30/40 CIDRs, flat 192.168.0.x assignments. Reference for firewall and deployment. |
 | `docs/MYCA_SUPPORT_UPGRADE_AUDIT_MAR07_2026.md` | **MYCA Support Upgrade Audit**: Cross-system audit (Website, MINDEX, NatureOS, MycoBrain, cowork, automation). Prioritized upgrade plan for MYCA–Morgan interaction. |
+| `docs/NEXT_JOBS_FROM_GAPS_MAR07_2026.md` | **Next jobs from gaps**: Prioritized job list (Critical→High→Quick wins→Medium→Large). Sprint planning, gap-derived work. |
+| `docs/GAP_PLAN_COMPLETION_MAR05_2026.md` | **Gap plan complete**: Critical/High/Quick/Medium verified or done; NatureOS summary API; deferred items. |
+| `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` | **Large items scaffolding**: Design stubs for Jobs 18–23 (control plane, bridges, workflow visibility). |
 
 ## 1. Master indexes (read first)
 
