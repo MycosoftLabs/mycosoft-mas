@@ -32,6 +32,14 @@ import aiohttp
 logger = logging.getLogger("myca.os.comms")
 
 
+def _env_any(*names: str, default: str = "") -> str:
+    for name in names:
+        value = os.getenv(name)
+        if value:
+            return value
+    return default
+
+
 class Channel(str, Enum):
     DISCORD = "discord"
     SIGNAL = "signal"
@@ -68,11 +76,11 @@ class InboundMessage:
 
 # Morgan's identifiers across platforms
 MORGAN_IDS = {
-    Channel.DISCORD: os.getenv("MORGAN_DISCORD_ID", ""),
-    Channel.SIGNAL: os.getenv("MORGAN_SIGNAL_NUMBER", ""),
-    Channel.WHATSAPP: os.getenv("MORGAN_WHATSAPP_NUMBER", ""),
-    Channel.SLACK: os.getenv("MORGAN_SLACK_ID", ""),
-    Channel.EMAIL: os.getenv("MORGAN_EMAIL", "morgan@mycosoft.org"),
+    Channel.DISCORD: _env_any("MORGAN_DISCORD_ID"),
+    Channel.SIGNAL: _env_any("MORGAN_SIGNAL_NUMBER"),
+    Channel.WHATSAPP: _env_any("MORGAN_WHATSAPP_NUMBER"),
+    Channel.SLACK: _env_any("MORGAN_SLACK_ID"),
+    Channel.EMAIL: _env_any("MORGAN_EMAIL", default="morgan@mycosoft.org"),
 }
 
 
@@ -82,19 +90,19 @@ class CommsHub:
     def __init__(self, os_ref):
         self._os = os_ref
         self._session: Optional[aiohttp.ClientSession] = None
-        self._discord_webhook = os.getenv("DISCORD_WEBHOOK_URL", "")
-        self._discord_bot_token = os.getenv("DISCORD_BOT_TOKEN", "")
-        self._signal_api = os.getenv("SIGNAL_API_URL", "http://localhost:8089")
-        self._signal_number = os.getenv("SIGNAL_SENDER_NUMBER", "")
-        self._slack_token = os.getenv("SLACK_BOT_TOKEN", "")
-        self._asana_token = os.getenv("ASANA_PAT", "")
-        self._workspace_url = os.getenv("MYCA_WORKSPACE_URL", "http://localhost:8000")
+        self._discord_webhook = _env_any("DISCORD_MYCA_WEBHOOK", "DISCORD_WEBHOOK_URL", default="")
+        self._discord_bot_token = _env_any("MYCA_DISCORD_TOKEN", "DISCORD_BOT_TOKEN", default="")
+        self._signal_api = _env_any("MYCA_SIGNAL_CLI_URL", "SIGNAL_API_URL", default="http://192.168.0.191:8089")
+        self._signal_number = _env_any("MYCA_SIGNAL_NUMBER", "SIGNAL_SENDER_NUMBER", default="")
+        self._slack_token = _env_any("MYCA_SLACK_BOT_TOKEN", "SLACK_BOT_TOKEN", "SLACK_OAUTH_TOKEN", default="")
+        self._asana_token = _env_any("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN", default="")
+        self._workspace_url = _env_any("MYCA_WORKSPACE_URL", "MYCA_GATEWAY_URL", default="http://localhost:8100")
         self._message_queue: asyncio.Queue = asyncio.Queue()
         self._imap_host = os.getenv("IMAP_HOST", "imap.gmail.com")
         self._imap_port = int(os.getenv("IMAP_PORT", "993"))
         self._imap_user = os.getenv("IMAP_USER") or os.getenv("SMTP_USER", "")
         self._imap_password = os.getenv("IMAP_PASSWORD") or os.getenv("SMTP_PASSWORD", "")
-        self._asana_workspace = os.getenv("ASANA_WORKSPACE_ID", "")
+        self._asana_workspace = _env_any("ASANA_WORKSPACE_ID", default="")
         self._asana_seen_stories: set = set()
 
     async def initialize(self):
@@ -226,6 +234,13 @@ class CommsHub:
             messages.extend(signal_msgs)
         except Exception as e:
             logger.debug(f"Signal poll: {e}")
+
+        # Poll WhatsApp
+        try:
+            whatsapp_msgs = await self._poll_whatsapp()
+            messages.extend(whatsapp_msgs)
+        except Exception as e:
+            logger.debug(f"WhatsApp poll: {e}")
 
         # Poll workspace API (aggregated webhook inbox)
         try:
@@ -393,6 +408,30 @@ class CommsHub:
                                 "is_morgan": sender == MORGAN_IDS.get(Channel.SIGNAL),
                                 "raw": item,
                             })
+        except Exception:
+            pass
+        return messages
+
+    async def _poll_whatsapp(self) -> list:
+        """Poll WhatsApp via Evolution API."""
+        messages = []
+        try:
+            from mycosoft_mas.integrations.whatsapp_client import WhatsAppClient
+            client = WhatsAppClient()
+            records = await client.get_messages(limit=20)
+            await client.close()
+            for item in records:
+                content = item.get("message", {}).get("conversation", "")
+                sender = item.get("key", {}).get("remoteJid", "")
+                if content:
+                    messages.append({
+                        "source": "whatsapp",
+                        "sender": sender,
+                        "sender_id": sender,
+                        "content": content,
+                        "is_morgan": sender == MORGAN_IDS.get(Channel.WHATSAPP),
+                        "raw": item,
+                    })
         except Exception:
             pass
         return messages

@@ -133,7 +133,7 @@ async def send_message(req: SendMessageRequest):
 
 
 @router.get("/messages")
-async def check_messages(platforms: str = "slack,discord,signal"):
+async def check_messages(platforms: str = "slack,discord,signal,whatsapp,email,asana"):
     """Check for new messages across platforms."""
     agent = _get_agent()
     if not agent:
@@ -142,6 +142,12 @@ async def check_messages(platforms: str = "slack,discord,signal"):
         "type": "check_messages",
         "parameters": {"platforms": platforms.split(",")},
     })
+
+
+@router.get("/inbox")
+async def workspace_inbox(platforms: str = "slack,discord,signal,whatsapp,email,asana"):
+    """Alias for aggregated inbox polling used by MYCA OS comms hub."""
+    return await check_messages(platforms=platforms)
 
 
 @router.post("/notify")

@@ -12,6 +12,12 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/REQUEST_FLOW_ARCHITECTURE_MAR05_2026.md` | **Request flows**: Browser → Cloudflare → VMs; Website → MAS/MINDEX; MycoBrain heartbeat; VM layout. Use for deployment and debugging. |
+| `docs/MYCA_RUNTIME_HARDENING_COMPLETE_MAR06_2026.md` | **Phase 1 runtime hardening complete**: Gateway auth, shell/skill gating, env normalization, canonical staff registry helper, workspace inbox contract, deploy script security, regression suite passing. |
+| `docs/MYCA_FULL_SYSTEM_RUNTIME_PROMOTION_COMPLETE_MAR06_2026.md` | **Phase 2 runtime promotion complete**: NatureOS, world model, Presence, NLM, and unified search promoted into the active MYCA OS runtime. |
+| `docs/MYCA_STAFF_IDENTITY_AND_MEMORY_COMPLETE_MAR06_2026.md` | **Phase 3 staff identity and memory complete**: canonical people registry, shared sender resolution, person-scoped memory, and stronger staff-aware reply context. |
+| `docs/MYCA_OMNICHANNEL_DIALOGUE_BUS_COMPLETE_MAR06_2026.md` | **Phase 4 omnichannel dialogue bus complete**: WhatsApp polling, workspace inbox contract, wider channel defaults, and better omnichannel runtime/status parity. |
+| `docs/MYCA_AGENT_AND_TOOL_FEDERATION_COMPLETE_MAR06_2026.md` | **Phase 5 agent/tool federation complete**: first-class runtime task routes for GitHub, Asana, NatureOS, and search. |
+| `docs/MYCA_BOUNDED_PERSONAL_AGENCY_COMPLETE_MAR06_2026.md` | **Phase 6 bounded personal agency complete**: personal-agency and autonomous-self modules wired into the daemon with enable flags and queue-budget gating. |
 | `infra/network/vlan_config.yaml` | **VLAN config as code**: VLAN 10/20/30/40 CIDRs, flat 192.168.0.x assignments. Reference for firewall and deployment. |
 
 ## 1. Master indexes (read first)
@@ -49,6 +55,13 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/MYCA_LIVING_EMPLOYEE_FULL_INTEGRATION_PHASE0_COMPLETE_MAR02_2026.md` | **Phase 0 complete**: Memory, MINDEX KG, CREP, Earth2, MycoBrain bridges; context assembly; llm_brain injection. Full platform wiring before computer-use. |
+
+## Cowork VM Continuity (Mar 4, 2026)
+
+| Doc | Purpose |
+|-----|---------|
+| `docs/COWORK_VM_CONTINUITY_MAR04_2026.md` | **Always-on Cowork VM**: Watchdog, scheduled task (every 2 min), auto-recovery for CoworkVMService. Run `install-cowork-vm-watchdog.ps1` elevated. Company automation depends on this. |
+| `docs/CLAUDE_COWORK_VM_TROUBLESHOOTING_MAR03_2026.md` | **Cowork VM fix**: MSIX/DCOM/Hyper-V issues; `fix-claude-cowork-vm.ps1`; exe installer from claude.ai/download |
 
 ## MYCA Ethics Training System (Mar 4, 2026)
 

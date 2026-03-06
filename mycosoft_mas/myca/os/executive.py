@@ -23,6 +23,8 @@ from typing import Optional
 from enum import Enum
 from dataclasses import dataclass, field
 
+from mycosoft_mas.myca.os.staff_registry import load_staff_directory
+
 logger = logging.getLogger("myca.os.executive")
 
 
@@ -107,6 +109,7 @@ class ExecutiveSystem:
         self._current_priorities: list[str] = []
         self._daily_plan: Optional[dict] = None
         self._llm_brain: Optional["LLMBrain"] = None
+        self._staff_directory = load_staff_directory()
 
     @property
     def llm_brain(self) -> "LLMBrain":
@@ -341,16 +344,30 @@ class ExecutiveSystem:
         """Classify an incoming message and determine routing."""
         content = msg.get("content", "").lower()
         sender = msg.get("sender", "")
+        person_id = msg.get("person_id")
+        staff = self._staff_directory.get(person_id or "", {})
+        sender_role = staff.get("role", "staff") if staff else "staff"
 
         # Simple classification — enhance with LLM later
         if any(kw in content for kw in ["deploy", "restart", "server", "docker"]):
             return {"action": "delegate_to_agent", "agent_id": "deployment_agent", "task": msg}
         elif any(kw in content for kw in ["money", "budget", "invoice", "payment"]):
             return {"action": "escalate_to_morgan"}
-        elif any(kw in content for kw in ["help", "question", "how to"]):
-            return {"action": "respond_directly", "response": f"I'll look into that for you, {sender}."}
         else:
-            return {"action": "respond_directly", "response": f"Thanks {sender}, I've noted your message."}
+            response = await self.llm_brain.respond(
+                msg.get("content", ""),
+                context={
+                    "sender": staff.get("name", sender),
+                    "source": msg.get("source", "unknown"),
+                    "status": (
+                        f"Role: {sender_role}; "
+                        f"Pending tasks: {len([t for t in self._task_queue if t.status == 'pending'])}"
+                    ),
+                    "person_id": person_id,
+                    "role": sender_role,
+                },
+            )
+            return {"action": "respond_directly", "response": response}
 
     # ── Decision Making ──────────────────────────────────────────
 
@@ -494,6 +511,14 @@ class ExecutiveSystem:
             return "coding"
         elif any(kw in content for kw in ["research", "find", "look up", "investigate"]):
             return "research"
+        elif any(kw in content for kw in ["github", "pull request", "pr ", "issue", "repo"]):
+            return "github"
+        elif any(kw in content for kw in ["asana", "workspace", "project task", "story comment"]):
+            return "asana"
+        elif any(kw in content for kw in ["natureos", "ecosystem", "matlab", "digital twin"]):
+            return "natureos"
+        elif any(kw in content for kw in ["search", "lookup", "query knowledge", "what do we know"]):
+            return "search"
         elif any(kw in content for kw in ["deploy", "restart", "update server"]):
             return "deployment"
         elif any(kw in content for kw in ["email", "message", "notify", "tell"]):

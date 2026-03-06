@@ -1,5 +1,23 @@
 # Master Document Index
 
+## MYCA Bounded Personal Agency (Mar 6, 2026)
+- `docs/MYCA_BOUNDED_PERSONAL_AGENCY_COMPLETE_MAR06_2026.md` – **Phase 6 complete**: personal-agency and autonomous-self modules wired into the daemon with enable flags and queue-budget gating.
+
+## MYCA Agent and Tool Federation (Mar 6, 2026)
+- `docs/MYCA_AGENT_AND_TOOL_FEDERATION_COMPLETE_MAR06_2026.md` – **Phase 5 complete**: first-class runtime task routes for GitHub, Asana, NatureOS, and search plus improved system-level task federation.
+
+## MYCA Omnichannel Dialogue Bus (Mar 6, 2026)
+- `docs/MYCA_OMNICHANNEL_DIALOGUE_BUS_COMPLETE_MAR06_2026.md` – **Phase 4 complete**: WhatsApp polling in the live comms hub, workspace inbox contract fixed, broader channel defaults, and better omnichannel status/env parity.
+
+## MYCA Staff Identity and Memory (Mar 6, 2026)
+- `docs/MYCA_STAFF_IDENTITY_AND_MEMORY_COMPLETE_MAR06_2026.md` – **Phase 3 complete**: canonical staff registry, shared sender resolution, person-scoped memory, staff role context injection, workspace inbox contract, and stronger non-Morgan reply routing.
+
+## MYCA Full-System Runtime Promotion (Mar 6, 2026)
+- `docs/MYCA_FULL_SYSTEM_RUNTIME_PROMOTION_COMPLETE_MAR06_2026.md` – **Phase 2 complete**: NatureOS, world model, Presence, NLM, unified search, and broader runtime context promoted into the active VM 191 MYCA loop.
+
+## MYCA Runtime Hardening (Mar 6, 2026)
+- `docs/MYCA_RUNTIME_HARDENING_COMPLETE_MAR06_2026.md` – **Phase 1 complete**: gateway auth, shell/skill gating, normalized env contract, canonical staff registry helper, workspace inbox contract, deploy script hardening, targeted regression suite passing.
+
 ## BoostVC Compliance Checklist (Mar 5, 2026)
 - `docs/BOOSTVC_COMPLIANCE_CHECKLIST_MAR_2026.md` – **BoostVC compliance**: Annual operating plan, board materials, material business changes, books and records. Config: `config/board_meetings.yaml`, `docs/board/`.
 
@@ -54,6 +72,9 @@
 ## MYCA Desktop Workstation (Mar 3–4, 2026)
 - `docs/MYCA_DESKTOP_WORKSTATION_COMPLETE_MAR03_2026.md` – **Implementation complete**: XFCE desktop, noVNC (6080), XRDP (3389), Node v20, Chrome/Cursor/VS Code/Discord/Slack/Signal, Claude Code/gh/Playwright/signal-cli, AI Python libs. Access: http://192.168.0.191:6080/vnc.html. Scripts: `_install_myca_desktop_191.py`, `_verify_myca_191.py`.
 - `docs/MYCA_SELF_PROVISIONING_PLAYBOOK_MAR04_2026.md` – **MYCA self-provisioning**: Steps for MYCA to fully operate VM 191 (Claude Code official, Cursor admin, MAS/MINDEX env, gh auth). Playbook copied to `~/myca-workspace/PLAYBOOK.md` on 191. Phase 8 of install script deploys it.
+
+## Cowork VM Continuity and Watchdog (Mar 4, 2026)
+- `docs/COWORK_VM_CONTINUITY_MAR04_2026.md` – **Always-on Cowork VM**: Watchdog script, scheduled task `Mycosoft-CoworkVMWatchdog` (every 2 min), auto-start and recovery for `CoworkVMService`. Run `scripts/install-cowork-vm-watchdog.ps1` elevated. Use when automation stops or VM fails.
 
 ## Claude Cowork VM Windows Troubleshooting (Mar 3, 2026)
 - `docs/CLAUDE_COWORK_VM_TROUBLESHOOTING_MAR03_2026.md` – **Cowork VM fix**: "VM service not running" regression; MSIX path bug, DCOM, Hyper-V; run `scripts/fix-claude-cowork-vm.ps1`; use exe installer from claude.ai/download to avoid MSIX.

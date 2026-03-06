@@ -443,6 +443,16 @@ class VoiceMemoryBridge:
         context = {
             "user_id": user_id,
             "current_message": current_message,
+            "recent_history": [],
+            "voice_sessions": {},
+            "autobiographical": {},
+            "semantic_knowledge": [],
+            "user_profile": {
+                "preferences": {},
+                "learned_facts": [],
+                "interaction_summary": "",
+            },
+            "recent_episodes": [],
         }
         
         try:

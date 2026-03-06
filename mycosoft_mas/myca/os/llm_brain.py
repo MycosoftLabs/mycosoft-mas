@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Optional, TYPE_CHECKING
 
 import aiohttp
+from mycosoft_mas.myca.os.staff_registry import load_staff_directory
 
 if TYPE_CHECKING:
     from .core import MycaOS
@@ -147,17 +148,30 @@ class LLMBrain:
             # 1. Recall from memory (session, working, episodic)
             mb = getattr(self._os, "mindex_bridge", None)
             mas = getattr(self._os, "mas_bridge", None)
+            person_id = (context or {}).get("person_id") if context else None
+            staff_directory = load_staff_directory() if person_id else {}
             if mb and hasattr(mb, "recall"):
                 for key in ["session:last_topic", "working:current_task", "episodic:recent_decisions"]:
                     val = await mb.recall(key)
                     if val:
                         parts.append(f"[Memory {key}]: {val[:500]}")
+                if person_id:
+                    personal_key = f"session:last_topic:{person_id}"
+                    personal_val = await mb.recall(personal_key)
+                    if personal_val:
+                        parts.append(f"[Person memory {person_id}]: {personal_val[:500]}")
             if mas and hasattr(mas, "recall_memory"):
                 memories = await mas.recall_memory(user_message[:100] if user_message else "context", limit=3)
                 if memories:
                     for m in memories:
                         c = m.get("content", m) if isinstance(m, dict) else str(m)
                         parts.append(f"[MAS memory]: {str(c)[:300]}")
+            if person_id and staff_directory.get(person_id):
+                staff = staff_directory[person_id]
+                parts.append(
+                    f"[Staff profile]: {staff.get('name')} | role: {staff.get('role')} | "
+                    f"scopes: {', '.join(staff.get('scopes', [])[:6])}"
+                )
 
             # 2. MINDEX KG if domain-specific (species, fungi, taxonomy, compounds)
             if mb and any(kw in msg_lower for kw in ["species", "fungi", "fungus", "taxonomy", "compound", "mushroom", "mycology"]):
@@ -191,6 +205,63 @@ class LLMBrain:
                     summary = await mycobrain.get_telemetry_summary()
                     if summary:
                         parts.append(f"[Devices]: {summary}")
+
+            # 6. NatureOS apps, tools, shell, and platform analytics
+            if any(kw in msg_lower for kw in [
+                "natureos", "workflow", "analytics", "monitoring", "lab tools",
+                "shell", "sample", "experiment", "report", "ecosystem", "device status",
+            ]):
+                natureos = getattr(self._os, "natureos_bridge", None)
+                if natureos and hasattr(natureos, "get_context_summary"):
+                    summary = await natureos.get_context_summary()
+                    if summary:
+                        parts.append(f"[NatureOS]: {summary}")
+
+            # 7. Unified search / cross-system lookup
+            if any(kw in msg_lower for kw in ["search", "find", "lookup", "where is", "show me", "what do we know"]):
+                if mb and hasattr(mb, "search_knowledge"):
+                    try:
+                        results = await mb.search_knowledge(user_message[:120], limit=5)
+                        if results:
+                            parts.append(f"[Unified search]: {str(results)[:800]}")
+                    except Exception:
+                        pass
+
+            # 8. Shared world model context (NLM, presence, aggregated system worldview)
+            if any(kw in msg_lower for kw in [
+                "world", "worldview", "presence", "online", "staff", "session",
+                "nlm", "biosphere", "environment", "systems",
+            ]):
+                world_model = getattr(self._os, "world_model", None)
+                if world_model:
+                    try:
+                        await world_model.update()
+                        summary = await world_model.get_summary()
+                        if summary:
+                            parts.append(f"[World model]: {summary}")
+                        relevant = await world_model.get_relevant_context(
+                            type("Focus", (), {"content": user_message, "related_entities": []})()
+                        )
+                        if relevant:
+                            parts.append(f"[World context]: {str(relevant)[:1200]}")
+                    except Exception:
+                        pass
+
+            # 9. Direct presence bridge
+            if any(kw in msg_lower for kw in ["presence", "online", "staff", "session", "who is online"]):
+                presence = getattr(self._os, "presence_bridge", None)
+                if presence and hasattr(presence, "get_presence_summary"):
+                    summary = await presence.get_presence_summary()
+                    if summary:
+                        parts.append(f"[Presence]: {summary}")
+
+            # 10. Direct NLM bridge
+            if any(kw in msg_lower for kw in ["nlm", "nature learning model", "biosphere", "environmental intelligence"]):
+                nlm = getattr(self._os, "nlm_bridge", None)
+                if nlm and hasattr(nlm, "get_summary"):
+                    summary = await nlm.get_summary()
+                    if summary:
+                        parts.append(f"[NLM]: {summary}")
         except Exception as e:
             logger.debug("Live context build failed: %s", e)
 

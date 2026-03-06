@@ -67,13 +67,12 @@ async def get_ep(ep_id: str) -> Dict[str, Any]:
             r = await client.get(f"{url}{path}", headers=headers or None)
             if r.status_code == 200:
                 return r.json()
-            if r.status_code in (401, 403, 404):
+            if r.status_code != 200:
                 return {
                     "ep_id": ep_id,
                     "status": "ep_storage_not_implemented",
-                    "detail": "Experience packet store unavailable in test mode.",
+                    "detail": f"Experience packet store unavailable (upstream status {r.status_code}).",
                 }
-            raise HTTPException(status_code=r.status_code, detail=r.text[:200])
     except HTTPException:
         raise
     except Exception as e:

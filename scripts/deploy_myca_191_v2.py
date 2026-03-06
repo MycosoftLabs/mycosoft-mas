@@ -104,12 +104,20 @@ def main():
     print("\n[4] Installing Python deps (discord.py, aioimaplib)...")
     run(f"cd {REPO_PATH} && .venv/bin/pip install -q discord.py aioimaplib 2>/dev/null || true", check=False)
 
-    print("\n[5] Ensuring gateway port 8100 and Ollama fallback env...")
+    print("\n[5] Ensuring gateway security, runtime env, and Ollama fallback...")
     # Gateway is started by MYCA OS; ensure systemd service has MYCA_GATEWAY_PORT
     run("grep -q MYCA_GATEWAY_PORT /opt/myca/.env 2>/dev/null || echo 'MYCA_GATEWAY_PORT=8100' | sudo tee -a /opt/myca/.env", check=False)
+    run("grep -q MYCA_ENABLE_SHELL_API /opt/myca/.env 2>/dev/null || echo 'MYCA_ENABLE_SHELL_API=false' | sudo tee -a /opt/myca/.env", check=False)
+    run("grep -q MYCA_ENABLE_SKILL_INSTALL /opt/myca/.env 2>/dev/null || echo 'MYCA_ENABLE_SKILL_INSTALL=false' | sudo tee -a /opt/myca/.env", check=False)
+    run("grep -q MYCA_ENABLE_PERSONAL_AGENCY /opt/myca/.env 2>/dev/null || echo 'MYCA_ENABLE_PERSONAL_AGENCY=true' | sudo tee -a /opt/myca/.env", check=False)
+    run("grep -q MYCA_PERSONAL_AGENCY_MAX_PENDING /opt/myca/.env 2>/dev/null || echo 'MYCA_PERSONAL_AGENCY_MAX_PENDING=2' | sudo tee -a /opt/myca/.env", check=False)
+    run("grep -q MYCA_TRUSTED_IPS /opt/myca/.env 2>/dev/null || echo 'MYCA_TRUSTED_IPS=127.0.0.1,::1,192.168.0.191,192.168.0.188' | sudo tee -a /opt/myca/.env", check=False)
+    run("grep -q MYCA_GATEWAY_API_KEY /opt/myca/.env 2>/dev/null || (echo -n 'MYCA_GATEWAY_API_KEY=' | sudo tee -a /opt/myca/.env >/dev/null && openssl rand -hex 32 | sudo tee -a /opt/myca/.env >/dev/null)", check=False)
     # Phase 4: Ollama fallback for llm_brain when Claude API fails (MAS VM 188)
     run("grep -q OLLAMA_URL /opt/myca/.env 2>/dev/null || echo 'OLLAMA_URL=http://192.168.0.188:11434' | sudo tee -a /opt/myca/.env", check=False)
     run("grep -q OLLAMA_MODEL /opt/myca/.env 2>/dev/null || echo 'OLLAMA_MODEL=llama3.1:8b' | sudo tee -a /opt/myca/.env", check=False)
+    run("grep -q NATUREOS_API_URL /opt/myca/.env 2>/dev/null || echo 'NATUREOS_API_URL=http://192.168.0.187:5000' | sudo tee -a /opt/myca/.env", check=False)
+    run("grep -q PRESENCE_API_URL /opt/myca/.env 2>/dev/null || echo 'PRESENCE_API_URL=http://192.168.0.187:3000/api/presence' | sudo tee -a /opt/myca/.env", check=False)
 
     print("\n[6] Ensuring Evolution API (WhatsApp) container...")
     # Evolution API for WhatsApp — port 8083, instance 'myca'
@@ -117,7 +125,7 @@ def main():
         "docker ps -q -f name=evolution-api 2>/dev/null | grep -q . || "
         "(docker pull atendai/evolution-api:latest 2>/dev/null || true) && "
         "docker run -d --name evolution-api -p 8083:8080 --restart unless-stopped "
-        "-e AUTHENTICATION_API_KEY=myca-whatsapp-secret "
+        "-e AUTHENTICATION_API_KEY=${MYCA_EVOLUTION_API_KEY:-$(openssl rand -hex 24)} "
         "atendai/evolution-api:latest 2>/dev/null || true",
         check=False,
     )

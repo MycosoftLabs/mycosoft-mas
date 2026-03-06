@@ -15,8 +15,16 @@ from typing import Any
 logger = logging.getLogger("myca.os.channels")
 
 
+def _env_any(*names: str) -> str:
+    for name in names:
+        value = (os.getenv(name) or "").strip()
+        if value:
+            return value
+    return ""
+
+
 async def _validate_slack() -> dict[str, Any]:
-    token = os.getenv("SLACK_APP_TOKEN", "") or os.getenv("SLACK_OAUTH_TOKEN", "")
+    token = _env_any("SLACK_APP_TOKEN", "MYCA_SLACK_APP_TOKEN", "SLACK_OAUTH_TOKEN", "MYCA_SLACK_BOT_TOKEN")
     if not token:
         return {"channel": "slack", "status": "missing_credential", "message": "No Slack token set.", "pass": False}
     try:
@@ -30,8 +38,8 @@ async def _validate_slack() -> dict[str, Any]:
 
 
 async def _validate_asana() -> dict[str, Any]:
-    if not os.getenv("ASANA_API_KEY"):
-        return {"channel": "asana", "status": "missing_credential", "message": "ASANA_API_KEY not set.", "pass": False}
+    if not _env_any("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN"):
+        return {"channel": "asana", "status": "missing_credential", "message": "Asana credential not set.", "pass": False}
     try:
         from mycosoft_mas.integrations.asana_client import AsanaClient
         client = AsanaClient()
@@ -45,7 +53,7 @@ async def _validate_asana() -> dict[str, Any]:
 
 
 async def _validate_signal() -> dict[str, Any]:
-    if not os.getenv("MYCA_SIGNAL_NUMBER"):
+    if not _env_any("MYCA_SIGNAL_NUMBER", "SIGNAL_SENDER_NUMBER"):
         return {"channel": "signal", "status": "missing_credential", "message": "MYCA_SIGNAL_NUMBER not set.", "pass": False}
     try:
         from mycosoft_mas.integrations.signal_client import SignalClient
@@ -58,8 +66,8 @@ async def _validate_signal() -> dict[str, Any]:
 
 
 async def _validate_discord() -> dict[str, Any]:
-    if not os.getenv("MYCA_DISCORD_TOKEN"):
-        return {"channel": "discord", "status": "missing_credential", "message": "MYCA_DISCORD_TOKEN not set.", "pass": False}
+    if not _env_any("MYCA_DISCORD_TOKEN", "DISCORD_BOT_TOKEN"):
+        return {"channel": "discord", "status": "missing_credential", "message": "Discord bot token not set.", "pass": False}
     try:
         from mycosoft_mas.integrations.discord_client import DiscordClient
         client = DiscordClient()

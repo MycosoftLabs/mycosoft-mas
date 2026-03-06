@@ -19,37 +19,12 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from mycosoft_mas.agents.base_agent import BaseAgent
+from mycosoft_mas.myca.os.staff_registry import load_staff_directory, resolve_person_id
 
 logger = logging.getLogger(__name__)
 
 
-# Staff directory — who MYCA works with
-STAFF_DIRECTORY = {
-    "morgan": {
-        "name": "Morgan",
-        "role": "CEO",
-        "platforms": ["slack", "discord", "signal", "email", "notion"],
-        "email": "morgan@mycosoft.org",
-        "priority": "high",
-        "topics": ["strategy", "budget", "hiring", "legal", "vision"],
-    },
-    "rj": {
-        "name": "RJ",
-        "role": "COO",
-        "platforms": ["slack", "discord", "email", "asana"],
-        "email": "rj@mycosoft.org",
-        "priority": "high",
-        "topics": ["operations", "processes", "team", "logistics"],
-    },
-    "garret": {
-        "name": "Garret",
-        "role": "CTO",
-        "platforms": ["slack", "discord", "email", "notion"],
-        "email": "garret@mycosoft.org",
-        "priority": "high",
-        "topics": ["infrastructure", "architecture", "code", "devops"],
-    },
-}
+STAFF_DIRECTORY = load_staff_directory()
 
 
 class WorkspaceAgent(BaseAgent):
@@ -71,6 +46,7 @@ class WorkspaceAgent(BaseAgent):
         self._discord_client = None
         self._notion_client = None
         self._signal_client = None
+        self._whatsapp_client = None
         self._asana_client = None
         self._google_client = None
 
@@ -83,7 +59,7 @@ class WorkspaceAgent(BaseAgent):
         self.vm_ip = config.get("vm_ip", "192.168.0.191")
         self.mas_url = config.get("mas_url", "http://192.168.0.188:8001")
         self.mindex_url = config.get("mindex_url", "http://192.168.0.189:8000")
-        self.staff_directory = config.get("staff_directory", STAFF_DIRECTORY)
+        self.staff_directory = config.get("staff_directory") or load_staff_directory() or STAFF_DIRECTORY
 
     async def process_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Route incoming tasks to the appropriate handler."""
@@ -118,15 +94,27 @@ class WorkspaceAgent(BaseAgent):
         if self._slack_client is None:
             try:
                 from mycosoft_mas.integrations.slack_client import SlackClient
-                token = os.getenv("SLACK_BOT_TOKEN", "")
+                token = os.getenv("MYCA_SLACK_BOT_TOKEN", "") or os.getenv("SLACK_BOT_TOKEN", "") or os.getenv("SLACK_OAUTH_TOKEN", "")
                 if not token:
                     token = self._read_credential("slack/bot_token")
-                self._slack_client = SlackClient(token=token)
+                self._slack_client = SlackClient({"token": token})
                 self._platform_status["slack"] = "connected"
             except Exception as e:
                 logger.warning("Slack client init failed: %s", e)
                 self._platform_status["slack"] = f"error: {e}"
         return self._slack_client
+
+    async def _get_discord(self):
+        if self._discord_client is None:
+            try:
+                from mycosoft_mas.integrations.discord_client import DiscordClient
+                token = os.getenv("MYCA_DISCORD_TOKEN", "") or os.getenv("DISCORD_BOT_TOKEN", "")
+                self._discord_client = DiscordClient({"token": token})
+                self._platform_status["discord"] = "connected"
+            except Exception as e:
+                logger.warning("Discord client init failed: %s", e)
+                self._platform_status["discord"] = f"error: {e}"
+        return self._discord_client
 
     async def _get_notion(self):
         if self._notion_client is None:
@@ -146,16 +134,46 @@ class WorkspaceAgent(BaseAgent):
         """Signal via the local signal-cli REST API container."""
         if self._signal_client is None:
             try:
-                import httpx
-                self._signal_client = httpx.AsyncClient(
-                    base_url=f"http://{self.vm_ip}:8089",
-                    timeout=30,
-                )
+                from mycosoft_mas.integrations.signal_client import SignalClient
+                self._signal_client = SignalClient()
                 self._platform_status["signal"] = "connected"
             except Exception as e:
                 logger.warning("Signal client init failed: %s", e)
                 self._platform_status["signal"] = f"error: {e}"
         return self._signal_client
+
+    async def _get_whatsapp(self):
+        if self._whatsapp_client is None:
+            try:
+                from mycosoft_mas.integrations.whatsapp_client import WhatsAppClient
+                self._whatsapp_client = WhatsAppClient()
+                self._platform_status["whatsapp"] = "connected"
+            except Exception as e:
+                logger.warning("WhatsApp client init failed: %s", e)
+                self._platform_status["whatsapp"] = f"error: {e}"
+        return self._whatsapp_client
+
+    async def _get_asana(self):
+        if self._asana_client is None:
+            try:
+                from mycosoft_mas.integrations.asana_client import AsanaClient
+                self._asana_client = AsanaClient({"api_key": os.getenv("ASANA_API_KEY", "") or os.getenv("ASANA_PAT", "")})
+                self._platform_status["asana"] = "connected"
+            except Exception as e:
+                logger.warning("Asana client init failed: %s", e)
+                self._platform_status["asana"] = f"error: {e}"
+        return self._asana_client
+
+    async def _get_google(self):
+        if self._google_client is None:
+            try:
+                from mycosoft_mas.integrations.google_workspace_client import GoogleWorkspaceClient
+                self._google_client = GoogleWorkspaceClient()
+                self._platform_status["email"] = "connected"
+            except Exception as e:
+                logger.warning("Google Workspace client init failed: %s", e)
+                self._platform_status["email"] = f"error: {e}"
+        return self._google_client
 
     def _read_credential(self, path: str) -> str:
         """Read a credential from /opt/myca/credentials/."""
@@ -210,7 +228,7 @@ class WorkspaceAgent(BaseAgent):
     async def _handle_check_messages(self, task: Dict) -> Dict:
         """Check for new messages across all platforms."""
         params = task.get("parameters", {})
-        platforms = params.get("platforms", ["slack", "discord", "signal"])
+        platforms = params.get("platforms", ["slack", "discord", "signal", "whatsapp", "email", "asana"])
 
         messages = []
         for platform in platforms:
@@ -232,11 +250,19 @@ class WorkspaceAgent(BaseAgent):
         params = task.get("parameters", {})
         source_platform = params.get("platform", "")
         sender = params.get("sender", "")
+        sender_id = params.get("sender_id", "")
+        sender_email = params.get("sender_email", "")
         content = params.get("content", "")
+        person_id = self.resolve_staff_member(
+            platform=source_platform,
+            sender_id=sender_id or sender,
+            email=sender_email,
+            fallback_name=sender,
+        )
 
         # Log inbound
         await self._log_interaction(
-            staff_member=sender,
+            staff_member=person_id or sender,
             platform=source_platform,
             direction="inbound",
             content=content,
@@ -251,6 +277,7 @@ class WorkspaceAgent(BaseAgent):
                 "status": "success",
                 "routed_to": "workspace_agent",
                 "action": "direct_response",
+                "person_id": person_id,
             }
         else:
             # Forward to another MAS agent
@@ -258,6 +285,7 @@ class WorkspaceAgent(BaseAgent):
                 "status": "success",
                 "routed_to": routing["route_to"],
                 "reason": routing["reason"],
+                "person_id": person_id,
             }
 
     async def _handle_create_task(self, task: Dict) -> Dict:
@@ -425,25 +453,55 @@ class WorkspaceAgent(BaseAgent):
                 except Exception as e:
                     return {"status": "error", "platform": "slack", "error": str(e)}
 
+        elif platform == "discord":
+            discord = await self._get_discord()
+            channel_id = recipient.get("channels", {}).get("discord")
+            if discord and channel_id:
+                try:
+                    resp = await discord.send_message(channel_id, message)
+                    return {"status": "sent" if resp else "error", "platform": "discord", "result": resp}
+                except Exception as e:
+                    return {"status": "error", "platform": "discord", "error": str(e)}
+
         elif platform == "signal":
             signal = await self._get_signal()
             if signal:
                 try:
-                    phone = os.getenv("SIGNAL_PHONE_NUMBER", "")
-                    resp = await signal.post("/v2/send", json={
-                        "message": message,
-                        "number": phone,
-                        "recipients": [recipient.get("phone", "")],
-                    })
-                    return {"status": "sent", "platform": "signal"}
+                    phone = recipient.get("channels", {}).get("signal", "")
+                    resp = await signal.send_message(phone, message) if phone else None
+                    return {"status": "sent" if resp else "error", "platform": "signal", "result": resp}
                 except Exception as e:
                     return {"status": "error", "platform": "signal", "error": str(e)}
 
+        elif platform == "whatsapp":
+            whatsapp = await self._get_whatsapp()
+            if whatsapp:
+                try:
+                    phone = recipient.get("channels", {}).get("whatsapp", "")
+                    resp = await whatsapp.send_message(phone, message) if phone else None
+                    return {"status": "sent" if resp else "error", "platform": "whatsapp", "result": resp}
+                except Exception as e:
+                    return {"status": "error", "platform": "whatsapp", "error": str(e)}
+
         elif platform == "email":
             try:
-                return {"status": "sent", "platform": "email"}
+                google = await self._get_google()
+                email = recipient.get("email", "")
+                resp = await google.send_email(email, "Message from MYCA", message) if google and email else None
+                return {"status": "sent" if resp else "error", "platform": "email", "result": resp}
             except Exception as e:
                 return {"status": "error", "platform": "email", "error": str(e)}
+
+        elif platform == "asana":
+            asana = await self._get_asana()
+            if asana:
+                try:
+                    task_gid = recipient.get("asana_task_gid", "")
+                    if task_gid:
+                        resp = await asana.add_comment(task_gid, message)
+                        return {"status": "sent" if resp else "error", "platform": "asana", "result": resp}
+                except Exception as e:
+                    return {"status": "error", "platform": "asana", "error": str(e)}
 
         elif platform == "notion":
             notion = await self._get_notion()
@@ -457,7 +515,51 @@ class WorkspaceAgent(BaseAgent):
 
     async def _fetch_messages(self, platform: str) -> List[Dict]:
         """Fetch recent messages from a platform."""
-        # Platform-specific message fetching
+        if platform == "signal":
+            signal = await self._get_signal()
+            if not signal:
+                return []
+            messages = await signal.receive_messages()
+            return [
+                {
+                    "platform": "signal",
+                    "sender_id": msg.get("envelope", {}).get("source", ""),
+                    "content": msg.get("envelope", {}).get("dataMessage", {}).get("message", ""),
+                }
+                for msg in messages
+                if msg.get("envelope", {}).get("dataMessage", {}).get("message")
+            ]
+
+        if platform == "whatsapp":
+            whatsapp = await self._get_whatsapp()
+            if not whatsapp:
+                return []
+            messages = await whatsapp.get_messages(limit=20)
+            return [
+                {
+                    "platform": "whatsapp",
+                    "sender_id": msg.get("key", {}).get("remoteJid", ""),
+                    "content": msg.get("message", {}).get("conversation", ""),
+                }
+                for msg in messages
+                if msg.get("message", {}).get("conversation")
+            ]
+
+        if platform == "email":
+            google = await self._get_google()
+            if not google:
+                return []
+            messages = await google.read_inbox(max_results=10)
+            normalized = []
+            for msg in messages:
+                headers = {h.get("name"): h.get("value") for h in msg.get("payload", {}).get("headers", [])}
+                normalized.append({
+                    "platform": "email",
+                    "sender_id": headers.get("From", ""),
+                    "content": headers.get("Subject", ""),
+                })
+            return normalized
+
         return []
 
     async def _log_interaction(self, staff_member: str, platform: str,
@@ -492,3 +594,20 @@ class WorkspaceAgent(BaseAgent):
             return {"route_to": "research_agent", "reason": "research_request"}
 
         return {"route_to": "self", "reason": "general_conversation"}
+
+    def resolve_staff_member(
+        self,
+        *,
+        platform: Optional[str] = None,
+        sender_id: Optional[str] = None,
+        email: Optional[str] = None,
+        fallback_name: Optional[str] = None,
+    ) -> Optional[str]:
+        """Resolve a sender or recipient to a canonical staff id."""
+        return resolve_person_id(
+            self.staff_directory,
+            platform=platform,
+            sender_id=sender_id,
+            email=email,
+            fallback_name=fallback_name,
+        )

@@ -467,6 +467,90 @@ print(asyncio.run(click()))
             webhook_path=webhook_path,
         )
 
+    async def run_github_task(self, task: dict) -> dict:
+        """Run a GitHub-native task via the REST client."""
+        from mycosoft_mas.integrations.github_client import GitHubClient
+
+        owner = task.get("owner") or os.getenv("GITHUB_OWNER", "")
+        repo = task.get("repo_name") or task.get("repo") or ""
+        operation = task.get("operation", "health")
+        client = GitHubClient()
+
+        try:
+            if operation == "health":
+                return {"status": "completed", "result": await client.health_check(), "summary": "GitHub health checked"}
+            if operation == "list_issues" and owner and repo:
+                issues = await client.list_issues(owner, repo, limit=20)
+                return {"status": "completed", "issues": issues, "summary": f"Listed issues for {owner}/{repo}"}
+            if operation == "list_pull_requests" and owner and repo:
+                prs = await client.list_pull_requests(owner, repo, limit=20)
+                return {"status": "completed", "pull_requests": prs, "summary": f"Listed pull requests for {owner}/{repo}"}
+            if operation == "create_issue" and owner and repo:
+                issue = await client.create_issue(owner, repo, task.get("title", "MYCA task"), task.get("body", task.get("description", "")))
+                return {"status": "completed" if issue else "failed", "issue": issue, "summary": f"Created issue in {owner}/{repo}"}
+            if operation == "comment_issue" and owner and repo and task.get("issue_number"):
+                comment = await client.add_issue_comment(owner, repo, int(task["issue_number"]), task.get("body", task.get("description", "")))
+                return {"status": "completed" if comment else "failed", "comment": comment, "summary": f"Commented on {owner}/{repo}#{task['issue_number']}"}
+            return {"status": "failed", "error": "Unsupported GitHub task or missing owner/repo"}
+        finally:
+            await client.close()
+
+    async def run_asana_task(self, task: dict) -> dict:
+        """Run an Asana-native task via the REST client."""
+        from mycosoft_mas.integrations.asana_client import AsanaClient
+
+        client = AsanaClient({"api_key": os.getenv("ASANA_API_KEY", "") or os.getenv("ASANA_PAT", "")})
+        operation = task.get("operation", "workspaces")
+
+        try:
+            if operation == "workspaces":
+                workspaces = await client.get_workspaces()
+                return {"status": "completed", "workspaces": workspaces, "summary": "Listed Asana workspaces"}
+            if operation == "create_task":
+                created = await client.create_task(
+                    name=task.get("title", "MYCA task"),
+                    workspace_gid=task.get("workspace_gid"),
+                    project_gid=task.get("project_gid"),
+                    notes=task.get("notes", task.get("description", "")),
+                )
+                return {"status": "completed" if created else "failed", "task": created, "summary": "Created Asana task"}
+            if operation == "comment_task" and task.get("task_gid"):
+                comment = await client.add_comment(task.get("task_gid", ""), task.get("body", task.get("description", "")))
+                return {"status": "completed" if comment else "failed", "comment": comment, "summary": f"Commented on Asana task {task.get('task_gid')}"}
+            if operation == "list_tasks":
+                tasks = await client.list_tasks(project_gid=task.get("project_gid"), workspace_gid=task.get("workspace_gid"), limit=20)
+                return {"status": "completed", "tasks": tasks, "summary": "Listed Asana tasks"}
+            return {"status": "failed", "error": "Unsupported Asana task"}
+        finally:
+            await client.close()
+
+    async def run_natureos_task(self, task: dict) -> dict:
+        """Run a NatureOS-native task."""
+        from mycosoft_mas.integrations.natureos_client import NATUREOSClient
+
+        client = NATUREOSClient()
+        operation = task.get("operation", "health")
+        if operation == "health":
+            return {"status": "completed", "result": await client.get_matlab_health(), "summary": "NatureOS health checked"}
+        if operation == "anomaly_detection":
+            result = await client.run_anomaly_detection(task.get("device_id", "mushroom1"))
+            return {"status": "completed", "result": result, "summary": "NatureOS anomaly detection executed"}
+        if operation == "forecast":
+            result = await client.forecast_environmental(task.get("metric", "temperature"), int(task.get("hours", 24)))
+            return {"status": "completed", "result": result, "summary": "NatureOS forecast executed"}
+        if operation == "device_sync":
+            result = await client.sync_digital_twin(task.get("device_id", "mushroom1"))
+            return {"status": "completed", "result": result, "summary": "NatureOS digital twin sync executed"}
+        return {"status": "failed", "error": "Unsupported NatureOS task"}
+
+    async def run_search_task(self, task: dict) -> dict:
+        """Run a unified search task against MINDEX-backed knowledge surfaces."""
+        query = task.get("query") or task.get("description") or task.get("title") or ""
+        if not query:
+            return {"status": "failed", "error": "Search query required"}
+        results = await self._os.mindex_bridge.search_knowledge(query, limit=int(task.get("limit", 10)))
+        return {"status": "completed", "results": results, "summary": f"Unified search completed for: {query[:80]}"}
+
     # ── Git / GitHub ─────────────────────────────────────────────
 
     async def run_git_operation(self, task: dict) -> dict:

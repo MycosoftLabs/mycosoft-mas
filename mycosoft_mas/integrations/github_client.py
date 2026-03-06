@@ -127,6 +127,24 @@ class GitHubClient:
             logger.warning("GitHub create_issue failed: %s", e)
             return None
 
+    async def add_issue_comment(
+        self, owner: str, repo: str, issue_number: int, body: str,
+    ) -> Optional[Dict[str, Any]]:
+        """Add a comment to an issue or pull request."""
+        if not self.token:
+            return None
+        client = await self._get_client()
+        try:
+            r = await client.post(
+                f"/repos/{owner}/{repo}/issues/{issue_number}/comments",
+                json={"body": body},
+            )
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            logger.warning("GitHub add_issue_comment failed: %s", e)
+            return None
+
     async def list_pull_requests(
         self, owner: str, repo: str, state: str = "open", limit: int = 30,
     ) -> List[Dict[str, Any]]:

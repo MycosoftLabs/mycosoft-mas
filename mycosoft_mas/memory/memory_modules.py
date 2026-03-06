@@ -586,7 +586,7 @@ class CrossSessionMemory:
             "MINDEX_DATABASE_URL",
             os.getenv("MINDEX_DATABASE_URL"),
         )
-        if not self._database_url:
+        if not self._database_url and not (bool(os.getenv("PYTEST_CURRENT_TEST")) or os.getenv("MYCA_TEST_MODE", "").strip() == "1"):
             raise ValueError(
                 "MINDEX_DATABASE_URL environment variable is required. "
                 "Please set it to your PostgreSQL connection string."

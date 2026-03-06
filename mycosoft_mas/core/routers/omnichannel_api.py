@@ -26,6 +26,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/omnichannel", tags=["omnichannel"])
 
 
+def _env_any(*names: str) -> str:
+    for name in names:
+        value = (os.getenv(name) or "").strip()
+        if value:
+            return value
+    return ""
+
+
 # ---------------------------------------------------------------------------
 # Request/Response Models
 # ---------------------------------------------------------------------------
@@ -74,7 +82,7 @@ class VerifySenderResponse(BaseModel):
 
 def _get_slack_client():
     from mycosoft_mas.integrations.slack_client import SlackClient
-    token = os.getenv("MYCA_SLACK_BOT_TOKEN") or os.getenv("SLACK_OAUTH_TOKEN", "")
+    token = _env_any("MYCA_SLACK_BOT_TOKEN", "SLACK_BOT_TOKEN", "SLACK_OAUTH_TOKEN")
     return SlackClient({"token": token})
 
 
@@ -103,7 +111,7 @@ def _get_google_client():
 
 def _get_asana_client():
     from mycosoft_mas.integrations.asana_client import AsanaClient
-    return AsanaClient()
+    return AsanaClient({"api_key": _env_any("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN")})
 
 
 def _get_platform_access():
@@ -242,7 +250,7 @@ async def omnichannel_status() -> Dict[str, Any]:
     # Slack
     try:
         sc = _get_slack_client()
-        tok = os.getenv("MYCA_SLACK_BOT_TOKEN") or os.getenv("SLACK_OAUTH_TOKEN", "")
+        tok = _env_any("MYCA_SLACK_BOT_TOKEN", "SLACK_BOT_TOKEN", "SLACK_OAUTH_TOKEN")
         status["slack"] = {"configured": bool(tok), "healthy": bool(tok)}
     except Exception as e:
         status["slack"] = {"configured": False, "healthy": False, "error": str(e)}
@@ -250,7 +258,7 @@ async def omnichannel_status() -> Dict[str, Any]:
     # Discord
     try:
         dc = _get_discord_client()
-        tok = os.getenv("MYCA_DISCORD_TOKEN", "")
+        tok = _env_any("MYCA_DISCORD_TOKEN", "DISCORD_BOT_TOKEN")
         status["discord"] = {"configured": bool(tok), "healthy": bool(tok)}
     except Exception as e:
         status["discord"] = {"configured": False, "healthy": False, "error": str(e)}
@@ -281,7 +289,7 @@ async def omnichannel_status() -> Dict[str, Any]:
     # Asana
     try:
         ac = _get_asana_client()
-        tok = os.getenv("ASANA_API_KEY") or os.getenv("MYCA_ASANA_TOKEN", "")
+        tok = _env_any("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN")
         status["asana"] = {"configured": bool(tok), "healthy": bool(tok)}
     except Exception as e:
         status["asana"] = {"configured": False, "healthy": False, "error": str(e)}

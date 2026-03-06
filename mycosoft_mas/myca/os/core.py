@@ -27,6 +27,8 @@ from typing import Optional
 from enum import Enum
 from dataclasses import dataclass, field
 
+from mycosoft_mas.myca.os.staff_registry import load_staff_directory, resolve_person_id
+
 logger = logging.getLogger("myca.os")
 
 
@@ -96,6 +98,9 @@ class MycaOS:
         self._crep_bridge: Optional["CREPBridge"] = None
         self._earth2_bridge: Optional["Earth2Bridge"] = None
         self._mycobrain_bridge: Optional["MycoBrainBridge"] = None
+        self._natureos_bridge: Optional["NatureOSBridge"] = None
+        self._presence_bridge: Optional["PresenceBridge"] = None
+        self._nlm_bridge: Optional["NLMBridge"] = None
         self._openwork_bridge: Optional["OpenWorkBridge"] = None
         self._browser_cdp: Optional["BrowserCDP"] = None
         self._n8n_bridge: Optional["N8NBridge"] = None
@@ -103,6 +108,9 @@ class MycaOS:
         self._file_manager: Optional["FileManager"] = None
         self._discord_gateway: Optional["DiscordGateway"] = None
         self._slack_gateway: Optional["SlackGateway"] = None
+        self._world_model: Optional["WorldModel"] = None
+        self._personal_agency = None
+        self._autonomous_self = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
 
     # ── Subsystem accessors (lazy-load) ──────────────────────────
@@ -164,6 +172,27 @@ class MycaOS:
         return self._mycobrain_bridge
 
     @property
+    def natureos_bridge(self) -> "NatureOSBridge":
+        if self._natureos_bridge is None:
+            from mycosoft_mas.myca.os.natureos_bridge import NatureOSBridge
+            self._natureos_bridge = NatureOSBridge(self)
+        return self._natureos_bridge
+
+    @property
+    def presence_bridge(self) -> "PresenceBridge":
+        if self._presence_bridge is None:
+            from mycosoft_mas.myca.os.presence_bridge import PresenceBridge
+            self._presence_bridge = PresenceBridge(self)
+        return self._presence_bridge
+
+    @property
+    def nlm_bridge(self) -> "NLMBridge":
+        if self._nlm_bridge is None:
+            from mycosoft_mas.myca.os.nlm_bridge import NLMBridge
+            self._nlm_bridge = NLMBridge(self)
+        return self._nlm_bridge
+
+    @property
     def openwork_bridge(self) -> "OpenWorkBridge":
         if self._openwork_bridge is None:
             from mycosoft_mas.myca.os.openwork_bridge import OpenWorkBridge
@@ -198,6 +227,25 @@ class MycaOS:
             self._file_manager = FileManager(self)
         return self._file_manager
 
+    @property
+    def world_model(self) -> "WorldModel":
+        if self._world_model is None:
+            from mycosoft_mas.consciousness.world_model import WorldModel
+            self._world_model = WorldModel()
+        return self._world_model
+
+    async def get_personal_agency(self):
+        if self._personal_agency is None:
+            from mycosoft_mas.consciousness.personal_agency import get_personal_agency
+            self._personal_agency = await get_personal_agency()
+        return self._personal_agency
+
+    async def get_autonomous_self(self):
+        if self._autonomous_self is None:
+            from mycosoft_mas.consciousness.autonomous_self import get_autonomous_self
+            self._autonomous_self = await get_autonomous_self()
+        return self._autonomous_self
+
     # ── Lifecycle ────────────────────────────────────────────────
 
     async def boot(self):
@@ -218,10 +266,13 @@ class MycaOS:
             logger.info("[2/5] Initializing MAS bridge (orchestrator)...")
             await self.mas_bridge.initialize()
 
-            logger.info("[2a/7] Initializing CREP, Earth2, MycoBrain bridges...")
+            logger.info("[2a/7] Initializing CREP, Earth2, MycoBrain, NatureOS, Presence, NLM bridges...")
             await self.crep_bridge.initialize()
             await self.earth2_bridge.initialize()
             await self.mycobrain_bridge.initialize()
+            await self.natureos_bridge.initialize()
+            await self.presence_bridge.initialize()
+            await self.nlm_bridge.initialize()
 
             logger.info("[3/7] Initializing communication hub...")
             await self.comms.initialize()
@@ -237,6 +288,16 @@ class MycaOS:
 
             logger.info("[7/7] Initializing file manager...")
             await self.file_manager.initialize()
+
+            logger.info("[7b/8] Initializing worldview model...")
+            await self.world_model.initialize_sensors()
+            self.world_model.start_write_queue()
+
+            if _env_flag("MYCA_ENABLE_PERSONAL_AGENCY", default=True):
+                logger.info("[7c/8] Initializing bounded personal agency...")
+                await self.get_personal_agency()
+                autonomous_self = await self.get_autonomous_self()
+                await autonomous_self.start()
 
             logger.info("[7a/8] Ensuring built-in skills...")
             try:
@@ -371,13 +432,25 @@ class MycaOS:
         for subsystem in [
             self._comms, self._tools, self._executive, self._scheduler, self._file_manager,
             self._mas_bridge, self._mindex_bridge, self._crep_bridge, self._earth2_bridge, self._mycobrain_bridge,
+            self._natureos_bridge, self._presence_bridge, self._nlm_bridge,
             self._openwork_bridge, self._browser_cdp, self._n8n_bridge,
+            self._world_model,
         ]:
             if subsystem and hasattr(subsystem, "cleanup"):
                 try:
                     await subsystem.cleanup()
                 except Exception as e:
                     logger.warning(f"Cleanup error: {e}")
+        if self._world_model and hasattr(self._world_model, "shutdown"):
+            try:
+                await self._world_model.shutdown()
+            except Exception as e:
+                logger.warning("World model shutdown error: %s", e)
+        if self._autonomous_self:
+            try:
+                await self._autonomous_self.stop()
+            except Exception as e:
+                logger.warning("Autonomous self shutdown error: %s", e)
 
         self._shutdown_event.set()
         logger.info("MYCA OS shutdown complete.")
@@ -439,6 +512,11 @@ class MycaOS:
                 if health.get("issues"):
                     for issue in health["issues"]:
                         logger.warning(f"Health issue: {issue}")
+
+                try:
+                    await self.world_model.update()
+                except Exception as e:
+                    logger.debug("World model update skipped: %s", e)
 
                 # Proactive 30-min check-in to Morgan via Discord
                 now = datetime.now(timezone.utc)
@@ -602,6 +680,14 @@ class MycaOS:
                     for learning in reflection["learnings"]:
                         logger.info(f"Learned: {learning}")
 
+                if _env_flag("MYCA_ENABLE_PERSONAL_AGENCY", default=True):
+                    pending = len([t for t in self.executive._task_queue if t.status == "pending"])
+                    if pending <= int(os.getenv("MYCA_PERSONAL_AGENCY_MAX_PENDING", "2")):
+                        personal_agency = await self.get_personal_agency()
+                        actions = await personal_agency.work_on_goals()
+                        for action in actions:
+                            logger.info("Personal agency: %s", action)
+
                 self.ctx.state = MycaState.AWAKE
             except Exception as e:
                 logger.error(f"Reflection loop error: {e}")
@@ -663,8 +749,21 @@ class MycaOS:
         """Route an incoming message to the right handler."""
         source = msg.get("source", "unknown")  # discord, signal, whatsapp, asana, email
         sender = msg.get("sender", "unknown")
+        sender_id = msg.get("sender_id")
         content = msg.get("content", "")
         is_morgan = msg.get("is_morgan", False)
+        staff_directory = load_staff_directory()
+        person_id = msg.get("person_id") or resolve_person_id(
+            staff_directory,
+            platform=source,
+            sender_id=sender_id,
+            email=sender if "@" in sender else None,
+            fallback_name=sender,
+        )
+        if person_id == "morgan":
+            is_morgan = True
+        if person_id:
+            msg["person_id"] = person_id
 
         logger.info(f"Message from {sender} via {source}: {content[:80]}...")
 
@@ -681,6 +780,7 @@ class MycaOS:
                     topic = f"{content[:100]} → {response[:100]}" if content and response else content or response or ""
                     if topic:
                         await mb.remember("session:last_topic", topic[:500], layer="session")
+                        await mb.remember("session:last_topic:morgan", topic[:500], layer="session")
             except Exception:
                 pass
             self.ctx.state = MycaState.AWAKE
@@ -689,6 +789,14 @@ class MycaOS:
             routing = await self.executive.classify_and_route(msg)
             if routing.get("action") == "respond_directly":
                 await self.comms.reply(msg, routing["response"])
+                try:
+                    mb = self.mindex_bridge
+                    if person_id and hasattr(mb, "remember"):
+                        topic = f"{content[:100]} → {routing['response'][:100]}" if content and routing.get("response") else content or routing.get("response", "")
+                        if topic:
+                            await mb.remember(f"session:last_topic:{person_id}", topic[:500], layer="session")
+                except Exception:
+                    pass
             elif routing.get("action") == "delegate_to_agent":
                 await self.mas_bridge.dispatch_task(routing["agent_id"], routing["task"])
             elif routing.get("action") == "escalate_to_morgan":
@@ -712,6 +820,14 @@ class MycaOS:
                 return await self.tools.run_browser_research(task)
             elif task_type == "workflow":
                 return await self.tools.trigger_n8n_workflow(task)
+            elif task_type == "github":
+                return await self.tools.run_github_task(task)
+            elif task_type == "asana":
+                return await self.tools.run_asana_task(task)
+            elif task_type == "natureos":
+                return await self.tools.run_natureos_task(task)
+            elif task_type == "search":
+                return await self.tools.run_search_task(task)
             elif task_type == "deployment":
                 return await self.tools.run_deployment(task)
             elif task_type == "communication":
@@ -754,6 +870,14 @@ class MycaOS:
         for svc, status in local_health.items():
             if not status:
                 issues.append({"system": svc, "severity": "medium", "description": f"Local service {svc} down"})
+
+        # Check NatureOS bridge
+        try:
+            natureos_health = await self.natureos_bridge.health_check()
+            if not natureos_health.get("healthy"):
+                issues.append({"system": "NatureOS", "severity": "medium", "description": "NatureOS surfaces unreachable"})
+        except Exception as e:
+            logger.debug("NatureOS health check skipped: %s", e)
 
         self.ctx.cycle_count += 1
         return {"healthy": len(issues) == 0, "issues": issues, "cycle": self.ctx.cycle_count}

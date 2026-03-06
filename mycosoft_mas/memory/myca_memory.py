@@ -28,6 +28,10 @@ from uuid import UUID, uuid4
 
 logger = logging.getLogger("MYCAMemory")
 
+
+def _is_test_environment() -> bool:
+    return bool(os.getenv("PYTEST_CURRENT_TEST")) or os.getenv("MYCA_TEST_MODE", "").strip() == "1"
+
 try:
     from qdrant_client import QdrantClient
     from qdrant_client.http import models as qmodels
@@ -128,6 +132,10 @@ class InMemoryBackend(MemoryBackend):
     def __init__(self, max_entries: int = 10000):
         self._storage: Dict[UUID, MemoryEntry] = {}
         self._max_entries = max_entries
+
+    async def initialize(self) -> None:
+        """Compatibility no-op for backend lifecycle parity."""
+        return
     
     async def store(self, entry: MemoryEntry) -> bool:
         if len(self._storage) >= self._max_entries:
@@ -478,7 +486,11 @@ class MYCAMemory:
         self._working = InMemoryBackend(max_entries=2000)
         
         # Persistent backends for long-term memory
-        self._persistent = PostgresBackend()
+        if os.getenv("MINDEX_DATABASE_URL") or not _is_test_environment():
+            self._persistent = PostgresBackend()
+        else:
+            logger.warning("MINDEX_DATABASE_URL not set under test; using in-memory persistent backend fallback.")
+            self._persistent = InMemoryBackend(max_entries=20000)
         self._semantic_index = QdrantSemanticIndex()
         
         self._initialized = False

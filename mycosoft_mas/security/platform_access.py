@@ -10,17 +10,26 @@ import os
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Set
 
+from mycosoft_mas.myca.os.staff_registry import load_staff_directory, resolve_person_id
+
 logger = logging.getLogger(__name__)
 
 AUTHORIZED_DOMAIN = "mycosoft.org"
 
+STAFF_DIRECTORY = load_staff_directory()
 LEADERSHIP: Dict[str, str] = {
-    "morgan@mycosoft.org": "CEO",
-    "rj@mycosoft.org": "COO",
-    "garret@mycosoft.org": "CTO",
+    staff.get("email", ""): staff.get("role", "leadership")
+    for person_id, staff in STAFF_DIRECTORY.items()
+    if person_id in {"morgan", "rj", "garret"}
+    and staff.get("email")
 }
 
-TEAM: Set[str] = set()
+TEAM: Set[str] = {
+    staff.get("email", "")
+    for person_id, staff in STAFF_DIRECTORY.items()
+    if person_id not in {"morgan", "rj", "garret"}
+    and staff.get("email")
+}
 
 LEADERSHIP_PERMISSIONS = frozenset({
     "read", "write", "delete", "deploy", "modify", "bulk_update",
@@ -99,11 +108,16 @@ class PlatformAccessControl:
         if platform == "slack":
             if "@" in sender_id:
                 return sender_id
-            return None
+            resolved = resolve_person_id(STAFF_DIRECTORY, platform="slack", sender_id=sender_id)
+            return STAFF_DIRECTORY.get(resolved, {}).get("email") if resolved else None
         if platform == "discord":
-            return self._discord_whitelist.get(sender_id)
+            return self._discord_whitelist.get(sender_id) or (
+                STAFF_DIRECTORY.get(resolve_person_id(STAFF_DIRECTORY, platform="discord", sender_id=sender_id) or "", {}).get("email")
+            )
         if platform in ("whatsapp", "signal"):
-            return self._phone_whitelist.get(sender_id)
+            return self._phone_whitelist.get(sender_id) or (
+                STAFF_DIRECTORY.get(resolve_person_id(STAFF_DIRECTORY, platform=platform, sender_id=sender_id) or "", {}).get("email")
+            )
         return None
 
     async def check_permission(

@@ -57,6 +57,73 @@ def broadcast_skill_progress(skill_id: str, message: str, percent: Optional[floa
                 WS_CLIENTS.discard(ws)
 
 
+def _env_flag(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _get_gateway_api_key() -> str:
+    for env_name in ("MYCA_GATEWAY_API_KEY", "MYCA_API_KEY", "MYCA_WORKSPACE_API_KEY"):
+        value = (os.getenv(env_name) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _get_bearer_token(request: web.Request) -> str:
+    auth = request.headers.get("Authorization", "").strip()
+    if not auth.lower().startswith("bearer "):
+        return ""
+    return auth[7:].strip()
+
+
+def _get_request_api_key(request: web.Request) -> str:
+    return (
+        request.headers.get("X-MYCA-API-Key", "").strip()
+        or request.headers.get("X-API-Key", "").strip()
+        or _get_bearer_token(request)
+    )
+
+
+def _is_trusted_remote(request: web.Request) -> bool:
+    trusted = {
+        "127.0.0.1",
+        "::1",
+        "localhost",
+        "192.168.0.191",
+        "192.168.0.188",
+    }
+    configured = os.getenv("MYCA_TRUSTED_IPS", "").strip()
+    if configured:
+        trusted.update(ip.strip() for ip in configured.split(",") if ip.strip())
+    remote = (request.remote or "").strip()
+    return remote in trusted
+
+
+def _is_authorized_request(request: web.Request) -> bool:
+    expected = _get_gateway_api_key()
+    provided = _get_request_api_key(request)
+    if expected and provided:
+        return hmac.compare_digest(expected, provided)
+    return _is_trusted_remote(request)
+
+
+def _auth_error() -> web.Response:
+    return web.json_response(
+        {"error": "unauthorized", "message": "Valid MYCA gateway credentials required."},
+        status=401,
+    )
+
+
+def _feature_disabled_error(feature: str) -> web.Response:
+    return web.json_response(
+        {"error": "disabled", "message": f"{feature} is disabled by runtime policy."},
+        status=403,
+    )
+
+
 async def handle_channels(request: web.Request) -> web.Response:
     """GET /channels — Per-channel connectivity status (Slack, Asana, Signal, Discord, WhatsApp)."""
     try:
@@ -86,6 +153,8 @@ async def handle_health(request: web.Request) -> web.Response:
 
 async def handle_status(request: web.Request) -> web.Response:
     """GET /status — Full daemon status."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     os_ref = request.app.get("myca_os")
     if not os_ref:
         return web.json_response({"error": "MYCA OS not attached"})
@@ -94,6 +163,8 @@ async def handle_status(request: web.Request) -> web.Response:
 
 async def handle_tasks_get(request: web.Request) -> web.Response:
     """GET /tasks — Current task queue."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     os_ref = request.app.get("myca_os")
     if not os_ref:
         return web.json_response({"tasks": [], "error": "no_os"})
@@ -113,6 +184,8 @@ async def handle_tasks_get(request: web.Request) -> web.Response:
 
 async def handle_tasks_post(request: web.Request) -> web.Response:
     """POST /tasks — Submit a new task."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     os_ref = request.app.get("myca_os")
     if not os_ref:
         return web.json_response({"error": "MYCA OS not attached"}, status=503)
@@ -145,6 +218,8 @@ async def handle_tasks_post(request: web.Request) -> web.Response:
 
 async def handle_message_post(request: web.Request) -> web.Response:
     """POST /message — Send a message to MYCA (she processes it like Morgan)."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     os_ref = request.app.get("myca_os")
     if not os_ref:
         return web.json_response({"error": "MYCA OS not attached"}, status=503)
@@ -159,8 +234,9 @@ async def handle_message_post(request: web.Request) -> web.Response:
     msg = {
         "source": body.get("source", "api"),
         "sender": body.get("sender", "api"),
+        "sender_id": body.get("sender_id"),
         "content": content,
-        "is_morgan": body.get("is_morgan", True),
+        "is_morgan": body.get("is_morgan", False),
     }
     asyncio.create_task(os_ref._handle_message(msg))
     return web.json_response({"status": "accepted", "content": content[:100]})
@@ -168,6 +244,10 @@ async def handle_message_post(request: web.Request) -> web.Response:
 
 async def handle_shell_post(request: web.Request) -> web.Response:
     """POST /shell — Execute a shell command (MYCA runs it)."""
+    if not _is_authorized_request(request):
+        return _auth_error()
+    if not _env_flag("MYCA_ENABLE_SHELL_API", default=False):
+        return _feature_disabled_error("Shell API")
     os_ref = request.app.get("myca_os")
     if not os_ref:
         return web.json_response({"error": "MYCA OS not attached"}, status=503)
@@ -200,6 +280,8 @@ async def handle_shell_post(request: web.Request) -> web.Response:
 
 async def handle_logs(request: web.Request) -> web.Response:
     """GET /logs — Tail last N log lines."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     n = int(request.query.get("n", "100"))
     n = min(n, LOG_BUFFER_MAX)
     lines = LOG_BUFFER[-n:] if LOG_BUFFER else []
@@ -208,11 +290,15 @@ async def handle_logs(request: web.Request) -> web.Response:
 
 async def handle_sessions(request: web.Request) -> web.Response:
     """GET /sessions — Active conversation sessions (placeholder)."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     return web.json_response({"sessions": []})
 
 
 async def handle_skills(request: web.Request) -> web.Response:
     """GET /skills — List available skills."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     try:
         from mycosoft_mas.myca.os.skills_manager import list_skills
         skills = list_skills()
@@ -223,6 +309,8 @@ async def handle_skills(request: web.Request) -> web.Response:
 
 async def handle_skills_run(request: web.Request) -> web.Response:
     """POST /skills/run — Run a skill by ID."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     os_ref = request.app.get("myca_os")
     try:
         body = await request.json()
@@ -242,6 +330,10 @@ async def handle_skills_run(request: web.Request) -> web.Response:
 
 async def handle_skills_install(request: web.Request) -> web.Response:
     """POST /skills/install — Install a skill from a git repository."""
+    if not _is_authorized_request(request):
+        return _auth_error()
+    if not _env_flag("MYCA_ENABLE_SKILL_INSTALL", default=False):
+        return _feature_disabled_error("Skill install API")
     try:
         body = await request.json()
     except Exception:
@@ -350,6 +442,8 @@ Reply in this thread. MYCA will summarize and flag overdue items."""
 
 async def handle_beto_onboarding_get(request: web.Request) -> web.Response:
     """GET /beto-onboarding — Beto onboarding checklist with completion status."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     try:
         from pathlib import Path
         import yaml
@@ -400,6 +494,8 @@ async def handle_beto_onboarding_get(request: web.Request) -> web.Response:
 
 async def handle_beto_onboarding_complete(request: web.Request) -> web.Response:
     """POST /beto-onboarding/{id}/complete — Mark Beto onboarding item complete."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     item_id = request.match_info.get("id", "").strip()
     if not item_id:
         return web.json_response({"error": "id required"}, status=400)
@@ -435,6 +531,8 @@ async def handle_beto_onboarding_complete(request: web.Request) -> web.Response:
 
 async def handle_investor_draft(request: web.Request) -> web.Response:
     """POST /investor-draft — Generate investor update draft (called by n8n quarterly)."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     body = {}
     ct = request.headers.get("Content-Type", "")
     if "application/json" in ct:
@@ -473,6 +571,8 @@ async def handle_investor_draft(request: web.Request) -> web.Response:
 
 async def handle_standup_prompt(request: web.Request) -> web.Response:
     """POST /standup-prompt — Post daily standup prompt to Discord/Slack (called by n8n at 11 AM Mon-Fri)."""
+    if not _is_authorized_request(request):
+        return _auth_error()
     os_ref = request.app.get("myca_os")
     if not os_ref:
         return web.json_response({"error": "MYCA OS not attached"}, status=503)
@@ -490,6 +590,8 @@ async def handle_standup_prompt(request: web.Request) -> web.Response:
 
 async def handle_ws(request: web.Request) -> web.WebSocketResponse:
     """WebSocket /ws — Real-time log streaming and task updates."""
+    if not _is_authorized_request(request):
+        raise web.HTTPUnauthorized(text="Valid MYCA gateway credentials required.")
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     WS_CLIENTS.add(ws)
