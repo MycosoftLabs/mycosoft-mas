@@ -80,6 +80,11 @@ MYCORRHIZAE_ADMIN_KEY=<from internal keys API or Mycorrhizae API>
 # Optional: Redis (if used by website server-side and Redis is on Sandbox)
 REDIS_URL=redis://192.168.0.187:6379
 
+# MYCA chat/voice – Ollama runs on MAS VM; at least one LLM key required for real AI
+OLLAMA_BASE_URL=http://192.168.0.188:11434
+OLLAMA_MODEL=llama3.3
+# At least one of: GROQ_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_AI_API_KEY
+
 # Local dev URL (for server-side redirects / callbacks)
 NEXT_PUBLIC_BASE_URL=http://localhost:3010
 ```

@@ -1,13 +1,25 @@
 # Master Document Index
 
+## BoostVC Compliance Checklist (Mar 5, 2026)
+- `docs/BOOSTVC_COMPLIANCE_CHECKLIST_MAR_2026.md` – **BoostVC compliance**: Annual operating plan, board materials, material business changes, books and records. Config: `config/board_meetings.yaml`, `docs/board/`.
+
 ## MYCA OpenWork Integration (Mar 5, 2026)
 - `docs/MYCA_OPENWORK_INTEGRATION_MAR05_2026.md` – **Phases 1–5 complete**: OpenWork orchestrator, CDP browser, skills manager, webhooks, n8n bridge, 3 workflows, Ollama fallback, deploy script. Use for MYCA VM 191 integration.
+
+## MYCA Fallback-Only Fix (Mar 5, 2026)
+- `docs/MYCA_FALLBACK_FIX_MAR05_2026.md` – **Fix**: OLLAMA_BASE_URL default to MAS VM (188:11434); env vars for real AI; troubleshooting when MYCA shows only myca-local-fallback.
 
 ## Request Flow Architecture (Mar 5, 2026)
 - `docs/REQUEST_FLOW_ARCHITECTURE_MAR05_2026.md` – **Request flows**: Browser → Cloudflare → VMs; Website → MAS/MINDEX; MycoBrain heartbeat; VM layout summary. Use for deployment and debugging.
 
 ## Organizational Structure Update (Mar 5, 2026)
 - `docs/ORGANIZATIONAL_STRUCTURE_UPDATE_COMPLETE_MAR05_2026.md` – **Roles corrected**: Morgan = CEO/CTO/COO; RJ = Board Member + MYCA 2nd Key; Garret = Business Development. Memory, CLAUDE.md, website team-data updated.
+
+## Grounding Production Enable (Mar 5, 2026)
+- `docs/GROUNDING_PRODUCTION_ENABLE_MAR05_2026.md` – **Enable Grounded Cognition**: `MYCA_GROUNDED_COGNITION=1`, `STATE_SERVICE_URL`, StateService deploy, MINDEX grounding endpoints, Grounding Dashboard at `/dashboard/grounding`.
+
+## Proxmox and CREP Restore (Mar 5, 2026)
+- `docs/PROXMOX_CREP_RESTORE_MAR05_2026.md` – **Proxmox fix and CREP restore**: `fix_proxmox_firewall.sh`, `start_crep_collectors.sh`, Proxmox check in autostart-healthcheck, CREP in MAS `/health`. Use for VM 188 CREP deployment.
 
 ## MYCA Living Employee Full Integration Phase 0 (Mar 2, 2026)
 - `docs/MYCA_LIVING_EMPLOYEE_FULL_INTEGRATION_PHASE0_COMPLETE_MAR02_2026.md` – **Phase 0 complete**: Memory injection, MAS memory API, MINDEX KG, CREP, Earth2, MycoBrain bridges; context assembly pipeline in llm_brain. MYCA OS now grounded in all platform systems before computer-use.
