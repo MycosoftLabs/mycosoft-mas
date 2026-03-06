@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
-"""Deploy MINDEX API to VM 189"""
+"""Deploy MINDEX API to VM 189. Prefer docker compose on VM. Loads .credentials.local."""
 
 import paramiko
 import sys
 import os
+from pathlib import Path
 
-# Load credentials from environment
+# Load credentials from .credentials.local
+creds = Path(__file__).resolve().parent.parent / ".credentials.local"
+if creds.exists():
+    for line in creds.read_text().splitlines():
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ[k.strip()] = v.strip()
+
 VM_189 = os.environ.get("MINDEX_VM_IP", "192.168.0.189")
 SSH_USER = os.environ.get("VM_USER", "mycosoft")
-SSH_PASS = os.environ.get("VM_PASSWORD")
+SSH_PASS = os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD")
 
 if not SSH_PASS:
     print("ERROR: VM_PASSWORD environment variable is not set.")
@@ -27,55 +35,26 @@ def main():
         client.connect(VM_189, username=SSH_USER, password=SSH_PASS, timeout=30)
         
         # Pull latest code
-        print("\n[0/3] Pulling latest code...")
-        cmd = "cd /home/mycosoft/mindex && git fetch && git reset --hard origin/main && git log -1 --oneline"
+        print("\n[1/3] Pulling latest code...")
+        cmd = "cd /home/mycosoft/mindex && git fetch origin && git reset --hard origin/main && git log -1 --oneline"
         stdin, stdout, stderr = client.exec_command(cmd, timeout=60)
         print(stdout.read().decode('utf-8', errors='replace'))
         
-        # Build Docker image
-        print("\n[1/3] Building MINDEX API Docker image (no cache)...")
-        cmd = "cd /home/mycosoft/mindex && docker build --no-cache -t mindex-api:latest . 2>&1 | tail -30"
-        stdin, stdout, stderr = client.exec_command(cmd, timeout=600)
+        # Stop, build, and start via docker compose (VM has .env with DB password). Service is 'api'.
+        print("\n[2/3] Stopping and rebuilding via docker compose...")
+        cmd = "cd /home/mycosoft/mindex && docker compose stop api 2>/dev/null; docker compose build --no-cache api 2>&1 | tail -60"
+        stdin, stdout, stderr = client.exec_command(cmd, timeout=900)
         out = stdout.read().decode('utf-8', errors='replace')
         print(out)
-        exit_code = stdout.channel.recv_exit_status()
-        if exit_code != 0:
-            print(f"Build may have failed (exit {exit_code})")
-            # Check if image exists anyway
-            stdin, stdout, stderr = client.exec_command("docker images mindex-api:latest --format '{{.ID}}'", timeout=30)
-            image_id = stdout.read().decode('utf-8', errors='replace').strip()
-            if not image_id:
-                print("No image created, aborting.")
-                return
-            print(f"Image exists: {image_id}, continuing...")
+        if stdout.channel.recv_exit_status() != 0:
+            print("Build may have failed - check output above")
         
-        # Stop and remove old container
-        print("\n[2/3] Stopping old container...")
-        cmd = "docker stop mindex-api 2>/dev/null; docker rm mindex-api 2>/dev/null; echo 'Done'"
-        stdin, stdout, stderr = client.exec_command(cmd, timeout=30)
-        print(stdout.read().decode('utf-8', errors='replace'))
-        
-        # Start new container
         print("\n[3/3] Starting MINDEX API container...")
-        cmd = """docker run -d --name mindex-api \
-          --restart unless-stopped \
-          --network host \
-          -e MINDEX_DB_HOST=127.0.0.1 \
-          -e MINDEX_DB_PORT=5432 \
-          -e MINDEX_DB_USER=mycosoft \
-          -e MINDEX_DB_PASSWORD=REDACTED_DB_PASSWORD \
-          -e MINDEX_DB_NAME=mindex \
-          -e REDIS_URL=redis://127.0.0.1:6379/0 \
-          -e QDRANT_URL=http://127.0.0.1:6333 \
-          -e API_HOST=0.0.0.0 \
-          -e API_PORT=8000 \
-          -e MINDEX_API_KEY=mindex_dev_key_2026 \
-          mindex-api:latest"""
+        cmd = "cd /home/mycosoft/mindex && docker compose up -d api"
         stdin, stdout, stderr = client.exec_command(cmd, timeout=60)
-        print(stdout.read().decode('utf-8', errors='replace'))
+        out = stdout.read().decode('utf-8', errors='replace')
         err = stderr.read().decode('utf-8', errors='replace')
-        if err:
-            print(f"Stderr: {err}")
+        print(out or err)
         
         # Check status
         print("\n[+] Container status:")
@@ -86,7 +65,7 @@ def main():
         print("\n[+] Health check:")
         import time
         time.sleep(5)
-        stdin, stdout, stderr = client.exec_command("curl -s http://127.0.0.1:8000/api/v1/health | head -200", timeout=30)
+        stdin, stdout, stderr = client.exec_command("curl -s http://127.0.0.1:8000/health 2>/dev/null || curl -s http://127.0.0.1:8000/api/v1/health", timeout=30)
         print(stdout.read().decode('utf-8', errors='replace'))
         
     except Exception as e:

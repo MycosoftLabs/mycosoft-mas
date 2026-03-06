@@ -80,16 +80,9 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
 
 Expected: Container running, HTTP 200.
 
-### Step 7: Purge Cloudflare cache
+### Step 7: Purge Cloudflare cache — AUTOMATIC (never ask user)
 
-Run `python -c "from _cloudflare_cache import purge_everything; purge_everything()"` from website repo. Or use the Cloudflare API:
-
-```bash
-curl -X POST "https://api.cloudflare.com/client/v4/zones/ZONE_ID/purge_cache" \
-  -H "Authorization: Bearer CF_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  --data '{"purge_everything":true}'
-```
+**The Python deploy scripts run Cloudflare purge automatically.** Use `_tmp_deploy_sandbox.py` or `_complete_deploy_sandbox.py` from the website repo; they call `purge_everything()` after a successful deploy. **NEVER ask the user to purge Cloudflare manually.** If running deploy steps manually, run from website repo: `python -c "from _cloudflare_cache import purge_everything; purge_everything()"`
 
 ### Step 8: Verify deployment
 
@@ -117,4 +110,4 @@ Compare localhost:3010 (dev) vs sandbox.mycosoft.com (production) to confirm cha
 - **Container won't start**: Check `docker logs`, fix config, retry.
 - **Script crashes**: Fix encoding/unicode issues in deploy script; retry.
 - **Videos not loading**: Verify NAS mount in docker run command.
-- **Changes not visible**: Purge Cloudflare cache yourself.
+- **Changes not visible**: Run purge from script (`purge_everything()` in _cloudflare_cache). Never ask user to purge.

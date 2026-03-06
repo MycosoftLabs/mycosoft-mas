@@ -44,7 +44,7 @@ try:
     print(out.strip())
 
     print("2. Building Docker image (no cache)...")
-    ec, out, err = run(f"cd {WEB_DIR} && docker build --no-cache -t mycosoft-always-on-mycosoft-website:latest . 2>&1", timeout=1200, read_timeout=1800)
+    ec, out, err = run(f"cd {WEB_DIR} && docker build --no-cache -t mycosoft-always-on-mycosoft-website:latest . 2>&1", timeout=3600, read_timeout=4800)
     if ec != 0:
         print("FAIL: Docker build. Last 1500 chars:", (err or out)[-1500:])
         sys.exit(1)
