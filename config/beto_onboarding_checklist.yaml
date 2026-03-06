@@ -1,0 +1,56 @@
+# Beto Onboarding Checklist — MYCA tracks completion, sends reminders, reports to Morgan
+# Date: 2026-03-05
+
+checklist:
+  - id: beto-01
+    title: "Access setup"
+    description: "Get Slack, Discord, Asana, and email access"
+    due_days: 3
+    reminder_interval_days: 1
+    completed: false
+
+  - id: beto-02
+    title: "Codebase orientation"
+    description: "Clone repos, run dev environment, understand MAS architecture"
+    due_days: 5
+    reminder_interval_days: 2
+    completed: false
+
+  - id: beto-03
+    title: "MYCA introduction"
+    description: "First Discord/Slack interaction with MYCA, understand task flow"
+    due_days: 5
+    reminder_interval_days: 2
+    completed: false
+
+  - id: beto-04
+    title: "First assigned task"
+    description: "Complete one task assigned by Morgan via MYCA"
+    due_days: 7
+    reminder_interval_days: 2
+    completed: false
+
+  - id: beto-05
+    title: "Standup participation"
+    description: "Respond to daily standup prompt at least 3 times"
+    due_days: 10
+    reminder_interval_days: 2
+    completed: false
+
+  - id: beto-06
+    title: "Documentation review"
+    description: "Read CURSOR_DOCS_INDEX, SYSTEM_REGISTRY, key architecture docs"
+    due_days: 7
+    reminder_interval_days: 2
+    completed: false
+
+  - id: beto-07
+    title: "Onboarding complete"
+    description: "All above items done, Morgan signs off"
+    due_days: 14
+    reminder_interval_days: 3
+    completed: false
+
+reminder_channel: discord
+report_to: morgan
+storage_key: "working:beto_onboarding"

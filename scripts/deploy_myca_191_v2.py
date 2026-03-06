@@ -111,7 +111,18 @@ def main():
     run("grep -q OLLAMA_URL /opt/myca/.env 2>/dev/null || echo 'OLLAMA_URL=http://192.168.0.188:11434' | sudo tee -a /opt/myca/.env", check=False)
     run("grep -q OLLAMA_MODEL /opt/myca/.env 2>/dev/null || echo 'OLLAMA_MODEL=llama3.1:8b' | sudo tee -a /opt/myca/.env", check=False)
 
-    print("\n[6] Restarting MYCA OS...")
+    print("\n[6] Ensuring Evolution API (WhatsApp) container...")
+    # Evolution API for WhatsApp — port 8083, instance 'myca'
+    run(
+        "docker ps -q -f name=evolution-api 2>/dev/null | grep -q . || "
+        "(docker pull atendai/evolution-api:latest 2>/dev/null || true) && "
+        "docker run -d --name evolution-api -p 8083:8080 --restart unless-stopped "
+        "-e AUTHENTICATION_API_KEY=myca-whatsapp-secret "
+        "atendai/evolution-api:latest 2>/dev/null || true",
+        check=False,
+    )
+
+    print("\n[7] Restarting MYCA OS...")
     run("sudo systemctl restart myca-os 2>/dev/null || true", check=False)
 
     ssh.close()

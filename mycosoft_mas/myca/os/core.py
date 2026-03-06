@@ -503,6 +503,26 @@ class MycaOS:
                         except Exception:
                             pass
 
+                        # Ethics review gate — every autonomous action passes before execution
+                        try:
+                            from mycosoft_mas.ethics.review_gate import run_ethics_review, ReviewOutcome
+                            review = await run_ethics_review(
+                                task,
+                                mindex_client=mb if hasattr(mb, "search") else None,
+                            )
+                            if review.outcome == ReviewOutcome.BLOCK:
+                                block_reason = "; ".join(review.reasons[:3]) if review.reasons else "Ethics gate blocked"
+                                logger.warning(f"Ethics BLOCK: {self.ctx.current_task} — {block_reason}")
+                                self.executive.mark_task_failed(task, f"Ethics blocked: {block_reason}")
+                                self.ctx.current_task = None
+                                self.ctx.state = MycaState.AWAKE
+                                await asyncio.sleep(self.TASK_PROCESS_INTERVAL)
+                                continue
+                            if review.outcome == ReviewOutcome.WARN:
+                                logger.info(f"Ethics WARN for {self.ctx.current_task}: {review.reasons[:2]}")
+                        except Exception as e:
+                            logger.debug("Ethics review skipped: %s", e)
+
                         result = await self._execute_task(task)
 
                         if result.get("status") == "completed":
@@ -527,6 +547,23 @@ class MycaOS:
                                     )
                             except Exception:
                                 pass
+
+                            # E2E demo: deployment tasks send Discord confirmation and store EP
+                            if task.get("type") == "deployment":
+                                try:
+                                    await self.comms.send_to_morgan(
+                                        f"Deployment completed: {result.get('summary', 'Website deployed to sandbox.')}",
+                                        channel="discord",
+                                    )
+                                    if hasattr(self.mindex_bridge, "store_experience_packet"):
+                                        await self.mindex_bridge.store_experience_packet(
+                                            task=task,
+                                            result=result,
+                                            session_id=task.get("session_id", "e2e-demo"),
+                                            user_id=task.get("source"),
+                                        )
+                                except Exception as e:
+                                    logger.warning("E2E deploy confirmation failed: %s", e)
 
                         if result.get("status") == "failed":
                             self.executive.mark_task_failed(task, result.get("error", "Unknown error"))

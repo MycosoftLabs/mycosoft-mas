@@ -54,7 +54,7 @@ class GroundingAgent(BaseAgent if BaseAgent is not object else object):  # type:
                 user_id=task.get("user_id"),
             )
             await gate.attach_self_state(ep)
-            await gate.attach_world_state(ep, task.get("context"))
+            await gate.attach_world_state(ep)
             valid, errors = gate.validate(ep)
             ep_id = getattr(ep, "id", None) or "ep_unknown"
             return {"status": "success", "result": {"ep_id": ep_id, "valid": valid, "errors": errors}}

@@ -436,4 +436,20 @@ if (Test-Path $dockerHealthScript) {
     Write-Host "[SKIP]   docker-healthcheck.ps1 not found" -ForegroundColor Gray
 }
 
+# ── Proxmox API (192.168.0.105:8006) ─────────────────────────────────────────
+
+Write-Host ""
+Write-Host "─── Proxmox API ───" -ForegroundColor Cyan
+try {
+    $proxmoxResult = Test-NetConnection -ComputerName "192.168.0.105" -Port 8006 -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+    if ($proxmoxResult.TcpTestSucceeded) {
+        Write-Host "[OK]     Proxmox API reachable (192.168.0.105:8006)" -ForegroundColor Green
+    } else {
+        Write-Host "[WARN]   Proxmox API unreachable (192.168.0.105:8006)" -ForegroundColor Yellow
+        Write-Host "         Run scripts/fix_proxmox_firewall.sh on Proxmox host" -ForegroundColor Gray
+    }
+} catch {
+    Write-Host "[WARN]   Proxmox check failed: $($_.Exception.Message)" -ForegroundColor Yellow
+}
+
 Write-Host ""

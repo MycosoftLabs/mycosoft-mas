@@ -49,6 +49,7 @@ class ExecutiveTask:
     priority: TaskPriority = TaskPriority.MEDIUM
     task_type: str = "general"  # coding, research, communication, deployment, decision, analysis
     source: str = "self"        # morgan, asana, discord, self, system
+    assigned_to: Optional[str] = None  # morgan, garret, rj, beto — from org_roles.yaml
     assigned_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     due: Optional[datetime] = None
     status: str = "pending"     # pending, in_progress, completed, blocked, cancelled
@@ -123,7 +124,7 @@ class ExecutiveSystem:
             if bridge and getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
                 async with bridge._pg_pool.acquire() as conn:
                     rows = await conn.fetch(
-                        """SELECT id, title, description, priority, task_type, source, status
+                        """SELECT id, title, description, priority, task_type, source, status, assigned_to
                            FROM myca_task_queue WHERE status IN ('pending', 'in_progress')
                            ORDER BY assigned_at"""
                     )
@@ -135,6 +136,7 @@ class ExecutiveSystem:
                             task_type=row.get("task_type", "general"),
                             source=row.get("source", "self"),
                             status=row.get("status", "pending"),
+                            assigned_to=row.get("assigned_to"),
                             db_id=row["id"],
                         ))
                     if rows:
@@ -187,19 +189,37 @@ class ExecutiveSystem:
         }
 
     def add_task(self, title: str, description: str, priority: str = "medium",
-                 task_type: str = "general", source: str = "self") -> ExecutiveTask:
-        """Add a task to the queue."""
+                 task_type: str = "general", source: str = "self",
+                 assigned_to: Optional[str] = None) -> ExecutiveTask:
+        """Add a task to the queue. assigned_to defaults to role from task_type (org_roles)."""
+        if assigned_to is None:
+            assigned_to = self._suggest_role_for_task_type(task_type)
         task = ExecutiveTask(
             title=title,
             description=description,
             priority=TaskPriority(priority),
             task_type=task_type,
             source=source,
+            assigned_to=assigned_to,
         )
         self._task_queue.append(task)
         asyncio.create_task(self._persist_task_add(task))
         logger.info(f"Task added [{priority}]: {title}")
         return task
+
+    def _suggest_role_for_task_type(self, task_type: str) -> str:
+        """Suggest assigned_to role from task_type using org_roles.yaml task_type_to_role."""
+        try:
+            from pathlib import Path
+            import yaml
+            roles_path = Path(__file__).resolve().parents[4] / "config" / "org_roles.yaml"
+            if roles_path.exists():
+                cfg = yaml.safe_load(roles_path.read_text())
+                mapping = cfg.get("task_type_to_role", {})
+                return mapping.get(task_type, "morgan")
+        except Exception as e:
+            logger.debug("org_roles load failed, defaulting to morgan: %s", e)
+        return "morgan"
 
     async def _persist_task_add(self, task: ExecutiveTask):
         """Insert task into myca_task_queue."""
@@ -208,9 +228,10 @@ class ExecutiveSystem:
             if bridge and getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
                 async with bridge._pg_pool.acquire() as conn:
                     task.db_id = await conn.fetchval(
-                        """INSERT INTO myca_task_queue (title, description, priority, task_type, source, status)
-                           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id""",
+                        """INSERT INTO myca_task_queue (title, description, priority, task_type, source, status, assigned_to)
+                           VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id""",
                         task.title, task.description, task.priority.value, task.task_type, task.source, task.status,
+                        task.assigned_to,
                     )
         except Exception as e:
             logger.warning("Task DB insert failed: %s", e)
@@ -281,13 +302,14 @@ class ExecutiveSystem:
 
         # Parse Morgan's message for actionable directives
         if any(kw in content.lower() for kw in ["do", "build", "fix", "create", "deploy", "update"]):
-            # Action directive — create task
+            # Action directive — create task (Morgan's directives go to Morgan)
             task = self.add_task(
                 title=content[:100],
                 description=content,
                 priority="high",
                 task_type=self._classify_task_type(content),
                 source="morgan",
+                assigned_to="morgan",
             )
             return (
                 f"Got it. I've added this to my queue as high priority: '{task.title}'. "

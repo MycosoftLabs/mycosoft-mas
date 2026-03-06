@@ -15,6 +15,7 @@ from mycosoft_mas.ethics.attention_budget import AttentionBudget
 from mycosoft_mas.ethics.vessels import DevelopmentalVessel, get_vessel_prompt, get_gate_vessels
 from mycosoft_mas.ethics.simulator import SecondOrderSimulator, SimulationResult, CausalNode
 from mycosoft_mas.ethics.sandbox_manager import SandboxManager, SandboxSession, SessionState, get_sandbox_manager
+from mycosoft_mas.ethics.review_gate import run_ethics_review, ReviewOutcome, ReviewResult
 
 __all__ = [
     "EthicsEngine",
@@ -39,4 +40,7 @@ __all__ = [
     "SandboxSession",
     "SessionState",
     "get_sandbox_manager",
+    "run_ethics_review",
+    "ReviewOutcome",
+    "ReviewResult",
 ]

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Health Check Module - February 6, 2026
 
 Health and readiness checks.
@@ -141,13 +141,50 @@ class HealthChecker:
                 status=HealthStatus.DEGRADED,
                 message=str(e)
             )
-    
+
+    async def check_crep(self) -> ComponentHealth:
+        """Check CREP Gateway (aviation, maritime, fishing intel)."""
+        import time
+
+        crep_url = os.getenv("CREP_GATEWAY_URL", "http://localhost:3020")
+        health_url = f"{crep_url.rstrip('/')}/health"
+        start = time.time()
+
+        try:
+            import httpx
+
+            async with httpx.AsyncClient(timeout=5) as client:
+                r = await client.get(health_url)
+                latency = (time.time() - start) * 1000
+
+            if r.status_code == 200:
+                data = r.json()
+                return ComponentHealth(
+                    name="crep",
+                    status=HealthStatus.HEALTHY,
+                    latency_ms=latency,
+                    details=data.get("services"),
+                )
+            return ComponentHealth(
+                name="crep",
+                status=HealthStatus.DEGRADED,
+                message=f"HTTP {r.status_code}",
+                latency_ms=latency,
+            )
+        except Exception as e:
+            return ComponentHealth(
+                name="crep",
+                status=HealthStatus.DEGRADED,
+                message=str(e),
+            )
+
     async def check_all(self) -> Dict[str, Any]:
         """Run all health checks."""
         checks = await asyncio.gather(
             self.check_database(),
             self.check_redis(),
             self.check_collectors(),
+            self.check_crep(),
             return_exceptions=True
         )
         

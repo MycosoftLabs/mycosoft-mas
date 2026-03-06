@@ -102,7 +102,27 @@ class GroundingGate:
         """
         Attach SelfState snapshot with 500ms timeout.
         Fallback to minimal SelfState on timeout.
+        When STATE_SERVICE_URL is set, uses StateService /state for faster path.
         """
+        import os
+        state_url = os.getenv("STATE_SERVICE_URL", "").rstrip("/")
+        if state_url:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=SELF_STATE_TIMEOUT) as client:
+                    r = await client.get(f"{state_url}/state")
+                    if r.status_code == 200:
+                        data = r.json()
+                        ep.self_state = SelfState(
+                            snapshot_ts=data.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                            services=data.get("services", {}),
+                            agents=data.get("agents", {}),
+                            active_plans=data.get("active_goals", []),
+                        )
+                        return ep
+            except Exception as e:
+                logger.debug("StateService /state unavailable, falling back: %s", e)
+
         services: Dict[str, Any] = {}
         agents: Dict[str, Any] = {}
         active_plans: List[str] = []
@@ -180,8 +200,29 @@ class GroundingGate:
     async def attach_world_state(self, ep: ExperiencePacket) -> ExperiencePacket:
         """
         Attach WorldStateRef from cached context with 1s timeout.
-        Uses WorldModel.get_cached_context() for fast path.
+        When STATE_SERVICE_URL is set, uses StateService /world for faster path.
+        Otherwise uses WorldModel.get_cached_context().
         """
+        import os
+        state_url = os.getenv("STATE_SERVICE_URL", "").rstrip("/")
+        if state_url:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=WORLD_STATE_TIMEOUT) as client:
+                    r = await client.get(f"{state_url}/world")
+                    if r.status_code == 200:
+                        data = r.json()
+                        ep.world_state = WorldStateRef(
+                            snapshot_ts=data.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                            sources=data.get("sources", []),
+                            freshness=data.get("freshness", "unknown"),
+                            summary=data.get("summary"),
+                            nlm_prediction=None,
+                        )
+                        return ep
+            except Exception as e:
+                logger.debug("StateService /world unavailable, falling back: %s", e)
+
         sources: List[str] = []
         summary: Optional[str] = None
         freshness = "unknown"

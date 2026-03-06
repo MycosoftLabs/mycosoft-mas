@@ -195,6 +195,67 @@ class MINDEXBridge:
             layer="semantic",
         )
 
+    # ── Experience Packets (Grounded Cognition) ────────────────────
+
+    async def store_experience_packet(
+        self,
+        task: dict,
+        result: dict,
+        session_id: str = "e2e-demo",
+        user_id: Optional[str] = None,
+    ) -> Optional[str]:
+        """Store a deployment experience packet to MINDEX for grounded cognition.
+
+        Used by e2e demo: Discord -> deploy -> confirm -> EP logged.
+        Soft-fail: returns None on error, EP id on success.
+        """
+        import uuid
+        if not self._session or self._session.closed:
+            return None
+        ep_id = str(uuid.uuid4())
+        user_id = user_id or task.get("source", "morgan")
+        body = {
+            "id": ep_id,
+            "session_id": session_id,
+            "user_id": user_id,
+            "ground_truth": {
+                "task_type": task.get("type", "deployment"),
+                "target": task.get("target", "website"),
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "status": result.get("status", "completed"),
+            },
+            "observation": {
+                "modality": "log",
+                "raw_payload": json.dumps({
+                    "task": {k: v for k, v in task.items() if k not in ("raw",)},
+                    "result": result,
+                }),
+            },
+            "self_state": {},
+            "world_state": {},
+            "uncertainty": {},
+            "provenance": {"source": "myca_os", "demo": "e2e-deploy"},
+        }
+        headers = {}
+        api_key = os.getenv("MINDEX_API_KEY") or os.getenv("API_KEYS", "").split(",")[0].strip()
+        if api_key:
+            headers["X-API-Key"] = api_key
+        try:
+            async with self._session.post(
+                f"{self._mindex_api.rstrip('/')}/api/mindex/grounding/experience-packets",
+                json=body,
+                headers=headers or None,
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status in (200, 201):
+                    data = await resp.json()
+                    logger.info(f"EP stored: {data.get('id', ep_id)}")
+                    return data.get("id", ep_id)
+                logger.warning(f"EP store failed: {resp.status} {await resp.text()}")
+        except Exception as e:
+            logger.warning(f"EP store failed: {e}")
+        return None
+
     # ── Event Logging ────────────────────────────────────────────
 
     async def store_event(self, event: dict):

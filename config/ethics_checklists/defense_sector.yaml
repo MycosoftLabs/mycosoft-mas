@@ -1,0 +1,35 @@
+# Defense Sector Ethics Checklist
+# Dual-use, export control, impact assessment
+# Created: March 5, 2026 — MYCA Loop Closure
+
+name: defense_sector
+description: Ethics review for tasks involving defense sector, dual-use technology, or export-controlled work
+
+checks:
+  - id: dual_use_review
+    name: Dual-use review
+    description: Is this technology or output usable for weapons or military without significant modification?
+    required: true
+  - id: export_control
+    name: Export control
+    description: Does this involve ITAR, EAR, or other export-controlled technology?
+    required: true
+  - id: impact_assessment
+    name: Impact assessment
+    description: Have downstream military or harmful uses been assessed?
+    required: true
+  - id: classification
+    name: Classification check
+    description: Is any classified or sensitive national security information involved?
+    required: true
+
+block_triggers:
+  - "weapons"
+  - "military targeting"
+  - "ITAR"
+  - "classified"
+
+warn_triggers:
+  - "dual-use"
+  - "export"
+  - "defense"

@@ -1,0 +1,36 @@
+# General Operations Ethics Checklist
+# Truth verification, incentive alignment, horizon check
+# Created: March 5, 2026 — MYCA Loop Closure
+
+name: general_operations
+description: Default ethics checklist for everyday MYCA operations
+
+checks:
+  - id: truth_verification
+    name: Truth verification
+    description: Are claims fact-checked against MINDEX or authoritative sources?
+    required: true
+  - id: incentive_alignment
+    name: Incentive alignment
+    description: Does this avoid manipulation or hidden agendas?
+    required: true
+  - id: horizon_check
+    name: Horizon check
+    description: Are long-term consequences considered?
+    required: true
+  - id: human_override
+    name: Human override
+    description: Can a human revoke or correct this action if needed?
+    required: true
+
+block_triggers:
+  - "mislead"
+  - "deceive"
+  - "manipulate"
+  - "irreversible harm"
+
+warn_triggers:
+  - "autonomous"
+  - "external system"
+  - "financial"
+  - "legal"

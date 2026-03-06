@@ -98,7 +98,9 @@ vault-data/
 
 # Credential patterns
 *credentials*
+*CREDS*
 *password*
+docs/MYCA CREDS.md
 *.pem
 *.key
 !*.md

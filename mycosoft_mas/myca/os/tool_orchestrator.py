@@ -512,34 +512,145 @@ print(asyncio.run(click()))
         target = task.get("target", "")  # mas, mindex, website, myca
         action = task.get("action", "restart")  # restart, rebuild, update
 
+        # Infer target from description if not set (e.g. Morgan: "deploy website to sandbox")
+        if not target and task.get("type") == "deployment":
+            desc = (task.get("description") or "") + " " + (task.get("title") or "")
+            desc = desc.lower()
+            if "website" in desc or "sandbox" in desc:
+                target = "website"
+            elif "mas" in desc or "orchestrator" in desc:
+                target = "mas"
+            elif "mindex" in desc:
+                target = "mindex"
+
         if target == "myca":
             # Local deployment on VM 191
             cmd = [self._docker, "compose", "-f",
                    "/opt/myca/docker-compose.myca-workspace.yml",
                    "up", "-d", "--build"]
-        elif target in ("mas", "mindex", "website"):
-            # Remote deployment via SSH (needs approval)
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+            return {
+                "status": "completed" if proc.returncode == 0 else "failed",
+                "output": stdout.decode()[:2000],
+                "summary": f"Deployed {target}: {action}",
+            }
+        elif target == "website":
+            # Deploy website to Sandbox VM 187 (SSH, build, restart, Cloudflare purge)
+            return await self._deploy_website_sandbox(task)
+        elif target in ("mas", "mindex"):
             return {
                 "status": "needs_approval",
                 "summary": f"Deployment to {target} requires Morgan's approval",
                 "target": target,
                 "action": action,
             }
+        elif not target:
+            return {"status": "failed", "error": "Could not infer deployment target from task"}
         else:
             return {"status": "failed", "error": f"Unknown deployment target: {target}"}
 
-        proc = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await proc.communicate()
+    async def _deploy_website_sandbox(self, task: dict) -> dict:
+        """Deploy website to Sandbox VM 187: pull, build, restart, purge Cloudflare."""
+        import paramiko
+
+        vm = os.getenv("SANDBOX_VM_IP", "192.168.0.187")
+        user = os.getenv("VM_USER", "mycosoft")
+        password = os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD")
+
+        if not password:
+            return {
+                "status": "failed",
+                "error": "VM_PASSWORD or VM_SSH_PASSWORD not set — cannot SSH to Sandbox",
+            }
+
+        def _ssh_deploy():
+            client = paramiko.SSHClient()
+            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            client.connect(vm, username=user, password=password, timeout=30)
+            try:
+                def run(cmd, timeout=600):
+                    _, stdout, stderr = client.exec_command(cmd, timeout=timeout)
+                    out = stdout.read().decode("utf-8", errors="replace")
+                    err = stderr.read().decode("utf-8", errors="replace")
+                    return stdout.channel.recv_exit_status(), out, err
+
+                # 1. Pull
+                ec, out, err = run("cd /opt/mycosoft/website && git fetch && git reset --hard origin/main && git log -1 --oneline")
+                if ec != 0:
+                    return False, f"Git pull failed: {err[:500]}"
+
+                # 2. Build
+                ec, out, err = run("cd /opt/mycosoft/website && docker build --no-cache -t mycosoft-always-on-mycosoft-website:latest . 2>&1", timeout=600)
+                if ec != 0:
+                    return False, f"Docker build failed: {err[:500]}"
+
+                # 3. Stop/remove old container
+                run("docker stop mycosoft-website 2>/dev/null; docker rm mycosoft-website 2>/dev/null; echo done")
+
+                # 4. Start with NAS mount
+                ec, out, err = run(
+                    "docker run -d --name mycosoft-website -p 3000:3000 "
+                    "-v /opt/mycosoft/media/website/assets:/app/public/assets:ro "
+                    "--restart unless-stopped mycosoft-always-on-mycosoft-website:latest"
+                )
+                if ec != 0:
+                    return False, f"Container start failed: {err[:500]}"
+
+                return True, "Deployed"
+            finally:
+                client.close()
+
+        try:
+            success, msg = await asyncio.to_thread(_ssh_deploy)
+        except Exception as e:
+            return {"status": "failed", "error": str(e), "summary": "Website deployment failed"}
+
+        if not success:
+            return {"status": "failed", "error": msg, "summary": "Website deployment failed"}
+
+        # 5. Purge Cloudflare
+        purge_ok = await self._purge_cloudflare()
+
+        summary = "Website deployed to sandbox.mycosoft.com. Container restarted with NAS mount."
+        if purge_ok:
+            summary += " Cloudflare cache purged."
+        else:
+            summary += " (Cloudflare purge skipped — set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ZONE_ID to enable.)"
 
         return {
-            "status": "completed" if proc.returncode == 0 else "failed",
-            "output": stdout.decode()[:2000],
-            "summary": f"Deployed {target}: {action}",
+            "status": "completed",
+            "output": msg,
+            "summary": summary,
+            "target": "website",
+            "cloudflare_purged": purge_ok,
         }
+
+    async def _purge_cloudflare(self) -> bool:
+        """Purge Cloudflare cache (purge_everything). Returns True on success."""
+        token = os.getenv("CLOUDFLARE_API_TOKEN")
+        zone_id = os.getenv("CLOUDFLARE_ZONE_ID")
+        if not token or not zone_id:
+            logger.debug("Cloudflare purge skipped: CLOUDFLARE_API_TOKEN/CLOUDFLARE_ZONE_ID not set")
+            return False
+        try:
+            import requests
+            url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache"
+            resp = requests.post(
+                url,
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                json={"purge_everything": True},
+                timeout=20,
+            )
+            data = resp.json()
+            return resp.ok and data.get("success") is True
+        except Exception as e:
+            logger.warning("Cloudflare purge failed: %s", e)
+            return False
 
     # ── Desktop / Computer Use ───────────────────────────────────
 

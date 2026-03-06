@@ -57,6 +57,16 @@ def broadcast_skill_progress(skill_id: str, message: str, percent: Optional[floa
                 WS_CLIENTS.discard(ws)
 
 
+async def handle_channels(request: web.Request) -> web.Response:
+    """GET /channels — Per-channel connectivity status (Slack, Asana, Signal, Discord, WhatsApp)."""
+    try:
+        from mycosoft_mas.myca.os.channels_health import get_all_channel_status
+        data = await get_all_channel_status()
+        return web.json_response(data)
+    except Exception as e:
+        return web.json_response({"channels": {}, "error": str(e)})
+
+
 async def handle_health(request: web.Request) -> web.Response:
     """GET /health — Health check for load balancers and monitoring."""
     os_ref = request.app.get("myca_os")
@@ -115,6 +125,7 @@ async def handle_tasks_post(request: web.Request) -> web.Response:
     priority = body.get("priority", "medium")
     task_type = body.get("type", body.get("task_type", "general"))
     source = body.get("source", "api")
+    assigned_to = body.get("assigned_to")
 
     executive = os_ref.executive
     task = executive.add_task(
@@ -123,6 +134,7 @@ async def handle_tasks_post(request: web.Request) -> web.Response:
         priority=priority,
         task_type=task_type,
         source=source,
+        assigned_to=assigned_to,
     )
     return web.json_response({
         "status": "added",
@@ -326,6 +338,156 @@ async def handle_webhooks(request: web.Request) -> web.Response:
     })
 
 
+STANDUP_PROMPT_TEMPLATE = """**Daily Standup** (11 AM)
+
+Morgan, Garret, RJ, Beto — please share:
+1. What you did yesterday
+2. What you're doing today
+3. Any blockers
+
+Reply in this thread. MYCA will summarize and flag overdue items."""
+
+
+async def handle_beto_onboarding_get(request: web.Request) -> web.Response:
+    """GET /beto-onboarding — Beto onboarding checklist with completion status."""
+    try:
+        from pathlib import Path
+        import yaml
+        cfg_path = Path(__file__).resolve().parents[3] / "config" / "beto_onboarding_checklist.yaml"
+        if not cfg_path.exists():
+            return web.json_response({"items": [], "error": "checklist config not found"})
+        cfg = yaml.safe_load(cfg_path.read_text())
+        items = cfg.get("checklist", [])
+    except Exception as e:
+        return web.json_response({"items": [], "error": str(e)})
+
+    # Get completion from mindex_bridge (working memory or pg)
+    completed_map = {}
+    os_ref = request.app.get("myca_os")
+    if os_ref:
+        bridge = getattr(os_ref, "mindex_bridge", None)
+        if bridge and getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
+            try:
+                async with bridge._pg_pool.acquire() as conn:
+                    rows = await conn.fetch(
+                        "SELECT checklist_id, completed_at, notes FROM myca_beto_onboarding WHERE completed_at IS NOT NULL"
+                    )
+                    completed_map = {r["checklist_id"]: {"completed_at": r["completed_at"].isoformat() if r["completed_at"] else None, "notes": r["notes"]} for r in rows}
+            except Exception:
+                pass
+        elif bridge and hasattr(bridge, "recall"):
+            try:
+                data = await bridge.recall("working:beto_onboarding")
+                if data and isinstance(data, dict):
+                    completed_map = data
+            except Exception:
+                pass
+
+    result = []
+    for item in items:
+        cid = item.get("id", "")
+        comp = completed_map.get(cid, {})
+        result.append({
+            "id": cid,
+            "title": item.get("title", ""),
+            "description": item.get("description", ""),
+            "completed": cid in completed_map and comp.get("completed_at"),
+            "completed_at": comp.get("completed_at"),
+            "notes": comp.get("notes"),
+        })
+    return web.json_response({"items": result})
+
+
+async def handle_beto_onboarding_complete(request: web.Request) -> web.Response:
+    """POST /beto-onboarding/{id}/complete — Mark Beto onboarding item complete."""
+    item_id = request.match_info.get("id", "").strip()
+    if not item_id:
+        return web.json_response({"error": "id required"}, status=400)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    notes = body.get("notes", "")
+
+    os_ref = request.app.get("myca_os")
+    if not os_ref:
+        return web.json_response({"error": "MYCA OS not attached"}, status=503)
+    bridge = getattr(os_ref, "mindex_bridge", None)
+    if not bridge:
+        return web.json_response({"error": "mindex_bridge not available"}, status=503)
+
+    if getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
+        try:
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            async with bridge._pg_pool.acquire() as conn:
+                await conn.execute(
+                    """INSERT INTO myca_beto_onboarding (checklist_id, completed_at, notes, updated_at)
+                       VALUES ($1, $2, $3, $4)
+                       ON CONFLICT (checklist_id) DO UPDATE SET completed_at = $2, notes = $3, updated_at = $4""",
+                    item_id, now, notes or None, now,
+                )
+            return web.json_response({"status": "completed", "id": item_id})
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+    return web.json_response({"error": "PostgreSQL storage required for Beto onboarding"}, status=503)
+
+
+async def handle_investor_draft(request: web.Request) -> web.Response:
+    """POST /investor-draft — Generate investor update draft (called by n8n quarterly)."""
+    body = {}
+    ct = request.headers.get("Content-Type", "")
+    if "application/json" in ct:
+        try:
+            body = await request.json() or {}
+        except Exception:
+            pass
+    else:
+        try:
+            form = await request.post()
+            body = dict(form) if form else {}
+        except Exception:
+            pass
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    def _get(v):
+        x = body.get(v, "")
+        return x[0] if isinstance(x, (list, tuple)) else (x or "")
+
+    period = _get("period")
+    if not period:
+        now = datetime.now()
+        q = (now.month - 1) // 3 + 1
+        period = f"{now.year}-Q{q}"
+    template_name = _get("template") or "investor_update"
+    tpl_path = Path(__file__).resolve().parents[3] / "templates" / f"{template_name}.md"
+    if not tpl_path.exists():
+        return web.json_response({"error": f"template {template_name} not found"}, status=404)
+    content = tpl_path.read_text()
+    content = content.replace("[YYYY-MM-DD]", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+    content = content.replace("[Quarter/Period]", str(period))
+    # TODO: Fetch metrics from MINDEX when /api/mindex/metrics available
+    return web.json_response({"draft": content, "period": period})
+
+
+async def handle_standup_prompt(request: web.Request) -> web.Response:
+    """POST /standup-prompt — Post daily standup prompt to Discord/Slack (called by n8n at 11 AM Mon-Fri)."""
+    os_ref = request.app.get("myca_os")
+    if not os_ref:
+        return web.json_response({"error": "MYCA OS not attached"}, status=503)
+    try:
+        comms = getattr(os_ref, "comms", None)
+        if not comms:
+            return web.json_response({"error": "comms hub not available"}, status=503)
+        from mycosoft_mas.myca.os.comms_hub import Channel
+        await comms.broadcast(STANDUP_PROMPT_TEMPLATE, channels=[Channel.DISCORD, Channel.SLACK])
+        return web.json_response({"status": "sent", "channels": ["discord", "slack"]})
+    except Exception as e:
+        logger.exception("Standup prompt failed")
+        return web.json_response({"status": "error", "error": str(e)}, status=500)
+
+
 async def handle_ws(request: web.Request) -> web.WebSocketResponse:
     """WebSocket /ws — Real-time log streaming and task updates."""
     ws = web.WebSocketResponse()
@@ -351,6 +513,7 @@ def create_app(os_ref=None) -> web.Application:
     app = web.Application()
     app["myca_os"] = os_ref
 
+    app.router.add_get("/channels", handle_channels)
     app.router.add_get("/health", handle_health)
     app.router.add_get("/status", handle_status)
     app.router.add_get("/tasks", handle_tasks_get)
@@ -363,6 +526,10 @@ def create_app(os_ref=None) -> web.Application:
     app.router.add_get("/skills", handle_skills)
     app.router.add_post("/skills/run", handle_skills_run)
     app.router.add_post("/skills/install", handle_skills_install)
+    app.router.add_post("/standup-prompt", handle_standup_prompt)
+    app.router.add_post("/investor-draft", handle_investor_draft)
+    app.router.add_get("/beto-onboarding", handle_beto_onboarding_get)
+    app.router.add_post("/beto-onboarding/{id}/complete", handle_beto_onboarding_complete)
     app.router.add_post(r"/webhooks/{source}", handle_webhooks)
     app.router.add_post("/webhooks/{source}", handle_webhooks)
 

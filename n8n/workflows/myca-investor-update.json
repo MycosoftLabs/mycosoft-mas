@@ -1,0 +1,70 @@
+{
+  "name": "MYCA Investor Update",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {"field": "cronExpression", "expression": "0 10 1 */3 *"}
+          ]
+        }
+      },
+      "id": "cron-quarterly",
+      "name": "Quarterly (1st of Q)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.191:8100/investor-draft",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {"name": "period", "value": "={{ $now.format('yyyy-Qq') }}"},
+            {"name": "template", "value": "investor_update"}
+          ]
+        },
+        "options": {"timeout": 60000}
+      },
+      "id": "http-draft",
+      "name": "Request Draft from MYCA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [500, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"name": "draft", "value": "={{ $json.body }}", "type": "string"},
+            {"name": "period", "value": "={{ $('Quarterly (1st of Q)').item.json.period || $now.format('yyyy-Qq') }}", "type": "string"}
+          ]
+        }
+      },
+      "id": "set-output",
+      "name": "Prepare Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 200]
+    }
+  ],
+  "connections": {
+    "Quarterly (1st of Q)": {
+      "main": [[{"node": "Request Draft from MYCA", "type": "main", "index": 0}]]
+    },
+    "Request Draft from MYCA": {
+      "main": [[{"node": "Prepare Output", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles"
+  },
+  "tags": [
+    {"name": "myca"},
+    {"name": "investor"},
+    {"name": "boostvc"}
+  ]
+}

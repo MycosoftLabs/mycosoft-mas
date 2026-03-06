@@ -1,0 +1,35 @@
+# Public Sector Ethics Checklist
+# Data privacy, bias audit, transparency requirements
+# Created: March 5, 2026 — MYCA Loop Closure
+
+name: public_sector
+description: Ethics review for tasks involving government, public institutions, or citizen data
+
+checks:
+  - id: data_privacy
+    name: Data privacy
+    description: Is citizen or personally identifiable information handled with appropriate safeguards?
+    required: true
+  - id: bias_audit
+    name: Bias audit
+    description: Have algorithmic bias and fairness implications been reviewed?
+    required: true
+  - id: transparency
+    name: Transparency requirements
+    description: Are outcomes explainable and auditable for public accountability?
+    required: true
+  - id: access_equity
+    name: Access equity
+    description: Does the solution serve all intended populations without discrimination?
+    required: true
+
+block_triggers:
+  - "mass surveillance"
+  - "profiling without consent"
+  - "discriminatory"
+
+warn_triggers:
+  - "government"
+  - "public data"
+  - "citizen"
+  - "algorithmic decision"

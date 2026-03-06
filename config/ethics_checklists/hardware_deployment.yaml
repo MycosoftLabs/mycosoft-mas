@@ -1,0 +1,35 @@
+# Hardware Deployment Ethics Checklist
+# Environmental impact, usage constraints
+# Created: March 5, 2026 — MYCA Loop Closure
+
+name: hardware_deployment
+description: Ethics review for deploying hardware, IoT devices, or infrastructure changes
+
+checks:
+  - id: environmental_impact
+    name: Environmental impact
+    description: Has environmental impact (power, materials, e-waste) been considered?
+    required: true
+  - id: usage_constraints
+    name: Usage constraints
+    description: Are usage limits and safety boundaries clearly defined?
+    required: true
+  - id: physical_safety
+    name: Physical safety
+    description: Could this hardware cause physical harm if misused?
+    required: true
+  - id: lifecycle
+    name: Lifecycle management
+    description: Is end-of-life and disposal addressed?
+    required: false
+
+block_triggers:
+  - "weaponized"
+  - "safety bypass"
+  - "uncontrolled access"
+
+warn_triggers:
+  - "deploy"
+  - "hardware"
+  - "infrastructure"
+  - "production"

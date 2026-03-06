@@ -1,0 +1,81 @@
+# Mycosoft Organization Roles — Role-Scoped Task Routing
+# Used by MYCA Executive to enforce role boundaries when assigning and routing tasks.
+# Date: 2026-03-05
+
+roles:
+  morgan:
+    name: "Morgan Rockwell"
+    titles: ["CEO", "CTO", "COO", "Founder"]
+    scopes:
+      - engineering
+      - strategy
+      - product
+      - architecture
+      - infrastructure
+      - all_executive
+    task_types: ["coding", "research", "deployment", "decision", "analysis", "architecture_change", "general"]
+    reports_to: null
+    channels:
+      discord: "${MORGAN_DISCORD_ID}"
+      signal: "${MORGAN_SIGNAL_NUMBER}"
+      slack: "${MORGAN_SLACK_ID}"
+      email: "morgan@mycosoft.org"
+
+  garret:
+    name: "Garret Baquet"
+    titles: ["Co-Founder", "Business Development"]
+    scopes:
+      - bizdev
+      - sales
+      - partnerships
+      - external_outreach
+    task_types: ["communication", "partnership", "sales", "outreach"]
+    reports_to: morgan
+    channels:
+      slack: "${GARRET_SLACK_ID}"
+      email: "garret@mycosoft.org"
+
+  rj:
+    name: "RJ"
+    titles: ["Co-Founder", "Board Member", "MYCA 2nd Key"]
+    scopes:
+      - finance
+      - board
+      - investor_comms
+      - cap_table
+      - compliance
+    task_types: ["financial", "decision", "communication", "compliance"]
+    reports_to: null
+    channels:
+      slack: "${RJ_SLACK_ID}"
+      email: "${RJ_EMAIL}"
+
+  beto:
+    name: "Beto"
+    titles: ["Technical Lieutenant"]
+    scopes:
+      - assigned_tasks
+      - technical_execution
+      - reporting_to_morgan
+    task_types: ["coding", "research", "deployment", "analysis", "general"]
+    reports_to: morgan
+    channels:
+      slack: "${BETO_SLACK_ID}"
+      email: "${BETO_EMAIL}"
+
+# Task type -> primary role mapping (for auto-assignment hints)
+task_type_to_role:
+  coding: morgan
+  research: morgan
+  deployment: morgan
+  architecture_change: morgan
+  partnership: garret
+  sales: garret
+  outreach: garret
+  financial: rj
+  compliance: rj
+  investor_comms: rj
+  general: morgan
+  communication: morgan
+  decision: morgan
+  analysis: morgan

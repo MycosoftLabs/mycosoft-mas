@@ -1,0 +1,32 @@
+# Board meetings tracker — used by MYCA to auto-generate board packages
+# Updated: 2026-03-05
+
+board:
+  name: Mycosoft Board
+  members:
+    - role: CEO/Chair
+      name: Morgan
+    - role: Board Member
+      name: RJ
+
+meetings:
+  # Format: YYYY-MM-DD
+  - date: "2026-03-15"
+    type: quarterly
+    agenda:
+      - Financial review
+      - Product milestones
+      - BoostVC compliance check
+  - date: "2026-06-15"
+    type: quarterly
+    agenda:
+      - Q2 financials
+      - Roadmap review
+      - Compliance
+
+package_output: docs/board/
+
+compliance:
+  boostvc_management_rights: true
+  annual_operating_plan_due: "2026-01-15"
+  board_minutes_shared: true
