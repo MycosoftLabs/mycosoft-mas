@@ -1,5 +1,9 @@
 # Master Document Index
 
+## Gap Plan Completion (Mar 5, 2026)
+- `docs/GAP_PLAN_COMPLETION_MAR05_2026.md` – **Gap plan complete**: Critical, High, Quick Wins, Medium in-scope items verified or done; NatureOS summary API added; deferred items documented.
+- `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` – **Large items scaffolding**: Design stubs for Jobs 18–23 (control plane, worldview digest, unified front door, NatureOS bridge, MycoBrain awareness, workflow visibility).
+
 ## MYCA Support Upgrade Implementation (Mar 7, 2026)
 - `docs/MYCA_SUPPORT_UPGRADE_IMPLEMENTATION_COMPLETE_MAR07_2026.md` – **Implementation complete**: 10 items (5 quick wins, 5 medium); MYCA state widget, Morgan oversight panel, EP summary, NatureOS summary, page context, docs.
 
@@ -12,6 +16,7 @@
 
 ## MYCA Support Upgrade Audit (Mar 7, 2026)
 - `docs/MYCA_SUPPORT_UPGRADE_AUDIT_MAR07_2026.md` – **Cross-system upgrade audit**: Website, MINDEX, NatureOS, MycoBrain, external AI/cowork, automation. Prioritized plan (quick wins, medium, large) for MYCA–Morgan interaction, context, visibility, supervise/steer/trust.
+- `docs/NEXT_JOBS_FROM_GAPS_MAR07_2026.md` – **Next jobs from gaps**: Prioritized job list (Critical → High → Quick wins → Medium → Large) derived from platform status, upgrade audit, system gaps. Use for sprint planning.
 
 ## MYCA Full Omnichannel Execution (Mar 6, 2026)
 - `docs/MYCA_FULL_OMNICHANNEL_EXECUTION_COMPLETE_MAR06_2026.md` – **Full execution complete**: code changes, test fixes, full suite passing, GitHub push, VM 191 deploy, VM 188 refresh, health verification, and remaining known issues.
