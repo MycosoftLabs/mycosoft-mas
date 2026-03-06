@@ -1,5 +1,18 @@
 # Master Document Index
 
+## MYCA Support Upgrade Implementation (Mar 7, 2026)
+- `docs/MYCA_SUPPORT_UPGRADE_IMPLEMENTATION_COMPLETE_MAR07_2026.md` – **Implementation complete**: 10 items (5 quick wins, 5 medium); MYCA state widget, Morgan oversight panel, EP summary, NatureOS summary, page context, docs.
+
+## MYCA Support Upgrade Docs (Mar 7, 2026)
+- `docs/MINDEX_A2A_AGENT_FOR_MYCA_MAR07_2026.md` – **A2A agent for MYCA**: MINDEX A2A delegation path for search/stats; MAS MINDEXBridge usage.
+- `docs/COWORK_VS_MYCA_SCOPE_MAR07_2026.md` – **Cowork vs MYCA scope**: When to use each; handoff pattern; unified front door.
+- `docs/MYCOBRAIN_TO_MAS_FLOW_MAR07_2026.md` – **MycoBrain→MAS flow**: Heartbeat, device registry, MYCA query path.
+- `docs/MYCA_N8N_TRIGGER_PATTERN_MAR07_2026.md` – **MYCA→n8n trigger**: Standard pattern for MYCA to trigger workflows.
+- `docs/MYCORRHIZAE_MYCA_TELEMETRY_BRIDGE_MAR07_2026.md` – **Mycorrhizae→MYCA bridge**: Design for FCI telemetry injection (future).
+
+## MYCA Support Upgrade Audit (Mar 7, 2026)
+- `docs/MYCA_SUPPORT_UPGRADE_AUDIT_MAR07_2026.md` – **Cross-system upgrade audit**: Website, MINDEX, NatureOS, MycoBrain, external AI/cowork, automation. Prioritized plan (quick wins, medium, large) for MYCA–Morgan interaction, context, visibility, supervise/steer/trust.
+
 ## MYCA Full Omnichannel Execution (Mar 6, 2026)
 - `docs/MYCA_FULL_OMNICHANNEL_EXECUTION_COMPLETE_MAR06_2026.md` – **Full execution complete**: code changes, test fixes, full suite passing, GitHub push, VM 191 deploy, VM 188 refresh, health verification, and remaining known issues.
 

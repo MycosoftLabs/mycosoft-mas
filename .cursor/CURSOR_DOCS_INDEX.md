@@ -20,6 +20,7 @@
 | `docs/MYCA_BOUNDED_PERSONAL_AGENCY_COMPLETE_MAR06_2026.md` | **Phase 6 bounded personal agency complete**: personal-agency and autonomous-self modules wired into the daemon with enable flags and queue-budget gating. |
 | `docs/MYCA_FULL_OMNICHANNEL_EXECUTION_COMPLETE_MAR06_2026.md` | **Full execution complete**: tests fixed, full suite passing, pushed to GitHub, VM 191 deployed, VM 188 refreshed, core health verified, remaining issues documented. |
 | `infra/network/vlan_config.yaml` | **VLAN config as code**: VLAN 10/20/30/40 CIDRs, flat 192.168.0.x assignments. Reference for firewall and deployment. |
+| `docs/MYCA_SUPPORT_UPGRADE_AUDIT_MAR07_2026.md` | **MYCA Support Upgrade Audit**: Cross-system audit (Website, MINDEX, NatureOS, MycoBrain, cowork, automation). Prioritized upgrade plan for MYCA–Morgan interaction. |
 
 ## 1. Master indexes (read first)
 
