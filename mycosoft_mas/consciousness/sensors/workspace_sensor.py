@@ -41,7 +41,7 @@ class WorkspaceSensor(BaseSensor):
     """
 
     WORKSPACE_API_BASE = os.getenv(
-        "MYCA_WORKSPACE_URL", "http://192.168.0.191:8100"
+        "MYCA_WORKSPACE_URL", "http://192.168.0.191:8000"
     )
     # Fallback: workspace API may also run on MAS VM during early dev
     FALLBACK_API_BASE = os.getenv(

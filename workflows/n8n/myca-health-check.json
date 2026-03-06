@@ -33,7 +33,7 @@
       "typeVersion": 3,
       "position": [250, 150],
       "parameters": {
-        "url": "http://localhost:8001/health",
+        "url": "http://192.168.0.188:8001/health",
         "method": "GET",
         "options": {}
       }
@@ -45,7 +45,7 @@
       "typeVersion": 3,
       "position": [250, 250],
       "parameters": {
-        "url": "http://localhost:8089/v1/health",
+        "url": "http://192.168.0.191:8089/v1/health",
         "method": "GET",
         "options": {}
       }
@@ -139,7 +139,7 @@
     ],
     "Format Failure Message": [{"node": ["Slack Alert Failures"], "type": "main", "index": [0, 0]}]
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   },

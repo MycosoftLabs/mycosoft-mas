@@ -74,7 +74,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://192.168.0.191:8100/api/rhythm/morning-brief",
+        "url": "http://192.168.0.191:8000/api/rhythm/morning-brief",
         "options": {"timeout": 30000}
       },
       "id": "http-morning",
@@ -86,7 +86,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://192.168.0.191:8100/api/rhythm/hourly-status",
+        "url": "http://192.168.0.191:8000/api/rhythm/hourly-status",
         "options": {"timeout": 15000}
       },
       "id": "http-hourly",
@@ -98,7 +98,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://192.168.0.191:8100/api/rhythm/midday-sync",
+        "url": "http://192.168.0.191:8000/api/rhythm/midday-sync",
         "options": {"timeout": 30000}
       },
       "id": "http-midday",
@@ -110,7 +110,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://192.168.0.191:8100/api/rhythm/end-of-day",
+        "url": "http://192.168.0.191:8000/api/rhythm/end-of-day",
         "options": {"timeout": 30000}
       },
       "id": "http-eod",
@@ -122,7 +122,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://192.168.0.191:8100/api/rhythm/night-mode",
+        "url": "http://192.168.0.191:8000/api/rhythm/night-mode",
         "options": {"timeout": 10000}
       },
       "id": "http-night",

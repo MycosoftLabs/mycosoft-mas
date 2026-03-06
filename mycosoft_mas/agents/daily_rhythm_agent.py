@@ -44,7 +44,7 @@ class DailyRhythmAgent(BaseAgent):
         ]
         self.mas_url = config.get("mas_url", "http://192.168.0.188:8001")
         self.workspace_url = config.get(
-            "workspace_url", "http://192.168.0.191:8100"
+            "workspace_url", "http://192.168.0.191:8000"
         )
         self._daily_plan: List[Dict] = []
         self._completed_today: List[Dict] = []
