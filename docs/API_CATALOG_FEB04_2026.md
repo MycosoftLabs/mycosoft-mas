@@ -21,6 +21,14 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 ## MAS API Endpoints
 
+### Recent Runtime Updates (Mar 6, 2026)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/myca/grounding/ep/{ep_id}` | GET | Grounding EP inspection with placeholder fallback when upstream storage is unavailable |
+| `/omnichannel/status` | GET | Omnichannel connector status with normalized env fallback handling |
+| `/api/workspace/inbox` | GET | Aggregated workspace inbox alias used by MYCA OS comms polling |
+
 ### Health & Status
 
 | Endpoint | Method | Description |

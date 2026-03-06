@@ -18,6 +18,7 @@
 | `docs/MYCA_OMNICHANNEL_DIALOGUE_BUS_COMPLETE_MAR06_2026.md` | **Phase 4 omnichannel dialogue bus complete**: WhatsApp polling, workspace inbox contract, wider channel defaults, and better omnichannel runtime/status parity. |
 | `docs/MYCA_AGENT_AND_TOOL_FEDERATION_COMPLETE_MAR06_2026.md` | **Phase 5 agent/tool federation complete**: first-class runtime task routes for GitHub, Asana, NatureOS, and search. |
 | `docs/MYCA_BOUNDED_PERSONAL_AGENCY_COMPLETE_MAR06_2026.md` | **Phase 6 bounded personal agency complete**: personal-agency and autonomous-self modules wired into the daemon with enable flags and queue-budget gating. |
+| `docs/MYCA_FULL_OMNICHANNEL_EXECUTION_COMPLETE_MAR06_2026.md` | **Full execution complete**: tests fixed, full suite passing, pushed to GitHub, VM 191 deployed, VM 188 refreshed, core health verified, remaining issues documented. |
 | `infra/network/vlan_config.yaml` | **VLAN config as code**: VLAN 10/20/30/40 CIDRs, flat 192.168.0.x assignments. Reference for firewall and deployment. |
 
 ## 1. Master indexes (read first)

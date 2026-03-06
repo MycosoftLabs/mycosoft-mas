@@ -29,6 +29,24 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
   - `mycosoft_mas/integrations/scholar_client.py`
 - Replaced SporeBase order 501 response with order intake logic in `mycosoft_mas/core/routers/sporebase_api.py`.
 
+## Recent Updates (Mar 6, 2026)
+
+- MYCA OS runtime hardening:
+  - `mycosoft_mas/myca/os/gateway.py`
+  - `mycosoft_mas/myca/os/channels_health.py`
+  - `mycosoft_mas/myca/os/comms_hub.py`
+- Added first-class MYCA OS bridges:
+  - `mycosoft_mas/myca/os/natureos_bridge.py`
+  - `mycosoft_mas/myca/os/presence_bridge.py`
+  - `mycosoft_mas/myca/os/nlm_bridge.py`
+  - `mycosoft_mas/myca/os/staff_registry.py`
+- Promoted new runtime task federation surfaces:
+  - `mycosoft_mas/myca/os/tool_orchestrator.py`
+  - `mycosoft_mas/integrations/github_client.py`
+- Expanded workspace and omnichannel surfaces:
+  - `mycosoft_mas/core/routers/workspace_api.py`
+  - `mycosoft_mas/core/routers/omnichannel_api.py`
+
 ## Architecture
 
 ```
