@@ -199,10 +199,11 @@ class HealthChecker:
             else:
                 results.append(check)
         
-        # Overall status
-        if any(c.status == HealthStatus.UNHEALTHY for c in results):
+        # Overall status: CREP is optional (aviation/maritime intel); only critical components matter
+        critical = [c for c in results if c.name != "crep"]
+        if any(c.status == HealthStatus.UNHEALTHY for c in critical):
             overall = HealthStatus.UNHEALTHY
-        elif any(c.status == HealthStatus.DEGRADED for c in results):
+        elif any(c.status == HealthStatus.DEGRADED for c in critical):
             overall = HealthStatus.DEGRADED
         else:
             overall = HealthStatus.HEALTHY
