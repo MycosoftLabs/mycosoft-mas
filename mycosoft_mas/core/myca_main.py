@@ -68,6 +68,7 @@ from mycosoft_mas.core.routers.ethics_api import router as ethics_router
 from mycosoft_mas.core.routers.ethics_training_api import router as ethics_training_router
 from mycosoft_mas.core.routers.network_api import router as network_api_router
 from mycosoft_mas.core.routers.memory_api import router as memory_router
+from mycosoft_mas.core.routers.conversation_memory_api import router as conversation_memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
@@ -564,6 +565,7 @@ app.include_router(ethics_router)
 app.include_router(ethics_training_router)
 app.include_router(network_api_router, tags=["network"])
 app.include_router(memory_router, tags=["memory"])
+app.include_router(conversation_memory_router, tags=["memory", "myca-conversations"])
 app.include_router(security_router, tags=["security"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
 app.include_router(nlq_router, tags=["nlq"])
@@ -1236,6 +1238,14 @@ async def startup_event():
     except Exception as exc:
         logger.warning(f"Runner auto-load failed on startup: {exc}")
 
+    # Start ingestion collectors (OpenSky, USGS, NORAD, AIS, NOAA)
+    try:
+        from mycosoft_mas.collectors import start_default_collectors
+        await start_default_collectors()
+        logger.info("✓ Ingestion collectors started (OpenSky, USGS, NORAD, AIS, NOAA)")
+    except Exception as exc:
+        logger.warning("Ingestion collectors failed to start: %s", exc)
+
     # Start MycoBrain → MINDEX telemetry pipeline (polls every 60s)
     try:
         from mycosoft_mas.services.telemetry_pipeline import start_telemetry_pipeline
@@ -1326,6 +1336,14 @@ async def shutdown_event():
     """Graceful shutdown: stop WorkflowAutoMonitor and other background services."""
     import logging
     logger = logging.getLogger("MAS_Shutdown")
+    try:
+        from mycosoft_mas.collectors import get_orchestrator
+        orch = get_orchestrator()
+        if orch._running:
+            await orch.stop()
+            logger.info("Ingestion collectors stopped")
+    except Exception as exc:
+        logger.warning("Ingestion collectors stop error: %s", exc)
     try:
         from mycosoft_mas.services.telemetry_pipeline import stop_telemetry_pipeline
         stop_telemetry_pipeline()
