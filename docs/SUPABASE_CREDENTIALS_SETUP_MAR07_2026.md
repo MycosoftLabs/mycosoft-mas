@@ -45,13 +45,20 @@ Use the variable names below. Get values from Supabase dashboard, Google Cloud C
 
 ### 4. MAS VM (188) deployment
 
-For the MAS container on VM 188 to run ingest and spreadsheet sync, pass these env vars when starting the container:
+MAS runs as systemd service `mas-orchestrator` on VM 188. To enable ingest and spreadsheet sync:
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `GOOGLE_APPLICATION_CREDENTIALS` (path inside container, or mount the JSON file)
+1. **Create env file on VM 188** (e.g. `/home/mycosoft/mycosoft/mas/.env`):
+   ```bash
+   # Required for Supabase backbone (get from Supabase dashboard)
+   NEXT_PUBLIC_SUPABASE_URL=<your-supabase-url>
+   SUPABASE_SERVICE_ROLE_KEY=<your-service-role-secret>
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=<your-publishable-key>
+   GOOGLE_APPLICATION_CREDENTIALS=/home/mycosoft/mycosoft/cred/myca-sheets.json
+   ```
 
-Or load from a `.env` file on the VM before `docker run`.
+2. **Copy service account JSON** to VM 188 and set path in `GOOGLE_APPLICATION_CREDENTIALS`.
+
+3. **Load env in systemd**: Add `EnvironmentFile=/home/mycosoft/mycosoft/mas/.env` to the `[Service]` section of the mas-orchestrator unit, then `sudo systemctl daemon-reload && sudo systemctl restart mas-orchestrator`.
 
 ### 5. Website `.env.local`
 
