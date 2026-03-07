@@ -135,20 +135,60 @@ async def handle_channels(request: web.Request) -> web.Response:
 
 
 async def handle_health(request: web.Request) -> web.Response:
-    """GET /health — Health check for load balancers and monitoring."""
+    """GET /health — Health check for load balancers and monitoring. Includes channel status."""
+    identity = os.getenv("SMTP_USER", os.getenv("MYCA_IDENTITY", "schedule@mycosoft.org"))
+    vm = os.getenv("MYCA_VM", "192.168.0.191")
+    base_payload = {
+        "identity": identity,
+        "vm": vm,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
     os_ref = request.app.get("myca_os")
     if not os_ref:
-        return web.json_response({"status": "no_os", "healthy": False})
+        # Return basic health + channel status even when OS not attached (e.g. during boot)
+        try:
+            from mycosoft_mas.myca.os.channels_health import get_all_channel_status
+            channel_data = await get_all_channel_status()
+            services = {
+                ch: (data.get("connected", False) or data.get("status") == "connected")
+                for ch, data in (channel_data.get("channels") or {}).items()
+            }
+        except Exception:
+            services = {}
+        connected = sum(1 for v in services.values() if v)
+        return web.json_response({
+            **base_payload,
+            "status": "healthy" if connected > 0 else "no_os",
+            "healthy": connected > 0,
+            "services": services,
+        })
     try:
         health = await os_ref._check_health()
-        return web.json_response({
+        payload = {
+            **base_payload,
             "status": "ok",
             "healthy": health.get("healthy", True),
             "cycle": health.get("cycle", 0),
             "issues": health.get("issues", []),
-        })
+        }
+        # Include channel connectivity (Slack, Asana, Discord, Signal, WhatsApp)
+        try:
+            from mycosoft_mas.myca.os.channels_health import get_all_channel_status
+            channel_data = await get_all_channel_status()
+            payload["services"] = {
+                ch: (data.get("connected", False) or data.get("status") == "connected")
+                for ch, data in (channel_data.get("channels") or {}).items()
+            }
+        except Exception:
+            payload["services"] = {}
+        return web.json_response(payload)
     except Exception as e:
-        return web.json_response({"status": "error", "healthy": False, "error": str(e)})
+        return web.json_response({
+            **base_payload,
+            "status": "error",
+            "healthy": False,
+            "error": str(e),
+        })
 
 
 async def handle_status(request: web.Request) -> web.Response:

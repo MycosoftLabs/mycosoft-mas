@@ -38,7 +38,7 @@ async def _validate_slack() -> dict[str, Any]:
 
 
 async def _validate_asana() -> dict[str, Any]:
-    if not _env_any("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN"):
+    if not _env_any("ASANA_API_KEY", "ASANA_PAT", "ASANA_ACCESS_TOKEN", "MYCA_ASANA_TOKEN"):
         return {"channel": "asana", "status": "missing_credential", "message": "Asana credential not set.", "pass": False}
     try:
         from mycosoft_mas.integrations.asana_client import AsanaClient

@@ -47,11 +47,17 @@ def build_myca_env(creds: dict) -> str:
         "GITHUB_TOKEN": "GITHUB_TOKEN",
         "DISCORD_BOT_TOKEN": "DISCORD_BOT_TOKEN",
         "DISCORD_WEBHOOK_URL": "DISCORD_WEBHOOK_URL",
+        "DISCORD_MYCA_WEBHOOK": "DISCORD_WEBHOOK_URL",
         "MORGAN_DISCORD_ID": "MORGAN_DISCORD_ID",
         "SLACK_BOT_TOKEN": "SLACK_BOT_TOKEN",
         "SLACK_APP_TOKEN": "SLACK_APP_TOKEN",
         "ASANA_PAT": "ASANA_PAT",
+        "ASANA_ACCESS_TOKEN": "ASANA_PAT",
+        "ASANA_API_KEY": "ASANA_PAT",
+        "MYCA_ASANA_TOKEN": "ASANA_PAT",
+        "ASANA_WORKSPACE_ID": "ASANA_WORKSPACE_ID",
         "SIGNAL_SENDER_NUMBER": "SIGNAL_SENDER_NUMBER",
+        "SIGNAL_API_URL": "SIGNAL_API_URL",
         "MORGAN_SIGNAL_NUMBER": "MORGAN_SIGNAL_NUMBER",
         "WHATSAPP_API_URL": "WHATSAPP_API_URL",
         "MORGAN_WHATSAPP_NUMBER": "MORGAN_WHATSAPP_NUMBER",
@@ -63,7 +69,8 @@ def build_myca_env(creds: dict) -> str:
     }
     for ckey, evar in mapping.items():
         if evar and ckey in creds and creds[ckey]:
-            template = re.sub(rf"^({evar}=).*$", rf"\1{creds[ckey]}", template, flags=re.MULTILINE)
+            val = creds[ckey]
+            template = re.sub(rf"^({re.escape(evar)}=).*$", lambda m, v=val: m.group(1) + v, template, flags=re.MULTILINE)
     return template
 
 
