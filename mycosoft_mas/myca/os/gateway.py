@@ -655,24 +655,30 @@ def create_app(os_ref=None) -> web.Application:
     app = web.Application()
     app["myca_os"] = os_ref
 
-    app.router.add_get("/channels", handle_channels)
-    app.router.add_get("/health", handle_health)
-    app.router.add_get("/status", handle_status)
-    app.router.add_get("/tasks", handle_tasks_get)
-    app.router.add_post("/tasks", handle_tasks_post)
-    app.router.add_post("/message", handle_message_post)
-    app.router.add_post("/shell", handle_shell_post)
-    app.router.add_get("/logs", handle_logs)
-    app.router.add_get("/sessions", handle_sessions)
-    app.router.add_get("/ws", handle_ws)
-    app.router.add_get("/skills", handle_skills)
-    app.router.add_post("/skills/run", handle_skills_run)
-    app.router.add_post("/skills/install", handle_skills_install)
-    app.router.add_post("/standup-prompt", handle_standup_prompt)
-    app.router.add_post("/investor-draft", handle_investor_draft)
-    app.router.add_get("/beto-onboarding", handle_beto_onboarding_get)
-    app.router.add_post("/beto-onboarding/{id}/complete", handle_beto_onboarding_complete)
-    app.router.add_post(r"/webhooks/{source}", handle_webhooks)
+    # Use explicit route names to avoid aiohttp resource reuse that can cause
+    # "method POST is already registered" when dynamic paths overlap.
+    app.router.add_get("/channels", handle_channels, name="channels")
+    app.router.add_get("/health", handle_health, name="health")
+    app.router.add_get("/status", handle_status, name="status")
+    app.router.add_get("/tasks", handle_tasks_get, name="tasks")
+    app.router.add_post("/tasks", handle_tasks_post, name="tasks")
+    app.router.add_post("/message", handle_message_post, name="message")
+    app.router.add_post("/shell", handle_shell_post, name="shell")
+    app.router.add_get("/logs", handle_logs, name="logs")
+    app.router.add_get("/sessions", handle_sessions, name="sessions")
+    app.router.add_get("/ws", handle_ws, name="ws")
+    app.router.add_get("/skills", handle_skills, name="skills")
+    app.router.add_post("/skills/run", handle_skills_run, name="skills_run")
+    app.router.add_post("/skills/install", handle_skills_install, name="skills_install")
+    app.router.add_post("/standup-prompt", handle_standup_prompt, name="standup_prompt")
+    app.router.add_post("/investor-draft", handle_investor_draft, name="investor_draft")
+    app.router.add_get("/beto-onboarding", handle_beto_onboarding_get, name="beto_onboarding_get")
+    app.router.add_post(
+        "/beto-onboarding/{id}/complete",
+        handle_beto_onboarding_complete,
+        name="beto_onboarding_complete",
+    )
+    app.router.add_post(r"/webhooks/{source}", handle_webhooks, name="webhooks")
 
     return app
 
