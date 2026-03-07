@@ -673,7 +673,6 @@ def create_app(os_ref=None) -> web.Application:
     app.router.add_get("/beto-onboarding", handle_beto_onboarding_get)
     app.router.add_post("/beto-onboarding/{id}/complete", handle_beto_onboarding_complete)
     app.router.add_post(r"/webhooks/{source}", handle_webhooks)
-    app.router.add_post("/webhooks/{source}", handle_webhooks)
 
     return app
 
