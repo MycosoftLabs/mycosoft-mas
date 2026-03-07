@@ -29,6 +29,20 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/omnichannel/status` | GET | Omnichannel connector status with normalized env fallback handling |
 | `/api/workspace/inbox` | GET | Aggregated workspace inbox alias used by MYCA OS comms polling |
 
+### C-Suite API (`/api/csuite/*`) – Mar 7, 2026
+
+Heartbeat, reporting, and escalation from executive-assistant VMs (CEO, CFO, CTO, COO) on Proxmox 90.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/csuite/heartbeat` | POST | C-Suite VM heartbeat (role, ip, status, assistant_name) |
+| `/api/csuite/report` | POST | Task completion, executive summary, operating report |
+| `/api/csuite/escalate` | POST | Escalation when Morgan's decision needed |
+| `/api/csuite/assistants` | GET | List registered assistants (MYCA/MAS UI) |
+| `/api/csuite/health` | GET | C-Suite API health check |
+
+**Router:** `mycosoft_mas/core/routers/csuite_api.py`
+
 ### Health & Status
 
 | Endpoint | Method | Description |
@@ -88,6 +102,27 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/ethics/training/observations` | GET | Observer MYCA notes |
 
 **Router:** `mycosoft_mas/core/routers/ethics_training_api.py`
+
+### Ingest API (`/api/ingest/*`) – Mar 7, 2026
+
+External system ingestion into Supabase backbone; used by n8n before sheet sync.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/ingest/external` | POST | Trigger Asana/Notion/GitHub ingest into Supabase (query: `sources=asana,notion,github`) |
+
+**Router:** `mycosoft_mas/core/routers/ingest_api.py`
+
+### Spreadsheet Sync API (`/api/spreadsheet/*`) – Mar 7, 2026
+
+Master spreadsheet projection from Supabase; n8n triggers after ingest.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/spreadsheet/status` | GET | Sheet sync status from Supabase |
+| `/api/spreadsheet/sync` | POST | Run master spreadsheet sync (Supabase → Google Sheet) |
+
+**Router:** `mycosoft_mas/core/routers/spreadsheet_sync_api.py`
 
 ### API Keys (`/api/keys/*`)
 
@@ -268,10 +303,12 @@ This API provides heartbeat-based registration and management for remote MycoBra
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/devices/register` | POST | Register device via heartbeat (called by remote MycoBrain services) |
+| `/api/devices/heartbeat` | POST | **Canonical** device heartbeat/registration (called by MycoBrain services) |
+| `/api/devices/register` | POST | Legacy alias for `/heartbeat`; both behave identically |
 | `/api/devices` | GET | List all network-registered devices (supports `status`, `include_offline` params) |
 | `/api/devices/{device_id}` | GET | Get specific device info |
 | `/api/devices/{device_id}` | DELETE | Unregister device from registry |
+| `/api/devices/{device_id}/fci-summary` | POST | Store FCI summary in device extra (bridge from Mycorrhizae/FCI) |
 | `/api/devices/{device_id}/command` | POST | Forward command to remote device via HTTP |
 | `/api/devices/{device_id}/telemetry` | GET | Fetch telemetry from remote device |
 | `/api/devices/health` | GET | Device registry health check |

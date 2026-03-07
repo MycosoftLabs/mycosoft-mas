@@ -1,8 +1,61 @@
 # Master Document Index
 
+## Planning → Ethics Context System (Mar 3, 2026)
+- `docs/PLANNING_ETHICS_CONTEXT_COMPLETE_MAR03_2026.md` – **Completion + verification**: Checklist for testing and documenting; scope summary.
+- `docs/PLANNING_ETHICS_CONTEXT_SYSTEM_MAR03_2026.md` – **Planning engine → ethics context**: What context the planning engine supplies to the ethics system; simulations, training source material, ethics guidelines; document types (ethics updates, training capabilities, plans); epistemic alignment per Michele outline.
+- `docs/michele_alignment_debate_outline.docx.md` – **Epistemic alignment debate outline**: Epistemic vs. safety alignment, source bias, model uncertainty, temporal/spatial reasoning; reference for planning→ethics epistemic discipline.
+
+## Supabase Operational Backbone (Mar 7, 2026)
+- `docs/SUPABASE_OPERATIONAL_BACKBONE_COMPLETE_MAR07_2026.md` – **Supabase backbone complete**: External ingest (Asana/Notion/GitHub), LLM usage ledger, ingest API, spreadsheet sync, n8n Ingest→Sync pipeline.
+
+## Master Spreadsheet Automation (Mar 7, 2026)
+- `docs/MASTER_SPREADSHEET_AUTOMATION_MAR07_2026.md` – **Master spreadsheet automation**: Inventory + hardware sync; n8n/Zapier/MYCA integration; config, API, enabling additional tabs.
+
+## C-Suite OpenClaw VM Rollout (Mar 7, 2026)
+- `docs/CSUITE_OPENCLAW_VM_ROLLOUT_COMPLETE_MAR07_2026.md` – **C-Suite VM rollout complete**: Four executive-assistant VMs (CEO/CFO/CTO/COO) on Proxmox 90; role-based provisioning; OpenClaw golden image; MAS heartbeat/report/escalate integration; VM IPs 192.168.0.192–195.
+- `docs/CSUITE_OPENCLAW_GOLDEN_IMAGE_MAR07_2026.md` – **Golden image procedure**: Windows bootstrap, OpenClaw install, persona seeds, policy defaults.
+- `config/proxmox90_csuite.yaml` – **Proxmox 90 C-Suite config**: Host 192.168.0.90:8006, VMs 192–195, guest_os windows.
+- `config/csuite_role_manifests.yaml` – **Role manifests**: CEO (Atlas/MYCAOS), CFO (Meridian/Perplexity), CTO (Forge/Cursor), COO (Nexus/Claude Cowork).
+
+## MycoBrain Sandbox Always-On (Mar 7, 2026)
+- `docs/MYCOBRAIN_SANDBOX_ALWAYS_ON_COMPLETE_MAR07_2026.md` – **MycoBrain Sandbox always-on complete**: systemd infinite restarts, 1-min watchdog, ensure script in deploy pipeline; service on 192.168.0.187:8003; Docker `host.docker.internal` for website container.
+
+## MycoBrain Firmware Baseline (Mar 7, 2026)
+- `docs/MYCOBRAIN_FIRMWARE_BASELINE_REBASELINE_MAR07_2026.md` – **Rebaseline**: DeviceManager/DualMode = operational truth; SideA/SideB = target split; MycoBrain_Working = recovery-only; ScienceComms = experimental reference.
+
+## MycoBrain Rail Unification (Mar 7, 2026)
+- `docs/MYCOBRAIN_RAIL_UNIFICATION_COMPLETE_MAR07_2026.md` – **Completion**: Heartbeat canonical, capability manifest, FCI bridge, Jetson path, Side B transport.
+- `docs/MYCOBRAIN_CAPABILITY_MANIFEST_MAR07_2026.md` – **Capability manifest**: Role→sensors/capabilities contract; firmware→service→MAS→website.
+- `docs/FCI_MYCORRHIZAE_BRIDGE_DESIGN_MAR07_2026.md` – **FCI/Mycorrhizae bridge**: Single device_id for MycoBrain + FCI; MAS fci-summary endpoint.
+- `docs/JETSON_OPTIONAL_CORTEX_PATH_MAR07_2026.md` – **Jetson optional cortex**: Identity unchanged; Jetson as optional inference/backhaul layer.
+- `docs/DEVICE_JETSON16_CORTEX_ARCHITECTURE_MAR07_2026.md` – **16GB Jetson on-device cortex**: Role between Side A and Side B; command arbitration, operator runtime, MDP rail, MYCA integration, identity rules.
+- `docs/GATEWAY_JETSON4_LILYGO_ARCHITECTURE_MAR07_2026.md` – **4GB Jetson + LilyGO gateway**: On-site aggregation, LoRa/SIM/BLE/WiFi, store-and-forward, upstream publish to MAS/Mycorrhizae/MINDEX.
+- `docs/SIDE_B_TRANSPORT_AND_BACKHAUL_MAR07_2026.md` – **Side B transport-only**: Modem/gateway strategy; device identity on Side A.
+- `docs/MDP_PROTOCOL_CONTRACTS_MAR07_2026.md` – **MDP internal rail + gateway upstream**: Side A↔Jetson16↔Side B command families; gateway→MAS/Mycorrhizae/MINDEX/website publish contracts; identity invariants.
+- `docs/MYCOBRAIN_FIRMWARE_ROADMAP_MAR07_2026.md` – **Side A/Side B firmware roadmap**: MDP layer, command alignment, transport directives, implementation phases.
+- `docs/DEVICE_NETWORK_EDGE_GATEWAY_AWARENESS_MAR07_2026.md` – **Edge-cortex and gateway awareness**: Capability manifest, display labels, identity invariants for Device Manager/Network.
+- `docs/EDGE_OPERATOR_SAFETY_MAR07_2026.md` – **Edge operator safety**: Audit, approval, rollback, code/firmware mutation boundaries.
+- `docs/JETSON_BACKED_MYCORBRAIN_ARCHITECTURE_COMPLETE_MAR07_2026.md` – **Plan complete**: All seven todos done; deliverables summary.
+- `docs/JETSON_FIRMWARE_IMPLEMENTATION_GUIDE_MAR07_2026.md` – **Implementation guide**: New SideA/SideB MDP firmware targets, on-device operator service, gateway router service, run/flash instructions.
+
+## MycoBrain Supabase Telemetry (Mar 7, 2026)
+- `docs/MYCOBRAIN_SUPABASE_TELEMETRY_ARCHITECTURE_MAR07_2026.md` – **MycoBrain → Supabase telemetry**: Data flow (device → MycoBrain → Ingest API → Supabase); Device Manager + MINDEX; why Supabase over SQLite; env vars `TELEMETRY_INGEST_URL`, `TELEMETRY_INGEST_API_KEY`; verification steps.
+- `docs/DEVICE_UI_VERIFICATION_COMPLETE_MAR07_2026.md` – **Device UI verification**: Device Network, Device Manager, controls, comms, I2C peripherals, firmware — all verified working in UI; APIs and fallbacks in place; hardware E2E pending.
+
+## BOM / Device Components (Mar 7, 2026)
+- `docs/MYCOBRAIN_JETSON_GATEWAY_BUILD_PLAN_MAR07_2026.md` – **MycoBrain→Jetson→MYCA gateway build plan**: Tier 1 Mushroom 1 (Orin NX Super), Tier 2 Hyphae 1 (Waveshare Nano/Xavier NX), Tier 3 Gateway (Nano B01); BOM, firmware, connections, Big Device 12V solar power; step-by-step build instructions.
+- `docs/COMPONENT_NAMES_STAFF_GUIDE_MAR07_2026.md` – **Staff component names**: Short, clear names for staff; which components go into which device (Mushroom 1, SporeBase, ALARM, MycoNODE, Hypha 1); ID→name map; naming rules; gaps list.
+- `docs/DEVICE_PRODUCTS_AND_MYCOFORGE_SYNC_MAR07_2026.md` – **MycoForge sync**: Canonical product registry (`device-products.ts`) ↔ Supabase `products`; seed script, PreOrderModal productId, BOM/components flow.
+- `docs/COMPONENTS_REMOVED_MAR07_2026.md` – **Non-BOM removal list**: 117 items removed from Supabase `components` (house, furniture, shop tools, office, personal). Kept 185 device BOM components. Use to restore any erroneously removed item.
+- `scripts/remove_non_bom_components.py` – **Script**: Filters `components` to 5 Mycosoft device BOM only; run with `--dry-run` to preview.
+- `scripts/update_component_names_for_staff.py` – **Script**: Updates Supabase `components.name` to staff-friendly short names; run with `--dry-run` to preview.
+- `docs/INVENTORY_GOOGLE_SHEETS_SYNC_MAR07_2026.md` – **Inventory→master sheet sync**: Supabase components → CSV + optional push to master Google Sheet tab; run after any inventory change.
+- `scripts/sync_components_to_google_sheets.py` – **Script**: Fetches components from Supabase, writes CSV, optionally pushes to master sheet; use `--push` with credentials.
+
 ## Gap Plan Completion (Mar 5, 2026)
 - `docs/GAP_PLAN_COMPLETION_MAR05_2026.md` – **Gap plan complete**: Critical, High, Quick Wins, Medium in-scope items verified or done; NatureOS summary API added; deferred items documented.
 - `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` – **Large items scaffolding**: Design stubs for Jobs 18–23 (control plane, worldview digest, unified front door, NatureOS bridge, MycoBrain awareness, workflow visibility).
+- `docs/GAP_PLAN_CHANGES_LOG_MAR07_2026.md` – **Gap plan changes log**: Audit trail of all code and doc changes during gap execution; WEBSITE + MAS commits, new/modified files, verification checks, build regression.
 
 ## MYCA Support Upgrade Implementation (Mar 7, 2026)
 - `docs/MYCA_SUPPORT_UPGRADE_IMPLEMENTATION_COMPLETE_MAR07_2026.md` – **Implementation complete**: 10 items (5 quick wins, 5 medium); MYCA state widget, Morgan oversight panel, EP summary, NatureOS summary, page context, docs.
@@ -68,6 +121,7 @@
 
 ## MYCA Platform Status and Gaps (Mar 5, 2026)
 - `docs/MYCA_PLATFORM_STATUS_AND_GAPS_MAR05_2026.md` – **Consolidated status report**: Single source of truth for what's done (infrastructure, plans, fixes), what's not (VM 191 SSH blocker, MYCA channels), user inputs needed (Slack token, Discord, Asana, Signal, WhatsApp), and next steps. Use for planning, handoffs, and quick reference.
+- `docs/MYCA_VM191_FULL_CAPABILITY_STATUS_MAR02_2026.md` – **VM 191 capability checklist**: Direct answers to Signal/WhatsApp/Discord, group chats, brain/memory, task-on-PC, periodic updates; what's working vs what needs setup.
 
 ## MYCA E2E Usability Test (Mar 5, 2026)
 - `docs/MYCA_E2E_USABILITY_TEST_COMPLETE_MAR05_2026.md` – **Pipeline USABLE**: 10/10 tests passed. You can ask MYCA to do work on her PC (VM 191). Workspace API at 191:8100, /workspace/think, MAS chat, agents registry. Run `python scripts/_test_myca_e2e.py` to verify.

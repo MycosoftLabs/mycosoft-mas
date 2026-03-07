@@ -21,9 +21,19 @@
 | `docs/MYCA_FULL_OMNICHANNEL_EXECUTION_COMPLETE_MAR06_2026.md` | **Full execution complete**: tests fixed, full suite passing, pushed to GitHub, VM 191 deployed, VM 188 refreshed, core health verified, remaining issues documented. |
 | `infra/network/vlan_config.yaml` | **VLAN config as code**: VLAN 10/20/30/40 CIDRs, flat 192.168.0.x assignments. Reference for firewall and deployment. |
 | `docs/MYCA_SUPPORT_UPGRADE_AUDIT_MAR07_2026.md` | **MYCA Support Upgrade Audit**: Cross-system audit (Website, MINDEX, NatureOS, MycoBrain, cowork, automation). Prioritized upgrade plan for MYCA–Morgan interaction. |
+| `docs/MYCOBRAIN_RAIL_UNIFICATION_COMPLETE_MAR07_2026.md` | **MycoBrain Rail Unification complete**: Heartbeat canonical, capability manifest, FCI bridge, Jetson path, Side B transport. |
+| `docs/MYCOBRAIN_CAPABILITY_MANIFEST_MAR07_2026.md` | **Capability manifest**: Role→sensors/capabilities; firmware→service→MAS→website. |
+| `docs/MYCOBRAIN_JETSON_GATEWAY_BUILD_PLAN_MAR07_2026.md` | **MycoBrain→Jetson gateway build**: Three tiers (Mushroom 1 Orin NX, Hyphae 1 Nano/Xavier NX, Gateway Nano B01); BOM, firmware, USB/LoRa/WiFi connections, 12V solar power; direct build instructions. |
+| `docs/DEVICE_JETSON16_CORTEX_ARCHITECTURE_MAR07_2026.md` | **16GB Jetson on-device cortex**: Role between Side A and Side B; command arbitration, operator runtime, MDP rail, MYCA integration; two-Jetson architecture. |
+| `docs/GATEWAY_JETSON4_LILYGO_ARCHITECTURE_MAR07_2026.md` | **4GB Jetson + LilyGO gateway**: On-site aggregation, LoRa/SIM/BLE/WiFi, store-and-forward, upstream publish to MAS/Mycorrhizae/MINDEX. |
+| `docs/MDP_PROTOCOL_CONTRACTS_MAR07_2026.md` | **MDP internal rail + gateway upstream**: Side A↔Jetson16↔Side B MDP command families; gateway→MAS/Mycorrhizae/MINDEX/website publish contracts. |
+| `docs/JETSON_FIRMWARE_IMPLEMENTATION_GUIDE_MAR07_2026.md` | **Implementation guide**: New SideA/SideB MDP firmware projects plus on-device operator and gateway router service runbook. |
+| `docs/MYCOBRAIN_SUPABASE_TELEMETRY_ARCHITECTURE_MAR07_2026.md` | **MycoBrain→Supabase telemetry**: Data flow, ingest API, Device Manager fallback, MINDEX integration; env vars `TELEMETRY_INGEST_URL`; Supabase vs SQLite rationale. |
 | `docs/NEXT_JOBS_FROM_GAPS_MAR07_2026.md` | **Next jobs from gaps**: Prioritized job list (Critical→High→Quick wins→Medium→Large). Sprint planning, gap-derived work. |
+| `docs/SUPABASE_OPERATIONAL_BACKBONE_COMPLETE_MAR07_2026.md` | **Supabase backbone complete**: External ingest (Asana/Notion/GitHub), LLM ledger, ingest API, spreadsheet sync, n8n Ingest→Sync. |
 | `docs/GAP_PLAN_COMPLETION_MAR05_2026.md` | **Gap plan complete**: Critical/High/Quick/Medium verified or done; NatureOS summary API; deferred items. |
 | `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` | **Large items scaffolding**: Design stubs for Jobs 18–23 (control plane, bridges, workflow visibility). |
+| `docs/CSUITE_OPENCLAW_VM_ROLLOUT_COMPLETE_MAR07_2026.md` | **C-Suite VM rollout complete**: Four executive-assistant VMs (CEO/CFO/CTO/COO) on Proxmox 90; OpenClaw golden image; MAS heartbeat/report/escalate; VM IPs 192.168.0.192–195. |
 
 ## 1. Master indexes (read first)
 
@@ -55,6 +65,8 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/MYCA_ETHICS_PHILOSOPHY_BASELINE_MAR03_2026.md` | **Implemented**: Three-gate pipeline (Truth/Incentive/Horizon), IncentiveAuditorAgent, Clarity Brief, constitution 9–12, instincts, n8n ethics workflow, orchestrator/deliberation integration |
+| `docs/PLANNING_ETHICS_CONTEXT_SYSTEM_MAR03_2026.md` | **Planning→ethics context**: Planning engine tells ethics system what context to hold (simulations, training source material, ethics guidelines); document types for ethics updates, training capabilities, plans; epistemic alignment per Michele outline |
+| `docs/michele_alignment_debate_outline.docx.md` | **Epistemic alignment**: Epistemic vs. safety alignment, source bias, model uncertainty, temporal/spatial reasoning; debate-ready outline for adaptive intelligence alignment |
 
 ## MYCA Living Employee Full Integration Phase 0 (Mar 2, 2026)
 | Doc | Purpose |

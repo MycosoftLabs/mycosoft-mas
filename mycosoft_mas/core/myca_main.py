@@ -72,6 +72,7 @@ from mycosoft_mas.core.routers.conversation_memory_api import router as conversa
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
+from mycosoft_mas.core.routers.csuite_api import router as csuite_router
 from mycosoft_mas.core.routers.alert_api import router as alert_router
 from mycosoft_mas.core.routers.iot_analytics_api import router as iot_analytics_router
 from mycosoft_mas.core.routers.fleet_api import router as fleet_router
@@ -81,6 +82,8 @@ from mycosoft_mas.core.routers.nlq_api import router as nlq_router
 from mycosoft_mas.core.routers.telemetry_pipeline_api import router as telemetry_pipeline_router
 from mycosoft_mas.core.routers.presence_api import router as presence_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
+from mycosoft_mas.core.routers.spreadsheet_sync_api import router as spreadsheet_sync_router
+from mycosoft_mas.core.routers.ingest_api import router as ingest_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -578,10 +581,15 @@ if FIRST_LIGHT_API_AVAILABLE and first_light_router is not None:
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
+# C-Suite Executive Assistant API (heartbeat, reporting, escalation)
+app.include_router(csuite_router, tags=["csuite"])
 # Presence API (online users, sessions, staff)
 app.include_router(presence_router, tags=["presence"])
 # Deploy API (autonomous fix pipeline)
 app.include_router(deploy_router)
+# Master Spreadsheet Sync API (n8n, Zapier)
+app.include_router(spreadsheet_sync_router)
+app.include_router(ingest_router)
 # IoT Alert Service API
 app.include_router(alert_router, tags=["iot-alerts"])
 # IoT Analytics API

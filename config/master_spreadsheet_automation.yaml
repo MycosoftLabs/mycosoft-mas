@@ -1,0 +1,82 @@
+# Master Spreadsheet Automation Config
+# Spreadsheet ID: 1rhuGmyxZakCVet1zMK3_C2f3SCOzH_dr6HH6EKWGRmc
+# All tabs are in this single spreadsheet; each section maps to a tab by GID.
+#
+# Source types: supabase | mas_api | csv | manual | zapier_webhook
+# - supabase: fetch from Supabase table (requires NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+# - mas_api: fetch from MAS HTTP endpoint (e.g. /api/devices/network)
+# - csv: read from local CSV file (path relative to MAS repo data/)
+# - manual: no automated source; user maintains; sync can still push if CSV exists
+# - zapier_webhook: Zapier writes to this tab; we don't overwrite (read-only from our side)
+
+spreadsheet_id: "1rhuGmyxZakCVet1zMK3_C2f3SCOzH_dr6HH6EKWGRmc"
+
+tabs:
+  inventory:
+    gid: "1289530278"
+    source: supabase
+    supabase_table: components
+    columns: ["id", "name", "sku", "category", "quantity", "unit_cost", "supplier_name", "location", "reorder_threshold", "supplier_lead_time_days"]
+    enabled: true
+
+  hardware:
+    gid: ""  # Set when tab exists in Google Sheet
+    source: supabase
+    supabase_table: hardware_network_devices
+    columns: ["device_id", "device_name", "host", "port", "connection_type", "last_seen", "status"]
+    enabled: true
+    mas_api_fallback: "/api/devices/network"  # Used when Supabase empty until ingestor populates
+    notes: "MycoBrain + network devices; Supabase canonical, MAS fallback when empty"
+
+  apps_and_services:
+    gid: ""
+    source: supabase
+    supabase_table: apps_services
+    columns: ["name", "category", "url", "owner", "status", "notes"]
+    enabled: true
+
+  customer_vendors:
+    gid: ""
+    source: supabase
+    supabase_table: customer_vendors
+    columns: ["name", "type", "contact", "terms", "notes"]
+    enabled: true
+
+  commitments:
+    gid: ""
+    source: supabase
+    supabase_table: commitments
+    columns: ["title", "due_date", "owner", "status", "notes"]
+    enabled: true
+
+  liabilities:
+    gid: ""
+    source: supabase
+    supabase_table: liabilities
+    columns: ["title", "amount", "due_date", "status", "notes"]
+    enabled: true
+
+  recruitment:
+    gid: ""
+    source: supabase
+    supabase_table: recruitment_roles
+    columns: ["role", "status", "owner", "notes"]
+    enabled: true
+
+  production:
+    gid: ""
+    source: supabase
+    supabase_table: production_runs
+    columns: ["product", "quantity", "status", "notes"]
+    enabled: true
+
+  singlogs:
+    gid: ""
+    source: supabase
+    supabase_table: singlogs
+    columns: ["log_date", "log_type", "message", "source"]
+    enabled: true
+
+# Zapier: set ZAPIER_WEBHOOK_URL to notify Zapier after sync (optional)
+# n8n: workflows call POST /api/spreadsheet/sync to trigger
+# MYCA: agents can call same endpoint or use spreadsheet as context

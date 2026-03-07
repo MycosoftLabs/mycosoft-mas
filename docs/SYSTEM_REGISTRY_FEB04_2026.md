@@ -29,6 +29,22 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
   - `mycosoft_mas/integrations/scholar_client.py`
 - Replaced SporeBase order 501 response with order intake logic in `mycosoft_mas/core/routers/sporebase_api.py`.
 
+## Recent Updates (Mar 7, 2026)
+
+- Supabase Operational Backbone:
+  - External ingest (Asana, Notion, GitHub) into Supabase `commitments`, `customer_vendors`, `liabilities`, `recruitment_roles`
+  - LLM usage ledger persisted to Supabase `llm_usage_ledger` from `mycosoft_mas/llm/router.py`
+  - Ingest API: `POST /api/ingest/external` — `mycosoft_mas/core/routers/ingest_api.py`
+  - Spreadsheet sync: `GET/POST /api/spreadsheet/status|sync` — `spreadsheet_sync_api.py`
+  - n8n workflow `myca-master-spreadsheet-sync` runs Ingest → Sync every 30 min
+  - Completion doc: `docs/SUPABASE_OPERATIONAL_BACKBONE_COMPLETE_MAR07_2026.md`
+
+- C-Suite OpenClaw VM Rollout:
+  - Four executive-assistant VMs (CEO, CFO, CTO, COO) on Proxmox 90 (192.168.0.90:8006)
+  - VM IPs: CEO 192.168.0.192, CFO 192.168.0.193, CTO 192.168.0.194, COO 192.168.0.195
+  - `mycosoft_mas/core/routers/csuite_api.py` — heartbeat, report, escalate, list assistants
+  - `config/proxmox90_csuite.yaml`, `config/csuite_role_manifests.yaml`, `infra/csuite/` (provision, bootstrap, heartbeat scripts)
+
 ## Recent Updates (Mar 6, 2026)
 
 - MYCA OS runtime hardening:
@@ -129,10 +145,12 @@ This new API provides heartbeat-based registration for remote MycoBrain devices.
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/devices/register` | POST | Register device via heartbeat |
+| `/api/devices/heartbeat` | POST | **Canonical** device heartbeat/registration |
+| `/api/devices/register` | POST | Legacy alias for `/heartbeat`; both behave identically |
 | `/api/devices` | GET | List all network-registered devices |
 | `/api/devices/{device_id}` | GET | Get specific device info |
 | `/api/devices/{device_id}` | DELETE | Unregister device |
+| `/api/devices/{device_id}/fci-summary` | POST | Store FCI summary (Mycorrhizae/FCI bridge) |
 | `/api/devices/{device_id}/command` | POST | Forward command to remote device |
 | `/api/devices/{device_id}/telemetry` | GET | Fetch telemetry from remote device |
 | `/api/devices/health` | GET | Device registry health check |
@@ -241,6 +259,22 @@ MYCA live awareness of online users, active sessions, and staff presence. Proxie
 **Upstream**: Website `PRESENCE_API_URL` (default http://192.168.0.187:3000/api/presence)  
 **Auth**: `x-service-key: PRESENCE_SERVICE_KEY` for service-to-service  
 **Doc**: `docs/myca/atomic/MYCA_PRESENCE.md`
+
+### C-Suite API (Mar 7, 2026)
+
+Heartbeat, reporting, and escalation from executive-assistant VMs (CEO, CFO, CTO, COO) back into MAS/MYCA.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/csuite/heartbeat` | POST | C-Suite VM heartbeat (role, ip, status, assistant_name) |
+| `/api/csuite/report` | POST | Task completion, executive summary, operating report |
+| `/api/csuite/escalate` | POST | Escalation when Morgan's decision needed |
+| `/api/csuite/assistants` | GET | List registered assistants (MYCA/MAS UI) |
+| `/api/csuite/health` | GET | C-Suite API health check |
+
+**Router**: `mycosoft_mas/core/routers/csuite_api.py`  
+**Doc**: `docs/CSUITE_OPENCLAW_VM_ROLLOUT_COMPLETE_MAR07_2026.md`  
+**VMs**: CEO 192.168.0.192, CFO .193, CTO .194, COO .195 (Proxmox 90 host at 192.168.0.90:8006)
 
 ### Agent Event Bus (Feb 9, 2026)
 

@@ -1,0 +1,95 @@
+{
+  "name": "MYCA Master Spreadsheet Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {"field": "cronExpression", "expression": "*/30 * * * *"}
+          ]
+        }
+      },
+      "id": "cron-every-30",
+      "name": "Every 30 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 180]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "master-spreadsheet-sync",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-sync",
+      "name": "Webhook (Zapier / on-demand)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 360],
+      "webhookId": "master-spreadsheet-sync"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "merge-triggers",
+      "name": "Merge Triggers",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [460, 270]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/ingest/external",
+        "options": {"timeout": 120000}
+      },
+      "id": "call-mas-ingest",
+      "name": "POST MAS Ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 270],
+      "notes": "Ingest Asana/Notion/GitHub into Supabase backbone"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/spreadsheet/sync",
+        "options": {"timeout": 90000}
+      },
+      "id": "call-mas-sync",
+      "name": "POST MAS Sync",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 270],
+      "notes": "Syncs inventory, hardware, etc. to master Google Sheet"
+    }
+  ],
+  "connections": {
+    "Every 30 min": {
+      "main": [[{"node": "Merge Triggers", "type": "main", "index": 0}]]
+    },
+    "Webhook (Zapier / on-demand)": {
+      "main": [[{"node": "Merge Triggers", "type": "main", "index": 1}]]
+    },
+    "Merge Triggers": {
+      "main": [[{"node": "POST MAS Ingest", "type": "main", "index": 0}]]
+    },
+    "POST MAS Ingest": {
+      "main": [[{"node": "POST MAS Sync", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles"
+  },
+  "tags": [
+    {"name": "myca"},
+    {"name": "spreadsheet"},
+    {"name": "inventory"},
+    {"name": "zapier"}
+  ]
+}
