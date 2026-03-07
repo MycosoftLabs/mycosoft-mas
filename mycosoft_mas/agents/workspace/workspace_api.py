@@ -25,7 +25,17 @@ MAS_API_URL = os.getenv("MAS_API_URL", "http://192.168.0.188:8001")
 MYCA_EMAIL = os.getenv("MYCA_EMAIL", "schedule@mycosoft.org")
 MYCA_DISCORD_TOKEN = os.getenv("MYCA_DISCORD_TOKEN", "")
 DISCORD_OPS_CHANNEL = os.getenv("DISCORD_OPS_CHANNEL_ID", "")
-ASANA_API_KEY = os.getenv("ASANA_API_KEY", "")
+
+
+def _env_asana_token() -> str:
+    """Asana token from ASANA_API_KEY, ASANA_PAT, or MYCA_ASANA_TOKEN (deploy uses ASANA_PAT on VM 191)."""
+    for name in ("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN"):
+        v = (os.getenv(name) or "").strip()
+        if v:
+            return v
+    return ""
+
+
 ASANA_WORKSPACE_ID = os.getenv("ASANA_WORKSPACE_ID", "")
 
 
@@ -41,7 +51,7 @@ async def health():
         "services": {
             "email": bool(os.path.exists(os.getenv("GOOGLE_SERVICE_ACCOUNT_KEY", ""))),
             "discord": bool(MYCA_DISCORD_TOKEN),
-            "asana": bool(ASANA_API_KEY),
+            "asana": bool(_env_asana_token()),
         }
     }
 
@@ -253,7 +263,7 @@ async def _run_morning_brief():
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
 async def _get_asana_tasks_today() -> List[Dict]:
-    if not ASANA_API_KEY:
+    if not _env_asana_token():
         return []
     try:
         from mycosoft_mas.integrations.asana_client import AsanaClient
