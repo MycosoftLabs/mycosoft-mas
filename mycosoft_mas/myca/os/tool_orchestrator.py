@@ -551,6 +551,87 @@ print(asyncio.run(click()))
         results = await self._os.mindex_bridge.search_knowledge(query, limit=int(task.get("limit", 10)))
         return {"status": "completed", "results": results, "summary": f"Unified search completed for: {query[:80]}"}
 
+    # ── Finance / CFO Connector ────────────────────────────────────
+
+    async def run_finance_task(self, task: dict) -> dict:
+        """Run a finance task via the finance discovery/delegation layer.
+
+        Routes through the canonical CFO-facing contract instead of generic fallback
+        or direct Morgan escalation. Operations:
+          - delegate: delegate to a finance agent (agent_id, task payload)
+          - list_agents, list_services, list_workloads, list_tasks: discovery
+          - status, alerts: aggregate status and alerts
+          - submit_report: submit finance report to C-Suite
+        """
+        from mycosoft_mas.finance.discovery import (
+            delegate_finance_task,
+            list_finance_agents,
+            list_finance_services,
+            list_finance_workloads,
+            list_finance_tasks,
+            get_finance_status,
+            get_finance_alerts,
+            submit_finance_report,
+        )
+
+        operation = task.get("operation", "status")
+
+        try:
+            if operation == "delegate":
+                agent_id = task.get("agent_id") or task.get("agent")
+                if not agent_id:
+                    return {"status": "failed", "error": "agent_id required for delegate"}
+                payload = {k: v for k, v in task.items() if k not in ("operation", "agent_id", "agent", "type")}
+                result = await delegate_finance_task(agent_id, payload)
+                if result.get("status") == "ok":
+                    return {
+                        "status": "completed",
+                        "result": result.get("result"),
+                        "agent_id": agent_id,
+                        "summary": f"Delegated to {agent_id}",
+                    }
+                return {
+                    "status": "failed",
+                    "error": result.get("error", "delegation failed"),
+                    "agent_id": agent_id,
+                }
+            elif operation == "list_agents":
+                agents = list_finance_agents()
+                return {"status": "completed", "agents": agents, "summary": f"Listed {len(agents)} finance agents"}
+            elif operation == "list_services":
+                services = list_finance_services()
+                return {"status": "completed", "services": services, "summary": f"Listed {len(services)} finance services"}
+            elif operation == "list_workloads":
+                workloads = await list_finance_workloads()
+                return {"status": "completed", "workloads": workloads, "summary": f"Listed {len(workloads)} finance workloads"}
+            elif operation == "list_tasks":
+                tasks = await list_finance_tasks()
+                return {"status": "completed", "tasks": tasks, "summary": f"Listed {len(tasks)} finance tasks"}
+            elif operation == "status":
+                status = await get_finance_status()
+                return {"status": "completed", "status": status, "summary": "Finance status retrieved"}
+            elif operation == "alerts":
+                alerts = await get_finance_alerts()
+                return {"status": "completed", "alerts": alerts, "summary": f"Retrieved {len(alerts)} finance alerts"}
+            elif operation == "submit_report":
+                result = await submit_finance_report(
+                    role=task.get("role", "CFO"),
+                    assistant_name=task.get("assistant_name", "Meridian"),
+                    report_type=task.get("report_type", "operating_report"),
+                    summary=task.get("summary", ""),
+                    details=task.get("details"),
+                    task_id=task.get("task_id"),
+                    escalated=task.get("escalated", False),
+                )
+                if "error" in result:
+                    return {"status": "failed", "error": result.get("error"), "summary": "Report submit failed"}
+                return {"status": "completed", "result": result, "summary": "Finance report submitted"}
+            else:
+                return {"status": "failed", "error": f"Unknown finance operation: {operation}"}
+        except Exception as e:
+            logger.exception("run_finance_task failed: %s", e)
+            return {"status": "failed", "error": str(e)}
+
     # ── Git / GitHub ─────────────────────────────────────────────
 
     async def run_git_operation(self, task: dict) -> dict:

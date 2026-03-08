@@ -396,6 +396,8 @@ WEBHOOK_SOURCE_CONFIG = {
     "github": {"task_type": "github", "default_priority": "high"},
     "calendar": {"task_type": "calendar", "default_priority": "medium"},
     "n8n": {"task_type": "automation", "default_priority": "medium"},
+    "csuite": {"task_type": "finance", "default_priority": "high"},
+    "finance": {"task_type": "finance", "default_priority": "high"},
     "custom": {"task_type": "general", "default_priority": "medium"},
 }
 

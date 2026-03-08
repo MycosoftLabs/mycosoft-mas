@@ -828,6 +828,8 @@ class MycaOS:
                 return await self.tools.run_natureos_task(task)
             elif task_type == "search":
                 return await self.tools.run_search_task(task)
+            elif task_type in ("finance", "financial", "cfo"):
+                return await self.tools.run_finance_task(task)
             elif task_type == "deployment":
                 return await self.tools.run_deployment(task)
             elif task_type == "communication":

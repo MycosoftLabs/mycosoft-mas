@@ -29,6 +29,17 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
   - `mycosoft_mas/integrations/scholar_client.py`
 - Replaced SporeBase order 501 response with order intake logic in `mycosoft_mas/core/routers/sporebase_api.py`.
 
+## Recent Updates (Mar 8, 2026)
+
+- CFO MCP Connector:
+  - `mycosoft_mas/finance/discovery.py` — Canonical finance discovery: list_finance_agents, list_finance_services, list_finance_workloads, list_finance_tasks, delegate_finance_task, submit_finance_report, get_finance_status, get_finance_alerts
+  - `mycosoft_mas/mcp/cfo_mcp_server.py` — Finance-specialized MCP server (8 tools)
+  - `mycosoft_mas/core/routers/cfo_mcp_api.py` — REST API for Meridian: GET/POST /api/cfo-mcp/tools, /tools/call, /health
+  - `mycosoft_mas/edge/meridian_adapter.py` — MeridianAdapter for Perplexity desktop on CFO VM (192.168.0.193); connects to CFO MCP, relays reports to csuite
+  - C-Suite API upgrades: POST /api/csuite/finance-directive, POST /api/csuite/agent-report, GET /api/csuite/cfo/dashboard, GET /api/csuite/cfo/summary (Redis-backed report history)
+  - MYCA federation: task_type finance/financial/cfo routes to run_finance_task in tool_orchestrator; webhook sources csuite and finance
+  - Completion doc: `docs/CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md`
+
 ## Recent Updates (Mar 7, 2026)
 
 - Supabase Operational Backbone:
@@ -43,7 +54,7 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
   - Four executive-assistant VMs (CEO, CFO, CTO, COO) on Proxmox 90 (192.168.0.90:8006)
   - VM IPs: CEO 192.168.0.192, CFO 192.168.0.193, CTO 192.168.0.194, COO 192.168.0.195
   - `mycosoft_mas/core/routers/csuite_api.py` — heartbeat, report, escalate, list assistants
-  - `config/proxmox90_csuite.yaml`, `config/csuite_role_manifests.yaml`, `infra/csuite/` (provision, bootstrap, heartbeat scripts)
+  - `config/proxmox202_csuite.yaml`, `config/csuite_role_manifests.yaml`, `infra/csuite/` (provision, bootstrap, heartbeat scripts)
 
 ## Recent Updates (Mar 6, 2026)
 

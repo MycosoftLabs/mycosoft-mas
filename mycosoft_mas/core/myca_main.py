@@ -73,6 +73,7 @@ from mycosoft_mas.core.routers.security_audit_api import router as security_rout
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
 from mycosoft_mas.core.routers.csuite_api import router as csuite_router
+from mycosoft_mas.core.routers.cfo_mcp_api import router as cfo_mcp_router
 from mycosoft_mas.core.routers.alert_api import router as alert_router
 from mycosoft_mas.core.routers.iot_analytics_api import router as iot_analytics_router
 from mycosoft_mas.core.routers.fleet_api import router as fleet_router
@@ -583,6 +584,8 @@ app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 app.include_router(device_registry_router, tags=["device-registry"])
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)
 app.include_router(csuite_router, tags=["csuite"])
+# CFO MCP API (Meridian adapter — finance discovery, delegation, reporting)
+app.include_router(cfo_mcp_router, tags=["cfo-mcp"])
 # Presence API (online users, sessions, staff)
 app.include_router(presence_router, tags=["presence"])
 # Deploy API (autonomous fix pipeline)

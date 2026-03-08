@@ -31,9 +31,11 @@
 | `docs/MYCOBRAIN_SUPABASE_TELEMETRY_ARCHITECTURE_MAR07_2026.md` | **MycoBrain→Supabase telemetry**: Data flow, ingest API, Device Manager fallback, MINDEX integration; env vars `TELEMETRY_INGEST_URL`; Supabase vs SQLite rationale. |
 | `docs/NEXT_JOBS_FROM_GAPS_MAR07_2026.md` | **Next jobs from gaps**: Prioritized job list (Critical→High→Quick wins→Medium→Large). Sprint planning, gap-derived work. |
 | `docs/SUPABASE_OPERATIONAL_BACKBONE_COMPLETE_MAR07_2026.md` | **Supabase backbone complete**: External ingest (Asana/Notion/GitHub), LLM ledger, ingest API, spreadsheet sync, n8n Ingest→Sync. |
+| `docs/SUPABASE_GOOGLE_SHEETS_AUTOMATION_MAR07_2026.md` | **Supabase + Google Sheets full automation**: One-time GCP service account; credential options; run `_automate_supabase_and_sheets.py`; tabs without GID supported. |
 | `docs/GAP_PLAN_COMPLETION_MAR05_2026.md` | **Gap plan complete**: Critical/High/Quick/Medium verified or done; NatureOS summary API; deferred items. |
 | `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` | **Large items scaffolding**: Design stubs for Jobs 18–23 (control plane, bridges, workflow visibility). |
 | `docs/CSUITE_OPENCLAW_VM_ROLLOUT_COMPLETE_MAR07_2026.md` | **C-Suite VM rollout complete**: Four executive-assistant VMs (CEO/CFO/CTO/COO) on Proxmox 90; OpenClaw golden image; MAS heartbeat/report/escalate; VM IPs 192.168.0.192–195. |
+| `docs/CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md` | **CFO MCP Connector complete**: Meridian/Perplexity hybrid; finance discovery; CFO MCP server; Meridian adapter; C-Suite reporting; MYCA federation; dynamic discovery. |
 
 ## 1. Master indexes (read first)
 

@@ -172,12 +172,28 @@ class AgentRegistry:
             description="Administrative financial operations and approvals",
             category=AgentCategory.FINANCIAL,
             capabilities=[AgentCapability.READ, AgentCapability.WRITE, AgentCapability.MANAGE],
-            module_path="mycosoft_mas.agents.finance_admin_agent",
+            module_path="mycosoft_mas.agents.financial.finance_admin_agent",
             class_name="FinanceAdminAgent",
             keywords=["finance", "admin", "approval", "payments"],
             voice_triggers=["finance admin", "payment approval"],
-            requires_confirmation=True
+            requires_confirmation=True,
+            config_key="finance_admin"
         ))
+
+        self.register(AgentDefinition(
+            agent_id="financial_operations",
+            name="FinancialOperationsAgent",
+            display_name="Financial Operations Agent",
+            description="Banking (Mercury), accounting (QuickBooks), SAFE agreements, cap table",
+            category=AgentCategory.FINANCIAL,
+            capabilities=[AgentCapability.READ, AgentCapability.WRITE, AgentCapability.ANALYZE],
+            module_path="mycosoft_mas.agents.financial.financial_operations_agent",
+            class_name="FinancialOperationsAgent",
+            keywords=["mercury", "quickbooks", "banking", "safe", "cap table", "pulley"],
+            voice_triggers=["financial operations", "mercury", "quickbooks", "banking"],
+            config_key="financial_operations"
+        ))
+
 
         self.register(AgentDefinition(
             agent_id="corporate_ops",
@@ -719,9 +735,13 @@ class AgentRegistry:
         agent_def.is_active = True
         self._agents[agent_def.agent_id] = agent_def
         
+    # Alias: financial_agent -> financial (registry uses 'financial', runtime sometimes uses 'financial_agent')
+    _AGENT_ALIASES = {"financial_agent": "financial"}
+
     def get(self, agent_id: str) -> Optional[AgentDefinition]:
-        """Get an agent definition by ID."""
-        return self._agents.get(agent_id)
+        """Get an agent definition by ID. Resolves aliases (e.g. financial_agent -> financial)."""
+        resolved = self._AGENT_ALIASES.get(agent_id, agent_id)
+        return self._agents.get(resolved)
     
     def get_by_name(self, name: str) -> Optional[AgentDefinition]:
         """Get an agent definition by class name."""

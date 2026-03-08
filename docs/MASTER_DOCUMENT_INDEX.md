@@ -10,11 +10,18 @@
 
 ## Master Spreadsheet Automation (Mar 7, 2026)
 - `docs/MASTER_SPREADSHEET_AUTOMATION_MAR07_2026.md` – **Master spreadsheet automation**: Inventory + hardware sync; n8n/Zapier/MYCA integration; config, API, enabling additional tabs.
+- `docs/SUPABASE_GOOGLE_SHEETS_AUTOMATION_MAR07_2026.md` – **Supabase + Google Sheets full automation**: One-time GCP service account setup; credential options; run `_automate_supabase_and_sheets.py`; tabs without GID supported.
 
-## C-Suite OpenClaw VM Rollout (Mar 7, 2026)
+## CFO MCP Connector (Mar 8, 2026)
+- `docs/CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md` – **CFO MCP Connector complete**: Meridian/Perplexity hybrid; finance discovery layer; CFO MCP server; Meridian adapter; C-Suite reporting upgrades; MYCA federation integration; dynamic finance agent discovery.
+
+## C-Suite OpenClaw VM Rollout (Mar 7–8, 2026)
+- `docs/PROXMOX202_AUTH_SETUP_MAR08_2026.md` – **Proxmox 202 auth setup**: One-time setup for root password, API token, or SSH key; credential fallback chain; auth attempt order.
+- `docs/CSUITE_COO_PROVISION_COMPLETE_MAR07_2026.md` – **COO provision complete (blocked on auth)**: COO VM 195 defined; PROXMOX202_USE_PASSWORD=1 support; token 403 / password 401; fix steps and provision commands.
+- `docs/CSUITE_ROLLOUT_CLONE_FIXES_MAR07_2026.md` – **Clone fixes**: 30-min timeout for clones, unlock before start for existing VMs, auth error hint; re-run blocked until PROXMOX202_PASSWORD in .credentials.local.
 - `docs/CSUITE_OPENCLAW_VM_ROLLOUT_COMPLETE_MAR07_2026.md` – **C-Suite VM rollout complete**: Four executive-assistant VMs (CEO/CFO/CTO/COO) on Proxmox 90; role-based provisioning; OpenClaw golden image; MAS heartbeat/report/escalate integration; VM IPs 192.168.0.192–195.
 - `docs/CSUITE_OPENCLAW_GOLDEN_IMAGE_MAR07_2026.md` – **Golden image procedure**: Windows bootstrap, OpenClaw install, persona seeds, policy defaults.
-- `config/proxmox90_csuite.yaml` – **Proxmox 90 C-Suite config**: Host 192.168.0.90:8006, VMs 192–195, guest_os windows.
+- `config/proxmox202_csuite.yaml` – **Proxmox 202 C-Suite config**: Host 192.168.0.202:8006, VMs 192–195, guest_os windows (co-located with MYCA 191).
 - `config/csuite_role_manifests.yaml` – **Role manifests**: CEO (Atlas/MYCAOS), CFO (Meridian/Perplexity), CTO (Forge/Cursor), COO (Nexus/Claude Cowork).
 
 ## MycoBrain Sandbox Always-On (Mar 7, 2026)

@@ -39,9 +39,25 @@ Heartbeat, reporting, and escalation from executive-assistant VMs (CEO, CFO, CTO
 | `/api/csuite/report` | POST | Task completion, executive summary, operating report |
 | `/api/csuite/escalate` | POST | Escalation when Morgan's decision needed |
 | `/api/csuite/assistants` | GET | List registered assistants (MYCA/MAS UI) |
+| `/api/csuite/finance-directive` | POST | Persist CFO directives from Meridian (Mar 8) |
+| `/api/csuite/agent-report` | POST | Agent/service reports back to CFO (Mar 8) |
+| `/api/csuite/cfo/dashboard` | GET | CFO dashboard: directives, agent reports, summary (Mar 8) |
+| `/api/csuite/cfo/summary` | GET | Compact summary for MYCA/Meridian (Mar 8) |
 | `/api/csuite/health` | GET | C-Suite API health check |
 
 **Router:** `mycosoft_mas/core/routers/csuite_api.py`
+
+### CFO MCP API (`/api/cfo-mcp/*`) – Mar 8, 2026
+
+REST API for the Meridian adapter; exposes CFO MCP tools over HTTP.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/cfo-mcp/tools` | GET | List available CFO MCP tools |
+| `/api/cfo-mcp/tools/call` | POST | Call a tool by name with arguments |
+| `/api/cfo-mcp/health` | GET | CFO MCP API health check |
+
+**Router:** `mycosoft_mas/core/routers/cfo_mcp_api.py`
 
 ### Health & Status
 
