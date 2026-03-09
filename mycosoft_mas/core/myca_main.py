@@ -85,6 +85,7 @@ from mycosoft_mas.core.routers.presence_api import router as presence_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
 from mycosoft_mas.core.routers.spreadsheet_sync_api import router as spreadsheet_sync_router
 from mycosoft_mas.core.routers.ingest_api import router as ingest_router
+from mycosoft_mas.core.routers.guardian_api import router as guardian_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -571,6 +572,7 @@ app.include_router(network_api_router, tags=["network"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(conversation_memory_router, tags=["memory", "myca-conversations"])
 app.include_router(security_router, tags=["security"])
+app.include_router(guardian_router, tags=["guardian"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
 app.include_router(nlq_router, tags=["nlq"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
