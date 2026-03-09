@@ -1,5 +1,12 @@
 # Master Document Index
 
+## PR #75: Jetson + Avani-Micah + Identity (Mar 9, 2026)
+- `docs/PR75_IMPLEMENTATION_PLAN_MAR09_2026.md` – **PR75 implementation plan**: Deployment status, security remediation, plans, docs, frontend implementations; Guardian, Avani, Identity, Liquid Fungal APIs; Jetson hardware.
+- `docs/JETSON_MYCOBRAIN_HARDWARE_PLAN_MAR09_2026.md` – **Jetson + MycoBrain hardware plan**: Mushroom 1 (AGX Orin 32GB) and Hyphae 1 (Orin Nano Super 8GB); ESP32-S3 MycoBrain, dual BME688, FCI, LoRa mesh.
+- `docs/AVANI_MICAH_CONSTITUTION_MAR09_2026.md` – **Avani–Micah constitutional governance**: Season Engine, Governor, Vision, Constitution, rights, red lines.
+- `docs/MICAH_GUARDIAN_ARCHITECTURE_MAR09_2026.md` – **Micah Guardian architecture**: Independent Constitutional Guardian, Moral Precedence, Anti-Ultron Tripwires, Authority Engine, Awakening Protocol.
+- `docs/RECIPROCAL_TURING_PROTOCOL_MAR09_2026.md` – **Reciprocal Turing identity integration**: Identity API, Mode Manager, Continuity Manager, honest uncertainty.
+
 ## Planning → Ethics Context System (Mar 3, 2026)
 - `docs/PLANNING_ETHICS_CONTEXT_COMPLETE_MAR03_2026.md` – **Completion + verification**: Checklist for testing and documenting; scope summary.
 - `docs/PLANNING_ETHICS_CONTEXT_SYSTEM_MAR03_2026.md` – **Planning engine → ethics context**: What context the planning engine supplies to the ethics system; simulations, training source material, ethics guidelines; document types (ethics updates, training capabilities, plans); epistemic alignment per Michele outline.
