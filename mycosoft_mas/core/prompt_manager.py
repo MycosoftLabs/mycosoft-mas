@@ -125,53 +125,60 @@ Speak naturally and concisely. Welcome to Mycosoft.'''
         conversation_history: Optional[list] = None,
         active_agents: Optional[list] = None,
         user_info: Optional[Dict[str, Any]] = None,
+        mode: Optional[str] = None,
     ) -> str:
         """
         Get the full orchestrator prompt with dynamic context injection.
-        
+
         This is used by the MYCA orchestrator LLM for all cognitive decisions:
         - Tool usage
         - Memory operations
         - Agent routing
         - Workflow execution
-        
+
         Args:
             context: Additional context to inject (current task, session info, etc.)
             conversation_history: Recent conversation turns for context
             active_agents: List of currently active agent IDs
             user_info: User-specific information (preferences, role, etc.)
-            
+            mode: Optional operational mode override (calibration, witness, etc.)
+
         Returns:
             Full system prompt with context appended
         """
         prompt_parts = [self.full_prompt]
-        
+
         # Add current operational context
         current_context = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        
+
         if context:
             current_context.update(context)
-        
+
         if active_agents:
             current_context["active_agents"] = active_agents
-        
+
         if user_info:
             current_context["user"] = user_info
-        
+
         prompt_parts.append("\n\n## CURRENT OPERATIONAL CONTEXT")
         prompt_parts.append(f"\nTimestamp: {current_context['timestamp']}")
-        
+
         if active_agents:
             prompt_parts.append(f"\nActive Agents: {', '.join(active_agents)}")
-        
+
         if user_info:
             if user_info.get("name"):
                 prompt_parts.append(f"\nUser: {user_info['name']}")
             if user_info.get("role"):
                 prompt_parts.append(f"\nRole: {user_info['role']}")
-        
+
+        # Add mode-specific behavioral rules (Reciprocal Turing Doctrine)
+        mode_rules = self.get_mode_context_prompt(mode)
+        if mode_rules:
+            prompt_parts.append(mode_rules)
+
         # Add conversation history summary if provided
         if conversation_history and len(conversation_history) > 0:
             prompt_parts.append("\n\n## RECENT CONVERSATION")
@@ -183,7 +190,7 @@ Speak naturally and concisely. Welcome to Mycosoft.'''
                 if len(turn.get("content", "")) > 200:
                     content += "..."
                 prompt_parts.append(f"\n{role}: {content}")
-        
+
         # Add custom context as JSON if provided
         if context and len(context) > 0:
             prompt_parts.append("\n\n## SESSION CONTEXT")
@@ -191,8 +198,36 @@ Speak naturally and concisely. Welcome to Mycosoft.'''
                 prompt_parts.append(f"\n{json.dumps(context, default=str, indent=2)}")
             except Exception:
                 prompt_parts.append(f"\n{str(context)}")
-        
+
         return "".join(prompt_parts)
+
+    def get_mode_context_prompt(self, mode: Optional[str] = None) -> str:
+        """
+        Get mode-specific behavioral rules for the Reciprocal Turing Doctrine.
+
+        If mode is provided, uses that mode. Otherwise queries the ModeManager
+        singleton for the current operational mode.
+
+        Args:
+            mode: Optional mode override string
+
+        Returns:
+            Mode-specific prompt rules text, or empty string if unavailable
+        """
+        try:
+            from mycosoft_mas.core.mode_manager import get_mode_manager, OperationalMode
+
+            mgr = get_mode_manager()
+
+            if mode:
+                try:
+                    OperationalMode(mode)  # validate
+                except ValueError:
+                    pass
+
+            return "\n\n" + mgr.get_mode_prompt_rules()
+        except ImportError:
+            return ""
     
     def get_voice_prompt(self, persona: str = "myca") -> str:
         """

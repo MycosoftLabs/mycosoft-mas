@@ -120,6 +120,12 @@ try:
 except ImportError:
     first_light_router = None
     FIRST_LIGHT_API_AVAILABLE = False
+try:
+    from mycosoft_mas.core.routers.identity_api import router as identity_router
+    IDENTITY_API_AVAILABLE = True
+except ImportError:
+    identity_router = None
+    IDENTITY_API_AVAILABLE = False
 from mycosoft_mas.monitoring.health_check import get_health_checker
 try:
     from mycosoft_mas.monitoring.metrics import get_metrics  # type: ignore
@@ -577,6 +583,8 @@ if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
     app.include_router(iot_router, tags=["iot"])
 if FIRST_LIGHT_API_AVAILABLE and first_light_router is not None:
     app.include_router(first_light_router, tags=["first-light"])
+if IDENTITY_API_AVAILABLE and identity_router is not None:
+    app.include_router(identity_router, tags=["identity"])
 
 # Telemetry Pipeline API (MycoBrain → MAS → MINDEX)
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])

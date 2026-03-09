@@ -235,44 +235,120 @@ class MemorySummarizationService:
     def _extract_key_info(self, turns: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Extract key information from conversation.
-        
+
         Looks for:
         - User preferences expressed
         - Decisions made
         - Action items mentioned
         - Errors encountered
+        - Identity-related statements (for Reciprocal Turing Doctrine)
         """
         info = {
             "preferences": [],
             "decisions": [],
             "action_items": [],
             "errors_mentioned": [],
+            "identity_signals": [],
         }
-        
+
+        preference_indicators = ["prefer", "like", "want", "always", "never"]
+        identity_indicators = [
+            "my favorite",
+            "i prefer",
+            "i always",
+            "i never",
+            "i believe",
+            "i feel strongly",
+            "my earliest",
+            "i remember",
+        ]
+
         for turn in turns:
             content = turn.get("content", "").lower()
-            
+            role = turn.get("role", "")
+
             # Look for preferences
-            if any(word in content for word in ["prefer", "like", "want", "always", "never"]):
+            if any(word in content for word in preference_indicators):
                 info["preferences"].append(turn.get("content", "")[:100])
-            
+
             # Look for decisions
             if any(word in content for word in ["decided", "will do", "going to", "let's"]):
                 info["decisions"].append(turn.get("content", "")[:100])
-            
+
             # Look for action items
             if any(word in content for word in ["need to", "should", "must", "todo", "reminder"]):
                 info["action_items"].append(turn.get("content", "")[:100])
-            
+
             # Look for errors
             if any(word in content for word in ["error", "failed", "broken", "issue", "problem", "bug"]):
                 info["errors_mentioned"].append(turn.get("content", "")[:100])
-        
+
+            # Look for identity-related signals (Reciprocal Turing Doctrine)
+            if role == "assistant" and any(phrase in content for phrase in identity_indicators):
+                info["identity_signals"].append(turn.get("content", "")[:150])
+
         # Limit lists
         for key in info:
             info[key] = info[key][:5]  # Keep max 5 of each
-        
+
+        # Update identity store with any detected preference signals
+        if info["preferences"]:
+            self._queue_identity_preference_update(info["preferences"])
+
         return info
+
+    def _queue_identity_preference_update(self, preference_texts: List[str]) -> None:
+        """
+        Queue detected preferences for identity store update.
+
+        Runs as fire-and-forget — does not block summarization.
+        """
+        import asyncio
+
+        async def _update():
+            try:
+                from mycosoft_mas.core.routers.identity_api import (
+                    PreferenceUpdate,
+                    get_identity_store,
+                )
+
+                store = get_identity_store()
+                for text in preference_texts[:3]:  # Max 3 per session
+                    # Extract a rough key-value from the text
+                    key = self._extract_preference_key(text)
+                    if key:
+                        await store.update_preference(
+                            PreferenceUpdate(
+                                key=key,
+                                value=text[:100],
+                                evidence_id=f"summarization:{uuid4().hex[:8]}",
+                            )
+                        )
+            except Exception as e:
+                logger.debug(f"Identity preference update failed: {e}")
+
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                asyncio.ensure_future(_update())
+            else:
+                loop.run_until_complete(_update())
+        except RuntimeError:
+            pass  # No event loop — skip silently
+
+    @staticmethod
+    def _extract_preference_key(text: str) -> Optional[str]:
+        """Extract a rough preference key from natural language text."""
+        text_lower = text.lower().strip()
+        # Pattern: "I prefer X" or "my favorite X"
+        for prefix in ["i prefer ", "my favorite ", "i always ", "i like "]:
+            if prefix in text_lower:
+                remainder = text_lower.split(prefix, 1)[1]
+                # Take first few words as key
+                words = remainder.split()[:3]
+                if words:
+                    return "_".join(words).replace(".", "").replace(",", "")
+        return None
     
     async def get_user_context(
         self,
