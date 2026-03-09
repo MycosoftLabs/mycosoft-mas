@@ -99,6 +99,9 @@ _safe_import(".v2.knowledge_domain_agent", "KnowledgeDomainAgent")
 _safe_import(".v2.autonomous_economy_agent", "AutonomousEconomyAgent")
 _safe_import(".v2.taxonomy_ingestion_agent", "TaxonomyIngestionAgent")
 
+# Liquid AI Fungal Integration (March 2026)
+_safe_import(".v2.liquid_fungal_agent", "LiquidFungalIntegrationAgent")
+
 # MYCA Workspace (VM 191)
 _safe_import(".workspace_agent", "WorkspaceAgent")
 _safe_import(".daily_rhythm_agent", "DailyRhythmAgent")
