@@ -835,6 +835,13 @@ try:
 except ImportError:
     pass
 
+# Liquid AI Fungal Integration API (March 2026)
+try:
+    from mycosoft_mas.core.routers.liquid_fungal_api import router as liquid_fungal_router
+    app.include_router(liquid_fungal_router, tags=["liquid-fungal"])
+except ImportError:
+    pass
+
 
 # Avani-Micah Constitutional Governance (March 2026)
 try:

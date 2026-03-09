@@ -599,3 +599,30 @@ System (MycoBrain) â”€â”€managesâ”€â”€> Device (SporeBase)
 | Router File | Prefix | Purpose |
 |-------------|--------|---------|
 | `mycosoft_mas/core/routers/physicsnemo_api.py` | `/api/physics` | MAS proxy for PhysicsNeMo simulation endpoints |
+
+---
+
+## Liquid AI Fungal Integration (Mar 9, 2026)
+
+Liquid AI-inspired adaptive temporal processing for FCI biosignals, fungal memory bridging, and recursive self-improvement with benchmark tracking.
+
+### New Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `LiquidTemporalProcessor` | `mycosoft_mas/engines/liquid_temporal/processor.py` | Adaptive time-constant biosignal processing (LTC-inspired) |
+| `FungalMemoryBridge` | `mycosoft_mas/memory/fungal_memory_bridge.py` | Memristive state tracking, biological bookmarks, pattern consolidation |
+| `RecursiveSelfImprovementEngine` | `mycosoft_mas/engines/recursive_improvement/engine.py` | Observe → Hypothesize → Test → Integrate → Verify cycle |
+| `LiquidFungalIntegrationAgent` | `mycosoft_mas/agents/v2/liquid_fungal_agent.py` | Orchestrating v2 agent |
+
+### Registered Agent
+
+| Agent ID | Class | Category | Capabilities |
+|----------|-------|----------|--------------|
+| `liquid-fungal-integration` | `LiquidFungalIntegrationAgent` | scientific | `process_biosignal`, `bridge_memory`, `run_improvement_cycle`, `benchmark`, `get_adaptation_status` |
+
+### Router
+
+| Router File | Prefix | Purpose |
+|-------------|--------|---------|
+| `mycosoft_mas/core/routers/liquid_fungal_api.py` | `/api/liquid-fungal` | Liquid fungal integration endpoints |
