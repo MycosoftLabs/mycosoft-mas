@@ -107,6 +107,10 @@ _safe_import(".workspace_security_agent", "WorkspaceSecurityAgent")
 # Ethics and philosophy (March 2026)
 _safe_import(".incentive_auditor_agent", "IncentiveAuditorAgent")
 
+# Avani-Micah Constitutional Governance (March 2026)
+_safe_import("mycosoft_mas.avani.agents.avani_agent", "AvaniAgent")
+_safe_import("mycosoft_mas.avani.agents.micah_agent", "MicahAgent")
+
 # Dynamically create runtime-safe agent modules/classes for compatibility.
 import sys
 import types

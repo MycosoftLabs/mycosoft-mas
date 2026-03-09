@@ -828,6 +828,14 @@ except ImportError:
     pass
 
 
+# Avani-Micah Constitutional Governance (March 2026)
+try:
+    from mycosoft_mas.core.routers.avani_router import router as avani_router
+    app.include_router(avani_router, tags=["avani"])
+except ImportError:
+    pass
+
+
 # ---------------------------------------------------------------------------
 # Health & version
 # ---------------------------------------------------------------------------
