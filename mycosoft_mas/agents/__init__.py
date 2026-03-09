@@ -93,11 +93,15 @@ _safe_import(".v2.grounding_agent", "GroundingAgent")
 _safe_import(".v2.intention_agent", "IntentionAgent")
 _safe_import(".v2.reflection_agent", "ReflectionAgent")
 _safe_import(".v2.static_decoding_agent", "STATICDecodingAgent")
+_safe_import(".v2.reciprocal_turing_agent", "ReciprocalTuringAgent")
 
 # New autonomous MYCA agents (March 2026)
 _safe_import(".v2.knowledge_domain_agent", "KnowledgeDomainAgent")
 _safe_import(".v2.autonomous_economy_agent", "AutonomousEconomyAgent")
 _safe_import(".v2.taxonomy_ingestion_agent", "TaxonomyIngestionAgent")
+
+# Liquid AI Fungal Integration (March 2026)
+_safe_import(".v2.liquid_fungal_agent", "LiquidFungalIntegrationAgent")
 
 # MYCA Workspace (VM 191)
 _safe_import(".workspace_agent", "WorkspaceAgent")
@@ -106,6 +110,10 @@ _safe_import(".workspace_security_agent", "WorkspaceSecurityAgent")
 
 # Ethics and philosophy (March 2026)
 _safe_import(".incentive_auditor_agent", "IncentiveAuditorAgent")
+
+# Avani-Micah Constitutional Governance (March 2026)
+_safe_import("mycosoft_mas.avani.agents.avani_agent", "AvaniAgent")
+_safe_import("mycosoft_mas.avani.agents.micah_agent", "MicahAgent")
 
 # Dynamically create runtime-safe agent modules/classes for compatibility.
 import sys

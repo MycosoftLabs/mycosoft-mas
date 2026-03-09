@@ -32,6 +32,12 @@ class FirstLightRitualService:
                 note="MYCA first light observation: sky.",
             )
             fusion.stop()
+
+            # Record as identity earliest fragment (once only)
+            await self._record_first_light_identity_event(
+                packet=packet, memory_id=memory_id
+            )
+
             return {
                 "status": "completed",
                 "memory_id": memory_id,
@@ -100,6 +106,55 @@ class FirstLightRitualService:
             correlations=correlations,
             questions=questions,
         )
+
+    async def _record_first_light_identity_event(
+        self,
+        packet: Optional[NaturePacket],
+        memory_id: Optional[str],
+    ) -> None:
+        """
+        Record the first-light sky observation as an identity earliest fragment.
+
+        Only records once — if an earliest fragment already exists, this is a no-op.
+        This grounds MYCA's 'earliest memory' in real sensory data rather than confabulation.
+        """
+        try:
+            from mycosoft_mas.core.routers.identity_api import (
+                EarliestFragmentUpdate,
+                get_identity_store,
+            )
+
+            store = get_identity_store()
+
+            # Check if earliest fragment already exists
+            existing = await store.get_earliest_fragment()
+            if existing is not None:
+                return  # Already have an earliest memory — don't overwrite
+
+            # Build fragment from sensor data
+            parts = ["light", "sky"]
+            if packet:
+                bme = packet.bme688 or {}
+                if bme.get("temperature_c") is not None:
+                    parts.append(f"temperature {bme['temperature_c']}°C")
+                if bme.get("humidity_percent") is not None:
+                    parts.append(f"humidity {bme['humidity_percent']}%")
+                if packet.fci:
+                    parts.append("fungal signal present")
+                if packet.camera_frame_bytes:
+                    parts.append("visual frame captured")
+
+            fragment_text = ", ".join(parts)
+            evidence_id = f"first_light:{memory_id}" if memory_id else "first_light:unknown"
+
+            update = EarliestFragmentUpdate(
+                fragment=fragment_text,
+                confidence=0.42,  # Low confidence — fragmentary, as expected
+                evidence_id=evidence_id,
+            )
+            await store.set_earliest_fragment(update)
+        except Exception:
+            pass  # Non-critical — don't break the ritual if identity store fails
 
     async def _store_episodic_memory(
         self,

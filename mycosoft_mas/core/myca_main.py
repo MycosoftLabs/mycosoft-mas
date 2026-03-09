@@ -85,6 +85,7 @@ from mycosoft_mas.core.routers.presence_api import router as presence_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
 from mycosoft_mas.core.routers.spreadsheet_sync_api import router as spreadsheet_sync_router
 from mycosoft_mas.core.routers.ingest_api import router as ingest_router
+from mycosoft_mas.core.routers.guardian_api import router as guardian_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -120,6 +121,12 @@ try:
 except ImportError:
     first_light_router = None
     FIRST_LIGHT_API_AVAILABLE = False
+try:
+    from mycosoft_mas.core.routers.identity_api import router as identity_router
+    IDENTITY_API_AVAILABLE = True
+except ImportError:
+    identity_router = None
+    IDENTITY_API_AVAILABLE = False
 from mycosoft_mas.monitoring.health_check import get_health_checker
 try:
     from mycosoft_mas.monitoring.metrics import get_metrics  # type: ignore
@@ -571,12 +578,15 @@ app.include_router(network_api_router, tags=["network"])
 app.include_router(memory_router, tags=["memory"])
 app.include_router(conversation_memory_router, tags=["memory", "myca-conversations"])
 app.include_router(security_router, tags=["security"])
+app.include_router(guardian_router, tags=["guardian"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
 app.include_router(nlq_router, tags=["nlq"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
     app.include_router(iot_router, tags=["iot"])
 if FIRST_LIGHT_API_AVAILABLE and first_light_router is not None:
     app.include_router(first_light_router, tags=["first-light"])
+if IDENTITY_API_AVAILABLE and identity_router is not None:
+    app.include_router(identity_router, tags=["identity"])
 
 # Telemetry Pipeline API (MycoBrain → MAS → MINDEX)
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
@@ -824,6 +834,21 @@ except ImportError:
 try:
     from mycosoft_mas.core.routers.daily_rhythm_api import router as rhythm_router
     app.include_router(rhythm_router, tags=["rhythm"])
+except ImportError:
+    pass
+
+# Liquid AI Fungal Integration API (March 2026)
+try:
+    from mycosoft_mas.core.routers.liquid_fungal_api import router as liquid_fungal_router
+    app.include_router(liquid_fungal_router, tags=["liquid-fungal"])
+except ImportError:
+    pass
+
+
+# Avani-Micah Constitutional Governance (March 2026)
+try:
+    from mycosoft_mas.core.routers.avani_router import router as avani_router
+    app.include_router(avani_router, tags=["avani"])
 except ImportError:
     pass
 

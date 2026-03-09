@@ -258,6 +258,28 @@ Master spreadsheet projection from Supabase; n8n triggers after ingest.
 
 **Router**: `mycosoft_mas/core/routers/evolution_api.py`
 
+### Liquid Fungal Integration API (`/api/liquid-fungal/*`) – Mar 9, 2026
+
+Liquid AI-inspired adaptive temporal processing, fungal memory bridging, and recursive self-improvement.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/liquid-fungal/health` | GET | Health check for liquid-fungal stack |
+| `/api/liquid-fungal/process` | POST | Process FCI biosignal through liquid temporal processor |
+| `/api/liquid-fungal/adaptation/metrics` | GET | Current adaptation metrics (time constants, rates) |
+| `/api/liquid-fungal/memory/bookmark` | POST | Create biological bookmark |
+| `/api/liquid-fungal/memory/bookmarks` | GET | Query biological bookmarks |
+| `/api/liquid-fungal/memory/hysteresis` | GET | Get memristive state report |
+| `/api/liquid-fungal/memory/memristive` | POST | Track memristive state for a channel |
+| `/api/liquid-fungal/memory/consolidate` | POST | Promote recurring patterns to semantic memory |
+| `/api/liquid-fungal/improvement/cycle` | POST | Trigger one recursive self-improvement cycle |
+| `/api/liquid-fungal/improvement/history` | GET | Get improvement cycle history |
+| `/api/liquid-fungal/improvement/benchmarks` | GET | Get benchmark records |
+| `/api/liquid-fungal/improvement/hypotheses` | GET | Get improvement hypotheses |
+| `/api/liquid-fungal/improvement/summary` | GET | Get improvement engine summary |
+
+**Router**: `mycosoft_mas/core/routers/liquid_fungal_api.py`
+
 ### Graph API (`/api/graph/*`)
 
 | Endpoint | Method | Description |
