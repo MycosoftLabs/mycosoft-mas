@@ -342,10 +342,14 @@ class PeripheralRegistry:
     Registry mapping peripheral types to widgets and command sets.
     """
     
-    # Default widget mappings
+    # Default widget mappings — keyed by peripheral_type.
+    # Each entry includes measurement_class for MMP capability-driven widget resolution.
+    # Website Device Manager: load registry → load peripherals → resolve widget via
+    # measurement_class/preferred_widget → fallback to generic_timeseries for unknowns.
     WIDGET_MAP: Dict[str, Dict[str, Any]] = {
         PeripheralType.BME688.value: {
             "widget": "environmental_sensor",
+            "measurement_class": "env.air",
             "icon": "thermometer",
             "controls": [],
             "telemetry_fields": ["temperature", "humidity", "pressure", "iaq", "co2eq", "voc"],
@@ -353,6 +357,7 @@ class PeripheralRegistry:
         },
         PeripheralType.PIXEL_ARRAY.value: {
             "widget": "led_array",
+            "measurement_class": "actuator.led",
             "icon": "lightbulb",
             "controls": ["color_picker", "pattern_selector", "brightness_slider"],
             "commands": ["led.rgb", "led.pattern", "led.brightness"],
@@ -360,6 +365,7 @@ class PeripheralRegistry:
         },
         PeripheralType.MIC.value: {
             "widget": "microphone",
+            "measurement_class": "audio.mic",
             "icon": "mic",
             "controls": ["gain_slider", "frequency_band_selector"],
             "telemetry_fields": ["amplitude", "frequency", "fft_bins"],
@@ -368,6 +374,7 @@ class PeripheralRegistry:
         },
         PeripheralType.LIDAR.value: {
             "widget": "lidar",
+            "measurement_class": "motion.lidar",
             "icon": "radar",
             "controls": ["sample_rate"],
             "telemetry_fields": ["distance_mm", "signal_strength"],
@@ -375,6 +382,7 @@ class PeripheralRegistry:
         },
         PeripheralType.CAMERA_PROXY.value: {
             "widget": "camera",
+            "measurement_class": "vision.rgb",
             "icon": "camera",
             "controls": ["resolution", "exposure"],
             "telemetry_fields": ["frame_rate", "brightness"],
@@ -382,6 +390,7 @@ class PeripheralRegistry:
         },
         PeripheralType.PHOTODIODE_RX.value: {
             "widget": "photodiode",
+            "measurement_class": "env.light",
             "icon": "sun",
             "controls": ["sensitivity"],
             "telemetry_fields": ["light_level", "decoded_bits"],
@@ -389,34 +398,74 @@ class PeripheralRegistry:
         },
         PeripheralType.FAST_LED_TX.value: {
             "widget": "led_tx",
+            "measurement_class": "actuator.led",
             "icon": "zap",
             "controls": ["pattern", "payload_input"],
             "modems": ["optical_tx"],
         },
         PeripheralType.VIBRATOR.value: {
             "widget": "haptic",
+            "measurement_class": "actuator.haptic",
             "icon": "vibrate",
             "controls": ["intensity_slider", "pattern_presets"],
             "commands": ["haptic.intensity", "haptic.pattern"],
         },
         PeripheralType.HAPTIC.value: {
             "widget": "haptic",
+            "measurement_class": "actuator.haptic",
             "icon": "vibrate",
             "controls": ["intensity_slider", "pattern_presets"],
             "commands": ["haptic.intensity", "haptic.pattern"],
         },
         PeripheralType.OLED.value: {
             "widget": "display",
+            "measurement_class": "actuator.led",
             "icon": "monitor",
             "controls": ["text_input", "image_upload"],
             "commands": ["display.text", "display.clear"],
         },
         PeripheralType.UNKNOWN.value: {
-            "widget": "generic",
+            "widget": "generic_timeseries",
+            "measurement_class": "unknown",
             "icon": "help-circle",
             "controls": [],
             "telemetry_fields": [],
         },
+    }
+
+    # Measurement class to widget fallback — used when peripheral_type is unknown
+    # but measurement_class is set (e.g. from MMP capability manifest).
+    MEASUREMENT_CLASS_WIDGETS: Dict[str, str] = {
+        "env.air": "environmental_sensor",
+        "env.soil": "soil_sensor",
+        "env.water": "water_sensor",
+        "env.light": "photodiode",
+        "bio.electric": "bioelectric_timeseries",
+        "bio.chemical": "chemical_sensor",
+        "bio.growth": "growth_tracker",
+        "motion.imu": "imu_3axis",
+        "motion.lidar": "lidar",
+        "vision.rgb": "camera_feed",
+        "vision.depth": "depth_map",
+        "vision.thermal": "thermal_map",
+        "audio.mic": "microphone",
+        "audio.ultrasonic": "ultrasonic",
+        "actuator.mosfet": "switch_panel",
+        "actuator.servo": "servo_control",
+        "actuator.led": "color_picker",
+        "actuator.haptic": "haptic",
+        "actuator.buzzer": "tone_control",
+        "comms.lora": "lora_status",
+        "comms.wifi": "wifi_status",
+        "comms.ble": "ble_status",
+        "comms.lte": "lte_status",
+        "compute.nlm": "nlm_dashboard",
+        "compute.llm": "llm_console",
+        "compute.vision": "vision_inference",
+        "compute.ik": "arm_control",
+        "system.power": "power_monitor",
+        "system.health": "health_summary",
+        "unknown": "generic_timeseries",
     }
     
     # I2C address to peripheral type hints
@@ -437,8 +486,21 @@ class PeripheralRegistry:
     def get_widget_config(cls, peripheral_type: str) -> Dict[str, Any]:
         """Get widget configuration for a peripheral type"""
         return cls.WIDGET_MAP.get(
-            peripheral_type, 
+            peripheral_type,
             cls.WIDGET_MAP[PeripheralType.UNKNOWN.value]
+        )
+
+    @classmethod
+    def resolve_widget_by_measurement_class(cls, measurement_class: str) -> str:
+        """
+        Resolve widget name from MMP measurement_class.
+        Used when the website receives a capability manifest from MMP
+        and needs to pick the right widget without knowing the peripheral_type.
+        Falls back to generic_timeseries for anything unknown.
+        """
+        return cls.MEASUREMENT_CLASS_WIDGETS.get(
+            measurement_class,
+            "generic_timeseries",
         )
     
     @classmethod

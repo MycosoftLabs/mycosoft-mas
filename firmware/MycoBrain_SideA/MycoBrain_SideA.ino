@@ -66,11 +66,20 @@
 // Configuration
 // ============================================================================
 #define SERIAL_BAUD 115200
-#define FIRMWARE_VERSION "1.0.0"
+#define FIRMWARE_VERSION "2.0.0-jetson"
 #define TELEMETRY_INTERVAL_MS 10000  // Default 10 seconds
 
 // Boot wait for Serial Monitor
 static const uint32_t BOOT_SERIAL_WAIT_MS = 2000;
+
+// ============================================================================
+// Safety Bounds (Side A enforces these locally — Jetson/MYCA cannot override)
+// ============================================================================
+#define MAX_MOSFET_DUTY_CYCLE 80       // Percent (0-100)
+#define MAX_STIMULUS_VOLTAGE_MV 200    // Millivolts
+#define MAX_STIMULUS_DURATION_MS 5000  // Milliseconds
+#define MAX_SAMPLE_RATE_HZ 100         // Hz
+#define MIN_TELEMETRY_INTERVAL_MS 500  // Minimum 500ms between telemetry
 
 // ============================================================================
 // Global Variables
@@ -173,7 +182,7 @@ void setup() {
   // Startup beep
   tone(BUZZER_PIN, 1000, 200);
   delay(300);
-  
+
   // Blink LED
   for (int i = 0; i < 3; i++) {
     digitalWrite(NEOPIXEL_PIN, HIGH);
@@ -181,6 +190,9 @@ void setup() {
     digitalWrite(NEOPIXEL_PIN, LOW);
     delay(100);
   }
+
+  // Emit capability manifest on boot (Jetson bridge reads this)
+  sendCapabilityManifest();
 }
 
 // ============================================================================
@@ -269,10 +281,10 @@ void processCommand(String cmd) {
     return;
   }
   
-  if (cmd == "scan") {
+  if (cmd == "scan" || cmd == "bus_rescan" || cmd == "sensor_rescan") {
     scanI2C();
     if (currentMode == MODE_MACHINE) {
-      sendPeriphList();
+      sendCapabilityManifest();
     } else {
       sendI2CScanResult();
     }
@@ -356,18 +368,33 @@ void processCommand(String cmd) {
       sendResponse("version", "{\"version\":\"" + String(FIRMWARE_VERSION) + "\"}");
     }
   }
-  else if (command == "i2c_scan" || command == "scan") {
+  else if (command == "i2c_scan" || command == "scan" || command == "bus_rescan" || command == "sensor_rescan") {
     scanI2C();
     if (currentMode == MODE_MACHINE) {
-      sendPeriphList();
+      sendCapabilityManifest();
     } else {
       sendI2CScanResult();
     }
   }
-  else if (command == "set_telemetry_interval") {
+  else if (command == "set_telemetry_interval" || command == "set_sampling_rate") {
     if (doc.containsKey("interval_seconds")) {
-      telemetryInterval = doc["interval_seconds"].as<unsigned long>() * 1000;
-      sendResponse("telemetry_interval", "{\"interval_seconds\":" + String(telemetryInterval / 1000) + "}");
+      unsigned long requested = doc["interval_seconds"].as<unsigned long>() * 1000;
+      // Safety bound: enforce minimum interval
+      if (requested < MIN_TELEMETRY_INTERVAL_MS) {
+        requested = MIN_TELEMETRY_INTERVAL_MS;
+      }
+      telemetryInterval = requested;
+      sendAck("set_telemetry_interval", String(telemetryInterval / 1000) + "s");
+    } else if (doc.containsKey("rate_hz")) {
+      float rateHz = doc["rate_hz"].as<float>();
+      // Safety bound: enforce max sample rate
+      if (rateHz > MAX_SAMPLE_RATE_HZ) rateHz = MAX_SAMPLE_RATE_HZ;
+      if (rateHz < 0.01) rateHz = 0.01;
+      telemetryInterval = (unsigned long)(1000.0 / rateHz);
+      if (telemetryInterval < MIN_TELEMETRY_INTERVAL_MS) {
+        telemetryInterval = MIN_TELEMETRY_INTERVAL_MS;
+      }
+      sendAck("set_sampling_rate", String(rateHz) + "Hz");
     }
   }
   else if (command == "set_mosfet") {
@@ -378,10 +405,30 @@ void processCommand(String cmd) {
         mosfetStates[index] = state;
         int pin = (index == 0) ? MOSFET_1_PIN : (index == 1) ? MOSFET_2_PIN : MOSFET_3_PIN;
         digitalWrite(pin, state ? HIGH : LOW);
-        sendResponse("mosfet", "{\"mosfet_index\":" + String(index) + ",\"state\":" + String(state ? "true" : "false") + "}");
+        sendAck("set_mosfet", "ch" + String(index) + "=" + String(state ? "on" : "off"));
       } else {
         sendError("Invalid mosfet_index (0-2)");
       }
+    }
+  }
+  else if (command == "stimulus_pulse") {
+    // Safety-bounded stimulation via MOSFET
+    int channel = doc["channel"] | 0;
+    int voltage_mv = doc["voltage_mv"] | 100;
+    int duration_ms = doc["duration_ms"] | 100;
+    // Enforce local safety bounds
+    if (voltage_mv > MAX_STIMULUS_VOLTAGE_MV) {
+      sendError("voltage_mv exceeds safety limit (" + String(MAX_STIMULUS_VOLTAGE_MV) + "mV)");
+    } else if (duration_ms > MAX_STIMULUS_DURATION_MS) {
+      sendError("duration_ms exceeds safety limit (" + String(MAX_STIMULUS_DURATION_MS) + "ms)");
+    } else if (channel < 0 || channel > 2) {
+      sendError("Invalid channel (0-2)");
+    } else {
+      int pin = (channel == 0) ? MOSFET_1_PIN : (channel == 1) ? MOSFET_2_PIN : MOSFET_3_PIN;
+      digitalWrite(pin, HIGH);
+      delay(duration_ms);
+      digitalWrite(pin, LOW);
+      sendAck("stimulus_pulse", "ch" + String(channel) + " " + String(voltage_mv) + "mV " + String(duration_ms) + "ms");
     }
   }
   else if (command == "read_sensor") {
@@ -610,25 +657,134 @@ void sendI2CScanResult() {
 }
 
 void sendPeriphList() {
-  // NDJSON format for peripheral list (website expects this)
-  StaticJsonDocument<2048> doc;
-  doc["type"] = "periph_list";
+  // Legacy periph_list for backward compatibility
+  sendCapabilityManifest();
+}
+
+void sendCapabilityManifest() {
+  // MMP-aligned capability manifest with measurement_class for widget resolution.
+  // Emitted on boot and on bus_rescan/scan command.
+  // Jetson bridge reads this to build the full manifest sent to MAS.
+  StaticJsonDocument<4096> doc;
+  doc["type"] = "capability_manifest";
   doc["ts"] = millis();
   doc["board_id"] = deviceMac;
-  
-  JsonArray peripherals = doc.createNestedArray("peripherals");
+  doc["firmware_version"] = FIRMWARE_VERSION;
+
+  JsonArray caps = doc.createNestedArray("capabilities");
+
+  // I2C-discovered sensors with measurement_class hints
+  for (int i = 0; i < i2cAddressCount; i++) {
+    JsonObject cap = caps.createNestedObject();
+    uint8_t addr = i2cAddresses[i];
+    cap["address"] = addr;
+    cap["bus"] = "i2c0";
+    cap["present"] = true;
+
+    // Map known I2C addresses to measurement_class and widget
+    if (addr == 0x76 || addr == 0x77) {
+      cap["capability_id"] = (addr == 0x76) ? "bme688_0" : "bme688_1";
+      cap["sensor_type"] = "bme688";
+      cap["measurement_class"] = "env.air";
+      cap["preferred_widget"] = "environmental_sensor";
+      cap["sample_hz"] = 0.1;
+      JsonArray ch = cap.createNestedArray("channels");
+      ch.add("temperature"); ch.add("humidity"); ch.add("pressure"); ch.add("gas_resistance");
+    } else if (addr == 0x3C || addr == 0x3D) {
+      cap["capability_id"] = (addr == 0x3C) ? "oled_0" : "oled_1";
+      cap["sensor_type"] = "ssd1306";
+      cap["measurement_class"] = "actuator.led";
+      cap["preferred_widget"] = "display";
+    } else if (addr == 0x29 || addr == 0x52) {
+      cap["capability_id"] = (addr == 0x29) ? "lidar_0" : "lidar_1";
+      cap["sensor_type"] = (addr == 0x29) ? "vl53l0x" : "vl53l1x";
+      cap["measurement_class"] = "motion.lidar";
+      cap["preferred_widget"] = "lidar";
+      cap["sample_hz"] = 10.0;
+      JsonArray ch = cap.createNestedArray("channels");
+      ch.add("distance_mm"); ch.add("signal_strength");
+    } else if (addr == 0x48) {
+      cap["capability_id"] = "adc_0";
+      cap["sensor_type"] = "ads1115";
+      cap["measurement_class"] = "bio.electric";
+      cap["preferred_widget"] = "adc_timeseries";
+      cap["sample_hz"] = 100.0;
+    } else if (addr == 0x57) {
+      cap["capability_id"] = "heartrate_0";
+      cap["sensor_type"] = "max30102";
+      cap["measurement_class"] = "bio.chemical";
+      cap["preferred_widget"] = "heartrate";
+    } else {
+      cap["capability_id"] = "i2c_" + String(addr, HEX);
+      cap["sensor_type"] = "unknown";
+      cap["measurement_class"] = "unknown";
+      cap["preferred_widget"] = "generic_timeseries";
+    }
+  }
+
+  // Built-in capabilities (always present on Side A)
+  JsonObject analogCap = caps.createNestedObject();
+  analogCap["capability_id"] = "analog_inputs";
+  analogCap["sensor_type"] = "adc_internal";
+  analogCap["bus"] = "gpio";
+  analogCap["measurement_class"] = "bio.electric";
+  analogCap["preferred_widget"] = "analog_timeseries";
+  analogCap["sample_hz"] = 0.1;
+  JsonArray aCh = analogCap.createNestedArray("channels");
+  aCh.add("ai1"); aCh.add("ai2"); aCh.add("ai3"); aCh.add("ai4");
+
+  JsonObject mosfetCap = caps.createNestedObject();
+  mosfetCap["capability_id"] = "mosfet_ctrl";
+  mosfetCap["sensor_type"] = "mosfet";
+  mosfetCap["bus"] = "gpio";
+  mosfetCap["measurement_class"] = "actuator.mosfet";
+  mosfetCap["preferred_widget"] = "switch_panel";
+  JsonArray mCtrl = mosfetCap.createNestedArray("controls");
+  mCtrl.add("set_mosfet"); mCtrl.add("stimulus_pulse");
+
+  JsonObject ledCap = caps.createNestedObject();
+  ledCap["capability_id"] = "neopixel";
+  ledCap["sensor_type"] = "sk6805";
+  ledCap["bus"] = "gpio";
+  ledCap["measurement_class"] = "actuator.led";
+  ledCap["preferred_widget"] = "color_picker";
+  JsonArray lCtrl = ledCap.createNestedArray("controls");
+  lCtrl.add("led_rgb"); lCtrl.add("led_off"); lCtrl.add("pixel_pattern");
+
+  JsonObject buzzerCap = caps.createNestedObject();
+  buzzerCap["capability_id"] = "buzzer";
+  buzzerCap["sensor_type"] = "piezo";
+  buzzerCap["bus"] = "gpio";
+  buzzerCap["measurement_class"] = "actuator.buzzer";
+  buzzerCap["preferred_widget"] = "tone_control";
+  JsonArray bCtrl = buzzerCap.createNestedArray("controls");
+  bCtrl.add("buzzer_tone"); bCtrl.add("buzzer_pattern");
+
+  // Safety bounds info
+  JsonObject safety = doc.createNestedObject("safety_bounds");
+  safety["max_stimulus_voltage_mv"] = MAX_STIMULUS_VOLTAGE_MV;
+  safety["max_stimulus_duration_ms"] = MAX_STIMULUS_DURATION_MS;
+  safety["max_sample_rate_hz"] = MAX_SAMPLE_RATE_HZ;
+  safety["min_telemetry_interval_ms"] = MIN_TELEMETRY_INTERVAL_MS;
+  safety["max_mosfet_duty_cycle"] = MAX_MOSFET_DUTY_CYCLE;
+
+  doc["count"] = i2cAddressCount;
+  sendNDJSON(doc);
+
+  // Also send legacy periph_list for backward compatibility
+  StaticJsonDocument<2048> legacyDoc;
+  legacyDoc["type"] = "periph_list";
+  legacyDoc["ts"] = millis();
+  legacyDoc["board_id"] = deviceMac;
+  JsonArray peripherals = legacyDoc.createNestedArray("peripherals");
   for (int i = 0; i < i2cAddressCount; i++) {
     JsonObject periph = peripherals.createNestedObject();
     periph["uid"] = "i2c0-" + String(i2cAddresses[i], HEX);
     periph["address"] = i2cAddresses[i];
-    periph["type"] = "unknown";  // Could be enhanced with device identification
-    periph["vendor"] = "unknown";
-    periph["product"] = "unknown";
     periph["present"] = true;
   }
-  
-  doc["count"] = i2cAddressCount;
-  sendNDJSON(doc);
+  legacyDoc["count"] = i2cAddressCount;
+  sendNDJSON(legacyDoc);
 }
 
 void readBME688(int sensor_id) {

@@ -84,6 +84,21 @@ DEVICE_TTL_SECONDS = int(os.getenv("DEVICE_TTL_SECONDS", "120"))  # 2 minutes de
 DEVICE_STALE_SECONDS = int(os.getenv("DEVICE_STALE_SECONDS", "60"))  # 1 minute stale threshold
 
 
+class PeripheralInfo(BaseModel):
+    """Peripheral capability manifest entry from Side A."""
+    capability_id: str = Field(..., description="Unique capability ID (e.g. bme688_0, fci_ch0)")
+    sensor_type: str = Field(default="unknown", description="Sensor/actuator type")
+    bus: str = Field(default="i2c0", description="Bus type: i2c0, spi, gpio, uart")
+    address: str = Field(default="", description="Bus address (e.g. 0x76)")
+    measurement_class: str = Field(default="unknown", description="MMP measurement class (e.g. env.air, bio.electric)")
+    channels: List[str] = Field(default_factory=list, description="Data channel names")
+    units: Dict[str, str] = Field(default_factory=dict, description="Channel units (e.g. {temperature: celsius})")
+    controls: List[str] = Field(default_factory=list, description="Available control commands")
+    preferred_widget: str = Field(default="generic_timeseries", description="Website widget type")
+    sample_hz: float = Field(default=1.0, description="Sample rate in Hz")
+    calibration_state: str = Field(default="uncalibrated", description="Calibration state")
+
+
 class DeviceHeartbeat(BaseModel):
     """Schema for device heartbeat/registration (serial, LoRa, Bluetooth, WiFi gateways)."""
     device_id: str = Field(..., description="Unique device identifier")
@@ -93,13 +108,14 @@ class DeviceHeartbeat(BaseModel):
     host: str = Field(..., description="Reachable IP or URL (gateway/server reachable from MAS)")
     port: int = Field(default=8003, description="MycoBrain service or gateway port")
     firmware_version: str = Field(default="unknown")
-    board_type: str = Field(default="esp32s3", description="Board type: esp32s3, esp32, service, etc.")
+    board_type: str = Field(default="esp32s3", description="Board type: esp32s3, esp32, service, jetson_agx_orin, jetson_orin_nano, etc.")
     sensors: List[str] = Field(default_factory=list, description="Connected sensors")
     capabilities: List[str] = Field(default_factory=list, description="Device capabilities")
+    peripherals: List[PeripheralInfo] = Field(default_factory=list, description="Capability manifest from Side A discovery")
     location: Optional[str] = Field(default=None, description="Physical location")
     connection_type: str = Field(default="lan", description="lan, tailscale, cloudflare")
     ingestion_source: str = Field(default="serial", description="serial, lora, bluetooth, wifi, gateway")
-    extra: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    extra: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata (jetson_present, jetson_capabilities, etc.)")
 
 
 class DeviceInfo(BaseModel):
@@ -114,6 +130,7 @@ class DeviceInfo(BaseModel):
     board_type: str
     sensors: List[str]
     capabilities: List[str]
+    peripherals: List[PeripheralInfo] = Field(default_factory=list)
     location: Optional[str]
     connection_type: str
     ingestion_source: str = "serial"
@@ -199,6 +216,7 @@ async def register_device(heartbeat: DeviceHeartbeat):
         "board_type": heartbeat.board_type,
         "sensors": heartbeat.sensors,
         "capabilities": heartbeat.capabilities,
+        "peripherals": [p.dict() for p in heartbeat.peripherals] if heartbeat.peripherals else [],
         "location": heartbeat.location,
         "connection_type": heartbeat.connection_type,
         "ingestion_source": heartbeat.ingestion_source,
@@ -220,6 +238,17 @@ async def register_device(heartbeat: DeviceHeartbeat):
         "device_id": device_id,
         "timestamp": now.isoformat(),
     }
+
+
+@router.post("/heartbeat")
+async def heartbeat_device(heartbeat: DeviceHeartbeat):
+    """
+    Canonical heartbeat endpoint — alias for /register.
+
+    Devices should call this endpoint every 30 seconds to maintain registration.
+    This is the preferred endpoint; /register is kept for backward compatibility.
+    """
+    return await register_device(heartbeat)
 
 
 async def _list_devices_impl(

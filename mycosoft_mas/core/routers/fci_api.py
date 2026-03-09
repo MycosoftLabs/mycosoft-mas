@@ -120,7 +120,7 @@ _pending_commands: Dict[str, List[FCIStimulusCommand]] = {}
 async def store_pattern_to_mindex(device_id: str, result: "FCIPatternResult") -> None:
     """
     Store a detected pattern to MINDEX for persistence.
-    
+
     This runs as a background task to not block the response.
     """
     try:
@@ -135,12 +135,12 @@ async def store_pattern_to_mindex(device_id: str, result: "FCIPatternResult") ->
                 "interpretation_implications": result.implications or [],
                 "interpretation_actions": result.recommended_actions or [],
             }
-            
+
             response = await client.post(
                 f"{MINDEX_API_URL}/api/fci/patterns",
                 json=payload,
             )
-            
+
             if response.status_code == 201:
                 print(f"[FCI] Pattern '{result.pattern_name}' stored to MINDEX for device {device_id}")
             else:
@@ -148,6 +148,56 @@ async def store_pattern_to_mindex(device_id: str, result: "FCIPatternResult") ->
     except Exception as e:
         # Log but don't fail - storage is best-effort
         print(f"[FCI] Error storing pattern to MINDEX: {e}")
+
+
+# MAS URL for device registry bridge
+MAS_API_URL = os.environ.get("MAS_API_URL", "http://192.168.0.188:8001")
+
+
+async def bridge_fci_pattern_to_mas(
+    device_id: str,
+    result: "FCIPatternResult",
+    channel: int = 0,
+) -> None:
+    """
+    Bridge FCI pattern detection results into MAS device registry via MMP envelope.
+
+    This ensures MYCA and Device Manager see FCI biological telemetry under the
+    same device_id as environmental sensors, closing the split where FCI data
+    only went to Mycorrhizae but not to MAS.
+
+    Runs as a background task alongside store_pattern_to_mindex.
+    """
+    try:
+        from mycosoft_mas.protocols.mmp import fci_signal_to_mmp
+
+        envelope = fci_signal_to_mmp(
+            device_id=device_id,
+            channel=channel,
+            signal_data={
+                "pattern_name": result.pattern_name,
+                "category": result.category,
+                "confidence": result.confidence,
+                "semantic_meaning": result.semantic_meaning,
+                "implications": result.implications or [],
+            },
+            pattern_name=result.pattern_name,
+        )
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Publish as telemetry update to MAS IoT envelope ingest
+            response = await client.post(
+                f"{MAS_API_URL}/api/iot/envelopes/ingest",
+                json=envelope.to_dict(),
+            )
+            if response.status_code in (200, 201):
+                print(f"[FCI] Pattern '{result.pattern_name}' bridged to MAS for device {device_id}")
+            else:
+                print(f"[FCI] MAS bridge failed: {response.status_code}")
+    except ImportError:
+        print("[FCI] MMP protocol not available, skipping MAS bridge")
+    except Exception as e:
+        print(f"[FCI] Error bridging pattern to MAS: {e}")
 
 
 # ============================================================================
@@ -701,7 +751,10 @@ async def process_signal(data: FCISignalData, background_tasks: BackgroundTasks)
     
     # Store pattern to MINDEX in background (won't block response)
     background_tasks.add_task(store_pattern_to_mindex, data.device_id, result)
-    
+
+    # Bridge FCI pattern to MAS device registry so MYCA and Device Manager see it
+    background_tasks.add_task(bridge_fci_pattern_to_mas, data.device_id, result)
+
     return result
 
 
