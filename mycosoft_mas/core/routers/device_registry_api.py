@@ -166,28 +166,22 @@ def _cleanup_expired_devices():
     return expired
 
 
-@router.post("/register")
-async def register_device(heartbeat: DeviceHeartbeat):
+def _upsert_device_heartbeat(heartbeat: DeviceHeartbeat) -> Dict[str, Any]:
     """
-    Register or update a device via heartbeat.
-    
-    Devices should call this endpoint every 30 seconds to maintain registration.
-    Devices not seen within TTL (2 minutes) are marked offline.
+    Upsert a device record from a heartbeat payload.
+    Shared implementation for /heartbeat (canonical) and /register (alias).
     """
     now = datetime.now(timezone.utc)
     device_id = heartbeat.device_id
-    
-    # Check if this is a new registration
+
     is_new = device_id not in _device_registry
-    
-    # Update or create device entry
+
     if is_new:
-        _device_registry[device_id] = {
-            "registered_at": now.isoformat(),
-        }
-        logger.info(f"New device registered: {device_id} ({heartbeat.device_name}) from {heartbeat.host}:{heartbeat.port}")
-    
-    # Update device info (supports serial + LoRa/BT/WiFi ingestion + device role/identity)
+        _device_registry[device_id] = {"registered_at": now.isoformat()}
+        logger.info(
+            f"New device registered: {device_id} ({heartbeat.device_name}) from {heartbeat.host}:{heartbeat.port}"
+        )
+
     _device_registry[device_id].update({
         "device_id": device_id,
         "device_name": heartbeat.device_name,
@@ -205,21 +199,39 @@ async def register_device(heartbeat: DeviceHeartbeat):
         "extra": heartbeat.extra,
         "last_seen": now.isoformat(),
     })
-    
+
     _device_last_seen[device_id] = now
-    
-    # Register with orchestrator for health monitoring (new devices only)
+
     if is_new:
         _register_device_with_orchestrator(device_id, _device_registry[device_id])
-    
-    # Cleanup expired devices occasionally
+
     _cleanup_expired_devices()
-    
+
     return {
         "status": "registered" if is_new else "updated",
         "device_id": device_id,
         "timestamp": now.isoformat(),
     }
+
+
+@router.post("/heartbeat")
+async def heartbeat_device(heartbeat: DeviceHeartbeat):
+    """
+    Canonical heartbeat endpoint for device registration and keepalive.
+
+    Devices should call this endpoint every 30 seconds to maintain registration.
+    Devices not seen within TTL (2 minutes) are marked offline.
+    Use POST /api/devices/register as a legacy alias; both behave identically.
+    """
+    return _upsert_device_heartbeat(heartbeat)
+
+
+@router.post("/register")
+async def register_device(heartbeat: DeviceHeartbeat):
+    """
+    Legacy alias for /heartbeat. Use POST /api/devices/heartbeat as canonical.
+    """
+    return _upsert_device_heartbeat(heartbeat)
 
 
 async def _list_devices_impl(
@@ -271,6 +283,46 @@ async def get_device(device_id: str):
         **device,
         "status": device_status,
     }
+
+
+class FCISummaryPayload(BaseModel):
+    """FCI summary from Mycorrhizae/FCI stream — stored under device extra for unified device_id."""
+    summary: Dict[str, Any] = Field(default_factory=dict, description="FCI summary data")
+    timestamp: Optional[str] = Field(default=None, description="ISO timestamp")
+    source: str = Field(default="fci", description="Source: fci, mycorrhizae, etc.")
+
+
+@router.post("/{device_id}/fci-summary")
+async def upsert_fci_summary(device_id: str, payload: FCISummaryPayload = Body(...)):
+    """
+    Store FCI summary for a device (bridge from Mycorrhizae/FCI).
+    Data is stored in device extra under fci_summary for unified device_id.
+    Device need not exist; will be created as placeholder if missing.
+    """
+    _cleanup_expired_devices()
+    now = datetime.now(timezone.utc)
+    ts = payload.timestamp or now.isoformat()
+    if device_id not in _device_registry:
+        _device_registry[device_id] = {
+            "device_id": device_id,
+            "device_name": "FCI-Placeholder",
+            "device_role": "mushroom1",
+            "registered_at": now.isoformat(),
+            "last_seen": now.isoformat(),
+        }
+        _device_last_seen[device_id] = now
+    device = _device_registry[device_id]
+    if "extra" not in device:
+        device["extra"] = {}
+    device["extra"]["fci_summary"] = {
+        "summary": payload.summary,
+        "timestamp": ts,
+        "source": payload.source,
+    }
+    device["last_seen"] = now.isoformat()
+    _device_last_seen[device_id] = now
+    logger.info("FCI summary stored for device %s", device_id)
+    return {"status": "ok", "device_id": device_id, "timestamp": now.isoformat()}
 
 
 @router.delete("/{device_id}")

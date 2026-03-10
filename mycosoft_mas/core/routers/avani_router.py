@@ -12,10 +12,11 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.avani.constitution.articles import CONSTITUTION, Tier, get_articles_by_tier
+from mycosoft_mas.core.routers.api_keys import require_api_key_scoped
 from mycosoft_mas.avani.constitution.red_lines import RED_LINES
 from mycosoft_mas.avani.constitution.rights import RIGHTS_CHARTER, RightsDomain, get_rights_by_domain
 from mycosoft_mas.avani.governor.governor import AvaniGovernor, GovernorDecision, Proposal, RiskTier
@@ -65,7 +66,6 @@ class SeasonUpdateRequest(BaseModel):
     critical_error: bool = False
     red_line_violated: bool = False
     all_systems_green: bool = True
-    is_root: bool = Field(default=False, description="Whether this update comes from Root authority")
 
 
 # --- Endpoints ---
@@ -92,9 +92,14 @@ async def get_season():
 
 
 @router.post("/season/update")
-async def update_season(request: SeasonUpdateRequest):
-    """Update season metrics and evaluate transitions."""
+async def update_season(
+    request: SeasonUpdateRequest,
+    auth: dict = require_api_key_scoped("avani:update"),
+):
+    """Update season metrics and evaluate transitions. Root authority derived from avani:root scope."""
     engine = get_season_engine()
+    scopes = auth.get("scopes") or []
+    is_root = "avani:root" in scopes
     metrics = SeasonMetrics(
         eco_stability=request.eco_stability,
         founder_latency_hours=request.founder_latency_hours,
@@ -103,7 +108,7 @@ async def update_season(request: SeasonUpdateRequest):
         red_line_violated=request.red_line_violated,
         all_systems_green=request.all_systems_green,
     )
-    result = engine.update(metrics, is_root=request.is_root)
+    result = engine.update(metrics, is_root=is_root)
     return {
         "transitioned": result is not None,
         "season": engine.to_dict(),

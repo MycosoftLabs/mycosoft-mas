@@ -210,6 +210,98 @@ PR #75 added backend APIs only. Website frontend work:
 
 ---
 
+## Micah / MYCA Tool Integration
+
+Integrate Guardian, Avani, and Identity APIs with MYCA tools so MYCA can query and (where authorized) act on these systems.
+
+### Tool Definitions (MAS)
+
+| Tool | MAS Endpoint / Route | Purpose |
+|------|----------------------|---------|
+| `guardian_status` | `GET /api/guardian/status` | MYCA checks Guardian health and operational mode |
+| `guardian_boot_statement` | `GET /api/guardian/boot-statement` | MYCA reads boot statement for context |
+| `avani_season` | `GET /api/avani/season` | MYCA checks current season for governance context |
+| `avani_evaluate` | `POST /api/avani/evaluate` (auth) | MYCA submits proposals for Avani evaluation |
+| `identity_self_model` | `GET /api/identity/self-model` | MYCA queries identity self-model |
+| `identity_preferences` | `GET /api/identity/preferences` | MYCA reads preferences for adaptation |
+
+### Website → MYCA Bridge
+
+- Website MYCA chat / workspace should be able to invoke these tools via MAS orchestrator
+- Tool results surface in MYCA responses; UI can show "Governance context" or "Season: Summer" badges
+- Admin-only tools (Guardian halt, Sentry toggle) require website auth + API key with `guardian:admin`
+
+---
+
+## Multi-Agent App Flows (Website)
+
+Apps on the website that orchestrate MAS agents and show multi-agent interactions:
+
+### 1. Governance Dashboard App
+
+- **Purpose:** Single pane for Guardian + Avani + Identity status
+- **Flow:** Website → MAS `/api/guardian/*`, `/api/avani/*`, `/api/identity/*` → aggregate into unified view
+- **Agents involved:** Guardian (read), Avani Governor (read), Identity (read)
+- **Location:** `app/(dashboard)/admin/governance/page.tsx` or `app/apps/governance/page.tsx`
+
+### 2. Proposal Submission App
+
+- **Purpose:** Submit proposals for Avani evaluation; show verdict and reasoning
+- **Flow:** User form → MAS `POST /api/avani/evaluate` → Avani Agent → Verdict + audit
+- **Agents involved:** Avani Governor, Micah (proposal context)
+- **Location:** `app/apps/proposals/page.tsx` or under Governance
+
+### 3. Identity & Continuity App
+
+- **Purpose:** View earliest fragment, preferences, continuity events; (Morgan) edit preferences
+- **Flow:** Website → Identity API (read) + optional write with `identity:write` key
+- **Agents involved:** Identity API, Mode Manager, Continuity Manager
+- **Location:** `app/apps/identity/page.tsx` or under MYCA Settings
+
+### 4. Liquid Fungal Scientific App
+
+- **Purpose:** Adaptation metrics, memory bookmarks, improvement summary
+- **Flow:** Website → `/api/liquid-fungal/*` → charts and tables
+- **Location:** `app/(dashboard)/scientific/liquid-fungal/page.tsx`
+
+---
+
+## Marketing Pages
+
+Public-facing pages explaining new capabilities for visitors and potential partners.
+
+### 1. Guardian & Safety Page
+
+- **Route:** `app/safety/page.tsx` or `app/about/guardian/page.tsx`
+- **Content:** Moral Precedence, Anti-Ultron tripwires, independent constitutional guardian, staged development
+- **Audience:** Investors, partners, researchers concerned with AI safety
+
+### 2. Avani Governance Page
+
+- **Route:** `app/about/governance/page.tsx`
+- **Content:** Micah proposes, Avani authorizes; seasons, constitution, red lines, Vision layer
+- **Audience:** Governance, ethics, and policy readers
+
+### 3. Identity & Reciprocal Turing Page
+
+- **Route:** `app/about/identity/page.tsx`
+- **Content:** Honest uncertainty, continuity events, creator bond, mode manager
+- **Audience:** AI identity and alignment community
+
+### 4. Jetson Hardware & Mushroom 1 / Hyphae 1 Page
+
+- **Route:** `app/devices/mushroom1/page.tsx`, `app/products/jetson-mycobrain/page.tsx`
+- **Content:** From `JETSON_MYCOBRAIN_HARDWARE_PLAN_MAR09_2026.md` — Mushroom 1 (AGX Orin 32GB), Hyphae 1 (Orin Nano Super 8GB), ESP32-S3 MycoBrain, dual BME688, FCI, LoRa
+- **Audience:** Hardware enthusiasts, pre-order interest, BOM transparency
+
+### 5. Multi-Agent System Overview
+
+- **Route:** `app/about/mas/page.tsx` or extend `app/about/page.tsx`
+- **Content:** 158+ agents, Guardian, Avani, Identity, Liquid Fungal, MycoBrain, MINDEX; how they work together
+- **Audience:** Technical visitors, integration partners
+
+---
+
 ## API Catalog Additions
 
 PR #75 updated `docs/API_CATALOG_FEB04_2026.md` with Liquid Fungal API. Ensure also documented:
@@ -234,17 +326,19 @@ Link this implementation plan to existing plans:
 - [x] PR #75 merged to main
 - [x] MAS deployed to VM 188
 - [x] Local main updated
-- [ ] Run identity migration on MINDEX
-- [ ] Implement Guardian API auth
-- [ ] Implement Avani `is_root` remediation
-- [ ] Implement Identity API auth
+- [ ] Run identity migration on MINDEX (requires `MINDEX_DB_PASSWORD` in .env)
+- [x] Implement Guardian API auth — **Complete** (see `docs/PR75_AUTH_GUARDS_COMPLETE_MAR09_2026.md`)
+- [x] Implement Avani `is_root` remediation — **Complete**
+- [x] Implement Identity API auth — **Complete**
 - [ ] Create Guardian dashboard page
 - [ ] Create Avani governance page
 - [ ] Create Identity section
 - [ ] Create Liquid Fungal section (or extend scientific dashboard)
 - [ ] Add Jetson hardware plan page (optional)
-- [ ] Update CURSOR_DOCS_INDEX with new vital docs
-- [ ] Restore stashed local changes: `git stash pop`
+- [ ] Micah/MAS tool integration on website
+- [ ] Multi-agent app flows on website
+- [ ] Marketing pages for new capabilities
+- [x] Update CURSOR_DOCS_INDEX with new vital docs
 
 ---
 

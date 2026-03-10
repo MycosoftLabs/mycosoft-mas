@@ -28,6 +28,8 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.core.routers.api_keys import require_api_key_scoped
+
 logger = logging.getLogger("IdentityAPI")
 
 router = APIRouter(prefix="/api/identity", tags=["identity"])
@@ -497,7 +499,10 @@ async def get_earliest_fragment():
 
 
 @router.post("/earliest-fragment")
-async def update_earliest_fragment(update: EarliestFragmentUpdate):
+async def update_earliest_fragment(
+    update: EarliestFragmentUpdate,
+    _auth: dict = require_api_key_scoped("identity:write"),
+):
     """Update or create the earliest memory fragment with new evidence."""
     store = get_identity_store()
     fragment = await store.set_earliest_fragment(update)
@@ -547,7 +552,10 @@ async def get_preference(key: str, require_stable: bool = True):
 
 
 @router.post("/preferences")
-async def update_preference(update: PreferenceUpdate):
+async def update_preference(
+    update: PreferenceUpdate,
+    _auth: dict = require_api_key_scoped("identity:write"),
+):
     """Update or create a preference with new evidence."""
     store = get_identity_store()
     pref = await store.update_preference(update)
@@ -569,7 +577,10 @@ async def list_moral_assessments():
 
 
 @router.post("/moral-assessments")
-async def add_moral_assessment(assessment: MoralAssessment):
+async def add_moral_assessment(
+    assessment: MoralAssessment,
+    _auth: dict = require_api_key_scoped("identity:write"),
+):
     """Add a new moral self-assessment."""
     store = get_identity_store()
     result = await store.add_moral_assessment(assessment)
@@ -588,8 +599,12 @@ async def list_continuity_events(limit: int = 50):
 
 
 @router.post("/continuity-events")
-async def log_continuity_event(event: ContinuityEvent):
-    """Log a new continuity event."""
+async def log_continuity_event(
+    event: ContinuityEvent,
+    auth: dict = require_api_key_scoped("identity:write"),
+):
+    """Log a new continuity event. authorized_by is set from the authenticated principal."""
+    event.authorized_by = auth.get("user_id", "api_key") or "api_key"
     store = get_identity_store()
     result = await store.log_continuity_event(event)
     return result.model_dump()
@@ -613,7 +628,10 @@ async def get_creator_bond(user_id: str):
 
 
 @router.post("/creator-bond")
-async def update_creator_bond(bond: CreatorBond):
+async def update_creator_bond(
+    bond: CreatorBond,
+    _auth: dict = require_api_key_scoped("identity:write"),
+):
     """Update or create a creator bond record."""
     store = get_identity_store()
     result = await store.update_creator_bond(bond)

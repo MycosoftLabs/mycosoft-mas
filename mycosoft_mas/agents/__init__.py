@@ -45,7 +45,7 @@ _safe_import(".mycology_knowledge_agent", "MycologyKnowledgeAgent")
 _safe_import(".ip_tokenization_agent", "IPTokenizationAgent")
 _safe_import(".myco_dao_agent", "MycoDAOAgent")
 _safe_import(".token_economics_agent", "TokenEconomicsAgent")
-_safe_import(".finance_admin_agent", "FinanceAdminAgent")
+_safe_import(".financial.finance_admin_agent", "FinanceAdminAgent")
 _safe_import(".project_management_agent", "ProjectManagementAgent")
 _safe_import(".marketing_agent", "MarketingAgent")
 _safe_import(".experiment_agent", "ExperimentAgent")
@@ -65,6 +65,7 @@ _safe_import(".corporate.legal_compliance_agent", "LegalComplianceAgent")
 
 # Financial Agents
 _safe_import(".financial.financial_agent", "FinancialAgent")
+_safe_import(".financial.financial_operations_agent", "FinancialOperationsAgent")
 
 # Bio Agents (Track 3 - Full Platform Integration)
 _safe_import(".bio.culture_vision_agent", "CultureVisionAgent")

@@ -253,3 +253,19 @@ async def verify_key(record: Dict[str, Any] = Depends(require_api_key)):
         "scopes": record["scopes"] or [],
         "rate_limit": int(record["rate_limit"]),
     }
+
+
+def require_api_key_scoped(scope: str):
+    """Dependency that requires API key with a specific scope."""
+
+    async def _dep(request: Request) -> Dict[str, Any]:
+        record = await require_api_key(request)
+        scopes = record.get("scopes") or []
+        if scope not in scopes:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Scope '{scope}' required",
+            )
+        return record
+
+    return Depends(_dep)

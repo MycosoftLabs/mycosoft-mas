@@ -56,6 +56,23 @@ PUBLIC_HOST = os.getenv("MYCOBRAIN_PUBLIC_HOST")  # Optional: explicit host/URL
 HEARTBEAT_INTERVAL = int(os.getenv("MYCOBRAIN_HEARTBEAT_INTERVAL", "30"))  # seconds
 HEARTBEAT_ENABLED = os.getenv("MYCOBRAIN_HEARTBEAT_ENABLED", "true").lower() == "true"
 
+# Telemetry ingest bridge: push to website ingest API for Supabase/Device Manager
+TELEMETRY_INGEST_URL = os.getenv("TELEMETRY_INGEST_URL", "")  # e.g. http://localhost:3010/api/devices/ingest
+TELEMETRY_INGEST_API_KEY = os.getenv("TELEMETRY_INGEST_API_KEY", "")
+
+
+def _post_telemetry_ingest(url: str, payload: dict, headers: dict) -> None:
+    """Fire-and-forget POST to ingest API. Runs in a daemon thread."""
+    try:
+        base = url.rstrip("/")
+        ingest_url = f"{base}/api/devices/ingest" if "/api/devices/ingest" not in base else base
+        resp = httpx.post(ingest_url, json=payload, headers=headers, timeout=10.0)
+        if resp.status_code >= 400:
+            logger.warning("Telemetry ingest returned %s: %s", resp.status_code, resp.text[:200])
+    except Exception as ex:
+        logger.warning("Telemetry ingest POST failed: %s", ex)
+
+
 app = FastAPI(title="MycoBrain Service", version="2.2.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
@@ -366,7 +383,38 @@ async def get_telemetry(device_id: str):
                 telemetry["bme2"] = parse_sensor_line(line, "env")
         
         telemetry_cache[device_id] = telemetry
-        
+
+        # Push to ingest API for Supabase / Device Manager (fire-and-forget)
+        if TELEMETRY_INGEST_URL:
+            try:
+                readings = []
+                if "bme1" in telemetry and isinstance(telemetry["bme1"], dict):
+                    r = telemetry["bme1"].copy()
+                    r["sensor_type"] = r.get("type", "amb")
+                    readings.append(r)
+                if "bme2" in telemetry and isinstance(telemetry["bme2"], dict):
+                    r = telemetry["bme2"].copy()
+                    r["sensor_type"] = r.get("type", "env")
+                    readings.append(r)
+                if readings:
+                    ingest_payload = {
+                        "deviceId": device_id,
+                        "deviceType": "mycobrain",
+                        "timestamp": datetime.now().isoformat(),
+                        "readings": readings,
+                    }
+                    headers = {"Content-Type": "application/json"}
+                    if TELEMETRY_INGEST_API_KEY:
+                        headers["Authorization"] = f"Bearer {TELEMETRY_INGEST_API_KEY}"
+                        headers["x-api-key"] = TELEMETRY_INGEST_API_KEY
+                    threading.Thread(
+                        target=_post_telemetry_ingest,
+                        args=(TELEMETRY_INGEST_URL, ingest_payload, headers),
+                        daemon=True,
+                    ).start()
+            except Exception as ex:
+                logger.warning("Telemetry ingest bridge start failed: %s", ex)
+
         return {
             "status": "ok",
             "device_id": device_id,
@@ -456,6 +504,12 @@ async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port
         # Priority: firmware-reported > env var > default
         device_role = fw_role or DEVICE_ROLE
         device_display_name = fw_display_name or DEVICE_DISPLAY_NAME  # None if not set
+
+        # Use capability manifest for sensors/capabilities (canonical contract)
+        from capability_manifest import get_manifest_for_role, get_default_manifest
+        sensors, capabilities = get_manifest_for_role(device_role)
+        if not sensors and not capabilities:
+            sensors, capabilities = get_default_manifest()
         
         # Build heartbeat payload (serial ingestion; same format for future LoRa/BT/WiFi gateways)
         payload = {
@@ -467,8 +521,8 @@ async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port
             "port": port,
             "firmware_version": device.get("info", {}).get("firmware", "unknown"),
             "board_type": device.get("info", {}).get("board", "ESP32-S3"),
-            "sensors": ["bme688_a", "bme688_b"],
-            "capabilities": ["led", "buzzer", "i2c"],
+            "sensors": sensors,
+            "capabilities": capabilities,
             "location": DEVICE_LOCATION,
             "connection_type": connection_type,
             "ingestion_source": "serial",
@@ -481,7 +535,7 @@ async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port
         
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
-                f"{MAS_REGISTRY_URL}/api/devices/register",
+                f"{MAS_REGISTRY_URL}/api/devices/heartbeat",
                 json=payload,
             )
             
@@ -538,7 +592,7 @@ async def heartbeat_loop():
                 }
                 try:
                     async with httpx.AsyncClient(timeout=10.0) as client:
-                        await client.post(f"{MAS_REGISTRY_URL}/api/devices/register", json=service_payload)
+                        await client.post(f"{MAS_REGISTRY_URL}/api/devices/heartbeat", json=service_payload)
                 except Exception:
                     pass
                     
@@ -555,7 +609,7 @@ PORT_WATCH_INTERVAL = float(os.getenv("MYCOBRAIN_PORT_WATCH_INTERVAL", "2.0"))
 async def port_watcher_loop():
     """Periodically scan for MycoBrain ports, auto-connect new ones, auto-disconnect unplugged.
     Only connects to real USB serial devices (COM7, etc.), never virtual ports (COM1, COM2).
-    WiFi/BLE/LoRa devices from other machines appear via MAS registry /api/devices/network."""
+    WiFi/BLE/LoRa devices from other machines appear via MAS registry /api/devices."""
     loop = asyncio.get_event_loop()
     logger.info(f"Port watcher started (interval: {PORT_WATCH_INTERVAL}s)")
     while True:

@@ -589,7 +589,7 @@ class WorkspaceAgent(BaseAgent):
         if any(w in content_lower for w in ["deploy", "server", "docker", "vm", "infrastructure"]):
             return {"route_to": "deployment_agent", "reason": "infrastructure_request"}
         if any(w in content_lower for w in ["finance", "budget", "invoice", "expense"]):
-            return {"route_to": "financial_agent", "reason": "financial_request"}
+            return {"route_to": "financial", "reason": "financial_request"}
         if any(w in content_lower for w in ["research", "paper", "study", "hypothesis"]):
             return {"route_to": "research_agent", "reason": "research_request"}
 

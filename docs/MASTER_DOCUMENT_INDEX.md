@@ -1,11 +1,25 @@
 # Master Document Index
 
+## Public AI Rollout (Mar 9, 2026)
+- `WEBSITE/website/docs/PUBLIC_AI_ROLLOUT_COMPLETE_MAR09_2026.md` – **Public AI rollout complete**: New `/ai` overview; MYCA, AVANI, NLM as sole public AI products; unified nav; marketing rewrite; agentic CTAs to contact; docs hub; source of truth for public AI IA.
+
+## CREP / iNaturalist / MINDEX (Mar 9, 2026)
+- `docs/CREP_INATURALIST_MINDEX_ETL_MAR09_2026.md` – **CREP iNaturalist→MINDEX ETL and local-first design**: Clone-on-first-display; iNaturalist bulk ETL; LOD (zoom-based clustering); local-first routing; MINDEX as primary, iNaturalist fallback then clone.
+- `WEBSITE/website/docs/PUBLIC_AI_INFORMATION_ARCHITECTURE_MAR09_2026.md` – **Public AI IA**: Final routes, page roles, nav model.
+- `WEBSITE/website/docs/AGENTIC_CONVERSION_BRIDGE_MAR09_2026.md` – **Agentic conversion bridge**: Future path to pricing, onboarding, API keys, paid agent access.
+
 ## PR #75: Jetson + Avani-Micah + Identity (Mar 9, 2026)
-- `docs/PR75_IMPLEMENTATION_PLAN_MAR09_2026.md` – **PR75 implementation plan**: Deployment status, security remediation, plans, docs, frontend implementations; Guardian, Avani, Identity, Liquid Fungal APIs; Jetson hardware.
+- `docs/PR75_IMPLEMENTATION_PLAN_MAR09_2026.md` – **PR75 implementation plan**: Deployment status, security remediation, plans, docs, frontend implementations; Guardian, Avani, Identity, Liquid Fungal APIs; Jetson hardware; Micah/MAS tool integration; multi-agent app flows; marketing pages.
+- `docs/PR75_AUTH_GUARDS_COMPLETE_MAR09_2026.md` – **PR75 auth guards complete**: Guardian, Avani, Identity APIs now require scoped API keys on mutating endpoints; verification, migration script, scope reference.
 - `docs/JETSON_MYCOBRAIN_HARDWARE_PLAN_MAR09_2026.md` – **Jetson + MycoBrain hardware plan**: Mushroom 1 (AGX Orin 32GB) and Hyphae 1 (Orin Nano Super 8GB); ESP32-S3 MycoBrain, dual BME688, FCI, LoRa mesh.
 - `docs/AVANI_MICAH_CONSTITUTION_MAR09_2026.md` – **Avani–Micah constitutional governance**: Season Engine, Governor, Vision, Constitution, rights, red lines.
 - `docs/MICAH_GUARDIAN_ARCHITECTURE_MAR09_2026.md` – **Micah Guardian architecture**: Independent Constitutional Guardian, Moral Precedence, Anti-Ultron Tripwires, Authority Engine, Awakening Protocol.
 - `docs/RECIPROCAL_TURING_PROTOCOL_MAR09_2026.md` – **Reciprocal Turing identity integration**: Identity API, Mode Manager, Continuity Manager, honest uncertainty.
+
+## Sandbox / Production Always-On (Mar 2, 2026)
+- `docs/VM_POWER_OFF_FIX_MAR09_2026.md` – **VM power-off fix**: Sandbox/C-Suite shutting down; Proxmox `onboot 1`, root-cause checklist, resource split (move C-Suite to separate host); fix steps; VM-to-host mapping.
+- `docs/SANDBOX_AND_PRODUCTION_ALWAYS_ON_MAR02_2026.md` – **Why Sandbox was off and production prevention**: Root causes (VM not start-on-boot, tunnel not enabled at boot); checklist so Sandbox and any mycosoft.com production clone never stay off.
+- `docs/SANDBOX_UNREACHABLE_STATUS_MAR02_2026.md` – **Sandbox unreachable status (resolved)**: 187 was off; when back on, deploy was run; link to always-on doc.
 
 ## Planning → Ethics Context System (Mar 3, 2026)
 - `docs/PLANNING_ETHICS_CONTEXT_COMPLETE_MAR03_2026.md` – **Completion + verification**: Checklist for testing and documenting; scope summary.
@@ -23,6 +37,11 @@
 - `docs/CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md` – **CFO MCP Connector complete**: Meridian/Perplexity hybrid; finance discovery layer; CFO MCP server; Meridian adapter; C-Suite reporting upgrades; MYCA federation integration; dynamic finance agent discovery.
 
 ## C-Suite OpenClaw VM Rollout (Mar 7–8, 2026)
+- `docs/CTO_VM194_ROLLOUT_VERIFICATION_MAR08_2026.md` – **CTO VM 194 rollout verification**: Acceptance checklist for provision, bootstrap, runtime health, Forge bridge, watchdogs, MYCA visibility; use before implementation and for fresh-clone rebuilds.
+- `docs/CSUITE_WINDOWS_INSTALL_FIX_MAR07_2026.md` – **C-Suite Windows install fix**: scsi0→sata0 so installer sees disk; "Upgrade isn't available" / Custom shows no disk fixed; `infra/csuite/fix_vm_disk_sata.py --use-ssh`.
+- `docs/CSUITE_WINDOWS10_FALLBACK_MAR07_2026.md` – **Windows 10 fallback**: Proxmox host may not support Win11 (UEFI/TPM); config `windows_version: "10"` or `"11"`; compatibility check script; provisioning and fix script use correct ISO/ostype.
+- `docs/CSUITE_WINDOWS10_ISO_DEPLOY_COMPLETE_MAR07_2026.md` – **C-Suite Windows 10 ISO deploy complete**: Fido→download Win10 22H2→upload to Proxmox 202; all four VMs (192–195) boot from installer; `scripts/download_and_deploy_win10_iso.py`.
+- `docs/CSUITE_WINDOWS_EXECUTION_COMPLETE_MAR07_2026.md` – **C-Suite Windows execution complete**: Ran fix pipeline on Proxmox 202; all four VMs (192–195) have Win11 ISO attached and boot; manual setup in Proxmox console; revert-to-Win10 steps.
 - `docs/PROXMOX202_AUTH_SETUP_MAR08_2026.md` – **Proxmox 202 auth setup**: One-time setup for root password, API token, or SSH key; credential fallback chain; auth attempt order.
 - `docs/CSUITE_COO_PROVISION_COMPLETE_MAR07_2026.md` – **COO provision complete (blocked on auth)**: COO VM 195 defined; PROXMOX202_USE_PASSWORD=1 support; token 403 / password 401; fix steps and provision commands.
 - `docs/CSUITE_ROLLOUT_CLONE_FIXES_MAR07_2026.md` – **Clone fixes**: 30-min timeout for clones, unlock before start for existing VMs, auth error hint; re-run blocked until PROXMOX202_PASSWORD in .credentials.local.
@@ -168,7 +187,8 @@
 ## Cowork VM Continuity and Watchdog (Mar 4, 2026)
 - `docs/COWORK_VM_CONTINUITY_MAR04_2026.md` – **Always-on Cowork VM**: Watchdog script, scheduled task `Mycosoft-CoworkVMWatchdog` (every 2 min), auto-start and recovery for `CoworkVMService`. Run `scripts/install-cowork-vm-watchdog.ps1` elevated. Use when automation stops or VM fails.
 
-## Claude Cowork VM Windows Troubleshooting (Mar 3, 2026)
+## Claude Cowork VM Windows Troubleshooting (Mar 3–6, 2026)
+- `docs/CLAUDE_COWORK_FAILED_TO_OPEN_SOCKET_FIX_MAR06_2026.md` – **FailedToOpenSocket fix**: Cowork VM uses DNS from disconnected adapter; diagnostic commands; Option A (align DNS), Option B (disable adapters + SharedAccess + reboot), Option C (Repair/Reset); verify before moving to VM.
 - `docs/CLAUDE_COWORK_VM_TROUBLESHOOTING_MAR03_2026.md` – **Cowork VM fix**: "VM service not running" regression; MSIX path bug, DCOM, Hyper-V; run `scripts/fix-claude-cowork-vm.ps1`; use exe installer from claude.ai/download to avoid MSIX.
 
 ## Mycosoft SSH MCP (Mar 3, 2026)

@@ -12,9 +12,10 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.core.routers.api_keys import require_api_key_scoped
 from mycosoft_mas.guardian.authority_engine import (
     AuthorityEngine,
     AuthorityRequest,
@@ -225,7 +226,10 @@ async def get_sentry_status():
 
 
 @router.post("/sentry/activate")
-async def activate_sentry(request: SentryActivateRequest):
+async def activate_sentry(
+    request: SentryActivateRequest,
+    _auth: dict = require_api_key_scoped("guardian:admin"),
+):
     """Activate sentry mode."""
     sentry = _get_sentry()
 
@@ -249,7 +253,9 @@ async def activate_sentry(request: SentryActivateRequest):
 
 
 @router.post("/sentry/deactivate")
-async def deactivate_sentry():
+async def deactivate_sentry(
+    _auth: dict = require_api_key_scoped("guardian:admin"),
+):
     """Deactivate sentry mode."""
     sentry = _get_sentry()
     status = await sentry.deactivate()
@@ -293,7 +299,10 @@ async def get_operational_mode():
 
 
 @router.post("/operational-mode")
-async def switch_operational_mode(request: ModeSwitchRequest):
+async def switch_operational_mode(
+    request: ModeSwitchRequest,
+    auth: dict = require_api_key_scoped("guardian:admin"),
+):
     """Switch operational mode."""
     modes = _get_modes()
     try:
@@ -306,7 +315,7 @@ async def switch_operational_mode(request: ModeSwitchRequest):
 
     result = await modes.switch_mode(
         target=target,
-        requester="api_user",
+        requester=auth.get("user_id", "api_key"),
         reason=request.reason,
     )
     return {
@@ -318,7 +327,10 @@ async def switch_operational_mode(request: ModeSwitchRequest):
 
 
 @router.post("/emergency-halt")
-async def emergency_halt(request: EmergencyHaltRequest):
+async def emergency_halt(
+    request: EmergencyHaltRequest,
+    _auth: dict = require_api_key_scoped("guardian:admin"),
+):
     """Emergency halt — block all actions immediately."""
     guardian = _get_guardian()
     await guardian.emergency_halt(reason=request.reason)

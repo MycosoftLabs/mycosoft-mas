@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Optional
 
 from mycosoft_mas.llm.config import LLMConfig, get_llm_config
+from mycosoft_mas.llm.llm_ledger import persist_to_supabase_ledger
 from mycosoft_mas.llm.providers.base import (
     BaseLLMProvider,
     LLMResponse,
@@ -299,6 +300,13 @@ class LLMRouter:
                 tokens=response.usage.total_tokens,
                 cost=response.estimated_cost,
             )
+            persist_to_supabase_ledger(
+                provider=provider_name,
+                model=selected_model,
+                tokens_in=response.usage.prompt_tokens,
+                tokens_out=response.usage.completion_tokens,
+                estimated_cost=response.estimated_cost,
+            )
 
             # Post-hoc constraint validation if index specified
             if constrained_index_name and response.content:
@@ -364,7 +372,13 @@ class LLMRouter:
                     tokens=response.usage.total_tokens,
                     cost=response.estimated_cost,
                 )
-                
+                persist_to_supabase_ledger(
+                    provider=fallback_name,
+                    model=fallback_model,
+                    tokens_in=response.usage.prompt_tokens,
+                    tokens_out=response.usage.completion_tokens,
+                    estimated_cost=response.estimated_cost,
+                )
                 return response
                 
             except LLMError as e:

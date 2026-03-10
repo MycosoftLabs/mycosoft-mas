@@ -8,6 +8,28 @@
 
 ---
 
+## Public AI Rollout (Mar 9, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `WEBSITE/website/docs/PUBLIC_AI_ROLLOUT_COMPLETE_MAR09_2026.md` | **Rollout complete**: Public AI IA, `/ai` overview, MYCA/AVANI/NLM pages; unified nav; marketing rewrite; agentic CTAs. Source of truth. |
+| `WEBSITE/website/docs/PUBLIC_AI_INFORMATION_ARCHITECTURE_MAR09_2026.md` | **Public AI IA**: Routes, page roles, nav model. |
+| `WEBSITE/website/docs/AGENTIC_CONVERSION_BRIDGE_MAR09_2026.md` | **Agentic bridge**: Future pricing, onboarding, API keys, paid agent access. |
+
+## CREP / iNaturalist / MINDEX (Mar 9, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/CREP_INATURALIST_MINDEX_ETL_MAR09_2026.md` | **iNaturalist→MINDEX ETL + local-first**: Clone-on-first-display; iNaturalist bulk ETL; LOD; local-first routing. Use for CREP map, life-form circles, MINDEX observations. |
+
+## PR #75: Jetson + Avani-Micah + Identity (Mar 9, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/PR75_IMPLEMENTATION_PLAN_MAR09_2026.md` | **PR75 plan**: Deployment, auth remediation (done), Guardian/Avani/Identity/Liquid Fungal APIs; Micah/MAS tool integration; multi-agent app flows; marketing pages; Jetson hardware. |
+| `docs/PR75_AUTH_GUARDS_COMPLETE_MAR09_2026.md` | **Auth guards complete**: Guardian, Avani, Identity scoped API key requirements; migration script; scope reference. |
+| `docs/JETSON_MYCOBRAIN_HARDWARE_PLAN_MAR09_2026.md` | **Jetson + MycoBrain hardware**: Mushroom 1 (AGX Orin 32GB), Hyphae 1 (Orin Nano Super 8GB); ESP32-S3, dual BME688, FCI, LoRa. |
+| `docs/AVANI_MICAH_CONSTITUTION_MAR09_2026.md` | **Avani–Micah governance**: Season Engine, Governor, Vision, Constitution, rights, red lines. |
+| `docs/MICAH_GUARDIAN_ARCHITECTURE_MAR09_2026.md` | **Guardian architecture**: Moral Precedence, Anti-Ultron Tripwires, Authority Engine, Awakening Protocol. |
+| `docs/RECIPROCAL_TURING_PROTOCOL_MAR09_2026.md` | **Reciprocal Turing identity**: Identity API, Mode Manager, Continuity Manager, honest uncertainty. |
+
 ## Request Flow Architecture (Mar 5, 2026)
 | Doc | Purpose |
 |-----|---------|
@@ -36,6 +58,8 @@
 | `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` | **Large items scaffolding**: Design stubs for Jobs 18–23 (control plane, bridges, workflow visibility). |
 | `docs/CSUITE_OPENCLAW_VM_ROLLOUT_COMPLETE_MAR07_2026.md` | **C-Suite VM rollout complete**: Four executive-assistant VMs (CEO/CFO/CTO/COO) on Proxmox 90; OpenClaw golden image; MAS heartbeat/report/escalate; VM IPs 192.168.0.192–195. |
 | `docs/CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md` | **CFO MCP Connector complete**: Meridian/Perplexity hybrid; finance discovery; CFO MCP server; Meridian adapter; C-Suite reporting; MYCA federation; dynamic discovery. |
+| `docs/CTO_VM194_ROLLOUT_VERIFICATION_MAR08_2026.md` | **CTO VM 194 rollout verification**: Acceptance checklist for provision, bootstrap, runtime health, Forge bridge, watchdogs, MYCA visibility; use before implementation and for fresh-clone rebuilds. |
+| `docs/CSUITE_WINDOWS_EXECUTION_COMPLETE_MAR07_2026.md` | **C-Suite Windows execution complete**: Fix pipeline run on Proxmox 202; all VMs 192–195 have Win11 ISO attached and boot; manual setup in console; revert-to-Win10 steps. |
 
 ## 1. Master indexes (read first)
 
