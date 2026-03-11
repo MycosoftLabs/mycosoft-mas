@@ -68,10 +68,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     
     # Endpoints exempt from rate limiting
     EXEMPT_PATHS = {"/health", "/metrics", "/docs", "/openapi.json", "/redoc"}
+    EXEMPT_PREFIXES = (
+        "/api/voice/v9/",
+        "/ws/voice/v9",
+    )
     
     async def dispatch(self, request: Request, call_next: Callable):
         # Skip rate limiting for exempt paths
-        if request.url.path in self.EXEMPT_PATHS:
+        path = request.url.path
+        if path in self.EXEMPT_PATHS or any(path.startswith(prefix) for prefix in self.EXEMPT_PREFIXES):
             return await call_next(request)
         
         # Skip if rate limiting is disabled
