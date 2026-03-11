@@ -2,10 +2,11 @@
 C-Suite Executive Assistant API Router
 
 Heartbeat, reporting, escalation, and bounded-autonomy integration for
-the four OpenClaw executive assistants (CEO, CFO, CTO, COO) on Proxmox 90.
+the four OpenClaw executive assistants (CEO, CFO, CTO, COO) on Proxmox 202.
 
 Assistants report to MAS (188) and are visible to MYCA (191) via MAS.
-State persists in Redis; escalations forward to MAS notifications (Morgan).
+State persists in Redis; escalations forward to MAS notifications (Morgan)
+and are stored for Morgan visibility and MYCA task queues.
 
 Created: March 7, 2026
 """
@@ -13,6 +14,7 @@ Created: March 7, 2026
 import json
 import os
 import logging
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -29,6 +31,9 @@ _CSUITE_REDIS_KEY = "csuite:assistants"
 _CFO_REPORT_HISTORY_KEY = "csuite:cfo:report_history"
 _CFO_DIRECTIVES_KEY = "csuite:cfo:directives"
 _CFO_AGENT_REPORTS_KEY = "csuite:cfo:agent_reports"
+_CTO_REPORT_HISTORY_KEY = "csuite:cto:report_history"
+_CTO_TASKS_KEY = "csuite:cto:tasks"  # Hash: task_id -> JSON
+_CSUITE_ESCALATIONS_KEY = "csuite:escalations"  # List: escalation entries for Morgan visibility
 _REDIS_TTL_SEC = 60 * 60 * 24 * 7  # 7 days
 _MAX_HISTORY_ITEMS = 50
 
@@ -115,6 +120,38 @@ def _get_history(key: str) -> List[Dict[str, Any]]:
         return []
 
 
+def _get_cto_tasks() -> Dict[str, Dict[str, Any]]:
+    """Return all CTO tasks from Redis hash."""
+    r = _get_redis()
+    if r is None:
+        return {}
+    try:
+        data = r.hgetall(_CTO_TASKS_KEY) or {}
+        out = {}
+        for k, v in data.items():
+            if v:
+                try:
+                    out[k] = json.loads(v)
+                except json.JSONDecodeError:
+                    pass
+        return out
+    except Exception as e:
+        logger.warning("C-Suite: Redis get CTO tasks failed: %s", e)
+        return {}
+
+
+def _set_cto_task(task_id: str, task: Dict[str, Any]) -> None:
+    """Store a CTO task in Redis hash."""
+    r = _get_redis()
+    if r is None:
+        return
+    try:
+        r.hset(_CTO_TASKS_KEY, task_id, json.dumps(task, default=str))
+        r.expire(_CTO_TASKS_KEY, 86400 * 14)  # 14 days
+    except Exception as e:
+        logger.warning("C-Suite: Redis set CTO task failed: %s", e)
+
+
 class CSuiteHeartbeat(BaseModel):
     """Heartbeat from an executive assistant VM."""
     role: str = Field(..., description="CEO | CFO | CTO | COO")
@@ -165,6 +202,22 @@ class AgentReportBody(BaseModel):
     task_id: Optional[str] = Field(default=None)
 
 
+class ForgeTaskCreate(BaseModel):
+    """CTO task posted by MYCA/Morgan for Forge."""
+    title: str = Field(..., description="Task title")
+    description: str = Field(..., description="Task description or instructions")
+    priority: str = Field(default="normal", description="low | normal | high | urgent")
+    source: str = Field(default="MYCA", description="MYCA | Morgan | CEO")
+    extra: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ForgeTaskAck(BaseModel):
+    """Forge acknowledges or completes a task."""
+    status: str = Field(..., description="in_progress | complete | failed")
+    summary: Optional[str] = Field(default=None, description="Completion summary")
+    details: Optional[Dict[str, Any]] = Field(default=None)
+
+
 def _assistant_id(role: str) -> str:
     return f"csuite-{role.lower()}"
 
@@ -211,8 +264,11 @@ async def csuite_report(body: CSuiteReport) -> Dict[str, Any]:
     _assistant_registry[aid]["last_report"] = report_entry
     _save_registry()
 
-    # Persist to report history for CFO so Meridian and MYCA can access historical reports
-    _push_history(_CFO_REPORT_HISTORY_KEY, report_entry)
+    # Persist to role-specific report history
+    if body.role.upper() == "CTO":
+        _push_history(_CTO_REPORT_HISTORY_KEY, report_entry)
+    elif body.role.upper() == "CFO":
+        _push_history(_CFO_REPORT_HISTORY_KEY, report_entry)
 
     if body.escalated:
         logger.warning(f"C-Suite escalation from {body.role}: {body.summary}")
@@ -227,14 +283,21 @@ async def csuite_escalation(body: CSuiteEscalation) -> Dict[str, Any]:
     logger.warning(f"C-Suite escalation: {body.role} ({body.assistant_name}) — {body.subject} [{body.urgency}]")
     if aid not in _assistant_registry:
         _assistant_registry[aid] = {}
-    _assistant_registry[aid]["last_escalation"] = {
+    esc_entry = {
+        "role": body.role,
+        "assistant_name": body.assistant_name,
         "subject": body.subject,
         "context": body.context,
         "options": body.options,
         "urgency": body.urgency,
         "at": now.isoformat(),
+        "assistant_id": aid,
     }
+    _assistant_registry[aid]["last_escalation"] = esc_entry
     _save_registry()
+
+    # Persist escalation for Morgan visibility and MYCA task queues
+    _push_history(_CSUITE_ESCALATIONS_KEY, esc_entry)
 
     # Forward to MAS notifications (Morgan) — email, webhook, SMS per priority
     try:
@@ -367,6 +430,39 @@ async def cfo_dashboard() -> Dict[str, Any]:
     }
 
 
+@router.get("/cfo/status")
+async def cfo_status() -> Dict[str, Any]:
+    """CFO finance status for website/MYCA: health, counts, last activity.
+    Used by finance plugin and C-suite dashboards."""
+    report_history = _get_history(_CFO_REPORT_HISTORY_KEY)
+    directives = _get_history(_CFO_DIRECTIVES_KEY)
+    agent_reports = _get_history(_CFO_AGENT_REPORTS_KEY)
+    _load_registry()
+    cfo = _assistant_registry.get("csuite-cfo") or {}
+    last_hb = cfo.get("last_heartbeat")
+    status = "healthy"
+    if last_hb:
+        try:
+            dt = datetime.fromisoformat(last_hb.replace("Z", "+00:00"))
+            age = (datetime.now(timezone.utc) - dt).total_seconds()
+            status = "stale" if age > _heartbeat_ttl_seconds else "healthy"
+        except Exception:
+            status = "unknown"
+    else:
+        status = "offline"
+
+    return {
+        "status": status,
+        "role": "CFO",
+        "assistant_name": cfo.get("assistant_name", "Meridian"),
+        "reports_count": len(report_history),
+        "directives_count": len(directives),
+        "agent_reports_count": len(agent_reports),
+        "last_heartbeat": last_hb,
+        "last_report": cfo.get("last_report"),
+    }
+
+
 @router.get("/cfo/summary")
 async def cfo_summary() -> Dict[str, Any]:
     """MYCA-visible CFO summary: aggregate counts and recent activity."""
@@ -382,6 +478,146 @@ async def cfo_summary() -> Dict[str, Any]:
         "recent_reports": recent_reports,
         "recent_directives": recent_directives,
     }
+
+
+# --- Forge (CTO) endpoints ---
+
+
+@router.post("/forge/task")
+async def forge_create_task(body: ForgeTaskCreate) -> Dict[str, Any]:
+    """Create a CTO task for Forge (from MYCA/Morgan)."""
+    task_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    task = {
+        "id": task_id,
+        "status": "pending",
+        "title": body.title,
+        "description": body.description,
+        "priority": body.priority,
+        "source": body.source,
+        "extra": body.extra,
+        "created_at": now.isoformat(),
+        "acked_at": None,
+        "summary": None,
+        "details": None,
+    }
+    _set_cto_task(task_id, task)
+    logger.info(f"C-Suite Forge task created: {task_id} — {body.title[:60]}...")
+    return {"status": "ok", "task_id": task_id, "task": task}
+
+
+@router.get("/forge/tasks")
+async def forge_list_tasks(
+    status: Optional[str] = Query(None, description="Filter: pending | in_progress | complete | failed"),
+) -> Dict[str, Any]:
+    """List CTO tasks for Forge to fetch."""
+    tasks_map = _get_cto_tasks()
+    tasks = list(tasks_map.values())
+    if status:
+        tasks = [t for t in tasks if t.get("status") == status]
+    tasks.sort(key=lambda t: t.get("created_at", ""), reverse=True)
+    return {"tasks": tasks, "count": len(tasks)}
+
+
+@router.post("/forge/tasks/{task_id}/ack")
+async def forge_ack_task(task_id: str, body: ForgeTaskAck) -> Dict[str, Any]:
+    """Forge acknowledges or completes a task."""
+    tasks_map = _get_cto_tasks()
+    if task_id not in tasks_map:
+        raise HTTPException(status_code=404, detail="Task not found")
+    task = tasks_map[task_id]
+    task["status"] = body.status
+    task["summary"] = body.summary
+    task["details"] = body.details
+    task["acked_at"] = datetime.now(timezone.utc).isoformat()
+    _set_cto_task(task_id, task)
+    logger.info(f"C-Suite Forge task {task_id} acked: {body.status}")
+    return {"status": "ok", "task_id": task_id, "task": task}
+
+
+@router.get("/forge/dashboard")
+async def forge_dashboard() -> Dict[str, Any]:
+    """Forge dashboard: report history, pending tasks, assistant status, stale-work visibility."""
+    _load_registry()
+    report_history = _get_history(_CTO_REPORT_HISTORY_KEY)
+    tasks_map = _get_cto_tasks()
+    tasks = list(tasks_map.values())
+    pending = [t for t in tasks if t.get("status") in ("pending", "in_progress")]
+    assistant = _assistant_registry.get("csuite-cto") or {}
+
+    # Stale work: tasks pending/in_progress older than threshold
+    now = datetime.now(timezone.utc)
+    stale_tasks: List[Dict[str, Any]] = []
+    for t in pending:
+        at_str = t.get("created_at") or t.get("acked_at")
+        if at_str:
+            try:
+                dt = datetime.fromisoformat(at_str.replace("Z", "+00:00"))
+                age = (now - dt).total_seconds()
+                if age > _stale_task_threshold_seconds:
+                    t_copy = dict(t)
+                    t_copy["stale_seconds"] = int(age)
+                    stale_tasks.append(t_copy)
+            except Exception:
+                pass
+
+    return {
+        "report_history": report_history[:20],
+        "tasks": tasks,
+        "pending_count": len(pending),
+        "stale_tasks": stale_tasks,
+        "assistant": assistant,
+        "stale_threshold_seconds": _stale_task_threshold_seconds,
+    }
+
+
+@router.get("/forge/summary")
+async def forge_summary() -> Dict[str, Any]:
+    """MYCA-visible CTO summary: aggregate counts and recent activity for Morgan oversight."""
+    _load_registry()
+    report_history = _get_history(_CTO_REPORT_HISTORY_KEY)
+    tasks_map = _get_cto_tasks()
+    tasks = list(tasks_map.values())
+    pending = [t for t in tasks if t.get("status") in ("pending", "in_progress")]
+    escalations = _get_history(_CSUITE_ESCALATIONS_KEY)
+    assistant = _assistant_registry.get("csuite-cto") or {}
+
+    # Stale task count
+    now = datetime.now(timezone.utc)
+    stale_count = 0
+    for t in pending:
+        at_str = t.get("created_at") or t.get("acked_at")
+        if at_str:
+            try:
+                dt = datetime.fromisoformat(at_str.replace("Z", "+00:00"))
+                if (now - dt).total_seconds() > _stale_task_threshold_seconds:
+                    stale_count += 1
+            except Exception:
+                pass
+
+    return {
+        "reports_count": len(report_history),
+        "tasks_count": len(tasks),
+        "pending_count": len(pending),
+        "stale_tasks_count": stale_count,
+        "escalations_count": len(escalations),
+        "recent_reports": report_history[:5] if report_history else [],
+        "recent_escalations": escalations[:5] if escalations else [],
+        "assistant_status": assistant.get("status", "unknown"),
+        "last_heartbeat": assistant.get("last_heartbeat"),
+    }
+
+
+@router.get("/escalations")
+async def list_escalations(
+    role: Optional[str] = Query(None, description="Filter by role"),
+    limit: int = Query(20, ge=1, le=100),
+) -> Dict[str, Any]:
+    """List C-Suite escalations for Morgan oversight and MYCA task visibility."""
+    escalations = _get_history(_CSUITE_ESCALATIONS_KEY)
+    if role:
+        escalations = [e for e in escalations if e.get("role", "").upper() == role.upper()]
+    return {"escalations": escalations[:limit], "count": len(escalations[:limit])}
 
 
 @router.get("/health")

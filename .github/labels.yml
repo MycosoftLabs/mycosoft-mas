@@ -1,0 +1,55 @@
+# Mycosoft org-wide label manifest (action-label-syncer)
+# See: https://github.com/micnncim/action-label-syncer
+# Syncs labels across MAS, WEBSITE, MINDEX, SDK, and related repos
+
+- name: bug
+  description: Something isn't working
+  color: d73a4a
+- name: documentation
+  description: Improvements or additions to documentation
+  color: 0075ca
+- name: duplicate
+  description: This issue or pull request already exists
+  color: cfd3d7
+- name: enhancement
+  description: New feature or request
+  color: a2eeef
+- name: good first issue
+  description: Good for newcomers
+  color: 7057ff
+- name: help wanted
+  description: Extra attention is needed
+  color: 008672
+- name: invalid
+  description: This doesn't seem right
+  color: e4e669
+- name: question
+  description: Further information is requested
+  color: d876e3
+- name: wontfix
+  description: This will not be worked on
+  color: ffffff
+- name: priority-high
+  description: High priority
+  color: b60205
+- name: priority-medium
+  description: Medium priority
+  color: fbca04
+- name: priority-low
+  description: Low priority
+  color: 0e8a16
+- name: area-mas
+  description: MAS / orchestration
+  color: c5def5
+- name: area-website
+  description: Website / Next.js
+  color: d4c5f9
+- name: area-mindex
+  description: MINDEX / database
+  color: bfe5bf
+- name: area-voice
+  description: Voice / PersonaPlex
+  color: f9d0c4
+- name: area-devices
+  description: MycoBrain / devices
+  color: fef2c0

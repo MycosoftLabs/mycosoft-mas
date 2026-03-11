@@ -8,6 +8,16 @@
 
 ---
 
+## Full Integration Program (Mar 10, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/INTEGRATION_CONTRACTS_CANONICAL_MAR10_2026.md` | **Canonical integration contracts**: Six contract types (entities, investigation, red-team, operator, payments, edge). Use for all integration work (OpenPlanter, Shadowbroker, PentAGI, Paperclip, Dekart, EO, payments, Jetson/MycoBrain). |
+
+## External Repo Integration (Mar 10, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/EXTERNAL_REPO_INTEGRATION_COMPLETE_MAR10_2026.md` | **Phase 1 complete**: Label syncer, Uncodixfy rule, Turf bbox validation, CrepMapPreferencesPanel, Supabase CREP preferences, MAS finance + proxy. Use for CREP map, finance status, external repo patterns. |
+
 ## Public AI Rollout (Mar 9, 2026)
 | Doc | Purpose |
 |-----|---------|

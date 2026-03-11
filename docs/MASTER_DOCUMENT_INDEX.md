@@ -1,5 +1,30 @@
 # Master Document Index
 
+## MYCA Voice + Chat Fixes (Mar 2, 2026)
+- `docs/MYCA_PRODUCTION_REQUIREMENTS_MAR02_2026.md` – **MYCA production requirements**: MAS reachable, at least one LLM key (e.g. GROQ), optional MINDEX/n8n; VM layout; verification steps; behavior when all providers fail.
+
+## Voice v9 (Mar 2, 2026)
+- `docs/VOICE_V9_BASELINE_AUDIT_MAR02_2026.md` – **Voice v9 baseline audit**: End-to-end live path; Bridge + Brain as single authority; duplicate MAS call risks; observability recommendations; v9 migration baseline.
+- `docs/VOICE_V9_DUPLEX_PERSONA_COMPLETE_MAR02_2026.md` – **Voice v9 duplex and persona lock complete**: InterruptManager, PersonaLockService, REST/WebSocket endpoints; barge-in, persona validation, identity-safe TTS.
+- `docs/VOICE_V9_DEPLOYMENT_RUNTIME_MAR02_2026.md` – **Voice v9 deployment and runtime**: Dev vs production topology; env contracts; startup order; rollout stages; v9 API endpoints.
+
+## Full Integration Program (Mar 10, 2026)
+- `docs/INTEGRATION_CONTRACTS_CANONICAL_MAR10_2026.md` – **Canonical integration contracts**: Unified entities, investigation artifacts, red-team audit, operator tasks, agent payments, Jetson/MycoBrain edge telemetry. Phase 0 of Full Integration Master Program.
+
+## External Repo Integration (Mar 10, 2026)
+- `docs/EXTERNAL_REPO_INTEGRATION_COMPLETE_MAR10_2026.md` – **Phase 1 complete**: Label syncer, Uncodixfy rule, Turf bbox validation, CrepMapPreferencesPanel, Supabase CREP preferences API, MAS finance route + website proxy; test results; verification commands.
+- `docs/EXTERNAL_REPO_SYSTEM_BOUNDARIES_MAR10_2026.md` – **System boundaries and extension seams**: MAS, WEBSITE, MINDEX, MycoBrain, Mycorrhizae, NatureOS boundaries; VM layout; extension seams for external repo integration.
+- `docs/EXTERNAL_REPO_CLASSIFICATION_MAR10_2026.md` – **Repository classification**: Adopt, Prototype, Watchlist, Do Not Integrate for 18 external repos; rationale and insertion points.
+- `docs/EXTERNAL_REPO_IMPLEMENTATION_STREAMS_MAR10_2026.md` – **Implementation streams**: Geo stack, local inference, finance, security, repo hygiene; phased execution.
+- `docs/EXTERNAL_REPO_GAP_ALIGNMENT_MAR10_2026.md` – **Gap alignment**: Cross-check against platform gaps; blocking rules; sequencing so new work strengthens architecture.
+
+## Test-Voice / PersonaPlex (Mar 10, 2026)
+- `docs/CUDA_GRAPH_REENABLED_PERSONAPLEX_MAR10_2026.md` – **CUDA graph re-enabled for PersonaPlex**: Required for real-time voice; `start_voice_system.py` and myca-voice-system.mdc updated to default `NO_CUDA_GRAPH=0`.
+- `docs/TEST_VOICE_LOCAL_FIX_MAR10_2026.md` – **Test-voice local voice fix**: Bridge health non-blocking; diagnostics TCP fallback; local Moshi + PersonaPlex Bridge (8998/8999) with `NEXT_PUBLIC_USE_LOCAL_GPU=true`.
+
+## MYCA Live Activity Panel (Mar 9, 2026)
+- `docs/MYCA_LIVE_ACTIVITY_PANEL_COMPLETE_MAR09_2026.md` – **MYCA Live Activity Panel complete**: Activity log (newest first, consciousness entry), FlowDot enlargement, text size bumps, mobile collapsible height.
+
 ## Public AI Rollout (Mar 9, 2026)
 - `WEBSITE/website/docs/PUBLIC_AI_ROLLOUT_COMPLETE_MAR09_2026.md` – **Public AI rollout complete**: New `/ai` overview; MYCA, AVANI, NLM as sole public AI products; unified nav; marketing rewrite; agentic CTAs to contact; docs hub; source of truth for public AI IA.
 
