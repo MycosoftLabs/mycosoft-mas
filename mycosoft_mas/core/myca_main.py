@@ -58,7 +58,6 @@ from mycosoft_mas.core.routers.scientific_ws import router as scientific_ws_rout
 from mycosoft_mas.core.routers.scientific_experiments_api import router as scientific_experiments_router
 from mycosoft_mas.core.routers.scientific_datasets_api import router as scientific_datasets_router
 from mycosoft_mas.core.routers.scientific_equipment_api import router as scientific_equipment_router
-from mycosoft_mas.core.routers.mindex_query import router as mindex_router
 from mycosoft_mas.core.routers.platform_api import router as platform_router
 from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
 from mycosoft_mas.core.routers.bio_api import router as bio_router
@@ -570,7 +569,6 @@ app.include_router(scientific_ws_router, tags=["websocket"])
 app.include_router(scientific_experiments_router)
 app.include_router(scientific_datasets_router)
 app.include_router(scientific_equipment_router)
-app.include_router(mindex_router, prefix="/mindex", tags=["mindex"])
 app.include_router(platform_router, prefix="/platform", tags=["platform"])
 app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
 app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])

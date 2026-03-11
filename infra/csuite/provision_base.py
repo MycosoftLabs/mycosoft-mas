@@ -62,12 +62,14 @@ def load_credentials() -> dict[str, str]:
         or os.getenv("PROXMOX_PASSWORD", "")
         or vm_pwd
     )
+    csuite_guest_pwd = os.getenv("CSUITE_GUEST_PASSWORD", "") or vm_pwd
     return {
         "proxmox_token": os.getenv("PROXMOX_TOKEN", ""),
         "proxmox202_token": os.getenv("PROXMOX202_TOKEN", ""),
         "proxmox_password": os.getenv("PROXMOX_PASSWORD", "") or vm_pwd,
         "proxmox202_password": proxmox202_pwd,
         "vm_password": vm_pwd,
+        "csuite_guest_password": csuite_guest_pwd,
     }
 
 

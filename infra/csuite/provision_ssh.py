@@ -393,6 +393,103 @@ def pve_ssh_stop(
     return ok, out
 
 
+def pve_ssh_scp_put(
+    host: str,
+    user: str,
+    password: str,
+    local_path: str | Path,
+    remote_path: str,
+    timeout: int = 120,
+) -> tuple[bool, str]:
+    """
+    SCP a file to Proxmox host. Returns (ok, message).
+    Uses paramiko SFTP if available, else scp/pscp subprocess.
+    """
+    local_path = Path(local_path)
+    if not local_path.exists():
+        return False, f"Local file not found: {local_path}"
+
+    pwd = (password or "").strip().strip('"').strip("'") or None
+
+    # Try paramiko SFTP
+    try:
+        import paramiko
+    except ImportError:
+        pass
+    else:
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        connected = False
+        try:
+            key_path = _load_proxmox202_ssh_key()
+            if key_path:
+                for key_cls in [paramiko.Ed25519Key, paramiko.RSAKey]:
+                    try:
+                        pkey = key_cls.from_private_key_file(str(key_path))
+                        if _try_paramiko_connect(client, host, user, None, pkey=pkey, look_for_keys=False, allow_agent=False):
+                            connected = True
+                            break
+                    except Exception:
+                        continue
+            if not connected and pwd:
+                connected = _try_paramiko_connect(client, host, user, pwd, look_for_keys=False, allow_agent=False)
+            if not connected:
+                connected = _try_paramiko_connect(client, host, user, None, pkey=None, look_for_keys=True, allow_agent=True)
+            if connected:
+                sftp = client.open_sftp()
+                sftp.put(str(local_path), remote_path)
+                sftp.close()
+                client.close()
+                return True, f"Uploaded {local_path.name} to {remote_path}"
+        except Exception as e:
+            if "Authentication failed" not in str(e):
+                return False, str(e)
+        finally:
+            try:
+                client.close()
+            except Exception:
+                pass
+
+    # Fallback: scp (Linux) or pscp (Windows)
+    if pwd:
+        if sys.platform == "win32":
+            pscp = shutil.which("pscp") or shutil.which("pscp.exe")
+            if pscp:
+                try:
+                    proc = subprocess.run(
+                        [pscp, "-batch", "-pw", pwd, str(local_path), f"{user}@{host}:{remote_path}"],
+                        capture_output=True,
+                        text=True,
+                        timeout=timeout,
+                        encoding="utf-8",
+                        errors="replace",
+                    )
+                    if proc.returncode == 0:
+                        return True, f"Uploaded {local_path.name} to {remote_path}"
+                    return False, (proc.stderr or proc.stdout or f"Exit {proc.returncode}").strip()
+                except Exception as e:
+                    return False, str(e)
+        else:
+            scp = shutil.which("scp")
+            sshpass = shutil.which("sshpass")
+            if scp and sshpass:
+                try:
+                    proc = subprocess.run(
+                        ["sshpass", "-p", pwd, "scp", "-o", "StrictHostKeyChecking=no", str(local_path), f"{user}@{host}:{remote_path}"],
+                        capture_output=True,
+                        text=True,
+                        timeout=timeout,
+                        encoding="utf-8",
+                        errors="replace",
+                    )
+                    if proc.returncode == 0:
+                        return True, f"Uploaded {local_path.name} to {remote_path}"
+                    return False, (proc.stderr or proc.stdout or f"Exit {proc.returncode}").strip()
+                except Exception as e:
+                    return False, str(e)
+    return False, "SCP failed: no paramiko, and no pscp/scp+sshpass with password"
+
+
 def pve_ssh_attach_iso_and_set_boot(
     host: str,
     vmid: int,
@@ -428,6 +525,72 @@ def pve_ssh_attach_iso_and_set_boot(
     if not ok_start:
         return True, f"ISO attached, boot order set — VM failed to start: {start_out}"
     return True, f"ISO attached, boot order=ide2;sata0 — VM started. Boot from Windows installer."
+
+
+def pve_ssh_attach_dual_iso_and_set_boot(
+    host: str,
+    vmid: int,
+    iso_installer: str,
+    iso_autounattend: str,
+    user: str,
+    password: str,
+) -> tuple[bool, str]:
+    """
+    Attach two ISOs for Windows unattended install:
+    - ide2: Windows installer (e.g. local:iso/Win10_22H2_English_x64.iso)
+    - ide3: autounattend ISO (e.g. local:iso/autounattend_csuite.iso)
+    Boot order: ide2;sata0 (installer boots first; Setup reads autounattend from ide3).
+    Stops VM first if running, then starts after. Returns (ok, message).
+    """
+    ide2_val = f"{iso_installer},media=cdrom"
+    ide3_val = f"{iso_autounattend},media=cdrom"
+    boot_order = "ide2;sata0"
+
+    ok_stop, _ = pve_ssh_stop(host, vmid, user, password, force=True)
+    if ok_stop:
+        time.sleep(3)
+
+    ok, out = pve_ssh_exec(
+        host,
+        user,
+        password,
+        ["qm", "set", str(vmid), "--ide2", ide2_val, "--ide3", ide3_val, "--boot", f"order={boot_order}"],
+        timeout=30,
+    )
+    if not ok:
+        return False, str(out)
+
+    ok_start, start_out = pve_ssh_exec(host, user, password, ["qm", "start", str(vmid)], timeout=60)
+    if not ok_start:
+        return True, f"Dual ISO attached — VM failed to start: {start_out}"
+    return True, "Dual ISO attached (ide2=installer, ide3=autounattend). VM started — unattended install in progress."
+
+
+def pve_ssh_detach_iso(
+    host: str,
+    vmid: int,
+    user: str,
+    password: str,
+) -> tuple[bool, str]:
+    """
+    Detach ide2 and ide3 (clear CD drives), set boot order to sata0.
+    Stops VM first if running. Does not start VM. Use after install completes, before cloning.
+    Returns (ok, message).
+    """
+    ok_stop, _ = pve_ssh_stop(host, vmid, user, password, force=True)
+    if ok_stop:
+        time.sleep(3)
+
+    ok, out = pve_ssh_exec(
+        host,
+        user,
+        password,
+        ["qm", "set", str(vmid), "--ide2", "none", "--ide3", "none", "--boot", "order=sata0"],
+        timeout=30,
+    )
+    if not ok:
+        return False, str(out)
+    return True, "ISOs detached, boot order=sata0 (disk)."
 
 
 def pve_ssh_unlock(

@@ -75,6 +75,15 @@ Invoke-RestMethod -Uri "http://192.168.0.188:8001/health"
 
 ---
 
+## 5. TTS Fallback (edge-tts)
+
+Moshi does **not** support text injection for TTS (`kind 0x02`). The Bridge uses **edge-tts** to synthesize MYCA responses.
+
+**Requirements:** `edge-tts>=6.1.0`, `opuslib>=3.0.0`, `ffmpeg` in PATH. Run `pip install edge-tts opuslib`. If TTS fails, the Bridge logs "TTS fallback: edge-tts not installed" or "ffmpeg not found". See `TTS_FALLBACK_PERSONAPLEX_MAR11_2026.md` for full flow and troubleshooting.
+
+---
+
+
 ## If it still doesn’t work
 
 | Symptom | Fix |
@@ -83,4 +92,5 @@ Invoke-RestMethod -Uri "http://192.168.0.188:8001/health"
 | Moshi offline | Moshi must be running and reachable by the bridge. Set `MOSHI_HOST` / `MOSHI_PORT` on the bridge host. |
 | WebSocket error | Browser must reach the bridge WebSocket URL. If bridge is on 192.168.0.190, the dev machine must be on the same LAN. |
 | No audio playback | Check browser console for decoder/worker errors. Ensure `/assets/decoderWorker.min.js` and `/assets/encoderWorker.min.js` exist. Allow mic permission. |
+| **No TTS output** | Install edge-tts, opuslib, ffmpeg. Bridge uses edge-tts (Moshi 0x02 does not work). See `TTS_FALLBACK_PERSONAPLEX_MAR11_2026.md`. |
 | MAS timeout | Ensure MAS VM (188) is up and reachable. Diagnostics use 18s timeout for MAS. |

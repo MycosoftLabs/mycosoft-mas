@@ -52,6 +52,19 @@ try:
 except ImportError as e:
     logging.getLogger("personaplex-bridge").warning(f"Duplex session not available: {e}")
     DUPLEX_AVAILABLE = False
+
+# TTS fallback: Moshi does not support kind 0x02 (text→TTS). Use edge-tts for MYCA speech.
+try:
+    _bridge_dir = Path(__file__).resolve().parent
+    if str(_bridge_dir) not in sys.path:
+        sys.path.insert(0, str(_bridge_dir))
+    from tts_fallback import synthesize_to_opus as tts_synthesize_to_opus
+    TTS_FALLBACK_AVAILABLE = True
+except ImportError as e:
+    logger = logging.getLogger("personaplex-bridge")
+    logger.warning(f"TTS fallback not available: {e}")
+    tts_synthesize_to_opus = None
+    TTS_FALLBACK_AVAILABLE = False
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse
 from pydantic import BaseModel
@@ -1033,11 +1046,22 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                                                 await clone_to_mas_memory(s, "user", text)
                                                 if s.duplex_session:
                                                     s.duplex_session.record_user_turn(text)
-                                        # Forward to Moshi for TTS: explicit forward_to_moshi OR inject_feedback
+                                        # Forward to TTS: explicit forward_to_moshi OR inject_feedback
+                                        # Moshi does NOT support kind 0x02 (text→TTS). Use edge-tts fallback.
                                         should_tts = payload.get("forward_to_moshi", False) or payload.get("type") == "inject_feedback"
                                         if should_tts and text:
-                                            logger.info(f"[{session_id[:8]}] Sending to Moshi TTS: {text[:60]}...")
-                                            await moshi.send_bytes(b"\x02" + text.encode("utf-8"))
+                                            if TTS_FALLBACK_AVAILABLE and tts_synthesize_to_opus:
+                                                logger.info(f"[{session_id[:8]}] TTS fallback (edge-tts): {text[:60]}...")
+                                                s.is_tts_playing = True
+                                                try:
+                                                    await websocket.send_json({"type": "text", "text": text, "speaker": "myca"})
+                                                    packets = await tts_synthesize_to_opus(text)
+                                                    for pkt in packets:
+                                                        await websocket.send_bytes(b"\x01" + pkt)
+                                                finally:
+                                                    s.is_tts_playing = False
+                                            else:
+                                                logger.warning(f"[{session_id[:8]}] TTS unavailable (edge-tts fallback not loaded); no audio")
                                         if payload.get("type") == "barge_in" or payload.get("interrupt"):
                                             logger.info(f"[{session_id[:8]}] Explicit barge-in from frontend")
                                             if s.duplex_session:

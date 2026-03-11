@@ -35,7 +35,8 @@
 - `docs/EXTERNAL_REPO_IMPLEMENTATION_STREAMS_MAR10_2026.md` – **Implementation streams**: Geo stack, local inference, finance, security, repo hygiene; phased execution.
 - `docs/EXTERNAL_REPO_GAP_ALIGNMENT_MAR10_2026.md` – **Gap alignment**: Cross-check against platform gaps; blocking rules; sequencing so new work strengthens architecture.
 
-## Test-Voice / PersonaPlex (Mar 10, 2026)
+## Test-Voice / PersonaPlex (Mar 10–11, 2026)
+- `docs/TTS_FALLBACK_PERSONAPLEX_MAR11_2026.md` – **TTS fallback for PersonaPlex**: Moshi does not support `0x02` text injection; Bridge uses edge-tts for TTS; dependencies, flow, troubleshooting.
 - `docs/CUDA_GRAPH_REENABLED_PERSONAPLEX_MAR10_2026.md` – **CUDA graph re-enabled for PersonaPlex**: Required for real-time voice; `start_voice_system.py` and myca-voice-system.mdc updated to default `NO_CUDA_GRAPH=0`.
 - `docs/TEST_VOICE_LOCAL_FIX_MAR10_2026.md` – **Test-voice local voice fix**: Bridge health non-blocking; diagnostics TCP fallback; local Moshi + PersonaPlex Bridge (8998/8999) with `NEXT_PUBLIC_USE_LOCAL_GPU=true`.
 

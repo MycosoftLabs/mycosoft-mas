@@ -2,8 +2,9 @@
 
 ## Policy
 
-Voice is **100% PersonaPlex / Moshi**. There is no edge-tts, no Aria, and no other TTS fallback.  
-Flow: **User mic → Moshi STT → MAS Brain → response text → Moshi TTS → speaker.**
+**STT:** 100% PersonaPlex / Moshi.  
+**TTS:** Moshi does **not** support `kind 0x02` (text injection). The Bridge uses **edge-tts** as a TTS fallback. See `TTS_FALLBACK_PERSONAPLEX_MAR11_2026.md`.  
+Flow: **User mic → Moshi STT → MAS Brain → response text → edge-tts (Bridge) → speaker.**
 
 ## Architecture (aligned with CONSCIOUSNESS_PIPELINE_ARCHITECTURE)
 
@@ -17,7 +18,7 @@ PersonaPlex Bridge ← Moshi TTS ← text ← MYCAConsciousness response
 
 - **STT**: Browser sends audio to Bridge (8999); Bridge forwards to Moshi (MOSHI_HOST:8998). Moshi returns text.
 - **Brain**: Bridge sends text to MAS Brain (188:8001); gets MYCA response text.
-- **TTS**: Bridge sends response text to Moshi with `\x02` + utf-8 text; Moshi streams TTS audio (kind=1) and text (kind=2) back; Bridge forwards to browser.
+- **TTS**: Bridge uses **edge-tts** (Moshi ignores `\x02` text injection). Bridge synthesizes via edge-tts → Opus → forwards `0x01` packets to browser.
 
 ## Components
 
@@ -47,9 +48,9 @@ Default when unset: `MOSHI_HOST=localhost`, `MOSHI_PORT=8998`.
 
 ## Code reference
 
-- **Bridge**: `services/personaplex-local/personaplex_bridge_nvidia.py` v8.2.0  
-  - MAS response → frontend (text) + `session.moshi_ws.send_bytes(b"\x02" + response_text.encode("utf-8"))` for TTS.  
-  - No edge_tts or other TTS path.
+- **Bridge**: `services/personaplex-local/personaplex_bridge_nvidia.py`  
+  - MAS response → frontend (text) + **edge-tts TTS fallback** (`tts_fallback.py`) — Moshi `0x02` does not work.  
+  - Requires: edge-tts, opuslib, ffmpeg. See `TTS_FALLBACK_PERSONAPLEX_MAR11_2026.md`.
 - **Consciousness pipeline**: `docs/CONSCIOUSNESS_PIPELINE_ARCHITECTURE_FEB12_2026.md`  
 - **GPU node**: `docs/GPU_NODE_INTEGRATION_FEB13_2026.md`, `docs/GPU_NODE_RUNBOOK_FEB13_2026.md`
 

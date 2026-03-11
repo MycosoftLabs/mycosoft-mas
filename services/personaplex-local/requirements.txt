@@ -1,4 +1,4 @@
-﻿# PersonaPlex Local Server Requirements - January 28, 2026
+# PersonaPlex Local Server Requirements - January 28, 2026
 torch>=2.1.0
 torchaudio>=2.1.0
 transformers>=4.36.0
@@ -12,3 +12,5 @@ huggingface-hub>=0.20.0
 fastapi>=0.109.0
 uvicorn>=0.25.0
 httpx>=0.26.0
+edge-tts>=6.1.0
+opuslib>=3.0.0

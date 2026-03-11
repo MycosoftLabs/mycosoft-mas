@@ -694,19 +694,23 @@ class ToolExecutor:
             return {"error": f"Telemetry not found: {device_id}"}
     
     async def _execute_mindex_query(self, args: Dict[str, Any]) -> Any:
-        """Query MINDEX knowledge base."""
-        query = args.get("query", "")
-        limit = args.get("limit", 5)
-        
+        """Query MINDEX knowledge base via canonical MINDEX unified-search API."""
+        query = (args.get("query") or "").strip()
+        if not query:
+            return {"results": [], "message": "query is required"}
+        limit = min(int(args.get("limit") or 5), 100)
+        types = (args.get("types") or "taxa,compounds,genetics").strip()
+        params = {"q": query, "limit": limit, "types": types}
+        headers = {"X-API-Key": self.mindex_api_key} if self.mindex_api_key else None
         async with httpx.AsyncClient(timeout=15) as client:
-            response = await client.post(
-                f"{self.mas_url}/mindex/search",
-                json={"query": query, "limit": limit}
+            response = await client.get(
+                f"{self.mindex_url}/api/mindex/unified-search",
+                params=params,
+                headers=headers,
             )
             if response.status_code == 200:
                 return response.json()
-            else:
-                return {"results": [], "message": "No results found"}
+            return {"results": [], "message": "No results found"}
     
     async def _execute_memory_recall(self, args: Dict[str, Any]) -> Any:
         """Recall from memory system."""

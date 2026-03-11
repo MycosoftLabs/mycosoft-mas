@@ -28,7 +28,7 @@ Browser (test-voice @ localhost:3010)
   ├── WebSocket v9: ws://192.168.0.188:8001/ws/voice/v9   (direct to MAS)
   ├── REST v9:      /api/test-voice/mas/voice-v9/*        (Next.js → MAS 188:8001)
   ├── Bridge WS:    ws://localhost:8999                   (PersonaPlex Bridge)
-  └── Moshi TTS:    localhost:8998                        (via Bridge)
+  └── TTS:          edge-tts (Bridge)                     (Moshi 0x02 not supported; see TTS_FALLBACK_PERSONAPLEX_MAR11_2026.md)
 ```
 
 ### 2.2 Startup Order (Dev)
