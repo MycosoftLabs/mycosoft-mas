@@ -106,6 +106,8 @@ from mycosoft_mas.core.routers.device_telemetry_ws import router as device_telem
 from mycosoft_mas.core.routers.memory_updates_ws import router as memory_updates_ws_router
 from mycosoft_mas.core.routers.task_progress_ws import router as task_progress_ws_router
 from mycosoft_mas.core.routers.voice_stream_ws import router as voice_stream_ws_router
+from mycosoft_mas.voice_v9.routers.voice_v9_api import router as voice_v9_api_router
+from mycosoft_mas.voice_v9.routers.voice_v9_ws import router as voice_v9_ws_router
 from mycosoft_mas.core.routers.earth2_predictions_ws import router as earth2_predictions_ws_router
 from mycosoft_mas.core.routers.scientific_data_ws import router as scientific_data_ws_router
 from mycosoft_mas.core.routers.system_health_ws import router as system_health_ws_router
@@ -634,6 +636,8 @@ app.include_router(device_telemetry_ws_router, tags=["ws-device-telemetry"])
 app.include_router(memory_updates_ws_router, tags=["ws-memory-updates"])
 app.include_router(task_progress_ws_router, tags=["ws-task-progress"])
 app.include_router(voice_stream_ws_router, tags=["ws-voice-stream"])
+app.include_router(voice_v9_api_router)
+app.include_router(voice_v9_ws_router)
 app.include_router(earth2_predictions_ws_router, tags=["ws-earth2-predictions"])
 app.include_router(scientific_data_ws_router, tags=["ws-scientific-data"])
 app.include_router(system_health_ws_router, tags=["ws-system-health"])
