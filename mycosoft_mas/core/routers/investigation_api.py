@@ -98,28 +98,12 @@ async def create_investigation(body: InvestigationCreateRequest) -> Investigatio
             artifact = r.json()
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404 or "investigation" in str(e).lower():
-                logger.warning("MINDEX investigation router not available; returning stub")
-                return InvestigationOut(
-                    id="stub",
-                    title=body.title,
-                    description=body.description,
-                    artifacts=[],
-                    evidence=[],
-                    research_papers=[],
-                    observations=[],
-                )
+                logger.warning("MINDEX investigation router not available")
+                raise HTTPException(status_code=503, detail="MINDEX unavailable")
             raise HTTPException(status_code=502, detail=f"MINDEX error: {e.response.text}")
         except httpx.RequestError as e:
             logger.warning("MINDEX unreachable: %s", e)
-            return InvestigationOut(
-                id="stub",
-                title=body.title,
-                description=body.description,
-                artifacts=[],
-                evidence=[],
-                research_papers=[],
-                observations=[],
-            )
+            raise HTTPException(status_code=503, detail="MINDEX unavailable")
 
         inv_id = str(artifact.get("id", "stub"))
         artifacts_list = [artifact]

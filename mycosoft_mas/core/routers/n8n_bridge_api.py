@@ -229,9 +229,9 @@ async def mindex_search(request: MindexSearchRequest) -> Dict[str, Any]:
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
-            # MINDEX uses GET /api/search with query params
+            # MINDEX canonical unified-search endpoint
             response = await client.get(
-                f"{MINDEX_URL}/api/search",
+                f"{MINDEX_URL}/api/mindex/unified-search",
                 params=params,
             )
             response.raise_for_status()

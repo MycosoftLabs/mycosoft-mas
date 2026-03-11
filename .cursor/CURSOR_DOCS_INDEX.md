@@ -8,6 +8,13 @@
 
 ---
 
+## CREP System Integration Audit (Mar 11, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/CREP_SYSTEM_INTEGRATION_AUDIT_MAR11_2026.md` | **CREP system integration audit**: Surface-by-surface read/write/search/interact and Merkle/MINDEX grounding; gap list; blocking mock/stub paths. Use for integration planning. |
+| `docs/CREP_FIRST_EXECUTION_CHECKLIST_MAR11_2026.md` | **CREP-first execution checklist**: Unified entities, local-first persistence, provenance; repo/file ownership. Use when implementing CREP wave. |
+| `docs/INTEGRATION_TEST_MATRIX_MAR11_2026.md` | **Integration test matrix**: Regression guardrails, CREP/search/device/ancestry contract tests; catches mock/stub drift. Use before deploy. |
+
 ## Full Integration Program (Mar 10, 2026)
 | Doc | Purpose |
 |-----|---------|

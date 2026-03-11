@@ -19,9 +19,9 @@ This audit maps every relevant surface across MAS, WEBSITE, MINDEX, and NatureOS
 | Surface | Read | Write | Search | Interact | Merkle/MINDEX Grounding | Gap |
 |---------|------|-------|--------|----------|--------------------------|-----|
 | **Merkle Ledger API** (`merkle_ledger_api.py`) | ✓ (roots, proofs) | ✓ (event hashes, roots) | — | ✓ (world root build) | World root auto-populates only `device_registry` + `device_health` when `slot_data` omitted; not full live world state | **Partial** – extend to CREP entities, biodiversity, sensor state |
-| **MINDEX Query Router** (`mindex_query.py`) | ✗ (simulated) | ✗ (simulated) | ✗ (simulated) | ✗ | **100% simulated** – generates fake telemetry, species, FCI signals, stats | **BLOCKER** – violates no-mock-data; replace with MINDEX bridge |
+| ~~MINDEX Query Router~~ (`mindex_query.py`) | — | — | — | — | **REMOVED** (Mar 11) – was simulated, not mounted; deleted per CORE_PLATFORM_HARDENING_PLAN | Resolved |
 | **Device Registry API** | ✓ (real) | ✓ (heartbeat) | ✓ (list) | ✓ (command) | Real MAS in-memory + optional MINDEX persistence | None |
-| **Investigation API** | ✓ (MINDEX) | ✓ (MINDEX) | ✓ (MINDEX) | ✓ | Calls MINDEX at 189:8000; returns stub when MINDEX unavailable | **Partial** – stub path on MINDEX failure |
+| **Investigation API** | ✓ (MINDEX) | ✓ (MINDEX) | ✓ (MINDEX) | ✓ | Calls MINDEX at 189:8000; raises 503 when MINDEX unavailable (no stub) | None |
 | **Identity API** | ✓ (MINDEX) | — | — | — | Uses MINDEX_API_URL | None |
 | **LLM Brain** (llm_brain.py) | ✓ (Merkle world root) | — | — | ✓ | Injects Merkle world root into MYCA context | Partial – world root scope limited |
 
@@ -75,7 +75,7 @@ This audit maps every relevant surface across MAS, WEBSITE, MINDEX, and NatureOS
 | **World root partial** | `merkle_ledger_api.py` – `build_world_root_endpoint` | **High** | Extend slot_data to include CREP entities, biodiversity, sensor state |
 | **Clone-on-display missing** | CREP fungal route | **High** | Implement per CREP_INATURALIST_MINDEX_ETL; POST to MINDEX on iNaturalist/GBIF fallback |
 | **Provenance writeback** | CREP entities | **Medium** | Add Merkle receipt or metadata to CREP entity responses |
-| **Investigation stub on MINDEX fail** | `investigation_api.py` | **Medium** | Fail explicitly; never return fake investigations |
+| ~~Investigation stub on MINDEX fail~~ | ~~`investigation_api.py`~~ | ~~Medium~~ | **Resolved** – API raises 503; no stub |
 | **NatureOS doc drift** | `mycosoft-integration.md` | **Low** | Update to current VM layout and MAS/MINDEX direct integration |
 
 ---
@@ -98,7 +98,7 @@ Merkle → CREP, Search, NatureOS, Petri, Analytics
 
 | Repo | Read | Write | Search | Merkle | Blockers |
 |------|------|-------|--------|--------|----------|
-| **MAS** | Partial (mindex_query simulated) | Partial | Simulated | Partial (world root limited) | mindex_query 100% simulated |
+| **MAS** | Partial | Partial | Real (MINDEX) | Partial (world root limited) | mindex_query router removed; tool uses real MINDEX |
 | **WEBSITE** | Good (CREP, Search MINDEX-first) | Partial (ingest-background) | Good | None | Ancestry mock |
 | **MINDEX** | Good | Good | Good | Schema ready (mica.*) | Not connected to MAS Merkle build |
 | **NatureOS** | Good | Good | — | — | Doc drift |
@@ -113,7 +113,7 @@ Merkle → CREP, Search, NatureOS, Petri, Analytics
 - `docs/CREP_INATURALIST_MINDEX_ETL_MAR09_2026.md`
 - `docs/CREP_SPECIES_WIDGETS_VIEWPORT_LOADING_COMPLETE_MAR11_2026.md`
 - `MINDEX/migrations/0021_mica_merkle_ledger.sql`
-- `mycosoft_mas/core/routers/mindex_query.py`
+- ~~`mycosoft_mas/core/routers/mindex_query.py`~~ (deleted Mar 11)
 - `mycosoft_mas/core/routers/merkle_ledger_api.py`
 - `WEBSITE/app/api/crep/fungal/route.ts`
 - `WEBSITE/app/api/search/unified/route.ts`

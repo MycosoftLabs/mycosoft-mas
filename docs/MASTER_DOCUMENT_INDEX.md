@@ -11,6 +11,13 @@
 ## CREP Integration Test Plan (Mar 10, 2026)
 - `WEBSITE/website/docs/CREP_INTEGRATION_TEST_PLAN_MAR10_2026.md` – **CREP integration test plan**: Canonical plan for validating CREP integrations; P0 biodiversity/wildlife bubble selection (done); satellite imagery (MODIS, VIIRS, AIRS, Landsat, EONET), Shadowbroker, deck.gl filters, military filters, VIZ test features; test matrix and completion checklist.
 
+## CREP System Integration Audit (Mar 11, 2026)
+- `docs/CREP_SYSTEM_INTEGRATION_AUDIT_MAR11_2026.md` – **CREP system integration audit**: Surface-by-surface read/write/search/interact and Merkle/MINDEX grounding across MAS, WEBSITE, MINDEX, NatureOS; gap list; blocking mock/stub paths.
+- `docs/CREP_FIRST_EXECUTION_CHECKLIST_MAR11_2026.md` – **CREP-first execution checklist**: Unified entities, local-first persistence, provenance grounding; repo/file ownership; CREP wave deliverables.
+- `docs/CORE_PLATFORM_HARDENING_PLAN_MAR11_2026.md` – **Core platform hardening plan**: Simulated MINDEX router removal; Merkle→MINDEX mica ledger; investigation stub reconciliation; API contract normalization.
+- `docs/CREP_FOLLOW_ON_BACKLOG_MAR11_2026.md` – **CREP follow-on backlog**: Search, device mapping, analytics, Ancestry, Petri prioritized by dependency order and gap severity.
+- `docs/INTEGRATION_TEST_MATRIX_MAR11_2026.md` – **Integration test matrix**: VM reachability smoke, regression guardrails (no mock/sample/stub), CREP/search/device/ancestry contract tests; execution matrix; implementation checklist.
+
 ## CREP Species Widgets & Viewport Loading (Mar 11, 2026)
 - `docs/CREP_SPECIES_WIDGETS_VIEWPORT_LOADING_COMPLETE_MAR11_2026.md` – **CREP species widgets & viewport loading complete**: Fungal data from map bounds only (fetchData no longer overwrites); bounds effect AbortController; FilterToggle layout stability; iNaturalist-style viewport loading.
 
@@ -78,6 +85,9 @@
 
 ## CFO MCP Connector (Mar 8, 2026)
 - `docs/CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md` – **CFO MCP Connector complete**: Meridian/Perplexity hybrid; finance discovery layer; CFO MCP server; Meridian adapter; C-Suite reporting upgrades; MYCA federation integration; dynamic finance agent discovery.
+
+## C-Suite Unattended Install (Mar 11, 2026)
+- `docs/CSUITE_UNATTENDED_INSTALL_MAR11_2026.md` – **C-Suite unattended Windows 10 install and clone**: COO golden image, autounattend.xml, build ISO, run install, clone CEO/CTO/CFO; workflow and troubleshooting.
 
 ## C-Suite OpenClaw VM Rollout (Mar 7–8, 2026)
 - `docs/CTO_VM194_ROLLOUT_VERIFICATION_MAR08_2026.md` – **CTO VM 194 rollout verification**: Acceptance checklist for provision, bootstrap, runtime health, Forge bridge, watchdogs, MYCA visibility; use before implementation and for fresh-clone rebuilds.
