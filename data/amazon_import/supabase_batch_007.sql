@@ -1,0 +1,75 @@
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DVHV7X53', 'Google Pixel 9a with Gemini - Unlocked Android Smartphone with Incredible Camera and AI Photo Editing, All-Day Battery, and Powerful Security - Obsidian - 128 GB', 'GA05769-US', 'cameras', 1, 423.99, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DGPVLHD5', 'yAyusi Dual-lamp Video Conference Lighting, LED Streaming Light with Remote and Touch Control, Zoom Lighting for Computer,Webcam Laptop Monitor Ring Light for Video Calls/Zoom Meetings/Video Recording', 'F-663', 'misc', 1, 37.49, 'yAyusi-us', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DWPKQ3LH', 'HP 15.6 inch Laptop, HD Touchscreen Display, AMD Ryzen 5 7520U, 8 GB RAM, 512 GB SSD, AMD Radeon Graphics, Windows 11 Home, Natural Silver, 15-fc0499nr', 'B8QE2UA#ABA', 'dev-boards', 1, 359.99, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0F93RCL8N', 'SOOMFON Stream Controller SE Stream Control Deck with 6 Customizable LCD Macro Keys to Trigger Actions in OBS Twitch YouTube for Content Creators Streaming Gaming Compatible with PC & Mac', 'CN002-BN1', 'misc', 1, 51.99, 'SOOMFON OFFICIAL', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0F18FK43Y', 'CENMASO for Google Pixel 9a Case with Card Holder (4 Cards) Sliding Camera Cover & Kickstand【RFID Blocking】 Military Drop Protection & TPU Edge Wallet Case for Pixel 9a-Black', 'Pixel 9 Pro XL QBK-1', 'cameras', 1, 15.29, 'CENMASO Store', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0C1CQ99RK', 'Furrion® FACR13HESA-PS-AM, White Chill HE RV Roof Air Conditioner-13.5K, 13.5k BTU', 'FACR13HESA-PS-AM', 'misc', 1, 741.41, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07ZNG4L9P', 'SUNLU 3D Printer Filament PLA Filament 1.75mm, Neatly Wound 3D Printing Filament 1.75mm, Dimensional Accuracy +/- 0.02 mm, Fit Most FDM 3D Printers, 1kg Spool (2.2lbs), Transparent, Clear PLA', '1.75 PLA Filament', 'misc', 1, 13.99, 'SUNLU Industry', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09KYKLGKP', 'iRobot Authentic Replacement Parts Cleaning Solution, 6-Pack', '4723291', 'misc', 1, 32.99, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08VNB7MVQ', 'Arteza 16 Drawer Storage Cabinet, 17.7 x 8.2 x 10.9 inches, White, Plastic Drawers with Stoppers, Multi Compartment Organizer for Makeup and Art Supplies', 'ARTZ-4092', 'misc', 2, 54.79, 'ARTEZA', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CZPN3D9K', 'MyoWare 2.0 Wireless Shield - wirelessly Transmit Data with The ESP32-WROOM chip - Input 5V via USB C Connector - Output 3.3V - ESD Protection Diodes for USB Data Lines', 'DEV-23387', 'dev-boards', 2, 26.95, 'SparkFun Electronics Inc.', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B00QMQX85K', 'EISCO Liquid Propane Micro Bunsen Burner, StabiliBase Anti-Tip Design with Handle, with Flame Stabilizer, LP', 'CH0994LP', 'misc', 1, 24.55, 'hBARSCI', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DGGFFY8K', 'MakerFocus Wireless Tracker Supports GPS Galileo Multi-System Joint Positioning ESP32-S3 WiFi Bluetooth SX1262 UC6580 with 3000mAh Battery, 915MHz LoRa Antenna, 0.96-inch LCD Display for Meshtastic', 'B0DGGFFY8K', 'dev-boards', 2, 35.49, 'MakerFocus', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BVFMR1VY', 'Yopay 10 Pack Media Storage Bottles with GL45 Blue Screw Cap, 250ml Reusable Glass Bottle, Round Scientific Glass Container for Labs, Classrooms or Home Use', 'YO-MediaStorageBottle-250ml-10P', 'misc', 1, 25.89, 'Suwimut', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0C3571PLB', 'Kashi Scientific 2mL Microcentrifuge Tube with Safe Lock Snap Cap [500/Pack] 2 mL Safety Lock Centrifuge Tubes with Flip Cap, Clear Tubes with Graduation, Polypropylene, Plastic Lab Snap Tubes', '102C', 'misc', 1, 19.99, 'Kashi Scientific', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DMN28TRW', 'AYWHP 3 Set ESP32 LoRa Development Board with Case, LoRa V3 Meshtastic ESP32 WiFi, LoRa V3 WiFi Bluetooth Dual Core 240MHz CP2102 Chip with 0.96" OLED Display and 863-928MHz Antenna for Arduino', 'B0DMN28TRW', 'dev-boards', 3, 64.66, 'Quan Ruiqi', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09X2NTTX1', 'SEUNMUK 2 Pack Lab Stand Set, Lab Grade Stand Support Set with Coated Base, 4 Retort Rings, 2 Flask & Burette Clamps', 'SEUNMUK', 'misc', 2, 30.79, 'SEUNMUK', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DT3RTK9D', '12 Packs ESP32-DevKitC-32 Development Board modules(ESP-32D,ESP-32 CP2012 USB C with 38 pins),Supporting STA/AP/STA+AP,with WiFi+Bluetooth Dual-core and Type-C Interface.', 'H1-HBB0059-12', 'dev-boards', 2, 55.48, 'XKD store', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B87TNPRY', 'TICONN Waterproof Electrical Junction Box IP67 ABS Plastic Enclosure with Hinged Cover with Mounting Plate, Wall Brackets, Cable Glands (Clear, 15.7"x11.8"x7.1")', 'TICONN - 642', 'misc', 1, 75.99, 'TICONN US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B658DZ9Z', 'LILYGO T-Echo Meshtastic LoRa SX1262 Wireless Module 915MHz TTGO Development Board NRF52840 GPS RTC NFC Arduino with BME280 Pressure Sensor', 'T-ECHO', 'dev-boards', 6, 89.5, 'Lily GO', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DNF89PF2', 'Spec5 Relay Solar-Powered Meshtastic LoRa Relay System Long-Range, Communication Station for Off-Grid & Remote Areas - 915 MHz, 12W Solar Panel, Waterproof, Autonomous Operation', 'Spec5 Relay', 'power', 2, 274.99, 'SpecFive, LLC', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BT9XQ23V', 'Stainless Steel Single Tier Speed Rail, Liquor Rack, Speed Rack, Bottle Holder - 15 Inch', 'WUOYCEV11', 'misc', 1, 29.99, 'Pivito Deals', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BZ4WV4PQ', 'BME688 Environmental Sensor with AI Function, Supports Temperature/Humidity/Barometric Pressure/Gas Detection, I2C and SPI, Support Raspberry Pi/Raspberry Pi Pico/Arduino / ESP32,etc.', 'B0BZ4WV4PQ', 'dev-boards', 10, 28.83, 'UeeKKoo', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B095CN96JS', 'Amazon Basics 2-Ply Soft Toilet Paper, 30 Rolls (5 Packs of 6), Equivalent to 185 Regular Rolls, Packaging May Vary', '421193', 'misc', 1, 25.21, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B01EV70C78', 'ELEGOO 120pcs Multicolored Dupont Wire 40pin Male to Female, 40pin Male to Male, 40pin Female to Female Breadboard Jumper Ribbon Cables Kit Compatible with Arduino Projects', 'EL-CP-004', 'dev-boards', 2, 6.93, 'ELEGOO Official US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DK3G77TC', 'THANDBLE USB C to 3 HDMI Adapter with 100W PD Charging, Triple 4K60Hz Monitor Extender for Dell/Surface Pro/HP, HDMI Splitter Extended Display Hub, Plug & Play Laptop Multi-Screen Adapter', '3-Port USB-C Multi-Monitor Adapter', 'misc', 1, 47.39, 'THANDBLE-Direct', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;

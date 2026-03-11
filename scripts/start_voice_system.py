@@ -77,15 +77,15 @@ else:
     else:
         print("    [STARTING] Moshi server...")
         
-        # RTX 5090 GPU Mode 0 workaround: disable Torch compile and CUDA graphs
-        # PyTorch doesn't support sm_120 (Blackwell) yet, so we must disable compilation.
-        # See docs/RTX_5090_PYTORCH_SUPPORT_FEB12_2026.md
+        # CUDA graphs MUST be enabled for PersonaPlex real-time performance (~30ms vs ~200ms/step).
+        # See docs/PERSONAPLEX_PERFORMANCE_FIX_FEB03_2026.md
+        # If you hit sm_120 / Blackwell errors, set NO_CUDA_GRAPH=1 in your environment.
         moshi_env = os.environ.copy()
-        moshi_env["NO_TORCH_COMPILE"] = "1"
-        moshi_env["NO_CUDA_GRAPH"] = "1"
-        moshi_env["TORCHDYNAMO_DISABLE"] = "1"
-        moshi_env["TORCH_COMPILE_DISABLE"] = "1"
-        print("    [GPU] RTX 5090 mode: TORCH_COMPILE and CUDA_GRAPH disabled")
+        if "NO_CUDA_GRAPH" not in moshi_env:
+            moshi_env["NO_CUDA_GRAPH"] = "0"  # 0 = ENABLED (critical for real-time voice)
+        if "NO_TORCH_COMPILE" not in moshi_env:
+            moshi_env["NO_TORCH_COMPILE"] = "0"  # Enable torch.compile
+        print(f"    [GPU] NO_CUDA_GRAPH={moshi_env.get('NO_CUDA_GRAPH', '0')} (0=enabled, required for PersonaPlex)")
         
         moshi_cmd = [sys.executable, "-m", "moshi.server", "--host", "0.0.0.0", "--port", "8998"]
         moshi_proc = subprocess.Popen(

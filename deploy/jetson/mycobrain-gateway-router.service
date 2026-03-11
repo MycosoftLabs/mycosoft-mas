@@ -1,0 +1,19 @@
+[Unit]
+Description=MycoBrain Gateway Router (Jetson 4GB)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mycosoft
+Group=mycosoft
+WorkingDirectory=/opt/mycosoft/mas
+EnvironmentFile=/etc/mycosoft/gateway-router.env
+ExecStart=/usr/bin/python3 /opt/mycosoft/mas/scripts/run_gateway_router.py --host 0.0.0.0 --port 8120
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

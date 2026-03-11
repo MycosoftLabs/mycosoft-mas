@@ -1,0 +1,75 @@
+﻿INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0FQ5XWXMG', 'Yahboom Jetson Orin NX Super 157TOPS with AI Voice Module,IMX219 CSI Camera,256GB SSD,Acrylic Casing for Mechanical Engineers Embedded and Edge Systems AI Large Model Kit', 'Jetson Orin NX', 'dev-boards', 1, 1115.0, 'Yahboom', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0GG9LPDB2', 'Bitcoin Miner Nerdqaxe++ Rev 6.1 6TH/s Hashrate 100W Low Power BTC Miner BM1370 Lottery Miner Open-Source for Home Office High Efficiency Crypto Currency Miners for BTC Solo Mining Machine', 'NerdQaxe-6T', 'power', 1, 379.04, 'YHZYBTC', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DGG7GJL7', 'WAVLINK AC1200 Outdoor Long Range Wi-Fi Extender,Dual Band Outdoor Access Point with Active/Passive PoE,WAN/LAN Port,IP67 Waterproof,Supports AP/Router/Repeater Mode,2x7dBi Antennas-Greenwood', 'WN570HA2', 'antennas', 1, 78.0, 'Ruichuang Technology', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09PH8YCVM', 'ELEPHANT ROBOTICS Robot Arm Accessory, Suction Pump for MyCobot & MechArm', 'myCobot_PI', 'misc', 2, 75.0, 'Elephant Robotics', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09PH867P6', 'MyCobot 280 Camera Flange Designed from Elephant Robotics', 'myCobot_accessories', 'cameras', 2, 59.99, 'Elephant Robotics', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B9W96SD6', 'ELEPHANT ROBOTICS Robotic Arm myCobot 280 Raspberry Pi 4B - Open Source 6DOF Collaborative Robots - Desktop Education Robot Arm - Python Programming & ROS Supporting', 'ER-280-PI', 'dev-boards', 1, 918.0, 'Elephant Robotics', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B098QH631G', 'TUOLNK 5PCS SMA Female to IPX U.FL RG178 Coaxial Cable, 12 inch(30cm) SMA MHF1 UFL Low Loss Jumper Extension Cable for WiFi Router, Antenna, Security Camera, GPS Devices, etc.', '178IPX2-30cm', 'cameras', 3, 7.29, 'TUOLNK Tech US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CH88LFS4', 'Waveshare GNSS L1+L5 Dual-Frequency Active Antenna, SMA-J Connector, Supports Multi-GNSS Positioning Systems', 'GPS External Antenna (D)', 'antennas', 3, 23.43, 'waveshare', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07GNC8DHH', 'Wlaniot 4G LTE GSM Antenna Omni-Directional 700-2600MHZ Adhesive Mount Antenna with SMA Male Connector for Car Vehicle Hotspot Router Gateway Modem 10ft', 'GP-KIT-4G-01', 'antennas', 3, 7.99, 'Superbat-us', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BTP93H8H', 'Waveshare SIM7600G-H 4G Communication Module, Compatible with Raspberry Pi 5/4B/3B/Zero/Zero W/Zero 2W/Pico/Pico W, Multi-Band Support, 4G/3G/2G, with GNSS Positioning', 'SIM7600G-H 4G Module', 'dev-boards', 3, 69.34, 'waveshare', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0C77S4VPD', 'UPERGO Vertical Laptop Stand for Desk, Laptop Holder to Dock MacBook, MacBook Pro and Other Laptops, Black Walnut Wood', 'VD-1', 'misc', 1, 31.5, 'UPERGO', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CNW4CF3X', 'UPERGO Walnut Headphone Stand, Wood Headset Stand for Desk, Universal Headphone Holder with Storage Base for Gaming, Airpod max, Bose,Razer', 'VD-4', 'misc', 1, 26.99, 'UPERGO', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0894MQGG8', 'Mouse Pad, PU Mouse Padï¼ŒLeather Mouse Pad with Stitched Edge Micro-Fiber Base with Non-Slip Waterproofï¼ŒMouse Pad for Computersï¼ŒLaptop, 8x11Inch (Caramel Brown)', '2019-12-03-1', 'misc', 1, 12.98, 'Besezx', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CDH4FGZY', 'Anker Thunderbolt 4 Certified USB C to USB C Cable, 8K/4K Display/40Gbps Compatible with USB4, Thunderbolt 4/3, for MacBook, iPhone 16(100W, 6.6FT)', 'A8489011', 'misc', 1, 79.98, 'AnkerDirect', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0FCMSRJ2J', 'ZIKNYDO 16K for Thunderbolt 5 Cable 6.6FT/2m, USB C 80Gbps Data Transfer, 120Gbps Bandwidth for 16K/Dual 8K Displays, PD3.1 240W Charging for Thunderbolt 4, MacBook M4, eGPU, Mac mini M4 Pro, Monitor', 'Z-W0407', 'misc', 1, 33.59, 'ZIKNYDO', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DDQDG6GF', 'Anker Prime Thunderbolt 4 Cable, 3.3 ft USB C to USB C Cable, 240W Charging, 40Gbps Data Transfer, Supports 8K/4K Displays, for iPhone 16 Series, MacBook Air, iPad, Samsung (Thunderbolt 4-Certified)', 'ELECTRONIC_CABLE', 'misc', 1, 39.98, 'AnkerDirect', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08XFSLWQF', 'Cable Matters 8K DisplayPort 1.4 to HDMI 2.1 Adapter with 4K 240Hz / 8K 60Hz, Unidirectional DisplayPort to HDMI 2.1 Cable Adapter, Supports RTX4080, RX7900, Not Work with PS5/Xbox, No VRR Support', '102101-GRY', 'misc', 1, 24.95, 'Cable Matters', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09GK8LBWS', 'CalDigit TS4 Thunderbolt 4 Dock - 18 Ports, 98W Charging, 40Gb/s Thunderbolt 4, USB-A/C, 2.5GbE, 8K/6K Displays, Mac/PC/Chrome Compatible', 'TS4-US 500971', 'misc', 1, 303.99, 'CalDigit, Inc.', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DYQH1N48', 'Western Digital 26TB WD Red Pro NAS Internal Hard Drive HDD - 7200 RPM, SATA 6 Gb/s, CMR, 512 MB Cache, 3.5" - WD260KFGX', 'WD260KFGX-SPCNGN0', 'dev-boards', 1, 539.85, 'Platinum Micro, Inc.', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09YVPSYWF', 'TOURSUIT Car Registration and Insurance Card Holder, Vehicle License Document Glove Box Compartment Organizer, Interior Car Accessories for Women Men Teens (Carbon Fiber Black)', 'CR01', 'misc', 1, 7.99, 'Toursuit', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DDL48VFX', 'THANDBLE DisplayPort to HDMI Splitter for Multi Monitor Adapter, HDMI Splitter Extended Display 1 in 3 Out MST Hub (4K@60Hz) for Extended or Cloned Display Mode, DP to 3X HDMI Port with PC, NVIDIA AMD', 'hdmi splitter', 'misc', 1, 46.54, 'THANDBLE-Direct', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B091GWJPJ5', '10K 8K HDMI 2.1 Cable 2-Pack 6.6FT, Highwings Certified 48Gbps Ultra High Speed Slim HDMI Cord,Support 4K@120Hz 8K@60Hz, HDCP 2.2&2.3, Dynamic HDR,eARC,DTS:X, Compatible with Roku TV/HDTV/PS5/Blu-ray', 'Highwings', 'misc', 1, 9.99, 'Szsea US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08VNYPL7H', 'Hot Air Rework Station, Prostormer 120V Digital Display Heat Gun with 3 Sets Stored Temperature and Sleep Mode, Airflow Efficiency, Accurate Temp 100~500 â„ƒ (212~932Â°F) for Electronics Repairing', 'PSST003D', 'misc', 1, 49.33, 'ArmPro', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BZCX99NV', 'Creality PETG Filament 1.75, 3D Printer Filament, Excellent Toughness High Precision, Odorless Non-Toxic Moistureproof, 1kg(2.2lbs) Glossy 3D Printing Filament for 3D Printer (Black)', '301030035', 'misc', 3, 12.99, 'Creality Official Store', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DMVG2TFL', 'Creality Hyper PLA Filament 1.75mm, RFID 3D Printer Filament for High Speed 30-600mm/s, PLA Filament Support CFS, Fits for K2 Plus Combo and Most 3D Printers 1kg(2.2lbs)/Spool', 'AMUS-CU-3D-PM-HPLA-RFID-BK+WH+RD+BL', 'misc', 1, 72.99, 'Creality CL Store', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;

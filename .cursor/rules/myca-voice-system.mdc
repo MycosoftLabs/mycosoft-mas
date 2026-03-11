@@ -28,18 +28,23 @@ Speaker ← PersonaPlex Bridge ← Moshi TTS ← MYCA response text
 
 ---
 
-## GPU Mode 0 (RTX 5090 Blackwell)
+## CUDA Graphs (REQUIRED for PersonaPlex)
 
-The RTX 5090 (sm_120) requires these env vars for Moshi:
+CUDA graphs **MUST be enabled** for real-time voice (~30ms vs ~200ms per step).
+See `docs/PERSONAPLEX_PERFORMANCE_FIX_FEB03_2026.md`.
 
 ```powershell
-$env:NO_TORCH_COMPILE = "1"
-$env:NO_CUDA_GRAPH = "1"
-$env:TORCHDYNAMO_DISABLE = "1"
-$env:TORCH_COMPILE_DISABLE = "1"
+# Default: CUDA graphs ON (0 = enabled)
+$env:NO_CUDA_GRAPH = "0"
+$env:NO_TORCH_COMPILE = "0"
 ```
 
-Without these, Moshi will fail with Triton/PyTorch errors.
+If you hit sm_120/Blackwell PyTorch errors, you can try disabling:
+```powershell
+$env:NO_CUDA_GRAPH = "1"
+$env:NO_TORCH_COMPILE = "1"
+```
+(Note: Without CUDA graphs, audio may garble due to slower processing.)
 
 ---
 
@@ -100,8 +105,8 @@ Voice text goes through the FULL consciousness pipeline:
 ## Starting Voice
 
 ```powershell
-# Terminal 1: Moshi (with GPU mode 0)
-$env:NO_TORCH_COMPILE="1"; $env:NO_CUDA_GRAPH="1"; $env:TORCHDYNAMO_DISABLE="1"; $env:TORCH_COMPILE_DISABLE="1"
+# Terminal 1: Moshi (CUDA graphs ON for real-time voice)
+$env:NO_CUDA_GRAPH="0"; $env:NO_TORCH_COMPILE="0"
 python -m moshi.server --host 0.0.0.0 --port 8998
 
 # Terminal 2: Bridge

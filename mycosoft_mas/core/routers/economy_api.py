@@ -20,6 +20,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.core.persistence import economy_store
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/economy", tags=["economy"])
@@ -99,27 +101,8 @@ class IncentiveRequest(BaseModel):
 
 
 # ============================================================================
-# In-memory state (would be backed by database in production)
+# STORAGE: economy_store (Supabase when configured, else in-memory)
 # ============================================================================
-
-_economy_state = {
-    "wallets": {
-        "solana": {"address": "MYCA_SOL_WALLET", "balance": 0.0, "currency": "SOL"},
-        "bitcoin": {"address": "MYCA_BTC_WALLET", "balance": 0.0, "currency": "BTC"},
-        "x401": {"address": "MYCA_X401_WALLET", "balance": 0.0, "currency": "X401"},
-    },
-    "total_revenue": 0.0,
-    "transactions": [],
-    "active_clients": {},
-    "resource_purchases": [],
-    "incentives": [],
-    "pricing_tiers": {
-        "free": {"price_per_request": 0.0, "daily_limit": 10, "features": ["basic_query", "taxonomy_lookup"]},
-        "agent": {"price_per_request": 0.001, "daily_limit": 10000, "features": ["all_queries", "data_access", "api_tools"]},
-        "premium": {"price_per_request": 0.01, "daily_limit": 100000, "features": ["all_queries", "data_access", "api_tools", "simulations", "priority"]},
-        "enterprise": {"price_per_request": 0.005, "daily_limit": 1000000, "features": ["unlimited", "custom_models", "dedicated_compute", "sla"]},
-    },
-}
 
 
 # ============================================================================
@@ -130,11 +113,12 @@ _economy_state = {
 @router.get("/health")
 async def economy_health():
     """Check economy system health."""
+    state = economy_store.get_state()
     return {
         "status": "healthy",
-        "wallets_active": len(_economy_state["wallets"]),
-        "total_revenue": _economy_state["total_revenue"],
-        "active_clients": len(_economy_state["active_clients"]),
+        "wallets_active": len(state["wallets"]),
+        "total_revenue": state["total_revenue"],
+        "active_clients": len(state["active_clients"]),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -142,8 +126,9 @@ async def economy_health():
 @router.get("/wallets")
 async def list_wallets() -> List[WalletInfo]:
     """List MYCA's cryptocurrency wallets."""
+    state = economy_store.get_state()
     wallets = []
-    for wtype, wdata in _economy_state["wallets"].items():
+    for wtype, wdata in state["wallets"].items():
         wallets.append(WalletInfo(
             wallet_type=wtype,
             address=wdata["address"],
@@ -157,9 +142,10 @@ async def list_wallets() -> List[WalletInfo]:
 @router.get("/wallets/{wallet_type}")
 async def get_wallet(wallet_type: str) -> WalletInfo:
     """Get a specific wallet's information."""
-    if wallet_type not in _economy_state["wallets"]:
+    state = economy_store.get_state()
+    if wallet_type not in state["wallets"]:
         raise HTTPException(status_code=404, detail=f"Wallet type '{wallet_type}' not found")
-    wdata = _economy_state["wallets"][wallet_type]
+    wdata = state["wallets"][wallet_type]
     return WalletInfo(
         wallet_type=wallet_type,
         address=wdata["address"],
@@ -172,31 +158,22 @@ async def get_wallet(wallet_type: str) -> WalletInfo:
 @router.post("/charge")
 async def charge_for_service(request: ChargeRequest) -> ChargeResponse:
     """Charge a client for a MYCA service."""
+    state = economy_store.get_state()
     # Look up client tier
-    client_tier = _economy_state["active_clients"].get(request.client_id, {}).get("tier", "agent")
-    tier_pricing = _economy_state["pricing_tiers"].get(client_tier, _economy_state["pricing_tiers"]["agent"])
+    client_tier = state["active_clients"].get(request.client_id, {}).get("tier", "agent")
+    tier_pricing = state["pricing_tiers"].get(client_tier, state["pricing_tiers"]["agent"])
 
     amount = request.amount or tier_pricing["price_per_request"]
 
     # Record transaction
     tx_id = f"tx_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{request.client_id[:8]}"
-    transaction = {
-        "id": tx_id,
-        "client_id": request.client_id,
-        "amount": amount,
-        "currency": request.currency,
-        "service_type": request.service_type,
-        "status": "completed",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
-    _economy_state["transactions"].append(transaction)
-    _economy_state["total_revenue"] += amount
-
-    # Update wallet balance
-    wallet_map = {"SOL": "solana", "BTC": "bitcoin", "X401": "x401"}
-    wallet_key = wallet_map.get(request.currency, "solana")
-    if wallet_key in _economy_state["wallets"]:
-        _economy_state["wallets"][wallet_key]["balance"] += amount
+    economy_store.record_charge(
+        transaction_id=tx_id,
+        client_id=request.client_id,
+        amount=amount,
+        currency=request.currency,
+        service_type=request.service_type,
+    )
 
     logger.info("Charged %s %.6f %s for %s", request.client_id, amount, request.currency, request.service_type)
 
@@ -213,28 +190,30 @@ async def charge_for_service(request: ChargeRequest) -> ChargeResponse:
 @router.get("/revenue")
 async def get_revenue_metrics() -> RevenueMetrics:
     """Get MYCA's revenue metrics."""
-    clients = _economy_state["active_clients"]
+    state = economy_store.get_state()
+    clients = state["active_clients"]
     agent_count = sum(1 for c in clients.values() if c.get("type") == "agent")
     human_count = sum(1 for c in clients.values() if c.get("type") == "human")
     total_clients = len(clients) or 1  # Avoid division by zero
 
     return RevenueMetrics(
-        daily_revenue=_economy_state["total_revenue"] * 0.033,  # Estimate
-        weekly_revenue=_economy_state["total_revenue"] * 0.23,
-        monthly_revenue=_economy_state["total_revenue"],
-        total_revenue=_economy_state["total_revenue"],
+        daily_revenue=state["total_revenue"] * 0.033,  # Estimate
+        weekly_revenue=state["total_revenue"] * 0.23,
+        monthly_revenue=state["total_revenue"],
+        total_revenue=state["total_revenue"],
         active_clients=len(clients),
         agent_clients=agent_count,
         human_clients=human_count,
-        avg_revenue_per_client=_economy_state["total_revenue"] / total_clients,
+        avg_revenue_per_client=state["total_revenue"] / total_clients,
     )
 
 
 @router.get("/pricing")
 async def get_pricing_tiers() -> Dict[str, PricingTierInfo]:
     """Get available pricing tiers."""
+    state = economy_store.get_state()
     tiers = {}
-    for tier_name, tier_data in _economy_state["pricing_tiers"].items():
+    for tier_name, tier_data in state["pricing_tiers"].items():
         tiers[tier_name] = PricingTierInfo(
             tier=tier_name,
             price_per_request=tier_data["price_per_request"],
@@ -247,9 +226,10 @@ async def get_pricing_tiers() -> Dict[str, PricingTierInfo]:
 @router.post("/resources/purchase")
 async def purchase_resource(request: ResourcePurchaseRequest) -> Dict[str, Any]:
     """Purchase a resource (GPU, storage, compute) with MYCA's funds."""
+    state = economy_store.get_state()
     # Check if we have sufficient funds
     total_cost = request.quantity * request.max_price
-    total_balance = sum(w["balance"] for w in _economy_state["wallets"].values())
+    total_balance = sum(w["balance"] for w in state["wallets"].values())
 
     if total_balance < total_cost:
         return {
@@ -259,6 +239,13 @@ async def purchase_resource(request: ResourcePurchaseRequest) -> Dict[str, Any]:
             "message": "Need more revenue to purchase this resource",
         }
 
+    economy_store.add_resource_purchase(
+        resource_type=request.resource_type,
+        quantity=request.quantity,
+        total_cost=total_cost,
+        vendor=request.vendor_preference or "auto_selected",
+        status="pending",
+    )
     purchase = {
         "resource_type": request.resource_type,
         "quantity": request.quantity,
@@ -267,7 +254,6 @@ async def purchase_resource(request: ResourcePurchaseRequest) -> Dict[str, Any]:
         "status": "pending",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
-    _economy_state["resource_purchases"].append(purchase)
 
     logger.info("Resource purchase initiated: %d x %s at $%.2f", request.quantity, request.resource_type, total_cost)
 
@@ -281,6 +267,8 @@ async def purchase_resource(request: ResourcePurchaseRequest) -> Dict[str, Any]:
 @router.get("/resources/needs")
 async def evaluate_resource_needs() -> Dict[str, Any]:
     """Evaluate what resources MYCA needs to purchase."""
+    state = economy_store.get_state()
+    total_balance = sum(w["balance"] for w in state["wallets"].values())
     return {
         "status": "success",
         "needs": [
@@ -296,14 +284,21 @@ async def evaluate_resource_needs() -> Dict[str, Any]:
              "reason": "In-memory caching for real-time queries"},
         ],
         "total_estimated_cost": 112000,
-        "current_balance": sum(w["balance"] for w in _economy_state["wallets"].values()),
-        "revenue_needed": 112000 - sum(w["balance"] for w in _economy_state["wallets"].values()),
+        "current_balance": total_balance,
+        "revenue_needed": 112000 - total_balance,
     }
 
 
 @router.post("/incentives")
 async def create_agent_incentive(request: IncentiveRequest) -> Dict[str, Any]:
     """Create an incentive for an agent to use MYCA's services."""
+    economy_store.add_incentive(
+        agent_id=request.agent_id,
+        incentive_type=request.incentive_type,
+        value=request.value,
+        duration_days=request.duration_days,
+        description=request.description,
+    )
     incentive = {
         "agent_id": request.agent_id,
         "type": request.incentive_type,
@@ -313,7 +308,6 @@ async def create_agent_incentive(request: IncentiveRequest) -> Dict[str, Any]:
         "status": "active",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
-    _economy_state["incentives"].append(incentive)
 
     logger.info("Created incentive for %s: %s (%.2f)", request.agent_id, request.incentive_type, request.value)
 
@@ -323,26 +317,121 @@ async def create_agent_incentive(request: IncentiveRequest) -> Dict[str, Any]:
 @router.get("/incentives")
 async def list_incentives() -> Dict[str, Any]:
     """List all active incentives."""
+    state = economy_store.get_state()
     return {
         "status": "success",
-        "incentives": _economy_state["incentives"],
-        "total_active": len([i for i in _economy_state["incentives"] if i["status"] == "active"]),
+        "incentives": state["incentives"],
+        "total_active": len([i for i in state["incentives"] if i.get("status") == "active"]),
     }
 
 
 @router.get("/summary")
 async def get_economic_summary() -> Dict[str, Any]:
     """Get a full economic summary of MYCA's autonomous economy."""
+    state = economy_store.get_state()
     return {
         "status": "success",
         "wallets": {k: {"balance": v["balance"], "currency": v["currency"]}
-                    for k, v in _economy_state["wallets"].items()},
-        "total_revenue": _economy_state["total_revenue"],
-        "total_transactions": len(_economy_state["transactions"]),
-        "active_clients": len(_economy_state["active_clients"]),
-        "resource_purchases": len(_economy_state["resource_purchases"]),
-        "active_incentives": len([i for i in _economy_state["incentives"] if i["status"] == "active"]),
-        "pricing_tiers": list(_economy_state["pricing_tiers"].keys()),
+                    for k, v in state["wallets"].items()},
+        "total_revenue": state["total_revenue"],
+        "total_transactions": len(state["transactions"]),
+        "active_clients": len(state["active_clients"]),
+        "resource_purchases": len(state["resource_purchases"]),
+        "active_incentives": len([i for i in state["incentives"] if i.get("status") == "active"]),
+        "pricing_tiers": list(state["pricing_tiers"].keys()),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# ============================================================================
+# x402-style metering, settlement, and authorization
+# ============================================================================
+
+
+class MeterRequest(BaseModel):
+    """Request to record usage for billing (x402-style metering)."""
+    client_id: str
+    service_type: str
+    units: float = 1.0
+    unit_price: Optional[float] = None
+    currency: str = "X401"
+
+
+class SettleRequest(BaseModel):
+    """Request to settle a metered usage to a charge."""
+    usage_id: str
+
+
+@router.post("/meter")
+async def meter_usage(request: MeterRequest) -> Dict[str, Any]:
+    """Record usage for x402-style request metering. Creates a meter record for later settlement."""
+    state = economy_store.get_state()
+    client_tier = state["active_clients"].get(request.client_id, {}).get("tier", "agent")
+    tier_pricing = state["pricing_tiers"].get(client_tier, state["pricing_tiers"]["agent"])
+    unit_price = request.unit_price if request.unit_price is not None else tier_pricing["price_per_request"]
+    usage_id = f"usage_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{request.client_id[:8]}"
+    economy_store.record_meter(
+        usage_id=usage_id,
+        client_id=request.client_id,
+        service_type=request.service_type,
+        units=request.units,
+        unit_price=unit_price,
+        currency=request.currency,
+    )
+    amount = request.units * unit_price
+    return {
+        "status": "metered",
+        "usage_id": usage_id,
+        "client_id": request.client_id,
+        "service_type": request.service_type,
+        "units": request.units,
+        "unit_price": unit_price,
+        "amount": amount,
+        "currency": request.currency,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@router.post("/settle")
+async def settle_usage(request: SettleRequest) -> Dict[str, Any]:
+    """Settle a metered usage into a completed charge (agent settlement)."""
+    tx_id = f"tx_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_settle"
+    ok = economy_store.settle_metered(usage_id=request.usage_id, transaction_id=tx_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail=f"Metered usage '{request.usage_id}' not found or already settled")
+    return {
+        "status": "settled",
+        "usage_id": request.usage_id,
+        "transaction_id": tx_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@router.get("/authorize")
+async def authorize_payment(
+    client_id: str,
+    service_type: str = "api_request",
+    estimated_amount: Optional[float] = None,
+    currency: str = "X401",
+) -> Dict[str, Any]:
+    """Check if client/agent can pay for a service (tier limits, balance). Used before serving paid requests."""
+    state = economy_store.get_state()
+    client_tier = state["active_clients"].get(client_id, {}).get("tier", "agent")
+    tier_pricing = state["pricing_tiers"].get(client_tier, state["pricing_tiers"]["agent"])
+    amount = estimated_amount if estimated_amount is not None else tier_pricing["price_per_request"]
+    result = economy_store.can_authorize(
+        client_id=client_id,
+        service_type=service_type,
+        estimated_amount=amount,
+        currency=currency,
+    )
+    return {
+        "authorized": result["authorized"],
+        "reason": result["reason"],
+        "tier": result["tier"],
+        "balance": result["balance"],
+        "daily_limit": result["daily_limit"],
+        "estimated_amount": result["estimated_amount"],
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -351,12 +440,7 @@ async def get_economic_summary() -> Dict[str, Any]:
 async def register_client(client_id: str, client_type: str = "agent",
                           tier: str = "agent") -> Dict[str, Any]:
     """Register a new client (agent or human) in the economy."""
-    _economy_state["active_clients"][client_id] = {
-        "type": client_type,
-        "tier": tier,
-        "registered_at": datetime.now(timezone.utc).isoformat(),
-        "total_spent": 0.0,
-    }
+    economy_store.register_client(client_id=client_id, client_type=client_type, tier=tier)
     logger.info("New client registered: %s (type=%s, tier=%s)", client_id, client_type, tier)
     return {
         "status": "success",

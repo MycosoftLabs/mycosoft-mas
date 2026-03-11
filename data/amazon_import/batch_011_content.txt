@@ -1,0 +1,75 @@
+﻿INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BH252R3J', 'Powered USB Hub, Wenter 11-Port USB Splitter Hub (10 Faster Data Transfer Ports+ 1 Smart Charging Port) with Individual LED On/Off Switches, USB Hub 3.0 Powered with Power Adapter for Mac, PC', 'KDP-AE', 'power', 1, 29.99, 'Igree', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D2PRQKWL', 'Twippo Heat Shrink Tubing Kit 355pcs - 3:1 Dual Wall Adhesive Lined - Electrical Waterproof Industrial Heat-Shrink Tubing Terminals- Marine Grade Wire Connector Shrink Wrap Tube - 3.15" Length - Black', 'US-Heat Shrink Tubing Kit-355', 'misc', 1, 18.99, 'Twippo', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B072PCQ2LW', '560PCS Heat Shrink Tubing 2:1, Eventronic Electrical Wire Cable Wrap Assortment Electric Insulation Heat Shrink Tube Kit with Box(5 colors/12 Sizes), Black, Red, Blue, Yellow, Green', 'asd-123', 'misc', 1, 5.99, 'Ayhh-official', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0C3GRTT2G', 'haisstronica Wire Stripper and Crimping Tool,AWG 24-10 Automatic Stripper Tool with AWG 22-10 Ratchet Wire Crimper For Heat Shrink Connectors', 'HX1608', 'misc', 1, 29.99, 'HAISSTRONICA', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B088QM242B', '14 Gauge Wire Combo 6 Pack 12V 100''FT per Roll (600 ft Total) 14 Gauge Auto Wire Copper Clad Aluminium Low Voltage 14 Gauge Wire', 'mkafv-1160', 'misc', 1, 37.89, 'BaboomBaboom', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B074JZ6NWV', 'Replace for DYMO LetraTag Label Maker Refill 91331 White Plastic Tape 12mm x 4m (1/2" x 13'') for Dymo Labeler Letra Tag 200B LT 100H 100T Plus, 5-Pack, Label KINGDOM Label', 'LT-A91331-5', 'misc', 1, 12.99, 'Label KINGDOM', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BBLSNJCJ', 'JESSINIE INA333 Amplifier Module 3 Operational Amplifier INA333 Low Power Precision Instrumentation Amplifier Module Board', 'INA333', 'dev-boards', 1, 9.95, 'Jessinie', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08QM9SM1W', 'Teyleten Robot Millivolt/Microvolt Voltage Amplifier Module AD620 Instrumentation Amplifier Module Signal Amplifier Module DC 3-12V High Precision (3PCS)', 'H64', 'misc', 1, 11.88, 'Teyleten Robot-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DPFX4PDP', 'Linear Instrumentation Amplifier 10PCS INA128UA INA128 INA128U SOP-8 New for Arrival 2025 High for Quality', 'MAANIHTYUW-M-TXN48926', 'misc', 1, 28.99, 'PHAMDUCQUYEN15', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BNQDV3FR', 'Jetson Nano B01 4GB SUB Development Kit Official Board for AI and Robotics Yahboom Provide ROS Programming Courses', 'gm-Jetson Nano B01', 'dev-boards', 1, 209.99, 'Yahboom', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BM2YKHRR', 'MyoWare 2.0 Muscle Sensor-Compatible with Arduino- All-in-one electromyography (EMG) sensor from Advancer Technologies -Measure muscle activity by detecting its electric potential-Keyed Snap Connector', 'DEV-21265', 'dev-boards', 1, 39.95, 'SparkFun Electronics Inc.', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BGWRWRX2', 'Fanttik E1 Max 3.7V Mini Electric Screwdriver, Precision Screwdriver Set, 50-in-1 Magnetic Bits, Magnetic Storage, 5/32''''Hex, Electric Screwdriver for Electronics Phone Camera Laptop Watch - Grey', 'E1 Max', 'cameras', 1, 45.75, 'Fanttik Innovation Direct', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CJHXJWN3', 'Gebildet 3V-6V-12V-24V-230V/1A 10pcs 7mm Black Prewired Mini Momentary Push Button,SPST Nomal Open ON/Off 2 Pin Round Button for Model Railway Hobby', 'E1252-US', 'misc', 1, 6.99, 'Gebildet', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D8PZ8MNL', 'CPZZ 20Pack 18650 Rechargeable Battery Flat top 3.7v 18650 Rechargeable Battery High Capacity for led flashlights,Headlights headlamp 1015', 'B0D8PZ8MNL', 'power', 1, 47.99, 'Liming Technology', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B31NRSD2', '2Pack GPS Module,Navigation Satellite Positioning NEO-6M,Arduino GPS, Drone Microcontroller, GPS Receiver Compatible with 51 Microcontroller STM32 Arduino UNO R3 with Antenna High Sensitivity', 'B0B31NRSD2', 'dev-boards', 1, 18.99, 'Deegoo-FPV', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CN63ZQ2J', '4 Pack 1ï¿µ8ï¿µ6ï¿µ5ï¿µ0 Rechargeable Batterï¿µy 9900mï¿µAï¿µh Wï¿µiï¿µth 18650 Battery Charger,Universal Smart Charger for 3.7V Rechargeable Battery 21700 14500 10440', 'B0CN63ZQ2J', 'power', 1, 24.98, 'cambriman', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08HGSXYM1', '4X EEMB 3.7V Lipo Battery 3700mAh 103395 Rechargeable Lithium Polymer ion Battery Pack with JST Connector (UL Certified for Cell) Make Sure Device Polarity Matches with Battery Before Purchase!!!', '3S-TBUH-ZL1C', 'power', 1, 46.92, 'MONERATOR', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DP634VQ5', 'MakerHawk 3.7V 10000mAh LiPo Battery Rechargeable 1S 3C Lithium Polymer Battery with Protection Board Insulated Rubber Tape, PH2.0 Plug for Arduino ESP32 Board RPI Battery Pack UPS (2 Pack)', 'B0DP634VQ5', 'dev-boards', 2, 36.99, 'MakerHawk-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09SVFL33L', '200mm(7.9in) Width PVC Heat Shrink Wrap Tube 18650 21700 26650 Lithium Battery DIY Battery Pack 3M(9.9ft) Length Blue', '200mmX3m', 'power', 1, 13.99, 'Jichu Store', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07Y53X4HK', 'Bestol 5 Meters 2P/3P/0.15x8mm/0.12x8mm/18x6x50mm Nickel alloy Strip for Battery Spot Welding, Connect battery in Paralle', 'Bestol', 'power', 1, 8.99, 'Bestol', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D3LP1G3F', 'MakerHawk 3.7V 6000mAh LiPo Battery Rechargeable 1S 3C Lithium Polymer Battery with Protection Board Insulated Rubber Tape, PH2.0 Plug for Arduino ESP32 Board RPI Battery Pack UPS (2 Pack)', 'B0D3LP1G3F', 'dev-boards', 1, 27.99, 'MakerHawk-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CRKHTG89', 'EC Buying 10Pcs TP4056 1A Lithium Battery Charging Board Module USB Type-c 5V 1A 18650 Lithium Battery Charger Module Charging Board with Dual Protection Functions', 'B0CRKHTG89', 'power', 1, 9.99, 'EC Buying', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CRY34GWR', 'Gebildet 5pcs 3V-4.5V-5V-6V-7.5V-9VDC 6mm Blue LED Metal Indicator Light Waterproof Signal Lamp Pilot Dash Directional Car Truck Boat with Wire', 'E728A', 'misc', 1, 6.99, 'Gebildet', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CDWZ9MDC', 'HiLetgo 5pcs TP4057 1A 3.7V Lithium Battery Charging Board with Protection Type-C USB C Li-ion Battery Charging Board Over TP4056', '3-01-1767', 'power', 1, 8.99, 'HiLetgo', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B081JWVK3C', 'Bestol 5 Meters 2P/3P/0.15x8mm/0.12x8mm/18x6x50mm Nickel alloy Strip for Battery Spot Welding, Connect battery in Paralle', '52001936561', 'power', 1, 8.99, 'Bestol', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;

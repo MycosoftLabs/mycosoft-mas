@@ -86,6 +86,8 @@ from mycosoft_mas.core.routers.deploy_api import router as deploy_router
 from mycosoft_mas.core.routers.spreadsheet_sync_api import router as spreadsheet_sync_router
 from mycosoft_mas.core.routers.ingest_api import router as ingest_router
 from mycosoft_mas.core.routers.guardian_api import router as guardian_router
+from mycosoft_mas.core.routers.investigation_api import router as investigation_router
+from mycosoft_mas.core.routers.merkle_ledger_api import router as merkle_ledger_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -581,6 +583,7 @@ app.include_router(memory_router, tags=["memory"])
 app.include_router(conversation_memory_router, tags=["memory", "myca-conversations"])
 app.include_router(security_router, tags=["security"])
 app.include_router(guardian_router, tags=["guardian"])
+app.include_router(merkle_ledger_router, tags=["merkle-ledger"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
 app.include_router(nlq_router, tags=["nlq"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
@@ -605,6 +608,7 @@ app.include_router(deploy_router)
 # Master Spreadsheet Sync API (n8n, Zapier)
 app.include_router(spreadsheet_sync_router)
 app.include_router(ingest_router)
+app.include_router(investigation_router, tags=["investigation"])
 # IoT Alert Service API
 app.include_router(alert_router, tags=["iot-alerts"])
 # IoT Analytics API

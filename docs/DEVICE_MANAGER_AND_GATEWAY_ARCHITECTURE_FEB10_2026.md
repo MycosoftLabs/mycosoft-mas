@@ -24,7 +24,7 @@ MycoBrain devices are visible across the entire network via the MAS Device Regis
 │  - Future: LoRa / Bluetooth / WiFi ingestion                               │
 │  - Heartbeat → MAS Device Registry                                          │
 └───────────────────────────────────────────┬───────────────────────────────────┘
-                                            │ HTTP POST /api/devices/register
+                                            │ HTTP POST /api/devices/heartbeat
                                             ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  MAS (192.168.0.188:8001)                                                   │
@@ -47,7 +47,7 @@ MycoBrain devices are visible across the entire network via the MAS Device Regis
 
 1. MycoBrain board on **COM7** → MycoBrain service (localhost:8003) on this PC.
 2. Service connects device as `mycobrain-COM7`, then sends heartbeat to MAS:
-   - `POST http://192.168.0.188:8001/api/devices/register`
+   - `POST http://192.168.0.188:8001/api/devices/heartbeat` (canonical; `/register` is a legacy alias)
    - Body: `device_id`, `device_name`, `host` (this PC’s LAN IP, e.g. 192.168.0.172), `port` (8003), `ingestion_source: "serial"`, etc.
 3. MAS stores the device; any client can call `GET /api/devices` (or website `GET /api/devices/network`) and see it.
 4. Commands: Website → MAS `POST /api/devices/{device_id}/command` → MAS proxies to `http://<host>:8003/devices/{device_id}/command`.

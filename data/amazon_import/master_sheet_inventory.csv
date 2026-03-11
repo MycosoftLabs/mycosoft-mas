@@ -1,0 +1,186 @@
+id,name,sku,category,quantity,unit_cost,supplier_name,location,reorder_threshold,supplier_lead_time_days
+c1772754630521,BME690,0769894026847,sensors,2,20.0,Pimoroni,Left Desk LAB,5,7
+c1772753572559,Mycobrain V1,Mycobrain-1,dev-boards,6,41.0,Chris,Morgan,10,7
+B0CH88LFS4,GNSS Antenna,GPS External Antenna (D),antennas,3,23.43,waveshare,,0,7
+c1772757965488,BME688,c1772757965488,misc,2,0.0,Amazon,,5,7
+c1772757984324,BME680,c1772757984324,misc,2,0.0,Amazon,,5,7
+c1772767020653,ESP32-S3,c1772767020653,dev-boards,10,0.0,Amazon,TBD Board Bin,5,7
+c1772756414292,Solar Controller,c1772756414292,power,1,0.0,Amazon,,5,7
+B0DGG7GJL7,Antenna,WN570HA2,antennas,1,78.0,Ruichuang Technology,,0,7
+B07GNC8DHH,4G LTE Antenna,GP-KIT-4G-01,antennas,3,7.99,Superbat-us,,0,7
+B09PH867P6,MyCobot 280 Camera Flange,myCobot_accessories,cameras,2,59.99,Elephant Robotics,,0,7
+B098QH631G,SMA to IPX Cable,178IPX2-30cm,cameras,3,7.29,TUOLNK Tech US,,0,7
+c1772756532326,Medium Grey Box,c1772756532326,chassis-housing,3,0.0,Amazon,Chassis rack,5,7
+c1772756572006,Small Grey Box,c1772756572006,chassis-housing,4,0.0,Amazon,Chassis rack,5,7
+c1772756491478,White Box Chassis,c1772756491478,chassis-housing,3,0.0,Amazon,Chassis rack,5,7
+B0B9W96SD6,myCobot 280 Robotic Arm,ER-280-PI,dev-boards,1,918.0,Elephant Robotics,,0,7
+c1772765873359,Jetson Orin Nano 8GB,900-13767-0030-000,dev-boards,2,0.0,Amazon,QA Table / Morgan,3,7
+B0FQ5XWXMG,Jetson Orin NX,Jetson Orin NX,dev-boards,1,1115.0,Yahboom,,0,7
+B09PH8YCVM,Suction Pump MyCobot,myCobot_PI,misc,2,75.0,Elephant Robotics,,0,7
+c1772756665580,Mushroom 1 Big Body,M1B,misc,3,0.0,Amazon,Body rack,5,7
+B0DLKLY669,Mini Speaker 8 Ohm,676-EL,dev-boards,1,8.39,eMagTech,,0,7
+B083XMGSVP,Pi Zero Camera 5MP,WQY,dev-boards,1,16.99,Dorhea,,0,7
+B0F9NXB9DB,ABS Filament 1.75mm Black,CR-ABS-Black,misc,1,19.99,Creality YOOPAI Store,,0,7
+B0F9NZDP3P,ABS Filament 1.75mm White,CR-ABS-White,misc,1,18.99,Creality YOOPAI Store,,0,7
+B0CTZF7MNP,USB Outlet 15 Amp,AUR01-1542CCA-BL10,misc,1,119.89,ELE GROUP,,0,7
+B0CTZQYNKY,USB Outlet 15 Amp,AUR01-1542CCA-WH10,misc,1,119.66,ELE GROUP,,0,7
+B0BPRZ82GD,Garden Tool Wall Rack,ST-1,misc,2,17.24,RUICAIAMZ,,0,7
+B0949JNZWQ,M4 x 20mm Flat Head Screws,763722102277,misc,1,7.21,YGTGZ,,0,7
+B0DXT4WTR4,Small Junction Box,Electrical Boxes-FT,misc,2,18.61,IGEYAPA-US,,0,7
+B07H5C8BB6,Junction Box,110807PT,chassis-housing,1,9.49,QILIPSU,,0,7
+B0CXJ71NB6,ESP32-S3 Board,L76K Version,dev-boards,3,61.0,Lily GO,,0,7
+B0DXT464VB,Large Junction Box,"Electrical Boxes-13.8""x9.8""x5.9"" Clear",misc,2,46.54,IGEYAPA-US,,0,7
+B0CY2BPPD4,Outdoor Electrical Box,Fan001,misc,3,139.99,zhuhaiyihong,,0,7
+B09TXL8NQ5,Jetson Nano,JETSON-NANO-DEV-KIT,dev-boards,1,189.99,waveshare,,0,7
+B0BTP93H8H,SIM7600G-H,SIM7600G-H 4G Module,dev-boards,3,69.34,waveshare,,0,7
+B0DDQDG6GF,Anker TB4 Cable 3.3ft,ELECTRONIC_CABLE,misc,1,39.98,AnkerDirect,,0,7
+B0CDH4FGZY,Anker TB4 Cable,A8489011,misc,1,79.98,AnkerDirect,,0,7
+B0C3PFQZ4G,HDMI Splitter Extended Display,USB-C2HDMI2,misc,1,49.99,OREI Direct,,0,7
+B0FCMSRJ2J,Thunderbolt 5 Cable 6.6ft,Z-W0407,misc,1,33.59,ZIKNYDO,,0,7
+B0CF5KH6ZM,KOOTION 256GB Micro SD Card,TF-256G,cameras,5,22.32,KOOTION,,0,7
+B08JPL85H8,Cat8 RJ45 Connector,52517.24,chassis-housing,1,107.9,KW-Commerce-US,,0,7
+B08XFSLWQF,DisplayPort to HDMI Adapter,102101-GRY,misc,1,24.95,Cable Matters,,0,7
+B0CH3TDJ4B,Cat8 Ethernet Crimping Tool,180124,misc,1,21.95,Cable Matters,,0,7
+B09GK8LBWS,CalDigit TS4 Thunderbolt Dock,TS4-US 500971,misc,1,303.99,"CalDigit, Inc.",,0,7
+B0C4TNQZYY,PLA Filament 1.75mm Black,Hyper RFID PLA_AU1,misc,2,23.99,Creality Official Store,,0,7
+B0DFGB288Y,PLA Filament 1.75mm,Value 4 Pack-WWWW-_3301010475_US1,misc,4,58.49,Creality Official Store,,0,7
+B0F4KG3WWK,Filament Storage,Hyper PLA RFID,misc,1,299.0,Creality US Official Store,,0,7
+B0DMVG2TFL,PLA Filament 1.75mm,AMUS-CU-3D-PM-HPLA-RFID-BK+WH+RD+BL,misc,1,72.99,Creality CL Store,,0,7
+B0BZCX99NV,PETG Filament 1.75mm,301030035,misc,3,12.99,Creality Official Store,,0,7
+B0CHS79BGL,PLA Plus Filament,US-EL-3D-PP25,misc,3,49.69,ELEGOO Official US,,0,7
+B09GLSWMQM,USB Charger Wall Outlet,R1615D42-WH,misc,1,93.99,ELE GROUP,,0,7
+B08VNYPL7H,Hot Air Rework Station,PSST003D,misc,1,49.33,ArmPro,,0,7
+B08PF938JJ,ASA Filament 1.75mm,OVASA,misc,3,27.12,OVERTURE 3D,,0,7
+B0DDL48VFX,DisplayPort HDMI Splitter,hdmi splitter,misc,1,46.54,THANDBLE-Direct,,0,7
+B0C2WS46WM,Cat8 RJ45 Connectors 20-Pack,180121x20,power,1,11.95,Cable Matters,,0,7
+B07ZQPFGHX,Cat8 Shielded Riser Cable,TFR2204ZBU,power,1,608.0,"Infinity Cable Products, Inc.",,0,7
+B0DQ9ZDXDG,Cat8 RJ45 Connector,CAT8,power,1,47.49,Itvexeme,,0,7
+B0875VL1CJ,UGREEN Cat8 Cable 6ft,80431,power,1,6.99,UGREEN GROUP LIMITED,,0,7
+B01LY05LOE,OV5647,UCT_B0033+B0087,dev-boards,1,9.29,UCTRONICS,,0,7
+B0C6XKXPVX,TTP223,B0C6XKXPVX,dev-boards,1,10.69,D-FLIFE,,0,7
+B0B53DPBTZ,TCRT5000,TCRT5000,dev-boards,1,11.99,HANXI01,,0,7
+B0DRJ5NTV3,GC2145,JCAH0003-005,dev-boards,1,8.54,FORIOT-US,,0,7
+B0CLLNMRX7,LILYGO T-A7670G 4G,B0CLLNMRX7,dev-boards,4,35.15,Lily GO,,0,7
+B099RQ7BSR,LILYGO T-SIM7000G,T-SIM7000G,dev-boards,2,49.87,Lily GO,,0,7
+B0DNZ3ZD36,OV2640 ESP32-CAM,Camera Module,dev-boards,1,23.99,Aideepen,,0,7
+B0CQXMPXKC,8 Port 10G Switch,S100-0800T-EU,misc,1,247.98,NICGIGA-US,,0,7
+B0949M4PMD,M4 x 25mm Flat Head Screws,763722102284,misc,1,7.69,YGTGZ,,0,7
+B0CZ79Q7XM,K1 Max Build Plate,K1MAXPEIPEO,misc,1,26.99,comgrow,,0,7
+B09DCQ972K,ASA Filament 1.75mm,OVASA,misc,2,30.68,OVERTURE 3D,,0,7
+B0BN8SSDPL,ASA Filament 1.75mm,OVASA,misc,6,28.42,OVERTURE 3D,,0,7
+B0DXTFT6WM,Junction Box IP67,"Electrical Boxes-11.4""x7.5""x5.5 clear",misc,2,32.58,IGEYAPA-US,,0,7
+B0BZHGCBTH,Junction Box Outdoor,P091,misc,2,14.99,Jineby Y,,0,7
+B0DHXTFS5P,Cat8 Ethernet Cable 100ft,cat8wh-100,power,2,18.19,10Gsupxsel,,0,7
+B0DHXS26XL,Cat8 Ethernet Cable 50ft,cat8wh-50,power,1,9.19,10Gsupxsel,,0,7
+B0DHXQ92RL,Cat8 Ethernet Cable 75ft,cat8wh-75,power,2,14.99,10Gsupxsel,,0,7
+B0CKJ5YPZ5,Cat8 Patch Cables 24-Pack,24PC830-1,power,1,23.99,FOELINK,,0,7
+B0BGWRWRX2,Fanttik E1 Max 3.7V Mini,E1 Max,cameras,1,45.75,Fanttik Innovation Direct,,0,7
+B0B31NRSD2,NEO-6M,B0B31NRSD2,dev-boards,1,18.99,Deegoo-FPV,,0,7
+B0BBLSNJCJ,INA333,INA333,dev-boards,1,9.95,Jessinie,,0,7
+B0BNQDV3FR,Jetson Nano,gm-Jetson Nano B01,dev-boards,1,209.99,Yahboom,,0,7
+B0DP634VQ5,Li-Po 10000mAh,B0DP634VQ5,dev-boards,2,36.99,MakerHawk-US,,0,7
+B0D3LP1G3F,Li-Po 6600mAh,B0D3LP1G3F,dev-boards,1,27.99,MakerHawk-US,,0,7
+B0BM2YKHRR,MyoWare 2.0,DEV-21265,dev-boards,1,39.95,SparkFun Electronics Inc.,,0,7
+B0D9JWT4P1,E-Ink E290 Dev Board,B0D9JWT4P1,dev-boards,3,33.32,MakerHawk-US,,0,7
+B072PCQ2LW,Heat Shrink Tubing,asd-123,misc,1,5.99,Ayhh-official,,0,7
+B0DJ7GNDL8,Digital Calendar,FA2189,misc,1,459.99,ElcSign,,0,7
+B0CGG19X3L,Screwdriver Organizer Rack,HFJA101,misc,1,24.99,AmayaArtz,,0,7
+B0C3GRTT2G,Wire Stripper Crimping Tool,HX1608,misc,1,29.99,HAISSTRONICA,,0,7
+B0DPFX4PDP,INA128,MAANIHTYUW-M-TXN48926,misc,1,28.99,PHAMDUCQUYEN15,,0,7
+B074JZ6NWV,DYMO Label Tape 12mm,LT-A91331-5,misc,1,12.99,Label KINGDOM,,0,7
+B08QM9SM1W,AD620,H64,misc,1,11.88,Teyleten Robot-US,,0,7
+B0D2PRQKWL,Heat Shrink Tubing 355pcs,US-Heat Shrink Tubing Kit-355,misc,1,18.99,Twippo,,0,7
+B0CY54RM4K,Wall Storage Rack 30-Bin,30-Bin Parts Rack Organizer,misc,1,48.99,Amazon,,0,7
+B09SVFL33L,PVC Heat Shrink 200mm,200mmX3m,power,1,13.99,Jichu Store,,0,7
+B0CN63ZQ2J,18650 Battery 9900mAh 4-Pack,B0CN63ZQ2J,power,1,24.98,cambriman,,0,7
+B08HGSXYM1,Li-Po 3700mAh,3S-TBUH-ZL1C,power,1,46.92,MONERATOR,,0,7
+B0D8PZ8MNL,18650 Battery 20-Pack,B0D8PZ8MNL,power,1,47.99,Liming Technology,,0,7
+B0CJ9C4FFH,ESP32 Case 5-in-1,HC-Blk-blkeav,dev-boards,2,9.99,CCYC,,0,7
+B0DT7K9VV3,MSI Gaming RTX 5090 32G,B0DT7K9VV3,dev-boards,1,2999.99,Amazon.com,,0,7
+B0BY3GTG48,NZXT Kraken 360 AIO,RL-KR360-W1,dev-boards,1,207.86,Amazon Resale,,0,7
+B0CJM767KB,T-SIM7000G ESP32,LHXn_BH_1248,dev-boards,2,64.47,iGouDi,,0,7
+B0CS69N2Z6,Anker USB-C Hub,A8340,misc,1,39.99,AnkerDirect,,0,7
+B0C9JSY1KM,Multi-Zone Wall Thermostat,FACW12APZA,misc,1,109.57,Amazon.com,,0,7
+B0949KFZ8V,M4 x 8mm Flat Head Screws,763722101850,misc,1,6.59,YGTGZ,,0,7
+B086Z6XMWP,Curtain Track Belt,0782290130185,misc,1,30.0,Quoya® Living Co. Ltd,,0,7
+B08K1BVGN9,Threaded Inserts M2-M5,GE-P-D,misc,2,31.99,ruthex,,0,7
+B0B87V7QTH,Junction Box IP67,TICONN - 640,misc,3,25.44,TICONN US,,0,7
+B0CTCSJ7Y8,M4 Knurled Insert Nuts,a23122300ux0293,misc,1,6.99,Amadeo City,,0,7
+B01FV1DD9C,LoRa Antenna 13dBi,EW-915-13-YAGI,antennas,2,87.0,Embedded Works - Wireless Professionals,,0,7
+B0D5QHXYGF,LoRa Antenna,B0D5QHXYGF,antennas,1,54.95,RAIGEN,,0,7
+B01FVWCKKE,SMA to N Cable 15m,OL-2977-X,antennas,1,17.69,OneLinkMore Tech,,0,7
+B0DT3RTK9D,ESP32 Dev Board,H1-HBB0059-12,dev-boards,2,55.48,XKD store,,0,7
+B0F1CXG94J,ESP32 Dev Board,V3,dev-boards,1,63.99,YIJinfan Direct,,0,7
+B0DMN28TRW,ESP32 Dev Board,B0DMN28TRW,dev-boards,3,64.66,Quan Ruiqi,,0,7
+B0DWPKQ3LH,HP 15.6 Laptop,B8QE2UA#ABA,dev-boards,1,359.99,Amazon.com,,0,7
+B0FBGTYQH3,ESP32-S3 Board,Meshtastic Firmware,dev-boards,1,89.0,Lily GO,,0,7
+B0DGGFFY8K,GPS Galileo Tracker,B0DGGFFY8K,dev-boards,2,35.49,MakerFocus,,0,7
+B0CZPN3D9K,ESP32 Board,DEV-23387,dev-boards,2,26.95,SparkFun Electronics Inc.,,0,7
+B08VNB7MVQ,Storage Cabinet 16 Drawer,ARTZ-4092,misc,2,54.79,ARTEZA,,0,7
+B0BM26L46T,Wire Spool Rack,823689,misc,1,39.99,Marketplace Pros,,0,7
+B09KYKLGKP,iRobot Cleaning Solution,4723291,misc,1,32.99,Amazon.com,,0,7
+B0C3571PLB,2mL Microcentrifuge Tubes,102C,misc,1,19.99,Kashi Scientific,,0,7
+B09VKF38KW,Sterile Petri Dishes 40-Pack,PD20Ppt,misc,1,9.5,MyMed,,0,7
+B0DJ6KGXKB,SenseCAP T1000-E Tracker,B0DJ6KGXKB,misc,1,44.09,Seeed Studio Official,,0,7
+B07ZNG4L9P,PLA Filament 1.75mm,1.75 PLA Filament,misc,1,13.99,SUNLU Industry,,0,7
+B0DPWZ6W5L,USB-C Hub Dual Monitor,MOUC6101,misc,1,59.99,MOKiN Direct,,0,7
+B0BVFMR1VY,Media Storage Bottles 250ml,YO-MediaStorageBottle-250ml-10P,misc,1,25.89,Suwimut,,0,7
+B0CMLGS4YG,22AWG Wire 360ft,NAOEVO,power,1,24.99,NAOEVO,,0,7
+B0D56GV4X1,AMD Mini PC Ryzen,RYZEN 5 32GB 512GB,dev-boards,1,389.99,ACEMAGICIAN US,,0,7
+B0BZ4WV4PQ,BME688 Sensor,B0BZ4WV4PQ,dev-boards,10,28.83,UeeKKoo,,0,7
+B01EV70C78,Dupont Wire 40pin,EL-CP-004,dev-boards,2,6.93,ELEGOO Official US,,0,7
+B0B658DZ9Z,SX1262,T-ECHO,dev-boards,6,89.5,Lily GO,,0,7
+B0DKSS4K6N,LoRa Antenna 915MHz,B0DKSS4K6N,dev-boards,1,12.99,eifagur,,0,7
+B0DP2S8V6N,K2 Plus Build Plate,LD-3D-AC-Bed-Ender3V3SE-110,misc,1,35.99,Creality LD Direct Store,,0,7
+B00AWS3QV0,Retort Clamp 90mm,CH0688,misc,4,16.79,hBARSCI,,0,7
+B087QGTZ1G,Inoculation Loop Mycology,Hotop-Reusable Inoculating Loop-0096,misc,1,12.99,Spareak Inc,,0,7
+B0D63D9Z5F,32GB Micro SD 10-Pack,293645c6-021c-4af2-a8fb-a40dbbd4b64e,misc,1,39.99,KOOTION,,0,7
+B0B75JJQ9Q,Screwdriver Rack,MT10010,misc,1,25.25,Metal Alter Tools,,0,7
+B00G4CJ8GK,Sharpie Fine Tip Markers,1884739,misc,1,17.97,Amazon.com,,0,7
+B0DK3G77TC,USB-C to 3 HDMI Adapter,3-Port USB-C Multi-Monitor Adapter,misc,1,47.39,THANDBLE-Direct,,0,7
+B0B87TNPRY,Junction Box IP67,TICONN - 642,misc,1,75.99,TICONN US,,0,7
+B0B9V8Z3CT,Keyboard Tray Under Desk,MOUNT-KB05-4DW,misc,3,59.99,V I V O,,0,7
+B0DNF89PF2,Meshtastic LoRa Relay Solar,Spec5 Relay,power,2,274.99,"SpecFive, LLC",,0,7
+B0DB5MH38T,LoRa Antenna 10dBi,B0DB5MH38T,antennas,1,25.99,MakerHawk-US,,0,7
+B0CTXL61LY,LoRa Antenna 3dBi,TY-CSA27,antennas,1,9.99,Tenmory,,0,7
+B0C9H7Y66W,ESP32-S3 Dev Kit,DA11892-1,dev-boards,1,17.99,Dorhea,,0,7
+B01D1FFVOA,WS2812B,ALWS2812B1LEDBK,dev-boards,1,14.99,ALITOVE,,0,7
+B07W6ZPH7D,SX1278,LY369,dev-boards,1,12.79,"ZhongTao(品牌已备案,跟卖必投诉封店,绝不和解)",,0,7
+B0CY1XKZQC,ESP32 Dev Board,B0CY1XKZQC,dev-boards,2,47.99,DIYmall,,0,7
+B0D8T53CQ5,ESP32 Dev Board,EL-SM-012,dev-boards,1,19.99,ELEGOO Official US,,0,7
+B0BKL93X2J,ESP32 Dev Board,B0BKL93X2J,dev-boards,1,41.99,Aitrip,,0,7
+B0DG8L5NG5,ESP32-S3 Dev Board,YY1-0163,dev-boards,1,33.99,Quan Ruiqi,,0,7
+B0CQT9J4K8,GPS Galileo Tracker,UC6580,dev-boards,1,25.49,MakerFocus,,0,7
+B0DMK4QPPD,LoRa Antenna Magnetic,B0DMK4QPPD,dev-boards,1,19.95,slinkdsco,,0,7
+B0CNH8H6NG,"5"" Round LCD 1080p",f571e31b-4248-43c5-b4e8-20ea18a707b2,dev-boards,1,140.15,UeeKKoo,,0,7
+B088BBJ9SQ,TF-Luna,TF-Luna,dev-boards,1,24.99,youyeetoo tech,,0,7
+B0CGR8ZLTZ,Bare Copper Wire 20ga,TX-16OZ,misc,1,20.99,XING WEI,,0,7
+B0DJQGS5JL,M3 x 50mm Socket Screws,BNH02022,misc,1,9.99,BNUOK Fasterner,,0,7
+B099P57WJN,Malt Extract Agar Plates,EV60,misc,2,31.99,Evviva Sciences,,0,7
+B078HY1WP1,Phono RCA Screw Connector,CAM902072M,misc,1,8.9,Exgoofit,,0,7
+B074GG4L95,PDA Agar Plates,PDA-10,misc,1,21.95,EZ BioResearch LLC,,0,7
+B0B6PVJTHY,Screws Assortment M2-M5,M2-M5-1500,misc,1,26.48,JROUTH,,0,7
+B013JRWCBU,JST 1.25mm 2-Pin Connectors,5738466,misc,2,6.99,A-Tools supplier,,0,7
+B00NS4J6BY,Tip Tinner,FBA_TMT-TC-2,misc,2,6.35,Thermaltronics,,0,7
+B0B2D89WLT,JST PH 2.0mm 30-Pair,PH2PUK-10-15-MF-1007-22AWG-30,power,1,9.99,Chanzon,,0,7
+B0DPZW6KXT,Li-Po 1000mAh,B0DPZW6KXT,power,2,16.99,MakerHawk-US,,0,7
+B07SST5GDB,AS3935 Lightning Sensor,Yosoowd1feuimkp,sensors,2,30.25,ochun,,0,7
+B000X05G1A,Submersible Utility Pump,91250,sensors,1,59.73,Amazon.com,,0,7
+B07BTXK1NG,SMD Diode Assortment,DIODE-KIT2-SMD-150,misc,1,6.99,Chanzon,,0,7
+B07DB1HCKP,500ml Wash Bottles,DEPEPE20180527,misc,1,16.99,SimpleBreeze,,0,7
+B0BN4W6P6Q,PLA Plus Filament,PLA+175CW1KG-RE,misc,1,22.99,eSUN official Store,,0,7
+B0711MB4TL,3296W Trimmer Potentiometers,HDR-3296-1,misc,1,12.99,Hilitchi,,0,7
+B0CJ78KXRH,SMD Resistors 1206 Kit,RES-KIT,misc,1,9.99,rising saplings,,0,7
+B07MSC2YGT,M3 Pushrod Connector 100mm,a18112200ux0490,misc,2,12.99,uxcell,,0,7
+B0B1LM2V5W,19V Power Cord Samsung,DL90190400,power,1,14.99,RUIQIU-direct,,0,7
+B0CNSSS6T4,18650 Shield Board,BUBUCAM 18650 Battery Shield Board V3,dev-boards,2,6.98,BUBUCA,,0,7
+B08TJRVWV1,256GB Micro SD Card,LSMICRO128GU3,dev-boards,1,10.99,Amazon.com,,0,7
+B0CRNPBGNB,Beelink Mini PC,Minis 12 Pro N100,dev-boards,1,158.99,ZDN PC,,0,7
+B0DF4TB93J,Soil Moisture Meter,CTY,misc,1,23.98,Cytentech,,0,7
+B08FM9334M,Centrifuge Tubes 15mL,AU17254,misc,1,17.99,Ackers,,0,7
+B0D19C25NS,Rubber Grommets 93pcs,NAARG-93,misc,1,9.99,NewAgeAmerica,,0,7
+B0CQXDXRZ2,Rubber Grommets 20-Pack,B0CQXDXRZ2,misc,1,7.99,QRITY,,0,7
+B0CN1N7WRZ,Electric Drill Plate Cutter,T-E01,misc,1,23.99,HAOXINGSHENG,,0,7
+B0B58S6L6W,CN3065 Solar Li-Po Charger,CN3065,power,1,8.99,Aceirmc US,,0,7
+B0CRKHTG89,TP4056 Charger,B0CRKHTG89,power,1,9.99,EC Buying,,0,7
+B0CDWZ9MDC,TP4057 Charger,3-01-1767,power,1,8.99,HiLetgo,,0,7

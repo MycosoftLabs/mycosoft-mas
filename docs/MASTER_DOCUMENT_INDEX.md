@@ -8,11 +8,28 @@
 - `docs/VOICE_V9_DUPLEX_PERSONA_COMPLETE_MAR02_2026.md` – **Voice v9 duplex and persona lock complete**: InterruptManager, PersonaLockService, REST/WebSocket endpoints; barge-in, persona validation, identity-safe TTS.
 - `docs/VOICE_V9_DEPLOYMENT_RUNTIME_MAR02_2026.md` – **Voice v9 deployment and runtime**: Dev vs production topology; env contracts; startup order; rollout stages; v9 API endpoints.
 
+## CREP Integration Test Plan (Mar 10, 2026)
+- `WEBSITE/website/docs/CREP_INTEGRATION_TEST_PLAN_MAR10_2026.md` – **CREP integration test plan**: Canonical plan for validating CREP integrations; P0 biodiversity/wildlife bubble selection (done); satellite imagery (MODIS, VIIRS, AIRS, Landsat, EONET), Shadowbroker, deck.gl filters, military filters, VIZ test features; test matrix and completion checklist.
+
+## CREP Species Widgets & Viewport Loading (Mar 11, 2026)
+- `docs/CREP_SPECIES_WIDGETS_VIEWPORT_LOADING_COMPLETE_MAR11_2026.md` – **CREP species widgets & viewport loading complete**: Fungal data from map bounds only (fetchData no longer overwrites); bounds effect AbortController; FilterToggle layout stability; iNaturalist-style viewport loading.
+
+## CREP Fungal Route Reliability (Mar 11, 2026)
+- `WEBSITE/website/docs/CREP_FUNGAL_ROUTE_RELIABILITY_MAR11_2026.md` – **CREP fungal route reliability**: MINDEX API key, graceful degradation (200 with empty data on failure), fetchWithRetry for iNaturalist/GBIF (10s timeout, 2 retries), 1.5MB cache limit; test results; MINDEX=0 investigation notes.
+
+## MYCA-Only Architecture (Mar 9, 2026)
+- `docs/MYCA_ONLY_ARCHITECTURE_COMPLETE_MAR09_2026.md` – **MYCA-only architecture complete**: Ollama primary 99.9%; no frontier fallback for user chat; Merkle world root integration; device/world grounding; BRAIN intent memory via MAS.
+
+## MICA Merkle Ledger (Mar 9, 2026)
+- `docs/MICA_MERKLE_LEDGER_INTEGRATION_MAR09_2026.md` – **Merkleized cognition ledger integrated**: Event leaves, temporal/spatial/self/world/thought roots, BLAKE3+CBOR hashing; MAS API `/api/merkle/*`; MINDEX migration `0021_mica_merkle_ledger`; consciousness integration point documented.
+
 ## Full Integration Program (Mar 10, 2026)
 - `docs/INTEGRATION_CONTRACTS_CANONICAL_MAR10_2026.md` – **Canonical integration contracts**: Unified entities, investigation artifacts, red-team audit, operator tasks, agent payments, Jetson/MycoBrain edge telemetry. Phase 0 of Full Integration Master Program.
+- `docs/EDGE_UNIFICATION_COMPLETE_MAR10_2026.md` – **Edge unification complete**: Jetson/MycoBrain runtime, telemetry, CREP presence, MYCA/AVANI interaction; GET /api/devices/crep for CREP UnifiedEntity format; Phase 7 of Full Integration Master Program.
 
 ## External Repo Integration (Mar 10, 2026)
 - `docs/EXTERNAL_REPO_INTEGRATION_COMPLETE_MAR10_2026.md` – **Phase 1 complete**: Label syncer, Uncodixfy rule, Turf bbox validation, CrepMapPreferencesPanel, Supabase CREP preferences API, MAS finance route + website proxy; test results; verification commands.
+- `docs/EXTERNAL_REPO_FEATURES_USAGE_AND_TESTING_MAR10_2026.md` – **Feature usage & testing**: How each feature works; where to see/use it (CREP Map Preferences, fungal API, finance proxy, label syncer); step-by-step interaction flows; CREP and Uncodixfy UI rules; verification commands and test results.
 - `docs/EXTERNAL_REPO_SYSTEM_BOUNDARIES_MAR10_2026.md` – **System boundaries and extension seams**: MAS, WEBSITE, MINDEX, MycoBrain, Mycorrhizae, NatureOS boundaries; VM layout; extension seams for external repo integration.
 - `docs/EXTERNAL_REPO_CLASSIFICATION_MAR10_2026.md` – **Repository classification**: Adopt, Prototype, Watchlist, Do Not Integrate for 18 external repos; rationale and insertion points.
 - `docs/EXTERNAL_REPO_IMPLEMENTATION_STREAMS_MAR10_2026.md` – **Implementation streams**: Geo stack, local inference, finance, security, repo hygiene; phased execution.

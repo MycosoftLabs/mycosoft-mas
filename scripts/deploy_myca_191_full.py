@@ -3,10 +3,11 @@
 Full MYCA deployment to VM 191 — Clone, setup, migrate, deploy .env, start services.
 
 Runs from dev machine. Uses paramiko for password-based SSH.
-Loads credentials from .credentials.local (gitignored).
+Loads credentials from .env, .credentials.local, ~/.mycosoft-credentials.
 
 Usage:
     python scripts/deploy_myca_191_full.py
+    python scripts/deploy_myca_191_full.py --env-only   # Only push .env and restart
 """
 
 import io
@@ -20,16 +21,19 @@ sys.path.insert(0, str(REPO_ROOT))
 
 
 def load_credentials() -> dict:
-    """Load from .credentials.local; never print secrets."""
+    """Load from .env, .credentials.local, ~/.mycosoft-credentials. Later sources override earlier."""
     creds = {}
-    for f in [REPO_ROOT / ".credentials.local", Path.home() / ".mycosoft-credentials"]:
+    for f in [
+        REPO_ROOT / ".env",
+        REPO_ROOT / ".credentials.local",
+        Path.home() / ".mycosoft-credentials",
+    ]:
         if f.exists():
             for line in f.read_text().splitlines():
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
                     k, v = line.split("=", 1)
                     creds[k.strip()] = v.strip()
-            break
     return creds
 
 
@@ -37,48 +41,83 @@ def build_myca_env(creds: dict) -> str:
     """Build /opt/myca/.env content from template + credentials."""
     template = (REPO_ROOT / "deploy" / "myca_os.env.template").read_text(encoding="utf-8")
     import re
-    # Map credential keys to env var names (creds key -> env var name)
-    mapping = {
-        "MINDEX_DB_PASSWORD": "MINDEX_PG_PASSWORD",
-        "MINDEX_PG_PASSWORD": "MINDEX_PG_PASSWORD",
-        "N8N_API_KEY": "MYCA_N8N_API_KEY",
-        "MAS_N8N_API_KEY": "MAS_N8N_API_KEY",
-        "ANTHROPIC_API_KEY": "ANTHROPIC_API_KEY",
-        "GITHUB_TOKEN": "GITHUB_TOKEN",
-        "DISCORD_BOT_TOKEN": "DISCORD_BOT_TOKEN",
-        "DISCORD_WEBHOOK_URL": "DISCORD_WEBHOOK_URL",
-        "DISCORD_MYCA_WEBHOOK": "DISCORD_WEBHOOK_URL",
-        "MORGAN_DISCORD_ID": "MORGAN_DISCORD_ID",
-        "SLACK_BOT_TOKEN": "SLACK_BOT_TOKEN",
-        "SLACK_APP_TOKEN": "SLACK_APP_TOKEN",
-        "ASANA_PAT": "ASANA_PAT",
-        "ASANA_ACCESS_TOKEN": "ASANA_PAT",
-        "ASANA_API_KEY": "ASANA_PAT",
-        "MYCA_ASANA_TOKEN": "ASANA_PAT",
-        "ASANA_WORKSPACE_ID": "ASANA_WORKSPACE_ID",
-        "SIGNAL_SENDER_NUMBER": "SIGNAL_SENDER_NUMBER",
-        "SIGNAL_API_URL": "SIGNAL_API_URL",
-        "MORGAN_SIGNAL_NUMBER": "MORGAN_SIGNAL_NUMBER",
-        "WHATSAPP_API_URL": "WHATSAPP_API_URL",
-        "MORGAN_WHATSAPP_NUMBER": "MORGAN_WHATSAPP_NUMBER",
-        "SMTP_USER": "SMTP_USER",
-        "SMTP_PASSWORD": "SMTP_PASSWORD",
-        "IMAP_USER": "IMAP_USER",
-        "IMAP_PASSWORD": "IMAP_PASSWORD",
-        "NOTION_API_KEY": "NOTION_API_KEY",
-    }
-    for ckey, evar in mapping.items():
+
+    # (cred_key, env_var) — one cred can map to multiple env vars via duplicate ckey
+    mapping: list[tuple[str, str]] = [
+        ("MINDEX_DB_PASSWORD", "MINDEX_PG_PASSWORD"),
+        ("MINDEX_PG_PASSWORD", "MINDEX_PG_PASSWORD"),
+        ("N8N_API_KEY", "MYCA_N8N_API_KEY"),
+        ("MAS_N8N_API_KEY", "MAS_N8N_API_KEY"),
+        ("ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"),
+        ("OPENAI_API_KEY", "OPENAI_API_KEY"),
+        ("GITHUB_TOKEN", "GITHUB_TOKEN"),
+        # Discord — set both so channels_health and DiscordClient find it
+        ("DISCORD_BOT_TOKEN", "DISCORD_BOT_TOKEN"),
+        ("DISCORD_BOT_TOKEN", "MYCA_DISCORD_TOKEN"),
+        ("MYCA_DISCORD_TOKEN", "DISCORD_BOT_TOKEN"),
+        ("MYCA_DISCORD_TOKEN", "MYCA_DISCORD_TOKEN"),
+        ("DISCORD_WEBHOOK_URL", "DISCORD_WEBHOOK_URL"),
+        ("DISCORD_MYCA_WEBHOOK", "DISCORD_WEBHOOK_URL"),
+        ("MORGAN_DISCORD_ID", "MORGAN_DISCORD_ID"),
+        # Slack — channels_health checks SLACK_APP_TOKEN, MYCA_SLACK_APP_TOKEN, SLACK_OAUTH_TOKEN, MYCA_SLACK_BOT_TOKEN
+        ("SLACK_BOT_TOKEN", "SLACK_BOT_TOKEN"),
+        ("SLACK_BOT_TOKEN", "MYCA_SLACK_BOT_TOKEN"),
+        ("SLACK_APP_TOKEN", "SLACK_APP_TOKEN"),
+        ("SLACK_APP_TOKEN", "MYCA_SLACK_APP_TOKEN"),
+        ("SLACK_OAUTH_TOKEN", "SLACK_OAUTH_TOKEN"),
+        ("SLACK_OAUTH_TOKEN", "SLACK_BOT_TOKEN"),
+        ("MYCA_SLACK_BOT_TOKEN", "SLACK_BOT_TOKEN"),
+        ("MYCA_SLACK_BOT_TOKEN", "MYCA_SLACK_BOT_TOKEN"),
+        ("MYCA_SLACK_APP_TOKEN", "SLACK_APP_TOKEN"),
+        ("MYCA_SLACK_APP_TOKEN", "MYCA_SLACK_APP_TOKEN"),
+        # Asana
+        ("ASANA_PAT", "ASANA_PAT"),
+        ("ASANA_ACCESS_TOKEN", "ASANA_PAT"),
+        ("ASANA_API_KEY", "ASANA_PAT"),
+        ("MYCA_ASANA_TOKEN", "ASANA_PAT"),
+        ("ASANA_WORKSPACE_ID", "ASANA_WORKSPACE_ID"),
+        # Signal — channels_health checks MYCA_SIGNAL_NUMBER, SIGNAL_SENDER_NUMBER
+        ("SIGNAL_SENDER_NUMBER", "SIGNAL_SENDER_NUMBER"),
+        ("SIGNAL_SENDER_NUMBER", "MYCA_SIGNAL_NUMBER"),
+        ("MYCA_SIGNAL_NUMBER", "SIGNAL_SENDER_NUMBER"),
+        ("MYCA_SIGNAL_NUMBER", "MYCA_SIGNAL_NUMBER"),
+        ("SIGNAL_API_URL", "SIGNAL_API_URL"),
+        ("MYCA_SIGNAL_CLI_URL", "MYCA_SIGNAL_CLI_URL"),
+        ("MORGAN_SIGNAL_NUMBER", "MORGAN_SIGNAL_NUMBER"),
+        # WhatsApp / Evolution API
+        ("WHATSAPP_API_URL", "WHATSAPP_API_URL"),
+        ("MYCA_EVOLUTION_API_URL", "MYCA_EVOLUTION_API_URL"),
+        ("MYCA_WHATSAPP_INSTANCE", "MYCA_WHATSAPP_INSTANCE"),
+        ("MORGAN_WHATSAPP_NUMBER", "MORGAN_WHATSAPP_NUMBER"),
+        # Email
+        ("SMTP_USER", "SMTP_USER"),
+        ("SMTP_PASSWORD", "SMTP_PASSWORD"),
+        ("IMAP_USER", "IMAP_USER"),
+        ("IMAP_PASSWORD", "IMAP_PASSWORD"),
+        ("NOTION_API_KEY", "NOTION_API_KEY"),
+    ]
+    for ckey, evar in mapping:
         if evar and ckey in creds and creds[ckey]:
             val = creds[ckey]
-            template = re.sub(rf"^({re.escape(evar)}=).*$", lambda m, v=val: m.group(1) + v, template, flags=re.MULTILINE)
+            template = re.sub(
+                rf"^({re.escape(evar)}=).*$",
+                lambda m, v=val: m.group(1) + v,
+                template,
+                flags=re.MULTILINE,
+            )
     return template
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--env-only", action="store_true", help="Only push .env and restart myca-os")
+    args = ap.parse_args()
+
     creds = load_credentials()
     password = creds.get("VM_SSH_PASSWORD") or creds.get("VM_PASSWORD") or os.environ.get("VM_PASSWORD")
     if not password:
-        print("ERROR: VM_SSH_PASSWORD or VM_PASSWORD not found in .credentials.local")
+        print("ERROR: VM_SSH_PASSWORD or VM_PASSWORD not found in .env / .credentials.local / ~/.mycosoft-credentials")
         sys.exit(1)
 
     try:
@@ -109,6 +148,23 @@ def main():
             print(f"  FAILED: {cmd}")
             print(f"  stderr: {err[:500]}")
         return code, out, err
+
+    if args.env_only:
+        print("\n[env-only] Pushing .env and restarting...")
+        run("sudo mkdir -p /opt/myca/{logs,data,backups} && sudo chown -R mycosoft:mycosoft /opt/myca")
+        env_content = build_myca_env(creds)
+        sftp = ssh.open_sftp()
+        try:
+            sftp.putfo(io.BytesIO(env_content.encode("utf-8")), "/opt/myca/.env")
+        finally:
+            sftp.close()
+        run("sudo systemctl restart myca-os 2>/dev/null || true")
+        run("sleep 2")
+        code, out, _ = run("curl -s http://localhost:8000/channels 2>/dev/null | head -c 500", check=False)
+        print(f"\n  Channels response: {out[:300] if out else '(empty)'}...")
+        ssh.close()
+        print("\n  Done. Verify: curl http://192.168.0.191:8000/channels")
+        return
 
     print("\n[1/8] Creating directories...")
     run("sudo mkdir -p /opt/myca/{logs,data,backups} && sudo chown -R mycosoft:mycosoft /opt/myca")

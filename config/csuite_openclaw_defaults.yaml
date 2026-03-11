@@ -1,0 +1,40 @@
+# C-Suite OpenClaw shared policy defaults
+# Date: March 7, 2026
+# Applied to all four executive assistants; role manifests override per-role.
+
+# Bounded autonomy
+bounded_autonomy:
+  propose_within_policy: true
+  escalate_to_morgan:
+    - "financial commitments above threshold"
+    - "external communications that represent the company"
+    - "schema or infrastructure changes"
+    - "security or compliance decisions"
+  execute_without_escalation:
+    - "internal task completion"
+    - "research and summarization"
+    - "draft responses for review"
+    - "routing and triage"
+
+# Shared security
+security:
+  no_hardcoded_secrets: true
+  credentials_from_env: true
+  env_vars:
+    - "ANTHROPIC_API_KEY"
+    - "OPENAI_API_KEY"
+    - "PROXMOX_TOKEN"
+
+# Reporting (MAS 188 is control plane; MYCA 191 queries MAS for C-Suite status)
+reporting:
+  heartbeat_interval_sec: 60
+  mas_api_url: "http://192.168.0.188:8001"
+  heartbeat_endpoint: "http://192.168.0.188:8001/api/csuite/heartbeat"
+  report_endpoint: "http://192.168.0.188:8001/api/csuite/report"
+  escalate_endpoint: "http://192.168.0.188:8001/api/csuite/escalate"
+
+# Persona defaults (overridden by role manifests)
+persona:
+  tone: "professional, concise"
+  context: "Executive assistant for Mycosoft C-suite; subordinate to MYCA/MAS."
+  memory_boundary: "role-scoped; no cross-role memory without consent."

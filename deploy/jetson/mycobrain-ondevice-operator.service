@@ -1,0 +1,19 @@
+[Unit]
+Description=MycoBrain On-Device Operator (Jetson 16GB)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mycosoft
+Group=mycosoft
+WorkingDirectory=/opt/mycosoft/mas
+EnvironmentFile=/etc/mycosoft/ondevice-operator.env
+ExecStart=/usr/bin/python3 /opt/mycosoft/mas/scripts/run_ondevice_operator.py --host 0.0.0.0 --port 8110
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

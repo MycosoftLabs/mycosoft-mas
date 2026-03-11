@@ -1,0 +1,6 @@
+blake3
+cbor2
+protobuf
+grpcio
+grpcio-tools
+psycopg[binary]

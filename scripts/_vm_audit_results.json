@@ -1,0 +1,24 @@
+{
+  "needs_sandbox": true,
+  "needs_mas": true,
+  "needs_mindex": null,
+  "results": {
+    "187_git": "e0267af fix(ethics-training): use Supabase auth instead of NextAuth for consistency with site login",
+    "187_local": "ebdf70f fix(myca): OLLAMA_BASE_URL default to MAS VM 188 for production",
+    "187_behind": true,
+    "187_error": "",
+    "188_path": "/home/mycosoft/mycosoft/mas",
+    "188_git": "b1e6ed4 docs: MYCA fallback fix, OLLAMA_BASE_URL env, VM layout env",
+    "188_local": "d86831f fix(MINDEX): healthy when API reachable only; doc MINDEX_HEALTH_CHECK_FIX_MAR02_2026",
+    "188_behind": true,
+    "188_health": "200",
+    "188_service": "myca-n8n Up 4 days\nmas-redis Up 4 days",
+    "189_error": "MINDEX repo not found",
+    "189_http": "200",
+    "189_containers": "mindex-api Up 2 days (healthy)\nmindex-postgres Up 4 days\nmindex-qdrant Up 4 days\nmindex-redis Up 4 days",
+    "191_n8n": "000000",
+    "191_api": "000",
+    "191_desktop": "active\nactive",
+    "191_containers": "myca-n8n\nmyca-postgres\nsignal-api\nmyca-workspace-api\nmyca-redis"
+  }
+}

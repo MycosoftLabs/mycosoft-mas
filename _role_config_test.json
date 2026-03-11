@@ -1,0 +1,19 @@
+{
+  "role": "CEO",
+  "role_key": "ceo",
+  "assistant_name": "Atlas",
+  "ip": "192.168.0.192",
+  "primary_tool": "MYCAOS",
+  "apps": [
+    "Google.Chrome",
+    "Discord.Discord",
+    "SlackTechnologies.Slack",
+    "Notion.Notion"
+  ],
+  "mas_api_url": "http://192.168.0.188:8001",
+  "heartbeat_interval_sec": 60,
+  "heartbeat_endpoint": "http://192.168.0.188:8001/api/csuite/heartbeat",
+  "report_endpoint": "http://192.168.0.188:8001/api/csuite/report",
+  "proxmox_host": "192.168.0.202:8006",
+  "proxmox_api_token": "root@pam!CEO_mycaos=4b69220a-db26-4f5a-97b8-d4c3d99fee26"
+}

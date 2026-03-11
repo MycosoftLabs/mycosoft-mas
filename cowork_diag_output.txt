@@ -1,0 +1,20 @@
+﻿=== COWORK DNS DIAGNOSTICS 03/09/2026 10:56:30 ===
+
+--- Network Adapters ---
+Ethernet 4: Disconnected [Intel(R) Ethernet Controller (3) I225-LMvP]
+Ethernet: Disconnected [Intel(R) Ethernet Network Adapter X710-TL]
+Ethernet 2: Up [Intel(R) Ethernet Network Adapter X710-TL #2]
+vEthernet (WSL (Hyper-V firewall)): Up [Hyper-V Virtual Ethernet Adapter #3]
+vEthernet (Default Switch): Up [Hyper-V Virtual Ethernet Adapter]
+
+--- DNS per Interface ---
+Ethernet: 1.1.1.1, 8.8.8.8
+Ethernet 4: 1.1.1.1, 8.8.8.8
+Ethernet 2: 192.168.0.1
+
+--- Cowork HNS Endpoints ---
+No cowork* HNS endpoints found (or access denied)
+
+--- DNS Resolution Test ---
+api.anthropic.com resolves: 2607:6bc0::10
+

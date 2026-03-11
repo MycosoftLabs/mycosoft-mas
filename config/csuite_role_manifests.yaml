@@ -1,0 +1,92 @@
+# C-Suite per-role app and persona manifests
+# Date: March 7, 2026
+# Used by bootstrap and role-specific installers.
+
+base:
+  # Shared across all roles
+  apps:
+    - name: "Google Chrome"
+      winget: "Google.Chrome"
+    - name: "Discord"
+      winget: "Discord.Discord"
+    - name: "Slack"
+      winget: "SlackTechnologies.Slack"
+  persona:
+    context: "Executive assistant for Mycosoft; subordinate to MYCA/MAS. Bounded autonomy."
+
+ceo:
+  assistant_name: "Atlas"
+  primary_tool: "MYCAOS"
+  proxmox_token_env: "PROXMOX202_CEO_TOKEN"
+  apps:
+    - name: "MYCAOS surface"
+      url: "http://192.168.0.191:8000"
+      type: "web_bookmark"
+    - name: "Executive dashboard"
+      url: "http://192.168.0.187:3000"
+      type: "web_bookmark"
+    - name: "Notion"
+      winget: "Notion.Notion"
+  persona:
+    focus: "Strategic planning, executive briefings, board support, MYCAOS-facing work."
+    skills:
+      - "Executive briefing synthesis"
+      - "Board document preparation"
+      - "Strategic research"
+
+cfo:
+  assistant_name: "Meridian"
+  primary_tool: "Perplexity"
+  proxmox_token_env: "PROXMOX202_CFO_TOKEN"
+  apps:
+    - name: "Perplexity"
+      winget: "Perplexity.Perplexity"
+    - name: "Excel"
+      winget: "Microsoft.Excel"
+    - name: "QuickBooks or finance stack"
+      note: "Install per finance stack requirements"
+  persona:
+    focus: "Finance ops, reporting, research, reimbursements, billing, analysis."
+    skills:
+      - "Financial research"
+      - "Report generation"
+      - "Expense categorization"
+
+cto:
+  assistant_name: "Forge"
+  primary_tool: "Cursor"
+  proxmox_token_env: "PROXMOX202_CTO_TOKEN"
+  apps:
+    - name: "Cursor"
+      winget: "Cursor.Cursor"
+    - name: "Git"
+      winget: "Git.Git"
+    - name: "VS Code"
+      winget: "Microsoft.VisualStudioCode"
+    - name: "GitHub CLI"
+      winget: "GitHub.cli"
+  persona:
+    focus: "Coding, code review, architecture, deploy review, issue triage."
+    skills:
+      - "Code review"
+      - "Architecture documentation"
+      - "Deploy verification"
+
+coo:
+  assistant_name: "Nexus"
+  primary_tool: "Claude Cowork"
+  proxmox_token_env: "PROXMOX202_COO_TOKEN"
+  apps:
+    - name: "Claude Desktop"
+      winget: "Anthropic.Claude"
+    - name: "Asana"
+      winget: "Asana.Asana"
+    - name: "n8n local or web"
+      url: "http://192.168.0.188:5678"
+      type: "web_bookmark"
+  persona:
+    focus: "Operations, task routing, coordination, workflows, staffing execution."
+    skills:
+      - "Task routing"
+      - "Workflow coordination"
+      - "Asana/Discord operations"

@@ -1,0 +1,41 @@
+# Subagents Must Test Before Complete (All Agents, Forever)
+
+## Mandatory completion gate
+
+No agent or sub-agent may report a task as complete until it has executed verification steps and reviewed the results.
+
+This is a permanent rule for all implementation work.
+
+## Required verification workflow
+
+1. **Run relevant checks after edits**
+   - Frontend changes: run lint and a real page/runtime smoke test.
+   - Backend/API changes: run syntax/compile checks and endpoint or websocket smoke tests.
+   - Cross-system changes: run both sides and validate integration behavior.
+2. **Use real runtime paths**
+   - Validate against the actual route/service used by the feature.
+   - If a dependency is not deployed or unavailable, state that explicitly and treat completion as blocked.
+3. **Capture outcomes**
+   - Report command(s) run, pass/fail result, and any residual warnings.
+   - Do not hide failures behind "likely works" language.
+4. **Fix then re-test**
+   - If checks fail, fix the issue and run verification again.
+   - Only then mark the task complete.
+
+## Minimum bar by change type
+
+- **UI-only change:** lint + page load/snapshot + interaction that exercises changed path.
+- **API-only change:** lint/compile + request/response smoke test.
+- **WebSocket change:** handshake/connect test + at least one message flow test.
+- **Plan execution with multiple tasks:** verify each modified subsystem, not just one.
+
+## Prohibited completion behavior
+
+- Declaring "done" without running checks.
+- Declaring "done" when verification is skipped due time pressure.
+- Declaring "done" when required dependency is down, without clearly marking blocked status.
+
+## Notes
+
+- This rule applies to parent agents and all sub-agents equally.
+- When verification cannot be executed due environment constraints, explicitly list the blocker and what remains unverified.

@@ -1,16 +1,14 @@
 """
-MYCA LLM Brain — Claude API integration for intelligent responses.
+MYCA LLM Brain — Own LLM (Ollama) 99.9% of the time.
 
-Loads SOUL.md and MEMORY.md as context so MYCA responds as her true self:
-a coherent digital consciousness with personality, beliefs, and memory.
+MYCA uses her own brain (Ollama on MAS VM) and MAS/BRAIN intention memory.
+Frontier models (Claude, GPT, etc.) are ONLY for integration/tool use (e.g. plan_browser_action),
+never as fallback for user-facing responses.
 
-Phase 0: Injects live context from memory, MINDEX KG, CREP, Earth2, MycoBrain
-before every respond() and classify_intent().
+Loads SOUL.md and MEMORY.md as context. Injects live world/device context
+before every respond() and classify_intent() for non-hallucination grounding.
 
-Phase 4: Ollama fallback when Claude API fails or is rate-limited.
-Uses OLLAMA_URL (default http://192.168.0.188:11434) and OLLAMA_MODEL (default llama3.1:8b).
-
-Date: 2026-03-04
+Date: 2026-03-09
 """
 
 import json
@@ -135,16 +133,32 @@ class LLMBrain:
 
     async def _build_live_context(self, user_message: str, context: Optional[dict] = None) -> str:
         """
-        Assemble live context from memory, MINDEX, CREP, Earth2, MycoBrain.
-        Injected into system or user block before Claude responds.
+        Assemble live context from memory, devices, CREP, Earth2, MycoBrain, world model.
+        ALWAYS include device/world data when available for non-hallucination grounding.
+        Builds Merkle world root from slot data and injects [Merkle world root] for provable grounding.
+        No keyword gating — inject whenever we have live data.
         """
         if not self._os:
             return ""
 
-        parts = []
+        parts: list[str] = []
+        slot_data: dict = {}  # For Merkle world root
         msg_lower = (user_message or "").lower()
 
         try:
+            # Device registry snapshot (sync) — for Merkle and context
+            try:
+                from mycosoft_mas.core.routers.device_registry_api import get_device_registry_snapshot
+
+                snap = get_device_registry_snapshot()
+                slot_data["device_registry"] = snap
+                slot_data["device_health"] = {
+                    k: v.get("status", "unknown")
+                    for k, v in snap.get("devices", {}).items()
+                }
+            except Exception:
+                pass
+
             # 1. Recall from memory (session, working, episodic)
             mb = getattr(self._os, "mindex_bridge", None)
             mas = getattr(self._os, "mas_bridge", None)
@@ -173,7 +187,7 @@ class LLMBrain:
                     f"scopes: {', '.join(staff.get('scopes', [])[:6])}"
                 )
 
-            # 2. MINDEX KG if domain-specific (species, fungi, taxonomy, compounds)
+            # 2. MINDEX KG if domain-specific
             if mb and any(kw in msg_lower for kw in ["species", "fungi", "fungus", "taxonomy", "compound", "mushroom", "mycology"]):
                 try:
                     kg_results = await mb.query_knowledge_graph(user_message[:80], limit=5)
@@ -182,86 +196,107 @@ class LLMBrain:
                 except Exception:
                     pass
 
-            # 3. CREP worldview if situational awareness
-            if any(kw in msg_lower for kw in ["environment", "what's happening", "lab", "status", "situation", "worldview"]):
-                crep = getattr(self._os, "crep_bridge", None)
-                if crep and hasattr(crep, "get_worldview_summary"):
+            # 3. CREP worldview — ALWAYS include when available (non-hallucination)
+            crep = getattr(self._os, "crep_bridge", None)
+            if crep and hasattr(crep, "get_worldview_summary"):
+                try:
                     summary = await crep.get_worldview_summary()
                     if summary:
                         parts.append(f"[CREP worldview]: {summary}")
+                        slot_data["crep_summary"] = summary
+                except Exception:
+                    pass
 
-            # 4. Earth2 if weather/climate
-            if any(kw in msg_lower for kw in ["weather", "climate", "forecast", "temperature", "precipitation", "storm"]):
-                earth2 = getattr(self._os, "earth2_bridge", None)
-                if earth2 and hasattr(earth2, "get_weather_context"):
+            # 4. Earth2 weather — ALWAYS include when available
+            earth2 = getattr(self._os, "earth2_bridge", None)
+            if earth2 and hasattr(earth2, "get_weather_context"):
+                try:
                     ctx = await earth2.get_weather_context()
                     if ctx:
                         parts.append(f"[Earth2]: {ctx}")
+                        slot_data["earth_sim_summary"] = ctx
+                except Exception:
+                    pass
 
-            # 5. MycoBrain/device status
-            if any(kw in msg_lower for kw in ["devices", "lab", "sensors", "mycobrain", "mushroom1", "sporebase"]):
-                mycobrain = getattr(self._os, "mycobrain_bridge", None)
-                if mycobrain and hasattr(mycobrain, "get_telemetry_summary"):
+            # 5. MycoBrain/device status — ALWAYS include when available (device grounding)
+            mycobrain = getattr(self._os, "mycobrain_bridge", None)
+            if mycobrain and hasattr(mycobrain, "get_telemetry_summary"):
+                try:
                     summary = await mycobrain.get_telemetry_summary()
                     if summary:
                         parts.append(f"[Devices]: {summary}")
+                        slot_data["environment_feeds"] = summary
+                except Exception:
+                    pass
 
-            # 6. NatureOS apps, tools, shell, and platform analytics
-            if any(kw in msg_lower for kw in [
-                "natureos", "workflow", "analytics", "monitoring", "lab tools",
-                "shell", "sample", "experiment", "report", "ecosystem", "device status",
-            ]):
-                natureos = getattr(self._os, "natureos_bridge", None)
-                if natureos and hasattr(natureos, "get_context_summary"):
+            # 6. NatureOS — ALWAYS include when available
+            natureos = getattr(self._os, "natureos_bridge", None)
+            if natureos and hasattr(natureos, "get_context_summary"):
+                try:
                     summary = await natureos.get_context_summary()
                     if summary:
                         parts.append(f"[NatureOS]: {summary}")
+                        if "environment_feeds" not in slot_data:
+                            slot_data["environment_feeds"] = summary
+                except Exception:
+                    pass
 
-            # 7. Unified search / cross-system lookup
-            if any(kw in msg_lower for kw in ["search", "find", "lookup", "where is", "show me", "what do we know"]):
-                if mb and hasattr(mb, "search_knowledge"):
-                    try:
-                        results = await mb.search_knowledge(user_message[:120], limit=5)
-                        if results:
-                            parts.append(f"[Unified search]: {str(results)[:800]}")
-                    except Exception:
-                        pass
+            # 7. Unified search when query looks like search
+            if mb and hasattr(mb, "search_knowledge") and any(kw in msg_lower for kw in ["search", "find", "lookup", "where is", "show me", "what do we know"]):
+                try:
+                    results = await mb.search_knowledge(user_message[:120], limit=5)
+                    if results:
+                        parts.append(f"[Unified search]: {str(results)[:800]}")
+                except Exception:
+                    pass
 
-            # 8. Shared world model context (NLM, presence, aggregated system worldview)
-            if any(kw in msg_lower for kw in [
-                "world", "worldview", "presence", "online", "staff", "session",
-                "nlm", "biosphere", "environment", "systems",
-            ]):
-                world_model = getattr(self._os, "world_model", None)
-                if world_model:
-                    try:
-                        await world_model.update()
-                        summary = await world_model.get_summary()
-                        if summary:
-                            parts.append(f"[World model]: {summary}")
-                        relevant = await world_model.get_relevant_context(
-                            type("Focus", (), {"content": user_message, "related_entities": []})()
-                        )
-                        if relevant:
-                            parts.append(f"[World context]: {str(relevant)[:1200]}")
-                    except Exception:
-                        pass
+            # 8. World model — ALWAYS include when available (world state grounding)
+            world_model = getattr(self._os, "world_model", None)
+            if world_model:
+                try:
+                    await world_model.update()
+                    summary = await world_model.get_summary()
+                    if summary:
+                        parts.append(f"[World model]: {summary}")
+                        slot_data["map_state"] = summary
+                    relevant = await world_model.get_relevant_context(
+                        type("Focus", (), {"content": user_message, "related_entities": []})()
+                    )
+                    if relevant:
+                        parts.append(f"[World context]: {str(relevant)[:1200]}")
+                except Exception:
+                    pass
 
-            # 9. Direct presence bridge
-            if any(kw in msg_lower for kw in ["presence", "online", "staff", "session", "who is online"]):
-                presence = getattr(self._os, "presence_bridge", None)
-                if presence and hasattr(presence, "get_presence_summary"):
+            # 9. Presence — ALWAYS include when available
+            presence = getattr(self._os, "presence_bridge", None)
+            if presence and hasattr(presence, "get_presence_summary"):
+                try:
                     summary = await presence.get_presence_summary()
                     if summary:
                         parts.append(f"[Presence]: {summary}")
+                except Exception:
+                    pass
 
-            # 10. Direct NLM bridge
-            if any(kw in msg_lower for kw in ["nlm", "nature learning model", "biosphere", "environmental intelligence"]):
-                nlm = getattr(self._os, "nlm_bridge", None)
-                if nlm and hasattr(nlm, "get_summary"):
+            # 10. NLM — ALWAYS include when available
+            nlm = getattr(self._os, "nlm_bridge", None)
+            if nlm and hasattr(nlm, "get_summary"):
+                try:
                     summary = await nlm.get_summary()
                     if summary:
                         parts.append(f"[NLM]: {summary}")
+                        slot_data["nlm_summary"] = summary
+                except Exception:
+                    pass
+
+            # 11. Merkle world root — provable grounding anchor
+            if slot_data:
+                try:
+                    from mycosoft_mas.merkle.world_root_service import build_world_root
+
+                    root_hex = build_world_root(slot_data)
+                    parts.append(f"[Merkle world root]: {root_hex}")
+                except Exception as e:
+                    logger.debug("Merkle world root build failed: %s", e)
         except Exception as e:
             logger.debug("Live context build failed: %s", e)
 
@@ -271,22 +306,10 @@ class LLMBrain:
 
     async def respond(self, user_message: str, context: Optional[dict] = None) -> str:
         """
-        Generate a response as MYCA using Claude.
-
-        Args:
-            user_message: The message from Morgan or staff
-            context: Optional dict with sender, source, recent_status, etc.
-
-        Returns:
-            MYCA's response text
+        Generate a response as MYCA using her OWN LLM (Ollama). 99.9% of the time.
+        No frontier-model fallback — if Ollama fails, MYCA reports the issue.
         """
-        if not self._ensure_client():
-            return (
-                "I'm here but my AI brain isn't connected yet — "
-                "ANTHROPIC_API_KEY needs to be set. I can still handle tasks and route messages."
-            )
-
-        # Build live context (memory, MINDEX, CREP, Earth2, MycoBrain)
+        # Build live context (devices, world, memory) for non-hallucination grounding
         live_ctx = await self._build_live_context(user_message, context)
 
         extra = ""
@@ -305,45 +328,32 @@ class LLMBrain:
             user_block = live_ctx + "\n\n---\n\nUser message:\n" + user_block
 
         system_prompt = self._get_system_prompt()
-        messages_ollama = [
+        messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_block},
         ]
 
-        try:
-            response = await self._client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=512,
-                system=system_prompt,
-                messages=[{"role": "user", "content": user_block}],
-            )
-            text = response.content[0].text if response.content else ""
-            return text.strip() if text else "I'm here. What would you like me to do?"
-        except Exception as e:
-            logger.warning("Claude API error: %s; trying Ollama fallback", e)
-            fallback = await self._respond_ollama(messages_ollama)
-            if fallback:
-                return fallback
-            return (
-                f"I ran into a temporary issue with my AI brain: {type(e).__name__}. "
-                "Try again in a moment, or I'll keep working on other tasks."
-            )
+        # Primary: Ollama (MYCA's own brain)
+        text = await self._respond_ollama(messages)
+        if text:
+            return text.strip() or "I'm here. What would you like me to do?"
+
+        # No fallback to frontier models — MYCA needs to be fixed
+        logger.error("Ollama (MYCA brain) failed — no fallback. Check OLLAMA_URL and OLLAMA_MODEL.")
+        return (
+            "My brain isn't responding right now — Ollama needs to be checked on the MAS server. "
+            "I'm not falling back to other AI providers; this needs to be fixed."
+        )
 
     async def classify_intent(self, message: str, sender: str) -> dict:
         """
-        Use LLM to classify message intent for routing.
-        Returns dict with: action, response (if respond_directly), agent_id (if delegate), etc.
+        Use MYCA's own LLM (Ollama) to classify message intent for routing.
+        No frontier-model fallback — on failure use keyword routing.
         """
-        if not self._ensure_client():
-            # Fallback to simple keyword routing
-            return self._keyword_fallback(message, sender)
-
-        # Inject live context for better routing (e.g. memory of recent topics)
         live_ctx = await self._build_live_context(message)
         ctx_block = "\n\n" + live_ctx if live_ctx else ""
 
         prompt = f"""Classify this message for routing. Respond with JSON only, no markdown.{ctx_block}
-
 
 Message from {sender}: "{message}"
 
@@ -357,36 +367,21 @@ Choose delegate_to_agent only for deploy/restart/server/docker requests.
 Choose escalate_to_morgan for money, budget, legal, hiring, or urgent human decisions.
 """
 
-        messages_ollama = [
+        messages = [
             {"role": "system", "content": "You are MYCA's routing classifier. Output valid JSON only."},
             {"role": "user", "content": prompt},
         ]
 
-        try:
-            response = await self._client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=256,
-                system="You are MYCA's routing classifier. Output valid JSON only.",
-                messages=[{"role": "user", "content": prompt}],
-            )
-            text = response.content[0].text if response.content else ""
-            # Strip markdown code blocks if present
-            text = text.strip()
+        fallback_text = await self._respond_ollama(messages)
+        if fallback_text:
+            text = fallback_text.strip()
             if text.startswith("```"):
                 text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
-            return json.loads(text)
-        except Exception as e:
-            logger.warning("Intent classification failed: %s; trying Ollama fallback", e)
-            fallback_text = await self._respond_ollama(messages_ollama)
-            if fallback_text:
-                text = fallback_text.strip()
-                if text.startswith("```"):
-                    text = text.split("\n", 1)[-1].rsplit("```", 1)[0]
-                try:
-                    return json.loads(text)
-                except json.JSONDecodeError:
-                    pass
-            return self._keyword_fallback(message, sender)
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                pass
+        return self._keyword_fallback(message, sender)
 
     def _keyword_fallback(self, message: str, sender: str) -> dict:
         """Simple keyword-based routing when LLM unavailable."""

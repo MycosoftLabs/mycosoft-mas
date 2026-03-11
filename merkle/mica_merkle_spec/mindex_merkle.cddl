@@ -1,0 +1,200 @@
+; MICA / MINDEX deterministic CBOR schema
+; Use RFC 8949 deterministic encoding.
+; Hashing uses BLAKE3-256 over the encoded bytes.
+; Integer keys are reserved for compact canonical representations.
+
+digest32 = bytes .size 32
+ns-time = uint
+h3-cell = tstr
+id-text = tstr
+json-text = tstr
+
+typed-value =
+    [0, int] /
+    [1, float64] /
+    [2, tstr] /
+    [3, bool] /
+    [4, bytes] /
+    [5, null] /
+    [6, [* float64]] /
+    [7, [* tstr]] /
+    [8, json-text]
+
+field = {
+  1: tstr,        ; name
+  2: typed-value, ; value
+  ? 3: tstr,      ; unit
+  ? 4: float32,   ; confidence
+  ? 5: { * tstr => tstr } ; tags
+}
+
+geo-point = {
+  1: int,         ; lat_e7
+  2: int,         ; lon_e7
+  ? 3: int,       ; alt_mm
+  ? 4: uint,      ; accuracy_mm
+  ? 5: h3-cell
+}
+
+clock-ref = {
+  1: ns-time,     ; event_time_ns
+  2: ns-time,     ; ingest_time_ns
+  3: uint,        ; tick_width_ns
+  4: uint,        ; tick_id
+  ? 5: uint,      ; logical_counter
+  ? 6: tstr       ; clock_domain
+}
+
+provenance-ref = {
+  ? 1: [* digest32], ; parent hashes
+  ? 2: tstr,         ; upstream_message_id
+  ? 3: tstr,         ; transport
+  ? 4: tstr,         ; source_schema
+  ? 5: tstr,         ; signer
+  ? 6: { * tstr => tstr }
+}
+
+event-object = {
+  1: 1,              ; schema_version
+  2: id-text,        ; event_id
+  3: tstr,           ; kind
+  4: id-text,        ; device_id
+  ? 5: tstr,         ; producer
+  ? 6: id-text,      ; capability_id
+  ? 7: tstr,         ; measurement_class
+  8: clock-ref,
+  ? 9: geo-point,
+  ? 10: [* field],   ; fields
+  ? 11: [* field],   ; features
+  ? 12: provenance-ref,
+  ? 13: digest32,    ; raw_payload_hash
+  ? 14: [* digest32],; attachment_hashes
+  ? 15: { * tstr => tstr } ; labels
+}
+
+component-ref = {
+  1: tstr,           ; slot
+  2: tstr,           ; component_type
+  ? 3: tstr,         ; component_name
+  4: digest32,       ; object hash
+  ? 5: { * tstr => tstr } ; labels
+}
+
+self-snapshot = {
+  1: 1,              ; schema_version
+  2: ns-time,        ; snapshot_time_ns
+  3: uint,           ; tick_id
+  4: id-text,        ; actor_id
+  ? 5: id-text,      ; session_id
+  ? 6: digest32,     ; previous_snapshot_hash
+  7: [* component-ref],
+  ? 8: { * tstr => tstr }
+}
+
+world-snapshot = {
+  1: 1,              ; schema_version
+  2: ns-time,        ; snapshot_time_ns
+  3: uint,           ; tick_id
+  4: id-text,        ; source_id
+  ? 5: digest32,     ; previous_snapshot_hash
+  6: [* component-ref],
+  ? 7: { * tstr => tstr }
+}
+
+root-member = {
+  1: uint,           ; ordinal
+  2: digest32,       ; member hash
+  3: tstr,           ; member_type
+  ? 4: tstr          ; key_text
+}
+
+; root_type enum:
+; 1 temporal
+; 2 spatial_bucket
+; 3 spatial
+; 4 event
+; 5 self
+; 6 world
+; 7 truth_mirror
+; 8 thought
+; 9 amendment
+;
+; status enum:
+; 1 open
+; 2 provisional
+; 3 final
+; 4 amendment
+
+root-record = {
+  1: 1,              ; schema_version
+  2: uint,           ; root_type
+  3: digest32,       ; root hash
+  ? 4: uint,         ; tick_id
+  ? 5: ns-time,      ; tick_start_ns
+  ? 6: uint,         ; tick_width_ns
+  ? 7: tstr,         ; bucket_id
+  8: uint,           ; status
+  9: uint,           ; child_count
+  10: digest32,      ; manifest_hash
+  ? 11: digest32,    ; previous_root_hash
+  ? 12: digest32,    ; amendment_of_hash
+  ? 13: [* root-member],
+  ? 14: { * tstr => tstr }
+}
+
+claim-object = {
+  1: 1,
+  2: ns-time,        ; claim_time_ns
+  3: tstr,           ; channel
+  4: tstr,           ; spoken/display text
+  5: float32,        ; confidence
+  6: bool,           ; interrupted
+  7: digest32,       ; thought_root_hash
+  8: [* digest32],   ; evidence_hashes
+  ? 9: ns-time,      ; stale_after_ns
+  ? 10: { * tstr => tstr }
+}
+
+thought-context = {
+  1: 1,
+  2: uint,           ; tick_id
+  3: ns-time,        ; thought_time_ns
+  4: id-text,        ; actor_id
+  ? 5: id-text,      ; session_id
+  6: digest32,       ; self_root_hash
+  7: digest32,       ; world_root_hash
+  8: digest32,       ; event_root_hash
+  ? 9: digest32,     ; truth_mirror_root_hash
+  ? 10: digest32,    ; previous_thought_root_hash
+  ? 11: digest32,    ; policy_root_hash
+  ? 12: [* digest32],; evidence_root_hashes
+  ? 13: { * tstr => tstr }
+}
+
+action-receipt = {
+  1: 1,
+  2: ns-time,        ; action_time_ns
+  3: digest32,       ; thought_root_hash
+  4: tstr,           ; tool_name
+  ? 5: digest32,     ; args_hash
+  ? 6: digest32,     ; result_hash
+  ? 7: digest32,     ; post_self_root_hash
+  ? 8: digest32,     ; post_world_root_hash
+  9: tstr,           ; status
+  ? 10: uint,        ; latency_ms
+  ? 11: { * tstr => tstr }
+}
+
+proof-step = [
+  0 / 1 / 2,         ; 1 = sibling on left, 2 = sibling on right
+  digest32
+]
+
+inclusion-proof = {
+  1: digest32,       ; leaf_hash
+  2: digest32,       ; root_hash
+  3: [* proof-step],
+  4: uint,           ; root_type
+  ? 5: uint,         ; tick_id
+  ? 6: tstr          ; bucket_id
+}

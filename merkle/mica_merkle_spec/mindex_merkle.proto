@@ -1,0 +1,308 @@
+syntax = "proto3";
+
+package org.mycosoft.mica.v1;
+
+option go_package = "github.com/mycosoft/mica/gen/proto/mica/v1;micav1";
+
+import "google/protobuf/empty.proto";
+
+enum HashAlgorithm {
+  HASH_ALGORITHM_UNSPECIFIED = 0;
+  HASH_ALGORITHM_BLAKE3_256 = 1;
+  HASH_ALGORITHM_SHA256 = 2;
+}
+
+enum RootType {
+  ROOT_TYPE_UNSPECIFIED = 0;
+  ROOT_TYPE_TEMPORAL = 1;
+  ROOT_TYPE_SPATIAL_BUCKET = 2;
+  ROOT_TYPE_SPATIAL = 3;
+  ROOT_TYPE_EVENT = 4;
+  ROOT_TYPE_SELF = 5;
+  ROOT_TYPE_WORLD = 6;
+  ROOT_TYPE_TRUTH_MIRROR = 7;
+  ROOT_TYPE_THOUGHT = 8;
+  ROOT_TYPE_AMENDMENT = 9;
+}
+
+enum RootStatus {
+  ROOT_STATUS_UNSPECIFIED = 0;
+  ROOT_STATUS_OPEN = 1;
+  ROOT_STATUS_PROVISIONAL = 2;
+  ROOT_STATUS_FINAL = 3;
+  ROOT_STATUS_AMENDMENT = 4;
+}
+
+enum ValueKind {
+  VALUE_KIND_UNSPECIFIED = 0;
+  VALUE_KIND_INT64 = 1;
+  VALUE_KIND_DOUBLE = 2;
+  VALUE_KIND_STRING = 3;
+  VALUE_KIND_BOOL = 4;
+  VALUE_KIND_BYTES = 5;
+  VALUE_KIND_JSON = 6;
+  VALUE_KIND_DOUBLE_VECTOR = 7;
+  VALUE_KIND_STRING_LIST = 8;
+}
+
+message HashRef {
+  HashAlgorithm algorithm = 1;
+  bytes digest = 2; // 32 bytes for BLAKE3-256
+}
+
+message TypedValue {
+  ValueKind kind = 1;
+  oneof value {
+    int64 int64_value = 2;
+    double double_value = 3;
+    string string_value = 4;
+    bool bool_value = 5;
+    bytes bytes_value = 6;
+    string json_value = 7;
+    DoubleVector double_vector = 8;
+    StringList string_list = 9;
+  }
+}
+
+message DoubleVector {
+  repeated double values = 1;
+}
+
+message StringList {
+  repeated string values = 1;
+}
+
+message Attribute {
+  string name = 1;
+  TypedValue value = 2;
+  string unit = 3;
+  float confidence = 4;
+  map<string, string> tags = 5;
+}
+
+message GeoPoint {
+  sint32 lat_e7 = 1;
+  sint32 lon_e7 = 2;
+  sint32 alt_mm = 3;
+  uint32 accuracy_mm = 4;
+  string h3_cell = 5;
+}
+
+message ClockRef {
+  uint64 event_time_ns = 1;
+  uint64 ingest_time_ns = 2;
+  uint64 tick_width_ns = 3;
+  uint64 tick_id = 4;
+  uint64 logical_counter = 5;
+  string clock_domain = 6;
+}
+
+message ProvenanceRef {
+  repeated HashRef parent_hashes = 1;
+  string upstream_message_id = 2;
+  string transport = 3;
+  string source_schema = 4;
+  string signer = 5;
+  map<string, string> labels = 6;
+}
+
+message MMPEnvelope {
+  string schema = 1;              // org.mycosoft.mmp/1
+  string event_id = 2;            // stable source-side event id
+  string kind = 3;                // sample_raw|sample_norm|event|pattern|health|command_result|...
+  string device_id = 4;
+  string producer = 5;            // side_a|jetson|side_b|gateway|etl|mas|crep|earth2|...
+  string capability_id = 6;
+  string measurement_class = 7;
+  ClockRef clock = 8;
+  GeoPoint geo = 9;
+  repeated Attribute fields = 10;
+  repeated Attribute features = 11;
+  ProvenanceRef provenance = 12;
+  HashRef raw_payload_hash = 13;
+  repeated HashRef attachment_hashes = 14;
+  map<string, string> labels = 15;
+}
+
+message StoredEvent {
+  HashRef event_hash = 1;
+  MMPEnvelope envelope = 2;
+}
+
+message ComponentRef {
+  string slot = 1;
+  string component_type = 2;
+  string component_name = 3;
+  HashRef object_hash = 4;
+  map<string, string> labels = 5;
+}
+
+message SelfSnapshot {
+  uint32 schema_version = 1;
+  uint64 snapshot_time_ns = 2;
+  uint64 tick_id = 3;
+  string actor_id = 4;      // usually MICA or MYCA
+  string session_id = 5;
+  HashRef previous_snapshot_hash = 6;
+  repeated ComponentRef components = 7;
+  map<string, string> labels = 8;
+}
+
+message WorldSnapshot {
+  uint32 schema_version = 1;
+  uint64 snapshot_time_ns = 2;
+  uint64 tick_id = 3;
+  string source_id = 4;
+  HashRef previous_snapshot_hash = 5;
+  repeated ComponentRef components = 6;
+  map<string, string> labels = 7;
+}
+
+message RootMember {
+  uint64 ordinal = 1;
+  HashRef member_hash = 2;
+  string member_type = 3;   // event_leaf|bucket_root|component_hash|claim_hash|...
+  string key_text = 4;      // h3 cell, slot name, event_id, etc.
+}
+
+message RootRecord {
+  uint32 schema_version = 1;
+  RootType root_type = 2;
+  HashRef root_hash = 3;
+  uint64 tick_id = 4;
+  uint64 tick_start_ns = 5;
+  uint64 tick_width_ns = 6;
+  string bucket_id = 7;             // H3 cell for spatial bucket roots
+  RootStatus status = 8;
+  uint64 child_count = 9;
+  HashRef manifest_hash = 10;       // hash of the canonical member list / manifest object
+  HashRef previous_root_hash = 11;  // previous root of same stream/type if applicable
+  HashRef amendment_of_hash = 12;   // original finalized root if this is an amendment
+  repeated RootMember members = 13; // optional for small responses only
+  map<string, string> labels = 14;
+}
+
+message ClaimObject {
+  uint32 schema_version = 1;
+  uint64 claim_time_ns = 2;
+  string channel = 3;               // speech|ui|api|log
+  string spoken_text = 4;
+  float confidence = 5;
+  bool interrupted = 6;
+  HashRef thought_root_hash = 7;
+  repeated HashRef evidence_hashes = 8;
+  uint64 stale_after_ns = 9;
+  map<string, string> labels = 10;
+}
+
+message ThoughtContext {
+  uint32 schema_version = 1;
+  uint64 tick_id = 2;
+  uint64 thought_time_ns = 3;
+  string actor_id = 4;              // MICA / MYCA instance id
+  string session_id = 5;
+  HashRef self_root_hash = 6;
+  HashRef world_root_hash = 7;
+  HashRef event_root_hash = 8;
+  HashRef truth_mirror_root_hash = 9;
+  HashRef previous_thought_root_hash = 10;
+  HashRef policy_root_hash = 11;
+  repeated HashRef evidence_root_hashes = 12;
+  map<string, string> labels = 13;
+}
+
+message ActionReceipt {
+  uint32 schema_version = 1;
+  uint64 action_time_ns = 2;
+  HashRef thought_root_hash = 3;
+  string tool_name = 4;
+  HashRef args_hash = 5;
+  HashRef result_hash = 6;
+  HashRef post_self_root_hash = 7;
+  HashRef post_world_root_hash = 8;
+  string status = 9;
+  uint32 latency_ms = 10;
+  map<string, string> labels = 11;
+}
+
+message ProofStep {
+  enum Side {
+    SIDE_UNSPECIFIED = 0;
+    SIDE_LEFT = 1;
+    SIDE_RIGHT = 2;
+  }
+  Side sibling_side = 1;
+  HashRef sibling_hash = 2;
+}
+
+message InclusionProof {
+  HashRef leaf_hash = 1;
+  HashRef root_hash = 2;
+  repeated ProofStep steps = 3;
+  RootType root_type = 4;
+  uint64 tick_id = 5;
+  string bucket_id = 6;
+}
+
+message PutEnvelopeAck {
+  HashRef event_hash = 1;
+  uint64 tick_id = 2;
+  string h3_cell = 3;
+  bool deduplicated = 4;
+}
+
+message PutSnapshotAck {
+  HashRef snapshot_hash = 1;
+  HashRef root_hash = 2;
+  uint64 tick_id = 3;
+}
+
+message BuildTickRequest {
+  uint64 tick_id = 1;
+  bool finalize = 2;
+  bool include_truth_mirror = 3;
+}
+
+message BuildTickResponse {
+  RootRecord temporal_root = 1;
+  RootRecord spatial_root = 2;
+  RootRecord event_root = 3;
+  RootRecord self_root = 4;
+  RootRecord world_root = 5;
+  RootRecord truth_mirror_root = 6;
+  RootRecord thought_root = 7;
+}
+
+message RootQuery {
+  RootType root_type = 1;
+  uint64 tick_id = 2;
+  string bucket_id = 3;
+  RootStatus status = 4;
+}
+
+message ProofRequest {
+  HashRef leaf_hash = 1;
+  RootQuery query = 2;
+}
+
+service IngestService {
+  rpc PutEnvelope(MMPEnvelope) returns (PutEnvelopeAck);
+}
+
+service SnapshotService {
+  rpc PutSelfSnapshot(SelfSnapshot) returns (PutSnapshotAck);
+  rpc PutWorldSnapshot(WorldSnapshot) returns (PutSnapshotAck);
+}
+
+service RootBuilderService {
+  rpc BuildTick(BuildTickRequest) returns (BuildTickResponse);
+  rpc GetRoot(RootQuery) returns (RootRecord);
+}
+
+service ProofService {
+  rpc GetInclusionProof(ProofRequest) returns (InclusionProof);
+}
+
+service HealthService {
+  rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

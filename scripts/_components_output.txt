@@ -1,0 +1,195 @@
+﻿B01FV1DD9C|915Mhz / 13 dBi gain Yagi LoRa Antenna - Excellent for Helium Hotspot Mining|antennas
+B0DB5MH38T|915MHz Antenna 10dBi Gain for Meshtastic LoRa Long Range Soft Whip Antenna, 17cm|antennas
+B0CTXL61LY|915MHz LoRa Antenna Indoor 3dBi Gain Omni SMA Male + IPEX Cable 2 Pcs|antennas
+B0D5QHXYGF|RAIGEN LoRa Fiberglass Antenna & Magnetic Base, SMA Male Connector 6.5ft Raigen-|antennas
+B01FVWCKKE|Ultra Flexible SMA to N Cable 15-Meter(49.2 Ft) Low Loss RG58 N Male to SMA Male|antennas
+B0CH88LFS4|Waveshare GNSS L1+L5 Dual-Frequency Active Antenna, SMA-J Connector, Supports Mu|antennas
+B0DGG7GJL7|WAVLINK AC1200 Outdoor Long Range Wi-Fi Extender,Dual Band Outdoor Access Point |antennas
+B07GNC8DHH|Wlaniot 4G LTE GSM Antenna Omni-Directional 700-2600MHZ Adhesive Mount Antenna w|antennas
+B0BGWRWRX2|Fanttik E1 Max 3.7V Mini Electric Screwdriver, Precision Screwdriver Set, 50-in-|cameras
+B0CF5KH6ZM|KOOTION 256GB Micro SD Card UHS-I U3 V30 4K for Camera/Action Camera/Drone/Smart|cameras
+B09PH867P6|MyCobot 280 Camera Flange Designed from Elephant Robotics|cameras
+B098QH631G|TUOLNK 5PCS SMA Female to IPX U.FL RG178 Coaxial Cable, 12 inch(30cm) SMA MHF1 U|cameras
+B08JPL85H8|kwmobile Keystone Module Jacks - 24 Piece CAT-8 Shielded Keystone Jack RJ45 Cat |chassis-housing
+c1772756532326|Medium grey box chassis |chassis-housing
+B07H5C8BB6|QILIPSU Junction Box with Mounting Plate 110x80x70mm, Clear Cover Plastic DIY El|chassis-housing
+c1772756572006|Small grey box chassis|chassis-housing
+c1772756491478|White box chasis|chassis-housing
+B0DT3RTK9D|12 Packs ESP32-DevKitC-32 Development Board modules(ESP-32D,ESP-32 CP2012 USB C |dev-boards
+B0CNSSS6T4|18650 Battery Shield Board V3 Micro USB Charger ESP32 for Raspberry Pi and Ardui|dev-boards
+B0F1CXG94J|2 Pack ESP32 LoRa V3 Development Board + 1100mAh Battery + Protect Case Set - wi|dev-boards
+B0B31NRSD2|2Pack GPS Module,Navigation Satellite Positioning NEO-6M,Arduino GPS, Drone Micr|dev-boards
+B0C9H7Y66W|3PCS ESP32 ESP32-S3 Development Board Type-C WiFi+Bluetooth Internet of Things D|dev-boards
+B0D56GV4X1|ACEMAGICIAN AMD Mini PC Ryzen 7430U, Mini Gaming PC 32GB DDR4 512GB SSD, Mini Co|dev-boards
+B01D1FFVOA|ALITOVE 100pcs WS2812B Addressable 5050 Smart RGB LED Pixel Light on Black Heat |dev-boards
+B08TJRVWV1|Amazon Basics Micro SDXC Memory Card with Full Size Adapter, A2, U3, Read Speed |dev-boards
+B01LY05LOE|Arducam for Raspberry Pi Zero Camera Module, 5MP OV5647 1080P Webcam on Raspbian|dev-boards
+B0DMN28TRW|AYWHP 3 Set ESP32 LoRa Development Board with Case, LoRa V3 Meshtastic ESP32 WiF|dev-boards
+B0CRNPBGNB|Beelink Mini S12 Pro Mini Pc,Intel 12th Gen Alder Lake-N100 (4C/4T, Up to 3.4GHz|dev-boards
+B0BZ4WV4PQ|BME688 Environmental Sensor with AI Function, Supports Temperature/Humidity/Baro|dev-boards
+B07W6ZPH7D|Comimark 2Pcs LoRa SX1278 Long Range RF Wireless Power Mental Module SX1276 5Km |dev-boards
+B0C6XKXPVX|D-FLIFE 100pcs TTP223 Touch Switch Module Capacitive Sensor Switch DIY for Ardui|dev-boards
+B0CY1XKZQC|DIYmall 2pcs 915MHz LoRa32 V3 ESP32 S3 WiFi+BT Development Board with 5DBi LoRa |dev-boards
+B0B53DPBTZ|DWEII 12PCS Obstacle Avoidance Sensor TCRT5000 5V 1 Way IR Infrared Reflective S|dev-boards
+B01EV70C78|ELEGOO 120pcs Multicolored Dupont Wire 40pin Male to Female, 40pin Male to Male,|dev-boards
+B0D8T53CQ5|ELEGOO 3PCS ESP-32 Development Board USB-C, 2.4GHz Dual Mode WiFi+Bluetooth Dual|dev-boards
+B0B9W96SD6|ELEPHANT ROBOTICS Robotic Arm myCobot 280 Raspberry Pi 4B - Open Source 6DOF Col|dev-boards
+B0DLKLY669|eMagTech 10pcs Mini Speaker 8 Ohm 1W 20x30mm Magnetic Speakers Replacement Compa|dev-boards
+B0BKL93X2J|ESP32 Development Board WT32-SC01 Plus with 3.5in 320 * 480 Based on ESP32-WROVE|dev-boards
+B0DG8L5NG5|ESP32 ESP32-S3 Development Board AYWHP 5 Pcs ESP32 S3 ESP32-S3-DevKitC Module wi|dev-boards
+c1772767020653|ESP32-S3|dev-boards
+B083XMGSVP|for Raspberry Pi Zero Camera Module 160 FOV 5MP Fisheye Lens Camera Wide Angle 1|dev-boards
+B0DRJ5NTV3|FORIOT GC2145 Camera 160? I2C Wide-Angle Lens 2 Megapixel Sensor Cam Module DVP |dev-boards
+B0CJ9C4FFH|HCJYC 5 in 1 Protective Accessories Soft Silicone Case & EVA Carrying Case & 3 P|dev-boards
+B0DWPKQ3LH|HP 15.6 inch Laptop, HD Touchscreen Display, AMD Ryzen 5 7520U, 8 GB RAM, 512 GB|dev-boards
+B0BBLSNJCJ|JESSINIE INA333 Amplifier Module 3 Operational Amplifier INA333 Low Power Precis|dev-boards
+B0BNQDV3FR|Jetson Nano B01 4GB SUB Development Kit Official Board for AI and Robotics Yahbo|dev-boards
+c1772765873359|Jetson Orin Nano 8GB Developer Kit|dev-boards
+B0CLLNMRX7|LILYGO T-A7670G R2 4G LTE CAT1 SIM Module ESP32 TTGO Development Board Support G|dev-boards
+B0CXJ71NB6|LILYGO T-BeamSUPREME Meshtastic 915Mhz ESP32-S3 LoRa L76K GPS WiFi Bluetooth Mod|dev-boards
+B0FBGTYQH3|LILYGO T-Deck Plus ESP32-S3 915Mhz LORA-89 SX1262 Ulbox GPS 2.8-inch Display TTG|dev-boards
+B0B658DZ9Z|LILYGO T-Echo Meshtastic LoRa SX1262 Wireless Module 915MHz TTGO Development Boa|dev-boards
+B099RQ7BSR|LILYGO T-SIM7000G ESP32-WROVER-B Solar Charge SIM GPS Antenna CH9102F 16MB 2G/NB|dev-boards
+B0DKSS4K6N|Long Range Soft Whip 915MHz LoRa Antenna with SMA Male Connector for Heltec V3 M|dev-boards
+B0DGGFFY8K|MakerFocus Wireless Tracker Supports GPS Galileo Multi-System Joint Positioning |dev-boards
+B0CQT9J4K8|MakerFocus Wireless Tracker Supports GPS Galileo Multi-System Joint Positioning |dev-boards
+B0DP634VQ5|MakerHawk 3.7V 10000mAh LiPo Battery Rechargeable 1S 3C Lithium Polymer Battery |dev-boards
+B0D3LP1G3F|MakerHawk 3.7V 6000mAh LiPo Battery Rechargeable 1S 3C Lithium Polymer Battery w|dev-boards
+B0DMK4QPPD|Meshtastic Long Range 915MHz Lora Magnetic Base Antenna with SMA Male for ESP32 |dev-boards
+B0DT7K9VV3|MSI Gaming RTX 5090 32G SUPRIM Liquid SOC Graphics Card (32GB GDDR7, 512-bit, Ex|dev-boards
+c1772753572559|Mycobrain V1|dev-boards
+B0BM2YKHRR|MyoWare 2.0 Muscle Sensor-Compatible with Arduino- All-in-one electromyography (|dev-boards
+B0CZPN3D9K|MyoWare 2.0 Wireless Shield - wirelessly Transmit Data with The ESP32-WROOM chip|dev-boards
+B0BY3GTG48|NZXT Kraken 360 RGB - 360mm AIO CPU Liquid Cooler - RL-KR360-W1 - Customizable 1|dev-boards
+B0DNZ3ZD36|OV2640 Camera Esp32 Cam Camera Module,Aideepen OV2640 Camera 160? Wide-Angle Len|dev-boards
+B0CJM767KB|TTGO T-SIM7000G Module ESP32-WROVER-B Chip WiFi Bluetooth 18560 Battery Holder S|dev-boards
+B0D9JWT4P1|Vision Master E290 Development Board with 2.9" E-Ink Display Screen, SX1262 Chip|dev-boards
+B0CNH8H6NG|waveshare 5inch Round LCD 1080 x 1080, IPS 10-Point Touch Screen for Raspberry P|dev-boards
+B09TXL8NQ5|Waveshare Jetson Nano Development/Expansion Kit, 16GB eMMC, Alternative Solution|dev-boards
+B0BTP93H8H|Waveshare SIM7600G-H 4G Communication Module, Compatible with Raspberry Pi 5/4B/|dev-boards
+B0FQ5XWXMG|Yahboom Jetson Orin NX Super 157TOPS with AI Voice Module,IMX219 CSI Camera,256G|dev-boards
+B088BBJ9SQ|youyeetoo TF-Luna Lidar Sensor Kit, with 1x USB-TTL Adapter 1x Dupont Line, 0.2-|dev-boards
+B0DF4TB93J|4-in-1 Soil Moisture Meter Digital Plant Temperature/Soil Moisture/PH Meter/Sunl|misc
+B072PCQ2LW|560PCS Heat Shrink Tubing 2:1, Eventronic Electrical Wire Cable Wrap Assortment |misc
+B0CQXMPXKC|8 Port 10G Ethernet Switch Unmanaged,with 8X 10Gb Base-T Ports, NICGIGA 10Gbps N|misc
+B0CGR8ZLTZ|99.9% Solid Bare Copper Wire, 20 Gauge 310Ft,1lb Spool,Supplied by Wonderway (20|misc
+B08FM9334M|Ackers Conical Centrifuge Tubes 15mL, 100 Pcs Sterile Plastic Test Tubes with Sc|misc
+B0DDQDG6GF|Anker Prime Thunderbolt 4 Cable, 3.3 ft USB C to USB C Cable, 240W Charging, 40G|misc
+B0CDH4FGZY|Anker Thunderbolt 4 Certified USB C to USB C Cable, 8K/4K Display/40Gbps Compati|misc
+B0CS69N2Z6|Anker USB-C Hub, USBC to 4-Port USBC Adapter, Multiport USB C Splitter, USB 3.2 |misc
+B0DJ7GNDL8|ApoloSign Digital Calendar: Electronic Calendar, Smart Touchscreen Interactive D|misc
+B08VNB7MVQ|Arteza 16 Drawer Storage Cabinet, 17.7 x 8.2 x 10.9 inches, White, Plastic Drawe|misc
+B0BM26L46T|BISupply Wall Mount Electrical Wire Spool Rack Holder - 2 Rod Cable Rack for Rib|misc
+c1772757984324|BME680|misc
+c1772757965488|BME688|misc
+B0DJQGS5JL|BNUOK 120pcs M3 x 50mm Hex Socket Head Cap Screws Bolts, 12.9 Grade Alloy Steel,|misc
+B08XFSLWQF|Cable Matters 8K DisplayPort 1.4 to HDMI 2.1 Adapter with 4K 240Hz / 8K 60Hz, Un|misc
+B0CH3TDJ4B|Cable Matters All-In-One Modular Ethernet Crimping Tool Cat 8 (Cat5 Cat6 Cat7 Ca|misc
+B09GK8LBWS|CalDigit TS4 Thunderbolt 4 Dock - 18 Ports, 98W Charging, 40Gb/s Thunderbolt 4, |misc
+B07BTXK1NG|Chanzon SMD Fast Switching/Schottky/Rectifier Diode Assorted Kit (15 Values Tota|misc
+B0C4TNQZYY|Creality 2kg Black & White PLA 1.75mm Filament Bundle for 3D Printing with No-Ta|misc
+B0DFGB288Y|Creality 3D Printer Filament 1.75mm 4KG, PLA Filament Bulk +/- 0.02mm, 4 Pack 1k|misc
+B0F9NXB9DB|Creality ABS Filament 1.75mm Black 3D Printer Filaments, 1kg(2.2lbs) Neatly-Woun|misc
+B0F9NZDP3P|Creality ABS Filament 1.75mm White 3D Printer Filaments, 1kg(2.2lbs) Neatly-Woun|misc
+B0F4KG3WWK|Creality CFS Multi Color Auto Filament System Anti-Moisture Filament Storage Aut|misc
+B0DMVG2TFL|Creality Hyper PLA Filament 1.75mm, RFID 3D Printer Filament for High Speed 30-6|misc
+B0DP2S8V6N|Creality K2 Plus Build Plate Epoxy Resin Coating 370x370mm Spring Steel Magnetic|misc
+B0BZCX99NV|Creality PETG Filament 1.75, 3D Printer Filament, Excellent Toughness High Preci|misc
+B07DB1HCKP|DEPEPE 6pcs 500ml Plastic Safety Wash Bottles Lab Squeeze Bottle LDPE Squirt Bot|misc
+B00AWS3QV0|EISCO CH0688 Labs Clamp Retort, 3 PVC Coated Prongs (Opens to 90mm in Dia.) with|misc
+B0CHS79BGL|ELEGOO PLA Plus Filament 1.75mm Black & White 4KG, PLA+ Tougher and Stronger 3D |misc
+B09GLSWMQM|ELEGRP USB Charger Wall Outlet, 15 Amp Duplex Tamper Resistant Receptacle Plug w|misc
+B0CTZF7MNP|ELEGRP USB Outlets, 15 Amp Wall Outlet with 3 USB Ports, Dual USB C Ports Outlet|misc
+B0CTZQYNKY|ELEGRP USB Outlets, 15 Amp Wall Outlet with 3 USB Ports, Dual USB C Ports Outlet|misc
+B09PH8YCVM|ELEPHANT ROBOTICS Robot Arm Accessory, Suction Pump for MyCobot & MechArm|misc
+B099P57WJN|ES EVVIVA SCIENCES Pre-Poured Black Malt Extract Agar Plates - Includes Both Bla|misc
+B0BN4W6P6Q|eSUN PLA+ Filament 1.75mm, 3D Printer Filament PLA Plus, Dimensional Accuracy +/|misc
+B0CGG19X3L|ESYTEOOT Bamboo Screwdriver Organizer Rack Desktop Hand Tool Stand and Repair To|misc
+B078HY1WP1|exgoofit Phono RCA Screws Male Female Plug to AV Screw Terminal Audio/Video Conn|misc
+B074GG4L95|EZ BioResearch Potato Dextrose Agar (PDA) Plates for Mushroom Cultivation (10 Pr|misc
+B0BPRZ82GD|Flexi Rods Garage Organizer Wall Hanger - Garden Tool Rack for Grass Trimmer, He|misc
+B0C9JSY1KM|Furrion Enhanced Multi-Zone Wall Thermostat with App Control for Chill RV Air Co|misc
+B0C3GRTT2G|haisstronica Wire Stripper and Crimping Tool,AWG 24-10 Automatic Stripper Tool w|misc
+B0711MB4TL|Hilitchi 60-Pcs 100 to 500K ohm 3296W Multiturn Trimmer Potentiometer Assortment|misc
+B08VNYPL7H|Hot Air Rework Station, Prostormer 120V Digital Display Heat Gun with 3 Sets Sto|misc
+B087QGTZ1G|Hotop 2 Pcs Inoculation Loop Mycology Reusable Inoculating Loop with 90 Replacea|misc
+B09KYKLGKP|iRobot Authentic Replacement Parts Cleaning Solution, 6-Pack|misc
+B0B6PVJTHY|JROUTH 1500pcs Screws Assortment , M2 M3 M4 M5 10.9 Grade Alloy Steel Hex Flat H|misc
+B0C3571PLB|Kashi Scientific 2mL Microcentrifuge Tube with Safe Lock Snap Cap [500/Pack] 2 m|misc
+B0D63D9Z5F|KOOTION 32GB Micro SD Cards 10-Pack, UHS-1 TF Flash Memory Card, U1, Class 10 mi|misc
+B0DXT464VB|Large Waterproof Electrical Junction Box, IP67 Waterproof Clear ABS Plastic Encl|misc
+B013JRWCBU|Letool 30 Pairs JST 1.25mm 2 Pin Micro Male Female Connector Plug with Red Black|misc
+B0DPFX4PDP|Linear Instrumentation Amplifier 10PCS INA128UA INA128 INA128U SOP-8 New for Arr|misc
+B0949JNZWQ|M4-0.7 x 20mm Flat Head Socket Cap Screws Bolts, Stainless Steel 18-8 (304), Bri|misc
+B0949M4PMD|M4-0.7 x 25mm Flat Head Socket Cap Screws Bolts, Stainless Steel 18-8 (304), Bri|misc
+B0949KFZ8V|M4-0.7 x 8mm Flat Head Socket Cap Screws Bolts, Stainless Steel 18-8 (304), Brig|misc
+B0B75JJQ9Q|METALTER Screwdriver Rack, Small Tool Storage Holder for Desk Top, Work bench Or|misc
+c1772756665580|Mushroom One Big Body|misc
+B09VKF38KW|MyMed Pack of 40 Sterile Petri Dishes with Lids (90 x 15 mm), 2ml Plastic Pipett|misc
+B0D19C25NS|New Age America? 93pcs Rubber Grommets Kit | 1/4 Inch to 1 Inch | 9 Sizes | Blac|misc
+B0CZ79Q7XM|Official Creality K1 Max Glossy PEO and Matte PEI Double Side Build Plate Kit, 3|misc
+B0C3PFQZ4G|OREI SplitExtend HDMI Splitter Extended Display for Dual Monitor - Multi-Monitor|misc
+B0CY2BPPD4|Outdoor Electrical Box with Thermostat and Fan, Cold-Rolled Steel Plate, Aluminu|misc
+B09DCQ972K|OVERTURE ASA Filament 1.75mm, 1kg Spool (2.2lbs) 3D Printer Filament, Premium An|misc
+B0BN8SSDPL|OVERTURE ASA Filament 1.75mm, 1kg Spool (2.2lbs) 3D Printer Filament, Premium An|misc
+B08PF938JJ|OVERTURE ASA Filament 1.75mm, 1kg Spool (2.2lbs) 3D Printer Filament, Premium An|misc
+B0CQXDXRZ2|Qrity 20 PCS Rubber Grommets Cable Railing, Car Grommet, Cable Railing Protectiv|misc
+B086Z6XMWP|Quoya Smart Curtain Tracks- Replacement Belt (14.4 Meters)|misc
+B074JZ6NWV|Replace for DYMO LetraTag Label Maker Refill 91331 White Plastic Tape 12mm x 4m |misc
+B0CJ78KXRH|risingsaplings 500pcs 1206 SMD resistors kit 270R 1K 4K7 10K 20K (5 Types Each 1|misc
+B08K1BVGN9|ruthex Threaded Inserts M2 + M3 + M4 + M5 Assortment Box - 70 + 100 + 50 + 50 Pi|misc
+B0DJ6KGXKB|SenseCAP Card Tracker T1000-E for Meshtastic|misc
+B00G4CJ8GK|Sharpie Permanent Markers Bulk Set Fine Tip Markers Set For Plastic Metal Wood A|misc
+B0DXT4WTR4|Small Waterproof Electrical Junction Box?IP67 Waterproof Clear ABS Plastic Enclo|misc
+B07ZNG4L9P|SUNLU 3D Printer Filament PLA Filament 1.75mm, Neatly Wound 3D Printing Filament|misc
+B08QM9SM1W|Teyleten Robot Millivolt/Microvolt Voltage Amplifier Module AD620 Instrumentatio|misc
+B0DDL48VFX|THANDBLE DisplayPort to HDMI Splitter for Multi Monitor Adapter, HDMI Splitter E|misc
+B0DK3G77TC|THANDBLE USB C to 3 HDMI Adapter with 100W PD Charging, Triple 4K60Hz Monitor Ex|misc
+B00NS4J6BY|Thermaltronics TMT-TC-2 Tip Tinner (20g) in 0.8oz Container|misc
+B0B87TNPRY|TICONN Waterproof Electrical Junction Box IP67 ABS Plastic Enclosure with Hinged|misc
+B0B87V7QTH|TICONN Waterproof Electrical Junction Box IP67 ABS Plastic Enclosure with Hinged|misc
+B0D2PRQKWL|Twippo Heat Shrink Tubing Kit 355pcs - 3:1 Dual Wall Adhesive Lined - Electrical|misc
+B0CN1N7WRZ|Tyimble 2024 Electric Drill Plate Cutter - Efficient Metal Shears Attachment for|misc
+B0DPWZ6W5L|USB C to USB C Hub Dual Monitor Adapter with 4K@60Hz USB4 Display Ports Video Ou|misc
+B0CTCSJ7Y8|uxcell Knurled Insert Nuts, 50pcs M4 x 4mm L x 6mm OD 3D Printing Brass Nuts Fem|misc
+B07MSC2YGT|uxcell M3x100mm Pushrod Connector Stainless Steel Rod Linkage,for RC Boat,Car,Ai|misc
+B0CY54RM4K|VEVOR Wall Mounted Storage Rack System, 30-Bin Parts Rack Organizer with Wall Pa|misc
+B0B9V8Z3CT|VIVO Large Keyboard Tray Under Desk Pull Out Platform with Pencil Drawer, Extra |misc
+B0DXTFT6WM|Waterproof Electrical Junction Box?IP67 Waterproof Clear ABS Plastic Enclosure B|misc
+B0BZHGCBTH|YETLEBOX Outdoor Waterproof Electrical Box Junction Box Weatherproof IP67 ABS Pl|misc
+B0BVFMR1VY|Yopay 10 Pack Media Storage Bottles with GL45 Blue Screw Cap, 250ml Reusable Gla|misc
+B0FCMSRJ2J|ZIKNYDO 16K for Thunderbolt 5 Cable 6.6FT/2m, USB C 80Gbps Data Transfer, 120Gbp|misc
+B0B1LM2V5W|19V Power Cord for Samsung TV 32" UN32 J4000 J4500 J5205 J5003 J525D UN32J4000AF|power
+B09SVFL33L|200mm(7.9in) Width PVC Heat Shrink Wrap Tube 18650 21700 26650 Lithium Battery D|power
+B0CN63ZQ2J|4 Pack 1?8?6?5?0 Rechargeable Batter?y 9900m?A?h W?i?th 18650 Battery Charger,Un|power
+B08HGSXYM1|4X EEMB 3.7V Lipo Battery 3700mAh 103395 Rechargeable Lithium Polymer ion Batter|power
+B0B58S6L6W|ACEIRMC 3pcs CN3065 Mini Solar Lipo Charger Board Lithium Battery Charge Chip Mi|power
+B0C2WS46WM|Cable Matters 20-Pack 23-24AWG Shielded Cat8 RJ45 Pass Through Connector with Lo|power
+B0DHXTFS5P|Cat8 Flat Ethernet Cable 100 FT Indoor & Outdoor, Invisable Ultra-Thin Ethernet |power
+B0DHXS26XL|Cat8 Flat Ethernet Cable 50 FT Indoor & Outdoor, Invisable Ultra-Thin Ethernet C|power
+B0DHXQ92RL|Cat8 Flat Ethernet Cable 75 FT Indoor & Outdoor, Invisable Ultra-Thin Ethernet C|power
+B0B2D89WLT|CHANZON 30 Pairs Jst PH 2.0 mm Pitch 22AWG 2Pin Plug Connector for 10cm and 15cm|power
+B0D8PZ8MNL|CPZZ 20Pack 18650 Rechargeable Battery Flat top 3.7v 18650 Rechargeable Battery |power
+B0CRKHTG89|EC Buying 10Pcs TP4056 1A Lithium Battery Charging Board Module USB Type-c 5V 1A|power
+B07ZQPFGHX|Elite Cat8 Shielded Riser (CMR), 40Gb, 2000MHz, S/FTP 22AWG, Solid Pure Copper, |power
+B0CDWZ9MDC|HiLetgo 5pcs TP4057 1A 3.7V Lithium Battery Charging Board with Protection Type-|power
+B0DQ9ZDXDG|Itvexeme RJ45 Connectors Tool Free Cat8, Cat8 Field Termination Plug Shielded Mo|power
+B0DPZW6KXT|MakerHawk 3.7V Lipo Battery 1000mAh 803040 Rechargeable Battery Lithium Polymer |power
+B0CMLGS4YG|NAOEVO 22 Gauge Wire 360ft, 22 AWG Wire 6 Colors 60ft Each Spool, Flexible Silic|power
+B0CKJ5YPZ5|Rapink Patch Cables Cat8 1ft 24 Pack Slim, Cat8 Ethernet Patch Cable 40G Support|power
+c1772756414292|Solar controller |power
+B0DNF89PF2|Spec5 Relay Solar-Powered Meshtastic LoRa Relay System Long-Range, Communication|power
+B0875VL1CJ|UGREEN Cat 8 Ethernet Cable 6FT, High Speed Braided 40Gbps 2000Mhz Network Cord |power
+c1772754630521|BME690|sensors
+B07SST5GDB|Sensor, AS3935 Storm Distances Detection Sensor SPI I2C Interfacing 2.4V-5.5V fo|sensors
+B000X05G1A|Superior Pump 91250 1800GPH Thermoplastic Submersible Utility Pump with 10-Foot |sensors
+
+--- Total: 185 components ---
+
+--- BOM: 4 links (product_id -> component_id, qty) ---
+
+p1772752271359:
+  - c1772753572559 x1
+  - c1772754630521 x1
+  - c1772756414292 x1
+  - c1772765873359 x1

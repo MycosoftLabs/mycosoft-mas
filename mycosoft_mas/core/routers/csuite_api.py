@@ -620,6 +620,63 @@ async def list_escalations(
     return {"escalations": escalations[:limit], "count": len(escalations[:limit])}
 
 
+@router.get("/org-state")
+async def csuite_org_state() -> Dict[str, Any]:
+    """
+    Unified org-state view for MYCA/Morgan: all C-Suite assistants, tasks, escalations,
+    and budget visibility. Paperclip-style orchestration without a parallel control plane.
+    """
+    _load_registry()
+    assistants = []
+    for aid, data in _assistant_registry.items():
+        last = data.get("last_heartbeat")
+        is_stale = False
+        if last:
+            try:
+                dt = datetime.fromisoformat(last.replace("Z", "+00:00"))
+                age = (datetime.now(timezone.utc) - dt).total_seconds()
+                is_stale = age > _heartbeat_ttl_seconds
+            except Exception:
+                is_stale = True
+        assistants.append({
+            "assistant_id": aid,
+            "role": data.get("role", ""),
+            "assistant_name": data.get("assistant_name", ""),
+            "ip": data.get("ip", ""),
+            "status": "stale" if is_stale else data.get("status", "unknown"),
+            "primary_tool": data.get("primary_tool", ""),
+            "last_heartbeat": last,
+            "last_report": data.get("last_report"),
+            "last_escalation": data.get("last_escalation"),
+        })
+
+    tasks_map = _get_cto_tasks()
+    all_tasks = list(tasks_map.values())
+    pending_tasks = [t for t in all_tasks if t.get("status") in ("pending", "in_progress")]
+    escalations = _get_history(_CSUITE_ESCALATIONS_KEY)
+
+    budget = {"total_revenue": 0.0, "currency": "USD"}
+    try:
+        from mycosoft_mas.core.persistence import economy_store
+        state = economy_store.get_state()
+        budget["total_revenue"] = float(state.get("total_revenue", 0))
+        budget["active_clients"] = len(state.get("active_clients", {}))
+    except Exception as e:
+        logger.debug("C-Suite org-state: economy fetch failed: %s", e)
+
+    return {
+        "assistants": assistants,
+        "assistant_count": len(assistants),
+        "pending_tasks": pending_tasks,
+        "pending_count": len(pending_tasks),
+        "total_tasks": len(all_tasks),
+        "escalations": escalations[:20],
+        "escalation_count": len(escalations),
+        "budget": budget,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 @router.get("/health")
 async def csuite_health() -> Dict[str, str]:
     """Health check for C-Suite API."""

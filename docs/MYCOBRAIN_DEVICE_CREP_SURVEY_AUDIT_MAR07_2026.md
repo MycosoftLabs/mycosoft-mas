@@ -23,7 +23,7 @@
 ## Flow: How a Device Gets "Online"
 
 1. **MycoBrain Service** (8003) connects to COM7 via port watcher (every 2s).
-2. **Heartbeat loop** (every 30s) sends `POST {MAS_REGISTRY_URL}/api/devices/register` for each connected device.
+2. **Heartbeat loop** (every 30s) sends `POST {MAS_REGISTRY_URL}/api/devices/heartbeat` for each connected device.
 3. **MAS** stores device in `_device_registry`, updates `_device_last_seen`.
 4. **Status** = online if last_seen within 60s; stale 60–120s; offline >120s.
 5. **Website** fetches via `/api/devices/network` → MAS `/api/devices` → returns devices with status.

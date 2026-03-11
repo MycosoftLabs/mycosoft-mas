@@ -21,11 +21,11 @@ MycoBrain HW (USB serial)
     ↓
 MycoBrain Service (localhost:8003 or VM:8003)
     ↓ heartbeat every 30s
-MAS Device Registry (192.168.0.188:8001/api/devices/heartbeat)
+MAS Device Registry (192.168.0.188:8001/api/devices/heartbeat)  ← canonical write
     ↓
-MAS /api/devices/network
+MAS /api/devices (GET list)
     ↑
-Website Device Manager, MYCA (when querying devices)
+Website /api/devices/network (proxies to MAS), MYCA mycobrain_bridge
 ```
 
 ## MycoBrain Service
@@ -59,10 +59,11 @@ The service sends to `POST {MAS_REGISTRY_URL}/api/devices/heartbeat`:
 MYCA (and any client) can ask "what devices are online?" via:
 
 ```
-GET {MAS_API_URL}/api/devices/network
+GET {MAS_API_URL}/api/devices?include_offline=true
 ```
 
 Returns devices from the registry, including MycoBrain boards that have sent recent heartbeats.
+The website exposes `GET /api/devices/network` which proxies to MAS `/api/devices`.
 
 ## FCI Telemetry (Separate Path)
 

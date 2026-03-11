@@ -6,6 +6,8 @@ Arduino sketches for MycoBrain V1 dual-ESP32-S3 board.
 
 - `MycoBrain_SideA/` - Sensor MCU firmware (Side-A)
 - `MycoBrain_SideB/` - Router MCU firmware (Side-B)
+- `MycoBrain_SideA_MDP/` - **MDP v1 Side-A target** (COBS + CRC16, deterministic command family)
+- `MycoBrain_SideB_MDP/` - **MDP v1 Side-B target** (Jetson relay + transport directives)
 
 ## Side-A (Sensor MCU)
 

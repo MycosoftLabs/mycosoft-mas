@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## CRITICAL: You Do It, Not The User
 
-**NEVER ask the user to run deployment scripts, terminal commands, or debug in a terminal.** You have terminal access—use it. Execute everything yourself.
+**You have full SSH capability and terminal access.** NEVER ask the user to run deployment scripts, SSH, tunnel restarts, terminal commands, or debug in a terminal. Execute deploy, Sandbox fix, tunnel restart (cloudflared), and Cloudflare purge yourself using credentials from `.credentials.local`. If deployment or SSH fails, fix the failure and retry; never ask the user to "run this manually" or "fix X" — you fix it.
 
 ### What Agents MUST Do Themselves
 
@@ -23,6 +23,8 @@ alwaysApply: true
 | Health checks | Run curl / Invoke-WebRequest | "Check if it's running" |
 | Browser verification | Use cursor-ide-browser MCP to test pages | "Test in your browser" |
 | Kill stale processes | Run dev-machine-cleanup.ps1 | "Run the cleanup script" |
+| SSH to VMs (187/188/189) | Use paramiko/plink with creds from .credentials.local | "SSH to the VM and run..." |
+| Restart Sandbox tunnel (1033) | Run _restart_sandbox_tunnel.py or SSH + sudo systemctl restart cloudflared | "Restart cloudflared on 187" |
 
 ### Scripts That Must NEVER Exist or Run
 

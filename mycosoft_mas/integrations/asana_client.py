@@ -5,7 +5,7 @@ Task and project management. Used by: SecretaryAgent, ProjectManagerAgent,
 n8n workflows, and MYCA for task sync.
 
 Environment Variables:
-    ASANA_API_KEY: Personal access token from Asana (My Settings > Apps > Personal access tokens)
+    ASANA_API_KEY, ASANA_PAT, MYCA_ASANA_TOKEN: Personal access token (any one)
     ASANA_WORKSPACE_ID: Default workspace GID (optional)
 """
 
@@ -20,12 +20,24 @@ logger = logging.getLogger(__name__)
 ASANA_API_BASE = "https://app.asana.com/api/1.0"
 
 
+def _env_asana_token() -> str:
+    """Resolve Asana token from config or env (ASANA_API_KEY, ASANA_PAT, MYCA_ASANA_TOKEN)."""
+    for name in ("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN"):
+        v = (os.getenv(name) or "").strip()
+        if v:
+            return v
+    return ""
+
+
 class AsanaClient:
     """Client for Asana REST API."""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_key = self.config.get("api_key", os.getenv("ASANA_API_KEY", ""))
+        self.api_key = (
+            self.config.get("api_key")
+            or _env_asana_token()
+        )
         self.workspace_id = self.config.get("workspace_id", os.getenv("ASANA_WORKSPACE_ID", ""))
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None

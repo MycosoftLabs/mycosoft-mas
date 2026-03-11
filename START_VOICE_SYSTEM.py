@@ -22,8 +22,8 @@ import sys
 import time
 from pathlib import Path
 
-# Paths
-MAS_DIR = Path(r"c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas")
+# Paths (script lives at MAS repo root)
+MAS_DIR = Path(__file__).resolve().parent
 MOSHI_SCRIPT = MAS_DIR / "start_personaplex.py"
 BRIDGE_SCRIPT = MAS_DIR / "services" / "personaplex-local" / "personaplex_bridge_nvidia.py"
 
@@ -97,7 +97,27 @@ def start_process(script, name):
     return proc
 
 
-async def warmup_cuda_graphs(max_wait=120):
+def wait_for_moshi_health(timeout=90):
+    """Wait until Moshi HTTP /health returns 200."""
+    try:
+        import urllib.request
+        url = f"http://localhost:{MOSHI_PORT}/health"
+        start = time.time()
+        while time.time() - start < timeout:
+            try:
+                req = urllib.request.Request(url)
+                with urllib.request.urlopen(req, timeout=5) as r:
+                    if r.status == 200:
+                        return True
+            except Exception:
+                pass
+            time.sleep(2)
+    except Exception:
+        pass
+    return False
+
+
+async def warmup_cuda_graphs(max_wait=240):
     """Connect to Moshi to trigger CUDA graphs compilation."""
     try:
         import aiohttp
@@ -107,7 +127,7 @@ async def warmup_cuda_graphs(max_wait=120):
     
     print_step("3", "WARMING UP CUDA GRAPHS")
     print("    This compiles CUDA graphs for 30ms/step performance.")
-    print(f"    First connection can take 60-90 seconds...")
+    print(f"    First connection can take 60-180 seconds (max wait {max_wait}s)...")
     
     try:
         async with aiohttp.ClientSession() as session:
@@ -230,18 +250,22 @@ def main():
     else:
         print_ok("Moshi already running on port 8998")
     
-    # Step 2: Wait for model to fully load
+    # Step 2: Wait for model to fully load and Moshi HTTP health
     print_step("2", "WAITING FOR MODEL INITIALIZATION")
     print("    Model needs ~10-15s to fully initialize after port opens...")
     time.sleep(15)
-    print_ok("Model should be ready")
+    print("    Checking Moshi HTTP /health...", end="")
+    if wait_for_moshi_health(timeout=90):
+        print_ok("Moshi health OK")
+    else:
+        print_fail("Moshi /health did not respond. Is Moshi really running? Check the Moshi console window.")
+        print("    You can still try warmup; if it fails, restart START_VOICE_SYSTEM.py.")
     
-    # Step 3: Warmup CUDA graphs
+    # Step 3: Warmup CUDA graphs (optional - Bridge will trigger on first client connect)
     warmup_ok = asyncio.run(warmup_cuda_graphs())
     if not warmup_ok:
-        print_fail("CUDA warmup failed - Moshi may need restart")
-        print("    Try killing all Python processes and running again.")
-        return False
+        print_wait("CUDA warmup timed out - first test-voice connection will trigger compilation (allow 2-4 min)")
+        print("    Continuing to start Bridge...")
     
     # Step 4: Start Bridge
     print_step("4", "STARTING PERSONAPLEX BRIDGE")

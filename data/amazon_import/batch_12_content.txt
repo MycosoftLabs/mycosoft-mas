@@ -1,0 +1,48 @@
+﻿INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CNSSS6T4', '18650 Battery Shield Board V3 Micro USB Charger ESP32 for Raspberry Pi and Arduino', 'BUBUCAM 18650 Battery Shield Board V3', 'dev-boards', 2, 6.98, 'BUBUCA', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B58S6L6W', 'ACEIRMC 3pcs CN3065 Mini Solar Lipo Charger Board Lithium Battery Charge Chip Micro USB DIY Outdoor Application Kit Charging Board Module', 'CN3065', 'power', 1, 8.99, 'Aceirmc US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09JZD4NMC', 'GHome Smart Plug Outlet Extender, Surge Protector with 3 Individually Controlled Smart Outlets and 3 Smart USB Ports, Works with Alexa Google Home, Wall Adapter Plug for APP Control,15A/1800W', 'P2-BK', 'misc', 2, 23.99, 'GHomeSmartUSA', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BYP44116', 'Linkind Color Changing Smart WiFi Light Bulbs, Work with Alexa & Google Home, A19 E26 Dimmable RGBTW Bulbs, No Hub Needed, 800 Lumen, 2.4Ghz WiFi, 6 Pack', 'A19', 'misc', 1, 39.99, 'LINKIND-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CN1N7WRZ', 'Tyimble 2024 Electric Drill Plate Cutter - Efficient Metal Shears Attachment for Effortless Cutting of Iron, Steel, Copper, Aluminum - Superior Precision and Efficiency, a Must-Have for DIY.', 'T-E01', 'misc', 1, 23.99, 'HAOXINGSHENG', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0784XXSQB', 'ALDON Copper (II) Sulfate Solution, 1M, 500mL - The Curated Chemical Collection', 'IS12196', 'misc', 2, 17.46, 'Vertex Reliance', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08LDDS59D', 'Gebildet 10Pcs 6mm 110V-220VAC LED Metal Indicator Light Waterproof Signal Lamp (Green/Orange/Red/Blue/White,Each 2pcs)', 'E553', 'misc', 1, 9.49, 'Gebildet', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DF4TB93J', '4-in-1 Soil Moisture Meter Digital Plant Temperature/Soil Moisture/PH Meter/Sunlight Intensity Backlight LCD Display Soil Test Meter for Gardening, Farming and Outdoor Plants', 'CTY', 'misc', 1, 23.98, 'Cytentech', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09JWN5F8W', 'Amazon Basics Full Motion TV Wall Mount fits 12" to 40" TVs and VESA 200x200, Black', 'AM20A', 'misc', 1, 18.69, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07961WPZP', 'AC Infinity Passive Ventilation Grille 17", White, for PC Computer AV Electronic Equipment Cabinets, Rooms, and Closets', 'AC-AGW7', 'misc', 1, 21.99, 'AC Infinity', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BDF358X8', 'LAB FISH Lab Infrared Scalpel Sterilizer Autoclave Sterilizers 825Â°C Inoculating Loop Sterilizer for Inoculating Loop Mycology 240W(DS-900S)', 'LFDS900S', 'misc', 1, 169.0, 'LAB FISH-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CQXDXRZ2', 'Qrity 20 PCS Rubber Grommets Cable Railing, Car Grommet, Cable Railing Protective Sleeves for Metal Posts, ID 3mm Mount Dia 5mm', 'B0CQXDXRZ2', 'misc', 1, 7.99, 'QRITY', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D19C25NS', 'New Age AmericaÂ® 93pcs Rubber Grommets Kit | 1/4 Inch to 1 Inch | 9 Sizes | Black Wire Grommets | Eyelet Ring Gaskets | Double Sided Round | 1/4", 5/16", 3/8", 7/16", 1/2", 5/8", 3/4", 3/4", 7/8", 1"', 'NAARG-93', 'misc', 1, 9.99, 'NewAgeAmerica', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08FM9334M', 'Ackers Conical Centrifuge Tubes 15mL, 100 Pcs Sterile Plastic Test Tubes with Screw Caps, Polypropylene Container with Graduated and Write-on Spot, Non-Pyrogenic, DN/RNase Free', 'AU17254', 'misc', 1, 17.99, 'Ackers', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CRNPBGNB', 'Beelink Mini S12 Pro Mini Pc,Intel 12th Gen Alder Lake-N100 (4C/4T, Up to 3.4GHz),16GB DDR4 RAM 500GB PCle SSD, Desktop Computer Support 4K@60Hz Dual HDMI Display/USB3.2/WiFi6/BT5.2 for Office/Home', 'Minis 12 Pro N100', 'dev-boards', 1, 158.99, 'ZDN PC', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08TJRVWV1', 'Amazon Basics Micro SDXC Memory Card with Full Size Adapter, A2, U3, Read Speed up to 100 MB/s, 128 GB, Black', 'LSMICRO128GU3', 'dev-boards', 1, 10.99, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;

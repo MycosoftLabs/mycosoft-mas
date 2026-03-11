@@ -1,0 +1,103 @@
+# Proxmox 202 — C-Suite Executive Assistant VMs
+# Date: March 7, 2026
+# Host: 192.168.0.202:8006 (SAME Proxmox as MYCA workspace VM 191)
+# Purpose: CEO, CFO, CTO, COO OpenClaw workstations — co-located with MYCA for integration
+
+proxmox:
+  host: "192.168.0.202"
+  port: 8006
+  node: "pve"          # override with PROXMOX_NODE if your node is different (e.g. "build")
+  storage: "local-lvm"
+  bridge: "vmbr0"
+  # Credentials (.credentials.local):
+  #   PROXMOX_TOKEN or PROXMOX_PASSWORD (general Proxmox root)
+  #   PROXMOX202_PASSWORD (Proxmox 202 root — use if different from VM_PASSWORD)
+  token_env: "PROXMOX_TOKEN"
+  password_env: "PROXMOX_PASSWORD"
+  password_202_env: "PROXMOX202_PASSWORD"
+
+# Build source for C-Suite VMs.
+# - base_template_vmid: NEUTRAL base (Windows 11 + OpenClaw, no role apps). When set, ALL roles clone from this.
+#   See docs/CSUITE_NEUTRAL_BASE_IMAGE_STRATEGY_MAR08_2026.md. Avoids CEO→CTO→CFO→COO role contamination.
+# - template_vmid: legacy CEO-from-template when base_template_vmid not yet built
+# - windows_version: "10" | "11" — use 10 when Win11 hardware requirements (TPM, OVMF) not met. Run:
+#   python scripts/check_csuite_windows_compatibility.py
+# - iso_path: Windows 11 installer (used when windows_version: "11")
+# - iso_path_win10: Windows 10 installer (used when windows_version: "10") — works on all Proxmox hosts
+# - create_blank: if true and no template/base, create blank VM (manual Windows install via console)
+build_source:
+  base_template_vmid: null  # e.g. 9100 — set when neutral C-Suite base template exists
+  template_vmid: null      # e.g. 9000 for win11 template — legacy; used when base_template_vmid not set
+  windows_version: "10"    # Win10 22H2 — deployed to Proxmox 202; C-Suite VMs boot from installer
+  iso_path: "local:iso/Win11_24H2_English_x64.iso"
+  iso_path_win10: "local:iso/Win10_22H2_English_x64.iso"
+  create_blank: true
+
+# Guest OS decision: set by validate_proxmox90_feasibility.py (uses this config)
+# Values: "macos" | "windows"
+guest_os: "windows"
+
+# C-Suite VM definitions (VMID, IP, role, primary tool)
+# clone_from: source VMID to clone from (CEO creates from template; others clone previous)
+# Rollout order for --role all: ceo → cto → cfo → coo (CEO first, then clone chain)
+vms:
+  ceo:
+    vmid: 192
+    ip: "192.168.0.192"
+    name: "csuite-ceo"
+    role: "CEO"
+    primary_tool: "MYCAOS"
+    assistant_name: "Atlas"
+    # No clone_from: create from build_source (template or blank)
+  cto:
+    vmid: 194
+    ip: "192.168.0.194"
+    name: "csuite-cto"
+    role: "CTO"
+    primary_tool: "Cursor"
+    assistant_name: "Forge"
+    clone_from: 192  # clone from CEO
+  cfo:
+    vmid: 193
+    ip: "192.168.0.193"
+    name: "csuite-cfo"
+    role: "CFO"
+    primary_tool: "Perplexity"
+    assistant_name: "Meridian"
+    clone_from: 194  # clone from CTO
+  coo:
+    vmid: 195
+    ip: "192.168.0.195"
+    name: "csuite-coo"
+    role: "COO"
+    primary_tool: "Claude Cowork"
+    assistant_name: "Nexus"
+    clone_from: 193  # clone from CFO
+
+# Host-driven guest bootstrap (WinRM). Credentials from env; never hardcode.
+# CSUITE_GUEST_USER, CSUITE_GUEST_PASSWORD (or VM_PASSWORD) from .credentials.local
+bootstrap:
+  guest_user_env: "CSUITE_GUEST_USER"      # default: Administrator
+  guest_password_env: "CSUITE_GUEST_PASSWORD"
+  guest_user_default: "Administrator"
+  winrm_port: 5985
+  connect_timeout_sec: 300
+  connect_retry_interval_sec: 10
+
+# CTO VM 194 — fresh-clone workspace bootstrap (repo sync, Cursor readiness)
+# Used by bootstrap_cto_guest.ps1 when role is cto. Override via env: CTO_CODE_ROOT, CTO_GIT_ORG
+cto_workspace:
+  code_root: "C:\\Users\\Administrator\\Mycosoft\\CODE"
+  git_org: "MycosoftLabs"
+  repos:
+    - path: "MAS\\mycosoft-mas"
+      repo: "mycosoft-mas"
+    - path: "WEBSITE\\website"
+      repo: "website"
+  branch: "main"
+
+# Shared VM hardware spec
+vm_spec:
+  cores: 4
+  memory_mb: 16384
+  disk_gb: 128

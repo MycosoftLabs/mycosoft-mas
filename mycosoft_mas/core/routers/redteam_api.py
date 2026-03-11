@@ -24,6 +24,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.core.persistence import redteam_store
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/redteam", tags=["Red Team"])
@@ -117,11 +119,8 @@ class SimulationResult(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════════
-# IN-MEMORY STORAGE (production would use database)
+# STORAGE: redteam_store (Supabase when configured, else in-memory)
 # ═══════════════════════════════════════════════════════════════
-
-# Active simulations
-simulations: Dict[str, Dict[str, Any]] = {}
 
 # Authorization tokens (production would validate against SSO/RBAC)
 valid_auth_tokens: set = set()
@@ -153,24 +152,23 @@ def validate_authorization(auth_code: Optional[str]) -> bool:
 
 
 async def log_simulation_to_soc(simulation: Dict[str, Any]) -> Optional[str]:
-    """Log simulation activity to SOC"""
+    """Log simulation activity to SOC."""
     try:
-        from mycosoft_mas.security.security_integration import SOCIntegration
-        
+        from mycosoft_mas.security.security_integration import (
+            SOCIntegration,
+            SeverityLevel,
+            ThreatCategory,
+        )
+
         soc = SOCIntegration()
         incident = await soc.create_incident(
             title=f"Red Team Simulation: {simulation.get('simulation_type', 'Unknown')}",
             description=f"Controlled attack simulation on {simulation.get('target', 'N/A')}",
-            severity="low",  # Simulations are controlled
-            source="red_team",
-            metadata={
-                "simulation_id": simulation.get("simulation_id"),
-                "simulation_type": simulation.get("simulation_type"),
-                "target": simulation.get("target"),
-                "authorized": True,
-            }
+            severity=SeverityLevel.LOW,
+            category=ThreatCategory.OTHER,
+            affected_systems=[simulation.get("target")] if simulation.get("target") else [],
         )
-        return incident.get("incident_id") if incident else None
+        return incident.incident_id if incident else None
     except Exception as e:
         logger.warning(f"Failed to log simulation to SOC: {e}")
         return None
@@ -182,7 +180,7 @@ async def log_simulation_to_soc(simulation: Dict[str, Any]) -> Optional[str]:
 
 async def run_credential_test(sim_id: str, request: CredentialTestRequest):
     """Run credential testing simulation"""
-    simulation = simulations.get(sim_id)
+    simulation = redteam_store.get(sim_id)
     if not simulation:
         return
     
@@ -245,16 +243,18 @@ async def run_credential_test(sim_id: str, request: CredentialTestRequest):
         simulation["findings"] = findings
         simulation["metrics"] = metrics
         simulation["recommendations"] = recommendations
+        redteam_store.save(simulation)
         
     except Exception as e:
         simulation["status"] = SimulationStatus.FAILED.value
         simulation["error"] = str(e)
         logger.error(f"[RedTeam] Credential test failed: {e}")
+        redteam_store.save(simulation)
 
 
 async def run_phishing_simulation(sim_id: str, request: PhishingSimRequest):
     """Run phishing awareness simulation"""
-    simulation = simulations.get(sim_id)
+    simulation = redteam_store.get(sim_id)
     if not simulation:
         return
     
@@ -326,16 +326,18 @@ async def run_phishing_simulation(sim_id: str, request: PhishingSimRequest):
         simulation["findings"] = findings
         simulation["metrics"] = metrics
         simulation["recommendations"] = recommendations
+        redteam_store.save(simulation)
         
     except Exception as e:
         simulation["status"] = SimulationStatus.FAILED.value
         simulation["error"] = str(e)
         logger.error(f"[RedTeam] Phishing simulation failed: {e}")
+        redteam_store.save(simulation)
 
 
 async def run_pivot_test(sim_id: str, request: PivotTestRequest):
     """Run network pivot/segmentation test"""
-    simulation = simulations.get(sim_id)
+    simulation = redteam_store.get(sim_id)
     if not simulation:
         return
     
@@ -412,16 +414,18 @@ async def run_pivot_test(sim_id: str, request: PivotTestRequest):
         simulation["findings"] = findings
         simulation["metrics"] = metrics
         simulation["recommendations"] = recommendations
+        redteam_store.save(simulation)
         
     except Exception as e:
         simulation["status"] = SimulationStatus.FAILED.value
         simulation["error"] = str(e)
         logger.error(f"[RedTeam] Pivot test failed: {e}")
+        redteam_store.save(simulation)
 
 
 async def run_exfil_test(sim_id: str, request: ExfilTestRequest):
     """Run data exfiltration detection test"""
-    simulation = simulations.get(sim_id)
+    simulation = redteam_store.get(sim_id)
     if not simulation:
         return
     
@@ -502,11 +506,13 @@ async def run_exfil_test(sim_id: str, request: ExfilTestRequest):
         simulation["findings"] = findings
         simulation["metrics"] = metrics
         simulation["recommendations"] = recommendations
+        redteam_store.save(simulation)
         
     except Exception as e:
         simulation["status"] = SimulationStatus.FAILED.value
         simulation["error"] = str(e)
         logger.error(f"[RedTeam] Exfil test failed: {e}")
+        redteam_store.save(simulation)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -519,7 +525,7 @@ async def health():
     return {
         "status": "healthy",
         "service": "redteam",
-        "active_simulations": len([s for s in simulations.values() if s.get("status") == "running"]),
+        "active_simulations": len(redteam_store.list_all(status="running")),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -579,15 +585,36 @@ async def start_simulation(
         "metrics": {},
         "recommendations": [],
     }
-    simulations[sim_id] = simulation
+    redteam_store.save(simulation)
     
     # Log to SOC
     soc_incident_id = await log_simulation_to_soc(simulation)
     simulation["soc_incident_id"] = soc_incident_id
+    redteam_store.save(simulation)
     
     logger.info(f"[RedTeam] Starting simulation {sim_id}: {request.simulation_type.value}")
     
     return SimulationResult(**simulation)
+
+
+async def _require_guardian_approval_if_needed(
+    simulation_type: str, target: Optional[str]
+) -> Optional[str]:
+    """
+    Enforce Guardian approval for medium/high/critical simulations.
+    Returns approved_by ('guardian'|'low_risk') for audit.
+    """
+    from mycosoft_mas.security.redteam_guardian_gate import check_redteam_authority
+
+    approved, reason, approved_by = await check_redteam_authority(
+        simulation_type=simulation_type,
+        requester="redteam_api",
+        target=target,
+        justification="Red-team simulation requested via API",
+    )
+    if not approved:
+        raise HTTPException(status_code=403, detail=f"Guardian approval required: {reason}")
+    return approved_by
 
 
 @router.post("/credential-test")
@@ -596,22 +623,26 @@ async def run_credential_test_endpoint(
     authorization_code: str,
     background_tasks: BackgroundTasks,
 ):
-    """Run credential testing simulation"""
+    """Run credential testing simulation."""
     if not validate_authorization(authorization_code):
         raise HTTPException(status_code=403, detail="Invalid authorization")
-    
+    approved_by = await _require_guardian_approval_if_needed("credential_test", request.target_system)
+
     sim_id = generate_simulation_id()
     simulation = {
         "simulation_id": sim_id,
         "simulation_type": SimulationType.CREDENTIAL_TEST.value,
         "status": SimulationStatus.AUTHORIZED.value,
         "target": request.target_system,
+        "approved_by": approved_by,
+        "approved_at": datetime.now(timezone.utc).isoformat() if approved_by else None,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "findings": [],
         "metrics": {},
         "recommendations": [],
     }
-    simulations[sim_id] = simulation
+    simulation["soc_incident_id"] = await log_simulation_to_soc(simulation)
+    redteam_store.save(simulation)
     
     background_tasks.add_task(run_credential_test, sim_id, request)
     
@@ -624,22 +655,26 @@ async def run_phishing_sim_endpoint(
     authorization_code: str,
     background_tasks: BackgroundTasks,
 ):
-    """Run phishing awareness simulation"""
+    """Run phishing awareness simulation."""
     if not validate_authorization(authorization_code):
         raise HTTPException(status_code=403, detail="Invalid authorization")
-    
+    approved_by = await _require_guardian_approval_if_needed("phishing_sim", request.target_group)
+
     sim_id = generate_simulation_id()
     simulation = {
         "simulation_id": sim_id,
         "simulation_type": SimulationType.PHISHING_SIM.value,
         "status": SimulationStatus.AUTHORIZED.value,
         "target": request.target_group,
+        "approved_by": approved_by,
+        "approved_at": datetime.now(timezone.utc).isoformat() if approved_by else None,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "findings": [],
         "metrics": {},
         "recommendations": [],
     }
-    simulations[sim_id] = simulation
+    simulation["soc_incident_id"] = await log_simulation_to_soc(simulation)
+    redteam_store.save(simulation)
     
     background_tasks.add_task(run_phishing_simulation, sim_id, request)
     
@@ -652,22 +687,28 @@ async def run_pivot_test_endpoint(
     authorization_code: str,
     background_tasks: BackgroundTasks,
 ):
-    """Run network pivot/segmentation test"""
+    """Run network pivot/segmentation test."""
     if not validate_authorization(authorization_code):
         raise HTTPException(status_code=403, detail="Invalid authorization")
-    
+    approved_by = await _require_guardian_approval_if_needed(
+        "pivot_test", f"{request.source_network} -> {request.target_network}"
+    )
+
     sim_id = generate_simulation_id()
     simulation = {
         "simulation_id": sim_id,
         "simulation_type": SimulationType.PIVOT_TEST.value,
         "status": SimulationStatus.AUTHORIZED.value,
         "target": f"{request.source_network} -> {request.target_network}",
+        "approved_by": approved_by,
+        "approved_at": datetime.now(timezone.utc).isoformat() if approved_by else None,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "findings": [],
         "metrics": {},
         "recommendations": [],
     }
-    simulations[sim_id] = simulation
+    simulation["soc_incident_id"] = await log_simulation_to_soc(simulation)
+    redteam_store.save(simulation)
     
     background_tasks.add_task(run_pivot_test, sim_id, request)
     
@@ -680,22 +721,28 @@ async def run_exfil_test_endpoint(
     authorization_code: str,
     background_tasks: BackgroundTasks,
 ):
-    """Run data exfiltration detection test"""
+    """Run data exfiltration detection test."""
     if not validate_authorization(authorization_code):
         raise HTTPException(status_code=403, detail="Invalid authorization")
-    
+    approved_by = await _require_guardian_approval_if_needed(
+        "exfil_test", f"{request.exfil_method} ({request.data_size_kb}KB)"
+    )
+
     sim_id = generate_simulation_id()
     simulation = {
         "simulation_id": sim_id,
         "simulation_type": SimulationType.EXFIL_TEST.value,
         "status": SimulationStatus.AUTHORIZED.value,
         "target": f"{request.exfil_method} ({request.data_size_kb}KB)",
+        "approved_by": approved_by,
+        "approved_at": datetime.now(timezone.utc).isoformat() if approved_by else None,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "findings": [],
         "metrics": {},
         "recommendations": [],
     }
-    simulations[sim_id] = simulation
+    simulation["soc_incident_id"] = await log_simulation_to_soc(simulation)
+    redteam_store.save(simulation)
     
     background_tasks.add_task(run_exfil_test, sim_id, request)
     
@@ -705,7 +752,7 @@ async def run_exfil_test_endpoint(
 @router.get("/simulation/{sim_id}")
 async def get_simulation(sim_id: str):
     """Get simulation status and results"""
-    simulation = simulations.get(sim_id)
+    simulation = redteam_store.get(sim_id)
     if not simulation:
         raise HTTPException(status_code=404, detail="Simulation not found")
     
@@ -719,18 +766,13 @@ async def list_simulations(
     limit: int = 50,
 ):
     """List all simulations with optional filtering"""
-    results = list(simulations.values())
-    
-    if status:
-        results = [s for s in results if s.get("status") == status.value]
-    if simulation_type:
-        results = [s for s in results if s.get("simulation_type") == simulation_type.value]
-    
-    # Sort by started_at descending
-    results.sort(key=lambda x: x.get("started_at", ""), reverse=True)
-    
+    results = redteam_store.list_all(
+        status=status.value if status else None,
+        simulation_type=simulation_type.value if simulation_type else None,
+        limit=limit,
+    )
     return {
-        "simulations": results[:limit],
+        "simulations": results,
         "total": len(results),
     }
 
@@ -738,7 +780,7 @@ async def list_simulations(
 @router.post("/simulation/{sim_id}/cancel")
 async def cancel_simulation(sim_id: str):
     """Cancel a running simulation"""
-    simulation = simulations.get(sim_id)
+    simulation = redteam_store.get(sim_id)
     if not simulation:
         raise HTTPException(status_code=404, detail="Simulation not found")
     
@@ -747,6 +789,7 @@ async def cancel_simulation(sim_id: str):
     
     simulation["status"] = SimulationStatus.CANCELLED.value
     simulation["completed_at"] = datetime.now(timezone.utc).isoformat()
+    redteam_store.save(simulation)
     
     return {"success": True, "message": f"Simulation {sim_id} cancelled"}
 

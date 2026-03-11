@@ -1,0 +1,75 @@
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0949JNZWQ', 'M4-0.7 x 20mm Flat Head Socket Cap Screws Bolts, Stainless Steel 18-8 (304), Bright Finish, Allen Socket Drive,Machine Screws Inner Hex Screw Fasteners Bolts (50pcs)', '763722102277', 'misc', 1, 7.21, 'YGTGZ', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0F9NZDP3P', 'Creality ABS Filament 1.75mm White 3D Printer Filaments, 1kg(2.2lbs) Neatly-Wound Spool, Strong, Durable, Good Heat Resistant, Less Odor, Dimensional Accuracy±0.03mm, Fit Most FDM 3D Printers, White', 'CR-ABS-White', 'misc', 1, 18.99, 'Creality YOOPAI Store', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0F9NXB9DB', 'Creality ABS Filament 1.75mm Black 3D Printer Filaments, 1kg(2.2lbs) Neatly-Wound Spool, Strong, Durable, Good Heat Resistant, Less Odor, Dimensional Accuracy±0.03mm, Fit Most FDM 3D Printers, Black', 'CR-ABS-Black', 'misc', 1, 19.99, 'Creality YOOPAI Store', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CT8GD432', 'Hrensaw Medium Outdoor Electrical Box(10.6x5.5x4.5inch),Weatherproof Connection Box w/6 Cable Entry,IP54 Waterproof Extension Cord Cover Protect Power Strip,Timer,Plug,Holiday Lights,Black', 'HM001', 'power', 1, 18.99, 'Hrensaw', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DXT4WTR4', 'Small Waterproof Electrical Junction Box，IP67 Waterproof Clear ABS Plastic Enclosure Boxes for Outdoor Garden with Hinged Cover, Mounting Plate, Wall Brackets, Cable Glands (8.7"x6.7"x4.3" Clear)', 'Electrical Boxes-FT', 'misc', 2, 18.61, 'IGEYAPA-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07H5C8BB6', 'QILIPSU Junction Box with Mounting Plate 110x80x70mm, Clear Cover Plastic DIY Electrical Project Case IP67 Waterproof Dustproof Enclosure Grey (4.3"x3.1"x2.8")', '110807PT', 'chassis-housing', 1, 9.49, 'QILIPSU', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DXT464VB', 'Large Waterproof Electrical Junction Box, IP67 Waterproof Clear ABS Plastic Enclosure Boxes for Outdoor Network Enclosure with Hinged Cover, Mounting Plate, Wall Brackets(13.8"x9.8"x5.9" Clear)', 'Electrical Boxes-13.8"x9.8"x5.9" Clear', 'misc', 2, 46.54, 'IGEYAPA-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DXTFT6WM', 'Waterproof Electrical Junction Box，IP67 Waterproof Clear ABS Plastic Enclosure Boxes for Outdoor Network Enclosure with Hinged Cover, Mounting Plate, Wall Brackets, Cable Glands (11.4"x7.5"x5.5")', 'Electrical Boxes-11.4"x7.5"x5.5 clear', 'misc', 2, 32.58, 'IGEYAPA-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BZHGCBTH', 'YETLEBOX Outdoor Waterproof Electrical Box Junction Box Weatherproof IP67 ABS Plastic Enclosure Switch Router Project Box Electronics DIY Enclosure With Mounting Plate Wall Bracket Grey 8.6"x6.6"x4.3"', 'P091', 'misc', 2, 14.99, 'Jineby Y', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DGMVFY85', 'SABRENT USB to 3.5mm Jack Audio Adapter, USB to Headphone Jack Adapter Sound Card, Upgrade to 24-Bit 96Khz for a deep Sound Quality (AU-UCMA)', 'AU-UCMA', 'dev-boards', 1, 8.54, 'Store4PC', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B099RQ7BSR', 'LILYGO T-SIM7000G ESP32-WROVER-B Solar Charge SIM GPS Antenna CH9102F 16MB 2G/NB TTGO Development Board', 'T-SIM7000G', 'dev-boards', 2, 49.87, 'Lily GO', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CZ79Q7XM', 'Official Creality K1 Max Glossy PEO and Matte PEI Double Side Build Plate Kit, 315 x 310mm Flexible Spring Steel Platform, Removable 3D Printer PEI Sheet Build Surface for K1 Max/Ender 3 V3 Plus', 'K1MAXPEIPEO', 'misc', 1, 26.99, 'comgrow', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CLLNMRX7', 'LILYGO T-A7670G R2 4G LTE CAT1 SIM Module ESP32 TTGO Development Board Support GSM/GPRS/Edge TF Card (A7670G with GPS)', 'B0CLLNMRX7', 'dev-boards', 4, 35.15, 'Lily GO', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07HSRNWBG', 'Business Prime Annual Membership Fee - Essentials', 'B07HSRNWBG', 'misc', 2, 89.5, 'Amazon US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07XVCP7F5', 'RK ROYAL KLUDGE S108 Typewriter Keyboard, Retro Mechanical Gaming Keyboard Wired 108 Keys with RGB Backlit Sidelight, Detachable Wrist Rest, Round Keycaps Blue Switches - Black', 'S108', 'misc', 1, 59.99, 'J-Devol', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B789CGGQ', 'Xbox Elite Series 2 Core Wireless Gaming Controller - White Series X|S, One, Windows PC, Android, and iOS', '4IK-00001', 'misc', 1, 129.99, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09DCQ972K', 'OVERTURE ASA Filament 1.75mm, 1kg Spool (2.2lbs) 3D Printer Filament, Premium Anti-UV, ASA Filament Perfect for Printing Outdoor Functional Parts, Dimensional Accuracy +/- 0.02 mm (Black)', 'OVASA', 'misc', 2, 30.68, 'OVERTURE 3D', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07R4W1QY7', 'Lenovo GY40T26478 Legion K500 RGB Mechanical Gaming Keyboard, 3 ZONE Full-size Keyboard, 7 user Programmable Hot Keys; 16.8 Million Colors, 50 Million-Click Red Mechanical Keys, Detachable Palm Rest', 'GY40T26478', 'dev-boards', 1, 67.99, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B614YWXD', 'Mille Lucciole 4 Pack Outdoor Wall Lights Exterior/Interior LED Wall Sconces IP65 Waterproof Square Aluminum Wall Lamps Outdoor Lighting Fixture Up and Down Lights Modern Black 12W 3000K Warm Lights', 'ML-HWBD', 'misc', 2, 98.99, 'FPDS', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CGG19X3L', 'ESYTEOOT Bamboo Screwdriver Organizer Rack Desktop Hand Tool Stand and Repair Tool Storage Holder', 'HFJA101', 'misc', 1, 24.99, 'AmayaArtz', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CY54RM4K', 'VEVOR Wall Mounted Storage Rack System, 30-Bin Parts Rack Organizer with Wall Panels/Tool Holders/Hooks, Garage Plastic Shop Tool Organizer for Nuts, Bolts, Screws, Nails, Beads, Buttons', '30-Bin Parts Rack Organizer', 'misc', 1, 48.99, 'Amazon', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D3J71RM7', 'Apple Pencil Pro: Latest Model - Device Compatibility Check Required - Pixel-Perfect Precision, Tilt and Pressure Sensitivity, Perfect for Note-Taking, Drawing, and Art. Charges and Pairs Magnetically', 'MX2D3AM/A', 'misc', 1, 99.0, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DJ7GNDL8', 'ApoloSign Digital Calendar: Electronic Calendar, Smart Touchscreen Interactive Display for Chore Chart, Family Schedules Planner, Supports All Apps via Google Play (Gray, 21.5-inch)', 'FA2189', 'misc', 1, 459.99, 'ElcSign', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CDW3B9J2', 'USB C to C Cable 3ft 2Pack Coiled USB C Charger Cable for Car Type C Fast Charging Cable for iPhone 16/15/Plus/Pro/Pro Max/Samsung Galaxy S23', 'USB C to USB C Cable 3Pack 3FT', 'dev-boards', 3, 17.09, 'KIYODA', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D9JWT4P1', 'Vision Master E290 Development Board with 2.9" E-Ink Display Screen, SX1262 Chip BLE WiFi ESP32-S3R8 LoRa Module Compatible with Arduino PlatformIO Micpython Meshtastic Raspberry PI IoT（902-928MHz', 'B0D9JWT4P1', 'dev-boards', 3, 33.32, 'MakerHawk-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;

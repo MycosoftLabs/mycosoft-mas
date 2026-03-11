@@ -1,0 +1,75 @@
+﻿INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BKL93X2J', 'ESP32 Development Board WT32-SC01 Plus with 3.5in 320 * 480 Based on ESP32-WROVER-B Multi-Touch LCD Screen with GUI Firmware 4MB SPI Flash/8MB PSRAM, WiFi, BT, BLE MCU Module for Arduino', 'B0BKL93X2J', 'dev-boards', 1, 41.99, 'Aitrip', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DMK4QPPD', 'Meshtastic Long Range 915MHz Lora Magnetic Base Antenna with SMA Male for ESP32 LoRa V3 Development Board 915MHz LoRa Module with 10cm IPEX Extension Cable (2 Sets), Slinkdsco ï»¿', 'B0DMK4QPPD', 'dev-boards', 1, 19.95, 'slinkdsco', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07W6ZPH7D', 'Comimark 2Pcs LoRa SX1278 Long Range RF Wireless Power Mental Module SX1276 5Km for Arduino', 'LY369', 'dev-boards', 1, 12.79, 'ZhongTao(å“ç‰Œå·²å¤‡æ¡ˆ,è·Ÿå–å¿…æŠ•è¯‰å°åº—,ç»ä¸å’Œè§£)', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CGR8ZLTZ', '99.9% Solid Bare Copper Wire, 20 Gauge 310Ft,1lb Spool,Supplied by Wonderway (20 Gauge/0.8mm, 16oz)', 'TX-16OZ', 'misc', 1, 20.99, 'XING WEI', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D8T53CQ5', 'ELEGOO 3PCS ESP-32 Development Board USB-C, 2.4GHz Dual Mode WiFi+Bluetooth Dual Core Microcontroller for Arduino IDE, Support AP/STA/AP+STA, CP2102 Chip', 'EL-SM-012', 'dev-boards', 1, 19.99, 'ELEGOO Official US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0C9H7Y66W', '3PCS ESP32 ESP32-S3 Development Board Type-C WiFi+Bluetooth Internet of Things Dual Type-C Core Board ESP32-S3-DevKit C N8R2 Development Board ESP32-S3 Module', 'DA11892-1', 'dev-boards', 1, 17.99, 'Dorhea', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DG8L5NG5', 'ESP32 ESP32-S3 Development Board AYWHP 5 Pcs ESP32 S3 ESP32-S3-DevKitC Module with WROOM-1-N16R8 Low Power MCU with Dual-Mode Wi-Fi and Bluetooth Type-C Connector Compatible with Arduino', 'YY1-0163', 'dev-boards', 1, 33.99, 'Quan Ruiqi', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B078HY1WP1', 'exgoofit Phono RCA Screws Male Female Plug to AV Screw Terminal Audio/Video Connector Adapter (10 Male +10 Female Connector)', 'CAM902072M', 'misc', 1, 8.9, 'Exgoofit', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B082ZPKV5W', 'uxcell PCB Panel Mount Single RCA Socket Female Jack Audio Video AV Connector Black 2pins 10Pcs', 'a19092900ux0312', 'misc', 1, 7.99, 'uxcell', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DJQGS5JL', 'BNUOK 120pcs M3 x 50mm Hex Socket Head Cap Screws Bolts, 12.9 Grade Alloy Steel, Black Oxide Finish, Allen Socket Drive, Full Threads,with Hex Spanner', 'BNH02022', 'misc', 1, 9.99, 'BNUOK Fasterner', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B000X05G1A', 'Superior Pump 91250 1800GPH Thermoplastic Submersible Utility Pump with 10-Foot Cord, 1/4 HP', '91250', 'sensors', 1, 59.73, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07BTXK1NG', 'Chanzon SMD Fast Switching/Schottky/Rectifier Diode Assorted Kit (15 Values Total 150pcs: M1 M4 M7 S1M S2M S3M SS14 SS16 SS24 SS26 SS34 SS36 RS1M US1M LL4148) Electronic Component Assortment Set', 'DIODE-KIT2-SMD-150', 'misc', 1, 6.99, 'Chanzon', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CJ78KXRH', 'risingsaplings 500pcs 1206 SMD resistors kit 270R 1K 4K7 10K 20K (5 Types Each 100pcs)', 'RES-KIT', 'misc', 1, 9.99, 'rising saplings', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0711MB4TL', 'Hilitchi 60-Pcs 100 to 500K ohm 3296W Multiturn Trimmer Potentiometer Assortment Kit - [12 Value]', 'HDR-3296-1', 'misc', 1, 12.99, 'Hilitchi', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B00W874Y46', 'Earthwise GS70015 15-Amp Garden Corded Electric Chipper, Collection Bin', 'GS70015', 'misc', 1, 201.77, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CSBZVR6F', '2 Pack Continuous Spray Bottles - Ultra Fine Mist Sprayer | Water Spray Bottle For Hair Mister Spray Bottle | Hair Spray Bottles For Hairstyling, Cleaning, Salons - 2pk 6.8 OZ / 200 ML', 'SP019', 'misc', 1, 7.64, 'Super +', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07DB1HCKP', 'DEPEPE 6pcs 500ml Plastic Safety Wash Bottles Lab Squeeze Bottle LDPE Squirt Bottle Tattoo Bottle with Narrow Mouth and Scale Labels (17oz x 6 Bottles)', 'DEPEPE20180527', 'misc', 1, 16.99, 'SimpleBreeze', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B00PV6J1F8', 'McKesson Hydrogen Peroxide 3%, 1 Gallon [Pack of 1] Topical Solution USP, First Aid Antiseptic, Oral Debriding Agent', '23-A0013', 'misc', 1, 16.45, 'SimplyMedical', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B01KK014F4', 'Isopropyl Alcohol Grade 99% Anhydrous - 4 Gallon', 'IsA4G', 'misc', 1, 67.94, 'FlaLab', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B1LM2V5W', '19V Power Cord for Samsung TV 32" UN32 J4000 J4500 J5205 J5003 J525D UN32J4000AF UN32J5205AF UN32J525DAF UN32J5003AF UN32J400DAF A4819-FDY BN44-00837A LCD Monitor Charger,HW-M360 Soundbar Power Supply', 'DL90190400', 'power', 1, 14.99, 'RUIQIU-direct', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07MSC2YGT', 'uxcell M3x100mm Pushrod Connector Stainless Steel Rod Linkage,for RC Boat,Car,Airplane,Helicopter,10pcs', 'a18112200ux0490', 'misc', 2, 12.99, 'uxcell', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D6GLH81M', 'Adult Trinocular Microscope WF10x and WF25x Eyepieces 40X-5000X Magnification, Digital Lab Trinocular Compound LED Microscope (Trinocular Microscope with Electronic Eyepieces)', 'CDJHJ368', 'misc', 1, 229.99, 'HWTHWT', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CKHR2RNX', 'Bysameyee Wireless Digital Microscope 4K HD Wi-Fi Microscope Camera Digital Magnifier Compatible for iPhone, Android Phones and PC (Black)', '4K', 'cameras', 1, 39.99, 'Sameyee', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07DPL1B4T', 'Beaker, Flask, Cylinder Set, 3.3 Boro. Glass - 9 Pieces - Beaker Set, Flask Set, and Graduated Cylinder Set, Karter Scientific 233N2', '233N2', 'misc', 1, 42.99, 'Lake Charles Manufacturing', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BN4W6P6Q', 'eSUN PLA+ Filament 1.75mm, 3D Printer Filament PLA Plus, Dimensional Accuracy +/- 0.03mm, 1KG Spool (2.2 LBS) 3D Printing Filament for 3D Printers, Cold White', 'PLA+175CW1KG-RE', 'misc', 1, 22.99, 'eSUN official Store', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;

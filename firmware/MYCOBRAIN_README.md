@@ -54,28 +54,31 @@ MycoBrain is a modular, dual-ESP32-S3 environmental monitoring and control devic
 
 ## Firmware Versions
 
-### Working Firmware (December 28-30, 2025)
+**See [MYCOBRAIN_FIRMWARE_BASELINE_REBASELINE_MAR07_2026.md](../docs/MYCOBRAIN_FIRMWARE_BASELINE_REBASELINE_MAR07_2026.md) for canonical baseline.**
 
-#### 1. MycoBrain_SideA_DualMode ✅ **RECOMMENDED**
-- **Features**: Dual mode (CLI + JSON), Machine Mode, NeoPixel, Buzzer, BME688
-- **Commands**: `led rgb`, `coin`, `bump`, `power`, `1up`, `morgio`, `status`, `scan`
-- **Location**: `firmware/MycoBrain_SideA_DualMode/`
-- **Status**: Was working before ScienceComms upgrade
+### Canonical Roles (Jetson-Backed Architecture)
 
-#### 2. MycoBrain_NeoPixel_Fixed ✅
-- **Features**: Fixed NeoPixel support (SK6812/FastLED), Buzzer, BSEC2
-- **Location**: `firmware/MycoBrain_NeoPixel_Fixed/`
-- **Status**: Was working, code fixes applied
+#### 1. Operational Baseline — DeviceManager / DualMode ✅
+- **Location**: `firmware/MycoBrain_DeviceManager/MycoBrain_DeviceManager.ino`
+- **Identifiers**: `mycobrain.sideA.dualmode` 1.1.0
+- **Features**: CLI + JSON, Machine Mode, NeoPixel, Buzzer, BME688
+- **Status**: Current operational truth (COM7 / production)
 
-#### 3. MycoBrain_Minimal_PIO ✅
-- **Features**: Minimal firmware, Buzzer, Serial, NO PSRAM
-- **Location**: `firmware/MycoBrain_Minimal_PIO/`
-- **Status**: Was working on COM7 (Jan 6, 2026)
+#### 2. Target Split — Side A (Sensing/Control)
+- **Location**: `firmware/MycoBrain_SideA/MycoBrain_SideA.ino`
+- **Role**: Target sensing/control firmware for two-Jetson architecture
 
-#### 4. MycoBrain_ScienceComms ❌ **DO NOT USE**
-- **Status**: Causes firmware crashes and boot loops
+#### 3. Target Split — Side B (Transport)
+- **Location**: `firmware/MycoBrain_SideB/MycoBrain_SideB.ino`
+- **Role**: Target transport executor; LoRa/BLE/WiFi/SIM future work
+
+#### 4. Recovery Only — MycoBrain_Working
+- **Location**: `firmware/MycoBrain_Working/`
+- **Use**: Minimal boot recovery when production firmware fails
+
+#### 5. Experimental Reference — MycoBrain_ScienceComms
 - **Location**: `firmware/MycoBrain_ScienceComms/`
-- **Issue**: NeoPixelBus incompatibility, reset loop
+- **Use**: Mine for modem/stimulus/comms patterns only; do not use as baseline (has caused boot loops)
 
 ---
 

@@ -1,0 +1,75 @@
+﻿INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0C3PFQZ4G', 'OREI SplitExtend HDMI Splitter Extended Display for Dual Monitor - Multi-Monitor Display 3 Separate Screens - USB A & USB-C Adapter to HDMI 2.0, 4K@30Hz Output 1, 1080p Output 2 for Windows, Mac OS G', 'USB-C2HDMI2', 'misc', 1, 49.99, 'OREI Direct', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CBPNWCVS', 'Logitech MK540 Advanced Wireless Keyboard and Mouse Combo for Windows, 2.4 GHz Unifying USB-Receiver, Multimedia Hotkeys, 3-Year Battery Life, for PC, Laptop', '920-012585', 'dev-boards', 3, 47.99, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D1DFRKNG', 'SAMSUNG 32-Inch ViewFinity S7 (S70D) Series 4K UHD High Resolution Monitor with HDR10, Multiple Ports, Easy Setup Stand, Advanced Eye Care, LS32D702EANXGO, 2024', 'LS32D702EANXGO', 'dev-boards', 2, 234.56, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09L7X2KPP', 'Gebildet 10pcs 6mm 3V-4.5V-5V-6V-7.5V-9VDC LED Metal Indicator Light Waterproof Signal Lamp Pilot Dash Directional Car Truck Boat with Wire(Red/Orange/Blue/Green/White)', 'E726', 'misc', 5, 9.99, 'Gebildet', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D53KLM7K', 'ELII 327 PCS Cable Management Kit 4 Cable Cable Sleeves,65 Cable Clips with 13Cord Holders,25 Roll Cable Organizer Straps,200 Fastening Cable Ties,20 Cable Zip Tie Mounts for Computer (Black)', 'ELII-20240524-01', 'misc', 1, 15.25, 'ELII', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09TXL8NQ5', 'Waveshare Jetson Nano Development/Expansion Kit, 16GB eMMC, Alternative Solution of B01 Kit Compatible with Both Jetson Nano and Jetson Xavier NX Optional Jetson Nano Core Module', 'JETSON-NANO-DEV-KIT', 'dev-boards', 1, 189.99, 'waveshare', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B098DPR27M', 'Scissors, Multipurpose office Scissors,8.5 Inch Ultra Sharp Shears, Comfort-Grip Handles Household scissorsï¼ŒSturdy Sharp Craft Supplies - Pack of 5, Right/Left Hande', 'j001', 'misc', 1, 9.98, 'Guangxun', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B9V8Z3CT', 'VIVO Large Keyboard Tray Under Desk Pull Out Platform with Pencil Drawer, Extra Sturdy C Clamp Mount, 27 (33 Including Clamps) x 11 inch Slide-Out Tray with Storage Drawer, White, MOUNT-KB05-4DW', 'MOUNT-KB05-4DW', 'misc', 3, 59.99, 'V I V O', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B00QQH66AO', 'Mounting Dream TV Mount Fixed for Most 42-84 Inch Flat Screen TVs, TV Wall Mount Bracket up to VESA 600 x 400mm and 132 lbs - Fits 16"/18"/24" Studs - Low Profile and Space Saving MD2163-K', 'MD2163-K', 'misc', 2, 29.99, 'Mounting Dream', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BXNGHKMR', 'Perlegear Studless TV Wall Mount for Most 24-55 Inch TVs up to 100 lbs, No Stud TV Mount, Drywall TV Bracket with Max VESA 400x400mm, No Drill, Easy Install, Low Profile, PGMT7', 'PGMT7', 'misc', 2, 14.98, 'Bestergo Direct', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B75JJQ9Q', 'METALTER Screwdriver Rack, Small Tool Storage Holder for Desk Top, Work bench Organizer, Aluminum Alloy, Dark Grey', 'MT10010', 'misc', 1, 25.25, 'Metal Alter Tools', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DQTQQBZ9', 'Creality K2 Plus Combo 3D Printer, Multicolor Printing with 16 Colors, 600mm/s High-Speed Printing, Dual AI Cameras for Monitoring, Full-Auto Leveling, Large Build Volume 350Ã—350Ã—350mm', 'K2 Plus Combo', 'cameras', 1, 1499.0, 'Wolias', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BMVR7TZK', 'Nilight 12mm Push Button Switch 5PCS with Pre Wired Harness 12V 24V Stainless Steel Self Locking Latching LED Round Switches SPDT 4Pin Waterproof Metal for Boats Cars Truck', '90252B-A', 'misc', 1, 14.39, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0BJTWB72D', '32PCS 30 Scalpel Blades with #10#11#23 Scalpels Surgical Sterile Blades Including Two Handle,Laboratory Blade-Lab Knives- Carving Blades with Handle-Art Blades Practicing Cutting-Crafts & More', 'B0BJTWB72D', 'misc', 1, 8.99, 'YixangDD', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B00AWS3QV0', 'EISCO CH0688 Labs Clamp Retort, 3 PVC Coated Prongs (Opens to 90mm in Dia.) with Boss Head', 'CH0688', 'misc', 4, 16.79, 'hBARSCI', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B087QGTZ1G', 'Hotop 2 Pcs Inoculation Loop Mycology Reusable Inoculating Loop with 90 Replaceable Nichrome Needle Tip Vaccination Rings Vaccination Rod for Mycology Supplies Lab Tool', 'Hotop-Reusable Inoculating Loop-0096', 'misc', 1, 12.99, 'Spareak Inc', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08Y8M54M9', 'Digital Caliper Measuring Tool, Stainless Steel Vernier Caliper Digital Micrometer with Large LCD Screen, Easy Switch from Inch Metric Fraction, 6 Inch Caliper Tool for DIY/Household', 'B08Y8M54M9', 'misc', 1, 19.98, 'ADRIO-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B00G4CJ8GK', 'Sharpie Permanent Markers Bulk Set Fine Tip Markers Set For Plastic Metal Wood And More Black 36 Count', '1884739', 'misc', 1, 17.97, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D63D9Z5F', 'KOOTION 32GB Micro SD Cards 10-Pack, UHS-1 TF Flash Memory Card, U1, Class 10 microSDHC Card with Adapter', '293645c6-021c-4af2-a8fb-a40dbbd4b64e', 'misc', 1, 39.99, 'KOOTION', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0C7VY246L', 'NoCry Safety Face Shield Mask for Work with Premium Anti Fog and Anti Scratch Technology - Durable ANSI Z87.1 Certified Grinding Face Shield with Extreme Impact Resistance', 'UltraShield Pro Mask', 'misc', 1, 36.99, 'NoCry Work Gear', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07N2KM9RH', 'VEVOR New Laboratory Glassware 24/40 Chemistry Glassware 29PCS Chemistry Lab Glassware Kit 250 1000ml for Distillations Separation Purification Synthesisï¼ˆ24/40, 29PCSï¼‰', 'Kit de Distillation', 'misc', 1, 82.99, 'Suplander', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0F195XM47', 'ShroolyÂ® Indoor Mushroom Growing - Easy Plug & Grow System for Gourmet & Functional Mushrooms. Premium Device for Bountiful Harvests in 7-10 Days. Automatic Control of Light and Humidity (without kit)', 'Shrooly S1 USA', 'misc', 1, 289.0, 'Shrooly', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B088KL1WTX', 'X-Sense Mini Smoke Alarm, 10-Year Battery Fire Alarm Smoke Detector with LED Indicator & Silence Button, XS01, 6-Pack', 'XS01', 'power', 1, 89.99, 'X-Sense US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09BZ4F4X8', 'Luoxun-LX 500ml Soxhlet Extractor Kit,Soxhlet Extraction Apparatus with Condenser, Flat Bottom Flask, Lab Glassware (500ml)', '1', 'misc', 1, 85.7, 'Luoxun-LX', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DP2S8V6N', 'Creality K2 Plus Build Plate Epoxy Resin Coating 370x370mm Spring Steel Magnetic K2 Plus Smooth Build Plate EP Bed Plate for Creality K2 Plus', 'LD-3D-AC-Bed-Ender3V3SE-110', 'misc', 1, 35.99, 'Creality LD Direct Store', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;

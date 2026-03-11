@@ -8,12 +8,17 @@
 # - csv: read from local CSV file (path relative to MAS repo data/)
 # - manual: no automated source; user maintains; sync can still push if CSV exists
 # - zapier_webhook: Zapier writes to this tab; we don't overwrite (read-only from our side)
+#
+# Scope: mycoforge = device manufacturing only (Mushroom 1, SporeBase, ALARM, MycoNODE, Hypha 1)
+#        company_ops = general company operations (vendors, commitments, recruitment, etc.)
+# See docs/MYCOFORGE_SCOPE_AND_BOUNDARY_MAR07_2026.md
 
 spreadsheet_id: "1rhuGmyxZakCVet1zMK3_C2f3SCOzH_dr6HH6EKWGRmc"
 
 tabs:
   inventory:
     gid: "1289530278"
+    scope: mycoforge
     source: supabase
     supabase_table: components
     columns: ["id", "name", "sku", "category", "quantity", "unit_cost", "supplier_name", "location", "reorder_threshold", "supplier_lead_time_days"]
@@ -21,6 +26,7 @@ tabs:
 
   hardware:
     gid: ""  # Set when tab exists in Google Sheet
+    scope: mycoforge
     source: supabase
     supabase_table: hardware_network_devices
     columns: ["device_id", "device_name", "host", "port", "connection_type", "last_seen", "status"]
@@ -30,6 +36,7 @@ tabs:
 
   apps_and_services:
     gid: ""
+    scope: company_ops
     source: supabase
     supabase_table: apps_services
     columns: ["name", "category", "url", "owner", "status", "notes"]
@@ -37,6 +44,7 @@ tabs:
 
   customer_vendors:
     gid: ""
+    scope: company_ops
     source: supabase
     supabase_table: customer_vendors
     columns: ["name", "type", "contact", "terms", "notes"]
@@ -44,6 +52,7 @@ tabs:
 
   commitments:
     gid: ""
+    scope: company_ops
     source: supabase
     supabase_table: commitments
     columns: ["title", "due_date", "owner", "status", "notes"]
@@ -51,6 +60,7 @@ tabs:
 
   liabilities:
     gid: ""
+    scope: company_ops
     source: supabase
     supabase_table: liabilities
     columns: ["title", "amount", "due_date", "status", "notes"]
@@ -58,6 +68,7 @@ tabs:
 
   recruitment:
     gid: ""
+    scope: company_ops
     source: supabase
     supabase_table: recruitment_roles
     columns: ["role", "status", "owner", "notes"]
@@ -65,6 +76,7 @@ tabs:
 
   production:
     gid: ""
+    scope: mycoforge
     source: supabase
     supabase_table: production_runs
     columns: ["product", "quantity", "status", "notes"]
@@ -72,6 +84,7 @@ tabs:
 
   singlogs:
     gid: ""
+    scope: company_ops
     source: supabase
     supabase_table: singlogs
     columns: ["log_date", "log_type", "message", "source"]

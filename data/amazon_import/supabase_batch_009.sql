@@ -1,0 +1,75 @@
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0824DBV87', '22 Pieces Stainless Steel Lab Spatula Micro Scoop Set Laboratory Sampling Spoon Mixing Spatula for Powders Gel Cap Filler', 'Mudder-Micro Scoop-01', 'misc', 1, 14.49, 'Honoson', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DKSS4K6N', 'Long Range Soft Whip 915MHz LoRa Antenna with SMA Male Connector for Heltec V3 Meshtastic LORA32 915MHz ESP32 LoRa OLED Board + IPEX Extension Cable Adapter（2 Sets）, Eifagur', 'B0DKSS4K6N', 'dev-boards', 1, 12.99, 'eifagur', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0788ZMZ7X', 'AC Infinity AIRFRAME T7 Black, High-Airflow Cooling Fan System 17", Exhaust Airflow, for AV Equipment Rooms, Closets, and Enclosures', 'AC-AFT7-BE', 'misc', 2, 119.0, 'AC Infinity', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0D56GV4X1', 'ACEMAGICIAN AMD Mini PC Ryzen 7430U, Mini Gaming PC 32GB DDR4 512GB SSD, Mini Computers Micro Desktop PC Support 4K Triple Display/WiFi6/BT5.2 for Gaming/Office/Home', 'RYZEN 5 32GB 512GB', 'dev-boards', 1, 389.99, 'ACEMAGICIAN US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CNH8H6NG', 'waveshare 5inch Round LCD 1080 x 1080, IPS 10-Point Touch Screen for Raspberry Pi 4B/Raspberry Pi 3B+/Pi3B/Raspberry Pi Zero W/Zero WH/Raspberry Pi Zero 2W/Jetson Nano/PC, HDMI/USB Type-C Interface', 'f571e31b-4248-43c5-b4e8-20ea18a707b2', 'dev-boards', 1, 140.15, 'UeeKKoo', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CQT9J4K8', 'MakerFocus Wireless Tracker Supports GPS Galileo Multi-System Joint Positioning ESP32-S3 WiFi Bluetooth SX1262 UC6580 with 915MHz LoRa Antenna, 0.96-inch LCD Display for Meshtastic Arduino', 'UC6580', 'dev-boards', 1, 25.49, 'MakerFocus', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09991HDXG', 'VEVOR Drill Bit Dispenser Cabinet, Three-Drawer Drill Bit Dispenser, Drill Bit Organizer Cabinet Cold Rolled Steel, 27-Compartment Drill Dispenser Organizer Cabinet Holder for Letter Sizes A to Z', 'drill bit dispenser 7 kg', 'misc', 1, 50.37, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07SST5GDB', 'Sensor, AS3935 Storm Distances Detection Sensor SPI I2C Interfacing 2.4V-5.5V for Phones Watches Electronic Devices', 'Yosoowd1feuimkp', 'sensors', 2, 30.25, 'ochun', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B088BBJ9SQ', 'youyeetoo TF-Luna Lidar Sensor Kit, with 1x USB-TTL Adapter 1x Dupont Line, 0.2-8m Measurement Range Distance, Support Raspberry Arduino STM32 MCU for Drone Industrial Sensing Robot Smart Home', 'TF-Luna', 'dev-boards', 1, 24.99, 'youyeetoo tech', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B09HHDRFRN', 'Amazon Basics Hydrogen Peroxide Topical Solution USP, Unflavored, 32 Fl Oz, Pack of 6', 'B09HHDRFRN', 'misc', 1, 37.09, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CY1XKZQC', 'DIYmall 2pcs 915MHz LoRa32 V3 ESP32 S3 WiFi+BT Development Board with 5DBi LoRa Antenna 0.96" OLED Display SX1262 LoRa Kit forMeshtastic IoT', 'B0CY1XKZQC', 'dev-boards', 2, 47.99, 'DIYmall', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B00NS4J6BY', 'Thermaltronics TMT-TC-2 Tip Tinner (20g) in 0.8oz Container', 'FBA_TMT-TC-2', 'misc', 2, 6.35, 'Thermaltronics', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B074GG4L95', 'EZ BioResearch Potato Dextrose Agar (PDA) Plates for Mushroom Cultivation (10 Pre-Poured Agar Plates)', 'PDA-10', 'misc', 1, 21.95, 'EZ BioResearch LLC', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DPZW6KXT', 'MakerHawk 3.7V Lipo Battery 1000mAh 803040 Rechargeable Battery Lithium Polymer Battery with Micro PH1.25 Connector Integrated Protection Circuit for Electronic Device (4 Pcs)', 'B0DPZW6KXT', 'power', 2, 16.99, 'MakerHawk-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B6PVJTHY', 'JROUTH 1500pcs Screws Assortment , M2 M3 M4 M5 10.9 Grade Alloy Steel Hex Flat Head Cap Bolts Nuts Washers Assortment Kit with Hex Wrenches', 'M2-M5-1500', 'misc', 1, 26.48, 'JROUTH', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B06XNP8J4R', '3M Micropore Tape 1530-1 (2 rolls) 1 x 10 yards', '1350-1', 'misc', 1, 4.61, 'Preferred Pharmacy Plus', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B01D1FFVOA', 'ALITOVE 100pcs WS2812B Addressable 5050 Smart RGB LED Pixel Light on Black Heat Sink PCB Board 5V DC Compatible with Raspberry Pi for DIY Lighting Project', 'ALWS2812B1LEDBK', 'dev-boards', 1, 14.99, 'ALITOVE', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B013JRWCBU', 'Letool 30 Pairs JST 1.25mm 2 Pin Micro Male Female Connector Plug with Red Black Wire Cable 80mm', '5738466', 'misc', 2, 6.99, 'A-Tools supplier', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0B2D89WLT', 'CHANZON 30 Pairs Jst PH 2.0 mm Pitch 22AWG 2Pin Plug Connector for 10cm and 15cm UL1007 Tinned Copper Wire for Battery H67 H36 Blade Inductrix E010 E013.', 'PH2PUK-10-15-MF-1007-22AWG-30', 'power', 1, 9.99, 'Chanzon', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0DB5MH38T', '915MHz Antenna 10dBi Gain for Meshtastic LoRa Long Range Soft Whip Antenna, 17cm Omni SMA Male Black (2 Pack)', 'B0DB5MH38T', 'antennas', 1, 25.99, 'MakerHawk-US', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B099P57WJN', 'ES EVVIVA SCIENCES Pre-Poured Black Malt Extract Agar Plates - Includes Both Black Dye & Charcoal for Enhanced Culture Visualization - Excellent Growth Medium - Great for Mushrooms & Science Projects', 'EV60', 'misc', 2, 31.99, 'Evviva Sciences', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0C8NTZ3QG', 'Kanayu 30 Pcs Small Solar Panels 3v 120ma Mini Polycrystalline Solar Cells DIY System Kits Epoxy Panel Module Photovoltaic Cells Charger 60 x 55 mm for Light Phone Charger Flashlight', 'WAE-Kanayu-1664', 'power', 1, 29.99, 'Waeeshy', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B07NFSFBXQ', 'Amazon Basics 99% Isopropyl Alcohol First Aid For Technical Use,16 Fluid Ounces, 1-Pack (Previously Solimo)', 'B07NFSFBXQ', 'misc', 2, 7.1, 'Amazon.com', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B0CTXL61LY', '915MHz LoRa Antenna Indoor 3dBi Gain Omni SMA Male + IPEX Cable 2 Pcs', 'TY-CSA27', 'antennas', 1, 9.99, 'Tenmory', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;
+INSERT INTO components (id, name, sku, category, quantity, unit_cost, supplier_name, location, reorder_threshold, supplier_lead_time_days)
+VALUES ('B08XHX9XJK', 'iplusmile Stainless Steel Single Ended Micro Straight Dissecting Needle for Lab Dissecting Needle for Lab Experiment Equipment', 'G36A3PA6FH20943GXT0O', 'misc', 2, 17.69, 'ubestsky', '', 0, 7)
+ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, sku=EXCLUDED.sku, category=EXCLUDED.category, quantity=EXCLUDED.quantity, unit_cost=EXCLUDED.unit_cost, supplier_name=EXCLUDED.supplier_name;

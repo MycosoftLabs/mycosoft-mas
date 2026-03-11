@@ -314,10 +314,14 @@ def fetch_tab_data(tab_name: str, tab_cfg: dict, mas_base: str) -> tuple[list[di
 def push_to_google_sheets(
     spreadsheet_id: str,
     tab_gid: str,
+    tab_name: str,
     rows: list[dict],
     columns: list[str],
 ) -> bool:
-    """Replace sheet tab content. Returns True on success."""
+    """Replace sheet tab content. Returns True on success.
+
+    When tab_gid is empty, uses tab_name to find or create the worksheet.
+    """
     try:
         import gspread
         from google.oauth2.service_account import Credentials
@@ -330,16 +334,20 @@ def push_to_google_sheets(
         or os.environ.get("GOOGLE_SERVICE_ACCOUNT_PATH")
         or os.environ.get("GOOGLE_SERVICE_ACCOUNT_KEY")
     )
-    creds_json = os.environ.get("GOOGLE_SHEETS_CREDENTIALS_JSON")
+    creds_json = os.environ.get("GOOGLE_SHEETS_CREDENTIALS_JSON", "").strip()
     if not creds_path and not creds_json:
         print("Set GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_SHEETS_CREDENTIALS_JSON")
         return False
 
     if creds_json:
         try:
-            info = json.loads(creds_json)
-        except json.JSONDecodeError:
-            print("GOOGLE_SHEETS_CREDENTIALS_JSON must be valid JSON")
+            import base64
+            raw = creds_json
+            if raw.startswith("eyJ"):  # base64 of '{"'
+                raw = base64.b64decode(raw).decode("utf-8")
+            info = json.loads(raw)
+        except (json.JSONDecodeError, ValueError) as e:
+            print("GOOGLE_SHEETS_CREDENTIALS_JSON must be valid JSON or base64: %s" % e)
             return False
         creds = Credentials.from_service_account_info(
             info, scopes=["https://www.googleapis.com/auth/spreadsheets"]
@@ -351,7 +359,25 @@ def push_to_google_sheets(
 
     gc = gspread.authorize(creds)
     sh = gc.open_by_key(spreadsheet_id)
-    ws = sh.get_worksheet_by_id(int(tab_gid)) if tab_gid.isdigit() else sh.worksheet(tab_gid)
+
+    # Resolve worksheet: by gid first, else by tab name; create if missing
+    ws = None
+    if tab_gid and tab_gid.strip().isdigit():
+        try:
+            ws = sh.get_worksheet_by_id(int(tab_gid))
+        except gspread.exceptions.APIError:
+            ws = None
+    if ws is None:
+        sheet_title = tab_name or tab_gid
+        if not sheet_title:
+            print("Need gid or tab_name to identify worksheet")
+            return False
+        try:
+            ws = sh.worksheet(sheet_title)
+        except gspread.exceptions.WorksheetNotFound:
+            ws = sh.add_worksheet(title=sheet_title, rows=1000, cols=26)
+            print(f"Created worksheet '{sheet_title}' (gid={ws.id})")
+
     vals = [columns] + [[str(r.get(k, "")) for k in columns] for r in rows]
     ws.clear()
     ws.update(vals, "A1", value_input_option="USER_ENTERED")
@@ -409,8 +435,8 @@ def main() -> int:
         print(f"[{tab_name}] Wrote {len(rows)} rows to {csv_path}")
 
         push_ok = False
-        if args.push and rows and gid:
-            push_ok = push_to_google_sheets(spreadsheet_id, gid, rows, columns)
+        if args.push and rows:
+            push_ok = push_to_google_sheets(spreadsheet_id, gid, tab_name, rows, columns)
             if push_ok:
                 results.append({"tab": tab_name, "status": "pushed", "rows": len(rows)})
                 print(f"[{tab_name}] Pushed to Google Sheets")

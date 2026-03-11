@@ -147,6 +147,26 @@ def _get_device_status(device_id: str) -> str:
         return "online"
 
 
+def get_device_registry_snapshot() -> Dict[str, Any]:
+    """
+    Thread-safe snapshot of device registry for Merkle world root.
+    Returns JSON-serializable dict: devices, last_seen_iso, timestamp.
+    """
+    _cleanup_expired_devices()
+    devices = {}
+    for device_id, device in list(_device_registry.items()):
+        status = _get_device_status(device_id)
+        devices[device_id] = {**device, "status": status}
+    last_seen_iso = {
+        k: v.isoformat() for k, v in _device_last_seen.items()
+    }
+    return {
+        "devices": devices,
+        "last_seen_iso": last_seen_iso,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 def _cleanup_expired_devices():
     """Remove devices that haven't sent heartbeat within TTL."""
     now = datetime.now(timezone.utc)
@@ -266,6 +286,63 @@ async def list_devices(
     Returns devices with their current status based on last heartbeat.
     """
     return await _list_devices_impl(status=status, include_offline=include_offline)
+
+
+@router.get("/crep")
+async def list_devices_crep(
+    include_offline: bool = Query(False, description="Include offline devices"),
+):
+    """
+    List devices as CREP UnifiedEntity format for unified entity aggregation.
+    Devices without lat/lng use [0, 0]; CREP layers can override with known positions.
+    """
+    _cleanup_expired_devices()
+    entities = []
+    import time as _time
+    for device_id, device in _device_registry.items():
+        status = _get_device_status(device_id)
+        if not include_offline and status == "offline":
+            continue
+        loc = device.get("location") or device.get("extra", {}).get("location")
+        coords: list[float] = [0.0, 0.0]
+        if isinstance(loc, str) and "," in loc:
+            try:
+                parts = loc.split(",")
+                coords = [float(parts[0].strip()), float(parts[1].strip())]
+            except (ValueError, IndexError):
+                pass
+        elif isinstance(loc, (list, tuple)) and len(loc) >= 2:
+            try:
+                coords = [float(loc[0]), float(loc[1])]
+            except (ValueError, TypeError):
+                pass
+        now_iso = datetime.now(timezone.utc).isoformat()
+        entities.append({
+            "id": device_id,
+            "type": "device",
+            "geometry": {"type": "Point", "coordinates": coords},
+            "state": {
+                "classification": device.get("device_role", "standalone"),
+                "energy": 1.0 if status == "online" else 0.5 if status == "stale" else 0.0,
+            },
+            "time": {"observed_at": now_iso, "valid_from": now_iso},
+            "confidence": 0.9 if status == "online" else 0.6,
+            "source": "mas-device-registry",
+            "properties": {
+                "device_name": device.get("device_name"),
+                "device_role": device.get("device_role"),
+                "status": status,
+                "host": device.get("host"),
+                "port": device.get("port"),
+                "board_type": device.get("board_type"),
+                "ingestion_source": device.get("ingestion_source", "serial"),
+            },
+            "s2_cell": "0",
+        })
+    return {
+        "entities": entities,
+        "server_time_ms": int(_time.time() * 1000),
+    }
 
 
 @router.get("/{device_id}")

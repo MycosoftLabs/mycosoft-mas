@@ -47,6 +47,20 @@ Heartbeat, reporting, and escalation from executive-assistant VMs (CEO, CFO, CTO
 
 **Router:** `mycosoft_mas/core/routers/csuite_api.py`
 
+### Merkle Ledger API (`/api/merkle/*`) – Mar 9, 2026
+
+Content-addressed event ledger with Merkle DAG roots per tick. BLAKE3-256 over deterministic CBOR.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/merkle/health` | GET | Merkle ledger health |
+| `/api/merkle/event/hash` | POST | Compute event leaf hash from canonical CBOR |
+| `/api/merkle/roots/temporal` | POST | Build temporal root from ordered event hashes |
+| `/api/merkle/roots/thought` | POST | Build thought root (self, world, event, prev, policy) |
+| `/api/merkle/proof/inclusion` | POST | Build Merkle inclusion proof |
+
+**Router:** `mycosoft_mas/core/routers/merkle_ledger_api.py`
+
 ### CFO MCP API (`/api/cfo-mcp/*`) – Mar 8, 2026
 
 REST API for the Meridian adapter; exposes CFO MCP tools over HTTP.
@@ -344,6 +358,7 @@ This API provides heartbeat-based registration and management for remote MycoBra
 | `/api/devices/heartbeat` | POST | **Canonical** device heartbeat/registration (called by MycoBrain services) |
 | `/api/devices/register` | POST | Legacy alias for `/heartbeat`; both behave identically |
 | `/api/devices` | GET | List all network-registered devices (supports `status`, `include_offline` params) |
+| `/api/devices/crep` | GET | List devices as CREP UnifiedEntity batch for unified entity aggregation (Mar 10, 2026) |
 | `/api/devices/{device_id}` | GET | Get specific device info |
 | `/api/devices/{device_id}` | DELETE | Unregister device from registry |
 | `/api/devices/{device_id}/fci-summary` | POST | Store FCI summary in device extra (bridge from Mycorrhizae/FCI) |

@@ -17,6 +17,7 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/EXTERNAL_REPO_INTEGRATION_COMPLETE_MAR10_2026.md` | **Phase 1 complete**: Label syncer, Uncodixfy rule, Turf bbox validation, CrepMapPreferencesPanel, Supabase CREP preferences, MAS finance + proxy. Use for CREP map, finance status, external repo patterns. |
+| `docs/EXTERNAL_REPO_FEATURES_USAGE_AND_TESTING_MAR10_2026.md` | **Feature usage & testing**: How features work; where to interact (CREP Map Preferences, fungal API, finance proxy); CREP and Uncodixfy UI rules; verification commands. Use for user flows and testing. |
 
 ## Public AI Rollout (Mar 9, 2026)
 | Doc | Purpose |
