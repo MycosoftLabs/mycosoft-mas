@@ -110,12 +110,17 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 | `gpu-node-ops` | GPU node (gpu01/192.168.0.190) deployment, PersonaPlex/Earth2 containers, nvidia-smi, offload from dev machine |
 | `backup-ops` | Cursor chat backup, Proxmox snapshots, DB backups |
 
+### Token / Efficiency
+| Agent | Use For |
+|-------|---------|
+| `token-efficiency-guardian` | Token discipline, thread resets, targeted prompts; invoke when "reduce token usage", "optimize Cursor" |
+
 ### Quality/Audit Agents
 | Agent | Use For |
 |-------|---------|
 | `bug-fixer` | Diagnose and fix bugs from error reports, stack traces, test failures; root cause and patch |
 | `code-auditor` | Find TODOs, FIXMEs, stubs, dead code across all repos |
-| `gap-agent` | Cross-repo gaps, missing connections, bridge gaps; suggests plans; use when two projects need a third connection |
+| `gap-agent` | Cross-repo gaps; invoke when user asks "what's missing" or when planning across 3+ repos (not every chat) |
 | `plan-tracker` | Track 650+ plans, 17+ roadmaps, find stale/abandoned work |
 | `route-validator` | Find missing pages, broken links, 501 API routes |
 | `stub-implementer` | Replace placeholders with real implementations |
