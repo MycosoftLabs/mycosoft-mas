@@ -1,9 +1,12 @@
-# Full Context Before Planning FEB10_2026 (All Agents)
+# Full Context for Planning Only FEB10_2026
 
-## MANDATORY: Context Loading Before Any Plan, Task, or Implementation
+## When to Apply: Creating a NEW Plan or Architecture Document
 
-Before ANY agent creates a plan, writes new code, makes architectural decisions,
-or starts a new task in any Mycosoft repository, it MUST load full system context.
+This rule applies **only** when:
+- Creating a **new plan** or architecture document
+- Designing a multi-repo system or integration
+
+**Do not apply** for coding, bug fixes, single-file work, or single-repo tasks. See `token-efficiency-cto-operating.mdc` for tiered context loading.
 
 ## Required Steps (in order)
 
@@ -50,3 +53,6 @@ or starts a new task in any Mycosoft repository, it MUST load full system contex
 ## Enforcement
 - If a plan is created without this context, it must be invalidated and redone.
 - The plan-tracker agent should verify context loading.
+
+## Cross-Reference
+- `token-efficiency-cto-operating.mdc` — When to use full vs tiered context

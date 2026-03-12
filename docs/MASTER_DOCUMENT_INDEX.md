@@ -8,6 +8,9 @@
 - `docs/VOICE_V9_DUPLEX_PERSONA_COMPLETE_MAR02_2026.md` – **Voice v9 duplex and persona lock complete**: InterruptManager, PersonaLockService, REST/WebSocket endpoints; barge-in, persona validation, identity-safe TTS.
 - `docs/VOICE_V9_DEPLOYMENT_RUNTIME_MAR02_2026.md` – **Voice v9 deployment and runtime**: Dev vs production topology; env contracts; startup order; rollout stages; v9 API endpoints.
 
+## Code Unification (Mar 11, 2026)
+- `docs/CODE_UNIFICATION_STATUS_MAR11_2026.md` – **Code unification status**: Pushed local Cursor work to main; open PRs blocked by conflicts/CI; what was unified, what remains, recommended next steps.
+
 ## CREP Integration Test Plan (Mar 10, 2026)
 - `WEBSITE/website/docs/CREP_INTEGRATION_TEST_PLAN_MAR10_2026.md` – **CREP integration test plan**: Canonical plan for validating CREP integrations; P0 biodiversity/wildlife bubble selection (done); satellite imagery (MODIS, VIIRS, AIRS, Landsat, EONET), Shadowbroker, deck.gl filters, military filters, VIZ test features; test matrix and completion checklist.
 
@@ -20,6 +23,7 @@
 
 ## CREP Species Widgets & Viewport Loading (Mar 11, 2026)
 - `docs/CREP_SPECIES_WIDGETS_VIEWPORT_LOADING_COMPLETE_MAR11_2026.md` – **CREP species widgets & viewport loading complete**: Fungal data from map bounds only (fetchData no longer overwrites); bounds effect AbortController; FilterToggle layout stability; iNaturalist-style viewport loading.
+- `docs/CREP_SPECIES_ICONS_CLICKABLE_FIX_MAR11_2026.md` – **CREP species icons clickable fix**: deck.gl overlay z-index/pointer-events; marker container above overlay; FungalMarker type=button; formatObs geometry.coordinates support.
 
 ## CREP Fungal Route Reliability (Mar 11, 2026)
 - `WEBSITE/website/docs/CREP_FUNGAL_ROUTE_RELIABILITY_MAR11_2026.md` – **CREP fungal route reliability**: MINDEX API key, graceful degradation (200 with empty data on failure), fetchWithRetry for iNaturalist/GBIF (10s timeout, 2 retries), 1.5MB cache limit; test results; MINDEX=0 investigation notes.

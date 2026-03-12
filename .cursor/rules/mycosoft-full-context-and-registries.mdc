@@ -20,21 +20,28 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
 
 ---
 
-## Mandatory before any new plan, task, or implementation
+## Mandatory before any new plan, task, or implementation — Tiered per task type
 
-**When a new agent is spun up, or a new plan/task is created, or before implementing code:**
+**Tiered loading (see `token-efficiency-cto-operating.mdc`):**
 
-0. **EVERY CHAT – Invoke sub-agents and load docs first.** Before any other step: read `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md`, identify which sub-agents apply to this task, @-invoke them or read their `.cursor/agents/<name>.md` and follow their protocols. Load CURSOR_DOCS_INDEX and task-relevant docs. Do not skip. See `.cursor/rules/agent-must-invoke-subagents-and-docs.mdc`.
-1. **Read and use registries and indexes** so the full system is known. Do not build from ignorance or "rabbit holes."
-2. **Consult (at minimum):**
-   - **.cursor/CURSOR_DOCS_INDEX.md** – vital/current docs only (Cursor internal reference; new replaces old)
-   - **docs/MASTER_DOCUMENT_INDEX.md** – table of contents for all docs
-   - **.cursor/docs_manifest.json** – full list of all docs (path, title, repo) for discovery; regenerate with `python scripts/build_docs_manifest.py`. Cursor does not auto-read 2000+ docs or Notion; see `.cursor/rules/cursor-docs-indexing.mdc`.
-   - **docs/SYSTEM_REGISTRY_FEB04_2026.md** – systems, APIs, agents, services, devices (and API endpoints for registry)
-   - **docs/API_CATALOG_FEB04_2026.md** – API catalog
-   - **docs/system_map.md** – system map
-   - **docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md** – memory system (when relevant)
-   - **Docs dated in the last 2 weeks** – list from `docs/` sorted by date (latest first) and read newest first for current state
+- **Simple** (typo, single-file edit): CURSOR_DOCS_INDEX only if task touches multiple systems; otherwise skip.
+- **Coding** (component, API, bug fix in one repo): CURSOR_DOCS_INDEX + 1–2 task-relevant docs. Add SYSTEM_REGISTRY + API_CATALOG only if touching APIs.
+- **Planning** (architecture, multi-repo design): Full list below.
+
+0. **Invoke sub-agents when task warrants.** Read `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md`, identify which sub-agents apply, @-invoke or follow their protocols. Do not invoke speculatively. See `.cursor/rules/agent-must-invoke-subagents-and-docs.mdc`.
+1. **Read and use registries and indexes** so the full system is known (or as much as relevant to the task tier). Do not build from ignorance or "rabbit holes."
+2. **Consult (tiered):**
+   - **Simple:** Skip or CURSOR_DOCS_INDEX only.
+   - **Coding:** **.cursor/CURSOR_DOCS_INDEX.md** + 1–2 task docs. Add **docs/SYSTEM_REGISTRY_FEB04_2026.md** and **docs/API_CATALOG_FEB04_2026.md** only if touching APIs.
+   - **Planning (full):**
+     - **.cursor/CURSOR_DOCS_INDEX.md** – vital/current docs
+     - **docs/MASTER_DOCUMENT_INDEX.md** – table of contents
+     - **.cursor/docs_manifest.json** – full discovery
+     - **docs/SYSTEM_REGISTRY_FEB04_2026.md** – systems, APIs, agents, services, devices
+     - **docs/API_CATALOG_FEB04_2026.md** – API catalog
+     - **docs/system_map.md** – system map
+     - **docs/MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md** – memory system (when relevant)
+     - **Docs dated in the last 2 weeks** – only when planning
 3. **Align with:** sitemap, pages, apps, APIs, services, integrations, device lists, agent lists, routes, schema. If a registry or list exists for it, use it before adding or changing.
 4. **When introducing new code** that adds or changes: pages, apps, APIs, routes, services, devices, agents, or schema – **update the relevant registries, indexes, and docs** (including MASTER_DOCUMENT_INDEX if new docs are created). Keep sitemap, API catalog, and system registry in sync with reality.
 5. **When a plan or task is completed** – **create or update documentation**: create a dated completion document at plan completion; at task completion update the plan/status docs and any task log. Add new docs to MASTER_DOCUMENT_INDEX (and CURSOR_DOCS_INDEX if vital). See `.cursor/rules/plan-and-task-completion-docs.mdc`.
@@ -45,7 +52,7 @@ All Mycosoft work can impact many systems. Agents must treat the following as in
 
 - **Execute operations yourself:** NEVER ask the user to run deployment scripts, terminal commands, or debug in a terminal. You have terminal access—use run_terminal_cmd. Load credentials from `.credentials.local` when needed. See `.cursor/rules/agent-must-execute-operations.mdc`.
 - **Run servers externally:** Long-running servers (dev server, Moshi, Bridge) must run in an **external** terminal (e.g. Start-Process powershell), not in Cursor's terminal. See `.cursor/rules/run-servers-externally.mdc`.
-- **Full context first:** Read and use the full index/registries so the entire system is known (or as much as is relevant to the task).
+- **Tiered context:** Use simple/coding/planning tiers per `token-efficiency-cto-operating.mdc`. Do not load full registries for simple or single-repo coding tasks.
 - **Then plan/code:** Only after that, make plans, ideas, or implementations. This avoids chaos and duplicate or conflicting work across 500k+ files and multiple repos.
 - **Index rapidly:** Use table-of-contents style indexing and existing registries so context can be loaded quickly by any agent. Prefer updating existing registries over creating scattered new lists.
 

@@ -1,8 +1,12 @@
-# Read Recent Docs Before Planning (All Agents)
+# Read Recent Docs Before Planning (Planning Only)
 
-## MANDATORY: Context Loading Before Any Plan, Task, or Implementation
+## When to Apply: Creating a New Plan or Multi-Repo Task
 
-Before ANY agent creates a plan, writes new code, makes architectural decisions, or starts a new task in any Mycosoft repository, it MUST first load recent documentation context.
+This rule applies **only** when:
+- Creating a **new plan** or architecture document
+- Starting a **multi-repo task** (3+ repos)
+
+For **bug fixes**, **single-repo coding**, or **single-file work**: read only docs directly referenced by the task (e.g. API catalog if touching an API). Do not load last-4-weeks docs. See `token-efficiency-cto-operating.mdc`.
 
 ---
 
@@ -38,9 +42,9 @@ Always read these before any work:
 ### 5. Check the Prioritization Document
 - Read `docs/Code and System Prioritization.docx.md` for current priorities, execution order, and what has been planned vs implemented.
 
-### 6. Check Gap Reports
+### 6. Check Gap Reports (Planning Only)
 
-Before any plan or implementation, check for known gaps:
+When creating a plan, check for known gaps:
 
 - **`.cursor/gap_report_index.json`** -- Gaps in indexed files (high-priority items from MASTER_DOCUMENT_INDEX)
 - **`.cursor/gap_report_latest.json`** -- Repo-wide gaps (TODOs, stubs, 501 routes, bridge gaps)
@@ -69,11 +73,12 @@ Regenerate gap reports if they're stale: `python scripts/gap_scan_cursor_index.p
 | Scenario | Required? |
 |----------|-----------|
 | Creating a new plan | YES -- full context load |
-| Starting a new coding task | YES -- at minimum read last 7 days |
-| Fixing a bug | YES -- read related docs |
-| Answering a question about the system | YES -- read relevant registries |
-| Continuing work from a previous session | YES -- read docs created since last session |
-| Simple file edit (typo fix, comment update) | NO -- skip if trivially scoped |
+| Starting a multi-repo task (3+ repos) | YES -- full context load |
+| Starting a single-repo coding task | NO -- read 1-2 task-relevant docs only |
+| Fixing a bug | NO -- read related docs only (e.g. API catalog if touching API) |
+| Answering a question about the system | NO -- read relevant registries only |
+| Continuing work from a previous session | NO -- read docs created since last session only if planning |
+| Simple file edit (typo fix, comment update) | NO -- skip |
 
 ---
 
@@ -96,6 +101,7 @@ Regenerate gap reports if they're stale: `python scripts/gap_scan_cursor_index.p
 
 ## Cross-Reference
 
+- `token-efficiency-cto-operating.mdc` -- Tiered context, when to skip
 - `mycosoft-full-context-and-registries.mdc` -- Full registry and index locations
 - `mycosoft-full-codebase-map.mdc` -- Complete repo map
 - `docs/Code and System Prioritization.docx.md` -- Master prioritization document
