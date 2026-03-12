@@ -244,6 +244,9 @@
 - `docs/CLAUDE_COWORK_FAILED_TO_OPEN_SOCKET_FIX_MAR06_2026.md` – **FailedToOpenSocket fix**: Cowork VM uses DNS from disconnected adapter; diagnostic commands; Option A (align DNS), Option B (disable adapters + SharedAccess + reboot), Option C (Repair/Reset); verify before moving to VM.
 - `docs/CLAUDE_COWORK_VM_TROUBLESHOOTING_MAR03_2026.md` – **Cowork VM fix**: "VM service not running" regression; MSIX path bug, DCOM, Hyper-V; run `scripts/fix-claude-cowork-vm.ps1`; use exe installer from claude.ai/download to avoid MSIX.
 
+## C-Suite COO Golden Setup (Mar 11, 2026)
+- `docs/CSUITE_COO_GOLDEN_SETUP_MAR11_2026.md` – **C-Suite golden image**: OpenClaw bootstrap, Claude Cowork (COO), Perplexity (CFO), Cursor (CTO), MycaOS (CEO); remote bootstrap via WinRM or manual RDP; `setup_csuite_golden_full.ps1`, `set_csuite_role.ps1` for clones.
+
 ## Mycosoft SSH MCP (Mar 3, 2026)
 - `docs/MYCOSOFT_SSH_MCP_MAR03_2026.md` – **SSH MCP**: Secure VM access for Claude Code, Cursor, Claude Cowork — ssh_exec, ssh_upload, ssh_download, ssh_status; host aliases sandbox/mas/mindex/gpu/myca; setup, credentials, adding future VMs.
 
