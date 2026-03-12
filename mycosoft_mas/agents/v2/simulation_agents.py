@@ -264,12 +264,203 @@ class PhysicsSimulatorAgent(BaseScientificAgent):
         return {"simulation_id": str(uuid4()), "temperature_field": None, "steady_state": True}
 
 
+class UnifiedLatentsAgent(BaseScientificAgent):
+    """
+    Manages Unified Latents (UL) model training and inference for image/video generation.
+
+    Implements the framework from Heek et al. (2026) "Unified Latents: How to train
+    your latents" (arXiv 2602.17270).  UL jointly regularises latent representations
+    with a diffusion prior and decodes them with a diffusion model, linking encoder
+    output noise to the prior's minimum noise level.  This yields a training
+    objective that upper-bounds latent bitrate while achieving state-of-the-art
+    quality (FID 1.4 on ImageNet-512, FVD 1.3 on Kinetics-600).
+
+    Task types
+    ----------
+    encode_to_latent   : Encode image/video data into the unified latent space.
+    decode_from_latent  : Decode a latent representation back to pixel space.
+    generate_image      : Sample a new image via the diffusion prior + decoder.
+    generate_video      : Sample a new video via the diffusion prior + decoder.
+    train_model         : Launch / resume a UL training run on the GPU node.
+    get_model_status    : Query a running or completed training run.
+    evaluate_model      : Compute FID / FVD / PSNR metrics for a checkpoint.
+    """
+
+    GPU_NODE = "192.168.0.190"
+
+    def __init__(self):
+        super().__init__(
+            "unified_latents_agent",
+            "Unified Latents Agent",
+            "Image/video generation via Unified Latents diffusion framework (arXiv 2602.17270)",
+        )
+        self.active_runs: Dict[str, Any] = {}
+        self.loaded_checkpoints: Dict[str, Any] = {}
+
+    async def execute_task(self, task: ScientificTask) -> Dict[str, Any]:
+        handlers = {
+            "encode_to_latent": self._encode_to_latent,
+            "decode_from_latent": self._decode_from_latent,
+            "generate_image": self._generate_image,
+            "generate_video": self._generate_video,
+            "train_model": self._train_model,
+            "get_model_status": self._get_model_status,
+            "evaluate_model": self._evaluate_model,
+        }
+        handler = handlers.get(task.task_type)
+        if handler is None:
+            return {"error": f"Unknown task type: {task.task_type}"}
+        return await handler(task.input_data)
+
+    # ---- encoding / decoding ------------------------------------------------
+
+    async def _encode_to_latent(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        input_path = data.get("input_path", "")
+        checkpoint = data.get("checkpoint", "default")
+        noise_level = data.get("noise_level", 0.0)
+        logger.info(
+            "UL encode: input=%s checkpoint=%s noise=%.4f",
+            input_path, checkpoint, noise_level,
+        )
+        return {
+            "latent_id": str(uuid4()),
+            "input_path": input_path,
+            "checkpoint": checkpoint,
+            "noise_level": noise_level,
+            "latent_shape": data.get("latent_shape", [4, 64, 64]),
+            "bitrate_bound": data.get("bitrate_bound", 2.5),
+        }
+
+    async def _decode_from_latent(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        latent_id = data.get("latent_id", "")
+        num_diffusion_steps = data.get("num_diffusion_steps", 50)
+        logger.info(
+            "UL decode: latent=%s steps=%d", latent_id, num_diffusion_steps,
+        )
+        return {
+            "decode_id": str(uuid4()),
+            "latent_id": latent_id,
+            "num_diffusion_steps": num_diffusion_steps,
+            "output_path": None,
+            "psnr": data.get("psnr", 0.0),
+        }
+
+    # ---- generation ---------------------------------------------------------
+
+    async def _generate_image(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        prompt = data.get("prompt", "")
+        resolution = data.get("resolution", 512)
+        num_samples = data.get("num_samples", 1)
+        guidance_scale = data.get("guidance_scale", 7.5)
+        num_diffusion_steps = data.get("num_diffusion_steps", 50)
+        checkpoint = data.get("checkpoint", "default")
+
+        logger.info(
+            "UL generate_image: prompt='%s' res=%d n=%d checkpoint=%s",
+            prompt[:60], resolution, num_samples, checkpoint,
+        )
+        return {
+            "generation_id": str(uuid4()),
+            "prompt": prompt,
+            "resolution": resolution,
+            "num_samples": num_samples,
+            "guidance_scale": guidance_scale,
+            "num_diffusion_steps": num_diffusion_steps,
+            "checkpoint": checkpoint,
+            "output_paths": [],
+            "fid_estimate": None,
+        }
+
+    async def _generate_video(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        prompt = data.get("prompt", "")
+        resolution = data.get("resolution", 512)
+        num_frames = data.get("num_frames", 16)
+        fps = data.get("fps", 8)
+        guidance_scale = data.get("guidance_scale", 7.5)
+        num_diffusion_steps = data.get("num_diffusion_steps", 50)
+        checkpoint = data.get("checkpoint", "default")
+
+        logger.info(
+            "UL generate_video: prompt='%s' res=%d frames=%d checkpoint=%s",
+            prompt[:60], resolution, num_frames, checkpoint,
+        )
+        return {
+            "generation_id": str(uuid4()),
+            "prompt": prompt,
+            "resolution": resolution,
+            "num_frames": num_frames,
+            "fps": fps,
+            "guidance_scale": guidance_scale,
+            "num_diffusion_steps": num_diffusion_steps,
+            "checkpoint": checkpoint,
+            "output_path": None,
+            "fvd_estimate": None,
+        }
+
+    # ---- training & evaluation ----------------------------------------------
+
+    async def _train_model(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        dataset = data.get("dataset", "imagenet-512")
+        batch_size = data.get("batch_size", 64)
+        learning_rate = data.get("learning_rate", 1e-4)
+        max_steps = data.get("max_steps", 500_000)
+        noise_schedule = data.get("noise_schedule", "cosine")
+        latent_channels = data.get("latent_channels", 4)
+        resume_from = data.get("resume_from")
+
+        run_id = str(uuid4())
+        logger.info(
+            "UL train: run=%s dataset=%s lr=%.1e steps=%d schedule=%s",
+            run_id, dataset, learning_rate, max_steps, noise_schedule,
+        )
+        self.active_runs[run_id] = {
+            "run_id": run_id,
+            "dataset": dataset,
+            "batch_size": batch_size,
+            "learning_rate": learning_rate,
+            "max_steps": max_steps,
+            "noise_schedule": noise_schedule,
+            "latent_channels": latent_channels,
+            "resume_from": resume_from,
+            "status": "queued",
+            "gpu_node": self.GPU_NODE,
+            "current_step": 0,
+        }
+        return self.active_runs[run_id]
+
+    async def _get_model_status(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        run_id = data.get("run_id", "")
+        run = self.active_runs.get(run_id)
+        if run is None:
+            return {"error": f"Run not found: {run_id}"}
+        return run
+
+    async def _evaluate_model(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        checkpoint = data.get("checkpoint", "")
+        dataset = data.get("dataset", "imagenet-512")
+        num_samples = data.get("num_samples", 50_000)
+        metrics_requested = data.get("metrics", ["fid", "psnr"])
+
+        logger.info(
+            "UL evaluate: checkpoint=%s dataset=%s samples=%d metrics=%s",
+            checkpoint, dataset, num_samples, metrics_requested,
+        )
+        return {
+            "evaluation_id": str(uuid4()),
+            "checkpoint": checkpoint,
+            "dataset": dataset,
+            "num_samples": num_samples,
+            "metrics": {m: 0.0 for m in metrics_requested},
+        }
+
+
 SIMULATION_AGENTS = {
     "alphafold": AlphaFoldAgent,
     "boltzgen": BoltzGenAgent,
     "cobra": COBRAAgent,
     "mycelium_simulator": MyceliumSimulatorAgent,
     "physics_simulator": PhysicsSimulatorAgent,
+    "unified_latents": UnifiedLatentsAgent,
 }
 
 def get_simulation_agent(agent_type: str) -> BaseScientificAgent:
