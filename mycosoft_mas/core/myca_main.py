@@ -860,6 +860,25 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
+# RaaS — Robot-as-a-Service Agent Platform (March 2026)
+# ---------------------------------------------------------------------------
+try:
+    from mycosoft_mas.raas.service_catalog import router as raas_catalog_router
+    from mycosoft_mas.raas.onboarding import router as raas_onboarding_router
+    from mycosoft_mas.raas.payment_gateway import router as raas_payment_router
+    from mycosoft_mas.raas.service_proxy import router as raas_proxy_router
+    from mycosoft_mas.raas.agent_card import router as raas_discovery_router
+
+    app.include_router(raas_catalog_router)
+    app.include_router(raas_onboarding_router)
+    app.include_router(raas_payment_router)
+    app.include_router(raas_proxy_router)
+    app.include_router(raas_discovery_router)
+except ImportError:
+    pass
+
+
+# ---------------------------------------------------------------------------
 # Health & version
 # ---------------------------------------------------------------------------
 
