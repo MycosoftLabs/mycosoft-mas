@@ -18,14 +18,16 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Literal, Optional
+from typing import Any, AsyncIterator, Dict, Literal, Optional
 import uuid
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from .mdp_serial_bridge import build_side_a_bridge, build_side_b_bridge, MdpResponse
 from .opclaw_client import OpenClawClient
+from .telemetry_pipeline import TelemetryPipeline
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +186,34 @@ def _response_dict(response: MdpResponse) -> Dict[str, Any]:
 
 
 operator = OnDeviceOperator()
+
+
+async def _side_a_request_for_pipeline(cmd: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    """Adapter for TelemetryPipeline: (cmd, params) -> request_side_a result."""
+    return await operator.request_side_a(CommandRequest(command=cmd, params=params))
+
+
+telemetry_pipeline = TelemetryPipeline(
+    side_a_request_fn=_side_a_request_for_pipeline,
+    device_id=os.getenv("ONDEVICE_DEVICE_ID", "mycobrain-001"),
+    mas_api_url=os.getenv("MAS_API_URL", "http://192.168.0.188:8001"),
+    nlm_api_url=os.getenv("NLM_API_URL") or None,
+    mindex_api_url=os.getenv("MINDEX_API_URL") or None,
+    role=os.getenv("ONDEVICE_ROLE", "mushroom1"),
+    poll_interval_seconds=float(os.getenv("ONDEVICE_POLL_INTERVAL", "5.0")),
+)
+
 app = FastAPI(title="MycoBrain On-Device Operator", version="1.0.0")
+
+
+@app.on_event("startup")
+async def startup() -> None:
+    telemetry_pipeline.start()
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    await telemetry_pipeline.stop()
 
 
 @app.get("/health")
@@ -242,3 +271,29 @@ async def openclaw_task(req: OpenClawTaskRequest) -> Dict[str, Any]:
 @app.get("/mutations")
 async def list_mutations() -> Dict[str, Any]:
     return {"proposals": [asdict(p) for p in operator.proposals.values()]}
+
+
+@app.get("/telemetry/latest")
+async def telemetry_latest(n: int = 10) -> Dict[str, Any]:
+    """Return last n telemetry entries from the pipeline buffer."""
+    entries = await telemetry_pipeline.get_latest(n)
+    return {"telemetry": entries, "device_id": telemetry_pipeline.device_id}
+
+
+@app.get("/telemetry/stream")
+async def telemetry_stream() -> StreamingResponse:
+    """SSE stream of live telemetry from the pipeline."""
+
+    async def event_gen() -> AsyncIterator[str]:
+        async for entry in telemetry_pipeline.stream():
+            yield f"data: {json.dumps(asdict(entry))}\n\n"
+
+    return StreamingResponse(
+        event_gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )

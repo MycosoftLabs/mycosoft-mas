@@ -5,6 +5,8 @@ Responsibilities:
 - Accept transport messages (LoRa/BLE/WiFi/SIM ingress)
 - Store-and-forward queue
 - Publish upstream to MAS / Mycorrhizae / MINDEX / Website ingest
+- IoT envelope wrapping, NLM translate for ingested telemetry
+- /devices endpoint, periodic gateway self-heartbeat
 - Optional OpenClaw task execution on gateway profile
 """
 
@@ -72,25 +74,36 @@ class GatewayRouter:
         self.queue: List[BufferedMessage] = []
         self._queue_lock = asyncio.Lock()
         self._flusher_task: Optional[asyncio.Task[Any]] = None
+        self._heartbeat_task: Optional[asyncio.Task[Any]] = None
         self.audit_path = Path(os.getenv("GATEWAY_AUDIT_LOG", "data/edge/gateway_audit.jsonl"))
         self.audit_path.parent.mkdir(parents=True, exist_ok=True)
         self.upstream_mas = os.getenv("MAS_API_URL", "http://192.168.0.188:8001").rstrip("/")
         self.upstream_mycorrhizae = os.getenv("MYCORRHIZAE_API_URL", "").rstrip("/")
         self.upstream_mindex = os.getenv("MINDEX_API_URL", "").rstrip("/")
         self.upstream_ingest = os.getenv("TELEMETRY_INGEST_URL", "").rstrip("/")
+        self.nlm_api_url = (os.getenv("NLM_API_URL", "").rstrip("/") or None)
         self.max_attempts = int(os.getenv("GATEWAY_MAX_ATTEMPTS", "8"))
         self.flush_interval_seconds = int(os.getenv("GATEWAY_FLUSH_INTERVAL_SECONDS", "5"))
+        self.heartbeat_interval_seconds = int(os.getenv("GATEWAY_HEARTBEAT_INTERVAL_SECONDS", "30"))
         self.opclaw_url = os.getenv("GATEWAY_OPENCLAW_BASE_URL", "").strip()
         self.opclaw_api_key = os.getenv("GATEWAY_OPENCLAW_API_KEY", "").strip() or None
         self.opclaw = OpenClawClient(self.opclaw_url) if self.opclaw_url else None
+        self._device_registry: Dict[str, Dict[str, Any]] = {}
+        self._device_lock = asyncio.Lock()
+        self._envelope_seq = 0
 
     async def start(self) -> None:
         if self._flusher_task and not self._flusher_task.done():
             return
         self._flusher_task = asyncio.create_task(self._flush_loop(), name="gateway-flusher")
+        self._heartbeat_task = asyncio.create_task(self._heartbeat_loop(), name="gateway-heartbeat")
         await self._audit("gateway_start", {"gateway_id": self.gateway_id})
 
     async def stop(self) -> None:
+        if self._heartbeat_task:
+            self._heartbeat_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._heartbeat_task
         if self._flusher_task:
             self._flusher_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
@@ -107,13 +120,58 @@ class GatewayRouter:
         )
         async with self._queue_lock:
             self.queue.append(msg)
+        async with self._device_lock:
+            self._device_registry[req.device_id] = {
+                "device_id": req.device_id,
+                "transport": req.transport,
+                "last_seen": msg.received_at,
+            }
         await self._audit("ingest", {"message_id": msg.message_id, "device_id": msg.device_id, "transport": msg.transport})
         return msg
+
+    def _build_envelope(self, device_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Wrap payload in IoT envelope for MAS/NLM/MINDEX ingest."""
+        self._envelope_seq += 1
+        msg_id = str(uuid.uuid4())
+        return {
+            "hdr": {
+                "deviceId": device_id,
+                "msgId": msg_id,
+                "seq": self._envelope_seq,
+            },
+            "payload": payload,
+            "received_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    async def _translate_via_nlm(self, client: httpx.AsyncClient, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Call NLM /api/translate for ingested telemetry. Returns NMF or None."""
+        if not self.nlm_api_url:
+            return None
+        try:
+            r = await client.post(
+                f"{self.nlm_api_url}/api/translate",
+                json=payload,
+                timeout=10.0,
+            )
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            logger.warning("NLM translate failed: %s", e)
+            return None
 
     async def _flush_loop(self) -> None:
         while True:
             await asyncio.sleep(self.flush_interval_seconds)
             await self.flush_once()
+
+    async def _heartbeat_loop(self) -> None:
+        """Periodic gateway self-heartbeat to MAS every 30s."""
+        while True:
+            await asyncio.sleep(self.heartbeat_interval_seconds)
+            try:
+                await self.register_gateway()
+            except Exception as e:
+                logger.warning("Gateway self-heartbeat failed: %s", e)
 
     async def flush_once(self) -> Dict[str, Any]:
         async with self._queue_lock:
@@ -139,7 +197,7 @@ class GatewayRouter:
         return {"delivered": delivered, "failed": failed, "queued": len(self.queue)}
 
     async def _publish_upstream(self, msg: BufferedMessage) -> tuple[bool, Optional[str]]:
-        payload = {
+        raw_payload = {
             "deviceId": msg.device_id,
             "deviceType": "mycobrain",
             "readings": msg.payload.get("readings", []),
@@ -148,6 +206,7 @@ class GatewayRouter:
             "received_at": msg.received_at,
             **{k: v for k, v in msg.payload.items() if k not in {"readings"}},
         }
+        envelope = self._build_envelope(msg.device_id, raw_payload)
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 # MAS heartbeat path (canonical ID preserved)
@@ -170,23 +229,27 @@ class GatewayRouter:
                 }
                 await client.post(f"{self.upstream_mas}/api/devices/heartbeat", json=hb)
 
+                # NLM translate for ingested LoRa/BLE/WiFi/SIM telemetry
+                nmf = await self._translate_via_nlm(client, envelope)
+                data_for_ingest = nmf if nmf else envelope
+
                 if self.upstream_ingest:
                     ingest_url = self.upstream_ingest
-                    if "/api/devices/ingest" not in ingest_url:
-                        ingest_url = ingest_url + "/api/devices/ingest"
-                    await client.post(ingest_url, json=payload)
+                    if "/api/iot/envelope/ingest" not in ingest_url and "/api/devices/ingest" not in ingest_url:
+                        ingest_url = ingest_url + "/api/iot/envelope/ingest"
+                    await client.post(ingest_url, json=data_for_ingest)
 
                 if self.upstream_mindex:
-                    await client.post(f"{self.upstream_mindex}/api/fci/telemetry", json=payload)
+                    await client.post(f"{self.upstream_mindex}/api/fci/telemetry", json=data_for_ingest)
 
                 if self.upstream_mycorrhizae:
-                    env = {
+                    env_pub = {
                         "device_id": msg.device_id,
                         "device_type": "mycobrain",
                         "payload_type": "telemetry",
-                        "payload": payload,
+                        "payload": data_for_ingest,
                     }
-                    await client.post(f"{self.upstream_mycorrhizae}/api/channels/publish", json=env)
+                    await client.post(f"{self.upstream_mycorrhizae}/api/channels/publish", json=env_pub)
 
             await self._audit("published", {"message_id": msg.message_id, "device_id": msg.device_id})
             return True, None
@@ -290,6 +353,17 @@ async def queue_state() -> Dict[str, Any]:
             for m in router.queue
         ],
     }
+
+
+@app.get("/devices")
+async def list_devices() -> Dict[str, Any]:
+    """List all ingested device IDs and their last-seen time."""
+    async with router._device_lock:
+        devices = [
+            {"device_id": dev_id, "transport": info.get("transport"), "last_seen": info.get("last_seen")}
+            for dev_id, info in router._device_registry.items()
+        ]
+    return {"gateway_id": router.gateway_id, "devices": devices}
 
 
 @app.post("/openclaw/task")

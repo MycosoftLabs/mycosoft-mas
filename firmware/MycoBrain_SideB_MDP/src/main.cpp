@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "mdp_codec.h"
+#include "esp_task_wdt.h"
 
 // Side-B sits between Jetson (gateway endpoint) and Side-A
 // UART1: Jetson16 <-> SideB
@@ -14,10 +15,14 @@ static const int SIDEA_RX = 18;
 static const int SIDEA_TX = 19;
 static const int STATUS_LED = 2;
 
-static const char* FW_VERSION = "side-b-mdp-1.0.0";
+static const char* FW_VERSION = "side-b-mdp-2.0.0";
+
+#define HEARTBEAT_INTERVAL_MS 5000
+#define MAX_QUEUE_DEPTH 32
 
 uint32_t tx_seq = 1;
 uint32_t last_heartbeat_ms = 0;
+uint32_t last_heartbeat_sent_ms = 0;
 bool lora_ready = false;
 bool ble_ready = false;
 bool wifi_ready = false;
@@ -89,6 +94,7 @@ void send_transport_status(uint32_t ack_seq = 0) {
   doc["wifi_ready"] = wifi_ready;
   doc["sim_ready"] = sim_ready;
   doc["queue_depth"] = queued_messages;
+  doc["backpressure"] = (queued_messages >= MAX_QUEUE_DEPTH);
   send_frame_to(JetsonUart, MDP_EVENT, EP_SIDE_B, EP_GATEWAY, ack_seq, 0, doc);
 }
 
@@ -102,29 +108,36 @@ void handle_transport_command(const MdpHeader& hdr, DynamicJsonDocument& payload
     return;
   }
   if (strcmp(cmd, "lora_send") == 0) {
-    // Hook real SX1262 driver here; queueing is tracked even before radio is integrated.
-    queued_messages++;
-    if (params.containsKey("payload")) {
-      lora_ready = true;
-      queued_messages = max(0, queued_messages - 1);
-      send_ack_to_jetson(hdr.seq, true, "lora_payload_accepted");
-    } else {
-      send_ack_to_jetson(hdr.seq, false, "missing_payload");
+    // TODO: integrate RadioLib SX1262 driver; queueing is tracked even before radio is integrated.
+    if (queued_messages >= MAX_QUEUE_DEPTH) {
+      send_ack_to_jetson(hdr.seq, false, "backpressure_queue_full");
+      return;
     }
+    if (!params.containsKey("payload")) {
+      send_ack_to_jetson(hdr.seq, false, "missing_payload");
+      return;
+    }
+    queued_messages++;
+    lora_ready = true;
+    queued_messages = max(0, queued_messages - 1);  // stub: simulate send, decrement
+    send_ack_to_jetson(hdr.seq, true, "lora_payload_accepted");
     return;
   }
   if (strcmp(cmd, "ble_advertise") == 0) {
+    // TODO: integrate RadioLib / ESP32 BLE stack for advertisement
     ble_ready = params["en"] | false;
     send_ack_to_jetson(hdr.seq, true, ble_ready ? "ble_advertising_on" : "ble_advertising_off");
     return;
   }
   if (strcmp(cmd, "wifi_connect") == 0) {
+    // TODO: integrate ESP32 WiFi driver
     const char* ssid = params["ssid"] | "";
     wifi_ready = strlen(ssid) > 0;
     send_ack_to_jetson(hdr.seq, wifi_ready, wifi_ready ? "wifi_connect_started" : "missing_ssid");
     return;
   }
   if (strcmp(cmd, "sim_send") == 0) {
+    // TODO: integrate SIM7000 cellular modem driver
     const char* payload_data = params["payload"] | "";
     sim_ready = true;
     send_ack_to_jetson(hdr.seq, strlen(payload_data) > 0, strlen(payload_data) > 0 ? "sim_payload_accepted" : "missing_payload");
@@ -140,6 +153,9 @@ void setup() {
   SideAUart.begin(115200, SERIAL_8N1, SIDEA_RX, SIDEA_TX);
   pinMode(STATUS_LED, OUTPUT);
   digitalWrite(STATUS_LED, LOW);
+
+  esp_task_wdt_init(30, true);
+  esp_task_wdt_add(NULL);
 
   StaticJsonDocument<192> hello;
   hello["role"] = "side_b";
@@ -194,6 +210,12 @@ void loop() {
     }
   }
 
+  if (millis() - last_heartbeat_sent_ms >= HEARTBEAT_INTERVAL_MS) {
+    send_transport_status(0);
+    last_heartbeat_sent_ms = millis();
+  }
+
   digitalWrite(STATUS_LED, (millis() - last_heartbeat_ms) < 5000 ? HIGH : LOW);
+  esp_task_wdt_reset();
   delay(5);
 }

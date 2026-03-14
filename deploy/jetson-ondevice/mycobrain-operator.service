@@ -1,0 +1,27 @@
+[Unit]
+Description=MycoBrain On-Device Jetson Operator (Side A + Side B MDP bridge)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mycosoft
+Group=mycosoft
+WorkingDirectory=/opt/mycobrain/mycosoft-mas
+
+# Load env from file (create from env.mushroom1 or env.hyphae1)
+EnvironmentFile=/etc/mycobrain/operator.env
+
+# Run operator
+ExecStart=/opt/mycobrain/venv/bin/python -m uvicorn mycosoft_mas.edge.ondevice_operator:app --host 0.0.0.0 --port 8080
+
+Restart=always
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mycobrain-operator
+
+[Install]
+WantedBy=multi-user.target

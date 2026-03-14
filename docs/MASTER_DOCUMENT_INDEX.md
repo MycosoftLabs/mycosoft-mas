@@ -1,5 +1,24 @@
 # Master Document Index
 
+## Network Topology and Ubiquiti (Mar 7, 2026)
+- `docs/NETWORK_TOPOLOGY_UBIQUITI_PLAN_MAR07_2026.md` – **Network topology and Ubiquiti labeling plan**: 192.168.0.x device designations (NodeFather crypto, C-Suite, R710/R630, Proxmox 202); segregation (public Proxmox vs internal R710); Ubiquiti labeling table; C-Suite VM migration R710; UniFi scan script usage.
+- `docs/NETWORK_IP_MAC_DEVICE_MAP_MAR07_2026.md` – **Full IP/MAC/device map (Mar 7, 2026)**: ARP-scan-validated map of 192.168.0.0/24; IP→MAC→role table; Proxmox 202 vs R720 layout; C-Suite migration plan; NodeFather, NAS, Edge R630; UniFi labeling reference.
+- `docs/UNIFI_SCAN_RESULTS_MAR07_2026.md` – **UniFi topology scan results (Mar 7, 2026)**: Credentials stored; scan run; login failed (no device list); command used; next steps when login works; intended output format; link to topology plan.
+
+## Sandbox / MAS / MINDEX Recovery (Mar 12, 2026)
+- `docs/SANDBOX_MAS_MINDEX_RECOVERY_AND_REDEPLOY_MAR12_2026.md` – **Recovery + redeploy report**: Sandbox outage recovery, Cloudflare tunnel/cache purge, website container stabilization, MAS/MINDEX health verification, and final runtime state.
+
+## Production VM Clone and CI/CD (Mar 13, 2026)
+- `docs/MYCOSOFT_ORG_PRODUCTION_VM_CLONE_CI_CD_MAR13_2026.md` – **Production VM clone + CI/CD**: Clone Sandbox→Production (186), Cloudflare tunnels (mycosoft.com vs sandbox.mycosoft.com), mycosoft.org→mycosoft.com/about redirect, _rebuild_production.py, verification checklist. Use for Production deploy and VM layout.
+- `docs/PRE_PRODUCTION_CHECKLIST_MAR13_2026.md` – **Pre-production checklist**: Cloudflare tunnels/DNS, Supabase auth redirect URLs, MAS/MINDEX API routes; verification commands; credentials. Run before going live.
+
+## Production Jetson+MycoBrain Deploy (Mar 13, 2026)
+- `docs/JETSON_MYCOBRAIN_PRODUCTION_DEPLOY_MAR13_2026.md` – **Jetson+MycoBrain production deployment**: BOM for Mushroom 1/Hyphae 1/Gateway; wiring diagram (Side A/B, Jetson); flash procedure (Side A then Side B); Jetson install.sh and systemd; verification checklist (health, MAS registry, NLM, MINDEX FCI); file reference.
+
+## MycoBrain Gateway Node Recognition (Mar 13, 2026)
+- `docs/MYCOBRAIN_GATEWAY_NODE_RECOGNITION_MAR13_2026.md` – **Gateway recognition implemented**: deterministic serial port allowlist (`MYCOBRAIN_ALLOWED_PORTS`), gateway-mode service startup, local gateway bring-up script, and verified MAS registration + command routing for COM7 gateway node.
+- `docs/MYCOBRAIN_LORA_GATEWAY_LINK_TEST_PLAN_MAR13_2026.md` – **LoRa link validation plan**: gateway-only and gateway+peer MAS command-proxy test flow for validating local yard LoRa ingestion readiness.
+
 ## MYCA Voice + Chat Fixes (Mar 2, 2026)
 - `docs/MYCA_PRODUCTION_REQUIREMENTS_MAR02_2026.md` – **MYCA production requirements**: MAS reachable, at least one LLM key (e.g. GROQ), optional MINDEX/n8n; VM layout; verification steps; behavior when all providers fail.
 
@@ -13,6 +32,9 @@
 
 ## CREP Integration Test Plan (Mar 10, 2026)
 - `WEBSITE/website/docs/CREP_INTEGRATION_TEST_PLAN_MAR10_2026.md` – **CREP integration test plan**: Canonical plan for validating CREP integrations; P0 biodiversity/wildlife bubble selection (done); satellite imagery (MODIS, VIIRS, AIRS, Landsat, EONET), Shadowbroker, deck.gl filters, military filters, VIZ test features; test matrix and completion checklist.
+
+## CREP Command Contract (Mar 13, 2026)
+- `docs/CREP_COMMAND_CONTRACT_MAR13_2026.md` – **CREP command contract (canonical)**: Single schema for CREP map commands (flyTo, showLayer, setTimeCursor, etc.) from MAS to website; entrypoint, types, fields, request/response models; source files and validation requirements.
 
 ## CREP System Integration Audit (Mar 11, 2026)
 - `docs/CREP_SYSTEM_INTEGRATION_AUDIT_MAR11_2026.md` – **CREP system integration audit**: Surface-by-surface read/write/search/interact and Merkle/MINDEX grounding across MAS, WEBSITE, MINDEX, NatureOS; gap list; blocking mock/stub paths.

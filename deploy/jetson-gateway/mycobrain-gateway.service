@@ -1,0 +1,27 @@
+[Unit]
+Description=MycoBrain Gateway Jetson Router (store-and-forward, MAS/NLM/MINDEX upstream)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mycosoft
+Group=mycosoft
+WorkingDirectory=/opt/mycobrain/mycosoft-mas
+
+# Load env from file
+EnvironmentFile=/etc/mycobrain/gateway.env
+
+# Run gateway router
+ExecStart=/opt/mycobrain/venv/bin/python -m uvicorn mycosoft_mas.edge.gateway_router:app --host 0.0.0.0 --port 8003
+
+Restart=always
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mycobrain-gateway
+
+[Install]
+WantedBy=multi-user.target

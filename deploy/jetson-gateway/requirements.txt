@@ -1,0 +1,7 @@
+# MycoBrain Gateway Jetson (4GB) - Router deps
+# Run from MAS repo: pip install -r deploy/jetson-gateway/requirements.txt && pip install -e .
+fastapi>=0.124.0
+uvicorn[standard]>=0.38.0
+pyserial>=3.5
+httpx>=0.28.0
+pydantic>=2.12.0

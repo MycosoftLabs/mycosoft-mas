@@ -8,6 +8,28 @@
 
 ---
 
+## Production VM Clone and CI/CD (Mar 13, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCOSOFT_ORG_PRODUCTION_VM_CLONE_CI_CD_MAR13_2026.md` | **Production VM clone + CI/CD**: Clone Sandbox→Production (186), Cloudflare tunnels (mycosoft.com vs sandbox), mycosoft.org redirect, _rebuild_production.py, verification. Use for Production deploy and VM layout. |
+| `docs/PRE_PRODUCTION_CHECKLIST_MAR13_2026.md` | **Pre-production checklist**: Cloudflare tunnels/DNS, Supabase auth redirect URLs, MAS/MINDEX API routes; verification commands; credentials. Run before going live. |
+
+## Sandbox / MAS / MINDEX Recovery (Mar 12, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/SANDBOX_MAS_MINDEX_RECOVERY_AND_REDEPLOY_MAR12_2026.md` | **Recovery + redeploy report**: Sandbox outage recovery, Cloudflare tunnel/cache purge, website container stabilization, MAS/MINDEX health verification, and final runtime state. |
+
+## Network Topology and UniFi (Mar 7, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/NETWORK_TOPOLOGY_UBIQUITI_PLAN_MAR07_2026.md` | **Network topology and Ubiquiti plan**: 192.168.0.x designations, Proxmox vs R710 segregation, UniFi labeling, C-Suite VM migration; current vs desired state. |
+| `docs/UNIFI_SCAN_RESULTS_MAR07_2026.md` | **UniFi scan results**: Credentials stored; scan run (login failed); command and next steps; use when re-running scan or debugging UniFi API. |
+
+## CREP Command Contract (Mar 13, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/CREP_COMMAND_CONTRACT_MAR13_2026.md` | **CREP command contract (canonical)**: Single schema for CREP map commands; MAS→website entrypoint; types (flyTo, showLayer, setTimeCursor, etc.); request/response models. Use for voice, autonomy, and safe CREP tools. |
+
 ## CREP System Integration Audit (Mar 11, 2026)
 | Doc | Purpose |
 |-----|---------|
@@ -38,6 +60,11 @@
 |-----|---------|
 | `docs/CREP_INATURALIST_MINDEX_ETL_MAR09_2026.md` | **iNaturalist→MINDEX ETL + local-first**: Clone-on-first-display; iNaturalist bulk ETL; LOD; local-first routing. Use for CREP map, life-form circles, MINDEX observations. |
 
+## Production Jetson+MycoBrain Deploy (Mar 13, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/JETSON_MYCOBRAIN_PRODUCTION_DEPLOY_MAR13_2026.md` | **Jetson+MycoBrain production deploy**: BOM (Mushroom 1/Hyphae 1/Gateway); wiring; flash procedure; Jetson install.sh + systemd; verification checklist. Use for production build, flash, and deploy. |
+
 ## PR #75: Jetson + Avani-Micah + Identity (Mar 9, 2026)
 | Doc | Purpose |
 |-----|---------|
@@ -63,6 +90,8 @@
 | `docs/MYCA_SUPPORT_UPGRADE_AUDIT_MAR07_2026.md` | **MYCA Support Upgrade Audit**: Cross-system audit (Website, MINDEX, NatureOS, MycoBrain, cowork, automation). Prioritized upgrade plan for MYCA–Morgan interaction. |
 | `docs/MYCOBRAIN_RAIL_UNIFICATION_COMPLETE_MAR07_2026.md` | **MycoBrain Rail Unification complete**: Heartbeat canonical, capability manifest, FCI bridge, Jetson path, Side B transport. |
 | `docs/MYCOBRAIN_CAPABILITY_MANIFEST_MAR07_2026.md` | **Capability manifest**: Role→sensors/capabilities; firmware→service→MAS→website. |
+| `docs/MYCOBRAIN_GATEWAY_NODE_RECOGNITION_MAR13_2026.md` | **Gateway node recognition**: COM7/LAN gateway-mode registration path; allowed-port pinning, startup script, MAS visibility and command-routing verification. |
+| `docs/MYCOBRAIN_LORA_GATEWAY_LINK_TEST_PLAN_MAR13_2026.md` | **LoRa gateway link test plan**: command-proxy execution path for gateway-only and gateway+peer board pairing over LoRa in local-yard topology. |
 | `docs/MYCOBRAIN_JETSON_GATEWAY_BUILD_PLAN_MAR07_2026.md` | **MycoBrain→Jetson gateway build**: Three tiers (Mushroom 1 Orin NX, Hyphae 1 Nano/Xavier NX, Gateway Nano B01); BOM, firmware, USB/LoRa/WiFi connections, 12V solar power; direct build instructions. |
 | `docs/DEVICE_JETSON16_CORTEX_ARCHITECTURE_MAR07_2026.md` | **16GB Jetson on-device cortex**: Role between Side A and Side B; command arbitration, operator runtime, MDP rail, MYCA integration; two-Jetson architecture. |
 | `docs/GATEWAY_JETSON4_LILYGO_ARCHITECTURE_MAR07_2026.md` | **4GB Jetson + LilyGO gateway**: On-site aggregation, LoRa/SIM/BLE/WiFi, store-and-forward, upstream publish to MAS/Mycorrhizae/MINDEX. |
