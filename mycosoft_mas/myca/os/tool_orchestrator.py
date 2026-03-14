@@ -17,8 +17,9 @@ import os
 import asyncio
 import json
 import logging
+import re
 import subprocess
-from typing import Optional
+from typing import Any, Dict, Optional, Tuple
 from pathlib import Path
 
 import aiohttp
@@ -550,6 +551,129 @@ print(asyncio.run(click()))
             return {"status": "failed", "error": "Search query required"}
         results = await self._os.mindex_bridge.search_knowledge(query, limit=int(task.get("limit", 10)))
         return {"status": "completed", "results": results, "summary": f"Unified search completed for: {query[:80]}"}
+
+    # ── CREP Map Control ───────────────────────────────────────────
+
+    def _infer_crep_tool_from_description(self, text: str) -> Optional[Tuple[str, Dict[str, Any], bool]]:
+        """
+        Infer CREP tool and args from natural language (title/description).
+        Returns (tool, args, needs_confirmation) or None if unparseable.
+        """
+        if not text or not isinstance(text, str):
+            return None
+        t = text.strip().lower()
+
+        # fly to / go to / zoom to / center on <place>
+        m = re.search(
+            r"(?:fly to|go to|zoom to|center on|navigate to)\s+(.+)",
+            t,
+            re.IGNORECASE,
+        )
+        if m:
+            query = m.group(1).strip()
+            if len(query) >= 2:
+                return ("crep_geocode_and_fly_to", {"query": query, "zoom": 10}, False)
+
+        # show <layer> / show <layer> layer
+        m = re.search(
+            r"show\s+(planes|vessels|satellites|fungal|weather|devices)(?:\s+layer)?",
+            t,
+        )
+        if m:
+            return ("crep_set_layer_visibility", {"layer": m.group(1), "visible": True}, False)
+
+        # hide <layer>
+        m = re.search(
+            r"hide\s+(planes|vessels|satellites|fungal|weather|devices)(?:\s+layer)?",
+            t,
+        )
+        if m:
+            return ("crep_set_layer_visibility", {"layer": m.group(1), "visible": False}, False)
+
+        # toggle <layer>
+        m = re.search(
+            r"toggle\s+(planes|vessels|satellites|fungal|weather|devices)(?:\s+layer)?",
+            t,
+        )
+        if m:
+            return ("crep_toggle_layer", {"layer": m.group(1)}, False)
+
+        # clear filters
+        if re.search(r"clear\s+(?:all\s+)?filters?", t):
+            return ("crep_clear_filters", {}, True)
+
+        # zoom in / zoom out
+        if re.search(r"zoom\s+in", t):
+            return ("crep_zoom_by", {"delta": 1}, False)
+        if re.search(r"zoom\s+out", t):
+            return ("crep_zoom_by", {"delta": -1}, False)
+
+        # get view / view context / what do I see
+        if re.search(r"(?:get\s+view|view\s+context|what\s+(?:do\s+i\s+)?see)", t):
+            return ("crep_get_view_context", {}, False)
+
+        # timeline search <query>
+        m = re.search(r"timeline\s+search\s+(.+)", t, re.IGNORECASE)
+        if m:
+            return ("crep_timeline_search", {"query": m.group(1).strip()}, False)
+
+        return None
+
+    async def run_crep_map_task(self, task: dict) -> dict:
+        """
+        Execute a CREP map action via the CREP bridge.
+
+        Task payload:
+          - tool: CREP tool name (crep_fly_to, crep_set_layer_visibility, etc.)
+          - args: dict of tool arguments
+          - confirmed: bool (required for crep_clear_filters and similar)
+
+        When tool/args are missing, infers from title/description via intent parsing.
+        """
+        crep = getattr(self._os, "crep_bridge", None)
+        if not crep or not hasattr(crep, "execute_crep_action"):
+            return {"status": "failed", "error": "CREP bridge not available"}
+
+        tool = task.get("tool") or task.get("tool_name")
+        args = task.get("args") or task.get("payload") or {}
+        confirmed = task.get("confirmed", False)
+
+        if not tool:
+            desc = (task.get("description") or task.get("title") or "").strip()
+            inferred = self._infer_crep_tool_from_description(desc)
+            if inferred:
+                tool, args, needs_confirm = inferred
+                if needs_confirm and not confirmed:
+                    return {
+                        "status": "requires_confirmation",
+                        "error": "Command requires user confirmation (e.g. clear filters)",
+                        "summary": "CREP command needs confirmation",
+                    }
+            else:
+                return {
+                    "status": "failed",
+                    "error": "CREP task requires 'tool' or a parseable description (e.g. 'fly to Paris', 'show planes layer')",
+                }
+
+        result = await crep.execute_crep_action(tool, args, confirmed=confirmed)
+
+        if result.get("success"):
+            return {
+                "status": "completed",
+                "frontend_command": result.get("frontend_command"),
+                "speak": result.get("speak"),
+                "summary": result.get("speak") or f"CREP {tool} executed",
+            }
+        if result.get("requires_confirmation"):
+            return {
+                "status": "requires_confirmation",
+                "error": result.get("error", "Command requires user confirmation"),
+                "summary": "CREP command needs confirmation (e.g. clear filters)",
+            }
+        return {
+            "status": "failed",
+            "error": result.get("error", "CREP command failed"),
+        }
 
     # ── Finance / CFO Connector ────────────────────────────────────
 

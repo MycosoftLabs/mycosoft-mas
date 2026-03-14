@@ -124,6 +124,20 @@ Full command table and error patterns: `.cursor/agents/terminal-watcher.md`.
 
 ---
 
+## Required verification collaborators
+
+**Never mark a task complete without evidence.** When verifying work (tests, builds, deploys), explicitly involve these subagents:
+
+| Subagent | Role | When to use |
+|----------|------|-------------|
+| **terminal-watcher** | Read terminal output for errors, diagnostics, hot-reload | After dev server, tests, build, deploy, or any command that produces terminal output |
+| **test-engineer** | Design and run tests, interpret failures | When adding tests, verifying test coverage, or diagnosing test failures |
+| **regression-guard** | Pre-deploy validation, health checks, build verification | Before deploy; when validating system health after changes |
+
+See `.cursor/rules/subagents-must-test-before-complete.mdc` and `.cursor/skills/workflow-orchestration/SKILL.md`.
+
+---
+
 ## Summary
 
 - **Every agent** that runs or relies on terminal output should **involve terminal-watcher** to read terminals, detect errors, run diagnostics, and suggest fixes.

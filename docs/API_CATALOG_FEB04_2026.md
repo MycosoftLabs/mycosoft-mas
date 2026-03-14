@@ -73,6 +73,20 @@ REST API for the Meridian adapter; exposes CFO MCP tools over HTTP.
 
 **Router:** `mycosoft_mas/core/routers/cfo_mcp_api.py`
 
+### Worldstate API (`/api/myca/world/*`) – Mar 14, 2026
+
+Canonical passive awareness surface for WorldState; read-only. CREP and Earth2 command APIs remain specialist.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/myca/world` | GET | Full worldstate snapshot |
+| `/api/myca/world/summary` | GET | Compact summary for context |
+| `/api/myca/world/region` | GET | Region-filtered summary (lat, lon, radius) |
+| `/api/myca/world/sources` | GET | Source freshness and status |
+| `/api/myca/world/diff` | GET | Diff since last turn (when implemented) |
+
+**Router:** `mycosoft_mas/core/routers/worldstate_api.py`
+
 ### Health & Status
 
 | Endpoint | Method | Description |

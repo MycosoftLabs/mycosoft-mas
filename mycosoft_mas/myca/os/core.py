@@ -828,6 +828,8 @@ class MycaOS:
                 return await self.tools.run_natureos_task(task)
             elif task_type == "search":
                 return await self.tools.run_search_task(task)
+            elif task_type in ("crep", "crep_map", "crep_map_action"):
+                return await self.tools.run_crep_map_task(task)
             elif task_type in ("finance", "financial", "cfo"):
                 return await self.tools.run_finance_task(task)
             elif task_type == "deployment":

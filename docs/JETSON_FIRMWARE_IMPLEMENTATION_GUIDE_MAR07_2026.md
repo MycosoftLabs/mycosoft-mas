@@ -160,7 +160,7 @@ Set on the 4GB gateway Jetson:
 
 ```bash
 export GATEWAY_ID=site-gateway-01
-export GATEWAY_HOST=192.168.0.201
+export GATEWAY_HOST=192.168.0.123
 export GATEWAY_PORT=8120
 export GATEWAY_LOCATION=server-room
 export MAS_API_URL=http://192.168.0.188:8001

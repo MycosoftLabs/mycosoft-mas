@@ -166,16 +166,23 @@ class TaxonomicReconciler:
         
         return hashlib.sha256(hash_string.encode()).hexdigest()
     
-    async def match_gbif(self, scientific_name: str, author: Optional[str] = None) -> TaxonomicMatch:
+    async def match_gbif(
+        self,
+        scientific_name: str,
+        author: Optional[str] = None,
+        kingdom: Optional[str] = None,
+    ) -> TaxonomicMatch:
         """
         Match scientific name against GBIF backbone taxonomy.
         
         Uses GBIF's /species/match endpoint with fuzzy matching.
+        kingdom: Optional. If "Fungi", restricts match to fungal taxa.
+        If None, matches across all kingdoms (default for worldview/all-life).
         """
         await self._rate_limit()
         
-        # Check cache
-        cache_key = f"gbif:{scientific_name}:{author or ''}"
+        # Check cache (include kingdom in key since it affects result)
+        cache_key = f"gbif:{scientific_name}:{author or ''}:{kingdom or 'all'}"
         if cache_key in self._cache:
             return self._cache[cache_key]
         
@@ -187,11 +194,12 @@ class TaxonomicReconciler:
             name_for_match = f"{scientific_name} {author}"
         
         try:
-            params = {
+            params: Dict[str, str] = {
                 "name": name_for_match,
                 "verbose": "true",
-                "kingdom": "Fungi",  # Focus on fungi
             }
+            if kingdom:
+                params["kingdom"] = kingdom
             
             async with session.get(
                 f"{self.GBIF_API_BASE}/species/match",
@@ -271,6 +279,7 @@ class TaxonomicReconciler:
         self,
         record: Dict[str, Any],
         enforce_license: bool = True,
+        kingdom: Optional[str] = None,
     ) -> Tuple[TaxonomicMatch, Optional[LicenseInfo], str]:
         """
         Reconcile a single record with taxonomic backbones.
@@ -278,6 +287,8 @@ class TaxonomicReconciler:
         Args:
             record: Source record with scientific_name and other fields
             enforce_license: If True, filter out records with non-compliant licenses
+            kingdom: Optional. Pass "Fungi" to restrict GBIF matching to fungal taxa.
+                If None, matches across all kingdoms (worldview/all-life mode).
         
         Returns:
             (TaxonomicMatch, LicenseInfo, citation_hash) tuple
@@ -289,15 +300,15 @@ class TaxonomicReconciler:
         # Normalize name
         canonical_name, author = self._normalize_name(scientific_name)
         
-        # Match against GBIF backbone
-        gbif_match = await self.match_gbif(scientific_name, author)
+        # Match against GBIF backbone (no kingdom filter = all-life unless caller specifies)
+        gbif_match = await self.match_gbif(scientific_name, author, kingdom=kingdom)
         
-        # For fungi, also check Index Fungorum
+        # Index Fungorum: only for taxa GBIF explicitly returned as Fungi
         index_fungorum_data = None
-        if gbif_match.kingdom == "Fungi" or not gbif_match.gbif_id:
+        if gbif_match.kingdom == "Fungi":
             index_fungorum_data = await self.match_index_fungorum(scientific_name)
         
-        # Build comprehensive match
+        # Build comprehensive match (do not assume Fungi when kingdom is unknown)
         match = TaxonomicMatch(
             scientific_name=scientific_name,
             canonical_name=canonical_name,
@@ -308,7 +319,7 @@ class TaxonomicReconciler:
             status=gbif_match.status or "UNKNOWN",
             accepted_name=gbif_match.accepted_name or canonical_name,
             accepted_gbif_id=gbif_match.accepted_gbif_id or gbif_match.gbif_id,
-            kingdom=gbif_match.kingdom or "Fungi",
+            kingdom=gbif_match.kingdom,
             phylum=gbif_match.phylum,
             class_name=gbif_match.class_name,
             order_name=gbif_match.order_name,
@@ -358,9 +369,13 @@ class TaxonomicReconciler:
         self,
         records: List[Dict[str, Any]],
         enforce_license: bool = True,
+        kingdom: Optional[str] = None,
     ) -> List[Tuple[TaxonomicMatch, Optional[LicenseInfo], str]]:
         """Reconcile multiple records in parallel."""
-        tasks = [self.reconcile(record, enforce_license) for record in records]
+        tasks = [
+            self.reconcile(record, enforce_license, kingdom=kingdom)
+            for record in records
+        ]
         return await asyncio.gather(*tasks, return_exceptions=True)
     
     async def group_by_taxon(

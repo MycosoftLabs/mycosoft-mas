@@ -1,5 +1,5 @@
 {
-  "count": 710,
+  "count": 754,
   "docs": [
     {
       "path": "docs\\AGENT_ACTIVATION_COMPLETE_FEB09_2026.md",
@@ -18,6 +18,12 @@
       "repo": "MAS",
       "title": "Agent Event Bus Usage Guide",
       "date": "2026-FEB-09"
+    },
+    {
+      "path": "docs\\AGENT_CENSUS_MAR02_2026.md",
+      "repo": "MAS",
+      "title": "Mycosoft MAS - Definitive Agent Census",
+      "date": "2026-MAR-02"
     },
     {
       "path": "docs\\AGENT_DEPLOYMENT_README.md",
@@ -182,6 +188,12 @@
       "date": null
     },
     {
+      "path": "docs\\AVANI_MICAH_CONSTITUTION_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "Avani-Micah Constitution \u2014 System Documentation",
+      "date": "2026-MAR-09"
+    },
+    {
       "path": "docs\\BACKEND_INTEGRATION_COMPLETE_FEB03_2026.md",
       "repo": "MAS",
       "title": "Summary",
@@ -308,6 +320,12 @@
       "date": "2026-FEB-04"
     },
     {
+      "path": "docs\\CODE_UNIFICATION_STATUS_MAR11_2026.md",
+      "repo": "MAS",
+      "title": "Code Unification Status \u2014 March 11, 2026",
+      "date": "2026-MAR-11"
+    },
+    {
       "path": "docs\\COM7_SANDBOX_COHESION_VERIFICATION_FEB18_2026.md",
       "repo": "MAS",
       "title": "COM7 Board on Desk \u2014 Sandbox + Local Dev Cohesion",
@@ -410,6 +428,18 @@
       "date": null
     },
     {
+      "path": "docs\\CREP_FIRST_EXECUTION_CHECKLIST_MAR11_2026.md",
+      "repo": "MAS",
+      "title": "CREP-First Execution Checklist",
+      "date": "2026-MAR-11"
+    },
+    {
+      "path": "docs\\CREP_INATURALIST_MINDEX_ETL_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "CREP iNaturalist \u2192 MINDEX ETL and Local-First Design",
+      "date": "2026-MAR-09"
+    },
+    {
       "path": "docs\\CREP_PHASE5_ADDITIONAL_COLLECTORS_FEB06_2026.md",
       "repo": "MAS",
       "title": "CREP Phase 5: Additional Data Collectors - February 6, 2026",
@@ -426,6 +456,24 @@
       "repo": "MAS",
       "title": "CREP Phase 3: LLM Agent Memory Graph - February 6, 2026",
       "date": "2026-FEB-06"
+    },
+    {
+      "path": "docs\\CREP_SPECIES_ICONS_CLICKABLE_FIX_MAR11_2026.md",
+      "repo": "MAS",
+      "title": "CREP Species Icons Clickable Fix \u2014 Mar 11, 2026",
+      "date": "2026-MAR-11"
+    },
+    {
+      "path": "docs\\CREP_SPECIES_WIDGETS_VIEWPORT_LOADING_COMPLETE_MAR11_2026.md",
+      "repo": "MAS",
+      "title": "CREP Species Widgets & Viewport Loading \u2014 Complete",
+      "date": "2026-MAR-11"
+    },
+    {
+      "path": "docs\\CREP_SYSTEM_INTEGRATION_AUDIT_MAR11_2026.md",
+      "repo": "MAS",
+      "title": "CREP-First System Integration Audit",
+      "date": "2026-MAR-11"
     },
     {
       "path": "docs\\CREP_USER_PERSONA_TESTS.md",
@@ -494,9 +542,21 @@
       "date": "2026-MAR-07"
     },
     {
+      "path": "docs\\CSUITE_WINDOWS10_ISO_DEPLOY_COMPLETE_MAR07_2026.md",
+      "repo": "MAS",
+      "title": "C-Suite Windows 10 ISO Deploy \u2014 Complete",
+      "date": "2026-MAR-07"
+    },
+    {
       "path": "docs\\CSUITE_WINDOWS_EXECUTION_COMPLETE_MAR07_2026.md",
       "repo": "MAS",
       "title": "C-Suite Windows Execution Complete (Mar 7, 2026)",
+      "date": "2026-MAR-07"
+    },
+    {
+      "path": "docs\\CSUITE_WINDOWS_INSTALL_FIX_MAR07_2026.md",
+      "repo": "MAS",
+      "title": "C-Suite VMs: Windows Install Fix (scsi0 \u2192 sata0)",
       "date": "2026-MAR-07"
     },
     {
@@ -516,6 +576,12 @@
       "repo": "MAS",
       "title": "CTO VM Blueprint Plan Audit \u2014 Mar 7, 2026",
       "date": "2026-MAR-07"
+    },
+    {
+      "path": "docs\\CUDA_GRAPH_REENABLED_PERSONAPLEX_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "CUDA Graph Re-enabled for PersonaPlex",
+      "date": "2026-MAR-10"
     },
     {
       "path": "docs\\CURSOR_CHAT_HISTORY_RECOVERY.md",
@@ -552,6 +618,12 @@
       "repo": "MAS",
       "title": "Cursor Team Audit \u2014 Subagents, Commands, Rules",
       "date": "2026-FEB-12"
+    },
+    {
+      "path": "docs\\CURSOR_TOKEN_EFFICIENCY_CTO_OPERATING_STRUCTURE_MAR11_2026.md",
+      "repo": "MAS",
+      "title": "Cursor Token Efficiency CTO Operating Structure MAR11 2026",
+      "date": "2026-MAR-11"
     },
     {
       "path": "docs\\DASHBOARD_COMPONENTS.md",
@@ -824,6 +896,12 @@
       "date": "2026-MAR-07"
     },
     {
+      "path": "docs\\EDGE_UNIFICATION_COMPLETE_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "Edge Unification Complete \u2014 Jetson/MycoBrain/CREP/MYCA",
+      "date": "2026-MAR-10"
+    },
+    {
       "path": "docs\\ELEVENLABS_MYCA_TOOLS.md",
       "repo": "MAS",
       "title": "MYCA ElevenLabs Agent Tools Configuration",
@@ -840,6 +918,42 @@
       "repo": "MAS",
       "title": "Global Integration Environment Variables",
       "date": null
+    },
+    {
+      "path": "docs\\EXTERNAL_REPO_CLASSIFICATION_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "External Repository Classification \u2014 Adopt, Prototype, Watchlist, Do Not Integrate",
+      "date": "2026-MAR-10"
+    },
+    {
+      "path": "docs\\EXTERNAL_REPO_FEATURES_USAGE_AND_TESTING_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "External Repo Integration \u2013 Feature Usage, Interaction & Testing",
+      "date": "2026-MAR-10"
+    },
+    {
+      "path": "docs\\EXTERNAL_REPO_GAP_ALIGNMENT_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "External Repository Integration \u2014 Gap Alignment",
+      "date": "2026-MAR-10"
+    },
+    {
+      "path": "docs\\EXTERNAL_REPO_IMPLEMENTATION_STREAMS_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "External Repository Implementation Streams \u2014 Phased Plan",
+      "date": "2026-MAR-10"
+    },
+    {
+      "path": "docs\\EXTERNAL_REPO_INTEGRATION_COMPLETE_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "External Repo Integration \u2013 Phase 1 Complete",
+      "date": "2026-MAR-10"
+    },
+    {
+      "path": "docs\\EXTERNAL_REPO_SYSTEM_BOUNDARIES_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "External Repo Integration \u2014 System Boundaries and Extension Seams",
+      "date": "2026-MAR-10"
     },
     {
       "path": "docs\\EXTERNAL_SERVICES_MCP_AND_ENV_FEB18_2026.md",
@@ -894,6 +1008,12 @@
       "repo": "MAS",
       "title": "Full-Duplex Voice System - Phase 1 Implementation",
       "date": "2026-FEB-12"
+    },
+    {
+      "path": "docs\\FULL_INTEGRATION_READ_WRITE_SEARCH_INTERACT_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "Full Integration \u2014 Read, Write, Search, Interact",
+      "date": "2026-MAR-09"
     },
     {
       "path": "docs\\FULL_INTEGRATION_STATUS.md",
@@ -1118,6 +1238,12 @@
       "date": "2026-JAN-19"
     },
     {
+      "path": "docs\\INTEGRATION_CONTRACTS_CANONICAL_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "Canonical Integration Contracts",
+      "date": "2026-MAR-10"
+    },
+    {
       "path": "docs\\INTEGRATION_GUIDE.md",
       "repo": "MAS",
       "title": "Integration Guide: NLM, SDK, NatureOS, Website, and MAS",
@@ -1158,6 +1284,12 @@
       "repo": "MAS",
       "title": "Jetson and Firmware Implementation Guide",
       "date": "2026-MAR-07"
+    },
+    {
+      "path": "docs\\JETSON_MYCOBRAIN_HARDWARE_PLAN_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "Jetson + MycoBrain Hardware Plan",
+      "date": "2026-MAR-09"
     },
     {
       "path": "docs\\JETSON_OPTIONAL_CORTEX_PATH_MAR07_2026.md",
@@ -1412,6 +1544,18 @@
       "date": "2026-JAN-27"
     },
     {
+      "path": "docs\\MICAH_GUARDIAN_ARCHITECTURE_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "Micah Guardian Architecture",
+      "date": "2026-MAR-09"
+    },
+    {
+      "path": "docs\\MICA_MERKLE_LEDGER_INTEGRATION_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "MICA/MYCA Merkleized Cognition Ledger Integration \u2014 Mar 9, 2026",
+      "date": "2026-MAR-09"
+    },
+    {
       "path": "docs\\michele_alignment_debate_outline.docx.md",
       "repo": "MAS",
       "title": "**Central Thesis**",
@@ -1541,12 +1685,6 @@
       "path": "docs\\MYCA Autonomous Scientific Architecture (2026).docx.md",
       "repo": "MAS",
       "title": "MYCA Autonomous Scientific Architecture (2026)",
-      "date": null
-    },
-    {
-      "path": "docs\\MYCA CREDS.md",
-      "repo": "MAS",
-      "title": "MYCA Master Sheet Sync \u2014 Credentials Map",
       "date": null
     },
     {
@@ -1730,6 +1868,12 @@
       "date": null
     },
     {
+      "path": "docs\\MYCA_LIVE_ACTIVITY_PANEL_COMPLETE_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Live Activity Panel \u2014 Complete",
+      "date": "2026-MAR-09"
+    },
+    {
       "path": "docs\\MYCA_LIVE_PRESENCE_AND_SESSION_COMPLETE_FEB24_2026.md",
       "repo": "MAS",
       "title": "MYCA Live Presence Integration and Session Summary",
@@ -1808,6 +1952,12 @@
       "date": "2026-MAR-06"
     },
     {
+      "path": "docs\\MYCA_ONLY_ARCHITECTURE_COMPLETE_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "MYCA-Only Architecture \u2014 Complete",
+      "date": "2026-MAR-09"
+    },
+    {
       "path": "docs\\MYCA_OPENWORK_INTEGRATION_MAR05_2026.md",
       "repo": "MAS",
       "title": "MYCA OpenWork Integration \u2014 Complete (Mar 5, 2026)",
@@ -1848,6 +1998,12 @@
       "repo": "MAS",
       "title": "MYCA Platform Status and Gaps -- Consolidated Report",
       "date": "2026-MAR-05"
+    },
+    {
+      "path": "docs\\MYCA_PRODUCTION_REQUIREMENTS_MAR02_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Production Requirements (Mar 2, 2026)",
+      "date": "2026-MAR-02"
     },
     {
       "path": "docs\\MYCA_PROTOCOL_STACK_INTEGRATION_PLAN_FEB17_2026.md",
@@ -2096,6 +2252,12 @@
       "date": "2026-JAN-20"
     },
     {
+      "path": "docs\\MYCOBRAIN_GATEWAY_NODE_RECOGNITION_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "MycoBrain Gateway Node Recognition \u2014 Mar 13, 2026",
+      "date": "2026-MAR-13"
+    },
+    {
       "path": "docs\\MYCOBRAIN_HARDWARE_CONFIG.md",
       "repo": "MAS",
       "title": "MycoBrain ESP32-S3 Hardware Configuration",
@@ -2106,6 +2268,12 @@
       "repo": "MAS",
       "title": "MycoBrain \u2192 Jetson \u2192 MYCA Server Gateway Build Plan",
       "date": "2026-MAR-07"
+    },
+    {
+      "path": "docs\\MYCOBRAIN_LORA_GATEWAY_LINK_TEST_PLAN_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "MycoBrain LoRa Gateway Link Test Plan (Mar 13, 2026)",
+      "date": "2026-MAR-13"
     },
     {
       "path": "docs\\MYCOBRAIN_RAIL_UNIFICATION_COMPLETE_MAR07_2026.md",
@@ -2358,6 +2526,12 @@
       "repo": "MAS",
       "title": "NETWORK STATUS REPORT - January 28, 2026",
       "date": "2026-JAN-28"
+    },
+    {
+      "path": "docs\\NETWORK_TOPOLOGY_UBIQUITI_PLAN_MAR07_2026.md",
+      "repo": "MAS",
+      "title": "Network Topology and Ubiquiti Labeling Plan \u2014 March 7, 2026",
+      "date": "2026-MAR-07"
     },
     {
       "path": "docs\\NEXT_JOBS_FROM_GAPS_MAR07_2026.md",
@@ -2678,6 +2852,18 @@
       "date": null
     },
     {
+      "path": "docs\\PR75_AUTH_GUARDS_COMPLETE_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "PR #75 Auth Guards Complete",
+      "date": "2026-MAR-09"
+    },
+    {
+      "path": "docs\\PR75_IMPLEMENTATION_PLAN_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "PR #75 Implementation Plan \u2014 Plans, Docs, Frontend",
+      "date": "2026-MAR-09"
+    },
+    {
       "path": "docs\\PREDICTION_ENGINE_ARCHITECTURE_FEB06_2026.md",
       "repo": "MAS",
       "title": "Prediction Engine Architecture - February 6, 2026",
@@ -2744,10 +2930,22 @@
       "date": null
     },
     {
+      "path": "docs\\RAAS_AGENT_SERVICE_PLATFORM_MAR11_2026.md",
+      "repo": "MAS",
+      "title": "RaaS \u2014 Robot-as-a-Service Agent Platform",
+      "date": "2026-MAR-11"
+    },
+    {
       "path": "docs\\REALTIME_STREAMING_ENDPOINTS_FEB12_2026.md",
       "repo": "MAS",
       "title": "Real-time Streaming Endpoints - February 12, 2026",
       "date": "2026-FEB-12"
+    },
+    {
+      "path": "docs\\RECIPROCAL_TURING_PROTOCOL_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "Reciprocal Turing Protocol",
+      "date": "2026-MAR-09"
     },
     {
       "path": "docs\\REDIS_PUBSUB_IMPLEMENTATION_SUMMARY_FEB12_2026.md",
@@ -2804,6 +3002,12 @@
       "date": null
     },
     {
+      "path": "docs\\SANDBOX_AND_PRODUCTION_ALWAYS_ON_MAR02_2026.md",
+      "repo": "MAS",
+      "title": "Sandbox and Production Always-On \u2013 Why Sandbox Was Off and How to Prevent It (Mar 2, 2026)",
+      "date": "2026-MAR-02"
+    },
+    {
       "path": "docs\\SANDBOX_BROWSER_TEST_REPORT_FEB05_2026.md",
       "repo": "MAS",
       "title": "Sandbox Browser Test Report - February 5, 2026",
@@ -2840,6 +3044,12 @@
       "date": "2026-FEB-18"
     },
     {
+      "path": "docs\\SANDBOX_MAS_MINDEX_RECOVERY_AND_REDEPLOY_MAR12_2026.md",
+      "repo": "MAS",
+      "title": "Sandbox MAS MINDEX Recovery and Redeploy (Mar 12, 2026)",
+      "date": "2026-MAR-12"
+    },
+    {
       "path": "docs\\SANDBOX_PREP_AND_HANDOFF_FEB18_2026.md",
       "repo": "MAS",
       "title": "Sandbox Prep and Handoff \u2013 February 18, 2026",
@@ -2850,6 +3060,18 @@
       "repo": "MAS",
       "title": "Sandbox Reboot and MYCA \"Connection Unavailable\" \u2013 Investigation and Fix (Feb 17, 2026)",
       "date": "2026-FEB-17"
+    },
+    {
+      "path": "docs\\SANDBOX_RECOVERY_AND_DEPLOY_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "Sandbox Recovery and Full Deploy \u2014 Mar 9, 2026",
+      "date": "2026-MAR-09"
+    },
+    {
+      "path": "docs\\SANDBOX_UNREACHABLE_STATUS_MAR02_2026.md",
+      "repo": "MAS",
+      "title": "Sandbox VM Unreachable \u2013 Status (Mar 2, 2026)",
+      "date": "2026-MAR-02"
     },
     {
       "path": "docs\\SANDBOX_WEBSITE_RESTART_RESULT_FEB24_2026.md",
@@ -3356,6 +3578,12 @@
       "date": null
     },
     {
+      "path": "docs\\TEST_VOICE_LOCAL_FIX_MAR10_2026.md",
+      "repo": "MAS",
+      "title": "Test-Voice Local Voice Fix (Mar 10, 2026)",
+      "date": "2026-MAR-10"
+    },
+    {
       "path": "docs\\TIMELINE_CACHING_ARCHITECTURE_FEB06_2026.md",
       "repo": "MAS",
       "title": "Overview",
@@ -3384,6 +3612,18 @@
       "repo": "MAS",
       "title": "Twilio Integration Guide",
       "date": null
+    },
+    {
+      "path": "docs\\UNIFIED_LATENTS_INTEGRATION_MAR03_2026.md",
+      "repo": "MAS",
+      "title": "Unified Latents (UL) Integration",
+      "date": "2026-MAR-03"
+    },
+    {
+      "path": "docs\\UNIFI_SCAN_RESULTS_MAR07_2026.md",
+      "repo": "MAS",
+      "title": "UniFi Topology Scan Results \u2014 March 7, 2026",
+      "date": "2026-MAR-07"
     },
     {
       "path": "docs\\VISION_VS_IMPLEMENTATION_GAP_ANALYSIS_FEB10_2026.md",
@@ -3450,6 +3690,12 @@
       "repo": "MAS",
       "title": "Ubuntu VM Post-Installation Guide",
       "date": null
+    },
+    {
+      "path": "docs\\VM_POWER_OFF_FIX_MAR09_2026.md",
+      "repo": "MAS",
+      "title": "VM Power-Off Fix \u2014 Sandbox, C-Suite, Always-On Policy",
+      "date": "2026-MAR-09"
     },
     {
       "path": "docs\\VM_QUICK_REFERENCE.md",
@@ -3588,6 +3834,24 @@
       "repo": "MAS",
       "title": "MYCA Voice Test \u2013 Quick Start (Feb 18, 2026)",
       "date": "2026-FEB-18"
+    },
+    {
+      "path": "docs\\VOICE_V9_BASELINE_AUDIT_MAR02_2026.md",
+      "repo": "MAS",
+      "title": "Voice v9 Baseline Audit (Mar 2, 2026)",
+      "date": "2026-MAR-02"
+    },
+    {
+      "path": "docs\\VOICE_V9_DEPLOYMENT_RUNTIME_MAR02_2026.md",
+      "repo": "MAS",
+      "title": "Voice v9 Deployment and Runtime (Mar 2, 2026)",
+      "date": "2026-MAR-02"
+    },
+    {
+      "path": "docs\\VOICE_V9_DUPLEX_PERSONA_COMPLETE_MAR02_2026.md",
+      "repo": "MAS",
+      "title": "Voice v9 Duplex and Persona Lock \u2014 Complete (Mar 2, 2026)",
+      "date": "2026-MAR-02"
     },
     {
       "path": "docs\\WEBSOCKET_AGENT_BUS_FEB09_2026.md",

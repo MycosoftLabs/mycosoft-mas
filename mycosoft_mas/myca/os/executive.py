@@ -24,6 +24,7 @@ from enum import Enum
 from dataclasses import dataclass, field
 
 from mycosoft_mas.myca.os.staff_registry import load_staff_directory
+from mycosoft_mas.myca.os.turn_packet_builder import build_turn_packet
 
 logger = logging.getLogger("myca.os.executive")
 
@@ -354,19 +355,19 @@ class ExecutiveSystem:
         elif any(kw in content for kw in ["money", "budget", "invoice", "payment"]):
             return {"action": "escalate_to_morgan"}
         else:
-            response = await self.llm_brain.respond(
-                msg.get("content", ""),
-                context={
-                    "sender": staff.get("name", sender),
-                    "source": msg.get("source", "unknown"),
-                    "status": (
-                        f"Role: {sender_role}; "
-                        f"Pending tasks: {len([t for t in self._task_queue if t.status == 'pending'])}"
-                    ),
-                    "person_id": person_id,
-                    "role": sender_role,
-                },
-            )
+            content = msg.get("content", "")
+            ctx = {
+                "sender": staff.get("name", sender),
+                "source": msg.get("source", "unknown"),
+                "status": (
+                    f"Role: {sender_role}; "
+                    f"Pending tasks: {len([t for t in self._task_queue if t.status == 'pending'])}"
+                ),
+                "person_id": person_id,
+                "role": sender_role,
+            }
+            ep = await build_turn_packet(self._os, content, ctx)
+            response = await self.llm_brain.respond(content, context=ctx, experience_packet=ep)
             return {"action": "respond_directly", "response": response}
 
     # ── Decision Making ──────────────────────────────────────────
@@ -517,6 +518,11 @@ class ExecutiveSystem:
             return "asana"
         elif any(kw in content for kw in ["natureos", "ecosystem", "matlab", "digital twin"]):
             return "natureos"
+        elif any(kw in content for kw in [
+            "crep", "map", "fly to", "show layer", "hide layer", "geocode", "filter", "timeline",
+            "viewport", "planes", "vessels", "satellites", "toggle layer", "clear filter",
+        ]):
+            return "crep_map"
         elif any(kw in content for kw in ["search", "lookup", "query knowledge", "what do we know"]):
             return "search"
         elif any(kw in content for kw in ["deploy", "restart", "update server"]):
@@ -543,4 +549,5 @@ class ExecutiveSystem:
                 f"Queue: {len([t for t in self._task_queue if t.status == 'pending'])} pending"
             ),
         }
-        return await self.llm_brain.respond(content, context=context)
+        ep = await build_turn_packet(self._os, content, context)
+        return await self.llm_brain.respond(content, context=context, experience_packet=ep)

@@ -8,6 +8,21 @@ This document describes request flows across the Mycosoft platform: Browser → 
 
 ## 1. Website (Public Traffic)
 
+### 1a. Production (mycosoft.com)
+
+```
+User Browser
+    → Cloudflare (DNS + CDN + Tunnel)
+    → Production VM (192.168.0.186:3000)
+    → Docker: mycosoft-website (Next.js)
+```
+
+- **URL:** https://mycosoft.com, https://www.mycosoft.com
+- **Cloudflare:** Production tunnel routes to 186:3000.
+- **VM 186:** Production website container; NAS mount for /public/assets.
+
+### 1b. Sandbox (sandbox.mycosoft.com)
+
 ```
 User Browser
     → Cloudflare (DNS + CDN + Tunnel)
@@ -15,16 +30,16 @@ User Browser
     → Docker: mycosoft-website (Next.js)
 ```
 
-- **URL:** https://sandbox.mycosoft.com (or mycosoft.com)
-- **Cloudflare:** Handles SSL, caching, DDoS. Tunnel routes to 187:3000.
-- **VM 187:** Website container; NAS mount for /public/assets (videos, images).
+- **URL:** https://sandbox.mycosoft.com
+- **Cloudflare:** Sandbox tunnel routes to 187:3000.
+- **VM 187:** Sandbox website container; NAS mount for /public/assets; MycoBrain host.
 
 ---
 
 ## 2. Website → MAS (Internal API)
 
 ```
-Website (187)
+Website (186 or 187)
     → HTTP GET/POST
     → MAS VM (192.168.0.188:8001)
     → MAS Orchestrator (FastAPI)
@@ -38,7 +53,7 @@ Website (187)
 ## 3. Website → MINDEX (Internal API)
 
 ```
-Website (187)
+Website (186 or 187)
     → HTTP GET
     → MINDEX VM (192.168.0.189:8000)
     → MINDEX API (FastAPI)
@@ -85,10 +100,13 @@ MycoBrain Service (187:8003 or local 8003)
 
 ## VM Layout Summary
 
-| VM   | IP            | Role              | Key Ports              |
-|------|---------------|-------------------|------------------------|
-| 187  | 192.168.0.187 | Sandbox, Website  | 3000, 8003             |
-| 188  | 192.168.0.188 | MAS, n8n, Ollama  | 8001, 5678, 11434      |
-| 189  | 192.168.0.189 | MINDEX            | 8000, 5432, 6379, 6333 |
-| 190  | 192.168.0.190 | GPU node          | TBD                    |
-| 191  | 192.168.0.191 | MYCA workspace    | 5679, 443, 8089        |
+| VM   | IP            | Role                    | Key Ports              |
+|------|---------------|-------------------------|------------------------|
+| 186  | 192.168.0.186 | Production Website      | 3000                   |
+| 187  | 192.168.0.187 | Sandbox, Website, MycoBrain | 3000, 8003         |
+| 188  | 192.168.0.188 | MAS, n8n, Ollama        | 8001, 5678, 11434      |
+| 189  | 192.168.0.189 | MINDEX                  | 8000, 5432, 6379, 6333 |
+| 190  | 192.168.0.190 | GPU node                | TBD                    |
+| 191  | 192.168.0.191 | MYCA workspace          | 5679, 443, 8089        |
+
+**Redirect:** mycosoft.org → mycosoft.com/about (301).

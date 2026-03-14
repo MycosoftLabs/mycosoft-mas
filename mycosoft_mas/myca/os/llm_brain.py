@@ -15,13 +15,44 @@ import json
 import os
 import logging
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, List
 
 import aiohttp
 from mycosoft_mas.myca.os.staff_registry import load_staff_directory
 
 if TYPE_CHECKING:
     from .core import MycaOS
+    from mycosoft_mas.schemas.experience_packet import ExperiencePacket
+
+
+def experience_packet_to_live_context(ep: "ExperiencePacket") -> str:
+    """
+    Convert ExperiencePacket to live-context string for LLM grounding.
+
+    Produces the same format as _build_live_context for world/self sections.
+    Used when ExperiencePacket is the primary grounding input (EP-as-primary path).
+    """
+    parts: List[str] = []
+    if ep.world_state and ep.world_state.summary:
+        parts.append(f"[World model]: {ep.world_state.summary}")
+    if ep.world_state and ep.world_state.nlm_prediction:
+        insights = ep.world_state.nlm_prediction.get("insights", [])
+        if insights:
+            parts.append(f"[NLM]: {insights[0]}" if len(insights) == 1 else f"[NLM]: {len(insights)} insights")
+    if ep.self_state:
+        ss = ep.self_state
+        ss_parts = []
+        if ss.services:
+            ss_parts.append(f"services: {str(ss.services)[:400]}")
+        if ss.agents:
+            ss_parts.append(f"agents: {str(ss.agents)[:200]}")
+        if ss.active_plans:
+            ss_parts.append(f"active_plans: {', '.join(ss.active_plans[:5])}")
+        if ss_parts:
+            parts.append(f"[Self state]: {'; '.join(ss_parts)}")
+    if not parts:
+        return ""
+    return "\n\n---\n\n## Live Context (Memory, Knowledge, Worldview)\n\n" + "\n\n".join(parts)
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://192.168.0.188:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
@@ -304,13 +335,73 @@ class LLMBrain:
             return ""
         return "\n\n---\n\n## Live Context (Memory, Knowledge, Worldview)\n\n" + "\n\n".join(parts)
 
-    async def respond(self, user_message: str, context: Optional[dict] = None) -> str:
+    async def _build_live_context_with_packet(
+        self,
+        user_message: str,
+        context: Optional[dict],
+        ep: "ExperiencePacket",
+    ) -> str:
+        """
+        Build live context using ExperiencePacket for world/self and bridges for memory.
+        Used when EP is the primary grounding input (EP-as-primary path).
+        """
+        parts: List[str] = []
+        if not self._os:
+            pass
+        else:
+            try:
+                mb = getattr(self._os, "mindex_bridge", None)
+                mas = getattr(self._os, "mas_bridge", None)
+                person_id = (context or {}).get("person_id") if context else None
+                staff_directory = load_staff_directory() if person_id else {}
+                if mb and hasattr(mb, "recall"):
+                    for key in ["session:last_topic", "working:current_task", "episodic:recent_decisions"]:
+                        val = await mb.recall(key)
+                        if val:
+                            parts.append(f"[Memory {key}]: {val[:500]}")
+                    if person_id:
+                        personal_val = await mb.recall(f"session:last_topic:{person_id}")
+                        if personal_val:
+                            parts.append(f"[Person memory {person_id}]: {personal_val[:500]}")
+                if mas and hasattr(mas, "recall_memory"):
+                    memories = await mas.recall_memory(user_message[:100] if user_message else "context", limit=3)
+                    if memories:
+                        for m in memories:
+                            c = m.get("content", m) if isinstance(m, dict) else str(m)
+                            parts.append(f"[MAS memory]: {str(c)[:300]}")
+                if person_id and staff_directory.get(person_id):
+                    staff = staff_directory[person_id]
+                    parts.append(
+                        f"[Staff profile]: {staff.get('name')} | role: {staff.get('role')} | "
+                        f"scopes: {', '.join(staff.get('scopes', [])[:6])}"
+                    )
+            except Exception as e:
+                logger.debug("Memory context with packet failed: %s", e)
+        packet_ctx = experience_packet_to_live_context(ep)
+        if packet_ctx:
+            parts.append(packet_ctx)
+        if not parts:
+            return ""
+        return "\n\n---\n\n## Live Context (Memory, Knowledge, Worldview)\n\n" + "\n\n".join(parts)
+
+    async def respond(
+        self,
+        user_message: str,
+        context: Optional[dict] = None,
+        experience_packet: Optional["ExperiencePacket"] = None,
+    ) -> str:
         """
         Generate a response as MYCA using her OWN LLM (Ollama). 99.9% of the time.
         No frontier-model fallback — if Ollama fails, MYCA reports the issue.
+
+        When experience_packet is provided with world_state and self_state, it is used
+        as the primary grounding source for world/self context instead of ad hoc bridge
+        fan-out (EP-as-primary path). Memory recall is still fetched from bridges.
         """
-        # Build live context (devices, world, memory) for non-hallucination grounding
-        live_ctx = await self._build_live_context(user_message, context)
+        if experience_packet and experience_packet.world_state and experience_packet.self_state:
+            live_ctx = await self._build_live_context_with_packet(user_message, context, experience_packet)
+        else:
+            live_ctx = await self._build_live_context(user_message, context)
 
         extra = ""
         if context:

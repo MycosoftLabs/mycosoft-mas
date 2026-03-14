@@ -68,6 +68,28 @@ AGENT_TOOLS = frozenset({
     "agent_invoke",
 })
 
+# CREP safe tools — MAS-native map control for autonomous MYCA
+CREP_TOOLS = frozenset({
+    "crep_fly_to", "crep_geocode_and_fly_to", "crep_set_layer_visibility",
+    "crep_toggle_layer", "crep_apply_filter", "crep_clear_filters",
+    "crep_get_view_context", "crep_get_entity_details", "crep_set_time_cursor",
+    "crep_timeline_search", "crep_set_zoom", "crep_zoom_by", "crep_pan_by",
+})
+
+# CREP tools requiring user confirmation before execution
+CREP_REQUIRES_CONFIRMATION = frozenset({"crep_clear_filters"})
+
+
+def _make_crep_handler(tool_name: str):
+    """Create a sync handler that delegates to CrepCommandBus."""
+    def handler(**kwargs):
+        from mycosoft_mas.crep import get_crep_command_bus
+        bus = get_crep_command_bus()
+        confirmed = kwargs.pop("_confirmed", False) or kwargs.pop("confirmed", False)
+        result = bus.execute(tool_name, kwargs, confirmed=confirmed)
+        return result
+    return handler
+
 
 class GatewayControlPlane:
     """Central control plane that intercepts and routes every tool call."""
@@ -102,6 +124,18 @@ class GatewayControlPlane:
         for name in AGENT_TOOLS:
             self._registered[name] = RegisteredTool(
                 name=name, route_type=ToolRouteType.AGENT,
+            )
+        self._init_crep_tools()
+
+    def _init_crep_tools(self):
+        """Register CREP safe tools with CrepCommandBus handlers."""
+        for name in CREP_TOOLS:
+            self.register_tool(
+                name,
+                handler=_make_crep_handler(name),
+                route_type=ToolRouteType.BUILTIN,
+                description=f"CREP map control: {name}",
+                requires_confirmation=(name in CREP_REQUIRES_CONFIRMATION),
             )
 
     def register_tool(

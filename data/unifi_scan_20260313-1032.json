@@ -1,0 +1,7 @@
+﻿python : UniFi login failed. Check credentials and UDM IP.
+At C:\Users\admin2\AppData\Local\Temp\ps-script-9b9d20be-e4f0-48f1-ab32-3173f9a9f2c3.ps1:90 char:60
++ ... cosoft-mas; python scripts/unifi_scan_topology.py --output json 2>&1  ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (UniFi login fai...als and UDM IP.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

@@ -12,7 +12,8 @@
 
 | VM | IP | Role | Main services / ports |
 |----|-----|------|------------------------|
-| **Sandbox** | 192.168.0.187 | Website (Docker), optional services | Website 3000, Redis 6379?, Mycorrhizae 8002?, n8n 5678? (see compose on VM) |
+| **Production** | 192.168.0.186 | Production website (mycosoft.com) | Website 3000 |
+| **Sandbox** | 192.168.0.187 | Website (Docker), optional services | Website 3000, Redis 6379?, Mycorrhizae 8002?, n8n 5678? (see compose on VM), MycoBrain 8003 |
 | **MAS** | 192.168.0.188 | Multi-Agent System, orchestrator | Orchestrator **8001**, n8n 5678, NatureOS 5000?, NLM 8200? |
 | **MINDEX** | 192.168.0.189 | Database + vector store | Postgres 5432, Redis 6379, Qdrant 6333/6334, **MINDEX API 8000** (if deployed) |
 | **GPU node** | 192.168.0.190 | GPU workloads (voice, Earth2, inference) | TBD |
@@ -123,9 +124,10 @@ If these fail, fix network/firewall or start the services on the VMs (see MAS_OR
 
 All three VMs are on the same LAN (192.168.0.x). They can call each other by IP:
 
+- **Production (186)** → MAS: `http://192.168.0.188:8001`, MINDEX: `http://192.168.0.189:8000`.
 - **Sandbox (187)** → MAS: `http://192.168.0.188:8001`, MINDEX: `http://192.168.0.189:8000` (or 187/188 if API is there).
-- **MAS (188)** → MINDEX: `http://192.168.0.189:8000`, Sandbox website: `http://192.168.0.187:3000`.
-- **MINDEX (189)** → MAS: `http://192.168.0.188:8001`, Sandbox: `http://192.168.0.187:3000`.
+- **MAS (188)** → MINDEX: `http://192.168.0.189:8000`, Production website: `http://192.168.0.186:3000`, Sandbox website: `http://192.168.0.187:3000`.
+- **MINDEX (189)** → MAS: `http://192.168.0.188:8001`, Production: `http://192.168.0.186:3000`, Sandbox: `http://192.168.0.187:3000`.
 
 Use these URLs in env vars or config on each VM (containers or systemd services) so they talk to the right host.
 
@@ -166,6 +168,7 @@ Use that IP in the URLs above.
 | MAS Orchestrator | http://192.168.0.188:8001 |
 | MAS health | http://192.168.0.188:8001/health |
 | MINDEX API (if on MINDEX VM) | http://192.168.0.189:8000 |
+| Production website | http://192.168.0.186:3000 / mycosoft.com |
 | Sandbox website | http://192.168.0.187:3000 / sandbox.mycosoft.com |
 | VMs → local dev | http://YOUR_PC_LAN_IP:3010 (allow port 3010 from 192.168.0.0/24) |
 

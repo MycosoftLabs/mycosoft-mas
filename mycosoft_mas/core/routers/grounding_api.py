@@ -5,6 +5,7 @@ Exposes grounding gate status and ThoughtObjects for the grounded cognition stac
 Created: February 17, 2026
 """
 
+import asyncio
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -136,6 +137,72 @@ def _thought_to_dict(t: Any) -> Dict[str, Any]:
         else:
             d[k] = str(v)
     return d
+
+
+@router.get("/ep/recent")
+async def get_recent_packets(
+    session_id: Optional[str] = None,
+    limit: int = 20,
+    domain: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    List recent experience packets, optionally filtered by session and domain.
+    Proxies to MINDEX; domain filters by world_state.sources containing the given string.
+    """
+    try:
+        import httpx
+        url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
+        params = {"limit": min(limit, 100)}
+        if session_id:
+            params["session_id"] = session_id
+        path = "/api/mindex/grounding/experience-packets"
+        headers = {}
+        if os.getenv("MINDEX_API_KEY"):
+            headers["X-API-Key"] = os.getenv("MINDEX_API_KEY")
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.get(f"{url}{path}", params=params, headers=headers or None)
+            if r.status_code != 200:
+                return {"packets": [], "count": 0, "detail": f"upstream status {r.status_code}"}
+            data = r.json()
+        packets = data if isinstance(data, list) else data.get("packets", data)
+        if domain and packets:
+            filtered = []
+            for p in packets:
+                ws = p.get("world_state") or {}
+                sources = ws.get("sources") if isinstance(ws, dict) else []
+                if isinstance(sources, list) and any(
+                    domain.lower() in str(s).lower() for s in sources
+                ):
+                    filtered.append(p)
+            packets = filtered
+        return {"packets": packets, "count": len(packets)}
+    except Exception as e:
+        return {"packets": [], "count": 0, "detail": str(e)[:200]}
+
+
+@router.get("/staleness")
+async def get_staleness() -> Dict[str, Any]:
+    """
+    Return world model source freshness for debugging and packet inspection.
+    Uses canonical WorldModel if available.
+    """
+    try:
+        from mycosoft_mas.consciousness import get_consciousness
+        consciousness = get_consciousness()
+        wm = getattr(consciousness, "_world_model", None)
+        if wm is None:
+            return {"sources": {}, "detail": "WorldModel not available"}
+        summary = getattr(wm, "get_summary", None)
+        if summary:
+            s = await summary() if asyncio.iscoroutinefunction(summary) else summary()
+            return {"sources": s.get("sources", s) if isinstance(s, dict) else s}
+        # Fallback: return cache if WorldModel has it
+        cache = getattr(wm, "_cache", None)
+        if cache:
+            return {"sources": dict(cache) if isinstance(cache, dict) else {}}
+        return {"sources": {}, "detail": "no freshness data"}
+    except Exception as e:
+        return {"sources": {}, "detail": str(e)[:200]}
 
 
 @router.get("/thoughts")

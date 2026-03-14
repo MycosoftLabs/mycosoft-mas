@@ -83,6 +83,8 @@ telemetry_cache: Dict[str, Dict] = {}
 
 # Known ESP32/MycoBrain USB VIDs (Espressif, USB Serial adapters)
 MYCOBRAIN_VIDS = {0x303A, 0x10C4, 0x1A86, 0x2341, 0x2A03, 0x046B}  # Espressif, Silabs, CH340, Arduino, USB Serial
+ALLOWED_PORTS_RAW = os.getenv("MYCOBRAIN_ALLOWED_PORTS", "").strip()
+ALLOWED_PORTS = {p.strip() for p in ALLOWED_PORTS_RAW.split(",") if p.strip()}
 
 def is_likely_mycobrain_port(p) -> bool:
     """Return True only for real USB serial devices (MycoBrain/ESP32), NOT virtual ACPI ports."""
@@ -169,7 +171,10 @@ def _get_mycobrain_port_names() -> set:
     """Return set of port device names that look like MycoBrain (USB serial, not virtual)."""
     try:
         import serial.tools.list_ports
-        return {p.device for p in serial.tools.list_ports.comports() if is_likely_mycobrain_port(p)}
+        ports = {p.device for p in serial.tools.list_ports.comports() if is_likely_mycobrain_port(p)}
+        if ALLOWED_PORTS:
+            return {p for p in ports if p in ALLOWED_PORTS}
+        return ports
     except Exception:
         return set()
 
@@ -177,6 +182,9 @@ def _try_connect_port_sync(port: str) -> bool:
     """Sync connect to port. Returns True if connected. Thread-safe for port watcher."""
     import serial
     port = port.replace('-', '/') if port.startswith('COM-') else port
+    if ALLOWED_PORTS and port not in ALLOWED_PORTS:
+        logger.debug(f"Skipping {port}; not in MYCOBRAIN_ALLOWED_PORTS")
+        return False
     device_id = f"mycobrain-{port.replace('/', '-').replace(':', '-')}"
     if device_id in serial_connections and serial_connections[device_id].is_open:
         return True
@@ -229,6 +237,11 @@ async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depen
     import serial
     
     port = port.replace('-', '/') if port.startswith('COM-') else port
+    if ALLOWED_PORTS and port not in ALLOWED_PORTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Port {port} is not in MYCOBRAIN_ALLOWED_PORTS",
+        )
     device_id = f"mycobrain-{port.replace('/', '-').replace(':', '-')}"
     
     logger.info(f"Connecting to {port}")

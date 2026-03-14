@@ -9,11 +9,23 @@
 - `docs/SANDBOX_MAS_MINDEX_RECOVERY_AND_REDEPLOY_MAR12_2026.md` – **Recovery + redeploy report**: Sandbox outage recovery, Cloudflare tunnel/cache purge, website container stabilization, MAS/MINDEX health verification, and final runtime state.
 
 ## Production VM Clone and CI/CD (Mar 13, 2026)
+- `docs/MYCOSOFT_COM_PRODUCTION_SANDBOX_ROUTE_MAR13_2026.md` – **mycosoft.com via Sandbox VM 187**: Tunnel config (mycosoft.com/www), --production flag on _rebuild_sandbox, Supabase/Cloudflare manual steps, deploy verification. Use for production cutover without VM 186.
 - `docs/MYCOSOFT_ORG_PRODUCTION_VM_CLONE_CI_CD_MAR13_2026.md` – **Production VM clone + CI/CD**: Clone Sandbox→Production (186), Cloudflare tunnels (mycosoft.com vs sandbox.mycosoft.com), mycosoft.org→mycosoft.com/about redirect, _rebuild_production.py, verification checklist. Use for Production deploy and VM layout.
 - `docs/PRE_PRODUCTION_CHECKLIST_MAR13_2026.md` – **Pre-production checklist**: Cloudflare tunnels/DNS, Supabase auth redirect URLs, MAS/MINDEX API routes; verification commands; credentials. Run before going live.
 
+## World View Search and Platform Cohesion (Mar 14, 2026)
+- `docs/CURSOR_WORKFLOW_ORCHESTRATION_ROLLOUT_COMPLETE_MAR14_2026.md` – **Cursor workflow orchestration rollout complete**: Plan-first, verify-first, lessons-fed defaults; rules, agents, skills; verification collaborators; propagation.
+- `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` – **World view search suggestions and MINDEX/SEARCH/MYCA/NATUREOS cohesion**: Shift from fungi-focused to full world-view platform; rotating Try: suggestions (nature, environment, CREP, Earth2, human/machine); typing placeholder expansion; MINDEX expansion for holistic Earth data; phases 1–6 with implementation order.
+- `docs/GROUNDING_ARCHITECTURE_LOCKED_MAR14_2026.md` – **Grounding architecture (locked)**: WorldState, SelfState, ExperiencePacket, GroundingGate, llm_brain live-context path; packet build/attach/store; world refresh loop; worldstate contract boundaries.
+- `docs/WORLDSTATE_VS_SPECIALIST_COMMAND_BOUNDARY_MAR14_2026.md` – **Worldstate vs specialist command boundary**: Passive awareness (worldstate read API) vs specialist commands (CREP, Earth2); endpoint matrix; boundary rules; no mock data.
+- `docs/GPU_ENRICHMENT_STRATEGY_MAR14_2026.md` – **GPU enrichment strategy**: Earth2, PhysicsNeMo, PersonaPlex input backlogs; worldstate context envelope; staging plan and source prioritization.
+- `docs/WORLDVIEW_VALIDATION_AND_SEQUENCING_MAR14_2026.md` – **Worldview validation and sequencing**: ETL/search/worldstate/grounding verification checklists; registry and API catalog updates; follow-on implementation sequencing.
+
 ## Production Jetson+MycoBrain Deploy (Mar 13, 2026)
 - `docs/JETSON_MYCOBRAIN_PRODUCTION_DEPLOY_MAR13_2026.md` – **Jetson+MycoBrain production deployment**: BOM for Mushroom 1/Hyphae 1/Gateway; wiring diagram (Side A/B, Jetson); flash procedure (Side A then Side B); Jetson install.sh and systemd; verification checklist (health, MAS registry, NLM, MINDEX FCI); file reference.
+
+## On-Site AI (OpenClaw) Integration (Mar 13, 2026)
+- `docs/ONSITE_AI_OPENCLAW_COMPLETE_MAR13_2026.md` – **On-Site AI complete**: Device Manager → On-Site AI → OpenClaw; `openclaw_url` per device in network API; On-Site AI page and panel; Open OpenClaw / SSH shell; install script reference.
 
 ## MycoBrain Gateway Node Recognition (Mar 13, 2026)
 - `docs/MYCOBRAIN_GATEWAY_NODE_RECOGNITION_MAR13_2026.md` – **Gateway recognition implemented**: deterministic serial port allowlist (`MYCOBRAIN_ALLOWED_PORTS`), gateway-mode service startup, local gateway bring-up script, and verified MAS registration + command routing for COM7 gateway node.

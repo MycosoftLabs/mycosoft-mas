@@ -307,6 +307,12 @@ async def start_default_collectors() -> None:
     from .norad_collector import NORADCollector
     from .ais_collector import AISCollector
     from .noaa_collector import NOAACollector
+    from .eonet_collector import EONETCollector
+    from .overpass_collector import OverpassCollector
+    from .ourairports_collector import OurAirportsCollector
+    from .noaa_coops_collector import NOAA_COOPSCollector
+    from .usgs_water_collector import USGSWaterCollector
+    from .firms_collector import FIRMSCollector
     
     orch = get_orchestrator()
     
@@ -315,5 +321,11 @@ async def start_default_collectors() -> None:
     orch.register(NORADCollector())
     orch.register(AISCollector())
     orch.register(NOAACollector())
+    orch.register(EONETCollector())
+    orch.register(OverpassCollector())
+    orch.register(OurAirportsCollector())
+    orch.register(NOAA_COOPSCollector())
+    orch.register(USGSWaterCollector())
+    orch.register(FIRMSCollector())
     
     await orch.start()

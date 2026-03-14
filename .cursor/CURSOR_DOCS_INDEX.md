@@ -8,9 +8,19 @@
 
 ---
 
+## World View Search and Platform Cohesion (Mar 14, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` | **World view search suggestions and MINDEX/SEARCH/MYCA/NATUREOS cohesion**: Shift from fungi-focused to full world-view platform; rotating Try: suggestions; typing placeholder expansion; MINDEX expansion for holistic Earth data. Use for homepage search, fluid search, and platform unification. |
+| `docs/GROUNDING_ARCHITECTURE_LOCKED_MAR14_2026.md` | **Grounding architecture (locked)**: WorldState, SelfState, ExperiencePacket, GroundingGate, llm_brain path; packet build/attach/store; world refresh loop. Use for worldstate contract and grounding changes. |
+| `docs/WORLDSTATE_VS_SPECIALIST_COMMAND_BOUNDARY_MAR14_2026.md` | **Worldstate vs specialist command boundary**: Passive awareness (worldstate read API) vs specialist commands (CREP, Earth2); endpoint matrix; boundary rules. Use for CREP/worldstate integration. |
+| `docs/GPU_ENRICHMENT_STRATEGY_MAR14_2026.md` | **GPU enrichment strategy**: Earth2, PhysicsNeMo, PersonaPlex input backlogs; worldstate context envelope; staging plan. Use for Earth2/PhysicsNeMo/PersonaPlex integration. |
+| `docs/WORLDVIEW_VALIDATION_AND_SEQUENCING_MAR14_2026.md` | **Worldview validation and sequencing**: ETL/search/worldstate verification checklists; registry updates; follow-on implementation order. Use for Phase 8 validation and rollout. |
+
 ## Production VM Clone and CI/CD (Mar 13, 2026)
 | Doc | Purpose |
 |-----|---------|
+| `docs/MYCOSOFT_COM_PRODUCTION_SANDBOX_ROUTE_MAR13_2026.md` | **mycosoft.com via Sandbox (187)**: Tunnel config, --production flag, Supabase/Cloudflare manual steps, deploy verification. Use for production cutover. |
 | `docs/MYCOSOFT_ORG_PRODUCTION_VM_CLONE_CI_CD_MAR13_2026.md` | **Production VM clone + CI/CD**: Clone Sandbox→Production (186), Cloudflare tunnels (mycosoft.com vs sandbox), mycosoft.org redirect, _rebuild_production.py, verification. Use for Production deploy and VM layout. |
 | `docs/PRE_PRODUCTION_CHECKLIST_MAR13_2026.md` | **Pre-production checklist**: Cloudflare tunnels/DNS, Supabase auth redirect URLs, MAS/MINDEX API routes; verification commands; credentials. Run before going live. |
 
@@ -64,6 +74,7 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/JETSON_MYCOBRAIN_PRODUCTION_DEPLOY_MAR13_2026.md` | **Jetson+MycoBrain production deploy**: BOM (Mushroom 1/Hyphae 1/Gateway); wiring; flash procedure; Jetson install.sh + systemd; verification checklist. Use for production build, flash, and deploy. |
+| `docs/ONSITE_AI_OPENCLAW_COMPLETE_MAR13_2026.md` | **On-Site AI (OpenClaw) complete**: Device Manager On-Site AI page; openclaw_url per device; Open OpenClaw / SSH shell from website. Use for OpenClaw + Device Manager integration. |
 
 ## PR #75: Jetson + Avani-Micah + Identity (Mar 9, 2026)
 | Doc | Purpose |

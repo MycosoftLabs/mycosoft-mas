@@ -442,7 +442,7 @@ class MYCAConsciousness:
                 ep = await gate.attach_world_state(ep)
                 asyncio.create_task(gate.wire_spatial_and_temporal(ep, context, session_id))
                 ep = gate.compute_provenance(ep)
-                asyncio.create_task(gate._store_ep(ep, session_id, user_id))
+                asyncio.create_task(gate._store_ep(ep, session_id, user_id, context))
                 valid, errors = gate.validate(ep)
                 if not valid:
                     logger.warning("Grounding incomplete (soft-fail): %s", errors)

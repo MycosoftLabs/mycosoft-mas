@@ -1,9 +1,11 @@
 ---
-description: When doing work, agents MUST invoke (or explicitly follow) the relevant sub-agents and load docs. No solo work without context and delegation.
+description: Canonical orchestration rule. Agents MUST invoke sub-agents, load docs, use plan mode for non-trivial tasks, stop-and-replan when execution destabilizes, and verify before marking complete.
 alwaysApply: true
 ---
 
 # Agent Must Invoke Sub-Agents and Load Docs (All Agents)
+
+**This is the single canonical orchestration rule** for intake, planning defaults, subagent strategy, stop-and-replan behavior, execution handoff, and closeout expectations. See `agent-must-invoke-subagents.mdc` for the task-type table and checklist (same obligation).
 
 ## CRITICAL: Why sub-agents are not invoked on every chat
 
@@ -15,6 +17,18 @@ If you never @-invoke or follow sub-agents, work is done without voice-engineer,
 
 ---
 
+## Plan mode by default (non-trivial tasks)
+
+**Default to plan mode** when the task has 3+ steps, architectural decisions, multi-stage verification, or anything likely to go sideways. Use `.cursor/plans/*.plan.md` or a written plan before executing.
+
+---
+
+## Stop-and-replan when execution destabilizes
+
+**Stop and re-plan immediately** when the original approach is no longer the cleanest path, execution destabilizes (blockers, scope creep, unexpected dependencies), or multiple fixes suggest a deeper design issue. Do not continue down a failing path.
+
+---
+
 ## Mandatory at task/session start (every chat when work is requested)
 
 When the user asks you to **do work** (code, fix, deploy, plan, debug, test), you MUST:
@@ -23,7 +37,7 @@ When the user asks you to **do work** (code, fix, deploy, plan, debug, test), yo
 
 - Read **`.cursor/CURSOR_DOCS_INDEX.md`** (vital/current docs).
 - Read **docs relevant to the task** (e.g. voice → `VOICE_TEST_QUICK_START_FEB18_2026.md`, `MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md`; deploy → `DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md`).
-- For plans or multi-step work: read **last 7 days of docs** per `read-recent-docs-before-planning.mdc`.
+- For plans or multi-step work: read **last 72 hours of docs** per `read-recent-docs-before-planning.mdc` (canonical planning default).
 - Follow **documentation-manager** guidance: use dated docs, update MASTER_DOCUMENT_INDEX and registries when you add or change things.
 
 ### 2. Invoke or follow the right sub-agents
@@ -32,6 +46,7 @@ When the user asks you to **do work** (code, fix, deploy, plan, debug, test), yo
 - If @-invoke is not used, **you** must still **follow** that agent’s instructions: read `.cursor/agents/<name>.md` and apply their “When Invoked” and commands.
 - **Terminal work:** Whenever you run dev server, tests, build, or deploy, involve **terminal-watcher** (read terminals folder, check for errors). See `terminal-watcher-and-agent-tasks.mdc`.
 - **Domain work:** Use the domain agent (e.g. **@voice-engineer** for PersonaPlex/Moshi/test-voice, **@documentation-manager** for new/updated docs and registries).
+- **Subagent strategy:** Use subagents aggressively for focused research and parallel analysis. Keep one tack per subagent so outputs stay sharp.
 
 ### 3. Task-specific sub-agents (quick reference)
 
@@ -52,14 +67,22 @@ Full mapping: **`docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md`** and **`docs/C
 
 ---
 
+## Verification before completion (closeout)
+
+**Never mark a task complete without proof.** See `subagents-must-test-before-complete.mdc`. Run tests, logs, runtime checks. Treat bug reports as autonomous fix work: inspect, find root cause, fix, verify.
+
+---
+
 ## Protocol summary
 
 1. **User asks for work** → Treat as task start.
-2. **Load docs** → CURSOR_DOCS_INDEX + task-relevant docs (+ last 7 days if planning).
-3. **Choose sub-agents** → From task type (voice, website, deploy, docs, etc.).
-4. **Invoke or follow** → @-mention them or read their agent file and do what they would do.
-5. **Terminal** → If you run terminal commands, use terminal-watcher to read output and check for errors.
-6. **Completion** → If plan/task completes, follow `plan-and-task-completion-docs.mdc` (documentation-manager).
+2. **Plan mode?** → If 3+ steps or non-trivial, create/write a plan first.
+3. **Load docs** → CURSOR_DOCS_INDEX + task-relevant docs (+ last 72 hours if planning).
+4. **Choose sub-agents** → From task type (voice, website, deploy, docs, etc.).
+5. **Invoke or follow** → @-mention them or read their agent file and do what they would do.
+6. **Stop-and-replan?** → If execution destabilizes, stop and re-plan.
+7. **Terminal** → If you run terminal commands, use terminal-watcher to read output and check for errors.
+8. **Completion** → Verify (tests, logs, runtime), then follow `plan-and-task-completion-docs.mdc`.
 
 ---
 
@@ -77,6 +100,7 @@ Full mapping: **`docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md`** and **`docs/C
 - `mycosoft-full-context-and-registries.mdc` — Registries, 34 sub-agents list
 - `read-recent-docs-before-planning.mdc` — Recent docs before plans
 - `terminal-watcher-and-agent-tasks.mdc` — Terminal monitoring
+- `subagents-must-test-before-complete.mdc` — Verification before completion
 - `plan-and-task-completion-docs.mdc` — Completion docs
 - `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md` — Per-agent subagents and commands
 - `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md` — All 34 agents, rules, skills

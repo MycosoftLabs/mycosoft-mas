@@ -15,8 +15,8 @@ alwaysApply: true
 
 1. **Create a completion document** (dated in the title).
    - **Filename:** `docs/{PLAN_NAME}_COMPLETE_{MMMDD}_{YYYY}.md` (e.g. `AUTONOMOUS_CURSOR_COMPLETE_FEB12_2026.md`).
-   - **Contents:** What was in scope, what was delivered (files, endpoints, agents, etc.), how to verify, any follow-up or known gaps.
-   - **Header:** Include **Date**, **Status: Complete**, and **Related plan/doc** links.
+   - **Contents:** What was in scope, what was delivered (files, endpoints, agents, etc.), **outcome summary**, how to verify, any follow-up or known gaps, **lessons learned** when applicable.
+   - **Header:** Include **Date**, **Status: Complete**, **Related plan/doc** links, and **linkage to plan todos**.
 
 2. **Update indexes.**
    - Add the new completion doc to **docs/MASTER_DOCUMENT_INDEX.md** in the correct section (by date or theme).
@@ -31,9 +31,10 @@ alwaysApply: true
 ## When a TASK is completed (within a plan or standalone)
 
 1. **Update task completion docs.**
-   - **Plan file:** In the plan or roadmap file, mark the task as done (e.g. `- [x] Task name` or update a "Completed" section).
+   - **Plan file:** In the plan or roadmap file, mark the task as done (e.g. `- [x] Task name` or update a "Completed" section). Link back to the plan todo.
    - **Status doc:** If a status or roadmap doc lists this task (e.g. `docs/SYSTEM_REGISTRY_*`, `docs/*_STATUS_*.md`), update that section to reflect completion.
    - **Single place:** If the project uses a single task log (e.g. `docs/TASK_COMPLETION_LOG_*.md`), append a short entry: date, task id/name, outcome, link to any new doc.
+   - **tasks/ tracking:** If `tasks/todo.md` or `tasks/lessons.md` exist, update them with outcome summary and lessons learned when applicable.
 
 2. **If the task produced a new document**, add that doc to **docs/MASTER_DOCUMENT_INDEX.md** and, if vital, to **.cursor/CURSOR_DOCS_INDEX.md**.
 

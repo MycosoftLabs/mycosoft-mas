@@ -48,6 +48,11 @@ Both devices pair a Jetson (AI compute) with an ESP32-S3 MycoBrain board (sensor
 └───────────────────────────────────────────────────────┘
 ```
 
+**USB connections to Jetson:**
+- **MycoBrain (ESP32-S3)** — USB serial → typically `/dev/ttyUSB0` or `/dev/ttyACM0` (MDP v1, 115200 baud)
+- **SIM board (cellular modem)** — USB serial → typically `/dev/ttyUSB2` or `/dev/ttyACM1` when used for cellular backhaul
+- Use `ls /dev/tty{USB,ACM}*` on the Jetson to discover ports after plugging in devices
+
 **Communication flow:**
 1. ESP32 acquires sensor data at hardware speed (I2C, ADC, SPI)
 2. ESP32 sends telemetry to Jetson via USB serial (MDP v1 protocol, COBS framing, CRC16)

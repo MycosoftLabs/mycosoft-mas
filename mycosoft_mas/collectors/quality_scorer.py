@@ -1,4 +1,4 @@
-﻿"""
+"""
 Quality Scorer - February 6, 2026
 
 Calculates data quality scores for incoming events.
@@ -25,8 +25,14 @@ SOURCE_TRUST_SCORES: Dict[str, float] = {
     "norad": 0.99,
     "usgs": 0.98,
     "noaa": 0.97,
+    "eonet": 0.96,
+    "overpass": 0.88,
+    "ourairports": 0.90,
     "gbif": 0.90,
     "inaturalist": 0.85,
+    "noaa_coops": 0.97,
+    "usgs_water": 0.98,
+    "firms": 0.95,
     
     # Commercial sources
     "marinetraffic": 0.92,
@@ -52,6 +58,9 @@ REQUIRED_FIELDS_BY_TYPE: Dict[str, list] = {
     "earthquake": ["lat", "lng", "magnitude", "depth"],
     "wildlife": ["lat", "lng", "species"],
     "weather": ["lat", "lng", "temperature"],
+    "hazard": ["lat", "lng", "title", "category_id"],
+    "infrastructure_asset": ["lat", "lng", "asset_type"],  # osm_id optional (OSM-only)
+    "environmental_field": ["lat", "lng", "value", "parameter"],
 }
 
 

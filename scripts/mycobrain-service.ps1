@@ -31,8 +31,11 @@ param(
     [Parameter(Position=0)]
     [ValidateSet("start", "stop", "restart", "status", "health", "logs")]
     [string]$Action = "status",
-    
-    [switch]$Schedule
+
+    [switch]$Schedule,
+    [ValidateSet("gateway", "standalone")]
+    [string]$Mode,
+    [string]$AllowedPorts
 )
 
 $ErrorActionPreference = "Continue"
@@ -41,6 +44,7 @@ $ServicePort = 8003
 $ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $ScriptRoot
 $ServiceScript = Join-Path $RepoRoot "services\mycobrain\mycobrain_service_standalone.py"
+$EnvFile = Join-Path $RepoRoot "services\mycobrain\.env.local"
 $LogFile = Join-Path $RepoRoot "data\mycobrain_service.log"
 $PidFile = Join-Path $RepoRoot "data\mycobrain_service.pid"
 $TaskName = "Mycosoft-MycoBrainService"
@@ -90,6 +94,25 @@ function Test-ServiceHealth {
     }
 }
 
+function Import-EnvFile {
+    param(
+        [string]$FilePath
+    )
+    if (-not (Test-Path $FilePath)) {
+        return
+    }
+
+    Get-Content $FilePath | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith("#")) { return }
+        if ($line -match "^([^=]+)=(.*)$") {
+            $key = $matches[1].Trim()
+            $value = $matches[2].Trim().Trim('"')
+            [Environment]::SetEnvironmentVariable($key, $value, "Process")
+        }
+    }
+}
+
 function Start-MycoBrainService {
     if (Test-ServiceRunning) {
         Write-Host "[OK] $ServiceName is already running" -ForegroundColor Green
@@ -117,6 +140,24 @@ function Start-MycoBrainService {
     if (-not (Test-Path $ServiceScript)) {
         Write-Host "[ERROR] Service script not found: $ServiceScript" -ForegroundColor Red
         return $false
+    }
+
+    # Load optional environment overrides from file
+    Import-EnvFile -FilePath $EnvFile
+
+    # Runtime overrides for role and port pinning
+    if ($Mode) {
+        [Environment]::SetEnvironmentVariable("MYCOBRAIN_DEVICE_ROLE", $Mode, "Process")
+        if ($Mode -eq "gateway" -and -not $env:MYCOBRAIN_DEVICE_NAME) {
+            [Environment]::SetEnvironmentVariable("MYCOBRAIN_DEVICE_NAME", "MycoBrain Gateway Node", "Process")
+        }
+    }
+    if ($AllowedPorts) {
+        [Environment]::SetEnvironmentVariable("MYCOBRAIN_ALLOWED_PORTS", $AllowedPorts, "Process")
+    }
+    Write-Host "[INFO] Effective role: $($env:MYCOBRAIN_DEVICE_ROLE)" -ForegroundColor Gray
+    if ($env:MYCOBRAIN_ALLOWED_PORTS) {
+        Write-Host "[INFO] Allowed ports: $($env:MYCOBRAIN_ALLOWED_PORTS)" -ForegroundColor Gray
     }
     
     # Start in background

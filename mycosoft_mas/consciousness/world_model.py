@@ -208,6 +208,7 @@ class WorldModel:
     ECOSYSTEM_UPDATE_INTERVAL = 60
     DEVICE_UPDATE_INTERVAL = 10
     NLM_UPDATE_INTERVAL = 60
+    MINDEX_UPDATE_INTERVAL = 60
     EARTHLIVE_UPDATE_INTERVAL = 120
     PRESENCE_UPDATE_INTERVAL = 5
 
@@ -275,6 +276,7 @@ class WorldModel:
         self._last_ecosystem_update: Optional[datetime] = None
         self._last_device_update: Optional[datetime] = None
         self._last_nlm_update: Optional[datetime] = None
+        self._last_mindex_update: Optional[datetime] = None
         self._last_earthlive_update: Optional[datetime] = None
         self._last_presence_update: Optional[datetime] = None
 
@@ -387,6 +389,11 @@ class WorldModel:
                 await self._update_nlm()
                 self._last_nlm_update = now
 
+            # Update MINDEX
+            if self._should_update(self._last_mindex_update, self.MINDEX_UPDATE_INTERVAL):
+                await self._update_mindex()
+                self._last_mindex_update = now
+
             # Update EarthLIVE
             if self._should_update(self._last_earthlive_update, self.EARTHLIVE_UPDATE_INTERVAL):
                 await self._update_earthlive()
@@ -474,6 +481,21 @@ class WorldModel:
                 logger.warning(f"NLM update error: {e}")
                 self._current_state.nlm_freshness = DataFreshness.UNAVAILABLE
 
+    async def _update_mindex(self) -> None:
+        """Update MINDEX knowledge stats and availability."""
+        sensor = self._mindex_sensor or self._sensors.get("mindex")
+        if not sensor:
+            return
+        try:
+            reading = await sensor.read()
+            if reading:
+                data = reading.data if isinstance(reading, SensorReading) else (reading if isinstance(reading, dict) else {})
+                self._current_state.knowledge_stats = data
+                self._current_state.knowledge_available = bool(data.get("available") or data.get("stats"))
+        except Exception as e:
+            logger.warning(f"MINDEX update error: {e}")
+            self._current_state.knowledge_available = False
+
     async def _update_earthlive(self) -> None:
         """Update EarthLIVE packetized environmental data."""
         if self._earthlive_sensor:
@@ -532,6 +554,7 @@ class WorldModel:
                 "ecosystem": self._current_state.ecosystem_status,
                 "devices": self._current_state.device_telemetry,
                 "nlm": self._current_state.nlm_insights,
+                "mindex": self._current_state.knowledge_stats,
                 "presence": self._current_state.presence_data,
             },
             "cached": True,

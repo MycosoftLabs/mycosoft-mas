@@ -17,14 +17,15 @@ For **bug fixes**, **single-repo coding**, or **single-file work**: read only do
 - Then read `docs/MASTER_DOCUMENT_INDEX.md` for the full table of contents.
 - For full discovery of all docs (2000+), use `.cursor/docs_manifest.json` (run `python scripts/build_docs_manifest.py` to regenerate). Cursor does not auto-load every doc; Notion is a one-way sync for humans – Cursor only sees local files. See `.cursor/rules/cursor-docs-indexing.mdc`.
 
-### 2. Identify All Docs from the Last 4 Weeks
-- Scan `docs/` for all `.md` files with dates in the last 4 weeks (28 days from today).
+### 2. Identify All Docs from the Last 72 Hours (Primary) and Last 4 Weeks (Broader)
+- **Primary planning default (user rule):** Read all docs from the **last 72 hours** in full before starting any new agent work or making new plans.
+- For broader context, scan `docs/` for docs in the last 4 weeks (28 days).
 - Date format in filenames: `*_MMMDD_YYYY.md` (e.g., `STATUS_FEB09_2026.md`).
 - Sort by date, newest first.
 
 ### 3. Read the Newest Docs First
-- Read **all** docs from the last 7 days in full.
-- Read **titles and first 20 lines** of docs from days 8-28 to get context.
+- Read **all** docs from the last 72 hours in full.
+- Read **titles and first 20 lines** of docs from 72 hours to 28 days to get context.
 - Pay special attention to:
   - Status documents (current system state)
   - Security documents (active vulnerabilities, fixes)

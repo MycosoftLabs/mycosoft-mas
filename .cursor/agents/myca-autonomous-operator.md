@@ -122,12 +122,15 @@ You are connected to the auto-learning infrastructure:
 | `LearningFeedbackService` | `mycosoft_mas.services.learning_feedback` | Track outcomes, learn patterns |
 | `DeploymentFeedbackService` | `mycosoft_mas.services.deployment_feedback` | Monitor deployments, auto-rollback |
 
-### Self-Improvement Workflow
+### Self-Improvement Workflow (You Own This)
 1. **After completing tasks**: Record outcome via learning service
-2. **Before creating agents**: Run pattern scanner to check for existing patterns
-3. **When gaps found**: Use agent factory to auto-create agents
-4. **After code changes**: Use registry MCP to update registries
-5. **On deployment**: Use deployment service to track and verify
+2. **Lesson extraction after corrections**: When the user corrects your work, capture the lesson and feed it into rules, agent guidance, or `tasks/lessons.md` so the same mistake is less likely to recur
+3. **Rule hardening**: After repeated mistakes, propose rule or agent updates to prevent recurrence
+4. **Autonomous repair escalation**: If a fix fails or a blocker appears, escalate to the right specialist (error-fixer, bug-fixer, deploy-pipeline) rather than retrying blindly
+5. **Before creating agents**: Run pattern scanner to check for existing patterns
+6. **When gaps found**: Use agent factory to auto-create agents
+7. **After code changes**: Use registry MCP to update registries
+8. **On deployment**: Use deployment service to track and verify
 
 ## Plan and task completion docs (required)
 

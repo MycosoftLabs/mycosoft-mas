@@ -13,6 +13,7 @@ import logging
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
+from mycosoft_mas.engines.self_state_builder import assemble_self_state, from_http_response
 from mycosoft_mas.schemas.experience_packet import (
     ExperiencePacket,
     GroundTruth,
@@ -113,12 +114,7 @@ class GroundingGate:
                     r = await client.get(f"{state_url}/state")
                     if r.status_code == 200:
                         data = r.json()
-                        ep.self_state = SelfState(
-                            snapshot_ts=data.get("timestamp", datetime.now(timezone.utc).isoformat()),
-                            services=data.get("services", {}),
-                            agents=data.get("agents", {}),
-                            active_plans=data.get("active_goals", []),
-                        )
+                        ep.self_state = from_http_response(data)
                         return ep
             except Exception as e:
                 logger.debug("StateService /state unavailable, falling back: %s", e)
@@ -189,12 +185,7 @@ class GroundingGate:
             ep.uncertainty.missingness["self_state_timeout"] = True
             services = {"timeout": True, "fallback": True}
 
-        ep.self_state = SelfState(
-            snapshot_ts=datetime.now(timezone.utc).isoformat(),
-            services=services,
-            agents=agents,
-            active_plans=active_plans,
-        )
+        ep.self_state = assemble_self_state(services, agents, active_plans)
         return ep
 
     async def attach_world_state(self, ep: ExperiencePacket) -> ExperiencePacket:
@@ -300,8 +291,11 @@ class GroundingGate:
         ep: ExperiencePacket,
         session_id: Optional[str],
         user_id: Optional[str],
+        context: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """Persist EP to MINDEX. Soft-fail: log and return on error."""
+        """Persist EP to MINDEX. Soft-fail: log and return on error.
+        Enriches ground_truth with turn_id, source_domains, focus_entity, geo for queryability.
+        """
         try:
             import os
             import httpx
@@ -310,11 +304,27 @@ class GroundingGate:
             path = "/api/mindex/grounding/experience-packets"
             payload = _to_json_serializable(ep)
             if isinstance(payload, dict):
+                gt = dict(payload.get("ground_truth") or {})
+                # Enrich for queryability: turn_id, source_domains, focus_entity, geo
+                ctx = context or (ep.observation.derived_features if ep.observation else {}) or {}
+                if isinstance(ctx, dict):
+                    if "turn_id" in ctx:
+                        gt["turn_id"] = ctx["turn_id"]
+                    if "focus_entity" in ctx:
+                        gt["focus_entity"] = ctx["focus_entity"]
+                    geo = ctx.get("geo")
+                    if geo is not None:
+                        if isinstance(geo, dict):
+                            gt["geo"] = geo
+                        elif hasattr(geo, "__dict__"):
+                            gt["geo"] = {"lat": getattr(geo, "lat", None), "lon": getattr(geo, "lon", None)}
+                if ep.world_state and ep.world_state.sources:
+                    gt["source_domains"] = list(ep.world_state.sources)
                 body = {
                     "id": ep.id,
                     "session_id": session_id,
                     "user_id": user_id,
-                    "ground_truth": payload.get("ground_truth", {}),
+                    "ground_truth": gt,
                     "self_state": payload.get("self_state"),
                     "world_state": payload.get("world_state"),
                     "observation": payload.get("observation", {}),

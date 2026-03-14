@@ -11,6 +11,15 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (Mar 14, 2026)
+
+- **Worldview Search Expansion** — Worldstate API, collectors, GPU enrichment:
+  - Worldstate API (`/api/myca/world/*`) — canonical passive awareness surface; reads from WorldModel and SelfState. Router: `mycosoft_mas/core/routers/worldstate_api.py`
+  - Worldview collectors: P0 (EONET, Overpass, OurAirports, OpenSky, USGS quakes, NOAA NWS, Open-Meteo); P1/P2 (NOAA CO-OPS, USGS water, FIRMS). See `mycosoft_mas/collectors/`
+  - GPU enrichment strategy: Earth2, PhysicsNeMo, PersonaPlex input backlogs and worldstate context envelope. Doc: `docs/GPU_ENRICHMENT_STRATEGY_MAR14_2026.md`
+  - Grounding architecture locked: `docs/GROUNDING_ARCHITECTURE_LOCKED_MAR14_2026.md`
+  - Validation and sequencing: `docs/WORLDVIEW_VALIDATION_AND_SEQUENCING_MAR14_2026.md`
+
 ## Recent Updates (Feb 28, 2026)
 
 - Added scientific persistence service and models:

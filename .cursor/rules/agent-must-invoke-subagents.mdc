@@ -27,7 +27,7 @@ alwaysApply: true
 ### 1. Load docs and registries (always)
 
 - Read **`.cursor/CURSOR_DOCS_INDEX.md`** (vital/current docs)
-- Read **docs relevant to the task** from the last 7–14 days (sort by date, newest first)
+- Read **docs relevant to the task** (for planning: last 72 hours per user rule; for coding: 1–2 task docs)
 - For voice: `docs/VOICE_TEST_QUICK_START_FEB18_2026.md`, `docs/MYCA_VOICE_TEST_SYSTEMS_ONLINE_FEB18_2026.md`, `docs/VOICE_SYSTEM_FILES_DEVICES_SSH_FEB13_2026.md`, `docs/MYCA_VOICE_APPLICATION_HANDOFF_FEB17_2026.md`
 - Check `docs/SUBAGENT_ROLES_AND_COMMANDS_FEB12_2026.md` and `docs/CURSOR_TEAM_AUDIT_FEB12_2026.md` to identify which sub-agents apply
 

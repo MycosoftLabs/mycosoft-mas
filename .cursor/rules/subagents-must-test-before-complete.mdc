@@ -21,6 +21,14 @@ This is a permanent rule for all implementation work.
 4. **Fix then re-test**
    - If checks fail, fix the issue and run verification again.
    - Only then mark the task complete.
+5. **Log checks and runtime checks**
+   - Inspect logs for errors, warnings, and anomalies.
+   - Validate runtime behavior (health endpoints, actual user flows).
+   - Use behavior diffs where relevant (before/after comparison).
+6. **Elegance pass (non-trivial work)**
+   - For non-trivial changes, ask: "Is there a more elegant approach?" Do not over-engineer obvious small fixes.
+7. **Staff-engineer gate**
+   - Before marking complete: "Would a staff engineer approve this?" Fix known shortcuts or technical debt before closing.
 
 ## Minimum bar by change type
 

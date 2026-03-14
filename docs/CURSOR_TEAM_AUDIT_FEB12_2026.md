@@ -114,10 +114,11 @@ All live in `.cursor/rules/*.mdc`. `alwaysApply: true` = applies to every chat.
 
 ---
 
-## 3. All 19 Skills (MAS .cursor/skills)
+## 3. All 20 Skills (MAS .cursor/skills)
 
 | Skill | Use when |
 |-------|----------|
+| workflow-orchestration | Plan-first execution; 3+ step tasks; verify before done; capture lessons |
 | create-api-endpoint | New FastAPI router/endpoints |
 | create-api-route | New Next.js API route |
 | create-mas-agent | New MAS agent (BaseAgent) |

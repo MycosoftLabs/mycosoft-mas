@@ -207,6 +207,73 @@ if (Test-Path $installWatchdog) {{
     return True, f"Bootstrap completed for {role} at {ip}"
 
 
+def setup_claude_cowork_on_guest(ip: str) -> tuple[bool, str]:
+    """
+    Push Claude Cowork fix + watchdog scripts to guest and run them.
+    Used for COO VM (192.168.0.195) or any VM needing Cowork VM service fix.
+    """
+    try:
+        import winrm
+    except ImportError:
+        return False, "pywinrm not installed. Run: poetry add --group dev pywinrm"
+
+    cfg = _get_bootstrap_config()
+    user_env = cfg.get("guest_user_env") or "CSUITE_GUEST_USER"
+    pass_env = cfg.get("guest_password_env") or "CSUITE_GUEST_PASSWORD"
+    user_default = cfg.get("guest_user_default") or "Administrator"
+    port = int(cfg.get("winrm_port") or 5985)
+    timeout = int(cfg.get("connect_timeout_sec") or 300)
+    retry_int = int(cfg.get("connect_retry_interval_sec") or 10)
+
+    user = os.environ.get(user_env) or user_default
+    password = os.environ.get(pass_env) or os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD")
+    if not password:
+        return False, f"Set {pass_env} or VM_PASSWORD in .credentials.local"
+
+    logger.info("Waiting for WinRM on %s:%d (timeout %ds)...", ip, port, timeout)
+    if not _wait_for_winrm(ip, port, timeout, retry_int):
+        return False, f"WinRM not reachable on {ip}:{port} within {timeout}s"
+
+    endpoint = f"http://{ip}:{port}/wsman"
+    try:
+        session = winrm.Session(endpoint, auth=(user, password), transport="ntlm")
+    except Exception as e:
+        return False, f"WinRM session failed: {e}"
+
+    # Push cowork scripts to C:\Users\<user>\AppData\Local\Mycosoft\C-Suite\scripts\cowork
+    cowork_scripts_dir = Path(REPO_ROOT) / "scripts"
+    scripts = [
+        ("fix-claude-cowork-vm.ps1", cowork_scripts_dir / "fix-claude-cowork-vm.ps1"),
+        ("ensure-cowork-vm-watchdog.ps1", cowork_scripts_dir / "ensure-cowork-vm-watchdog.ps1"),
+        ("install-cowork-vm-watchdog.ps1", cowork_scripts_dir / "install-cowork-vm-watchdog.ps1"),
+    ]
+    cowork_path = os.path.join("C:\\Users", user, "AppData\\Local", "Mycosoft", "C-Suite", "scripts", "cowork")
+    base_esc = cowork_path.replace("\\", "\\\\")
+    r = session.run_ps(f'New-Item -ItemType Directory -Path "{base_esc}" -Force | Out-Null')
+    if r.status_code != 0:
+        return False, f"Failed to create cowork dir: {r.std_err}"
+
+    for name, src in scripts:
+        if not src.exists():
+            return False, f"Script not found: {src}"
+        dest = os.path.join(cowork_path, name)
+        if not _write_file_via_winrm(session, dest, src.read_text(encoding="utf-8")):
+            return False, f"Failed to push {name}"
+
+    # Run fix script (starts CoworkVMService, optionally clears cache)
+    fix_esc = cowork_path.replace("\\", "\\\\")
+    r = session.run_ps(f'& "{fix_esc}\\fix-claude-cowork-vm.ps1" -Force')
+    if r.status_code != 0:
+        logger.warning("Fix script returned %d: %s", r.status_code, r.std_err or r.std_out)
+
+    # Install watchdog scheduled task (requires Admin - session is as Administrator)
+    r = session.run_ps(f'& "{fix_esc}\\install-cowork-vm-watchdog.ps1"')
+    if r.status_code != 0:
+        return False, f"Watchdog install failed: {r.std_err or r.std_out}"
+
+    return True, f"Claude Cowork fix + watchdog installed on {ip}"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Bootstrap C-Suite Windows guest via WinRM")
     ap.add_argument("--role", "-r", required=True, choices=["ceo", "cfo", "cto", "coo"])

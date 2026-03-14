@@ -1,0 +1,99 @@
+---
+description: Token-efficiency operating structure for CTO workflows. Enforce tiered context loading, task-scoped sub-agent usage, and thread discipline to reduce unnecessary cache reads.
+alwaysApply: true
+---
+
+# Token-Efficiency CTO Operating Structure
+
+## Purpose
+
+Reduce token waste by preventing "load everything every chat" behavior and enforcing task-type context tiers.
+
+---
+
+## Task-Type Context Tiers
+
+### Simple Tasks (single-file typo, small comment, tiny scoped fix)
+- Load 0-1 docs only, and only if needed to avoid policy mistakes.
+- Skip heavy registry and gap-report reads.
+- Do not invoke specialist sub-agents unless the task genuinely needs them.
+
+### Coding Tasks (feature work, API changes, bug fixes, component edits)
+- Load `.cursor/CURSOR_DOCS_INDEX.md`.
+- Load 1-2 task-relevant docs only.
+- Load `docs/SYSTEM_REGISTRY_FEB04_2026.md` and `docs/API_CATALOG_FEB04_2026.md` only if touching APIs/services.
+
+### Planning / Architecture Tasks (new plan, cross-repo architecture, large migrations)
+- Load full planning context per `.cursor/rules/full-context-before-planning.mdc`.
+- Include planning-only gap checks, recent docs (last 72 hours per user rule), and cross-repo analysis.
+- **Plan mode by default:** Any task with 3+ steps, architectural decisions, or multi-stage verification triggers plan mode first.
+- **Re-plan triggers:** Stop and re-plan when execution destabilizes (blockers, scope creep), the original approach is no longer cleanest, or multiple fixes suggest a deeper design issue.
+
+---
+
+## Never Every Chat
+
+Do NOT automatically load the following on every chat:
+- `.cursor/gap_report_latest.json`
+- `.cursor/gap_report_index.json`
+- "last 72 hours" / "last 7 days" / "last 4 weeks" doc sweeps
+- Full registry stacks across all systems
+
+Only load the above when:
+1. User explicitly asks "what's missing", "find gaps", or "what do I need to connect"
+2. Creating a new plan
+3. Working across 3+ repos in one task
+
+---
+
+## Thread Discipline
+
+- Prefer one thread per feature/task.
+- When a thread exceeds about 20 messages or 2+ hours, suggest:
+  1) "Summarize session"
+  2) Start a new thread with the summary pasted in
+
+---
+
+## Targeted Prompting
+
+Prefer file-scoped prompts and targeted analysis:
+- Good: "Analyze `mycosoft_mas/core/orchestrator.py` and callers."
+- Bad: "Analyze the entire MAS architecture."
+
+Prefer direct file/path references over whole-repo requests.
+
+---
+
+## Sub-Agent Invocation Discipline
+
+- Do not invoke sub-agents speculatively.
+- Invoke only when task type requires specialist expertise.
+- Do not invoke `gap-agent`, `plan-tracker`, or `documentation-manager` by default on simple coding tasks.
+- Invoke `terminal-watcher` only when a terminal command was actually run.
+
+---
+
+## Context Source Re-Read Prevention
+
+- Track docs already read in the current thread.
+- Do not re-read the same doc unless:
+  - user asks to refresh,
+  - a specific section is requested, or
+  - the source changed and a refresh is required.
+
+---
+
+## Gap Report Caching
+
+- If a gap report was read in this thread and is less than 30 minutes old, do not re-read it.
+- Regenerate gap reports only when:
+  - user asks "refresh gaps", or
+  - a new planning session starts.
+
+---
+
+## Model Choice Guidance
+
+- Prefer coding-focused models for coding/debug tasks.
+- Reserve highest-cost planning models for architecture/planning tasks when clearly needed.

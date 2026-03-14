@@ -168,6 +168,12 @@ try:
 except ImportError:
     VOICE_TOOLS_AVAILABLE = False
 
+# Voice command API - CREP map commands (PersonaPlex bridge)
+from mycosoft_mas.core.routers.voice_command_api import router as voice_command_router
+
+# CREP command API - autonomous MYCA CREP tools (CrepCommandBus)
+from mycosoft_mas.core.routers.crep_command_api import router as crep_command_router
+
 # MYCA Tools API for tool execution
 try:
     from mycosoft_mas.core.routers.tools_api import router as tools_router
@@ -215,6 +221,14 @@ try:
 except ImportError:
     grounding_router = None
     GROUNDING_API_AVAILABLE = False
+
+# MYCA Worldstate API - canonical WorldState read-only awareness
+try:
+    from mycosoft_mas.core.routers.worldstate_api import router as worldstate_router
+    WORLDSTATE_API_AVAILABLE = True
+except ImportError:
+    worldstate_router = None
+    WORLDSTATE_API_AVAILABLE = False
 
 # MYCA Reflection API - reflection history and logging
 try:
@@ -640,6 +654,8 @@ app.include_router(task_progress_ws_router, tags=["ws-task-progress"])
 app.include_router(voice_stream_ws_router, tags=["ws-voice-stream"])
 app.include_router(voice_v9_api_router)
 app.include_router(voice_v9_ws_router)
+app.include_router(voice_command_router, tags=["voice-command"])
+app.include_router(crep_command_router, tags=["crep"])
 app.include_router(earth2_predictions_ws_router, tags=["ws-earth2-predictions"])
 app.include_router(scientific_data_ws_router, tags=["ws-scientific-data"])
 app.include_router(system_health_ws_router, tags=["ws-system-health"])
@@ -708,6 +724,10 @@ except NameError:
 # MYCA Grounding API - grounding gate status, EP, thoughts
 if GROUNDING_API_AVAILABLE and grounding_router is not None:
     app.include_router(grounding_router, tags=["grounding", "myca"])
+
+# MYCA Worldstate API - canonical WorldState read-only awareness
+if WORLDSTATE_API_AVAILABLE and worldstate_router is not None:
+    app.include_router(worldstate_router, tags=["worldstate", "myca"])
 
 # MYCA Reflection API - reflection history and logging
 if REFLECTION_API_AVAILABLE and reflection_router is not None:

@@ -30,6 +30,7 @@ class MapIntent(Enum):
     CREP_FILTER = "crep_filter"
     CREP_ENTITY = "crep_entity"
     WHAT_HERE = "map_what_here"
+    TIMELINE = "map_timeline"
     UNKNOWN = "unknown"
 
 
@@ -47,6 +48,8 @@ class MapCommand:
     filter_type: Optional[str] = None
     filter_value: Optional[str] = None
     entity_name: Optional[str] = None
+    time_cursor: Optional[str] = None  # ISO8601 or relative
+    timeline_query: Optional[str] = None
     raw_text: str = ""
     confidence: float = 0.0
 
@@ -100,6 +103,12 @@ MAP_PATTERNS = {
         r"what\s+(?:am I|are we)\s+looking at",
         r"describe\s+(?:this\s+)?(?:area|location|view)",
         r"summarize\s+(?:this\s+)?(?:area|view|region)",
+    ],
+    MapIntent.TIMELINE: [
+        r"(?:set\s+)?time\s+(?:to\s+)?(.+)",
+        r"(?:show|go to)\s+(?:events?\s+)?(?:at|from)\s+(.+)",
+        r"(?:timeline|search)\s+(.+)",
+        r"(?:show me|find)\s+(?:events?\s+)?(?:from|in)\s+(.+)",
     ],
 }
 
@@ -273,6 +282,14 @@ class MapVoiceHandler:
             groups = match.groups()
             if groups and groups[0]:
                 cmd.entity_name = groups[0].strip()
+        elif intent == MapIntent.TIMELINE:
+            groups = match.groups()
+            if groups and groups[0]:
+                val = groups[0].strip()
+                if any(kw in text for kw in ["search", "find", "timeline"]):
+                    cmd.timeline_query = val
+                else:
+                    cmd.time_cursor = val
         
         return cmd
     
@@ -295,6 +312,8 @@ class MapVoiceHandler:
                 return self._query_entity(cmd)
             elif cmd.intent == MapIntent.WHAT_HERE:
                 return self._describe_view(cmd)
+            elif cmd.intent == MapIntent.TIMELINE:
+                return self._timeline(cmd)
             else:
                 return {"success": False, "error": "Unknown intent"}
         except Exception as e:
@@ -470,6 +489,31 @@ class MapVoiceHandler:
             },
             "speak": "Let me describe what's currently visible on the map."
         }
+
+    def _timeline(self, cmd: MapCommand) -> Dict[str, Any]:
+        """Set time cursor or search timeline."""
+        if cmd.time_cursor:
+            return {
+                "success": True,
+                "action": "set_time_cursor",
+                "frontend_command": {
+                    "type": "setTimeCursor",
+                    "time": cmd.time_cursor
+                },
+                "speak": f"Setting timeline to {cmd.time_cursor}."
+            }
+        elif cmd.timeline_query:
+            return {
+                "success": True,
+                "action": "timeline_search",
+                "frontend_command": {
+                    "type": "timelineSearch",
+                    "query": cmd.timeline_query
+                },
+                "speak": f"Searching timeline for {cmd.timeline_query}."
+            }
+        else:
+            return {"success": False, "error": "No time or query specified"}
 
 
 # Singleton instance

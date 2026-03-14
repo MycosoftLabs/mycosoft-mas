@@ -68,7 +68,7 @@ static const uint8_t AO_PINS[3] = {12, 13, 14};
 // FIRMWARE INFO
 // ============================================================
 static const char* FW_NAME = "mycobrain.sideA.bsec2";
-static const char* FW_VERSION = "2.0.0";
+static const char* FW_VERSION = "2.1.0";
 static const uint32_t SCHEMA_VER = 4;
 
 // ============================================================
@@ -687,6 +687,86 @@ static void cmdAotxStatus(const char* cmdId = nullptr) {
 }
 
 // ============================================================
+// LORA / MESH STATE (gateway-readiness command plane)
+// ============================================================
+static bool gLoraInitialized = false;
+static uint32_t gLoraTxCount = 0;
+static String gLoraLastTx = "";
+
+static void cmdLoraInit(const char* cmdId = nullptr) {
+  // Command-plane readiness only; radio driver integration lives in gateway transport layer.
+  gLoraInitialized = true;
+  if (gOutputFormat == FMT_JSON) {
+    StaticJsonDocument<256> doc;
+    doc["ok"] = true;
+    if (cmdId) doc["id"] = cmdId;
+    doc["lora_initialized"] = gLoraInitialized;
+    doc["mode"] = "command_plane_ready";
+    writeJson(doc);
+  } else {
+    writeLine("lora_initialized=true");
+    writeLine("mode=command_plane_ready");
+  }
+}
+
+static void cmdLoraStatus(const char* cmdId = nullptr) {
+  if (gOutputFormat == FMT_JSON) {
+    StaticJsonDocument<320> doc;
+    doc["ok"] = true;
+    if (cmdId) doc["id"] = cmdId;
+    doc["initialized"] = gLoraInitialized;
+    doc["tx_count"] = gLoraTxCount;
+    doc["last_tx"] = gLoraLastTx;
+    doc["mode"] = "command_plane_ready";
+    writeJson(doc);
+  } else {
+    writeKeyValue("lora_initialized", gLoraInitialized ? "true" : "false");
+    writeKeyValue("lora_tx_count", (int)gLoraTxCount);
+    writeKeyValue("lora_last_tx", gLoraLastTx);
+    writeKeyValue("lora_mode", "command_plane_ready");
+  }
+}
+
+static void cmdLoraSend(const String& payload, const char* cmdId = nullptr) {
+  if (!gLoraInitialized) {
+    respondError("lora_not_initialized", cmdId);
+    return;
+  }
+  gLoraTxCount += 1;
+  gLoraLastTx = payload;
+  if (gOutputFormat == FMT_JSON) {
+    StaticJsonDocument<384> doc;
+    doc["ok"] = true;
+    if (cmdId) doc["id"] = cmdId;
+    doc["queued"] = true;
+    doc["transport"] = "lora";
+    doc["payload"] = payload;
+    doc["tx_count"] = gLoraTxCount;
+    writeJson(doc);
+  } else {
+    Serial.print("lora_queued=");
+    Serial.println(payload);
+    writeKeyValue("lora_tx_count", (int)gLoraTxCount);
+  }
+}
+
+static void cmdMeshStatus(const char* cmdId = nullptr) {
+  if (gOutputFormat == FMT_JSON) {
+    StaticJsonDocument<320> doc;
+    doc["ok"] = true;
+    if (cmdId) doc["id"] = cmdId;
+    doc["mesh"] = "standby";
+    doc["lora_initialized"] = gLoraInitialized;
+    doc["peers_online"] = 0;
+    writeJson(doc);
+  } else {
+    writeLine("mesh=standby");
+    writeKeyValue("mesh_peers_online", 0);
+    writeKeyValue("lora_initialized", gLoraInitialized ? "true" : "false");
+  }
+}
+
+// ============================================================
 // SENSOR OUTPUT
 // ============================================================
 static void printOneSensorJson(const SensorSlot &s, JsonObject &obj) {
@@ -774,6 +854,8 @@ static void cmdStatus(const char* cmdId = nullptr) {
     doc["output_format"] = gOutputFormat == FMT_JSON ? "json" : "lines";
     doc["cpu_mhz"] = ESP.getCpuFreqMHz();
     doc["bsec2"] = true;
+    doc["lora_initialized"] = gLoraInitialized;
+    doc["lora_tx_count"] = gLoraTxCount;
     writeJson(doc);
   } else {
     writeLine("=== Status (BSEC2) ===");
@@ -785,6 +867,8 @@ static void cmdStatus(const char* cmdId = nullptr) {
     writeKeyValue("bme688_count", (int)bme688_count);
     writeKeyValue("i2c_count", (int)i2cCount);
     writeKeyValue("cpu_mhz", (int)ESP.getCpuFreqMHz());
+    writeKeyValue("lora_initialized", gLoraInitialized ? "true" : "false");
+    writeKeyValue("lora_tx_count", (int)gLoraTxCount);
   }
 }
 
@@ -824,7 +908,9 @@ static void cmdHelp(const char* cmdId = nullptr) {
     cmds.add("help"); cmds.add("status"); cmds.add("ping");
     cmds.add("get_mac"); cmds.add("get_version"); cmds.add("scan");
     cmds.add("sensors"); cmds.add("led"); cmds.add("beep");
-    cmds.add("fmt"); cmds.add("optx"); cmds.add("aotx"); cmds.add("reboot");
+    cmds.add("fmt"); cmds.add("optx"); cmds.add("aotx");
+    cmds.add("lora init"); cmds.add("lora status"); cmds.add("lora send <payload>");
+    cmds.add("mesh status"); cmds.add("reboot");
     writeJson(doc);
   } else {
     writeLine("=== MycoBrain BSEC2 Commands ===");
@@ -835,6 +921,8 @@ static void cmdHelp(const char* cmdId = nullptr) {
     writeLine("led brightness 0-100 | led pattern ...");
     writeLine("beep [freq] [ms] | coin | bump | power | 1up | morgio");
     writeLine("optx start/stop/status | aotx start/stop/status");
+    writeLine("lora init | lora status | lora send <payload>");
+    writeLine("mesh status");
     writeLine("fmt json|lines | reboot");
   }
 }
@@ -1089,6 +1177,24 @@ static void parseCliCommand(const String& line) {
       respondError("usage: aotx start <payload> | aotx stop | aotx status");
     }
   }
+  else if (firstWord == "lora") {
+    if (args == "init") {
+      cmdLoraInit();
+    } else if (args == "status" || args.length() == 0) {
+      cmdLoraStatus();
+    } else if (args.startsWith("send ")) {
+      cmdLoraSend(args.substring(5));
+    } else {
+      respondError("usage: lora init | lora status | lora send <payload>");
+    }
+  }
+  else if (firstWord == "mesh") {
+    if (args == "status" || args.length() == 0) {
+      cmdMeshStatus();
+    } else {
+      respondError("usage: mesh status");
+    }
+  }
   else if (firstWord.length() > 0) {
     respondError("unknown command - try 'help'");
   }
@@ -1179,6 +1285,19 @@ static void parseJsonCommand(const String& line) {
       gLedMode = LED_MANUAL;
     }
     respondOk(id);
+  }
+  else if (strcmp(cmd, "lora.init") == 0 || strcmp(cmd, "lora_init") == 0) {
+    cmdLoraInit(id);
+  }
+  else if (strcmp(cmd, "lora.status") == 0 || strcmp(cmd, "lora_status") == 0) {
+    cmdLoraStatus(id);
+  }
+  else if (strcmp(cmd, "lora.send") == 0 || strcmp(cmd, "lora_send") == 0) {
+    const char* payload = req["payload"] | "";
+    cmdLoraSend(String(payload), id);
+  }
+  else if (strcmp(cmd, "mesh.status") == 0 || strcmp(cmd, "mesh_status") == 0) {
+    cmdMeshStatus(id);
   }
   else if (strcmp(cmd, "reboot") == 0) { cmdReboot(); }
   else if (strcmp(cmd, "fmt") == 0) {

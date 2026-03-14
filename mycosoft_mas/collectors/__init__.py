@@ -18,6 +18,12 @@ from .usgs_collector import USGSCollector
 from .norad_collector import NORADCollector
 from .ais_collector import AISCollector
 from .noaa_collector import NOAACollector
+from .eonet_collector import EONETCollector
+from .overpass_collector import OverpassCollector
+from .ourairports_collector import OurAirportsCollector
+from .noaa_coops_collector import NOAA_COOPSCollector
+from .usgs_water_collector import USGSWaterCollector
+from .firms_collector import FIRMSCollector
 
 __all__ = [
     "BaseCollector",
@@ -35,4 +41,10 @@ __all__ = [
     "NORADCollector",
     "AISCollector",
     "NOAACollector",
+    "EONETCollector",
+    "OverpassCollector",
+    "OurAirportsCollector",
+    "NOAA_COOPSCollector",
+    "USGSWaterCollector",
+    "FIRMSCollector",
 ]
