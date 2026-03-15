@@ -1,5 +1,9 @@
 # Master Document Index
 
+## Pull, Integration & Gap Report (Mar 15, 2026)
+- `docs/GAP_REPORT_MAR15_2026.md` – **Pull, integration & gap report**: Latest pull for NLM, MINDEX, MAS, website; MINDEX plasticity/NLM/search_answers routers wired; stashes, security scan, migrations, tests, and cross-repo integration recommendations.
+- `WEBSITE/website/docs/AUTH_TROUBLESHOOTING_MAR15_2026.md` – **Website auth troubleshooting**: Required Supabase env vars, redirect URL config, origin/proxy; env checks in login and callback routes; quick checks when sign-in fails.
+
 ## Network Topology and Ubiquiti (Mar 7, 2026)
 - `docs/NETWORK_TOPOLOGY_UBIQUITI_PLAN_MAR07_2026.md` – **Network topology and Ubiquiti labeling plan**: 192.168.0.x device designations (NodeFather crypto, C-Suite, R710/R630, Proxmox 202); segregation (public Proxmox vs internal R710); Ubiquiti labeling table; C-Suite VM migration R710; UniFi scan script usage.
 - `docs/NETWORK_IP_MAC_DEVICE_MAP_MAR07_2026.md` – **Full IP/MAC/device map (Mar 7, 2026)**: ARP-scan-validated map of 192.168.0.0/24; IP→MAC→role table; Proxmox 202 vs R720 layout; C-Suite migration plan; NodeFather, NAS, Edge R630; UniFi labeling reference.
