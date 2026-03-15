@@ -67,3 +67,10 @@ The MAS-owned unified search pipeline is implemented: every query routes through
 - MINDEX answer schema migration must be applied on each environment (dev, sandbox, production).
 - Second-search instant retrieval (GET `/search/answers?q=`) depends on prior writes; validate with a first search then repeat query.
 - Playwright e2e can be extended for mobile path and widget coverage checks when selectors are stable.
+
+## Deployment — full VM redeploy (Mar 15, 2026)
+
+- **Website (Sandbox 187):** `_rebuild_sandbox.py` run from `website/` (HEAD eb229ff). Rebuild timeout increased to 1200s. If build is slow or times out, re-run from `website/`: load creds then `python _rebuild_sandbox.py`. After success: container has NAS mount; run Cloudflare Purge Everything.
+- **MAS (188):** `scripts/_pull_and_restart_mas_vm188.py` — pulled 1b116481, restarted `mas-orchestrator`. Health may show postgres/crep degraded; API reports `services.api: ok`.
+- **MINDEX (189):** `scripts/deploy_mindex.py` — pull, `docker compose build --no-cache api`, `docker compose up -d api --no-deps` (avoids recreating existing postgres/redis/qdrant). **Verified healthy:** `http://192.168.0.189:8000/health` returns `{"status":"healthy"}`. Windows encoding fix: SSH output uses `_safe_print()` to avoid charmap errors.
+- **Verify live:** sandbox.mycosoft.com — guest: empty notepad; logged-in: per-user notepad. After Sandbox script completes, purge Cloudflare (Purge Everything) if not done by script.

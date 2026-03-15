@@ -26,6 +26,15 @@ if not SSH_PASS:
     sys.exit(1)
 
 
+def _safe_print(s: str) -> None:
+    """Print SSH output safely on Windows (avoid charmap encode errors)."""
+    if not s:
+        return
+    enc = getattr(sys.stdout, "encoding", None) or "utf-8"
+    sys.stdout.buffer.write(s.encode(enc, errors="replace") + b"\n")
+    sys.stdout.flush()
+
+
 def main():
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -45,28 +54,28 @@ def main():
         cmd = "cd /home/mycosoft/mindex && docker compose stop api 2>/dev/null; docker compose build --no-cache api 2>&1 | tail -60"
         stdin, stdout, stderr = client.exec_command(cmd, timeout=900)
         out = stdout.read().decode('utf-8', errors='replace')
-        print(out)
+        _safe_print(out)
         if stdout.channel.recv_exit_status() != 0:
             print("Build may have failed - check output above")
         
         print("\n[3/3] Starting MINDEX API container...")
-        cmd = "cd /home/mycosoft/mindex && docker compose up -d api"
+        cmd = "cd /home/mycosoft/mindex && docker compose up -d api --no-deps"
         stdin, stdout, stderr = client.exec_command(cmd, timeout=60)
         out = stdout.read().decode('utf-8', errors='replace')
         err = stderr.read().decode('utf-8', errors='replace')
-        print(out or err)
+        _safe_print(out or err)
         
         # Check status
         print("\n[+] Container status:")
         stdin, stdout, stderr = client.exec_command("docker ps --filter name=mindex-api", timeout=30)
-        print(stdout.read().decode('utf-8', errors='replace'))
+        _safe_print(stdout.read().decode('utf-8', errors='replace'))
         
         # Health check
         print("\n[+] Health check:")
         import time
         time.sleep(5)
         stdin, stdout, stderr = client.exec_command("curl -s http://127.0.0.1:8000/health 2>/dev/null || curl -s http://127.0.0.1:8000/api/v1/health", timeout=30)
-        print(stdout.read().decode('utf-8', errors='replace'))
+        _safe_print(stdout.read().decode('utf-8', errors='replace'))
         
     except Exception as e:
         print(f"Error: {e}")
