@@ -54,8 +54,16 @@ The MAS-owned unified search pipeline is implemented: every query routes through
 - This completion doc; `docs/NEMOTRON_ROUTING_AND_PERSISTENCE_MAR14_2026.md`.
 - MASTER_DOCUMENT_INDEX and CURSOR_DOCS_INDEX updated with new/current docs.
 
+## Post-rollout: Notepad gated on auth (Mar 14, 2026)
+
+- Search notepad (add/remove/clear items) is gated on authenticated user: `SearchContextProvider` uses `useAuth()` and `notepadStorageKey = getNotepadStorageKey(user?.id)`.
+- When not logged in: notepad shows empty, no localStorage read/write.
+- When logged in: notepad persists per user in `localStorage` under `search-notepad-${user.id}`.
+- See `website/components/search/SearchContextProvider.tsx`.
+
 ## Follow-up / known gaps
 
+- **Follow-up plan:** `docs/SEARCH_FOLLOWUP_MAP_CREP_EARTH_INTERNAL_MAR14_2026.md` — Map/CREP full-screen, Earth Simulator naming, internal-only answers (planned, not in rollout).
 - MINDEX answer schema migration must be applied on each environment (dev, sandbox, production).
 - Second-search instant retrieval (GET `/search/answers?q=`) depends on prior writes; validate with a first search then repeat query.
 - Playwright e2e can be extended for mobile path and widget coverage checks when selectors are stable.
