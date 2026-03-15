@@ -13,7 +13,17 @@
 - `docs/MYCOSOFT_ORG_PRODUCTION_VM_CLONE_CI_CD_MAR13_2026.md` – **Production VM clone + CI/CD**: Clone Sandbox→Production (186), Cloudflare tunnels (mycosoft.com vs sandbox.mycosoft.com), mycosoft.org→mycosoft.com/about redirect, _rebuild_production.py, verification checklist. Use for Production deploy and VM layout.
 - `docs/PRE_PRODUCTION_CHECKLIST_MAR13_2026.md` – **Pre-production checklist**: Cloudflare tunnels/DNS, Supabase auth redirect URLs, MAS/MINDEX API routes; verification commands; credentials. Run before going live.
 
+## Browser / Lightpanda (Mar 14, 2026)
+- `docs/LIGHTPANDA_MAS_BROWSER_POLICY_MAR14_2026.md` – **Lightpanda as MAS browser runtime**: Use Lightpanda as specialized worker (fast scrape, low-RAM browsing, extraction) with Chromium/Playwright fallback; browser abstraction `lightpanda | chromium`; AGPL-3.0 and telemetry considerations; suggested role layout and first integration policy.
+
+## Nemotron MYCA/AVANI Integration (Mar 14, 2026)
+- `docs/NEMOTRON_VERIFICATION_ROLLOUT_MAR14_2026.md` – **Nemotron verification and rollout**: End-to-end test gates (canonical voice path, route unification, retrieval provenance, full-duplex); rollout phases 1–6; required doc/registry updates (SYSTEM_REGISTRY, API_CATALOG, MASTER_DOCUMENT_INDEX, voice topology); completion checklist.
+- `docs/NEMOTRON_DEPLOYMENT_TOPOLOGY_MAR14_2026.md` – **Nemotron deployment topology**: Service placement across 187/188/189/190 and NAS model storage; Nemotron core/safety/speech/RAG/edge roles; network dependencies; summary table.
+- `docs/SPEECH_DUPLEX_MIGRATION_MAR14_2026.md` – **Speech duplex migration**: Migration from Moshi/browser to backend-owned interruptible ASR/TTS while preserving PersonaPlex full duplex.
+- `docs/MINDEX_NEMOTRON_RAG_PLAN_MAR14_2026.md` – **MINDEX Nemotron RAG plan**: Embedding, rerank, and provenance for worldstate-grounded retrieval; alignment with WorldState contract.
+
 ## World View Search and Platform Cohesion (Mar 14, 2026)
+- `docs/DOABLE_SEARCH_AND_ANSWER_PIPELINE_MAR14_2026.md` – **Doable search and answer pipeline (master plan)**: Every search uses full MYCA context; ingest → MINDEX → instant second search; widget registry and missing widgets; training/ETL/memory; frontier LLM → MINDEX; fix unanswerable search; Nemotron 3 alignment.
 - `docs/CURSOR_WORKFLOW_ORCHESTRATION_ROLLOUT_COMPLETE_MAR14_2026.md` – **Cursor workflow orchestration rollout complete**: Plan-first, verify-first, lessons-fed defaults; rules, agents, skills; verification collaborators; propagation.
 - `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` – **World view search suggestions and MINDEX/SEARCH/MYCA/NATUREOS cohesion**: Shift from fungi-focused to full world-view platform; rotating Try: suggestions (nature, environment, CREP, Earth2, human/machine); typing placeholder expansion; MINDEX expansion for holistic Earth data; phases 1–6 with implementation order.
 - `docs/GROUNDING_ARCHITECTURE_LOCKED_MAR14_2026.md` – **Grounding architecture (locked)**: WorldState, SelfState, ExperiencePacket, GroundingGate, llm_brain live-context path; packet build/attach/store; world refresh loop; worldstate contract boundaries.
