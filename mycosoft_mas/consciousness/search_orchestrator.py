@@ -94,8 +94,17 @@ async def run_unified_search(
         except Exception as e:
             logger.debug("Memory semantic search fallback failed: %s", e)
 
-    # 3. Specialist routing (CREP/Earth2) — stub for now; wire per worldstate boundary docs
+    # 3. Specialist routing (CREP/Earth2) — from world_context per WORLDSTATE_VS_SPECIALIST_COMMAND_BOUNDARY
     specialist_results: Dict[str, Any] = {}
+    if isinstance(world_context, dict):
+        if world_context.get("crep"):
+            specialist_results["crep"] = world_context["crep"]
+        if world_context.get("predictions"):
+            specialist_results["earth2"] = world_context["predictions"]
+        if world_context.get("ecosystem"):
+            specialist_results["ecosystem"] = world_context["ecosystem"]
+        if world_context.get("devices"):
+            specialist_results["devices"] = world_context["devices"]
 
     result_payload = {
         "query": query,

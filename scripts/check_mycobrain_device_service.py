@@ -1,13 +1,27 @@
 #!/usr/bin/env python3
-"""Check MycoBrain device detection service status and functionality"""
+"""Check MycoBrain device detection service status and functionality.
+VM password from .credentials.local (VM_PASSWORD / VM_SSH_PASSWORD) or env."""
 
+import os
 import paramiko
 import requests
 import json
 
+def _load_vm_password():
+    creds_file = os.path.join(os.path.dirname(__file__), "..", ".credentials.local")
+    password = os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD") or ""
+    if os.path.exists(creds_file):
+        for line in open(creds_file).read().splitlines():
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                if k.strip() in ("VM_PASSWORD", "VM_SSH_PASSWORD"):
+                    password = v.strip()
+                    break
+    return password
+
 vm_ip = '192.168.0.187'
 vm_user = 'mycosoft'
-vm_password = 'REDACTED_VM_SSH_PASSWORD'
+vm_password = _load_vm_password()
 
 print("=" * 80)
 print("MYCOBRAIN DEVICE SERVICE DIAGNOSTICS")

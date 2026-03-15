@@ -5,6 +5,10 @@ Mycosoft MAS Agent Verification Script
 Run this to get the REAL, LIVE count of all agents in the system.
 Resolves the conflicting numbers (40, 117, 273+) once and for all.
 
+Legacy/stub agents (STUB_ONLY, LOADABLE with minimal impl) are intentional:
+see docs/GAPS_AND_SECURITY_AUDIT_MAR14_2026.md § 1.4. They are tracked here
+until product decision to implement or retire each stub.
+
 Usage:
     python scripts/verify_agents.py
     python scripts/verify_agents.py --json

@@ -223,6 +223,7 @@ print(asyncio.run(read()))
         """Fill form fields and optionally submit."""
         import base64
         import json
+        # Base64 used for non-secret payload encoding only (form fields/selectors).
         fields_b64 = base64.b64encode(json.dumps(fields).encode()).decode()
         submit_b64 = base64.b64encode((submit_selector or "").encode()).decode()
         headless_str = "True" if headless else "False"
@@ -394,6 +395,7 @@ print(asyncio.run(login()))
     ) -> dict:
         """Navigate to URL and click an element."""
         import base64
+        # Base64 used for non-secret payload encoding only (selector string).
         sel_b64 = base64.b64encode(selector.encode()).decode()
         headless_str = "True" if headless else "False"
         script = f'''

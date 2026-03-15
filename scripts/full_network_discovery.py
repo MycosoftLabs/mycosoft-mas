@@ -2,8 +2,10 @@
 """
 Full Network Discovery - After Rewiring
 Discovers all devices, Proxmox instances, VMs, and network topology.
+Proxmox password from .credentials.local (PROXMOX_PASSWORD / VM_PASSWORD) or env.
 """
 
+import os
 import socket
 import subprocess
 import json
@@ -13,10 +15,28 @@ import concurrent.futures
 from datetime import datetime
 urllib3.disable_warnings()
 
+
+def _load_proxmox_password():
+    """Load Proxmox/VM password from .credentials.local or env. Never log or return it."""
+    password = os.environ.get("PROXMOX_PASSWORD") or os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD") or ""
+    creds_file = os.path.join(os.path.dirname(__file__), "..", ".credentials.local")
+    if os.path.exists(creds_file):
+        for line in open(creds_file).read().splitlines():
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                k = k.strip()
+                if k in ("PROXMOX_PASSWORD", "VM_PASSWORD", "VM_SSH_PASSWORD"):
+                    password = v.strip()
+                    break
+    return password
+
+
 print("=" * 70)
 print("  MYCOSOFT FULL NETWORK DISCOVERY")
 print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 print("=" * 70)
+
+_proxmox_password = _load_proxmox_password()
 
 # Known infrastructure
 KNOWN_ROLES = {
@@ -110,23 +130,21 @@ def identify_device(ip, open_ports):
         return "WEB DEVICE"
     return "UNKNOWN"
 
-def check_proxmox_api(ip):
-    """Check if Proxmox API is accessible and try auth."""
+def check_proxmox_api(ip, password_to_try):
+    """Check if Proxmox API is accessible and try auth with given password. Never returns or logs password."""
     try:
         r = requests.get(f"https://{ip}:8006/", verify=False, timeout=3)
         if r.status_code == 200 and ("PVE" in r.text or "Proxmox" in r.text):
-            # Try authentication
-            for password in ["20202020", "REDACTED_VM_SSH_PASSWORD", ""]:
-                try:
-                    r2 = requests.post(
-                        f"https://{ip}:8006/api2/json/access/ticket",
-                        data={"username": "root@pam", "password": password},
-                        verify=False, timeout=5
-                    )
-                    if r2.status_code == 200:
-                        return {"accessible": True, "auth": True, "password": password[:3] + "***"}
-                except Exception:
-                    pass
+            try:
+                r2 = requests.post(
+                    f"https://{ip}:8006/api2/json/access/ticket",
+                    data={"username": "root@pam", "password": password_to_try or ""},
+                    verify=False, timeout=5
+                )
+                if r2.status_code == 200:
+                    return {"accessible": True, "auth": True}
+            except Exception:
+                pass
             return {"accessible": True, "auth": False}
     except Exception:
         pass
@@ -202,18 +220,17 @@ if proxmox_servers:
         print(f"  MAC: {pve['mac']}")
         print(f"  Ports: {pve['open_ports']}")
         
-        # Check API
-        api_status = check_proxmox_api(pve['ip'])
+        # Check API (password from .credentials.local / env only)
+        api_status = check_proxmox_api(pve['ip'], _proxmox_password)
         print(f"  Web UI: {'Accessible' if api_status['accessible'] else 'Not accessible'}")
-        print(f"  API Auth: {'SUCCESS (' + api_status.get('password', '') + ')' if api_status['auth'] else 'FAILED'}")
-        
+        print(f"  API Auth: {'SUCCESS' if api_status['auth'] else 'FAILED'}")
+
         if api_status['auth']:
-            # Get VM list
+            # Get VM list using same credential
             try:
-                password = "20202020" if api_status.get('password', '').startswith('202') else ""
                 r = requests.post(
                     f"https://{pve['ip']}:8006/api2/json/access/ticket",
-                    data={"username": "root@pam", "password": password},
+                    data={"username": "root@pam", "password": _proxmox_password},
                     verify=False, timeout=5
                 )
                 if r.status_code == 200:
@@ -268,7 +285,7 @@ else:
             sock.settimeout(2)
             if sock.connect_ex((ip, 8006)) == 0:
                 print(f"  {ip}:8006 - OPEN (Proxmox)")
-                api_status = check_proxmox_api(ip)
+                api_status = check_proxmox_api(ip, _proxmox_password)
                 print(f"    Auth: {'SUCCESS' if api_status['auth'] else 'FAILED'}")
             sock.close()
         except Exception:

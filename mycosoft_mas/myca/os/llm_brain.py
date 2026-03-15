@@ -573,6 +573,7 @@ If the goal is already achieved, respond with {{"action": "done", "message": "..
 Return ONLY valid JSON, no markdown or explanation."""
 
         content_parts = []
+        # Base64 used for screenshot image payload to vision API only; no secrets encoded.
         if screenshot_b64:
             content_parts.append({
                 "type": "image",

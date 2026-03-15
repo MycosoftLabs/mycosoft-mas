@@ -6,15 +6,29 @@ Authoritative behavior (per docs/DEPLOYMENT_INSTRUCTIONS_MASTER.md):
 - sandbox.mycosoft.com `/api/mycobrain*` routes to the Windows LAN host running
   the MycoBrain service: `http://192.168.0.172:8003`.
 """
-"""Set up Cloudflare tunnel for MycoBrain service on sandbox."""
+"""Set up Cloudflare tunnel for MycoBrain service on sandbox.
+VM password from .credentials.local (VM_PASSWORD / VM_SSH_PASSWORD) or env."""
 
+import os
 import paramiko
 import yaml
 from io import StringIO
 
+def _load_vm_password():
+    creds_file = os.path.join(os.path.dirname(__file__), "..", ".credentials.local")
+    password = os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD") or ""
+    if os.path.exists(creds_file):
+        for line in open(creds_file).read().splitlines():
+            if "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                if k.strip() in ("VM_PASSWORD", "VM_SSH_PASSWORD"):
+                    password = v.strip()
+                    break
+    return password
+
 vm_ip = '192.168.0.187'
 vm_user = 'mycosoft'
-vm_password = 'REDACTED_VM_SSH_PASSWORD'
+vm_password = _load_vm_password()
 
 print("=" * 80)
 print("SETTING UP CLOUDFLARE TUNNEL FOR MYCOBRAIN")

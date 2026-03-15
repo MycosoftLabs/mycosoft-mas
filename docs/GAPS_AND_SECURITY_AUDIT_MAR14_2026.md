@@ -99,3 +99,22 @@ These scripts set `password = ""` then load from `.credentials.local` (e.g. `_ve
    - Resolve voice bridge stub and engine stubs per product decisions.
 
 After fixes, update this doc (or add a completion note) and run a quick re-scan for `password\s*=\s*['\"]`, `api_key\s*=\s*['\"]`, and `REDACTED_` in repo scripts.
+
+---
+
+## 5. Completion notes (Mar 14, 2026)
+
+### Implementation gaps — completed
+
+- **1.1 Search orchestrator:** `specialist_results` now populated from `world_context` (CREP, predictions, ecosystem, devices) per WORLDSTATE_VS_SPECIALIST boundary; no longer `{}`.
+- **1.2 Phase 2 engine stubs:** Documented in `docs/ENGINES_PHASE2_STUBS_MAR14_2026.md`; `engines/__init__.py` docstring updated. Stubs are intentional until Phase 2.
+- **1.3 Voice bridge provider:** `mas_bridge.py` now reads provider from `os.environ.get("VOICE_PROVIDER", "stub")`; documented in module docstring.
+- **1.4 Legacy stub agents:** Documented in `scripts/verify_agents.py` header and this audit § 1.4 — stubs are intentional; track until implement or retire.
+- **1.5 Doable Search:** Search registration and specialist routing wired; remaining work (memory contract, MINDEX answer schema, website proxy, E2E) per plan. Status noted here.
+
+### Security — completed
+
+- **2.1 Credentials:** `full_network_discovery.py` uses env/creds only; `_force_restart.py`, `setup_mycobrain_cloudflare.py`, `check_mycobrain_device_service.py` load from `.credentials.local` / env (no literal REDACTED or password).
+- **2.2 Deploy scripts:** Verified; all use env/creds only.
+- **2.3 Base64:** Confirmed tool_orchestrator (form/selector) and llm_brain (screenshot image) use base64 for **non-secret** payloads only; comments added in code. No AES-GCM change required for these uses.
+- **2.4 backend_selection:** Confirmed api_key from config/env; Ollama empty string correct; no change.
