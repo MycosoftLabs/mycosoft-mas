@@ -22,6 +22,7 @@ from mycosoft_mas.avani.constitution.rights import RIGHTS_CHARTER, RightsDomain,
 from mycosoft_mas.avani.governor.governor import AvaniGovernor, GovernorDecision, Proposal, RiskTier
 from mycosoft_mas.avani.season_engine.seasons import Season, SeasonEngine, SeasonMetrics
 from mycosoft_mas.avani.vision.vision import VISION_PRINCIPLES
+from mycosoft_mas.governance.avani_message_evaluate import evaluate_message
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,20 @@ class ProposalRequest(BaseModel):
     ecological_impact: float = Field(default=0.0, ge=0.0, le=1.0)
     reversibility: float = Field(default=1.0, ge=0.0, le=1.0)
     metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class EvaluateMessageRequest(BaseModel):
+    """MYCA ingress contract: message-based evaluation consumed by website/voice/chat."""
+    message: str = Field(..., description="User message or action description")
+    user_id: str = Field(default="anonymous", description="User or session ID")
+    user_role: str = Field(default="user", description="Role for authorization")
+    is_superuser: bool = Field(default=False, description="Whether user has superuser")
+    action_type: str = Field(
+        default="chat",
+        description="One of: chat, agent_dispatch, workflow, device_control, data_access, system_config",
+    )
+    response_text: Optional[str] = Field(default=None, description="Proposed or actual response for leakage check")
+    context: Dict[str, Any] = Field(default_factory=dict, description="Optional context")
 
 
 class SeasonUpdateRequest(BaseModel):
@@ -133,6 +148,25 @@ async def evaluate_proposal(request: ProposalRequest):
         return decision.to_dict()
     except (KeyError, ValueError) as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/evaluate-message")
+async def evaluate_message_request(request: EvaluateMessageRequest):
+    """
+    Authoritative message-based AVANI evaluation for MYCA ingress.
+    Same contract as website evaluateGovernance(); used by chat, voice orchestrator, search chat.
+    All MYCA ingress routes must call this (or proxy to it) so no path bypasses governance.
+    """
+    evaluation = evaluate_message(
+        message=request.message,
+        user_id=request.user_id,
+        user_role=request.user_role,
+        is_superuser=request.is_superuser,
+        action_type=request.action_type,
+        response_text=request.response_text,
+        context=request.context,
+    )
+    return evaluation.to_dict()
 
 
 @router.get("/constitution")

@@ -242,6 +242,28 @@ _SERVICES: List[ServiceDefinition] = [
         input_schema={"sim_type": "physics", "parameters": "dict"},
         output_schema={"reasoning": "string", "predictions": "list"},
     ),
+    # --- Live Worldstate (MYCA/AVANI — $1/min) ---
+    ServiceDefinition(
+        service_id="live_worldstate_connection",
+        name="Live Worldstate Connection",
+        description=(
+            "Metered live connection to MYCA and AVANI worldstate — real-time context, "
+            "consciousness state, and agent-accessible world model. Billed by active minute."
+        ),
+        category="worldstate",
+        credit_cost=0,
+        metered_by_minute=True,
+        price_per_minute_usd=1.0,
+        input_schema={
+            "session": "start → heartbeat (every 30s) → stop",
+            "endpoints": "POST /api/raas/worldstate/start, /heartbeat, /stop; GET /balance, /usage",
+        },
+        output_schema={
+            "session_id": "string",
+            "balance_minutes": "int",
+            "minutes_used_this_session": "int",
+        },
+    ),
 ]
 
 _CATEGORIES: List[ServiceCategory] = [
@@ -292,6 +314,12 @@ _CATEGORIES: List[ServiceCategory] = [
         name="Simulations",
         description="Biological and physics simulations — petri dish, mycelium, PhysicsNeMo.",
         services=[s for s in _SERVICES if s.category == "simulations"],
+    ),
+    ServiceCategory(
+        category_id="worldstate",
+        name="Live Worldstate",
+        description="Metered live connection to MYCA and AVANI — $1/minute. Session lifecycle: start, heartbeat, stop.",
+        services=[s for s in _SERVICES if s.category == "worldstate"],
     ),
 ]
 

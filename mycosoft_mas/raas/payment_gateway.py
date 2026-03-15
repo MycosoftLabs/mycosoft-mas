@@ -18,6 +18,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
+import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from mycosoft_mas.integrations.coinbase_client import CoinbaseClient
@@ -29,6 +30,8 @@ from mycosoft_mas.raas.credits import CREDIT_PACKAGES
 from mycosoft_mas.raas.middleware import require_raas_auth
 from mycosoft_mas.raas.models import (
     AgentAccount,
+    ClaimWorldstateMinutesRequest,
+    ClaimWorldstateMinutesResponse,
     CryptoInvoiceRequest,
     CryptoInvoiceResponse,
     CryptoVerifyRequest,
@@ -36,6 +39,7 @@ from mycosoft_mas.raas.models import (
     StripeCheckoutRequest,
     StripeCheckoutResponse,
 )
+from mycosoft_mas.raas.worldstate_session import claim_stripe_session, get_balance
 
 logger = logging.getLogger(__name__)
 
@@ -206,17 +210,55 @@ async def stripe_checkout(body: StripeCheckoutRequest) -> StripeCheckoutResponse
     )
 
 
+def _get_webhook_secret() -> str:
+    """Webhook secret from env or StripeClient. Reject placeholder for launch safety."""
+    secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "") or getattr(
+        _stripe, "webhook_secret", ""
+    )
+    return (secret or "").strip()
+
+
 @router.post("/stripe/webhook")
 async def stripe_webhook(request: Request) -> Dict[str, Any]:
-    """Handle Stripe webhook events (payment_intent.succeeded)."""
-    body = await request.json()
+    """Handle Stripe webhook events (payment_intent.succeeded).
 
-    event_type = body.get("type", "")
+    Verifies the Stripe-Signature using STRIPE_WEBHOOK_SECRET. Rejects if
+    secret is missing or placeholder; returns 400 on invalid signature.
+    """
+    raw_body = await request.body()
+    signature = request.headers.get("stripe-signature", "")
+
+    secret = _get_webhook_secret()
+    if not secret or secret.lower().startswith("whsec_placeholder"):
+        logger.error("Stripe webhook secret not configured or is placeholder")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Webhook secret not configured",
+        )
+
+    try:
+        event = stripe.Webhook.construct_event(
+            raw_body, signature, secret
+        )
+    except ValueError as e:
+        logger.warning("Stripe webhook invalid payload: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid payload",
+        )
+    except stripe.SignatureVerificationError as e:
+        logger.warning("Stripe webhook signature verification failed: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid signature",
+        )
+
+    event_type = event.get("type", "")
     if event_type != "payment_intent.succeeded":
         return {"status": "ignored", "event_type": event_type}
 
-    data = body.get("data", {}).get("object", {})
-    metadata = data.get("metadata", {})
+    data = event.get("data", {}).get("object", {})
+    metadata = data.get("metadata", {}) or {}
     agent_id = metadata.get("agent_id")
     package_id = metadata.get("package_id")
 
@@ -252,6 +294,65 @@ async def stripe_webhook(request: Request) -> Dict[str, Any]:
         else 0,
         "new_balance": new_balance,
     }
+
+
+# ---------------------------------------------------------------------------
+# Worldstate minutes (Stripe checkout claim)
+# ---------------------------------------------------------------------------
+
+
+@router.post("/worldstate-minutes", response_model=ClaimWorldstateMinutesResponse)
+async def claim_worldstate_minutes(
+    body: ClaimWorldstateMinutesRequest,
+    account: AgentAccount = Depends(require_raas_auth),
+) -> ClaimWorldstateMinutesResponse:
+    """Claim prepaid worldstate minutes from a completed website Stripe checkout.
+
+    Idempotent: if the session was already claimed by this agent, returns current
+    balance and minutes_added=0 with message 'already_claimed'.
+    """
+    minutes_added, status_code = await claim_stripe_session(
+        body.stripe_checkout_session_id, account.agent_id
+    )
+    balance = await get_balance(account.agent_id)
+
+    if status_code == "ok":
+        return ClaimWorldstateMinutesResponse(
+            balance_minutes=balance.balance_minutes,
+            minutes_added=minutes_added,
+            message="Minutes added. Start a session via POST /api/raas/worldstate/start.",
+        )
+    if status_code == "already_claimed":
+        return ClaimWorldstateMinutesResponse(
+            balance_minutes=balance.balance_minutes,
+            minutes_added=0,
+            message="This checkout session was already claimed.",
+        )
+    if status_code == "invalid_session":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or unknown Stripe checkout session.",
+        )
+    if status_code == "not_paid":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Checkout session payment is not complete.",
+        )
+    if status_code == "wrong_product":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Checkout session is not for agent worldstate minutes.",
+        )
+    if status_code == "invalid_minutes":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Checkout session has no valid minutes metadata.",
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=f"Cannot claim minutes: {status_code}",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -387,11 +488,11 @@ async def verify_crypto_payment(body: CryptoVerifyRequest) -> Dict[str, Any]:
         except Exception as e:
             logger.warning("Solana verification failed: %s", e)
     else:
-        # For EVM chains (ETH, BTC, USDT, AVE), record tx hash
-        # In production, verify via respective chain RPC
-        verified = True  # Accept and flag for manual review
+        # Unsupported/unspecified chain: do not auto-approve (launch-safe).
+        # Record for manual verification only; credits are not granted.
+        verified = False
         logger.info(
-            "Crypto payment %s/%s recorded for manual verification: %s",
+            "Crypto payment %s/%s recorded for manual verification (no auto-approve): %s",
             currency,
             body.invoice_id,
             body.tx_signature,

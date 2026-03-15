@@ -13,12 +13,26 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 
 ## Recent Updates (Mar 14, 2026)
 
+- **RaaS Worldstate Monetization** — Paid live worldstate access for external agents ($1/min MYCA/AVANI):
+  - Product: `live_worldstate_connection` in RaaS service catalog; meter by active minute.
+  - Session lifecycle router: `mycosoft_mas/raas/session_lifecycle.py` — prefix `/api/raas/worldstate`.
+  - Endpoints: POST /start, POST /heartbeat, POST /stop, GET /balance, GET /usage; all require `X-API-Key`; return 402 when balance exhausted.
+  - Website: `/agent`, `/agent/dashboard`, Stripe checkout for prepaid minutes; proxy routes `/api/mas/raas/worldstate/balance`, `/api/mas/raas/worldstate/usage`.
+  - Contract doc: `docs/MYCA_AVANI_WORLDSTATE_CONNECTION_CONTRACT_MAR14_2026.md`.
+
 - **Worldview Search Expansion** — Worldstate API, collectors, GPU enrichment:
   - Worldstate API (`/api/myca/world/*`) — canonical passive awareness surface; reads from WorldModel and SelfState. Router: `mycosoft_mas/core/routers/worldstate_api.py`
   - Worldview collectors: P0 (EONET, Overpass, OurAirports, OpenSky, USGS quakes, NOAA NWS, Open-Meteo); P1/P2 (NOAA CO-OPS, USGS water, FIRMS). See `mycosoft_mas/collectors/`
   - GPU enrichment strategy: Earth2, PhysicsNeMo, PersonaPlex input backlogs and worldstate context envelope. Doc: `docs/GPU_ENRICHMENT_STRATEGY_MAR14_2026.md`
   - Grounding architecture locked: `docs/GROUNDING_ARCHITECTURE_LOCKED_MAR14_2026.md`
   - Validation and sequencing: `docs/WORLDVIEW_VALIDATION_AND_SEQUENCING_MAR14_2026.md`
+
+- **Doable Search Rollout** — MAS-owned unified search pipeline (Mar 14, 2026):
+  - MAS: `mycosoft_mas/consciousness/search_orchestrator.py` — canonical fallback chain (MINDEX → memory → specialist → LLM); `search_registration.py` — persist to MINDEX + training sink.
+  - MAS API: POST `/api/search/execute` — `mycosoft_mas/core/routers/search_orchestrator_api.py`; NLQ and tool_orchestrator route through orchestrator.
+  - MINDEX: `search` schema (query ledger, answer_snippet, qa_pair, worldview_fact); router `mindex_api/routers/search_answers.py` — GET/POST `/api/mindex/search/answers`, POST queries/qa.
+  - Website: search/chat routes proxy to MAS; `lib/search/mas-search-proxy.ts`, `lib/search/widget-registry.ts`; FallbackWidget for unmapped result types.
+  - Completion: `docs/DOABLE_SEARCH_ROLLOUT_COMPLETE_MAR14_2026.md`; Nemotron routing: `docs/NEMOTRON_ROUTING_AND_PERSISTENCE_MAR14_2026.md`.
 
 ## Recent Updates (Feb 28, 2026)
 

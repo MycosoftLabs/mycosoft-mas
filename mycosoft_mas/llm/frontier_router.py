@@ -18,11 +18,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
+from mycosoft_mas.llm.backend_selection import BackendSelection, get_backend_for_role, MYCA_CORE
 from mycosoft_mas.llm.error_sanitizer import sanitize_for_log, sanitize_error_body
 
 logger = logging.getLogger(__name__)
 
-# Ollama config — MYCA's sovereign local brain on the MAS VM
+# Legacy env fallbacks when backend_selection not used
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://192.168.0.188:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 LLM_ROUTER_MODE = os.getenv("LLM_ROUTER_MODE", "local_first")
@@ -71,9 +72,10 @@ class FrontierLLMRouter:
         )
         self.persona = self._load_persona()
         
-        # Provider health tracking
+        # Provider health tracking (nemotron = unified MYCA core backend when configured)
         self.provider_health = {
             "ollama": {"healthy": True, "failures": 0},
+            "nemotron": {"healthy": True, "failures": 0},
             "gemini": {"healthy": True, "failures": 0},
             "claude": {"healthy": True, "failures": 0},
             "openai": {"healthy": True, "failures": 0},
@@ -169,16 +171,21 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         system_prompt = self._build_system_prompt(context, tools)
         messages = self._build_messages(message, context, system_prompt)
         
-        # Auto-select provider based on health and availability
+        # Unified backend: resolve MYCA core from backend_selection (Nemotron or Ollama)
+        selection = get_backend_for_role(MYCA_CORE)
         if provider == "auto":
-            provider = self._select_provider()
+            provider = self._select_provider(selection)
         
         logger.info(f"[MYCA Brain] Using {provider} for: {message[:50]}...")
         
         yielded = 0
         try:
-            if provider == "ollama":
-                async for token in self._stream_ollama(messages):
+            if provider == "nemotron":
+                async for token in self._stream_openai_compatible(selection, messages):
+                    yielded += 1
+                    yield token
+            elif provider == "ollama":
+                async for token in self._stream_ollama(messages, selection.base_url, selection.model):
                     yielded += 1
                     yield token
             elif provider == "gemini" and self.gemini_api_key:
@@ -200,12 +207,12 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
 
             if yielded == 0:
                 logger.warning(f"[MYCA Brain] Provider {provider} returned no tokens")
-                # Fallback chain: if Ollama returned nothing, try cloud
-                if provider == "ollama":
-                    self._mark_provider_failure("ollama")
-                    fallback = self._select_provider()
-                    if fallback != "ollama":
-                        logger.info(f"[MYCA Brain] Ollama empty — falling back to {fallback}")
+                # Fallback: if local backend (ollama/nemotron) returned nothing, try cloud
+                if provider in ("ollama", "nemotron"):
+                    self._mark_provider_failure(provider)
+                    fallback = self._select_provider()  # None => config-based (cloud)
+                    if fallback not in ("ollama", "nemotron"):
+                        logger.info(f"[MYCA Brain] {provider} empty — falling back to {fallback}")
                         async for token in self.stream_response(message, context, tools, fallback):
                             yield token
                         return
@@ -214,32 +221,40 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         except Exception as e:
             logger.error(f"[MYCA Brain] Error with {provider}: {sanitize_for_log(e)}")
             self._mark_provider_failure(provider)
-            # Auto-fallback for Ollama failures
-            if provider == "ollama":
-                fallback = self._select_provider()
-                if fallback != "ollama":
-                    logger.info(f"[MYCA Brain] Ollama failed — falling back to {fallback}")
+            # Auto-fallback for local backend failures
+            if provider in ("ollama", "nemotron"):
+                fallback = self._select_provider()  # None => config-based (cloud)
+                if fallback not in ("ollama", "nemotron"):
+                    logger.info(f"[MYCA Brain] {provider} failed — falling back to {fallback}")
                     async for token in self.stream_response(message, context, tools, fallback):
                         yield token
                     return
             yield LLM_FALLBACK_MESSAGE
     
-    def _select_provider(self) -> str:
-        """Select best available provider based on router mode."""
+    def _select_provider(self, selection: Optional[BackendSelection] = None) -> str:
+        """Select best available provider. Uses backend_selection (Nemotron/Ollama) when selection given."""
+        if selection is None:
+            selection = get_backend_for_role(MYCA_CORE)
+
         if self.router_mode == "ollama_only":
             return "ollama"
 
         if self.router_mode == "cloud_first":
-            # Legacy order: Gemini → Claude → OpenAI → Ollama
             if self.gemini_api_key and self.provider_health["gemini"]["healthy"]:
                 return "gemini"
             if self.anthropic_api_key and self.provider_health["claude"]["healthy"]:
                 return "claude"
             if self.openai_api_key and self.provider_health["openai"]["healthy"]:
                 return "openai"
-            return "ollama"
+            return selection.provider
 
-        # local_first (default) and hybrid: Ollama → cloud
+        # local_first (default): prefer MYCA core backend (nemotron or ollama) from backend_selection
+        primary = selection.provider
+        if primary == "nemotron" and self.provider_health.get("nemotron", {}).get("healthy", True):
+            return "nemotron"
+        if primary == "ollama" and self.provider_health["ollama"]["healthy"]:
+            return "ollama"
+        # Fallback to other if primary unhealthy
         if self.provider_health["ollama"]["healthy"]:
             return "ollama"
         if self.gemini_api_key and self.provider_health["gemini"]["healthy"]:
@@ -248,8 +263,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
             return "claude"
         if self.openai_api_key and self.provider_health["openai"]["healthy"]:
             return "openai"
-        # Last resort: try Ollama even if marked unhealthy
-        return "ollama"
+        return primary
     
     def _mark_provider_failure(self, provider: str):
         """Mark a provider as having failed."""
@@ -257,31 +271,72 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
             self.provider_health[provider]["failures"] += 1
             if self.provider_health[provider]["failures"] >= 3:
                 self.provider_health[provider]["healthy"] = False
-    
-    async def _stream_ollama(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
-        """Stream from Ollama — MYCA's sovereign local brain on the MAS VM."""
+
+    async def _stream_openai_compatible(
+        self, selection: BackendSelection, messages: List[Dict]
+    ) -> AsyncGenerator[str, None]:
+        """Stream from an OpenAI-compatible endpoint (e.g. Nemotron)."""
         import httpx
         import json
-
-        # Convert messages: Ollama uses OpenAI-compatible format
-        ollama_messages = []
-        for msg in messages:
-            role = msg["role"]
-            # Ollama supports system/user/assistant roles
-            ollama_messages.append({"role": role, "content": msg["content"]})
-
+        url = f"{selection.base_url.rstrip('/')}/v1/chat/completions"
         payload = {
-            "model": self.ollama_model,
+            "model": selection.model,
+            "messages": messages,
+            "stream": True,
+            "temperature": 0.7,
+            "max_tokens": 2048,
+        }
+        headers = {"Content-Type": "application/json"}
+        if getattr(selection, "api_key", None):
+            headers["Authorization"] = f"Bearer {selection.api_key}"
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                async with client.stream("POST", url, json=payload, headers=headers) as response:
+                    if response.status_code != 200:
+                        body = await response.aread()
+                        logger.error(
+                            f"OpenAI-compatible stream error {response.status_code}: {sanitize_error_body(body)}"
+                        )
+                        self._mark_provider_failure("nemotron")
+                        return
+                    async for line in response.aiter_lines():
+                        if not line or not line.startswith("data: "):
+                            continue
+                        payload = line[6:].strip()
+                        if payload == "[DONE]":
+                            break
+                        try:
+                            data = json.loads(payload)
+                            for choice in data.get("choices", []):
+                                delta = choice.get("delta", {})
+                                content = delta.get("content", "")
+                                if content:
+                                    yield content
+                        except json.JSONDecodeError:
+                            continue
+        except Exception as e:
+            logger.error(f"Nemotron stream error: {sanitize_for_log(e)}")
+            self._mark_provider_failure("nemotron")
+
+    async def _stream_ollama(
+        self,
+        messages: List[Dict],
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+    ) -> AsyncGenerator[str, None]:
+        """Stream from Ollama. Uses backend_selection base_url/model when provided."""
+        import httpx
+        import json
+        base_url = base_url or self.ollama_base_url
+        model = model or self.ollama_model
+        ollama_messages = [{"role": msg["role"], "content": msg["content"]} for msg in messages]
+        payload = {
+            "model": model,
             "messages": ollama_messages,
             "stream": True,
-            "options": {
-                "temperature": 0.7,
-                "num_predict": 2048,
-            }
+            "options": {"temperature": 0.7, "num_predict": 2048},
         }
-
-        url = f"{self.ollama_base_url}/api/chat"
-
+        url = f"{base_url.rstrip('/')}/api/chat"
         try:
             async with httpx.AsyncClient(timeout=60) as client:
                 async with client.stream("POST", url, json=payload) as response:
@@ -290,7 +345,6 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                         logger.error(f"Ollama error {response.status_code}: {sanitize_error_body(body)}")
                         self._mark_provider_failure("ollama")
                         return
-
                     async for line in response.aiter_lines():
                         if not line:
                             continue
@@ -303,9 +357,8 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                                 yield content
                         except json.JSONDecodeError:
                             continue
-
         except Exception as e:
-            logger.error(f"Ollama stream error ({self.ollama_base_url}): {sanitize_for_log(e)}")
+            logger.error(f"Ollama stream error ({base_url}): {sanitize_for_log(e)}")
             self._mark_provider_failure("ollama")
 
     async def _stream_gemini(self, messages: List[Dict]) -> AsyncGenerator[str, None]:

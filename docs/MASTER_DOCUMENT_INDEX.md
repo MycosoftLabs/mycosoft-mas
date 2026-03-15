@@ -13,8 +13,15 @@
 - `docs/MYCOSOFT_ORG_PRODUCTION_VM_CLONE_CI_CD_MAR13_2026.md` – **Production VM clone + CI/CD**: Clone Sandbox→Production (186), Cloudflare tunnels (mycosoft.com vs sandbox.mycosoft.com), mycosoft.org→mycosoft.com/about redirect, _rebuild_production.py, verification checklist. Use for Production deploy and VM layout.
 - `docs/PRE_PRODUCTION_CHECKLIST_MAR13_2026.md` – **Pre-production checklist**: Cloudflare tunnels/DNS, Supabase auth redirect URLs, MAS/MINDEX API routes; verification commands; credentials. Run before going live.
 
+## RaaS Worldstate Monetization (Mar 14, 2026)
+- `docs/MYCA_AVANI_WORLDSTATE_CONNECTION_CONTRACT_MAR14_2026.md` – **MYCA/AVANI live worldstate connection contract**: Product ($1/min), session lifecycle (start/heartbeat/stop/balance/usage), 402 behavior, auth (X-API-Key); MAS router and catalog references.
+- `docs/MYCA_WORLDSTATE_MONETIZATION_COMPLETE_MAR14_2026.md` – **MYCA Worldstate Monetization complete**: Delivered surfaces (website, MAS RaaS, payment hardening); deployment and verification steps; registry/doc updates.
+
 ## Browser / Lightpanda (Mar 14, 2026)
 - `docs/LIGHTPANDA_MAS_BROWSER_POLICY_MAR14_2026.md` – **Lightpanda as MAS browser runtime**: Use Lightpanda as specialized worker (fast scrape, low-RAM browsing, extraction) with Chromium/Playwright fallback; browser abstraction `lightpanda | chromium`; AGPL-3.0 and telemetry considerations; suggested role layout and first integration policy.
+
+## Gaps and Security Audit (Mar 14, 2026)
+- `docs/GAPS_AND_SECURITY_AUDIT_MAR14_2026.md` – **Implementation gaps and security issues**: Unfinished stubs (search specialist routing, engines, voice bridge, legacy agents); Doable Search contract/schema/proxy/E2E gaps; hardcoded credentials and REDACTED placeholders; base64-vs-AES-GCM note; recommended fixes and verification steps.
 
 ## Nemotron MYCA/AVANI Integration (Mar 14, 2026)
 - `docs/NEMOTRON_VERIFICATION_ROLLOUT_MAR14_2026.md` – **Nemotron verification and rollout**: End-to-end test gates (canonical voice path, route unification, retrieval provenance, full-duplex); rollout phases 1–6; required doc/registry updates (SYSTEM_REGISTRY, API_CATALOG, MASTER_DOCUMENT_INDEX, voice topology); completion checklist.
@@ -23,6 +30,8 @@
 - `docs/MINDEX_NEMOTRON_RAG_PLAN_MAR14_2026.md` – **MINDEX Nemotron RAG plan**: Embedding, rerank, and provenance for worldstate-grounded retrieval; alignment with WorldState contract.
 
 ## World View Search and Platform Cohesion (Mar 14, 2026)
+- `docs/DOABLE_SEARCH_ROLLOUT_COMPLETE_MAR14_2026.md` – **Doable Search Rollout complete**: MAS orchestrator, MINDEX answer schema, website proxy, widget registry, registration/training sinks, Nemotron persistence, e2e and backend tests; verification steps.
+- `docs/NEMOTRON_ROUTING_AND_PERSISTENCE_MAR14_2026.md` – **Nemotron routing and persistence**: Role-based routing; same MINDEX storage pipeline for search and voice answers.
 - `docs/DOABLE_SEARCH_AND_ANSWER_PIPELINE_MAR14_2026.md` – **Doable search and answer pipeline (master plan)**: Every search uses full MYCA context; ingest → MINDEX → instant second search; widget registry and missing widgets; training/ETL/memory; frontier LLM → MINDEX; fix unanswerable search; Nemotron 3 alignment.
 - `docs/CURSOR_WORKFLOW_ORCHESTRATION_ROLLOUT_COMPLETE_MAR14_2026.md` – **Cursor workflow orchestration rollout complete**: Plan-first, verify-first, lessons-fed defaults; rules, agents, skills; verification collaborators; propagation.
 - `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` – **World view search suggestions and MINDEX/SEARCH/MYCA/NATUREOS cohesion**: Shift from fungi-focused to full world-view platform; rotating Try: suggestions (nature, environment, CREP, Earth2, human/machine); typing placeholder expansion; MINDEX expansion for holistic Earth data; phases 1–6 with implementation order.

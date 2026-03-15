@@ -396,6 +396,46 @@ class MemoryCoordinator:
         logger.debug(f"Recorded episode for {agent_id}: {event_type}")
         return episode.id
     
+    # =========================================================================
+    # Simple recall/store (consciousness / search enrichment contract)
+    # =========================================================================
+
+    async def recall(
+        self,
+        query: Optional[str] = None,
+        layer: Optional[str] = None,
+        limit: int = 10,
+        agent_id: str = "system",
+    ) -> List[Dict[str, Any]]:
+        """
+        Recall memories by query and optional layer. Used by consciousness
+        and search enrichment. Delegates to agent_recall.
+        """
+        return await self.agent_recall(
+            agent_id=agent_id,
+            query=query,
+            layer=layer,
+            limit=limit,
+        )
+
+    async def store(
+        self,
+        key: str,
+        value: Dict[str, Any],
+        layer: str = "system",
+        agent_id: str = "system",
+    ) -> UUID:
+        """
+        Store a key-value state (e.g. consciousness state). Delegates to agent_remember.
+        """
+        return await self.agent_remember(
+            agent_id=agent_id,
+            content={"key": key, "value": value},
+            layer=layer,
+            importance=0.8,
+            tags=["state", key],
+        )
+
     async def get_recent_episodes(
         self,
         agent_id: Optional[str] = None,
@@ -836,18 +876,18 @@ class MemoryCoordinator:
         results = []
         collections = collections or ["fungi", "devices"]
         
-        # Try MINDEX sensor for knowledge base search
+        # Try MINDEX sensor for knowledge base search (sensor uses category param)
         try:
             from mycosoft_mas.consciousness.sensors import MINDEXSensor
             mindex = MINDEXSensor()
-            await mindex.initialize()
+            await mindex.connect()
             
             for collection in collections:
                 if collection in ["fungi", "compounds", "devices"]:
                     mindex_results = await mindex.semantic_search(
                         query=query,
                         limit=limit,
-                        collection=collection
+                        category=collection,
                     )
                     results.extend(mindex_results)
                     

@@ -172,6 +172,22 @@ class StripeClient:
             logger.warning("Stripe create_invoice failed: %s", e)
             return None
 
+    async def retrieve_checkout_session(
+        self, session_id: str
+    ) -> Optional[Dict[str, Any]]:
+        """Retrieve a Checkout Session by ID (e.g. cs_xxx). Used to verify payment and read metadata."""
+        if not self.secret_key or not session_id:
+            return None
+        client = await self._get_client()
+        try:
+            r = await client.get(f"checkout/sessions/{session_id}")
+            if r.is_success:
+                return r.json()
+            return None
+        except Exception as e:
+            logger.warning("Stripe retrieve_checkout_session failed: %s", e)
+            return None
+
     async def health_check(self) -> Dict[str, Any]:
         """Verify connectivity to Stripe API."""
         if not self.secret_key:

@@ -545,12 +545,24 @@ print(asyncio.run(click()))
         return {"status": "failed", "error": "Unsupported NatureOS task"}
 
     async def run_search_task(self, task: dict) -> dict:
-        """Run a unified search task against MINDEX-backed knowledge surfaces."""
+        """Run a unified search task through the MAS search orchestrator."""
         query = task.get("query") or task.get("description") or task.get("title") or ""
         if not query:
             return {"status": "failed", "error": "Search query required"}
-        results = await self._os.mindex_bridge.search_knowledge(query, limit=int(task.get("limit", 10)))
-        return {"status": "completed", "results": results, "summary": f"Unified search completed for: {query[:80]}"}
+        limit = int(task.get("limit", 10))
+        try:
+            from mycosoft_mas.consciousness.search_orchestrator import run_unified_search
+            result = await run_unified_search(
+                query=query,
+                search_context=task.get("context"),
+                limit=limit,
+            )
+            results = (result.get("results") or {}).get("keyword", []) + (result.get("results") or {}).get("semantic", [])
+            return {"status": "completed", "results": results, "result_payload": result, "summary": f"Unified search completed for: {query[:80]}"}
+        except Exception as e:
+            logger.warning("Search orchestrator failed, falling back to mindex_bridge: %s", e)
+            results = await self._os.mindex_bridge.search_knowledge(query, limit=limit)
+            return {"status": "completed", "results": results, "summary": f"Unified search completed for: {query[:80]}"}
 
     # ── CREP Map Control ───────────────────────────────────────────
 

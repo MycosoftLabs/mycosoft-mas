@@ -3,6 +3,9 @@
 PersonaPlex NVIDIA Bridge v8.2.0 - February 13, 2026
 Full-Duplex Voice: 100% Moshi STT + TTS (no edge-tts or other TTS fallback).
 
+This module is the canonical realtime MYCA voice path: Browser -> PersonaPlex Bridge -> MAS Brain.
+The website voice orchestrator adapts to the same MAS Brain API (POST /voice/brain/chat).
+
 Voice path: User mic -> Moshi STT -> MAS Brain -> response text -> Moshi TTS -> speaker.
 Bridge connects to Moshi at MOSHI_HOST:MOSHI_PORT (e.g. GPU node 192.168.0.190:8998).
 

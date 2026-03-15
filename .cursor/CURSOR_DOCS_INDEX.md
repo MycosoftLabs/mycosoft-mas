@@ -11,6 +11,9 @@
 ## World View Search and Platform Cohesion (Mar 14, 2026)
 | Doc | Purpose |
 |-----|---------|
+| `docs/DOABLE_SEARCH_ROLLOUT_COMPLETE_MAR14_2026.md` | **Doable Search Rollout complete**: MAS orchestrator, MINDEX answer schema, website proxy, widget registry, registration/training sinks, Nemotron persistence alignment, e2e and backend tests. Use for search pipeline status and verification. |
+| `docs/DOABLE_SEARCH_AND_ANSWER_PIPELINE_MAR14_2026.md` | **Doable search and answer pipeline (master plan)**: Every search uses full MYCA context (brain, memory, intention, finger, LLM, MINDEX); ingest → store → instant second search; widget registry and missing widgets; training/ETL/memory; frontier LLM → MINDEX; fix unanswerable search; Nemotron 3 alignment. Use for search orchestration, MINDEX pipeline, and widget rollout. |
+| `docs/NEMOTRON_ROUTING_AND_PERSISTENCE_MAR14_2026.md` | **Nemotron routing and persistence**: Role-based routing via backend_selection; same MINDEX storage pipeline for search and voice/orchestrator answers. Use for LLM routing and answer persistence. |
 | `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` | **World view search suggestions and MINDEX/SEARCH/MYCA/NATUREOS cohesion**: Shift from fungi-focused to full world-view platform; rotating Try: suggestions; typing placeholder expansion; MINDEX expansion for holistic Earth data. Use for homepage search, fluid search, and platform unification. |
 | `docs/GROUNDING_ARCHITECTURE_LOCKED_MAR14_2026.md` | **Grounding architecture (locked)**: WorldState, SelfState, ExperiencePacket, GroundingGate, llm_brain path; packet build/attach/store; world refresh loop. Use for worldstate contract and grounding changes. |
 | `docs/WORLDSTATE_VS_SPECIALIST_COMMAND_BOUNDARY_MAR14_2026.md` | **Worldstate vs specialist command boundary**: Passive awareness (worldstate read API) vs specialist commands (CREP, Earth2); endpoint matrix; boundary rules. Use for CREP/worldstate integration. |

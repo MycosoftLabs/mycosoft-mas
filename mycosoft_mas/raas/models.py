@@ -101,10 +101,12 @@ class ServiceDefinition(BaseModel):
     name: str
     description: str
     category: str
-    credit_cost: int
+    credit_cost: int = 0
     input_schema: Optional[Dict[str, Any]] = None
     output_schema: Optional[Dict[str, Any]] = None
     rate_limit_per_minute: int = 60
+    metered_by_minute: bool = False
+    price_per_minute_usd: Optional[float] = None
 
 
 class ServiceCategory(BaseModel):
@@ -305,3 +307,91 @@ class SimulationInvokeRequest(BaseModel):
         default="petri", pattern="^(petri|mycelium|physics)$"
     )
     parameters: Dict[str, Any] = Field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# Worldstate session (live_worldstate_connection — $1/min MYCA/AVANI)
+# ---------------------------------------------------------------------------
+
+
+class WorldstateBalance(BaseModel):
+    """Minute balance for agent live worldstate access."""
+
+    agent_id: str
+    balance_minutes: int
+    total_purchased_minutes: int
+    total_used_minutes: int
+
+
+class WorldstateSessionSummary(BaseModel):
+    """Summary of a single worldstate session."""
+
+    session_id: str
+    agent_id: str
+    started_at: Optional[datetime] = None
+    last_heartbeat_at: Optional[datetime] = None
+    stopped_at: Optional[datetime] = None
+    minutes_used: int = 0
+
+
+class SessionStartResponse(BaseModel):
+    """Response after starting a paid worldstate session."""
+
+    session_id: str
+    balance_minutes: int
+    message: str = "Session started. Send heartbeat at least every 60s to keep session active and meter minutes."
+
+
+class SessionHeartbeatRequest(BaseModel):
+    """Request body for session heartbeat."""
+
+    session_id: str = Field(..., min_length=1)
+
+
+class SessionHeartbeatResponse(BaseModel):
+    """Response after heartbeat (session continued, 1 minute deducted if elapsed)."""
+
+    session_id: str
+    balance_minutes: int
+    minutes_used_this_session: int
+    message: str = "Session active."
+
+
+class SessionStopRequest(BaseModel):
+    """Request body for session stop."""
+
+    session_id: str = Field(..., min_length=1)
+
+
+class SessionStopResponse(BaseModel):
+    """Response after stopping a session."""
+
+    session_id: str
+    total_minutes_used: int
+    balance_minutes: int
+    message: str = "Session stopped."
+
+
+class BalanceUsageResponse(BaseModel):
+    """Balance and recent usage for worldstate access."""
+
+    agent_id: str
+    balance_minutes: int
+    total_purchased_minutes: int
+    total_used_minutes: int
+    active_session_id: Optional[str] = None
+    recent_sessions: List[WorldstateSessionSummary] = Field(default_factory=list)
+
+
+class ClaimWorldstateMinutesRequest(BaseModel):
+    """Claim prepaid minutes from a Stripe Checkout session (website purchase)."""
+
+    stripe_checkout_session_id: str = Field(..., min_length=1)
+
+
+class ClaimWorldstateMinutesResponse(BaseModel):
+    """Response after claiming worldstate minutes from a Stripe checkout."""
+
+    balance_minutes: int
+    minutes_added: int
+    message: str

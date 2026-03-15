@@ -12,6 +12,14 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Optional
 
+from mycosoft_mas.llm.backend_selection import (
+    BackendSelection,
+    EMBEDDING,
+    EXECUTION,
+    FAST,
+    PLANNING,
+    get_backend_for_role,
+)
 from mycosoft_mas.llm.config import LLMConfig, get_llm_config
 from mycosoft_mas.llm.llm_ledger import persist_to_supabase_ledger
 from mycosoft_mas.llm.providers.base import (
@@ -117,6 +125,27 @@ class LLMRouter:
         
         # Initialize providers
         self._init_providers()
+
+    @staticmethod
+    def _role_for_task_type(task_type: str) -> str:
+        """Map router task_type to backend_selection role for unified routing."""
+        t = (task_type or "execution").lower()
+        if t == "planning":
+            return PLANNING
+        if t == "fast":
+            return FAST
+        if t == "embedding":
+            return EMBEDDING
+        return EXECUTION
+
+    def _provider_for_selection(self, selection: BackendSelection) -> BaseLLMProvider:
+        """Build an OpenAI-compatible provider for a BackendSelection (Nemotron/Ollama)."""
+        return OpenAICompatibleProvider(
+            api_key=selection.api_key or "",
+            base_url=selection.base_url,
+            timeout=self.config.default_timeout,
+            max_retries=self.config.default_max_retries,
+        )
     
     def _init_providers(self) -> None:
         """Initialize configured providers."""
@@ -274,13 +303,47 @@ class LLMRouter:
                 model="",
             )
         
-        # Select model
+        # Unified backend-selection path (Nemotron/Ollama from config/models.yaml)
+        role = self._role_for_task_type(task_type)
+        selection = get_backend_for_role(role)
+        if selection.provider in ("nemotron", "ollama"):
+            prov = self._provider_for_selection(selection)
+            selected_model = model or selection.model
+            try:
+                response = await prov.chat(
+                    messages=messages,
+                    model=selected_model,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    tools=tools,
+                    tool_choice=tool_choice,
+                    **kwargs,
+                )
+                self._usage.add_usage(
+                    tokens=response.usage.total_tokens,
+                    cost=response.estimated_cost,
+                )
+                persist_to_supabase_ledger(
+                    provider=selection.provider,
+                    model=selected_model,
+                    tokens_in=response.usage.prompt_tokens,
+                    tokens_out=response.usage.completion_tokens,
+                    estimated_cost=response.estimated_cost,
+                )
+                if constrained_index_name and response.content:
+                    response = self._apply_constraint_validation(
+                        response, constrained_index_name
+                    )
+                return response
+            except LLMError:
+                # Fall through to legacy provider selection
+                pass
+        
+        # Legacy path: config-based model and provider
         selected_model = model or self._select_model(
             task_type=task_type,
             requires_tools=bool(tools),
         )
-        
-        # Try primary provider
         provider_name, provider_instance = self._select_provider(provider)
         
         try:
@@ -424,20 +487,22 @@ class LLMRouter:
         **kwargs: Any,
     ) -> EmbeddingResponse:
         """Generate embeddings with automatic routing."""
+        selection = get_backend_for_role(EMBEDDING)
+        if selection.provider in ("nemotron", "ollama"):
+            prov = self._provider_for_selection(selection)
+            selected_model = model or selection.model
+            return await prov.embed(texts=texts, model=selected_model, **kwargs)
         selected_model = model or self.config.embedding_model
         provider_name, provider_instance = self._select_provider(provider)
-        
         try:
             response = await provider_instance.embed(
                 texts=texts,
                 model=selected_model,
                 **kwargs,
             )
-            
             self._health[provider_name].mark_success()
             return response
-            
-        except LLMError as e:
+        except LLMError:
             self._health[provider_name].mark_failure()
             raise
     
@@ -452,9 +517,22 @@ class LLMRouter:
         **kwargs: Any,
     ) -> AsyncGenerator[str, None]:
         """Stream chat completion response."""
+        role = self._role_for_task_type(task_type)
+        selection = get_backend_for_role(role)
+        if selection.provider in ("nemotron", "ollama"):
+            prov = self._provider_for_selection(selection)
+            selected_model = model or selection.model
+            async for chunk in prov.chat_stream(
+                messages=messages,
+                model=selected_model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs,
+            ):
+                yield chunk
+            return
         selected_model = model or self._select_model(task_type=task_type)
-        provider_name, provider_instance = self._select_provider(provider)
-        
+        _provider_name, provider_instance = self._select_provider(provider)
         async for chunk in provider_instance.chat_stream(
             messages=messages,
             model=selected_model,

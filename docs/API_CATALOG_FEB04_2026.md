@@ -29,6 +29,12 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/omnichannel/status` | GET | Omnichannel connector status with normalized env fallback handling |
 | `/api/workspace/inbox` | GET | Aggregated workspace inbox alias used by MYCA OS comms polling |
 
+### Search Orchestrator API (`/api/search/*`) – Mar 14, 2026
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/search/execute` | POST | Canonical unified search: body `query`, optional `session_id`, `user_id`; returns focus, results.keyword/semantic/specialist, memories, timestamp. Website proxy and NLQ use this. |
+
 ### C-Suite API (`/api/csuite/*`) – Mar 7, 2026
 
 Heartbeat, reporting, and escalation from executive-assistant VMs (CEO, CFO, CTO, COO) on Proxmox 90.
@@ -86,6 +92,20 @@ Canonical passive awareness surface for WorldState; read-only. CREP and Earth2 c
 | `/api/myca/world/diff` | GET | Diff since last turn (when implemented) |
 
 **Router:** `mycosoft_mas/core/routers/worldstate_api.py`
+
+### RaaS Worldstate Sessions (`/api/raas/worldstate/*`) – Mar 14, 2026
+
+Metered live worldstate connection for external agents. All endpoints require `X-API-Key`. May return `402 Payment Required` when balance is exhausted.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/raas/worldstate/start` | POST | Start a paid session (deducts 1 min on first heartbeat) |
+| `/api/raas/worldstate/heartbeat` | POST | Keep session active; 1 minute deducted per elapsed minute |
+| `/api/raas/worldstate/stop` | POST | Stop session and finalize minutes used |
+| `/api/raas/worldstate/balance` | GET | Current minute balance |
+| `/api/raas/worldstate/usage` | GET | Balance + active session + recent sessions (query: `limit`) |
+
+**Router:** `mycosoft_mas/raas/session_lifecycle.py` (included via `mycosoft_mas/core/myca_main.py`).
 
 ### Health & Status
 
@@ -504,6 +524,17 @@ Manages mycosoft-gpu01 compute node (192.168.0.190): status, containers, deploy 
 | `/api/ledger/blocks` | GET | List blocks |
 | `/api/ledger/entries/{type}` | GET | Get entries |
 | `/api/ledger/health` | GET | Ledger health |
+
+### Search Answers API (`/api/mindex/search/*`) – Mar 14, 2026
+
+Answer/QA/worldview persistence for Doable Search Rollout; used for second-search instant retrieval.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/mindex/search/answers` | GET | List/search answer snippets by query (e.g. `?q=`) for instant second-search retrieval |
+| `/api/mindex/search/answers` | POST | Upsert answer snippet (normalized query, snippet, result_hash, sources, timestamp); called by MAS after search |
+| `/api/mindex/search/queries` | POST | Record normalized query ledger entry |
+| `/api/mindex/search/qa` | GET, POST | QA pair read/write for reusable question-answer pairs |
 
 ---
 

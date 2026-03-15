@@ -362,9 +362,15 @@ class MYCAConsciousness:
         """Restore consciousness state from last session."""
         if self._memory_coordinator:
             try:
-                state = await self._memory_coordinator.recall(
+                state_list = await self._memory_coordinator.recall(
                     query="myca_consciousness_state",
-                    layer="system"
+                    layer="system",
+                    limit=1,
+                )
+                state = (
+                    state_list[0]["content"].get("value")
+                    if state_list and state_list[0].get("content")
+                    else None
                 )
                 if state:
                     logger.info("Restored previous consciousness state")
@@ -674,62 +680,31 @@ class MYCAConsciousness:
         session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Process a search query using attention, world model, and deliberation.
+        Process a search query via the canonical MAS search orchestrator.
         Returns ranked results and contextual guidance for the search system.
         """
         if self._state == ConsciousnessState.DORMANT:
             await self.awaken()
 
-        focus = await self._attention.focus_on(query, "search", search_context)
-        self._metrics.attention_focus = focus.summary
+        from mycosoft_mas.consciousness.search_orchestrator import run_unified_search
 
-        working_context, world_context, memories = await asyncio.gather(
-            self._working_memory.load_context(focus, session_id, user_id),
-            self._world_model.get_relevant_context(focus),
-            self._recall_relevant_memories(query, focus),
-            return_exceptions=False,
+        result = await run_unified_search(
+            query=query,
+            search_context=search_context,
+            user_id=user_id,
+            session_id=session_id,
+            consciousness=self,
         )
-
-        from mycosoft_mas.agents.clusters.search_discovery.search_agent import (
-            SearchAgent,
-            SearchQuery,
-            SearchType,
-        )
-        search_agent = SearchAgent(agent_id="search-agent")
-
-        keyword_query = SearchQuery(query_type=SearchType.KEYWORD, query=query, filters=search_context or {})
-        semantic_query = SearchQuery(query_type=SearchType.SEMANTIC, query=query, filters=search_context or {})
-
-        keyword_results, semantic_results = await asyncio.gather(
-            search_agent._keyword_search(keyword_query),
-            search_agent._semantic_search(semantic_query),
-            return_exceptions=False,
-        )
-
-        result_payload = {
-            "query": query,
-            "focus": focus.summary,
-            "world_context": world_context,
-            "working_context": working_context,
-            "memories": memories,
-            "results": {
-                "keyword": keyword_results,
-                "semantic": semantic_results,
-            },
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
-        if self._memory_coordinator:
-            try:
-                await self._memory_coordinator.store(
-                    key=f"search:{session_id or 'anon'}:{datetime.now(timezone.utc).isoformat()}",
-                    value=result_payload,
-                    layer="episodic",
-                )
-            except Exception as e:
-                logger.warning(f"Failed to store search interaction: {e}")
-
-        return result_payload
+        self._metrics.attention_focus = result.get("focus", "")
+        # Normalize for existing consumers: results.keyword/semantic (orchestrator adds results.specialist)
+        if "specialist" in result.get("results", {}):
+            payload = {k: v for k, v in result.items() if k != "results"}
+            payload["results"] = {
+                "keyword": result["results"].get("keyword", []),
+                "semantic": result["results"].get("semantic", []),
+            }
+            return payload
+        return result
     
     # =========================================================================
     # Agent Coordination

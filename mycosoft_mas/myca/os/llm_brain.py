@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Optional, TYPE_CHECKING, List
 
 import aiohttp
+from mycosoft_mas.llm.backend_selection import get_backend_for_role, MYCA_CORE
 from mycosoft_mas.myca.os.staff_registry import load_staff_directory
 
 if TYPE_CHECKING:
@@ -53,9 +54,6 @@ def experience_packet_to_live_context(ep: "ExperiencePacket") -> str:
     if not parts:
         return ""
     return "\n\n---\n\n## Live Context (Memory, Knowledge, Worldview)\n\n" + "\n\n".join(parts)
-
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://192.168.0.188:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.1:8b")
 
 logger = logging.getLogger("myca.os.llm_brain")
 
@@ -136,14 +134,14 @@ class LLMBrain:
             base += "\n\n---\n\n" + self._context[:30000]  # Cap context size
         return base
 
-    async def _respond_ollama(self, messages: list) -> Optional[str]:
+    async def _respond_ollama(self, base_url: str, model: str, messages: list) -> Optional[str]:
         """
-        Call Ollama /api/chat as fallback when Claude fails.
+        Call Ollama /api/chat.
         messages: list of {"role": "user"|"system"|"assistant", "content": "..."}
         Returns response text or None on failure.
         """
-        url = f"{OLLAMA_URL.rstrip('/')}/api/chat"
-        payload = {"model": OLLAMA_MODEL, "messages": messages, "stream": False}
+        url = f"{base_url.rstrip('/')}/api/chat"
+        payload = {"model": model, "messages": messages, "stream": False}
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(
@@ -159,8 +157,50 @@ class LLMBrain:
                     content = msg.get("content", "")
                     return content.strip() if content else None
         except Exception as e:
-            logger.warning("Ollama fallback failed: %s", e)
+            logger.warning("Ollama request failed: %s", e)
             return None
+
+    async def _respond_openai_compatible(self, base_url: str, model: str, api_key: str, messages: list) -> Optional[str]:
+        """
+        Call OpenAI-compatible /v1/chat/completions (e.g. Nemotron).
+        Returns response text or None on failure.
+        """
+        url = f"{base_url.rstrip('/')}/v1/chat/completions"
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        body = {"model": model, "messages": messages, "stream": False}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    url,
+                    json=body,
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=60),
+                ) as resp:
+                    if resp.status != 200:
+                        logger.warning("OpenAI-compatible returned status %s", resp.status)
+                        return None
+                    data = await resp.json()
+                    choice = (data.get("choices") or [{}])[0]
+                    msg = choice.get("message", {})
+                    content = msg.get("content", "")
+                    return content.strip() if content else None
+        except Exception as e:
+            logger.warning("OpenAI-compatible request failed: %s", e)
+            return None
+
+    async def _respond_backend(self, messages: list) -> Optional[str]:
+        """
+        Call the MYCA core backend (from unified backend_selection).
+        Uses get_backend_for_role(MYCA_CORE); dispatches to Ollama or OpenAI-compatible (e.g. Nemotron).
+        """
+        selection = get_backend_for_role(MYCA_CORE)
+        if selection.provider == "ollama":
+            return await self._respond_ollama(selection.base_url, selection.model, messages)
+        return await self._respond_openai_compatible(
+            selection.base_url, selection.model, selection.api_key or "", messages
+        )
 
     async def _build_live_context(self, user_message: str, context: Optional[dict] = None) -> str:
         """
@@ -272,12 +312,15 @@ class LLMBrain:
                 except Exception:
                     pass
 
-            # 7. Unified search when query looks like search
-            if mb and hasattr(mb, "search_knowledge") and any(kw in msg_lower for kw in ["search", "find", "lookup", "where is", "show me", "what do we know"]):
+            # 7. Unified search when query looks like search (via MAS search orchestrator)
+            if any(kw in msg_lower for kw in ["search", "find", "lookup", "where is", "show me", "what do we know"]):
                 try:
-                    results = await mb.search_knowledge(user_message[:120], limit=5)
-                    if results:
-                        parts.append(f"[Unified search]: {str(results)[:800]}")
+                    from mycosoft_mas.consciousness.search_orchestrator import run_unified_search
+                    result = await run_unified_search(query=user_message[:120], limit=5)
+                    res = result.get("results") or {}
+                    combined = (res.get("keyword") or []) + (res.get("semantic") or [])
+                    if combined:
+                        parts.append(f"[Unified search]: {str(combined)[:800]}")
                 except Exception:
                     pass
 
@@ -424,13 +467,13 @@ class LLMBrain:
             {"role": "user", "content": user_block},
         ]
 
-        # Primary: Ollama (MYCA's own brain)
-        text = await self._respond_ollama(messages)
+        # Primary: unified MYCA core backend (Ollama or Nemotron via backend_selection)
+        text = await self._respond_backend(messages)
         if text:
             return text.strip() or "I'm here. What would you like me to do?"
 
         # No fallback to frontier models — MYCA needs to be fixed
-        logger.error("Ollama (MYCA brain) failed — no fallback. Check OLLAMA_URL and OLLAMA_MODEL.")
+        logger.error("MYCA brain backend failed — no fallback. Check config/models.yaml and backend_selection.")
         return (
             "My brain isn't responding right now — Ollama needs to be checked on the MAS server. "
             "I'm not falling back to other AI providers; this needs to be fixed."
@@ -463,7 +506,7 @@ Choose escalate_to_morgan for money, budget, legal, hiring, or urgent human deci
             {"role": "user", "content": prompt},
         ]
 
-        fallback_text = await self._respond_ollama(messages)
+        fallback_text = await self._respond_backend(messages)
         if fallback_text:
             text = fallback_text.strip()
             if text.startswith("```"):

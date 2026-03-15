@@ -25,9 +25,34 @@ providers:
     api_key: ${LLM_API_KEY:-}
     base_url: ${LLM_BASE_URL:-http://litellm:4000}
 
+  # Nemotron (OpenAI-compatible); NEMOTRON_BASE_URL for local/GPU deployment
+  nemotron:
+    provider: openai_compatible
+    model: ${NEMOTRON_MODEL_SUPER:-nemotron-super}
+    api_key: ${NEMOTRON_API_KEY:-}
+    base_url: ${NEMOTRON_BASE_URL:-}
+
+  ollama:
+    provider: openai_compatible
+    model: ${OLLAMA_MODEL:-llama3.2}
+    api_key: ""
+    base_url: ${OLLAMA_BASE_URL:-http://localhost:11434}
+
 roles:
   planning_model: openai:${LLM_MODEL_PLANNING:-gpt-4o-mini}
   execution_model: local:${LLM_MODEL_EXECUTION:-gpt-4o-mini}
   fast_model: openai:${LLM_MODEL_FAST:-gpt-4o-mini}
   embedding_model: openai:${LLM_MODEL_EMBEDDING:-text-embedding-3-small}
   fallback_model: gemini:${LLM_MODEL_FALLBACK:-gemini-1.5-flash}
+
+# Unified model roles for LLMRouter, FrontierLLMRouter, LLMBrain (Nemotron MYCA rollout)
+model_roles:
+  myca_core: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
+  myca_edge: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
+  nemotron_super: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
+  nemotron_nano: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
+  planning: openai:${LLM_MODEL_PLANNING:-gpt-4o-mini}
+  execution: local:${LLM_MODEL_EXECUTION:-gpt-4o-mini}
+  fast: openai:${LLM_MODEL_FAST:-gpt-4o-mini}
+  embedding: openai:${LLM_MODEL_EMBEDDING:-text-embedding-3-small}
+  fallback: gemini:${LLM_MODEL_FALLBACK:-gemini-1.5-flash}

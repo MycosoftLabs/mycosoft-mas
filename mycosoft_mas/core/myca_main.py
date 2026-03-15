@@ -79,6 +79,7 @@ from mycosoft_mas.core.routers.fleet_api import router as fleet_router
 from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
 from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
 from mycosoft_mas.core.routers.nlq_api import router as nlq_router
+from mycosoft_mas.core.routers.search_orchestrator_api import router as search_orchestrator_router
 from mycosoft_mas.core.routers.telemetry_pipeline_api import router as telemetry_pipeline_router
 from mycosoft_mas.core.routers.presence_api import router as presence_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
@@ -598,6 +599,7 @@ app.include_router(guardian_router, tags=["guardian"])
 app.include_router(merkle_ledger_router, tags=["merkle-ledger"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
 app.include_router(nlq_router, tags=["nlq"])
+app.include_router(search_orchestrator_router, tags=["search"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
     app.include_router(iot_router, tags=["iot"])
 if FIRST_LIGHT_API_AVAILABLE and first_light_router is not None:
@@ -888,12 +890,14 @@ try:
     from mycosoft_mas.raas.payment_gateway import router as raas_payment_router
     from mycosoft_mas.raas.service_proxy import router as raas_proxy_router
     from mycosoft_mas.raas.agent_card import router as raas_discovery_router
+    from mycosoft_mas.raas.session_lifecycle import router as raas_session_router
 
     app.include_router(raas_catalog_router)
     app.include_router(raas_onboarding_router)
     app.include_router(raas_payment_router)
     app.include_router(raas_proxy_router)
     app.include_router(raas_discovery_router)
+    app.include_router(raas_session_router)
 except ImportError:
     pass
 
@@ -1055,6 +1059,26 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
         )
     except Exception:
         # Don't block chat on feedback persistence.
+        pass
+
+    # Persist voice/orchestrator answer to MINDEX (same pipeline as search; Nemotron/Ollama answers)
+    try:
+        import asyncio
+        from mycosoft_mas.consciousness.search_registration import persist_search_to_mindex
+        minimal_payload = {
+            "focus": (response_text or "")[:1000],
+            "results": {},
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+        asyncio.create_task(
+            persist_search_to_mindex(
+                payload.message,
+                minimal_payload,
+                session_id=payload.session_id,
+                user_id=payload.actor,
+            )
+        )
+    except Exception:
         pass
 
     return VoiceChatResponse(
