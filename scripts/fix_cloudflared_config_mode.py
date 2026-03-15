@@ -16,7 +16,7 @@ except Exception:
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 print("=" * 70)
 print("SWITCHING CLOUDFLARED TO CONFIG FILE MODE")

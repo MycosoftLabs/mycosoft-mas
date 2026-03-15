@@ -4,6 +4,7 @@ Fix VMs - Check Proxmox and start VMs if needed.
 Also try to SSH to known VM IPs.
 """
 
+import os
 import requests
 import urllib3
 import socket
@@ -14,10 +15,10 @@ PROXMOX_HOST = '192.168.0.90'
 
 # Try multiple credential combinations
 CREDENTIALS = [
-    ('root@pam', '20202020'),
-    ('root', '20202020'),
-    ('admin@pam', '20202020'),
-    ('root@pam', 'REDACTED_VM_SSH_PASSWORD'),
+    ('root@pam', os.environ.get("PROXMOX_PASSWORD", "")),
+    ('root', os.environ.get("PROXMOX_PASSWORD", "")),
+    ('admin@pam', os.environ.get("PROXMOX_PASSWORD", "")),
+    ('root@pam', '<VM_PASSWORD>'),
 ]
 
 def try_proxmox_auth():

@@ -6,7 +6,7 @@ import json
 urllib3.disable_warnings()
 
 PROXMOX_HOST = "https://192.168.0.202:8006"
-headers = {"Authorization": "PVEAPIToken=myca@pve!mas=ca23b6c8-5746-46c4-8e36-fc6caad5a9e5"}
+headers = {"Authorization": f"PVEAPIToken={os.environ.get('PROXMOX_TOKEN_ID', 'myca@pve!mas')}={os.environ.get('PROXMOX_TOKEN_SECRET', '')}"}
 VM_ID = 103
 NODE = "pve"
 

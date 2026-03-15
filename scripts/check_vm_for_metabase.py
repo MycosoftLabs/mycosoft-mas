@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Check MAS VM for Metabase deployment"""
 
+import os
 import paramiko
 
 def main():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
     
     # Check what containers are running
     stdin, stdout, stderr = ssh.exec_command('docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | head -25')

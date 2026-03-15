@@ -7,7 +7,7 @@ import time
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 # Python script to run on VM for ETL
 ETL_SCRIPT = '''#!/usr/bin/env python3

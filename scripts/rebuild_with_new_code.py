@@ -9,7 +9,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 VM_HOST = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 WEBSITE_PATH = "/home/mycosoft/mycosoft/website"
 MAS_PATH = "/home/mycosoft/mycosoft/mas"
 CONTAINER_NAME = "mycosoft-website"

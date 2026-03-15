@@ -3,7 +3,7 @@ import paramiko
 
 HOST = "192.168.0.188"
 USER = "mycosoft"
-PASS = "REDACTED_VM_SSH_PASSWORD"
+PASS = os.environ.get("VM_PASSWORD", "")
 
 def run(ssh, cmd, timeout=15):
     stdin, stdout, stderr = ssh.exec_command(cmd, timeout=timeout)

@@ -2,6 +2,7 @@
 """
 Setup MAS VM - Attach ISO and configure for installation
 """
+import os
 import requests
 import urllib3
 import time
@@ -107,7 +108,7 @@ def main():
     print("1. Open Proxmox console: https://192.168.0.202:8006/#v1:0:=qemu/188:=console")
     print("2. Complete Ubuntu installation:")
     print("   - Username: mycosoft")
-    print("   - Password: REDACTED_VM_SSH_PASSWORD")
+    print("   - Password: <VM_PASSWORD>")
     print("   - Hostname: mas-vm")
     print("   - Install OpenSSH server")
     print("3. After installation, configure static IP: 192.168.0.188")

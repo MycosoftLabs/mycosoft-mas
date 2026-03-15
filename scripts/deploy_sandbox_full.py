@@ -31,7 +31,7 @@ if env_file.exists():
 # Configuration
 SSH_HOST = "192.168.0.187"
 SSH_USER = "mycosoft"
-SSH_PASS = "REDACTED_VM_SSH_PASSWORD"
+SSH_PASS = os.environ.get("VM_PASSWORD", "")
 
 WEBSITE_REPO = "/opt/mycosoft/website"
 MAS_REPO = "/home/mycosoft/mycosoft/mas"

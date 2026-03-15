@@ -7,7 +7,7 @@ from pathlib import Path
 
 MAS_HOST = "192.168.0.188"
 MAS_USER = "mycosoft"
-MAS_PASS = "REDACTED_VM_SSH_PASSWORD"
+MAS_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run_command(ssh, cmd, sudo=False):
     if sudo:

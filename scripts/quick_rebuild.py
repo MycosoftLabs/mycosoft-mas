@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Quick rebuild after code push"""
+import os
 import paramiko
 import time
 import sys
@@ -7,7 +8,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 print('Connecting...')
 ssh = paramiko.SSHClient()

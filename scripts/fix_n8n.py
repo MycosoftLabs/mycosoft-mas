@@ -3,13 +3,14 @@
 Fix n8n and complete deployment
 Created: February 4, 2026
 """
+import os
 import paramiko
 import sys
 import time
 
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run_command(client, cmd, timeout=120):
     """Execute command and return output."""

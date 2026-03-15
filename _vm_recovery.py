@@ -9,7 +9,7 @@ import requests
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run_sudo(ssh, cmd, timeout=120):
     """Run command with sudo, providing password via stdin"""

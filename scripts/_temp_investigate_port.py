@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Investigate what's holding port 8000"""
 
+import os
 import paramiko
 
 host = '192.168.0.189'
 user = 'mycosoft'
-password = 'REDACTED_VM_SSH_PASSWORD'
+password = '<VM_PASSWORD>'
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

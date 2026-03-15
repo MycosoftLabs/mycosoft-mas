@@ -107,7 +107,7 @@ def main() -> int:
     local_assets = Path(r"C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\public\assets")
     vm_assets_root = "/opt/mycosoft/media/website/assets"
 
-    target = VmTarget(host="192.168.0.187", username="mycosoft", password="REDACTED_VM_SSH_PASSWORD")
+    target = VmTarget(host="192.168.0.187", username="mycosoft", password=os.environ.get("VM_PASSWORD", ""))
     verify_hash = False  # speed default; enable when debugging.
 
     if not local_assets.exists():

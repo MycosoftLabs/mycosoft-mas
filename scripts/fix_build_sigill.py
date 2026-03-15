@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fix SIGILL build error by adjusting build settings."""
+import os
 import paramiko
 import time
 
@@ -24,7 +25,7 @@ def main():
     print("FIXING BUILD - SIGILL WORKAROUND")
     print("="*60)
     print("\nConnecting to VM...")
-    client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+    client.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
     print("Connected!")
     
     # Check where the website code is

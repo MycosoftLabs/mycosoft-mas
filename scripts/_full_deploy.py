@@ -6,7 +6,7 @@ import time
 
 VM_IP = "192.168.0.188"
 VM_USER = "mycosoft"
-VM_PASS = os.environ.get("VM_PASSWORD", "REDACTED_VM_SSH_PASSWORD")
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run_cmd(ssh, cmd, timeout=600, show=True):
     stdin, stdout, stderr = ssh.exec_command(cmd, timeout=timeout)

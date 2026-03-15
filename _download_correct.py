@@ -6,7 +6,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 proxmox_host = "192.168.0.202"
 proxmox_user = "root"
-proxmox_pass = "20202020"
+proxmox_pass = os.environ.get("PROXMOX_PASSWORD", "")
 
 print(f"Connecting to correct Proxmox at {proxmox_host}...")
 

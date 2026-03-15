@@ -1,9 +1,10 @@
 ﻿import paramiko
+import os
 import time
 
 proxmox_host = "192.168.0.90"
 proxmox_user = "root"
-proxmox_pass = "20202020"
+proxmox_pass = os.environ.get("PROXMOX_PASSWORD", "")
 
 print("Connecting to Proxmox...")
 ssh = paramiko.SSHClient()
@@ -27,13 +28,13 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     lock_passwd: false
-    plain_text_passwd: 'REDACTED_VM_SSH_PASSWORD'
+    plain_text_passwd: '<VM_PASSWORD>'
 ssh_pwauth: true
 disable_root: false
 chpasswd:
   list: |
-    root:REDACTED_VM_SSH_PASSWORD
-    mycosoft:REDACTED_VM_SSH_PASSWORD
+    root:<VM_PASSWORD>
+    mycosoft:<VM_PASSWORD>
   expire: false
 runcmd:
   - sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config

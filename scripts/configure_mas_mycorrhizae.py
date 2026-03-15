@@ -6,7 +6,7 @@ Configure MAS orchestrator with Mycorrhizae API key and fix restart issues.
 import paramiko
 
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 VM_188 = "192.168.0.188"
 
 # Generated API key for MAS

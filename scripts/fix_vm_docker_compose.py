@@ -5,7 +5,7 @@ import paramiko
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 # The CORRECT docker-compose that matches local always-on setup
 DOCKER_COMPOSE = '''version: "3.8"

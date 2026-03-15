@@ -57,7 +57,7 @@ def main():
         
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+        client.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
         
         sftp = client.open_sftp()
         print(f"Uploading {file_size:.2f} GB - please wait...")
@@ -71,7 +71,7 @@ def main():
     
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+    client.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
     
     commands = [
         'docker load -i /home/mycosoft/website-image.tar',

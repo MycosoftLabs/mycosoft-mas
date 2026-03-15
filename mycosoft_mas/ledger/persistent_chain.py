@@ -52,10 +52,7 @@ class PersistentBlockchainLedger:
     """
     
     def __init__(self, database_url: Optional[str] = None):
-        self.database_url = database_url or os.getenv(
-            "DATABASE_URL",
-            "postgresql://mycosoft:mycosoft@localhost:5432/mycosoft"
-        )
+        self.database_url = database_url or os.getenv("DATABASE_URL", "")
         self._pool = None
         self._pending_entries: List[LedgerEntry] = []
         self._initialized = False

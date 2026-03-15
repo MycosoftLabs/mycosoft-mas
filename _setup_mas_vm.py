@@ -2,12 +2,13 @@
 """
 Setup MAS Orchestrator on VM and create systemd service
 """
+import os
 import paramiko
 import time
 
 VM_HOST = '192.168.0.188'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 MAS_DIR = '/home/mycosoft/mycosoft/mas'
 
 def run_cmd(client, cmd, timeout=60):

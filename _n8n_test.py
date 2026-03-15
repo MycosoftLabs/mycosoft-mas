@@ -6,7 +6,7 @@ N8N_URL = "http://localhost:5678"
 
 # Try basic auth
 print("Testing Basic Auth...")
-auth = HTTPBasicAuth("morgan@mycosoft.org", "REDACTED_VM_SSH_PASSWORD")
+auth = HTTPBasicAuth("morgan@mycosoft.org", os.environ.get("VM_PASSWORD", ""))
 
 try:
     r = requests.get(f"{N8N_URL}/api/v1/workflows", auth=auth, timeout=10)

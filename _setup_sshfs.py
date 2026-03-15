@@ -1,4 +1,5 @@
 ﻿import paramiko
+import os
 import time
 import sys
 
@@ -6,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 mindex_host = "192.168.0.189"
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 print("Setting up SSHFS mount on MINDEX VM...")
 ssh = paramiko.SSHClient()
@@ -33,7 +34,7 @@ sudo chown mycosoft:mycosoft /mnt/mycosoft-nas
 
 # Try with password using sshpass
 sudo apt-get install -y sshpass -qq
-sshpass -p 'REDACTED_VM_SSH_PASSWORD' sshfs -o StrictHostKeyChecking=no,allow_other,default_permissions mycosoft@192.168.0.187:/mnt/mycosoft-nas /mnt/mycosoft-nas 2>&1
+sshpass -p '<VM_PASSWORD>' sshfs -o StrictHostKeyChecking=no,allow_other,default_permissions mycosoft@192.168.0.187:/mnt/mycosoft-nas /mnt/mycosoft-nas 2>&1
 
 echo ""
 echo "=== Mount result ==="

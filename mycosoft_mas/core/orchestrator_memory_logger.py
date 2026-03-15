@@ -18,7 +18,7 @@ class OrchestratorMemoryLogger:
     
     def __init__(self):
         self._pool = None
-        self._url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mycosoft")
+        self._url = os.getenv("DATABASE_URL", "")
         self._buffer: List[Dict[str, Any]] = []
         self._buffer_size = 100
     

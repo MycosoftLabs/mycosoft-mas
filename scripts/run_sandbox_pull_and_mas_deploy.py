@@ -130,7 +130,7 @@ def main():
   --restart unless-stopped \\
   -p 8001:8000 \\
   -e REDIS_URL=redis://192.168.0.188:6379/0 \\
-  -e DATABASE_URL=postgresql://mycosoft:mycosoft@192.168.0.188:5432/mindex \\
+  -e DATABASE_URL=${{DATABASE_URL}} \\
   -e N8N_URL=http://192.168.0.188:5678 \\
   -e MAS_SSH_KEY_PATH=/run/secrets/mas_ssh_key \\
   -v {key_on_188}:/run/secrets/mas_ssh_key:ro \\
@@ -140,7 +140,7 @@ def main():
   --restart unless-stopped \\
   -p 8001:8000 \\
   -e REDIS_URL=redis://192.168.0.188:6379/0 \\
-  -e DATABASE_URL=postgresql://mycosoft:mycosoft@192.168.0.188:5432/mindex \\
+  -e DATABASE_URL=${{DATABASE_URL}} \\
   -e N8N_URL=http://192.168.0.188:5678 \\
   mycosoft/mas-agent:latest"""
     out, err = run(ssh188, cmd, timeout=60)

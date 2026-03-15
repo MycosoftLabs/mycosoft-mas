@@ -16,7 +16,7 @@ import sys
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 
 def run(ssh: paramiko.SSHClient, cmd: str) -> str:

@@ -43,7 +43,7 @@ for ip in ips_to_check:
                     # Try authentication
                     r2 = requests.post(
                         f"https://{ip}:8006/api2/json/access/ticket",
-                        data={"username": "root@pam", "password": "20202020"},
+                        data={"username": "root@pam", "password": os.environ.get("PROXMOX_PASSWORD", "")},
                         verify=False, timeout=10
                     )
                     print(f"  Auth Status: {r2.status_code}")

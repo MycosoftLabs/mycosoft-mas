@@ -18,7 +18,7 @@ class MemoryCleanupService:
     
     def __init__(self):
         self._pool = None
-        self._url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mycosoft")
+        self._url = os.getenv("DATABASE_URL", "")
         self._running = False
         self._task = None
     

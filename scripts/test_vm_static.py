@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Test static file access on VM."""
 
+import os
 import paramiko
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+ssh.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
 
 print("=== Testing direct localhost access ===")
 stdin, stdout, stderr = ssh.exec_command('curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/_next/static/css/e205cd54c9e25594.css')

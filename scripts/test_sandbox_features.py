@@ -3,6 +3,7 @@
 Test all new features on Sandbox site
 Created: February 5, 2026
 """
+import os
 import paramiko
 import requests
 import json
@@ -10,7 +11,7 @@ import time
 
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run_ssh_command(client, cmd, timeout=60):
     """Execute SSH command and return output."""

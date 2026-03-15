@@ -92,7 +92,7 @@ def list_available_webhooks():
         # n8n requires auth for API calls, but we can try the basic auth
         r = requests.get(
             f"{N8N_URL}/api/v1/workflows",
-            auth=("morgan@mycosoft.org", "REDACTED_VM_SSH_PASSWORD"),
+            auth=("morgan@mycosoft.org", os.environ.get("VM_PASSWORD", "")),
             timeout=10
         )
         if r.status_code == 200:

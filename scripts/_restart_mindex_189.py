@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Restart MINDEX postgres and API on VM 189"""
+import os
 import paramiko
 import time
 import sys
@@ -8,7 +9,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('192.168.0.189', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+ssh.connect('192.168.0.189', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
 
 def run(cmd):
     stdin, stdout, stderr = ssh.exec_command(cmd)

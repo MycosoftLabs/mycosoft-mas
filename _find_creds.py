@@ -6,7 +6,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 sandbox_host = "192.168.0.187"
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

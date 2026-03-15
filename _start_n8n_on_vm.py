@@ -11,7 +11,7 @@ from pathlib import Path
 
 MAS_VM = "192.168.0.188"
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 N8N_URL = f"http://{MAS_VM}:5678"
 
 print("=" * 60)
@@ -81,7 +81,7 @@ def import_workflows_via_api():
     ]
     
     session = requests.Session()
-    session.auth = ("morgan@mycosoft.org", "REDACTED_VM_SSH_PASSWORD")
+    session.auth = ("morgan@mycosoft.org", os.environ.get("VM_PASSWORD", ""))
     
     imported = 0
     for wf_name in priority_workflows:

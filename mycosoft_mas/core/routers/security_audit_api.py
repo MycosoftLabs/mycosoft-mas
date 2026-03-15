@@ -78,10 +78,7 @@ class PersistentAuditLog:
         self._pool = None
         self._db_available = None
         self._memory_log: List[AuditEntry] = []
-        self._database_url = os.getenv(
-            "DATABASE_URL",
-            "postgresql://mycosoft:mycosoft@postgres:5432/mycosoft"
-        )
+        self._database_url = os.getenv("DATABASE_URL", "")
     
     async def _get_pool(self):
         """Get or create database connection pool."""

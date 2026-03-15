@@ -15,7 +15,7 @@ import base64
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 # Extended ETL Script - Scrapes 5000+ taxa
 EXTENDED_ETL = '''

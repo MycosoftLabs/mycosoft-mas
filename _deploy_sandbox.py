@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Quick deploy to sandbox VM - Feb 5, 2026"""
+import os
 import paramiko
 import time
 
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run(client, cmd, timeout=300):
     print(f">>> {cmd}")

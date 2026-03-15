@@ -4,7 +4,7 @@ import textwrap
 
 HOST = "192.168.0.189"
 USER = "mycosoft"
-PASS = "REDACTED_VM_SSH_PASSWORD"
+PASS = os.environ.get("VM_PASSWORD", "")
 
 def run(ssh, cmd, timeout=120):
     stdin, stdout, stderr = ssh.exec_command(cmd, timeout=timeout)

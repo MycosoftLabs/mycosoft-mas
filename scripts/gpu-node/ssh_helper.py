@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """SSH Helper for GPU Node Management"""
+import os
 import paramiko
 import sys
 import io
@@ -9,7 +10,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 
 HOST = '192.168.0.190'
 USER = 'mycosoft'
-PASS = 'REDACTED_VM_SSH_PASSWORD'
+PASS = os.environ.get("VM_PASSWORD", "")
 # Escaped password for use in bash commands (escape ! for bash history expansion)
 PASS_ESCAPED = PASS.replace('!', '\\!')
 

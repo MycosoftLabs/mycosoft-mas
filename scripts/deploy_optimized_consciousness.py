@@ -13,7 +13,7 @@ from pathlib import Path
 # VM Configuration
 MAS_VM_IP = "192.168.0.188"
 MAS_VM_USER = "mycosoft"
-MAS_VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+MAS_VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 MAS_REPO_PATH = "/home/mycosoft/mycosoft/mas"
 
 def ssh_execute(ssh_client, command: str, timeout: int = 60):

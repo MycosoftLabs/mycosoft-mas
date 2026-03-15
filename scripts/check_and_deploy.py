@@ -2,6 +2,7 @@
 """
 Check VM status, deploy website, and test
 """
+import os
 import requests
 import urllib3
 import paramiko
@@ -13,15 +14,15 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 # Proxmox config
 PROXMOX_HOST = "https://192.168.0.202:8006"
-PROXMOX_TOKEN_ID = "myca@pve!mas"
-PROXMOX_TOKEN_SECRET = "ca23b6c8-5746-46c4-8e36-fc6caad5a9e5"
+PROXMOX_TOKEN_ID = os.environ.get("PROXMOX_TOKEN_ID", "myca@pve!mas")
+PROXMOX_TOKEN_SECRET = os.environ.get("PROXMOX_TOKEN_SECRET", "")
 VM_ID = 103
 NODE = "pve"
 
 # SSH config
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 headers = {
     "Authorization": f"PVEAPIToken={PROXMOX_TOKEN_ID}={PROXMOX_TOKEN_SECRET}"

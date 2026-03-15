@@ -4,6 +4,7 @@ Phase 7: n8n Workflow Tests
 Tests workflow inventory, webhook triggers, and execution
 Created: February 5, 2026
 """
+import os
 import paramiko
 import requests
 import json
@@ -54,7 +55,7 @@ class TestSuite:
 # Configuration
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 N8N_URL = f"http://{VM_HOST}:5678"
 
 # Expected workflows from documentation

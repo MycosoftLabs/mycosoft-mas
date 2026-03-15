@@ -4,7 +4,7 @@ import paramiko
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

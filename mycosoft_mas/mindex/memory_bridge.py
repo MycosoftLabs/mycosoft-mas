@@ -20,9 +20,9 @@ class MINDEXMemoryBridge:
     def __init__(self):
         self._pool = None
         self._url = os.getenv("MINDEX_DATABASE_URL", os.getenv("DATABASE_URL",
-            "postgresql://postgres:postgres@localhost:5432/mindex"))
+            ""))
         self._memory_url = os.getenv("DATABASE_URL",
-            "postgresql://postgres:postgres@localhost:5432/mycosoft")
+            "")
         self._memory_pool = None
     
     async def connect(self) -> bool:

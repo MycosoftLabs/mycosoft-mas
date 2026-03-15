@@ -1,4 +1,5 @@
 ﻿import paramiko
+import os
 import time
 import sys
 
@@ -6,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 mindex_host = "192.168.0.189"
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 print("Complete MINDEX ETL and Integration Test...")
 ssh = paramiko.SSHClient()
@@ -33,7 +34,7 @@ cmds = [
     '''/opt/mycosoft/sync_to_nas.sh''',
     
     # Final status
-    '''echo "=== Final NAS Contents ===" && sshpass -p 'REDACTED_VM_SSH_PASSWORD' ssh -o StrictHostKeyChecking=no mycosoft@192.168.0.187 "ls -la /mnt/mycosoft-nas/mindex/"''',
+    '''echo "=== Final NAS Contents ===" && sshpass -p '<VM_PASSWORD>' ssh -o StrictHostKeyChecking=no mycosoft@192.168.0.187 "ls -la /mnt/mycosoft-nas/mindex/"''',
 ]
 
 for cmd in cmds:

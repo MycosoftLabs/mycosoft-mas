@@ -29,7 +29,7 @@ class N8NCloudSync:
         # Local n8n instance
         self.local_url = local_url or os.getenv("N8N_URL", "http://192.168.0.188:5678")
         self.local_username = local_username or os.getenv("N8N_USERNAME", "admin")
-        self.local_password = local_password or os.getenv("N8N_PASSWORD", "Mushroom1!")
+        self.local_password = local_password or os.getenv("N8N_PASSWORD", "")
         
         # Cloud n8n instance
         self.cloud_url = cloud_url or os.getenv("N8N_CLOUD_URL", "https://mycosoft.app.n8n.cloud")

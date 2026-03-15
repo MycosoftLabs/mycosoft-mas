@@ -1,4 +1,5 @@
 ﻿import paramiko
+import os
 import time
 import sys
 
@@ -6,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 mindex_host = "192.168.0.189"
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 print("Mounting NAS with proper password escaping...")
 ssh = paramiko.SSHClient()
@@ -22,7 +23,7 @@ setup_cmd = '''
 sudo mkdir -p /etc/samba
 sudo bash -c 'cat > /etc/samba/mycosoft-nas.creds << "CREDEOF"
 username=morgan
-password=REDACTED_VM_SSH_PASSWORD
+password=<VM_PASSWORD>
 domain=WORKGROUP
 CREDEOF'
 sudo chmod 600 /etc/samba/mycosoft-nas.creds

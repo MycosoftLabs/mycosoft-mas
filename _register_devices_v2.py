@@ -8,7 +8,7 @@ import json
 
 mindex_host = "192.168.0.189"
 user = "mycosoft"
-passwd = os.getenv("SANDBOX_PASSWORD", "REDACTED_VM_SSH_PASSWORD")
+passwd = os.environ.get("VM_PASSWORD", "")
 
 # Device definitions with comprehensive metadata
 devices = [

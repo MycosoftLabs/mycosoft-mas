@@ -19,7 +19,7 @@ def run_ssh_command(host, user, password, command, timeout=60):
     except Exception as e:
         return False, str(e)
 
-password = "REDACTED_VM_SSH_PASSWORD"
+password = os.environ.get("VM_PASSWORD", "")
 
 print("Waiting for container to become healthy...")
 for i in range(12):  # Wait up to 60 seconds

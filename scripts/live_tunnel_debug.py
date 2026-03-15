@@ -1,10 +1,11 @@
+import os
 import paramiko
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -20,7 +21,7 @@ _, out, _ = ssh.exec_command(f'echo "{VM_PASS}" | sudo -S curl -s -o /dev/null -
 print(f'Result: {out.read().decode("utf-8", errors="replace")}')
 
 print('\n=== CHECK FIREWALL ===')
-_, out, _ = ssh.exec_command('echo "REDACTED_VM_SSH_PASSWORD" | sudo -S iptables -L -n 2>&1 | head -20')
+_, out, _ = ssh.exec_command('echo os.environ.get("VM_PASSWORD", "") | sudo -S iptables -L -n 2>&1 | head -20')
 print(out.read().decode('utf-8', errors='replace'))
 
 print('\n=== CHECK IF ANY PROCESS IS BLOCKING ===')

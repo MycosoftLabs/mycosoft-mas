@@ -17,7 +17,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Configuration - Proxmox API
 PROXMOX_HOST = "https://192.168.0.202:8006"
 PROXMOX_TOKEN_ID = os.getenv("PROXMOX_TOKEN_ID", "myca@pve!mas")
-PROXMOX_TOKEN_SECRET = os.getenv("PROXMOX_TOKEN_SECRET", "ca23b6c8-5746-46c4-8e36-fc6caad5a9e5")
+PROXMOX_TOKEN_SECRET = os.getenv("PROXMOX_TOKEN_SECRET", "{os.environ.get('PROXMOX_TOKEN_SECRET', '')}")
 VM_ID = 103
 NODE = "pve"
 

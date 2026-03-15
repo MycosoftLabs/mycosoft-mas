@@ -10,7 +10,7 @@ urllib3.disable_warnings()
 
 UNIFI_HOST = "192.168.0.1"  # Dream Machine
 UNIFI_USER = "cursor_agent"  # or admin
-UNIFI_PASS = "REDACTED_VM_SSH_PASSWORD"
+UNIFI_PASS = os.environ.get("VM_PASSWORD", "")
 
 print("=" * 70)
 print("  UNIFI NETWORK TOPOLOGY")
@@ -49,7 +49,7 @@ if not logged_in:
     # Try default admin credentials
     print("\nTrying alternate credentials...")
     for user in ["admin", "root", "cursor_agent"]:
-        for pwd in ["REDACTED_VM_SSH_PASSWORD", "20202020", "admin"]:
+        for pwd in [os.environ.get("VM_PASSWORD", ""), os.environ.get("PROXMOX_PASSWORD", ""), "admin"]:
             try:
                 r = session.post(
                     f"https://{UNIFI_HOST}/api/auth/login",

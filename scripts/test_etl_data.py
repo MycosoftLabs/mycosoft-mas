@@ -4,6 +4,7 @@ Phase 8: ETL and Data Validation Tests
 Tests MINDEX data pipelines, GBIF sync, and data quality
 Created: February 5, 2026
 """
+import os
 import paramiko
 import requests
 import json
@@ -54,7 +55,7 @@ class TestSuite:
 # Configuration
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 BASE_URL = f"http://{VM_HOST}:8000"
 
 def print_header(title: str):

@@ -22,7 +22,7 @@ import paramiko
 host, user = "192.168.0.188", "mycosoft"
 
 # DB password from .env or use common one - avoid ! in shell by using env file or quotes
-db_pass = os.environ.get("MINDEX_DB_PASSWORD", "Diamond1!")
+db_pass = os.environ.get("MINDEX_DB_PASSWORD", "")
 # Escape for shell: use single-quoted URL, escape any single quotes in password
 import urllib.parse
 escaped_pass = urllib.parse.quote(db_pass, safe="")

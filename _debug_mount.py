@@ -6,7 +6,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 mindex_host = "192.168.0.189"
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -29,7 +29,7 @@ print("\n=== Trying manual mount ===")
 # The password contains ! which needs escaping
 mount_cmd = '''
 sudo umount /mnt/mycosoft-nas 2>/dev/null || true
-sudo mount -t cifs //192.168.0.105/mycosoft.com /mnt/mycosoft-nas -o username=morgan,password='REDACTED_VM_SSH_PASSWORD',vers=3.0,uid=1000,gid=1000
+sudo mount -t cifs //192.168.0.105/mycosoft.com /mnt/mycosoft-nas -o username=morgan,password=os.environ.get("VM_PASSWORD", ""),vers=3.0,uid=1000,gid=1000
 echo "Exit code: $?"
 mount | grep cifs
 '''

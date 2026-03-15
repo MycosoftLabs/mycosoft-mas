@@ -10,7 +10,7 @@ from datetime import datetime
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 DB_CONTAINER = "mindex-postgres-data"
 DB_USER = "mindex"
 DB_NAME = "mindex"

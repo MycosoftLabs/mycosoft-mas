@@ -13,7 +13,7 @@ import sys
 SANDBOX_IP = "192.168.0.187"
 MAS_VM_IP = "192.168.0.188"
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run_cmd(ssh, cmd, sudo=False, timeout=300):
     if sudo:

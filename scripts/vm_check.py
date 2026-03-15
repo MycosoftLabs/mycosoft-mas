@@ -11,7 +11,7 @@ os.environ['PYTHONIOENCODING'] = 'utf-8'
 VM_IP = "192.168.0.187"
 PROXMOX_HOST = "192.168.0.202"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 def run_on_vm(command: str) -> str:
     """Run a command on the VM via Proxmox host"""

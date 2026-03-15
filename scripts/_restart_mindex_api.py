@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Restart MINDEX API container with latest code"""
+import os
 import paramiko
 
 c = paramiko.SSHClient()
 c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-c.connect('192.168.0.189', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+c.connect('192.168.0.189', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
 
 # Restart the API container
 print('Restarting mindex-api container...')

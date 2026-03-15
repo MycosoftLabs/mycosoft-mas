@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import paramiko
 import sys
 
@@ -7,9 +8,9 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+ssh.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
 
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run(cmd, timeout=120):
     full_cmd = f"echo '{VM_PASS}' | sudo -S {cmd}"

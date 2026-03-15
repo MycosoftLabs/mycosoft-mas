@@ -2,7 +2,7 @@
 import paramiko, os
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-password = os.environ.get("VM_PASSWORD", "REDACTED_VM_SSH_PASSWORD")
+password = os.environ.get("VM_PASSWORD", "")
 try:
     ssh.connect("192.168.0.187", username="mycosoft", password=password, timeout=10)
     stdin, stdout, stderr = ssh.exec_command('docker ps --format "{{.Names}} {{.Status}}"', timeout=10)

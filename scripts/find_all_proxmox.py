@@ -16,8 +16,8 @@ ONLINE_IPS = [
 
 # Known credentials
 PROXMOX_CREDS = [
-    ("root@pam", "20202020"),
-    ("root", "20202020"),
+    ("root@pam", os.environ.get("PROXMOX_PASSWORD", "")),
+    ("root", os.environ.get("PROXMOX_PASSWORD", "")),
 ]
 
 print("=" * 70)

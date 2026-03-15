@@ -17,7 +17,7 @@ import os
 # Configuration
 VM_IP = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASSWORD = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASSWORD = '<VM_PASSWORD>'
 
 MYCORRHIZAE_PATH = r"C:\Users\admin2\Desktop\MYCOSOFT\CODE\Mycorrhizae\mycorrhizae-protocol"
 

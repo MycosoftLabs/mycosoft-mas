@@ -1,5 +1,6 @@
 """Verify the VM has the latest code with enhanced responses."""
 
+import os
 import paramiko
 import sys
 
@@ -9,7 +10,7 @@ print("Checking VM code version...")
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
 
 def run_command(cmd):
     stdin, stdout, stderr = ssh.exec_command(cmd, timeout=60)

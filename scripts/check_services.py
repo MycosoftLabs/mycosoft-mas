@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+import os
 import paramiko
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+ssh.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
 
 print('=== Docker Container Status ===')
-cmd = "echo 'REDACTED_VM_SSH_PASSWORD' | sudo -S docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+cmd = "echo '<VM_PASSWORD>' | sudo -S docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
 stdin, stdout, stderr = ssh.exec_command(cmd)
 print(stdout.read().decode())
 

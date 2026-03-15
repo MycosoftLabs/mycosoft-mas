@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Setup n8n API key for workflow imports"""
+import os
 import paramiko
 
 def main():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
     
     # Need to restart n8n with API key enabled
     print("=== Updating n8n configuration to enable API key ===")

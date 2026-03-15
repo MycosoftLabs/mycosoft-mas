@@ -8,7 +8,7 @@
 
 $vmHost = "192.168.0.187"
 $vmUser = "mycosoft"
-$password = "REDACTED_VM_SSH_PASSWORD"
+$password = $env:VM_PASSWORD
 
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host "  Mycosoft Sandbox Deployment" -ForegroundColor Cyan

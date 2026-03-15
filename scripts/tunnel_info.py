@@ -1,3 +1,4 @@
+import os
 import paramiko
 import sys
 import base64
@@ -6,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 # Decode the tunnel token to see what it contains
 token = "eyJhIjoiYzMwZmFmODdhZmYxNGE5YTc1YWQ5ZWZhNWE0MzJmMzciLCJ0IjoiYmQzODUzMTMtYTQ0YS00N2FlLThmOGEtNTgxNjA4MTE4MTI3IiwicyI6IlpEUTJNbVl6TWpFdE9ERTBOeTAwWlRJeExUaGpaV010WXpJNU5tUXpNMlV6TVRoaiJ9"

@@ -100,7 +100,7 @@ class ChangeDetector:
     def __init__(self, database_url: Optional[str] = None):
         self._database_url = database_url or os.getenv(
             "MINDEX_DATABASE_URL",
-            "postgresql://mycosoft:REDACTED_VM_SSH_PASSWORD@192.168.0.189:5432/mindex"
+            "postgresql://mycosoft:<VM_PASSWORD>@192.168.0.189:5432/mindex"
         )
         self._pool = None
         self._snapshots: Dict[str, Snapshot] = {}

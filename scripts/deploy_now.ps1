@@ -4,7 +4,7 @@
 $MAS_VM = "192.168.0.188"
 $SANDBOX_VM = "192.168.0.187"
 $USER = "mycosoft"
-$PASS = "REDACTED_VM_SSH_PASSWORD"
+$PASS = $env:VM_PASSWORD
 
 Write-Host "=== MAS Deployment Script ===" -ForegroundColor Cyan
 Write-Host "Date: $(Get-Date)" -ForegroundColor Gray

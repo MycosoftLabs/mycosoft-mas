@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Stop systemd service and deploy MINDEX API via Docker"""
 
+import os
 import paramiko
 import time
 
 host = '192.168.0.189'
 user = 'mycosoft'
-password = 'REDACTED_VM_SSH_PASSWORD'
+password = '<VM_PASSWORD>'
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -17,12 +18,12 @@ print('=== MINDEX API Deployment ===\n')
 # Step 1: Stop systemd service
 print('Step 1: Stopping systemd mindex-api.service...')
 # Use sudo with password via stdin
-stdin, stdout, stderr = client.exec_command('echo "REDACTED_VM_SSH_PASSWORD" | sudo -S systemctl stop mindex-api.service', timeout=30)
+stdin, stdout, stderr = client.exec_command('echo os.environ.get("VM_PASSWORD", "") | sudo -S systemctl stop mindex-api.service', timeout=30)
 stdout.read()
 time.sleep(2)
 
 # Disable it so it doesn't restart on boot
-stdin, stdout, stderr = client.exec_command('echo "REDACTED_VM_SSH_PASSWORD" | sudo -S systemctl disable mindex-api.service', timeout=30)
+stdin, stdout, stderr = client.exec_command('echo os.environ.get("VM_PASSWORD", "") | sudo -S systemctl disable mindex-api.service', timeout=30)
 stdout.read()
 print('Systemd service stopped and disabled.')
 
@@ -39,7 +40,7 @@ port_check = stdout.read().decode('utf-8', errors='replace').strip()
 if port_check:
     print(f'Port still in use: {port_check}')
     print('Killing process...')
-    stdin, stdout, stderr = client.exec_command('echo "REDACTED_VM_SSH_PASSWORD" | sudo -S fuser -k 8000/tcp')
+    stdin, stdout, stderr = client.exec_command('echo os.environ.get("VM_PASSWORD", "") | sudo -S fuser -k 8000/tcp')
     stdout.read()
     time.sleep(3)
 else:

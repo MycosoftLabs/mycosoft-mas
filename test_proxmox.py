@@ -5,7 +5,7 @@ import sys
 
 # Set token directly for testing
 os.environ["PROXMOX_TOKEN_ID"] = "myca@pve!mas"
-os.environ["PROXMOX_TOKEN_SECRET"] = "ca23b6c8-5746-46c4-8e36-fc6caad5a9e5"
+os.environ["PROXMOX_TOKEN_SECRET"] = "{os.environ.get('PROXMOX_TOKEN_SECRET', '')}"
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 

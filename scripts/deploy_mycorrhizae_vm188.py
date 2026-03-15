@@ -20,7 +20,7 @@ from typing import Tuple
 
 # VM Credentials
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 # VM IPs
 VM_188 = "192.168.0.188"  # MAS VM

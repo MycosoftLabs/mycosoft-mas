@@ -6,7 +6,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 mindex_host = "192.168.0.189"
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 print("Trying different usernames and passwords...")
 ssh = paramiko.SSHClient()
@@ -15,11 +15,11 @@ ssh.connect(mindex_host, username=user, password=passwd, timeout=30)
 
 # Try with different credential combinations
 attempts = [
-    ("mycosoft", "REDACTED_VM_SSH_PASSWORD"),
-    ("admin", "REDACTED_VM_SSH_PASSWORD"),
-    ("morgan", "Mushroom1!"),
-    ("morgan", "mushroom1"),
-    ("mycosoft", "Mushroom1!"),
+    ("mycosoft", os.environ.get("VM_PASSWORD", "")),
+    ("admin", os.environ.get("VM_PASSWORD", "")),
+    ("morgan", os.environ.get("VM_PASSWORD", "")),
+    ("morgan", os.environ.get("VM_PASSWORD", "")),
+    ("mycosoft", os.environ.get("VM_PASSWORD", "")),
 ]
 
 for username, password in attempts:

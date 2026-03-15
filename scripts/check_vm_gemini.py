@@ -1,9 +1,10 @@
 """Check Gemini API configuration on MAS VM."""
+import os
 import paramiko
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+client.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
 
 # Check env vars in container
 stdin, stdout, stderr = client.exec_command('docker exec myca-orchestrator-new env | grep -i gemini', timeout=30)

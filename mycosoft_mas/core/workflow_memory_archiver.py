@@ -18,7 +18,7 @@ class WorkflowMemoryArchiver:
     
     def __init__(self):
         self._pool = None
-        self._url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mycosoft")
+        self._url = os.getenv("DATABASE_URL", "")
     
     async def connect(self) -> bool:
         try:

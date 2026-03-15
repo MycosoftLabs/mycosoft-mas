@@ -4,6 +4,7 @@ Deploy Metabase + n8n to MAS VM for MYCA Integration
 Date: January 27, 2026
 """
 
+import os
 import paramiko
 import time
 
@@ -115,7 +116,7 @@ def main():
     
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
     
     # Create directory
     print("Creating deployment directory...")

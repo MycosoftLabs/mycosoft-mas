@@ -168,10 +168,7 @@ class SystemRegistry:
     """
     
     def __init__(self, database_url: Optional[str] = None):
-        self._database_url = database_url or os.getenv(
-            "DATABASE_URL",
-            "postgresql://mycosoft:mycosoft@postgres:5432/mycosoft"
-        )
+        self._database_url = database_url or os.getenv("DATABASE_URL", "")
         self._pool = None
         self._initialized = False
         self._cache: Dict[str, Any] = {}

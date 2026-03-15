@@ -3,12 +3,13 @@
 Deploy Voice/Brain API to Sandbox VM
 Created: February 5, 2026
 """
+import os
 import paramiko
 import time
 
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run_ssh_command(client, cmd, timeout=120):
     """Execute SSH command and return output."""
