@@ -80,6 +80,7 @@ from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
 from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
 from mycosoft_mas.core.routers.nlq_api import router as nlq_router
 from mycosoft_mas.core.routers.search_orchestrator_api import router as search_orchestrator_router
+from mycosoft_mas.core.routers.earth_search_api import router as earth_search_router
 from mycosoft_mas.core.routers.telemetry_pipeline_api import router as telemetry_pipeline_router
 from mycosoft_mas.core.routers.presence_api import router as presence_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
@@ -600,6 +601,7 @@ app.include_router(merkle_ledger_router, tags=["merkle-ledger"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
 app.include_router(nlq_router, tags=["nlq"])
 app.include_router(search_orchestrator_router, tags=["search"])
+app.include_router(earth_search_router, tags=["earth-search"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
     app.include_router(iot_router, tags=["iot"])
 if FIRST_LIGHT_API_AVAILABLE and first_light_router is not None:

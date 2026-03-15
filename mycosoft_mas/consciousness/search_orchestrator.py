@@ -94,7 +94,27 @@ async def run_unified_search(
         except Exception as e:
             logger.debug("Memory semantic search fallback failed: %s", e)
 
-    # 3. Specialist routing (CREP/Earth2) — from world_context per WORLDSTATE_VS_SPECIALIST_COMMAND_BOUNDARY
+    # 3. Earth Search — planetary-scale search across all 35+ domains (MINDEX-first)
+    earth_search_results: List[Dict[str, Any]] = []
+    crep_commands: List[Dict[str, Any]] = []
+    try:
+        from mycosoft_mas.earth_search.models import EarthSearchQuery
+        from mycosoft_mas.earth_search.orchestrator import run_earth_search
+
+        earth_query = EarthSearchQuery(
+            query=query,
+            limit=min(limit, 10),
+            include_crep=True,
+            user_id=user_id,
+            session_id=session_id,
+        )
+        earth_response = await asyncio.wait_for(run_earth_search(earth_query), timeout=20.0)
+        earth_search_results = [r.model_dump(mode="json") for r in earth_response.results]
+        crep_commands = earth_response.crep_commands
+    except Exception as e:
+        logger.warning("Earth Search in unified pipeline failed: %s", e)
+
+    # 4. Specialist routing (CREP/Earth2) — from world_context per WORLDSTATE_VS_SPECIALIST_COMMAND_BOUNDARY
     specialist_results: Dict[str, Any] = {}
     if isinstance(world_context, dict):
         if world_context.get("crep"):
@@ -105,6 +125,10 @@ async def run_unified_search(
             specialist_results["ecosystem"] = world_context["ecosystem"]
         if world_context.get("devices"):
             specialist_results["devices"] = world_context["devices"]
+    if earth_search_results:
+        specialist_results["earth_search"] = earth_search_results
+    if crep_commands:
+        specialist_results["crep_commands"] = crep_commands
 
     result_payload = {
         "query": query,
