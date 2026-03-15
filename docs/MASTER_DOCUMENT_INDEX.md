@@ -17,6 +17,9 @@
 - `docs/MYCOSOFT_ORG_PRODUCTION_VM_CLONE_CI_CD_MAR13_2026.md` – **Production VM clone + CI/CD**: Clone Sandbox→Production (186), Cloudflare tunnels (mycosoft.com vs sandbox.mycosoft.com), mycosoft.org→mycosoft.com/about redirect, _rebuild_production.py, verification checklist. Use for Production deploy and VM layout.
 - `docs/PRE_PRODUCTION_CHECKLIST_MAR13_2026.md` – **Pre-production checklist**: Cloudflare tunnels/DNS, Supabase auth redirect URLs, MAS/MINDEX API routes; verification commands; credentials. Run before going live.
 
+## Plasticity Forge Phase 1 (Mar 14, 2026)
+- `docs/PLASTICITY_FORGE_PHASE1_COMPLETE_MAR14_2026.md` – **Plasticity Forge Phase 1 complete**: Fitness policy, simulation factory, compression lane, security/governance sandbox; plasticity API and registry; contracts and completion checklist.
+
 ## RaaS Worldstate Monetization (Mar 14, 2026)
 - `docs/MYCA_AVANI_WORLDSTATE_CONNECTION_CONTRACT_MAR14_2026.md` – **MYCA/AVANI live worldstate connection contract**: Product ($1/min), session lifecycle (start/heartbeat/stop/balance/usage), 402 behavior, auth (X-API-Key); MAS router and catalog references.
 - `docs/MYCA_WORLDSTATE_MONETIZATION_COMPLETE_MAR14_2026.md` – **MYCA Worldstate Monetization complete**: Delivered surfaces (website, MAS RaaS, payment hardening); deployment and verification steps; registry/doc updates.
