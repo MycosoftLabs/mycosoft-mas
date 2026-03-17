@@ -1,5 +1,16 @@
 # Master Document Index
 
+## MYCA Export Package (Mar 16, 2026)
+- `docs/MYCA_EXPORT_INDEX_MAR16_2026.md` – **MYCA export master index**: Master index for external AI systems (Base44, Claude, Perplexity, OpenAI, Grok); links to identity, soul, constitution, skills, external access.
+- `docs/MYCA_EXPORT_IDENTITY_MAR16_2026.md` – **MYCA identity export**: Core identity (pronunciation, creator, roles, capabilities, communication style) for external systems.
+- `docs/MYCA_EXPORT_SOUL_MAR16_2026.md` – **MYCA soul export**: Personality, beliefs, emotions, creativity, instincts, relationships for external systems.
+- `docs/MYCA_EXPORT_CONSTITUTION_MAR16_2026.md` – **MYCA constitution export**: Absolute constraints, prompt injection defense, output standards, tool use rules.
+- `docs/MYCA_EXPORT_EXTERNAL_ACCESS_MAR16_2026.md` – **MYCA external access**: MCP servers, MAS/MINDEX APIs, website, VM layout, how to configure Base44/Claude/Perplexity/OpenAI/Grok.
+- `docs/MYCA_EXPORT_SKILLS_MAR16_2026/` – **MYCA skills export**: Individual skill markdowns (22 skills) for deploy, create-api-endpoint, create-react-component, etc.
+
+## Background Terminals Audit (Mar 16, 2026)
+- `docs/BACKGROUND_TERMINALS_AUDIT_MAR16_2026.md` – **Background terminals / unauthorized PowerShell audit**: Root cause (Dev Server Watchdog opening minimized CMD when restarting dev server); fix (WindowStyle Hidden); other scripts and scheduled tasks reviewed; how to kill or disable the watchdog.
+
 ## Pull, Integration & Gap Report (Mar 15, 2026)
 - `docs/GAP_REPORT_MAR15_2026.md` – **Pull, integration & gap report**: Latest pull for NLM, MINDEX, MAS, website; MINDEX plasticity/NLM/search_answers routers wired; stashes, security scan, migrations, tests, and cross-repo integration recommendations.
 - `WEBSITE/website/docs/AUTH_TROUBLESHOOTING_MAR15_2026.md` – **Website auth troubleshooting**: Required Supabase env vars, redirect URL config, origin/proxy; env checks in login and callback routes; quick checks when sign-in fails.
@@ -56,6 +67,7 @@
 ## MycoBrain Gateway Node Recognition (Mar 13, 2026)
 - `docs/MYCOBRAIN_GATEWAY_NODE_RECOGNITION_MAR13_2026.md` – **Gateway recognition implemented**: deterministic serial port allowlist (`MYCOBRAIN_ALLOWED_PORTS`), gateway-mode service startup, local gateway bring-up script, and verified MAS registration + command routing for COM7 gateway node.
 - `docs/MYCOBRAIN_LORA_GATEWAY_LINK_TEST_PLAN_MAR13_2026.md` – **LoRa link validation plan**: gateway-only and gateway+peer MAS command-proxy test flow for validating local yard LoRa ingestion readiness.
+- `docs/MYCOBRAIN_LIVE_NETWORK_CONTROL_MAR07_2026.md` – **MycoBrain live network control + COM5 phantom fix**: Why live mycosoft.com cannot control a board on the user's PC; phantom COM5 (virtual ACPI) excluded; `MYCOBRAIN_ALLOWED_PORTS=COM7`; restart steps.
 
 ## MYCA Voice + Chat Fixes (Mar 2, 2026)
 - `docs/MYCA_PRODUCTION_REQUIREMENTS_MAR02_2026.md` – **MYCA production requirements**: MAS reachable, at least one LLM key (e.g. GROQ), optional MINDEX/n8n; VM layout; verification steps; behavior when all providers fail.

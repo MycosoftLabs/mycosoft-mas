@@ -78,6 +78,7 @@
 |-----|---------|
 | `docs/JETSON_MYCOBRAIN_PRODUCTION_DEPLOY_MAR13_2026.md` | **Jetson+MycoBrain production deploy**: BOM (Mushroom 1/Hyphae 1/Gateway); wiring; flash procedure; Jetson install.sh + systemd; verification checklist. Use for production build, flash, and deploy. |
 | `docs/ONSITE_AI_OPENCLAW_COMPLETE_MAR13_2026.md` | **On-Site AI (OpenClaw) complete**: Device Manager On-Site AI page; openclaw_url per device; Open OpenClaw / SSH shell from website. Use for OpenClaw + Device Manager integration. |
+| `docs/MYCOBRAIN_LIVE_NETWORK_CONTROL_MAR07_2026.md` | **MycoBrain live network + COM5 phantom fix**: Why live mycosoft.com cannot control board on user PC; phantom COM5 excluded; MYCOBRAIN_ALLOWED_PORTS=COM7; restart steps. Use when debugging device controls or live site board connectivity. |
 
 ## PR #75: Jetson + Avani-Micah + Identity (Mar 9, 2026)
 | Doc | Purpose |
