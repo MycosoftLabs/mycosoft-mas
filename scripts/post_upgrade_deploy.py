@@ -2,6 +2,7 @@
 """
 Post-upgrade: Expand LVM, deploy website, test everything
 """
+import os
 import paramiko
 import sys
 import time
@@ -10,7 +11,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run_cmd(ssh, cmd, timeout=300, show_all=False):
     """Execute command and return output"""

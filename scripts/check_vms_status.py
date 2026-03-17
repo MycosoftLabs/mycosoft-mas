@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Check VM status and Docker containers."""
 
+import os
 import paramiko
 
 vms = [
-    ('192.168.0.187', 'mycosoft', 'REDACTED_VM_SSH_PASSWORD', 'Sandbox VM'),
-    ('192.168.0.188', 'mycosoft', 'REDACTED_VM_SSH_PASSWORD', 'MAS VM'),
+    ('192.168.0.187', 'mycosoft', '<VM_PASSWORD>', 'Sandbox VM'),
+    ('192.168.0.188', 'mycosoft', '<VM_PASSWORD>', 'MAS VM'),
 ]
 
 print("=" * 70)
@@ -69,8 +70,8 @@ print("  Checking Proxmox hosts...")
 print("=" * 70)
 
 proxmox_hosts = [
-    ('192.168.0.202', 'root', '20202020', 'Proxmox Main'),
-    ('192.168.0.90', 'root', '20202020', 'Proxmox Secondary'),
+    ('192.168.0.202', 'root', os.environ.get("PROXMOX_PASSWORD", ""), 'Proxmox Main'),
+    ('192.168.0.90', 'root', os.environ.get("PROXMOX_PASSWORD", ""), 'Proxmox Secondary'),
 ]
 
 for ip, user, password, name in proxmox_hosts:

@@ -8,7 +8,7 @@ import secrets
 import hashlib
 
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 VM_189 = "192.168.0.189"
 
 def ssh_exec(host, cmd, timeout=60):

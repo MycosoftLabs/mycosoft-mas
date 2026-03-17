@@ -1,4 +1,5 @@
 ﻿import paramiko
+import os
 import time
 import sys
 
@@ -6,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 mindex_host = "192.168.0.189"
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 print("Testing SSHFS with simpler options...")
 ssh = paramiko.SSHClient()
@@ -21,7 +22,7 @@ mkdir -p /mnt/mycosoft-nas
 
 # Try simple SSHFS without allow_other
 echo "=== Trying simple SSHFS ==="
-sshpass -p 'REDACTED_VM_SSH_PASSWORD' sshfs -o StrictHostKeyChecking=no mycosoft@192.168.0.187:/mnt/mycosoft-nas /mnt/mycosoft-nas 2>&1
+sshpass -p '<VM_PASSWORD>' sshfs -o StrictHostKeyChecking=no mycosoft@192.168.0.187:/mnt/mycosoft-nas /mnt/mycosoft-nas 2>&1
 echo "Exit code: $?"
 
 echo ""

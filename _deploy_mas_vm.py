@@ -17,7 +17,7 @@ def run_ssh_command(host, user, password, command, timeout=120):
     except Exception as e:
         return False, str(e)
 
-password = "REDACTED_VM_SSH_PASSWORD"
+password = os.environ.get("VM_PASSWORD", "")
 
 print("=" * 60)
 print("Deploying to MAS VM (192.168.0.188)")

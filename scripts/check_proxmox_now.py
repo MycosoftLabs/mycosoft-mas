@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check Proxmox status at new IP and list VMs."""
 
+import os
 import requests
 import urllib3
 urllib3.disable_warnings()
@@ -8,11 +9,11 @@ urllib3.disable_warnings()
 # Proxmox credentials
 PROXMOX_HOST = '192.168.0.90'
 PROXMOX_USER = 'root@pam'
-PROXMOX_PASS = '20202020'
+PROXMOX_PASS = os.environ.get("PROXMOX_PASSWORD", "")
 
 # Alternative credentials to try
 ALT_USERS = ['root@pam', 'root', 'admin@pam']
-ALT_PASSES = ['20202020', 'REDACTED_VM_SSH_PASSWORD', 'admin']
+ALT_PASSES = [os.environ.get("PROXMOX_PASSWORD", ""), '<VM_PASSWORD>', 'admin']
 
 def main():
     print('=== PROXMOX AUTHENTICATION ===')

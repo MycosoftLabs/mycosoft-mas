@@ -7,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 # Get credentials from sandbox
 sandbox_host = "192.168.0.187"
 sandbox_user = "mycosoft"
-sandbox_pass = "REDACTED_VM_SSH_PASSWORD"
+sandbox_pass = os.environ.get("VM_PASSWORD", "")
 
 print("Getting NAS credentials from Sandbox...")
 ssh_sandbox = paramiko.SSHClient()
@@ -40,7 +40,7 @@ ssh_sandbox.close()
 print("\n=== Configuring MINDEX VM with NAS mount ===")
 mindex_host = "192.168.0.189"
 mindex_user = "mycosoft"
-mindex_pass = "REDACTED_VM_SSH_PASSWORD"
+mindex_pass = os.environ.get("VM_PASSWORD", "")
 
 ssh_mindex = paramiko.SSHClient()
 ssh_mindex.set_missing_host_key_policy(paramiko.AutoAddPolicy())

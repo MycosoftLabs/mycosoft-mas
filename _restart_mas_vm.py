@@ -80,7 +80,7 @@ docker run -d \\
     -p 8001:8001 \\
     -e PYTHONPATH=/app \\
     -e REDIS_URL=redis://192.168.0.188:6379 \\
-    -e POSTGRES_URL=postgresql://postgres:postgres@192.168.0.188:5432/mycosoft \\
+    -e POSTGRES_URL=${{DATABASE_URL}} \\
     -e N8N_URL=http://192.168.0.188:5678 \\
     -v ~/mycosoft-mas:/app \\
     python:3.11-slim \\

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Deploy website after Docker restart - Feb 6, 2026"""
+import os
 import paramiko
 import time
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=10)
+ssh.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=10)
 
 # Pull latest and start website
 cmd = '''cd /home/mycosoft/mycosoft/mas && \

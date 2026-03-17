@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Import n8n workflows using the n8n CLI (bypasses API key requirement)"""
+import os
 import paramiko
 import json
 from pathlib import Path
@@ -18,7 +19,7 @@ def main():
     # Connect to SSH
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
     sftp = ssh.open_sftp()
     
     # Create temp directory for workflows

@@ -20,15 +20,15 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # Configuration from docs/SESSION_VM_CREATION_JAN17_2026.md
 # ==============================================================================
 PROXMOX_HOST = "https://192.168.0.202:8006"
-PROXMOX_TOKEN_ID = "myca@pve!mas"  # Working token from test_proxmox.py
-PROXMOX_TOKEN_SECRET = "ca23b6c8-5746-46c4-8e36-fc6caad5a9e5"
+PROXMOX_TOKEN_ID = os.environ.get("PROXMOX_TOKEN_ID", "myca@pve!mas")  # Working token from test_proxmox.py
+PROXMOX_TOKEN_SECRET = os.environ.get("PROXMOX_TOKEN_SECRET", "")
 VM_ID = 103
 NODE = "pve"
 
 # SSH fallback (from docs/VM103_DEPLOYMENT_COMPLETE.md)
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 headers = {
     "Authorization": f"PVEAPIToken={PROXMOX_TOKEN_ID}={PROXMOX_TOKEN_SECRET}"

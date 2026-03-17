@@ -10,7 +10,7 @@ import time
 VM_HOST = "192.168.0.187"
 VM_USER = "mycosoft"
 VM_PORT = 22
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 def run_ssh_commands():
     """Connect to VM and run deployment commands."""

@@ -8,7 +8,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 PROXMOX_HOST = "https://192.168.0.202:8006"
 TOKEN_ID = "myca@pve!mas"
-TOKEN_SECRET = "ca23b6c8-5746-46c4-8e36-fc6caad5a9e5"
+TOKEN_SECRET = os.environ.get("PROXMOX_TOKEN_SECRET", "")
 headers = {"Authorization": f"PVEAPIToken={TOKEN_ID}={TOKEN_SECRET}"}
 
 def test_exec(cmd):

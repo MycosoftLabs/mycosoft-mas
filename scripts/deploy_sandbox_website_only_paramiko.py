@@ -28,7 +28,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 VM_HOST = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 WEBSITE_REPO = "/opt/mycosoft/website"
 COMPOSE_ROOT = "/opt/mycosoft"

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Force rebuild website on VM 103 via SSH/Paramiko"""
+import os
 import paramiko
 import sys
 import time
@@ -8,7 +9,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 WEBSITE_PATH = '/opt/mycosoft/website'
 
 def main():

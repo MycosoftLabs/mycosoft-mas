@@ -6,7 +6,7 @@ import sys
 def deploy():
     host = "192.168.0.188"
     user = "mycosoft"
-    password = "REDACTED_VM_SSH_PASSWORD"
+    password = os.environ.get("VM_PASSWORD", "")
     
     print(f"Connecting to {host}...")
     client = paramiko.SSHClient()

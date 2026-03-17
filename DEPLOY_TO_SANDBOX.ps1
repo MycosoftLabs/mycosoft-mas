@@ -10,7 +10,7 @@ Write-Host ""
 
 $VMHost = "192.168.0.187"
 $VMUser = "mycosoft"
-$VMPass = "REDACTED_VM_SSH_PASSWORD"
+$VMPass = $env:VM_PASSWORD
 
 Write-Host "Target: $VMUser@$VMHost" -ForegroundColor Yellow
 Write-Host ""

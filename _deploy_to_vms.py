@@ -23,7 +23,7 @@ def run_ssh_command(host, user, password, command, timeout=120):
         return False, str(e)
 
 def main():
-    password = "REDACTED_VM_SSH_PASSWORD"
+    password = os.environ.get("VM_PASSWORD", "")
     
     # Deploy to MAS VM
     print("=" * 60)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Full rebuild and deploy of the website to the VM."""
+import os
 import paramiko
 import time
 
@@ -25,7 +26,7 @@ def main():
     print("FULL WEBSITE REBUILD & DEPLOY")
     print("="*60)
     print("\nConnecting to VM 192.168.0.187...")
-    client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+    client.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
     print("Connected!\n")
     
     # Step 1: Check current git status or clone fresh

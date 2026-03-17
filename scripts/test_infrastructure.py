@@ -4,6 +4,7 @@ Phase 1: Infrastructure and Connectivity Tests
 Comprehensive testing of containers, databases, and network connectivity
 Created: February 5, 2026
 """
+import os
 import paramiko
 import requests
 import json
@@ -62,7 +63,7 @@ class TestSuite:
 
 # Configuration
 VM_CONFIG = {
-    'sandbox': {'host': '192.168.0.187', 'user': 'mycosoft', 'password': 'REDACTED_VM_SSH_PASSWORD'},
+    'sandbox': {'host': '192.168.0.187', 'user': 'mycosoft', 'password': '<VM_PASSWORD>'},
 }
 
 EXPECTED_CONTAINERS = [

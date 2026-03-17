@@ -21,10 +21,10 @@ from pathlib import Path
 # Configuration
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 PROXMOX_HOST = "192.168.0.202"
 PROXMOX_USER = "root"
-PROXMOX_PASSWORD = "20202020"
+PROXMOX_PASSWORD = os.environ.get("PROXMOX_PASSWORD", "")
 
 # Export directory
 EXPORT_DIR = Path(r"C:\Users\admin2\Desktop\MYCOSOFT\DOCKER_EXPORTS")

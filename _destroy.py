@@ -3,7 +3,7 @@ import time
 
 wrong_host = "192.168.0.90"
 proxmox_user = "root"
-proxmox_pass = "20202020"
+proxmox_pass = os.environ.get("PROXMOX_PASSWORD", "")
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

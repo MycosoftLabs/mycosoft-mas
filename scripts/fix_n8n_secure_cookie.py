@@ -9,7 +9,7 @@ import time
 def main():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
     
     print("=== Fixing n8n secure cookie ===")
     
@@ -86,7 +86,7 @@ services:
       N8N_PORT: 5678
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: morgan@mycosoft.org
-      N8N_BASIC_AUTH_PASSWORD: "REDACTED_VM_SSH_PASSWORD"
+      N8N_BASIC_AUTH_PASSWORD: os.environ.get("VM_PASSWORD", "")
       N8N_PUBLIC_API_DISABLED: "false"
       N8N_SECURE_COOKIE: "false"
       EXECUTIONS_PROCESS: main

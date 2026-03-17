@@ -11,10 +11,10 @@ import socket
 
 VM_IP = "192.168.0.87"
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 PROXMOX_HOST = "192.168.0.202"
 PROXMOX_USER = "root"
-PROXMOX_PASS = "20202020"
+PROXMOX_PASS = os.environ.get("PROXMOX_PASSWORD", "")
 
 
 def check_ssh_port(host, port=22, timeout=3):

@@ -11,7 +11,7 @@ vms = [
 ]
 
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 results = []
 

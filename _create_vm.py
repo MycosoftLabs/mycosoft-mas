@@ -1,9 +1,10 @@
 ﻿import paramiko
+import os
 import time
 
 proxmox_host = "192.168.0.90"
 proxmox_user = "root"
-proxmox_pass = "20202020"
+proxmox_pass = os.environ.get("PROXMOX_PASSWORD", "")
 
 print("Connecting to Proxmox...")
 ssh = paramiko.SSHClient()
@@ -56,7 +57,7 @@ qm resize $VM_ID scsi0 $DISK_SIZE
 # Configure cloud-init
 echo "Configuring cloud-init..."
 qm set $VM_ID --ciuser mycosoft
-qm set $VM_ID --cipassword 'REDACTED_VM_SSH_PASSWORD'
+qm set $VM_ID --cipassword '<VM_PASSWORD>'
 qm set $VM_ID --ipconfig0 ip=192.168.0.189/24,gw=192.168.0.1
 qm set $VM_ID --nameserver 8.8.8.8
 qm set $VM_ID --searchdomain local

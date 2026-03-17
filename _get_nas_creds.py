@@ -7,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 # Get credentials from sandbox
 sandbox_host = "192.168.0.187"
 sandbox_user = "mycosoft"
-sandbox_pass = "REDACTED_VM_SSH_PASSWORD"
+sandbox_pass = os.environ.get("VM_PASSWORD", "")
 
 print("Getting NAS credentials from Sandbox...")
 ssh = paramiko.SSHClient()

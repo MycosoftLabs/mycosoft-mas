@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Check MAS Agent Architecture - Why 16 containers vs 223 agents?"""
 
+import os
 import paramiko
 
 def main():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
 
     # Check actual running containers
     print('=== RUNNING CONTAINERS (Active) ===')

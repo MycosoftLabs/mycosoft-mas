@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Check MAS Earth-2 deployment status."""
+import os
 import paramiko
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=10)
+ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=10)
 
 print('=== Container logs (last 30 lines) ===')
 stdin, stdout, stderr = ssh.exec_command('docker logs myca-orchestrator-new --tail 30 2>&1', timeout=30)

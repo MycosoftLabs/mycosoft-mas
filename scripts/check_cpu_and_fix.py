@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check VM CPU and diagnose build issue."""
+import os
 import paramiko
 
 def run_cmd(client, cmd, name):
@@ -18,7 +19,7 @@ def main():
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
     print("Connecting to VM...")
-    client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+    client.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
     print("Connected!")
     
     # Check CPU info

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Fix Cloudflare tunnel routing for MycoBrain"""
 
+import os
 import paramiko
 import yaml
 from io import StringIO
 
 vm_ip = '192.168.0.187'
 vm_user = 'mycosoft'
-vm_password = 'REDACTED_VM_SSH_PASSWORD'
+vm_password = os.environ.get("VM_PASSWORD", "")
 mycobrain_lan_host = "192.168.0.172"
 mycobrain_lan_port = "18003"
 

@@ -34,7 +34,7 @@ WORKFLOWS_DIR = Path(r"c:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\n8
 
 # n8n credentials (from docs)
 N8N_USER = "morgan@mycosoft.org"
-N8N_PASS = "REDACTED_VM_SSH_PASSWORD"
+N8N_PASS = os.environ.get("VM_PASSWORD", "")
 
 
 def check_service(name, url, timeout=5):
@@ -255,7 +255,7 @@ def main():
         else:
             print("\n[!] Could not authenticate with n8n")
             print("    Login: morgan@mycosoft.org")
-            print("    Password: REDACTED_VM_SSH_PASSWORD")
+            print("    Password: <VM_PASSWORD>")
     
     # Test MYCA voice
     voice_ok = test_myca_voice()

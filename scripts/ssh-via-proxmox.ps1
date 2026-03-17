@@ -3,10 +3,10 @@
 
 $ProxmoxHost = "192.168.0.202"
 $ProxmoxUser = "root"
-$ProxmoxPass = "20202020"
+$ProxmoxPass = $env:PROXMOX_PASSWORD
 $VMIp = "192.168.0.87"
 $VMUser = "mycosoft"
-$VMPass = "REDACTED_VM_SSH_PASSWORD"
+$VMPass = $env:VM_PASSWORD
 
 # Method 1: Direct SSH to VM (if SSH is installed)
 Write-Host "=== Testing Direct SSH to VM ==="

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Restart sandbox container with new image"""
+import os
 import paramiko
 import sys
 import io
@@ -8,7 +9,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+client.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
 
 print('=== Stopping old container ===')
 stdin, stdout, stderr = client.exec_command('docker stop mycosoft-website', timeout=30)

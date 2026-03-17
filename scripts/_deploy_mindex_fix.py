@@ -4,7 +4,7 @@ import os
 
 HOST = "192.168.0.189"
 USER = "mycosoft"
-PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 # Read the fixed unified_search.py file
 FIXED_FILE = r"c:\Users\admin2\Desktop\MYCOSOFT\CODE\MINDEX\mindex\mindex_api\routers\unified_search.py"

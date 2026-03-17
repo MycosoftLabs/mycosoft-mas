@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Final MINDEX API deployment with proper cleanup"""
 
+import os
 import paramiko
 import time
 
 host = '192.168.0.189'
 user = 'mycosoft'
-password = 'REDACTED_VM_SSH_PASSWORD'
+password = '<VM_PASSWORD>'
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())

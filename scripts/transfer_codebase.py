@@ -9,7 +9,7 @@ from pathlib import Path
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 # Local paths
 MAS_PATH = Path(r"C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas")

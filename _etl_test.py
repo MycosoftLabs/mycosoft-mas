@@ -1,4 +1,5 @@
 ﻿import paramiko
+import os
 import time
 import sys
 
@@ -6,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 mindex_host = "192.168.0.189"
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 print("Running ETL test on MINDEX...")
 ssh = paramiko.SSHClient()
@@ -62,7 +63,7 @@ echo "Test entries created in MINDEX" >> /opt/mycosoft/data/ledger/etl_test.log
 
 echo ""
 echo "=== Verify sync on NAS ==="
-sshpass -p 'REDACTED_VM_SSH_PASSWORD' ssh -o StrictHostKeyChecking=no mycosoft@192.168.0.187 "ls -la /mnt/mycosoft-nas/mindex/ledger/"
+sshpass -p '<VM_PASSWORD>' ssh -o StrictHostKeyChecking=no mycosoft@192.168.0.187 "ls -la /mnt/mycosoft-nas/mindex/ledger/"
 '''
 
 stdin, stdout, stderr = ssh.exec_command(cmd)

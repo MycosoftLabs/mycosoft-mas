@@ -5,7 +5,7 @@ import json
 
 VM = "192.168.0.188"
 USER = "mycosoft"
-PASS = "REDACTED_VM_SSH_PASSWORD"
+PASS = os.environ.get("VM_PASSWORD", "")
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

@@ -34,7 +34,7 @@ def run(ssh: paramiko.SSHClient, cmd: str, *, timeout: int = 60) -> tuple[int, s
 
 
 def main() -> int:
-    target = VmTarget(host="192.168.0.187", username="mycosoft", password="REDACTED_VM_SSH_PASSWORD")
+    target = VmTarget(host="192.168.0.187", username="mycosoft", password=os.environ.get("VM_PASSWORD", ""))
     container_name = "mycosoft-website"
 
     ssh = paramiko.SSHClient()

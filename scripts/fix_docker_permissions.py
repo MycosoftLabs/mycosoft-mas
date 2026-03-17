@@ -6,7 +6,7 @@ import time
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 def run_sudo_cmd(ssh, cmd):
     """Run a command with sudo using -S flag"""

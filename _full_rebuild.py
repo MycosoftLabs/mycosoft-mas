@@ -17,7 +17,7 @@ def run_ssh(host, user, password, command, timeout=600):
     except Exception as e:
         return str(e)
 
-password = "REDACTED_VM_SSH_PASSWORD"
+password = os.environ.get("VM_PASSWORD", "")
 
 print("=" * 60)
 print("Full Rebuild with Latest Code")

@@ -4,7 +4,7 @@ import time
 # Proxmox host
 proxmox_host = "192.168.0.90"
 proxmox_user = "root"
-proxmox_pass = "20202020"
+proxmox_pass = os.environ.get("PROXMOX_PASSWORD", "")
 
 print(f"Connecting to Proxmox at {proxmox_host}...")
 

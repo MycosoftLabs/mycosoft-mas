@@ -1,4 +1,5 @@
 ﻿import paramiko
+import os
 import time
 import sys
 
@@ -6,7 +7,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 mindex_host = "192.168.0.189"
 user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+passwd = os.environ.get("VM_PASSWORD", "")
 
 print("Setting up rsync-based data sync for MINDEX...")
 ssh = paramiko.SSHClient()
@@ -28,7 +29,7 @@ sudo chown -R mycosoft:mycosoft /opt/mycosoft
 cat > /opt/mycosoft/sync_to_nas.sh << 'SYNCEOF'
 #!/bin/bash
 # Sync local data to NAS via sandbox gateway
-SSHPASS='REDACTED_VM_SSH_PASSWORD'
+SSHPASS='<VM_PASSWORD>'
 NAS_PATH="mycosoft@192.168.0.187:/mnt/mycosoft-nas/mindex"
 
 echo "$(date): Starting sync to NAS..."
@@ -39,7 +40,7 @@ chmod +x /opt/mycosoft/sync_to_nas.sh
 
 # Test the sync
 echo "=== Testing rsync connection ==="
-sshpass -p 'REDACTED_VM_SSH_PASSWORD' ssh -o StrictHostKeyChecking=no mycosoft@192.168.0.187 "ls -la /mnt/mycosoft-nas/mindex/"
+sshpass -p '<VM_PASSWORD>' ssh -o StrictHostKeyChecking=no mycosoft@192.168.0.187 "ls -la /mnt/mycosoft-nas/mindex/"
 
 echo ""
 echo "=== Local data directories ==="

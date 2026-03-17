@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Complete MycoBrain setup - Fixed version"""
 
+import os
 import paramiko
 import yaml
 import time
@@ -8,7 +9,7 @@ from io import StringIO
 
 vm_ip = '192.168.0.187'
 vm_user = 'mycosoft'
-vm_password = 'REDACTED_VM_SSH_PASSWORD'
+vm_password = os.environ.get("VM_PASSWORD", "")
 
 print("=" * 80)
 print("COMPLETE MYCOBRAIN SETUP")

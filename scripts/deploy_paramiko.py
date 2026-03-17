@@ -2,6 +2,7 @@
 """
 Deploy to sandbox.mycosoft.com via SSH using Paramiko
 """
+import os
 import paramiko
 import time
 import sys
@@ -9,7 +10,7 @@ import sys
 # Configuration
 VM_HOST = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def run_command(ssh, command, timeout=300):
     """Run command and return output"""
@@ -67,7 +68,7 @@ def main():
         ("Check MINDEX status", "docker exec mindex-api curl -s http://localhost:8000/health 2>/dev/null | head -c 200 || echo 'MINDEX API check failed'"),
         
         # Restart Cloudflare
-        ("Restart Cloudflare tunnel", "echo 'REDACTED_VM_SSH_PASSWORD' | sudo -S systemctl restart cloudflared 2>&1"),
+        ("Restart Cloudflare tunnel", "echo '<VM_PASSWORD>' | sudo -S systemctl restart cloudflared 2>&1"),
         
         # Verify
         ("Final container status", "docker ps --format 'table {{.Names}}\\t{{.Status}}'"),

@@ -1,5 +1,6 @@
 """Complete MYCA Voice Setup - Import n8n workflow, fix dependencies, test end-to-end."""
 
+import os
 import paramiko
 import json
 import time
@@ -17,7 +18,7 @@ ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 print("\n1. Connecting to MAS VM (192.168.0.188)...")
-ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
 print("   Connected!")
 
 def run_command(cmd, ignore_error=False, timeout=120):
@@ -118,7 +119,7 @@ else:
     print("   ⚠️ Workflow not responding - needs manual import or credentials config")
     print("\n   MANUAL STEPS NEEDED:")
     print("   1. Go to http://192.168.0.188:5678")
-    print("   2. Login: morgan@mycosoft.org / REDACTED_VM_SSH_PASSWORD")
+    print("   2. Login: morgan@mycosoft.org / <VM_PASSWORD>")
     print("   3. Import: n8n/workflows/myca_voice_brain.json")
     print("   4. Configure Google AI Studio credentials")
     print("   5. Activate the workflow")
@@ -192,7 +193,7 @@ NEXT STEPS FOR FULL PERSONAPLEX:
 
 FOR N8N WORKFLOW (if not working):
   1. Go to http://192.168.0.188:5678
-  2. Login: morgan@mycosoft.org / REDACTED_VM_SSH_PASSWORD
+  2. Login: morgan@mycosoft.org / <VM_PASSWORD>
   3. Import: n8n/workflows/myca_voice_brain.json
   4. Add credential: Google AI Studio (Gemini API key)
   5. Activate workflow

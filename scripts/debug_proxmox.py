@@ -51,9 +51,9 @@ except Exception as e:
 # Try authentication with different formats
 print("\n4. AUTHENTICATION ATTEMPTS:")
 credentials = [
-    ("root@pam", "20202020"),
-    ("root", "20202020"),
-    ("root@pve", "20202020"),
+    ("root@pam", os.environ.get("PROXMOX_PASSWORD", "")),
+    ("root", os.environ.get("PROXMOX_PASSWORD", "")),
+    ("root@pve", os.environ.get("PROXMOX_PASSWORD", "")),
 ]
 
 for username, password in credentials:
@@ -102,7 +102,7 @@ for last_octet in [2, 90, 100, 202, 203, 204]:
             try:
                 r = requests.post(
                     f"https://{ip}:8006/api2/json/access/ticket",
-                    data={"username": "root@pam", "password": "20202020"},
+                    data={"username": "root@pam", "password": os.environ.get("PROXMOX_PASSWORD", "")},
                     verify=False,
                     timeout=5
                 )

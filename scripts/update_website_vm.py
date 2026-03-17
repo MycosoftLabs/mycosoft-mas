@@ -8,7 +8,7 @@ from pathlib import Path
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASSWORD = "REDACTED_VM_SSH_PASSWORD"
+VM_PASSWORD = os.environ.get("VM_PASSWORD", "")
 
 FRESH_IMAGE = Path(r"C:\Users\admin2\Desktop\MYCOSOFT\DOCKER_EXPORTS\website-website_fresh.tar")
 

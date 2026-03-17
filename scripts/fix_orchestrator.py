@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Check and fix the unhealthy orchestrator."""
 
+import os
 import paramiko
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 print("Connecting to MAS VM (192.168.0.188)...")
-client.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=10)
+client.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=10)
 print("Connected!")
 
 # Check orchestrator logs

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check NAS mount and video assets accessibility on VM."""
+import os
 import paramiko
 import sys
 
@@ -13,7 +14,7 @@ def main():
     
     try:
         print("\n[1] Connecting to VM 192.168.0.187...")
-        client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=30)
+        client.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=30)
         print("    [OK] Connected!\n")
     except Exception as e:
         print(f"    [ERROR] Failed: {e}")

@@ -14,7 +14,7 @@ except ImportError:
 
 MAS_VM_IP = "192.168.0.188"
 MAS_VM_USER = "mycosoft"
-MAS_VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+MAS_VM_PASS = os.environ.get("VM_PASSWORD", "")
 
 def log(msg, level="INFO"):
     ts = time.strftime("%H:%M:%S")

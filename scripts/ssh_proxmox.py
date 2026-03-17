@@ -6,7 +6,7 @@ import sys
 
 PROXMOX_IP = '192.168.0.90'
 USERNAME = 'root'
-PASSWORD = '20202020'
+PASSWORD = os.environ.get("PROXMOX_PASSWORD", "")
 
 # Commands to run on Proxmox
 commands = [

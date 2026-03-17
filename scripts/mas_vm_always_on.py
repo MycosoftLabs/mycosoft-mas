@@ -37,7 +37,7 @@ MAS_VM_NAME = "mycosoft-mas"
 
 # Credentials (should be in env vars in production)
 PROXMOX_USER = os.getenv("PROXMOX_USER", "root@pam")
-PROXMOX_PASSWORD = os.getenv("PROXMOX_PASSWORD", "Mushroom1!")
+PROXMOX_PASSWORD = os.getenv("PROXMOX_PASSWORD", "")
 
 # Monitoring settings
 CHECK_INTERVAL = 60  # seconds

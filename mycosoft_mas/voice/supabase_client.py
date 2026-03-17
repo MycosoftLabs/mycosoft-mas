@@ -24,7 +24,7 @@ class VoiceSessionStore:
     def __init__(self):
         self._pool = None
         self._url = os.getenv("DATABASE_URL", os.getenv("SUPABASE_DATABASE_URL",
-            "postgresql://postgres:postgres@localhost:5432/mycosoft"))
+            ""))
     
     async def connect(self) -> bool:
         try:

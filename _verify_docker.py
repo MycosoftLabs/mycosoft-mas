@@ -3,7 +3,7 @@ import time
 
 mindex_host = "192.168.0.189"
 mindex_user = "mycosoft"
-mindex_pass = "REDACTED_VM_SSH_PASSWORD"
+mindex_pass = os.environ.get("VM_PASSWORD", "")
 
 print(f"Connecting to MINDEX VM...")
 ssh = paramiko.SSHClient()

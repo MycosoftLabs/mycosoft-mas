@@ -1,9 +1,10 @@
+import os
 import paramiko
 import time
 
 host = '192.168.0.188'
 user = 'mycosoft'
-password = 'REDACTED_VM_SSH_PASSWORD'
+password = '<VM_PASSWORD>'
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

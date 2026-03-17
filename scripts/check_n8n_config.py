@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Check n8n container configuration"""
+import os
 import paramiko
 
 def main():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect('192.168.0.188', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
     
     print('=== n8n Container Environment ===')
     stdin, stdout, stderr = ssh.exec_command('docker exec myca-n8n env | grep -E "N8N|BASIC" | sort')

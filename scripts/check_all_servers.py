@@ -45,10 +45,10 @@ for ip in servers:
             # Try auth
             r2 = requests.post(
                 f"https://{ip}:8006/api2/json/access/ticket",
-                data={"username": "root@pam", "password": "20202020"},
+                data={"username": "root@pam", "password": os.environ.get("PROXMOX_PASSWORD", "")},
                 verify=False, timeout=5
             )
-            print(f"  Auth (20202020): {r2.status_code}")
+            print(f"  Auth (proxmox): {r2.status_code}")
             
             if r2.status_code == 200:
                 print("  => AUTH SUCCESS!")

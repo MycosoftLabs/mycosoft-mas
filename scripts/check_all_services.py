@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check all services on VM 103 including MINDEX, NatureOS, and MycoBrain."""
 
+import os
 import paramiko
 
 def main():
@@ -8,7 +9,7 @@ def main():
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
     print("Connecting to VM 103...")
-    ssh.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
     print("Connected!\n")
     
     # Check all running containers
@@ -63,7 +64,7 @@ def main():
     print("CLOUDFLARED STATUS")
     print("=" * 60)
     stdin, stdout, stderr = ssh.exec_command('sudo systemctl status cloudflared --no-pager -l 2>&1 | head -20')
-    stdin.write('REDACTED_VM_SSH_PASSWORD\n')
+    stdin.write('<VM_PASSWORD>\n')
     stdin.flush()
     print(stdout.read().decode())
     

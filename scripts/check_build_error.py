@@ -10,7 +10,7 @@ os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+client.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""))
 
 # Get build logs with webpack errors
 stdin, stdout, stderr = client.exec_command(

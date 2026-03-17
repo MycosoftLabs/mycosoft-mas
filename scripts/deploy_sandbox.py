@@ -13,6 +13,7 @@ Services Deployed:
 
 Usage: python deploy_sandbox.py
 """
+import os
 import paramiko
 import sys
 import time
@@ -23,7 +24,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 # VM Configuration
 VM_HOST = '192.168.0.187'
 VM_USER = 'mycosoft'
-VM_PASS = 'REDACTED_VM_SSH_PASSWORD'
+VM_PASS = os.environ.get("VM_PASSWORD", "")
 WEBSITE_PATH = '/opt/mycosoft/website'
 
 def run_cmd(ssh, cmd, name, timeout=600):

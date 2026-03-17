@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Pre-commit hook: Block commits containing hardcoded secrets
+# Install: .githooks/install.sh  (or: git config core.hooksPath .githooks)
+# =============================================================================
+set -euo pipefail
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+BLOCKED=0
+
+# Get list of staged files (added/modified, not deleted)
+STAGED=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+if [ -z "$STAGED" ]; then
+    exit 0
+fi
+
+# ---- Pattern definitions ----
+# Each pattern: "regex|description"
+PATTERNS=(
+    'Mushroom1!|Known VM SSH password (Mushroom1!)'
+    'Diamond1!|Known MINDEX DB password (Diamond1!)'
+    '20202020|Known Proxmox password (20202020)'
+    'ca23b6c8-5746-46c4-8e36-fc6caad5a9e5|Known Proxmox API token secret'
+    'REDACTED_VM_SSH_PASSWORD|Placeholder that should be replaced with env var'
+    'password\s*=\s*["\x27][A-Za-z0-9!@#$%^&*]{6,}["\x27]|Possible hardcoded password literal'
+    'PRIVATE.KEY|Possible private key material'
+    '-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----|Private key block detected'
+    'sk-[A-Za-z0-9]{20,}|Possible OpenAI API key'
+    'ghp_[A-Za-z0-9]{36}|Possible GitHub personal access token'
+    'xoxb-[0-9]{10,}|Possible Slack bot token'
+    'xoxp-[0-9]{10,}|Possible Slack user token'
+    'AKIA[0-9A-Z]{16}|Possible AWS access key'
+)
+
+# ---- File extension filter (skip binaries, images, etc.) ----
+is_checkable() {
+    local f="$1"
+    case "$f" in
+        *.py|*.js|*.ts|*.jsx|*.tsx|*.sh|*.bash|*.ps1|*.yml|*.yaml|*.json|*.toml|*.cfg|*.ini|*.env*|*.md|*.mdc|*.txt|*.html|*.css|*.sql|Dockerfile*|Makefile|*.conf)
+            return 0 ;;
+        *)
+            return 1 ;;
+    esac
+}
+
+# ---- Scan staged content ----
+for file in $STAGED; do
+    # Skip non-text files
+    if ! is_checkable "$file"; then
+        continue
+    fi
+
+    # Skip .env.example (it has empty placeholders by design)
+    if [ "$file" = ".env.example" ]; then
+        continue
+    fi
+
+    # Get staged content (not working-tree content)
+    CONTENT=$(git show ":$file" 2>/dev/null || true)
+    if [ -z "$CONTENT" ]; then
+        continue
+    fi
+
+    for entry in "${PATTERNS[@]}"; do
+        PATTERN="${entry%%|*}"
+        DESC="${entry##*|}"
+
+        # Use grep -P for Perl-compatible regex; fall back to -E
+        MATCHES=$(echo "$CONTENT" | grep -nP "$PATTERN" 2>/dev/null || echo "$CONTENT" | grep -nE "$PATTERN" 2>/dev/null || true)
+        if [ -n "$MATCHES" ]; then
+            echo -e "${RED}BLOCKED${NC} secret in ${YELLOW}${file}${NC}: ${DESC}"
+            echo "$MATCHES" | head -3 | while IFS= read -r line; do
+                echo "  $line"
+            done
+            BLOCKED=1
+        fi
+    done
+done
+
+# ---- Also check for large files that might be keys/certs ----
+for file in $STAGED; do
+    case "$file" in
+        *.pem|*.key|*.p12|*.pfx|id_rsa*|id_ed25519*|id_ecdsa*|*.credentials*|*.secret)
+            echo -e "${RED}BLOCKED${NC} sensitive file type: ${YELLOW}${file}${NC}"
+            BLOCKED=1
+            ;;
+    esac
+done
+
+if [ "$BLOCKED" -ne 0 ]; then
+    echo ""
+    echo -e "${RED}Commit blocked: hardcoded secrets or sensitive files detected.${NC}"
+    echo "Fix the issues above, then retry. Use 'git diff --cached' to review staged changes."
+    echo "If this is a false positive, use: git commit --no-verify"
+    exit 1
+fi
+
+exit 0

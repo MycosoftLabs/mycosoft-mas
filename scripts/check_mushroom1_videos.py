@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Check mushroom1 videos on Sandbox VM."""
 
+import os
 import paramiko
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 print("Connecting to Sandbox VM...")
-client.connect('192.168.0.187', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD', timeout=10)
+client.connect('192.168.0.187', username='mycosoft', password=os.environ.get("VM_PASSWORD", ""), timeout=10)
 
 # Check mushroom1 videos directly
 print("\n" + "=" * 60)
