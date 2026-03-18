@@ -367,6 +367,31 @@ class ExecutiveSystem:
                 "role": sender_role,
             }
             ep = await build_turn_packet(self._os, content, ctx)
+            from mycosoft_mas.myca2.runtime import is_myca2_runtime_message
+            from mycosoft_mas.myca2.psilo_overlay import apply_psilo_overlay
+            from mycosoft_mas.integrations import plasticity_registry
+            from mycosoft_mas.llm.backend_selection import MYCA2_CORE
+
+            if is_myca2_runtime_message(msg):
+                psilo_state = None
+                sid = msg.get("psilo_session_id")
+                if sid:
+                    sess = plasticity_registry.psilo_session_get(sid)
+                    if sess:
+                        m = sess.get("metrics") or {}
+                        psilo_state = {
+                            "overlay_edges": sess.get("overlay_edges") or [],
+                            "dmn_attenuation": float(m.get("dmn_attenuation") or 0),
+                            "cross_domain_ratio": float(m.get("cross_domain_ratio") or 0),
+                            "synesthesia_notes": m.get("synesthesia_notes") or [],
+                            "observer_summary": m.get("observer_summary") or "",
+                        }
+                ep, _ov_metrics = apply_psilo_overlay(ep, psilo_state)
+                ctx = {**ctx, "model_role": MYCA2_CORE, "myca2": True}
+                if sid:
+                    plasticity_registry.psilo_append_event(
+                        sid, "psilo.session.tick", {"executive_turn": True, "overlay_metrics": _ov_metrics}
+                    )
             response = await self.llm_brain.respond(content, context=ctx, experience_packet=ep)
             return {"action": "respond_directly", "response": response}
 

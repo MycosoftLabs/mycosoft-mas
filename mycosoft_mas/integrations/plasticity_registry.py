@@ -197,3 +197,150 @@ def create_promotion_decision(
     except Exception as e:
         logger.debug("Plasticity registry create_promotion_decision: %s", e)
         return None
+
+
+def create_rollback_event(
+    rollback_id: str,
+    alias: str,
+    from_candidate_id: Optional[str],
+    to_candidate_id: str,
+    decided_by: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(
+                f"{_base_url()}/api/mindex/plasticity/rollback-events",
+                json={
+                    "rollback_id": rollback_id,
+                    "alias": alias,
+                    "from_candidate_id": from_candidate_id,
+                    "to_candidate_id": to_candidate_id,
+                    "decided_by": decided_by,
+                },
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("Plasticity registry create_rollback_event: %s", e)
+        return None
+
+
+def psilo_session_create(
+    session_id: Optional[str] = None,
+    dose_profile: Optional[Dict[str, Any]] = None,
+    phase_profile: Optional[Dict[str, Any]] = None,
+) -> Optional[Dict[str, Any]]:
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(
+                f"{_base_url()}/api/mindex/plasticity/psilo/sessions",
+                json={
+                    "session_id": session_id,
+                    "dose_profile": dose_profile or {},
+                    "phase_profile": phase_profile or {},
+                },
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("psilo_session_create: %s", e)
+        return None
+
+
+def psilo_session_get(session_id: str) -> Optional[Dict[str, Any]]:
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.get(
+                f"{_base_url()}/api/mindex/plasticity/psilo/sessions/{session_id}",
+                headers=_headers(),
+            )
+            if r.status_code == 404:
+                return None
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("psilo_session_get: %s", e)
+        return None
+
+
+def psilo_session_patch(session_id: str, body: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.patch(
+                f"{_base_url()}/api/mindex/plasticity/psilo/sessions/{session_id}",
+                json=body,
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("psilo_session_patch: %s", e)
+        return None
+
+
+def psilo_append_event(session_id: str, event_type: str, payload: Optional[Dict[str, Any]] = None) -> bool:
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(
+                f"{_base_url()}/api/mindex/plasticity/psilo/sessions/{session_id}/events",
+                json={"event_type": event_type, "payload": payload or {}},
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            return r.status_code < 400
+    except Exception as e:
+        logger.debug("psilo_append_event: %s", e)
+        return False
+
+
+def mutation_run_create(
+    mutation_run_id: str,
+    candidate_id: Optional[str] = None,
+    parent_mutation_run_id: Optional[str] = None,
+    operators_applied: Optional[list] = None,
+    config: Optional[Dict[str, Any]] = None,
+) -> Optional[Dict[str, Any]]:
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(
+                f"{_base_url()}/api/mindex/plasticity/mutation-runs",
+                json={
+                    "mutation_run_id": mutation_run_id,
+                    "candidate_id": candidate_id,
+                    "parent_mutation_run_id": parent_mutation_run_id,
+                    "operators_applied": operators_applied or [],
+                    "config": config or {},
+                },
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("mutation_run_create: %s", e)
+        return None
+
+
+def lineage_event_create(
+    event_id: str,
+    candidate_id: str,
+    event_type: str,
+    payload: Optional[Dict[str, Any]] = None,
+) -> Optional[Dict[str, Any]]:
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(
+                f"{_base_url()}/api/mindex/plasticity/lineage-events",
+                json={
+                    "event_id": event_id,
+                    "candidate_id": candidate_id,
+                    "event_type": event_type,
+                    "payload": payload or {},
+                },
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("lineage_event_create: %s", e)
+        return None

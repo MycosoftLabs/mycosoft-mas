@@ -11,6 +11,10 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (Mar 17, 2026)
+
+- **MYCA2 PSILO sandbox** — Separate runtime (`myca2_core` / `myca2_edge` / `myca2_sandbox` / `psilo_overlay`); registry-backed LLM routing; PSILO sessions in MINDEX (`0023_myca2_psilo_registry.sql`); executive packet overlay when `myca2` or `psilo_session_id`; production alias promote/rollback gated. Doc: `docs/MYCA2_PSILO_STACK_COMPLETE_MAR17_2026.md`.
+
 ## Recent Updates (Mar 14, 2026)
 
 - **RaaS Worldstate Monetization** — Paid live worldstate access for external agents ($1/min MYCA/AVANI):

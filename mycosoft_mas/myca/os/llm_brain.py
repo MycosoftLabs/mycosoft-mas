@@ -190,12 +190,11 @@ class LLMBrain:
             logger.warning("OpenAI-compatible request failed: %s", e)
             return None
 
-    async def _respond_backend(self, messages: list) -> Optional[str]:
+    async def _respond_backend(self, messages: list, model_role: str = MYCA_CORE) -> Optional[str]:
         """
-        Call the MYCA core backend (from unified backend_selection).
-        Uses get_backend_for_role(MYCA_CORE); dispatches to Ollama or OpenAI-compatible (e.g. Nemotron).
+        Call backend from backend_selection for model_role (MYCA_CORE or MYCA2_CORE for sandbox).
         """
-        selection = get_backend_for_role(MYCA_CORE)
+        selection = get_backend_for_role(model_role or MYCA_CORE)
         if selection.provider == "ollama":
             return await self._respond_ollama(selection.base_url, selection.model, messages)
         return await self._respond_openai_compatible(
@@ -467,8 +466,8 @@ class LLMBrain:
             {"role": "user", "content": user_block},
         ]
 
-        # Primary: unified MYCA core backend (Ollama or Nemotron via backend_selection)
-        text = await self._respond_backend(messages)
+        model_role = (context or {}).get("model_role") or MYCA_CORE
+        text = await self._respond_backend(messages, model_role=model_role)
         if text:
             return text.strip() or "I'm here. What would you like me to do?"
 

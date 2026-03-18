@@ -669,3 +669,42 @@ Most endpoints require authentication via:
 | `/api/simulation/petri/batch/scale/{job_id}/cancel` | POST | Cancel scale batch |
 | `/api/simulation/petri/agent/control` | POST | MYCA agent control (monitor, adjust_env, contamination_response, multi_run) |
 | `/api/simulation/petri/agent/audit` | GET | Audit trail of agent actions |
+
+---
+
+## MYCA2 PSILO & Plasticity (Mar 17, 2026)
+
+### MAS (`/api/plasticity/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/plasticity/psilo/session/start` | POST | Create PSILO session (MINDEX); body: dose_profile, phase_profile |
+| `/api/plasticity/psilo/session/{id}` | GET | Session state (edges, metrics, status) |
+| `/api/plasticity/psilo/session/{id}/stop` | POST | End session |
+| `/api/plasticity/psilo/session/{id}/kill` | POST | Kill session |
+| `/api/plasticity/psilo/session/{id}/edge` | POST | Append overlay edge |
+| `/api/plasticity/psilo/session/{id}/integration-report` | POST | Final integration report |
+
+### MINDEX (`/api/mindex/plasticity/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/plasticity/psilo/sessions` | POST | Create PSILO session row |
+| `/plasticity/psilo/sessions/{id}` | GET/PATCH | Read/update session |
+| `/plasticity/psilo/sessions/{id}/events` | GET/POST | Journal events |
+| `/plasticity/mutation-runs` | POST | Mutation run record |
+| `/plasticity/lineage-events` | POST | Lineage event |
+| `/plasticity/eval-case-results` | POST | Per-case eval result |
+| `/plasticity/artifact-meta` | POST | Artifact metadata |
+| `/plasticity/rollback-events` | POST | Rollback audit row |
+| `/plasticity/alias-history` | GET | Alias change history |
+
+### Website (proxy)
+
+| Path | Description |
+|------|-------------|
+| `/api/mas/myca2-psilo/start` | POST → MAS PSILO start |
+| `/api/mas/myca2-psilo/session/[id]` | GET session |
+| `/api/mas/myca2-psilo/session/[id]/stop` | POST |
+| `/api/mas/myca2-psilo/session/[id]/kill` | POST |
+| `/api/mas/myca2-psilo/session/[id]/edge` | POST |

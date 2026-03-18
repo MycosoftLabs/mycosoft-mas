@@ -49,6 +49,11 @@ roles:
 model_roles:
   myca_core: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
   myca_edge: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
+  # MYCA2 sandbox — same boot defaults as MYCA; override via MINDEX alias -> candidate (artifact_uri)
+  myca2_core: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
+  myca2_edge: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
+  myca2_sandbox: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
+  psilo_overlay: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
   nemotron_super: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
   nemotron_nano: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
   planning: openai:${LLM_MODEL_PLANNING:-gpt-4o-mini}

@@ -25,6 +25,12 @@ NEMOTRON_SAFETY = "nemotron_safety"
 NEMOTRON_RAG = "nemotron_rag"
 MYCA_CORE = "myca_core"
 MYCA_EDGE = "myca_edge"
+# MYCA2 sandbox roles — registry alias resolution checked first (MINDEX plasticity)
+MYCA2_CORE = "myca2_core"
+MYCA2_EDGE = "myca2_edge"
+MYCA2_SANDBOX = "myca2_sandbox"
+PSILO_OVERLAY = "psilo_overlay"
+_MYCA2_ROLES = frozenset({MYCA2_CORE, MYCA2_EDGE, MYCA2_SANDBOX, PSILO_OVERLAY})
 # Task-type roles (used by LLMRouter)
 PLANNING = "planning"
 EXECUTION = "execution"
@@ -83,11 +89,28 @@ def _load_models_yaml() -> dict:
 def get_backend_for_role(role: ModelRole) -> BackendSelection:
     """
     Resolve the backend (provider, base_url, model) for a given role.
-    Used by LLMRouter, FrontierLLMRouter, and LLMBrain for unified routing.
+    MYCA2 roles: MINDEX plasticity alias -> candidate (artifact_uri as base_url) first; then models.yaml.
     """
     data = _load_models_yaml()
     providers = data.get("providers") or {}
     roles = data.get("roles") or {}
+    model_roles = data.get("model_roles") or {}
+
+    if role in _MYCA2_ROLES:
+        try:
+            from mycosoft_mas.integrations.plasticity_registry import resolve_alias_to_backend_spec
+
+            spec = resolve_alias_to_backend_spec(role)
+            bu = (spec or {}).get("base_url") or ""
+            if bu.strip():
+                return BackendSelection(
+                    provider="openai_compatible",
+                    base_url=bu.rstrip("/"),
+                    model=str((spec or {}).get("model") or "default").strip(),
+                    api_key=_expand_env(os.getenv("NEMOTRON_API_KEY", "")),
+                )
+        except Exception:
+            pass
 
     # Aliases: myca_core -> nemotron_super or local/ollama when Nemotron not set
     role_key = role
@@ -95,9 +118,16 @@ def get_backend_for_role(role: ModelRole) -> BackendSelection:
         role_key = roles.get("myca_core") or roles.get("nemotron_super") or "local"
     elif role == MYCA_EDGE:
         role_key = roles.get("myca_edge") or roles.get("nemotron_nano") or "local"
+    elif role == MYCA2_CORE:
+        role_key = "myca2_core"
+    elif role == MYCA2_EDGE:
+        role_key = "myca2_edge"
+    elif role == MYCA2_SANDBOX:
+        role_key = "myca2_sandbox"
+    elif role == PSILO_OVERLAY:
+        role_key = "psilo_overlay"
 
     # Role in YAML can be "provider:model" or a key under model_roles
-    model_roles = data.get("model_roles") or {}
     role_spec = model_roles.get(role) or model_roles.get(role_key) or roles.get(role) or roles.get(role_key)
 
     if isinstance(role_spec, str) and ":" in role_spec:
@@ -123,7 +153,7 @@ def get_backend_for_role(role: ModelRole) -> BackendSelection:
 
     # No YAML role spec: use env-based defaults
     nemotron_base = os.getenv("NEMOTRON_BASE_URL", "").strip()
-    if role in (NEMOTRON_SUPER, MYCA_CORE):
+    if role in (NEMOTRON_SUPER, MYCA_CORE, MYCA2_CORE, MYCA2_SANDBOX):
         if nemotron_base:
             return BackendSelection(
                 provider="nemotron",
@@ -138,7 +168,7 @@ def get_backend_for_role(role: ModelRole) -> BackendSelection:
             model=os.getenv("OLLAMA_MODEL", "llama3.2"),
             api_key="",
         )
-    if role in (NEMOTRON_NANO, MYCA_EDGE):
+    if role in (NEMOTRON_NANO, MYCA_EDGE, MYCA2_EDGE, PSILO_OVERLAY):
         if nemotron_base:
             return BackendSelection(
                 provider="nemotron",

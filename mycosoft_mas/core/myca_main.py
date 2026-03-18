@@ -78,6 +78,7 @@ from mycosoft_mas.core.routers.iot_analytics_api import router as iot_analytics_
 from mycosoft_mas.core.routers.fleet_api import router as fleet_router
 from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
 from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
+from mycosoft_mas.core.routers.plasticity_api import plasticity_router
 from mycosoft_mas.core.routers.nlq_api import router as nlq_router
 from mycosoft_mas.core.routers.search_orchestrator_api import router as search_orchestrator_router
 from mycosoft_mas.core.routers.earth_search_api import router as earth_search_router
@@ -578,6 +579,7 @@ app.include_router(documents_router)
 app.include_router(api_keys_router, tags=["api-keys"])
 app.include_router(evolution_router)
 app.include_router(petri_sim_router)
+app.include_router(plasticity_router, tags=["plasticity", "myca2"])
 
 # Scientific platform routers
 app.include_router(scientific_router, prefix="/scientific", tags=["scientific"])

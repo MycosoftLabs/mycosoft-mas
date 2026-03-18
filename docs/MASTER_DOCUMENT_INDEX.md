@@ -1,5 +1,9 @@
 # Master Document Index
 
+## MYCA2 PSILO Stack (Mar 17–18, 2026)
+- `docs/MYCA2_PLASTICITY_ROUTER_MOUNT_MAR18_2026.md` – **Plasticity router on MAS**: PSILO returned 404 until `plasticity_router` was mounted in `myca_main.py`; deploy MAS after merge; smoke POST body.
+- `docs/MYCA2_PSILO_STACK_COMPLETE_MAR17_2026.md` – **MYCA2 PSILO full-stack**: Sandbox runtime, PSILO protocol, MINDEX lineage/journal tables, registry-backed `myca2_*` routing, executive overlay, production promotion gates, AI Studio widget, verification.
+
 ## MYCA Export Package (Mar 16, 2026)
 - `docs/MYCA_EXPORT_INDEX_MAR16_2026.md` – **MYCA export master index**: Master index for external AI systems (Base44, Claude, Perplexity, OpenAI, Grok); links to identity, soul, constitution, skills, external access.
 - `docs/MYCA_EXPORT_IDENTITY_MAR16_2026.md` – **MYCA identity export**: Core identity (pronunciation, creator, roles, capabilities, communication style) for external systems.
@@ -10,6 +14,7 @@
 
 ## Background Terminals Audit (Mar 16, 2026)
 - `docs/BACKGROUND_TERMINALS_AUDIT_MAR16_2026.md` – **Background terminals / unauthorized PowerShell audit**: Root cause (Dev Server Watchdog opening minimized CMD when restarting dev server); fix (WindowStyle Hidden); other scripts and scheduled tasks reviewed; how to kill or disable the watchdog.
+- `docs/POWERSHELL_POPUP_AUDIT_MAR16_2026.md` – **PowerShell pop-up audit**: Every source that can open a visible PowerShell window (scheduled tasks, scripts, rules); fixes applied (cursor-chat-backup, voice-test-readiness, start-all-dev-services-external, fix-visible-scheduled-tasks); run fix script as Admin once to update existing tasks.
 
 ## Pull, Integration & Gap Report (Mar 15, 2026)
 - `docs/GAP_REPORT_MAR15_2026.md` – **Pull, integration & gap report**: Latest pull for NLM, MINDEX, MAS, website; MINDEX plasticity/NLM/search_answers routers wired; stashes, security scan, migrations, tests, and cross-repo integration recommendations.
