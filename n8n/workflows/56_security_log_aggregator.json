@@ -1,0 +1,133 @@
+{
+  "name": "Security: Log Aggregator & Anomaly Detector",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every 10 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 10 }] }
+      }
+    },
+    {
+      "id": "collect_mas_logs",
+      "name": "Collect MAS Orchestrator Logs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/logs/recent",
+        "qs": { "minutes": "10", "level": "WARNING,ERROR,CRITICAL" },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "collect_audit_logs",
+      "name": "Collect Audit Trail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/audit/recent",
+        "qs": { "minutes": "10" },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "collect_n8n_errors",
+      "name": "Collect n8n Execution Errors",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 600],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:5678/api/v1/executions",
+        "qs": { "status": "error", "limit": "20" },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "analyze_anomalies",
+      "name": "Detect Anomalies",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [800, 400],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst now = new Date().toISOString();\n\nconst masLogs = items[0]?.json?.logs || [];\nconst auditLogs = items[1]?.json?.entries || [];\nconst n8nErrors = items[2]?.json?.data || [];\n\nconst anomalies = [];\n\n// Check for error bursts (>10 errors in 10 min window)\nconst errorCount = masLogs.filter(l => l.level === 'ERROR' || l.level === 'CRITICAL').length;\nif (errorCount > 10) {\n  anomalies.push({\n    type: 'error_burst',\n    severity: 'high',\n    message: `${errorCount} errors in last 10 minutes`,\n    details: masLogs.slice(0, 5).map(l => l.message || l.msg).join('; ')\n  });\n}\n\n// Check for critical errors\nconst criticals = masLogs.filter(l => l.level === 'CRITICAL');\nif (criticals.length > 0) {\n  anomalies.push({\n    type: 'critical_error',\n    severity: 'critical',\n    message: `${criticals.length} CRITICAL errors detected`,\n    details: criticals.map(l => l.message || l.msg).join('; ')\n  });\n}\n\n// Check for unusual audit patterns (>50 actions in 10 min)\nif (auditLogs.length > 50) {\n  anomalies.push({\n    type: 'unusual_activity',\n    severity: 'medium',\n    message: `Unusual activity: ${auditLogs.length} audit entries in 10 minutes`,\n    details: 'Possible automated attack or misconfigured service'\n  });\n}\n\n// Check for repeated n8n failures\nconst failedWorkflows = {};\nfor (const exec of n8nErrors) {\n  const name = exec.workflowName || exec.workflowId || 'unknown';\n  failedWorkflows[name] = (failedWorkflows[name] || 0) + 1;\n}\nconst repeatedFailures = Object.entries(failedWorkflows).filter(([_, count]) => count >= 3);\nif (repeatedFailures.length > 0) {\n  anomalies.push({\n    type: 'workflow_failure_loop',\n    severity: 'high',\n    message: `Repeated workflow failures: ${repeatedFailures.map(([name, count]) => name + ' (' + count + 'x)').join(', ')}`,\n    details: 'Workflows failing repeatedly may indicate systemic issues'\n  });\n}\n\n// Check for auth failures in audit\nconst authFailures = auditLogs.filter(l => \n  (l.action || '').includes('auth_fail') || \n  (l.action || '').includes('unauthorized') ||\n  (l.action || '').includes('forbidden')\n);\nif (authFailures.length >= 5) {\n  anomalies.push({\n    type: 'auth_anomaly',\n    severity: 'high',\n    message: `${authFailures.length} authentication failures detected`,\n    details: 'Possible brute force or credential stuffing attempt'\n  });\n}\n\nconst report = {\n  timestamp: now,\n  log_counts: {\n    mas_errors: errorCount,\n    audit_entries: auditLogs.length,\n    n8n_errors: n8nErrors.length\n  },\n  anomalies: anomalies,\n  has_anomalies: anomalies.length > 0,\n  max_severity: anomalies.reduce((max, a) => {\n    const levels = { critical: 4, high: 3, medium: 2, low: 1 };\n    return levels[a.severity] > levels[max] ? a.severity : max;\n  }, 'low')\n};\n\nreturn [{ json: report }];"
+      }
+    },
+    {
+      "id": "has_anomalies",
+      "name": "Anomalies Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "parameters": {
+        "conditions": {
+          "boolean": [{ "value1": "={{ $json.has_anomalies }}", "value2": true }]
+        }
+      }
+    },
+    {
+      "id": "alert",
+      "name": "Send Security Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "={{ $json.max_severity }}" },
+            { "name": "title", "value": "Security Anomaly Detected" },
+            { "name": "message", "value": "={{ $json.anomalies.map(a => '[' + a.severity.toUpperCase() + '] ' + a.message).join('\\n') }}" },
+            { "name": "channels", "value": "[\"slack\"]" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "store",
+      "name": "Store Log Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/security/logs/store",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "report", "value": "={{ JSON.stringify($json) }}" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 10 Minutes": { "main": [[
+      { "node": "Collect MAS Orchestrator Logs", "type": "main", "index": 0 },
+      { "node": "Collect Audit Trail", "type": "main", "index": 0 },
+      { "node": "Collect n8n Execution Errors", "type": "main", "index": 0 }
+    ]] },
+    "Collect MAS Orchestrator Logs": { "main": [[{ "node": "Detect Anomalies", "type": "main", "index": 0 }]] },
+    "Collect Audit Trail": { "main": [[{ "node": "Detect Anomalies", "type": "main", "index": 0 }]] },
+    "Collect n8n Execution Errors": { "main": [[{ "node": "Detect Anomalies", "type": "main", "index": 0 }]] },
+    "Detect Anomalies": { "main": [[{ "node": "Anomalies Found?", "type": "main", "index": 0 }]] },
+    "Anomalies Found?": {
+      "main": [
+        [{ "node": "Send Security Alert", "type": "main", "index": 0 }],
+        [{ "node": "Store Log Summary", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Security Alert": { "main": [[{ "node": "Store Log Summary", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["security", "logging", "anomaly-detection", "monitoring"]
+}

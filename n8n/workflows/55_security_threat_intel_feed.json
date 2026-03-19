@@ -1,0 +1,174 @@
+{
+  "name": "Security: Threat Intelligence Feed",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 1 }]
+        }
+      }
+    },
+    {
+      "id": "webhook",
+      "name": "Manual Check Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "security/threat-intel/check",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "fetch_cve",
+      "name": "Fetch CVE Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "https://services.nvd.nist.gov/rest/json/cves/2.0",
+        "qs": {
+          "pubStartDate": "={{ new Date(Date.now() - 24*60*60*1000).toISOString().split('.')[0] }}",
+          "pubEndDate": "={{ new Date().toISOString().split('.')[0] }}",
+          "resultsPerPage": "50"
+        },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "fetch_abuse_ip",
+      "name": "Check AbuseIPDB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.abuseipdb.com/api/v2/blacklist",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "qs": {
+          "confidenceMinimum": "90",
+          "limit": "50"
+        },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "fetch_github_advisories",
+      "name": "Fetch GitHub Advisories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 600],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/advisories",
+        "qs": {
+          "type": "reviewed",
+          "ecosystem": "pip",
+          "per_page": "20"
+        },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "analyze",
+      "name": "Analyze Threats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [800, 400],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst now = new Date().toISOString();\n\n// Our tech stack for CVE relevance filtering\nconst ourStack = [\n  'python', 'fastapi', 'uvicorn', 'postgresql', 'redis', 'qdrant',\n  'docker', 'nginx', 'node', 'n8n', 'proxmox', 'ubuntu', 'linux',\n  'ollama', 'httpx', 'aiohttp', 'pydantic', 'sqlalchemy',\n  'cloudflare', 'github', 'anthropic', 'openai'\n];\n\nconst threats = [];\nlet highSeverityCount = 0;\n\n// Process CVEs\nconst cveData = items[0]?.json?.vulnerabilities || [];\nfor (const vuln of cveData.slice(0, 20)) {\n  const cve = vuln.cve || {};\n  const desc = (cve.descriptions || []).find(d => d.lang === 'en')?.value || '';\n  const metrics = cve.metrics?.cvssMetricV31?.[0]?.cvssData || {};\n  const score = metrics.baseScore || 0;\n  const relevant = ourStack.some(tech => desc.toLowerCase().includes(tech));\n\n  if (score >= 7.0 || relevant) {\n    threats.push({\n      type: 'cve',\n      id: cve.id,\n      severity: score >= 9 ? 'critical' : score >= 7 ? 'high' : 'medium',\n      score: score,\n      description: desc.substring(0, 300),\n      relevant_to_stack: relevant,\n      published: cve.published\n    });\n    if (score >= 7) highSeverityCount++;\n  }\n}\n\n// Process GitHub advisories\nconst advisories = items[2]?.json || [];\nconst advArray = Array.isArray(advisories) ? advisories : [];\nfor (const adv of advArray.slice(0, 10)) {\n  const severity = adv.severity || 'unknown';\n  threats.push({\n    type: 'advisory',\n    id: adv.ghsa_id || adv.cve_id,\n    severity: severity,\n    package: adv.vulnerabilities?.[0]?.package?.name || 'unknown',\n    description: (adv.summary || '').substring(0, 300),\n    relevant_to_stack: true,\n    published: adv.published_at\n  });\n  if (severity === 'critical' || severity === 'high') highSeverityCount++;\n}\n\nconst report = {\n  timestamp: now,\n  total_threats: threats.length,\n  high_severity: highSeverityCount,\n  threats: threats,\n  needs_attention: highSeverityCount > 0,\n  scan_sources: ['NVD CVE', 'AbuseIPDB', 'GitHub Advisories']\n};\n\nreturn [{ json: report }];"
+      }
+    },
+    {
+      "id": "needs_attention",
+      "name": "High Severity?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "parameters": {
+        "conditions": {
+          "boolean": [{ "value1": "={{ $json.needs_attention }}", "value2": true }]
+        }
+      }
+    },
+    {
+      "id": "alert_security",
+      "name": "Security Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "high" },
+            { "name": "title", "value": "Threat Intelligence Alert" },
+            { "name": "message", "value": "={{ $json.high_severity + ' high/critical threats found. ' + $json.threats.filter(t => t.severity === 'critical' || t.severity === 'high').map(t => t.id).join(', ') }}" },
+            { "name": "channels", "value": "[\"slack\", \"email\"]" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "store_intel",
+      "name": "Store Threat Intel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/security/threat-intel/store",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "report", "value": "={{ JSON.stringify($json) }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1550, 500],
+      "parameters": { "respondWith": "json" }
+    }
+  ],
+  "connections": {
+    "Every Hour": { "main": [[
+      { "node": "Fetch CVE Feed", "type": "main", "index": 0 },
+      { "node": "Check AbuseIPDB", "type": "main", "index": 0 },
+      { "node": "Fetch GitHub Advisories", "type": "main", "index": 0 }
+    ]] },
+    "Manual Check Trigger": { "main": [[
+      { "node": "Fetch CVE Feed", "type": "main", "index": 0 },
+      { "node": "Check AbuseIPDB", "type": "main", "index": 0 },
+      { "node": "Fetch GitHub Advisories", "type": "main", "index": 0 }
+    ]] },
+    "Fetch CVE Feed": { "main": [[{ "node": "Analyze Threats", "type": "main", "index": 0 }]] },
+    "Check AbuseIPDB": { "main": [[{ "node": "Analyze Threats", "type": "main", "index": 0 }]] },
+    "Fetch GitHub Advisories": { "main": [[{ "node": "Analyze Threats", "type": "main", "index": 0 }]] },
+    "Analyze Threats": { "main": [[{ "node": "High Severity?", "type": "main", "index": 0 }]] },
+    "High Severity?": {
+      "main": [
+        [{ "node": "Security Alert", "type": "main", "index": 0 }],
+        [{ "node": "Store Threat Intel", "type": "main", "index": 0 }]
+      ]
+    },
+    "Security Alert": { "main": [[{ "node": "Store Threat Intel", "type": "main", "index": 0 }]] },
+    "Store Threat Intel": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["security", "threat-intel", "cve", "monitoring"]
+}

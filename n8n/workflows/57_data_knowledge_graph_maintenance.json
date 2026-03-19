@@ -1,0 +1,162 @@
+{
+  "name": "Data: Knowledge Graph Maintenance",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Daily at 3 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 3 * * *" }] }
+      }
+    },
+    {
+      "id": "webhook",
+      "name": "Manual Maintenance Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "data/knowledge-graph/maintain",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "check_graph_stats",
+      "name": "Get Graph Statistics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/memory/knowledge-graph/stats",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "find_orphans",
+      "name": "Find Orphaned Nodes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 500],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/memory/knowledge-graph/orphans",
+        "options": { "timeout": 60000 }
+      }
+    },
+    {
+      "id": "check_duplicates",
+      "name": "Detect Duplicate Entities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 700],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/memory/knowledge-graph/duplicates",
+        "qs": { "similarity_threshold": "0.85" },
+        "options": { "timeout": 60000 }
+      }
+    },
+    {
+      "id": "plan_maintenance",
+      "name": "Plan Maintenance Actions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [800, 500],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst stats = items[0]?.json || {};\nconst orphans = items[1]?.json?.orphans || [];\nconst duplicates = items[2]?.json?.duplicates || [];\n\nconst actions = [];\n\n// Clean orphaned nodes (no connections)\nif (orphans.length > 0) {\n  actions.push({\n    action: 'clean_orphans',\n    count: orphans.length,\n    node_ids: orphans.slice(0, 100).map(o => o.id),\n    description: `Remove ${orphans.length} orphaned nodes with no relationships`\n  });\n}\n\n// Merge duplicate entities\nif (duplicates.length > 0) {\n  actions.push({\n    action: 'merge_duplicates',\n    count: duplicates.length,\n    pairs: duplicates.slice(0, 50),\n    description: `Merge ${duplicates.length} duplicate entity pairs`\n  });\n}\n\n// Rebuild indexes if graph is large\nconst totalNodes = stats.total_nodes || 0;\nif (totalNodes > 10000) {\n  actions.push({\n    action: 'reindex',\n    description: `Rebuild search indexes for ${totalNodes} nodes`\n  });\n}\n\n// Vacuum Qdrant collections\nactions.push({\n  action: 'vacuum_vectors',\n  description: 'Optimize Qdrant vector collections'\n});\n\nconst plan = {\n  timestamp: new Date().toISOString(),\n  graph_stats: stats,\n  orphan_count: orphans.length,\n  duplicate_count: duplicates.length,\n  actions: actions,\n  estimated_cleanup: orphans.length + duplicates.length\n};\n\nreturn [{ json: plan }];"
+      }
+    },
+    {
+      "id": "execute_cleanup",
+      "name": "Execute Cleanup",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/memory/knowledge-graph/maintain",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "actions", "value": "={{ JSON.stringify($json.actions) }}" },
+            { "name": "dry_run", "value": "false" }
+          ]
+        },
+        "options": { "timeout": 300000 }
+      }
+    },
+    {
+      "id": "optimize_qdrant",
+      "name": "Optimize Qdrant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 600],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.189:6333/collections/myca_knowledge/points/scroll",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "limit", "value": "1" }
+          ]
+        },
+        "options": { "timeout": 60000 }
+      }
+    },
+    {
+      "id": "log_results",
+      "name": "Log Maintenance Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/audit/log",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "knowledge_graph_maintenance" },
+            { "name": "details", "value": "={{ JSON.stringify($json) }}" },
+            { "name": "source", "value": "n8n-kg-maintenance" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1550, 500],
+      "parameters": { "respondWith": "json" }
+    }
+  ],
+  "connections": {
+    "Daily at 3 AM": { "main": [[
+      { "node": "Get Graph Statistics", "type": "main", "index": 0 },
+      { "node": "Find Orphaned Nodes", "type": "main", "index": 0 },
+      { "node": "Detect Duplicate Entities", "type": "main", "index": 0 }
+    ]] },
+    "Manual Maintenance Trigger": { "main": [[
+      { "node": "Get Graph Statistics", "type": "main", "index": 0 },
+      { "node": "Find Orphaned Nodes", "type": "main", "index": 0 },
+      { "node": "Detect Duplicate Entities", "type": "main", "index": 0 }
+    ]] },
+    "Get Graph Statistics": { "main": [[{ "node": "Plan Maintenance Actions", "type": "main", "index": 0 }]] },
+    "Find Orphaned Nodes": { "main": [[{ "node": "Plan Maintenance Actions", "type": "main", "index": 0 }]] },
+    "Detect Duplicate Entities": { "main": [[{ "node": "Plan Maintenance Actions", "type": "main", "index": 0 }]] },
+    "Plan Maintenance Actions": { "main": [[
+      { "node": "Execute Cleanup", "type": "main", "index": 0 },
+      { "node": "Optimize Qdrant", "type": "main", "index": 0 }
+    ]] },
+    "Execute Cleanup": { "main": [[{ "node": "Log Maintenance Results", "type": "main", "index": 0 }]] },
+    "Optimize Qdrant": { "main": [[{ "node": "Log Maintenance Results", "type": "main", "index": 0 }]] },
+    "Log Maintenance Results": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["data", "knowledge-graph", "maintenance", "qdrant", "postgres"]
+}

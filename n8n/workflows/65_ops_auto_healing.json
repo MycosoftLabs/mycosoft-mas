@@ -1,0 +1,115 @@
+{
+  "name": "Ops: Auto-Healing Service Manager",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 1 }] }
+      }
+    },
+    {
+      "id": "check_services",
+      "name": "Check Critical Services",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "jsCode": "// Define critical services and their health endpoints\nconst services = [\n  {\n    name: 'MAS Orchestrator',\n    health_url: 'http://192.168.0.188:8001/health',\n    restart_cmd: 'docker restart myca-orchestrator-new',\n    vm: '188',\n    max_restart_attempts: 3,\n    cooldown_minutes: 5\n  },\n  {\n    name: 'MINDEX API',\n    health_url: 'http://192.168.0.189:8000/health',\n    restart_cmd: 'docker restart mindex-api',\n    vm: '189',\n    max_restart_attempts: 3,\n    cooldown_minutes: 5\n  },\n  {\n    name: 'n8n',\n    health_url: 'http://192.168.0.188:5678/healthz',\n    restart_cmd: 'docker restart mycosoft-mas-n8n-1',\n    vm: '188',\n    max_restart_attempts: 2,\n    cooldown_minutes: 10\n  },\n  {\n    name: 'Website',\n    health_url: 'http://192.168.0.187:3000',\n    restart_cmd: 'docker restart mycosoft-website',\n    vm: '187',\n    max_restart_attempts: 3,\n    cooldown_minutes: 5\n  }\n];\n\nreturn services.map(s => ({ json: s }));"
+      }
+    },
+    {
+      "id": "probe_service",
+      "name": "Health Probe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [750, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.health_url }}",
+        "options": {
+          "timeout": 5000,
+          "redirect": { "redirect": { "followRedirects": true } }
+        }
+      }
+    },
+    {
+      "id": "evaluate",
+      "name": "Evaluate & Auto-Heal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1000, 300],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst now = Date.now();\nconst healActions = [];\nconst healthy = [];\n\n// Simple in-memory tracker (resets on n8n restart — acceptable for auto-healing)\nif (!globalThis._autoHealState) {\n  globalThis._autoHealState = {};\n}\n\nfor (const item of items) {\n  const service = item.json;\n  const name = service.name || 'unknown';\n  const statusCode = service.statusCode || 0;\n  const isHealthy = statusCode >= 200 && statusCode < 500;\n\n  if (!globalThis._autoHealState[name]) {\n    globalThis._autoHealState[name] = { attempts: 0, last_restart: 0 };\n  }\n  const state = globalThis._autoHealState[name];\n\n  if (isHealthy) {\n    state.attempts = 0; // Reset on healthy\n    healthy.push({ name, status: 'healthy', code: statusCode });\n  } else {\n    const cooldownMs = (service.cooldown_minutes || 5) * 60 * 1000;\n    const withinCooldown = (now - state.last_restart) < cooldownMs;\n    const maxAttempts = service.max_restart_attempts || 3;\n\n    if (state.attempts < maxAttempts && !withinCooldown) {\n      state.attempts++;\n      state.last_restart = now;\n      healActions.push({\n        name,\n        action: 'restart',\n        vm: service.vm,\n        restart_cmd: service.restart_cmd,\n        attempt: state.attempts,\n        max_attempts: maxAttempts\n      });\n    } else if (state.attempts >= maxAttempts) {\n      healActions.push({\n        name,\n        action: 'escalate',\n        vm: service.vm,\n        message: `${name} failed ${state.attempts} restart attempts — needs manual intervention`,\n        attempt: state.attempts\n      });\n    }\n  }\n}\n\nconst result = {\n  timestamp: new Date().toISOString(),\n  healthy: healthy,\n  actions: healActions,\n  needs_healing: healActions.length > 0,\n  needs_escalation: healActions.some(a => a.action === 'escalate')\n};\n\nreturn [{ json: result }];"
+      }
+    },
+    {
+      "id": "needs_action",
+      "name": "Needs Healing?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "parameters": {
+        "conditions": { "boolean": [{ "value1": "={{ $json.needs_healing }}", "value2": true }] }
+      }
+    },
+    {
+      "id": "execute_healing",
+      "name": "Execute Restart",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/infrastructure/service/restart",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "actions", "value": "={{ JSON.stringify($json.actions.filter(a => a.action === 'restart')) }}" }
+          ]
+        },
+        "options": { "timeout": 120000 }
+      }
+    },
+    {
+      "id": "notify",
+      "name": "Notify Auto-Heal Action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "={{ $json.needs_escalation ? 'critical' : 'medium' }}" },
+            { "name": "title", "value": "={{ $json.needs_escalation ? 'Auto-Heal Escalation — Manual Intervention Needed' : 'Auto-Heal: Service Restarted' }}" },
+            { "name": "message", "value": "={{ $json.actions.map(a => a.name + ': ' + a.action + (a.attempt ? ' (attempt ' + a.attempt + ')' : '')).join('\\n') }}" },
+            { "name": "channels", "value": "[\"slack\"]" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every Minute": { "main": [[{ "node": "Check Critical Services", "type": "main", "index": 0 }]] },
+    "Check Critical Services": { "main": [[{ "node": "Health Probe", "type": "main", "index": 0 }]] },
+    "Health Probe": { "main": [[{ "node": "Evaluate & Auto-Heal", "type": "main", "index": 0 }]] },
+    "Evaluate & Auto-Heal": { "main": [[{ "node": "Needs Healing?", "type": "main", "index": 0 }]] },
+    "Needs Healing?": {
+      "main": [
+        [
+          { "node": "Execute Restart", "type": "main", "index": 0 },
+          { "node": "Notify Auto-Heal Action", "type": "main", "index": 0 }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["ops", "auto-healing", "critical", "reliability", "monitoring"]
+}

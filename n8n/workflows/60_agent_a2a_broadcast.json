@@ -1,0 +1,156 @@
+{
+  "name": "Agent: A2A Broadcast & Messaging",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "A2A Message Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agents/a2a/send",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "validate",
+      "name": "Validate Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "jsCode": "const msg = $input.first().json;\n\nconst validated = {\n  message_id: `a2a_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,\n  from_agent: msg.from_agent || 'unknown',\n  to_agents: msg.to_agents || [],       // specific agents, or empty for broadcast\n  broadcast: msg.broadcast || false,      // send to all agents\n  category: msg.category || 'general',    // task, alert, knowledge, coordination\n  priority: msg.priority || 'normal',     // low, normal, high, critical\n  message_type: msg.message_type || 'info', // info, request, response, command\n  subject: msg.subject || '',\n  payload: msg.payload || msg.data || {},\n  ttl_minutes: msg.ttl_minutes || 60,\n  require_ack: msg.require_ack || false,\n  timestamp: new Date().toISOString()\n};\n\n// Validate required fields\nif (!validated.from_agent || validated.from_agent === 'unknown') {\n  return [{ json: { error: 'from_agent is required', valid: false } }];\n}\nif (!validated.broadcast && validated.to_agents.length === 0) {\n  return [{ json: { error: 'Specify to_agents or set broadcast=true', valid: false } }];\n}\n\nvalidated.valid = true;\nreturn [{ json: validated }];"
+      }
+    },
+    {
+      "id": "check_valid",
+      "name": "Valid Message?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "parameters": {
+        "conditions": { "boolean": [{ "value1": "={{ $json.valid }}", "value2": true }] }
+      }
+    },
+    {
+      "id": "route_type",
+      "name": "Route by Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1000, 250],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.broadcast ? 'broadcast' : 'direct' }}",
+        "rules": {
+          "rules": [
+            { "value2": "broadcast" },
+            { "value2": "direct" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "broadcast_redis",
+      "name": "Publish to Redis PubSub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 150],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/messaging/broadcast",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "channel", "value": "={{ 'a2a.' + $json.category }}" },
+            { "name": "message", "value": "={{ JSON.stringify($json) }}" },
+            { "name": "ttl_minutes", "value": "={{ $json.ttl_minutes }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "direct_send",
+      "name": "Direct Send via Redis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 350],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/messaging/direct",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "to_agents", "value": "={{ JSON.stringify($json.to_agents) }}" },
+            { "name": "message", "value": "={{ JSON.stringify($json) }}" },
+            { "name": "require_ack", "value": "={{ $json.require_ack }}" },
+            { "name": "ttl_minutes", "value": "={{ $json.ttl_minutes }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log_message",
+      "name": "Log A2A Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 250],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/audit/log",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "a2a_message" },
+            { "name": "details", "value": "={{ JSON.stringify({ message_id: $json.message_id || '', from: $json.from_agent || '', to: $json.to_agents || [], broadcast: $json.broadcast || false, category: $json.category || '' }) }}" },
+            { "name": "source", "value": "n8n-a2a-broadcast" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond_success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1750, 250],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'delivered', message_id: $json.message_id }) }}"
+      }
+    },
+    {
+      "id": "respond_error",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1000, 450],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'error', error: $json.error }) }}",
+        "options": { "responseCode": 400 }
+      }
+    }
+  ],
+  "connections": {
+    "A2A Message Webhook": { "main": [[{ "node": "Validate Message", "type": "main", "index": 0 }]] },
+    "Validate Message": { "main": [[{ "node": "Valid Message?", "type": "main", "index": 0 }]] },
+    "Valid Message?": {
+      "main": [
+        [{ "node": "Route by Type", "type": "main", "index": 0 }],
+        [{ "node": "Respond Error", "type": "main", "index": 0 }]
+      ]
+    },
+    "Route by Type": {
+      "main": [
+        [{ "node": "Publish to Redis PubSub", "type": "main", "index": 0 }],
+        [{ "node": "Direct Send via Redis", "type": "main", "index": 0 }]
+      ]
+    },
+    "Publish to Redis PubSub": { "main": [[{ "node": "Log A2A Message", "type": "main", "index": 0 }]] },
+    "Direct Send via Redis": { "main": [[{ "node": "Log A2A Message", "type": "main", "index": 0 }]] },
+    "Log A2A Message": { "main": [[{ "node": "Respond Success", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["agents", "a2a", "messaging", "broadcast", "redis"]
+}

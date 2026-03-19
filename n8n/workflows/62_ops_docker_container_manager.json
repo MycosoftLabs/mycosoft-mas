@@ -1,0 +1,182 @@
+{
+  "name": "Ops: Docker Container Manager",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Docker Control Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ops/docker/manage",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "schedule",
+      "name": "Container Health Check (5min)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 5 }] }
+      }
+    },
+    {
+      "id": "route_action",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.action || 'health_check' }}",
+        "rules": {
+          "rules": [
+            { "value2": "health_check" },
+            { "value2": "restart" },
+            { "value2": "logs" },
+            { "value2": "stats" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "health_check",
+      "name": "Check All Containers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 150],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/infrastructure/docker/containers",
+        "qs": { "vm": "={{ $json.vm || 'all' }}" },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "restart_container",
+      "name": "Restart Container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/infrastructure/docker/restart",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "container", "value": "={{ $json.container }}" },
+            { "name": "vm", "value": "={{ $json.vm || '188' }}" }
+          ]
+        },
+        "options": { "timeout": 60000 }
+      }
+    },
+    {
+      "id": "get_logs",
+      "name": "Get Container Logs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 450],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/infrastructure/docker/logs",
+        "qs": {
+          "container": "={{ $json.container }}",
+          "vm": "={{ $json.vm || '188' }}",
+          "tail": "={{ $json.tail || '100' }}"
+        },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "get_stats",
+      "name": "Get Container Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 600],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/infrastructure/docker/stats",
+        "qs": { "vm": "={{ $json.vm || 'all' }}" },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "evaluate_health",
+      "name": "Evaluate Container Health",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1100, 300],
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nconst containers = result.containers || result.data || [];\nconst containerList = Array.isArray(containers) ? containers : [];\n\nconst unhealthy = [];\nconst highResource = [];\n\nfor (const c of containerList) {\n  if (c.status !== 'running' && c.status !== 'healthy') {\n    unhealthy.push({\n      name: c.name,\n      status: c.status,\n      vm: c.vm || 'unknown',\n      restart_count: c.restart_count || 0\n    });\n  }\n  if ((c.cpu_pct || 0) > 80 || (c.memory_pct || 0) > 85) {\n    highResource.push({\n      name: c.name,\n      cpu_pct: c.cpu_pct || 0,\n      memory_pct: c.memory_pct || 0,\n      vm: c.vm || 'unknown'\n    });\n  }\n}\n\nconst report = {\n  timestamp: new Date().toISOString(),\n  total_containers: containerList.length,\n  running: containerList.filter(c => c.status === 'running').length,\n  unhealthy: unhealthy,\n  high_resource: highResource,\n  needs_attention: unhealthy.length > 0 || highResource.length > 0,\n  result: result\n};\n\nreturn [{ json: report }];"
+      }
+    },
+    {
+      "id": "needs_attention",
+      "name": "Needs Attention?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1350, 300],
+      "parameters": {
+        "conditions": { "boolean": [{ "value1": "={{ $json.needs_attention }}", "value2": true }] }
+      }
+    },
+    {
+      "id": "alert",
+      "name": "Container Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1600, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "={{ $json.unhealthy.length > 0 ? 'high' : 'medium' }}" },
+            { "name": "title", "value": "Docker Container Issues" },
+            { "name": "message", "value": "={{ ($json.unhealthy.length > 0 ? 'Unhealthy: ' + $json.unhealthy.map(c => c.name).join(', ') + '. ' : '') + ($json.high_resource.length > 0 ? 'High resource: ' + $json.high_resource.map(c => c.name + ' (CPU:' + c.cpu_pct + '% MEM:' + c.memory_pct + '%)').join(', ') : '') }}" },
+            { "name": "channels", "value": "[\"slack\"]" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1600, 400],
+      "parameters": { "respondWith": "json" }
+    }
+  ],
+  "connections": {
+    "Docker Control Webhook": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Container Health Check (5min)": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Route Action": {
+      "main": [
+        [{ "node": "Check All Containers", "type": "main", "index": 0 }],
+        [{ "node": "Restart Container", "type": "main", "index": 0 }],
+        [{ "node": "Get Container Logs", "type": "main", "index": 0 }],
+        [{ "node": "Get Container Stats", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check All Containers": { "main": [[{ "node": "Evaluate Container Health", "type": "main", "index": 0 }]] },
+    "Restart Container": { "main": [[{ "node": "Evaluate Container Health", "type": "main", "index": 0 }]] },
+    "Get Container Logs": { "main": [[{ "node": "Evaluate Container Health", "type": "main", "index": 0 }]] },
+    "Get Container Stats": { "main": [[{ "node": "Evaluate Container Health", "type": "main", "index": 0 }]] },
+    "Evaluate Container Health": { "main": [[{ "node": "Needs Attention?", "type": "main", "index": 0 }]] },
+    "Needs Attention?": {
+      "main": [
+        [{ "node": "Container Alert", "type": "main", "index": 0 }],
+        [{ "node": "Respond", "type": "main", "index": 0 }]
+      ]
+    },
+    "Container Alert": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["ops", "docker", "containers", "monitoring", "infrastructure"]
+}
