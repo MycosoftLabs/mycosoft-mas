@@ -16,29 +16,34 @@ from mycosoft_mas.runtime import AgentTask, AgentCategory
 class MindexAgent(BaseAgentV2):
     """
     MINDEX Agent - Database Operations
-    
+
+    Updated March 19, 2026 — Real MINDEX integration via mindex_client.
+
     Responsibilities:
-    - Database queries
+    - Database queries via MINDEX API (192.168.0.189:8000)
     - Data freshness monitoring
     - ETL coordination
+    - Species/observation queries
     """
-    
+
+    MINDEX_API_URL = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000")
+
     @property
     def agent_type(self) -> str:
         return "mindex"
-    
+
     @property
     def category(self) -> str:
         return AgentCategory.DATA.value
-    
+
     @property
     def display_name(self) -> str:
         return "MINDEX Agent"
-    
+
     @property
     def description(self) -> str:
         return "Manages MINDEX database operations"
-    
+
     def get_capabilities(self) -> List[str]:
         return [
             "query_species",
@@ -46,29 +51,108 @@ class MindexAgent(BaseAgentV2):
             "data_freshness",
             "etl_status",
             "backup_status",
+            "search",
         ]
-    
+
     async def on_start(self):
         self.register_handler("query", self._handle_query)
         self.register_handler("etl_status", self._handle_etl_status)
-    
+        self.register_handler("search", self._handle_search)
+        self.register_handler("health", self._handle_health)
+
     async def _handle_query(self, task: AgentTask) -> Dict[str, Any]:
-        """Execute MINDEX query"""
-        query_type = task.payload.get("query_type")
+        """Execute MINDEX query via the real MINDEX API."""
+        query_type = task.payload.get("query_type", "species")
         filters = task.payload.get("filters", {})
-        return {
-            "query_type": query_type,
-            "results": [],
-            "total": 0,
+        limit = task.payload.get("limit", 50)
+
+        endpoint_map = {
+            "species": "/api/mindex/taxa",
+            "observations": "/api/mindex/observations",
+            "telemetry": "/api/mindex/telemetry/latest",
+            "compounds": "/api/mindex/compounds",
         }
-    
+        endpoint = endpoint_map.get(query_type, f"/api/mindex/{query_type}")
+
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                params = {**filters, "limit": limit}
+                response = await client.get(f"{self.MINDEX_API_URL}{endpoint}", params=params)
+                response.raise_for_status()
+                data = response.json()
+
+                results = data.get("results", data.get("data", data.get("items", [])))
+                total = data.get("total", len(results))
+
+                return {
+                    "query_type": query_type,
+                    "results": results,
+                    "total": total,
+                    "source": "mindex_api",
+                }
+        except httpx.HTTPError as e:
+            return {
+                "query_type": query_type,
+                "results": [],
+                "total": 0,
+                "error": str(e),
+                "source": "mindex_api",
+            }
+
     async def _handle_etl_status(self, task: AgentTask) -> Dict[str, Any]:
-        """Get ETL pipeline status"""
-        return {
-            "last_run": None,
-            "status": "idle",
-            "records_processed": 0,
-        }
+        """Get ETL pipeline status from MINDEX."""
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(f"{self.MINDEX_API_URL}/api/mindex/health")
+                response.raise_for_status()
+                health = response.json()
+
+                return {
+                    "status": health.get("status", "unknown"),
+                    "last_run": health.get("last_etl_run"),
+                    "records_processed": health.get("total_records", 0),
+                    "source": "mindex_api",
+                }
+        except httpx.HTTPError as e:
+            return {
+                "status": "unreachable",
+                "error": str(e),
+                "last_run": None,
+                "records_processed": 0,
+            }
+
+    async def _handle_search(self, task: AgentTask) -> Dict[str, Any]:
+        """Search MINDEX via the search API."""
+        query = task.payload.get("query", "")
+        search_type = task.payload.get("search_type", "keyword")
+        limit = task.payload.get("limit", 20)
+
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                response = await client.post(
+                    f"{self.MINDEX_API_URL}/api/mindex/search",
+                    json={"query": query, "search_type": search_type, "limit": limit},
+                )
+                response.raise_for_status()
+                data = response.json()
+                return {
+                    "query": query,
+                    "results": data.get("results", []),
+                    "total": data.get("total", 0),
+                    "source": "mindex_search",
+                }
+        except httpx.HTTPError as e:
+            return {"query": query, "results": [], "total": 0, "error": str(e)}
+
+    async def _handle_health(self, task: AgentTask) -> Dict[str, Any]:
+        """Check MINDEX API health."""
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(f"{self.MINDEX_API_URL}/health")
+                response.raise_for_status()
+                return {"status": "healthy", "details": response.json()}
+        except Exception as e:
+            return {"status": "unhealthy", "error": str(e)}
 
 
 class NLMAgent(BaseAgentV2):
