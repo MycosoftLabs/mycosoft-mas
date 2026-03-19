@@ -61,14 +61,13 @@ def _instance_checksums(engine: N8NWorkflowEngine) -> Dict[str, str]:
     return out
 
 
-def _drift_detected(repo: Dict[str, str], local: Dict[str, str], cloud: Dict[str, str]) -> bool:
-    """True if repo differs from local or from cloud (by name/checksum)."""
+def _drift_detected(repo: Dict[str, str], local: Dict[str, str]) -> bool:
+    """True if repo differs from local n8n (by name/checksum)."""
     for name, csum in repo.items():
-        if local.get(name) != csum or cloud.get(name) != csum:
+        if local.get(name) != csum:
             return True
-    # Extra workflows in local/cloud that are not in repo count as drift if we care
-    for name in set(local) | set(cloud):
-        if name not in repo and (local.get(name) or cloud.get(name)):
+    for name in local:
+        if name not in repo:
             return True
     return False
 
@@ -107,14 +106,11 @@ class WorkflowAutoMonitor:
                 logger.exception("on_failure callback error: %s", e)
 
     async def _health_loop(self) -> None:
-        local_url = os.getenv("N8N_LOCAL_URL", "http://localhost:5678")
-        cloud_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
-        local_key = os.getenv("N8N_LOCAL_API_KEY", os.getenv("N8N_API_KEY", ""))
-        cloud_key = os.getenv("N8N_API_KEY", "")
+        local_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+        local_key = os.getenv("N8N_API_KEY", "")
         while self._running:
             try:
                 local_health = None
-                cloud_health = None
                 try:
                     engine_local = N8NWorkflowEngine(base_url=local_url, api_key=local_key)
                     try:
@@ -125,31 +121,18 @@ class WorkflowAutoMonitor:
                     local_health = {"status": "unhealthy", "error": str(e)}
                     await self._emit_failure("Local n8n health check failed", {"error": str(e), "url": local_url})
 
-                try:
-                    engine_cloud = N8NWorkflowEngine(base_url=cloud_url, api_key=cloud_key)
-                    try:
-                        cloud_health = await asyncio.to_thread(engine_cloud.health_check)
-                    finally:
-                        engine_cloud.close()
-                except Exception as e:
-                    cloud_health = {"status": "unhealthy", "error": str(e)}
-                    await self._emit_failure("Cloud n8n health check failed", {"error": str(e), "url": cloud_url})
-
-                self._last_health = {"local": local_health, "cloud": cloud_health}
+                self._last_health = {"local": local_health}
             except Exception as e:
                 logger.exception("Health loop error: %s", e)
             await asyncio.sleep(self.health_interval)
 
     async def _drift_loop(self) -> None:
-        local_url = os.getenv("N8N_LOCAL_URL", "http://localhost:5678")
-        cloud_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
-        local_key = os.getenv("N8N_LOCAL_API_KEY", os.getenv("N8N_API_KEY", ""))
-        cloud_key = os.getenv("N8N_API_KEY", "")
+        local_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+        local_key = os.getenv("N8N_API_KEY", "")
         while self._running:
             try:
                 repo = _repo_checksums()
                 local_csums = {}
-                cloud_csums = {}
                 try:
                     engine_local = N8NWorkflowEngine(base_url=local_url, api_key=local_key)
                     try:
@@ -158,35 +141,21 @@ class WorkflowAutoMonitor:
                         engine_local.close()
                 except Exception as e:
                     logger.warning("Drift: could not get local checksums: %s", e)
-                try:
-                    engine_cloud = N8NWorkflowEngine(base_url=cloud_url, api_key=cloud_key)
-                    try:
-                        cloud_csums = await asyncio.to_thread(_instance_checksums, engine_cloud)
-                    finally:
-                        engine_cloud.close()
-                except Exception as e:
-                    logger.warning("Drift: could not get cloud checksums: %s", e)
 
-                if _drift_detected(repo, local_csums, cloud_csums):
-                    logger.info("Workflow drift detected; running sync-both")
+                if _drift_detected(repo, local_csums):
+                    logger.info("Workflow drift detected; running local sync")
                     try:
                         engine_local = N8NWorkflowEngine(base_url=local_url, api_key=local_key)
-                        engine_cloud = N8NWorkflowEngine(base_url=cloud_url, api_key=cloud_key)
                         try:
                             r_local = await asyncio.to_thread(
                                 engine_local.sync_all_local_workflows, True
                             )
-                            r_cloud = await asyncio.to_thread(
-                                engine_cloud.sync_all_local_workflows, True
-                            )
                             logger.info(
-                                "Auto-sync: local imported=%s, cloud imported=%s",
+                                "Auto-sync: local imported=%s",
                                 len(r_local.imported),
-                                len(r_cloud.imported),
                             )
                         finally:
                             engine_local.close()
-                            engine_cloud.close()
                     except Exception as e:
                         await self._emit_failure("Auto-sync after drift failed", {"error": str(e)})
                 self._last_drift_run = asyncio.get_event_loop().time()

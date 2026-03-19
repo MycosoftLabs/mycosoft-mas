@@ -141,14 +141,11 @@ async def workflow_registry(
 
 @router.post("/sync-both")
 async def sync_both_local_and_cloud(request: SyncRequest):
-    """Sync repo workflows (n8n/workflows/*.json) to BOTH local (N8N_LOCAL_URL) and cloud (N8N_URL).
-    Keeps local dev and production forever in sync. Use after any workflow change."""
-    local_url = os.getenv("N8N_LOCAL_URL", "http://localhost:5678")
-    cloud_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
-    local_key = os.getenv("N8N_LOCAL_API_KEY", os.getenv("N8N_API_KEY", ""))
-    cloud_key = os.getenv("N8N_API_KEY", "")
-    results = {"local": None, "cloud": None, "errors": []}
-    # Sync to local
+    """Sync repo workflows (n8n/workflows/*.json) to local MAS n8n (192.168.0.188:5678).
+    All workflows run locally — no cloud instance needed."""
+    local_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
+    local_key = os.getenv("N8N_API_KEY", "")
+    results = {"local": None, "errors": []}
     try:
         engine_local = N8NWorkflowEngine(base_url=local_url, api_key=local_key)
         try:
@@ -159,17 +156,6 @@ async def sync_both_local_and_cloud(request: SyncRequest):
     except Exception as e:
         logger.warning(f"Sync to local failed: {e}")
         results["errors"].append({"target": "local", "error": str(e)})
-    # Sync to cloud
-    try:
-        engine_cloud = N8NWorkflowEngine(base_url=cloud_url, api_key=cloud_key)
-        try:
-            r = engine_cloud.sync_all_local_workflows(activate_core=request.activate_core)
-            results["cloud"] = r.to_dict()
-        finally:
-            engine_cloud.close()
-    except Exception as e:
-        logger.warning(f"Sync to cloud failed: {e}")
-        results["errors"].append({"target": "cloud", "error": str(e)})
     return {"status": "synced", "results": results, "timestamp": datetime.utcnow().isoformat()}
 
 

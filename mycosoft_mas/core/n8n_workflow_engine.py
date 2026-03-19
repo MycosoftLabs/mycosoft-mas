@@ -18,11 +18,9 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
-# Configuration
+# Configuration — all workflows run on local MAS n8n (VM 188), no cloud instance
 N8N_URL = os.getenv("N8N_URL", "http://192.168.0.188:5678")
-N8N_CLOUD_URL = os.getenv("N8N_CLOUD_URL", "https://mycosoft.app.n8n.cloud")
 N8N_API_KEY = os.getenv("N8N_API_KEY", "")
-N8N_CLOUD_API_KEY = os.getenv("N8N_CLOUD_API_KEY", "")
 N8N_BASIC_AUTH_USER = os.getenv("N8N_BASIC_AUTH_USER", "")
 N8N_BASIC_AUTH_PASSWORD = os.getenv("N8N_BASIC_AUTH_PASSWORD", "")
 N8N_USER = os.getenv("N8N_USER", "")
@@ -147,13 +145,9 @@ def clean_workflow_for_api(workflow_data: dict, for_update: bool = False) -> dic
 class N8NWorkflowEngine:
     """N8N Workflow Management Engine for MYCA 24/7/365 automation"""
     
-    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None, use_cloud: bool = False):
-        if use_cloud:
-            self.base_url = (base_url or N8N_CLOUD_URL).rstrip("/")
-            self.api_key = api_key or N8N_CLOUD_API_KEY
-        else:
-            self.base_url = (base_url or N8N_URL).rstrip("/")
-            self.api_key = api_key or N8N_API_KEY
+    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None):
+        self.base_url = (base_url or N8N_URL).rstrip("/")
+        self.api_key = api_key or N8N_API_KEY
         
         self.headers = {"X-N8N-API-KEY": self.api_key, "Content-Type": "application/json"}
         auth_user = N8N_BASIC_AUTH_USER or N8N_USER
@@ -576,8 +570,8 @@ class WorkflowScheduler:
         logger.info("Workflow scheduler stopped")
 
 
-def get_engine(use_cloud: bool = False) -> N8NWorkflowEngine:
-    return N8NWorkflowEngine(use_cloud=use_cloud)
+def get_engine() -> N8NWorkflowEngine:
+    return N8NWorkflowEngine()
 
 
 def sync_workflows(activate_core: bool = True) -> SyncResult:
