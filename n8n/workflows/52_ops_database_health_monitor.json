@@ -1,0 +1,139 @@
+{
+  "name": "Ops: Database Health Monitor",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 5 }]
+        }
+      }
+    },
+    {
+      "id": "check_postgres",
+      "name": "Check PostgreSQL Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/api/health/postgres",
+        "options": { "timeout": 10000 }
+      }
+    },
+    {
+      "id": "check_redis",
+      "name": "Check Redis Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/api/health/redis",
+        "options": { "timeout": 10000 }
+      }
+    },
+    {
+      "id": "check_qdrant",
+      "name": "Check Qdrant Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 600],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:6333/healthz",
+        "options": { "timeout": 10000 }
+      }
+    },
+    {
+      "id": "aggregate",
+      "name": "Aggregate Health Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [800, 400],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = items.map(item => item.json);\n\nconst health = {\n  timestamp: new Date().toISOString(),\n  postgres: {\n    status: results[0]?.status || 'unknown',\n    connections_active: results[0]?.connections_active || 0,\n    connections_max: results[0]?.connections_max || 100,\n    disk_usage_pct: results[0]?.disk_usage_pct || 0,\n    replication_lag_ms: results[0]?.replication_lag_ms || 0,\n    slow_queries: results[0]?.slow_queries || 0\n  },\n  redis: {\n    status: results[1]?.status || 'unknown',\n    memory_used_mb: results[1]?.memory_used_mb || 0,\n    memory_max_mb: results[1]?.memory_max_mb || 0,\n    connected_clients: results[1]?.connected_clients || 0,\n    keys_total: results[1]?.keys_total || 0,\n    ops_per_sec: results[1]?.ops_per_sec || 0\n  },\n  qdrant: {\n    status: results[2]?.status === 'ok' ? 'healthy' : (results[2]?.status || 'unknown'),\n    collections_count: results[2]?.collections_count || 0,\n    points_total: results[2]?.points_total || 0,\n    disk_usage_mb: results[2]?.disk_usage_mb || 0\n  }\n};\n\n// Determine overall status\nconst statuses = [health.postgres.status, health.redis.status, health.qdrant.status];\nconst unhealthy = statuses.filter(s => s !== 'healthy' && s !== 'ok');\nhealth.overall = unhealthy.length === 0 ? 'healthy' : 'degraded';\n\n// Check thresholds\nhealth.alerts = [];\nif (health.postgres.connections_active > health.postgres.connections_max * 0.8) {\n  health.alerts.push('PostgreSQL connection pool > 80%');\n}\nif (health.postgres.disk_usage_pct > 85) {\n  health.alerts.push(`PostgreSQL disk usage at ${health.postgres.disk_usage_pct}%`);\n}\nif (health.redis.memory_used_mb > health.redis.memory_max_mb * 0.9) {\n  health.alerts.push('Redis memory > 90% of max');\n}\nif (health.postgres.slow_queries > 5) {\n  health.alerts.push(`${health.postgres.slow_queries} slow PostgreSQL queries detected`);\n}\n\nreturn [{ json: health }];"
+      }
+    },
+    {
+      "id": "check_alerts",
+      "name": "Has Alerts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.alerts.length > 0 }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send_alert",
+      "name": "Send Database Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "={{ $json.overall === 'degraded' ? 'high' : 'medium' }}" },
+            { "name": "title", "value": "Database Health Alert" },
+            { "name": "message", "value": "={{ $json.alerts.join('; ') }}" },
+            { "name": "channels", "value": "[\"slack\"]" },
+            { "name": "data", "value": "={{ JSON.stringify($json) }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "store_metrics",
+      "name": "Store Health Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/metrics/store",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "source", "value": "database-health-monitor" },
+            { "name": "metrics", "value": "={{ JSON.stringify($json) }}" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": { "main": [[
+      { "node": "Check PostgreSQL Health", "type": "main", "index": 0 },
+      { "node": "Check Redis Health", "type": "main", "index": 0 },
+      { "node": "Check Qdrant Health", "type": "main", "index": 0 }
+    ]] },
+    "Check PostgreSQL Health": { "main": [[{ "node": "Aggregate Health Status", "type": "main", "index": 0 }]] },
+    "Check Redis Health": { "main": [[{ "node": "Aggregate Health Status", "type": "main", "index": 0 }]] },
+    "Check Qdrant Health": { "main": [[{ "node": "Aggregate Health Status", "type": "main", "index": 0 }]] },
+    "Aggregate Health Status": { "main": [[{ "node": "Has Alerts?", "type": "main", "index": 0 }]] },
+    "Has Alerts?": {
+      "main": [
+        [{ "node": "Send Database Alert", "type": "main", "index": 0 }],
+        [{ "node": "Store Health Metrics", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Database Alert": { "main": [[{ "node": "Store Health Metrics", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["ops", "monitoring", "database", "health", "critical"]
+}

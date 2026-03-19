@@ -1,0 +1,129 @@
+{
+  "name": "Data: ETL Pipeline Monitor",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 15 }] }
+      }
+    },
+    {
+      "id": "check_mindex",
+      "name": "Check MINDEX Pipeline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/api/pipeline/status",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "check_scraper_status",
+      "name": "Check Species Scraper Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/api/scraper/status",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "check_vector_sync",
+      "name": "Check Vector Sync Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 600],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:6333/collections",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "evaluate_health",
+      "name": "Evaluate Pipeline Health",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [800, 400],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst now = new Date().toISOString();\n\nconst mindex = items[0]?.json || {};\nconst scraper = items[1]?.json || {};\nconst vectors = items[2]?.json || {};\n\nconst issues = [];\n\n// Check MINDEX pipeline staleness\nconst lastRun = mindex.last_run ? new Date(mindex.last_run) : null;\nif (lastRun) {\n  const hoursSinceRun = (Date.now() - lastRun.getTime()) / (1000 * 60 * 60);\n  if (hoursSinceRun > 26) {\n    issues.push({\n      pipeline: 'mindex',\n      issue: 'stale',\n      message: `MINDEX pipeline hasn't run in ${Math.round(hoursSinceRun)} hours`,\n      severity: 'high'\n    });\n  }\n}\n\n// Check scraper errors\nif (scraper.error_count > 10) {\n  issues.push({\n    pipeline: 'species_scraper',\n    issue: 'high_errors',\n    message: `${scraper.error_count} scraper errors in last cycle`,\n    severity: 'medium'\n  });\n}\n\n// Check if scraper is stuck\nif (scraper.status === 'running' && scraper.running_since) {\n  const runningHours = (Date.now() - new Date(scraper.running_since).getTime()) / (1000 * 60 * 60);\n  if (runningHours > 4) {\n    issues.push({\n      pipeline: 'species_scraper',\n      issue: 'stuck',\n      message: `Scraper has been running for ${Math.round(runningHours)} hours — may be stuck`,\n      severity: 'high'\n    });\n  }\n}\n\n// Check Qdrant collection health\nconst collections = vectors.collections || [];\nfor (const col of collections) {\n  if (col.status === 'red') {\n    issues.push({\n      pipeline: 'qdrant',\n      issue: 'collection_unhealthy',\n      message: `Qdrant collection '${col.name}' is in RED status`,\n      severity: 'critical'\n    });\n  }\n}\n\nconst report = {\n  timestamp: now,\n  pipelines: {\n    mindex: { status: mindex.status || 'unknown', last_run: mindex.last_run },\n    scraper: { status: scraper.status || 'unknown', records_processed: scraper.records_processed || 0 },\n    qdrant: { collections: (vectors.collections || []).length, status: vectors.status || 'unknown' }\n  },\n  issues: issues,\n  has_issues: issues.length > 0,\n  max_severity: issues.length > 0 ? issues.reduce((max, i) => {\n    const levels = { critical: 4, high: 3, medium: 2, low: 1 };\n    return (levels[i.severity] || 0) > (levels[max] || 0) ? i.severity : max;\n  }, 'low') : 'none'\n};\n\nreturn [{ json: report }];"
+      }
+    },
+    {
+      "id": "has_issues",
+      "name": "Issues Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "parameters": {
+        "conditions": { "boolean": [{ "value1": "={{ $json.has_issues }}", "value2": true }] }
+      }
+    },
+    {
+      "id": "alert",
+      "name": "Send ETL Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "={{ $json.max_severity }}" },
+            { "name": "title", "value": "ETL Pipeline Issue" },
+            { "name": "message", "value": "={{ $json.issues.map(i => '[' + i.pipeline + '] ' + i.message).join('\\n') }}" },
+            { "name": "channels", "value": "[\"slack\"]" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "store",
+      "name": "Store Pipeline Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/metrics/store",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "source", "value": "etl-pipeline-monitor" },
+            { "name": "metrics", "value": "={{ JSON.stringify($json) }}" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": { "main": [[
+      { "node": "Check MINDEX Pipeline", "type": "main", "index": 0 },
+      { "node": "Check Species Scraper Status", "type": "main", "index": 0 },
+      { "node": "Check Vector Sync Status", "type": "main", "index": 0 }
+    ]] },
+    "Check MINDEX Pipeline": { "main": [[{ "node": "Evaluate Pipeline Health", "type": "main", "index": 0 }]] },
+    "Check Species Scraper Status": { "main": [[{ "node": "Evaluate Pipeline Health", "type": "main", "index": 0 }]] },
+    "Check Vector Sync Status": { "main": [[{ "node": "Evaluate Pipeline Health", "type": "main", "index": 0 }]] },
+    "Evaluate Pipeline Health": { "main": [[{ "node": "Issues Found?", "type": "main", "index": 0 }]] },
+    "Issues Found?": {
+      "main": [
+        [{ "node": "Send ETL Alert", "type": "main", "index": 0 }],
+        [{ "node": "Store Pipeline Metrics", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send ETL Alert": { "main": [[{ "node": "Store Pipeline Metrics", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["data", "etl", "pipeline", "monitoring", "mindex"]
+}

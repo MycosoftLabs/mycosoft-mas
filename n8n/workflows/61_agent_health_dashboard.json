@@ -1,0 +1,159 @@
+{
+  "name": "Agent: Health Dashboard Aggregator",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every 3 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 3 }] }
+      }
+    },
+    {
+      "id": "webhook",
+      "name": "Dashboard Data Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "agents/dashboard/status",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "get_agents",
+      "name": "Get All Agent Statuses",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/registry/agents",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "get_tasks",
+      "name": "Get Active Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/tasks/active",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "get_metrics",
+      "name": "Get System Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 600],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/metrics/system",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "build_dashboard",
+      "name": "Build Dashboard Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [800, 400],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst agents = items[0]?.json?.agents || items[0]?.json || [];\nconst tasks = items[1]?.json?.tasks || items[1]?.json || [];\nconst metrics = items[2]?.json || {};\n\nconst agentList = Array.isArray(agents) ? agents : [];\nconst taskList = Array.isArray(tasks) ? tasks : [];\n\n// Agent status summary\nconst byStatus = { active: 0, idle: 0, error: 0, offline: 0, total: agentList.length };\nconst byCategory = {};\nfor (const agent of agentList) {\n  const status = agent.status || 'unknown';\n  byStatus[status] = (byStatus[status] || 0) + 1;\n  const cat = agent.category || 'uncategorized';\n  if (!byCategory[cat]) byCategory[cat] = { count: 0, active: 0 };\n  byCategory[cat].count++;\n  if (status === 'active') byCategory[cat].active++;\n}\n\n// Task summary\nconst tasksByStatus = { pending: 0, running: 0, completed: 0, failed: 0 };\nfor (const task of taskList) {\n  const ts = task.status || 'unknown';\n  tasksByStatus[ts] = (tasksByStatus[ts] || 0) + 1;\n}\n\n// Find unhealthy agents\nconst unhealthy = agentList\n  .filter(a => a.status === 'error' || a.status === 'offline')\n  .map(a => ({ id: a.agent_id || a.id, name: a.name, status: a.status, last_seen: a.last_seen }));\n\n// Top performers (most tasks completed recently)\nconst topPerformers = agentList\n  .filter(a => a.tasks_completed > 0)\n  .sort((a, b) => (b.tasks_completed || 0) - (a.tasks_completed || 0))\n  .slice(0, 10)\n  .map(a => ({ name: a.name, tasks: a.tasks_completed, success_rate: a.success_rate }));\n\nconst dashboard = {\n  timestamp: new Date().toISOString(),\n  agents: {\n    total: byStatus.total,\n    active: byStatus.active || 0,\n    idle: byStatus.idle || 0,\n    error: byStatus.error || 0,\n    offline: byStatus.offline || 0,\n    by_category: byCategory,\n    unhealthy: unhealthy,\n    top_performers: topPerformers\n  },\n  tasks: tasksByStatus,\n  system: {\n    cpu_pct: metrics.cpu_pct || 0,\n    memory_pct: metrics.memory_pct || 0,\n    disk_pct: metrics.disk_pct || 0,\n    uptime_hours: metrics.uptime_hours || 0\n  },\n  health_score: Math.round(\n    ((byStatus.active || 0) / Math.max(byStatus.total, 1)) * 100\n  )\n};\n\nreturn [{ json: dashboard }];"
+      }
+    },
+    {
+      "id": "cache_dashboard",
+      "name": "Cache Dashboard Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/cache/set",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "key", "value": "dashboard:agent_health" },
+            { "name": "value", "value": "={{ JSON.stringify($json) }}" },
+            { "name": "ttl_seconds", "value": "300" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "check_unhealthy",
+      "name": "Unhealthy Agents?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 500],
+      "parameters": {
+        "conditions": { "boolean": [{ "value1": "={{ $json.agents.unhealthy.length > 0 }}", "value2": true }] }
+      }
+    },
+    {
+      "id": "alert",
+      "name": "Agent Health Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "medium" },
+            { "name": "title", "value": "Agent Health Issues" },
+            { "name": "message", "value": "={{ $json.agents.unhealthy.map(a => a.name + ' (' + a.status + ')').join(', ') }}" },
+            { "name": "channels", "value": "[\"slack\"]" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond with Dashboard",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1300, 600],
+      "parameters": { "respondWith": "json" }
+    }
+  ],
+  "connections": {
+    "Every 3 Minutes": { "main": [[
+      { "node": "Get All Agent Statuses", "type": "main", "index": 0 },
+      { "node": "Get Active Tasks", "type": "main", "index": 0 },
+      { "node": "Get System Metrics", "type": "main", "index": 0 }
+    ]] },
+    "Dashboard Data Webhook": { "main": [[
+      { "node": "Get All Agent Statuses", "type": "main", "index": 0 },
+      { "node": "Get Active Tasks", "type": "main", "index": 0 },
+      { "node": "Get System Metrics", "type": "main", "index": 0 }
+    ]] },
+    "Get All Agent Statuses": { "main": [[{ "node": "Build Dashboard Data", "type": "main", "index": 0 }]] },
+    "Get Active Tasks": { "main": [[{ "node": "Build Dashboard Data", "type": "main", "index": 0 }]] },
+    "Get System Metrics": { "main": [[{ "node": "Build Dashboard Data", "type": "main", "index": 0 }]] },
+    "Build Dashboard Data": { "main": [[
+      { "node": "Cache Dashboard Data", "type": "main", "index": 0 },
+      { "node": "Unhealthy Agents?", "type": "main", "index": 0 }
+    ]] },
+    "Unhealthy Agents?": {
+      "main": [
+        [{ "node": "Agent Health Alert", "type": "main", "index": 0 }],
+        [{ "node": "Respond with Dashboard", "type": "main", "index": 0 }]
+      ]
+    },
+    "Agent Health Alert": { "main": [[{ "node": "Respond with Dashboard", "type": "main", "index": 0 }]] },
+    "Cache Dashboard Data": { "main": [[]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["agents", "dashboard", "health", "monitoring"]
+}
