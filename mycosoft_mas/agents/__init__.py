@@ -119,6 +119,9 @@ _safe_import("mycosoft_mas.avani.agents.micah_agent", "MicahAgent")
 # Earth Search — planetary-scale unified search (March 2026)
 _safe_import(".earth_search_agent", "EarthSearchAgent")
 
+# OpenViking — edge device context database management (March 2026)
+_safe_import(".openviking_agent", "OpenVikingAgent")
+
 # Dynamically create runtime-safe agent modules/classes for compatibility.
 import sys
 import types

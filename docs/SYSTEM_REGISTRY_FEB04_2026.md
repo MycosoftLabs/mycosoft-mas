@@ -11,6 +11,32 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (Mar 19, 2026)
+
+- **OpenViking Edge Memory Integration** — Bidirectional bridge between MAS 6-layer memory and OpenViking context databases on Jetson Orin edge devices:
+  - **Agent:** `OpenVikingAgent` (`mycosoft_mas/agents/openviking_agent.py`) — manages device connections, sync, cross-device knowledge sharing, tiered context queries.
+  - **Bridge:** `OpenVikingBridge` (`mycosoft_mas/memory/openviking_bridge.py`) — singleton bridge connecting MAS MemoryCoordinator to device OpenViking instances. Maps `viking://` paths to MAS memory layers (episodic, semantic, procedural).
+  - **Sync Service:** `OpenVikingSyncService` (`mycosoft_mas/memory/openviking_sync.py`) — periodic (5min default) and event-driven sync. Cross-device knowledge sharing (federated learning). Publishes events to Redis `mas:openviking:sync` / `mas:openviking:events`.
+  - **HTTP Client:** `OpenVikingClient` (`mycosoft_mas/edge/openviking_client.py`) — async client for OpenViking server API (port 1933). Supports filesystem ops (ls, tree, read, write, mkdir), search (find, grep), ingestion (add_resource), and session management.
+  - **REST API (14 endpoints):** Router `openviking_api.py` at `/api/openviking/*`:
+    - `POST /devices/register` — Register device OpenViking instance
+    - `DELETE /devices/{device_id}` — Unregister device
+    - `GET /devices` — List all registered devices
+    - `POST /sync/{device_id}` — Trigger manual sync
+    - `POST /sync/all` — Sync all devices
+    - `POST /query/{device_id}` — Query device memory (with L0/L1/L2 tier)
+    - `POST /push/{device_id}` — Push content to device
+    - `GET /health` — Bridge health + device status
+    - `GET /sync/status` — Background sync service status
+    - `POST /sync/start` — Start periodic sync
+    - `POST /sync/stop` — Stop periodic sync
+    - `GET /sync/history` — Recent sync cycle history
+    - `POST /devices/{device_id}/browse` — Browse device filesystem
+    - `POST /devices/{device_id}/read` — Read device content with tier
+  - **Layer Mapping:** `viking://memories/sensor-observations/` → episodic, `viking://memories/errors-learned/` → semantic, `viking://skills/` → procedural, `viking://resources/mas-agent-context/` → semantic.
+  - **Tests:** `tests/test_openviking_bridge.py` — unit tests for client, bridge, sync, agent, API models + integration tests.
+  - **Plan Doc:** `docs/OPENVIKING_INTEGRATION_PLAN_MAR19_2026.md`.
+
 ## Recent Updates (Mar 17, 2026)
 
 - **MYCA2 PSILO sandbox** — Separate runtime (`myca2_core` / `myca2_edge` / `myca2_sandbox` / `psilo_overlay`); registry-backed LLM routing; PSILO sessions in MINDEX (`0023_myca2_psilo_registry.sql`); executive packet overlay when `myca2` or `psilo_session_id`; production alias promote/rollback gated. Doc: `docs/MYCA2_PSILO_STACK_COMPLETE_MAR17_2026.md`.
