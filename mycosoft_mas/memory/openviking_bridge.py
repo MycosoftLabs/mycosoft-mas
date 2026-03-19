@@ -18,11 +18,13 @@ Created: March 19, 2026
 from __future__ import annotations
 
 import asyncio
+import ipaddress
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
+from urllib.parse import urlparse
 from uuid import uuid4
 
 logger = logging.getLogger("OpenVikingBridge")
@@ -96,6 +98,54 @@ MAS_TO_DEVICE_PATHS = [
 ]
 
 
+# Allowed private subnet for OpenViking devices (LAN only)
+_ALLOWED_NETWORKS = [
+    ipaddress.ip_network("192.168.0.0/24"),  # Mycosoft LAN
+]
+
+
+def validate_openviking_url(url: str) -> tuple[str, int]:
+    """Validate and parse an OpenViking device URL. Returns (host, port).
+
+    Rejects URLs pointing to loopback, link-local, non-private, or
+    otherwise dangerous addresses to prevent SSRF.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"Invalid URL scheme: {parsed.scheme!r} (must be http or https)")
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("URL has no hostname")
+
+    try:
+        addr = ipaddress.ip_address(hostname)
+    except ValueError:
+        raise ValueError(
+            f"OpenViking URLs must use IP addresses, not hostnames: {hostname!r}"
+        )
+
+    if addr.is_loopback:
+        raise ValueError(f"Loopback addresses are not allowed: {addr}")
+    if addr.is_link_local:
+        raise ValueError(f"Link-local addresses are not allowed: {addr}")
+    if addr.is_multicast:
+        raise ValueError(f"Multicast addresses are not allowed: {addr}")
+    if addr.is_reserved:
+        raise ValueError(f"Reserved addresses are not allowed: {addr}")
+    if addr.is_unspecified:
+        raise ValueError(f"Unspecified addresses are not allowed: {addr}")
+
+    if not any(addr in net for net in _ALLOWED_NETWORKS):
+        raise ValueError(
+            f"Address {addr} is not in an allowed network. "
+            f"Only devices on the Mycosoft LAN (192.168.0.0/24) can be registered."
+        )
+
+    port = parsed.port or 1933
+    return str(addr), port
+
+
 class OpenVikingBridge:
     """
     Bidirectional bridge between MAS 6-layer memory and OpenViking context
@@ -150,11 +200,9 @@ class OpenVikingBridge:
         """
         from mycosoft_mas.edge.openviking_client import OpenVikingClient
 
-        # Parse host/port from URL
+        # Validate URL against SSRF — only allow Mycosoft LAN IPs
+        host, port = validate_openviking_url(openviking_url)
         url = openviking_url.rstrip("/")
-        parts = url.replace("http://", "").replace("https://", "").split(":")
-        host = parts[0]
-        port = int(parts[1]) if len(parts) > 1 else 1933
 
         client = OpenVikingClient(host=host, port=port, base_url=url)
         connected = await client.connect()

@@ -15,7 +15,14 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.core.routers.api_keys import require_api_key_scoped
+
 router = APIRouter(prefix="/api/openviking", tags=["OpenViking - Edge Memory"])
+
+# Auth dependencies — scoped by operation type
+_read_auth = require_api_key_scoped("openviking:read")
+_write_auth = require_api_key_scoped("openviking:write")
+_admin_auth = require_api_key_scoped("openviking:admin")
 
 
 # ── Request/Response Models ────────────────────────────────────────────
@@ -77,7 +84,7 @@ class SyncServiceStatus(BaseModel):
 
 
 @router.post("/devices/register", response_model=DeviceResponse)
-async def register_device(request: DeviceRegisterRequest) -> DeviceResponse:
+async def register_device(request: DeviceRegisterRequest, _auth: dict = _admin_auth) -> DeviceResponse:
     """Register an edge device's OpenViking instance.
 
     Connects to the device's OpenViking server, verifies reachability,
@@ -86,13 +93,16 @@ async def register_device(request: DeviceRegisterRequest) -> DeviceResponse:
     from mycosoft_mas.memory.openviking_bridge import get_openviking_bridge
 
     bridge = await get_openviking_bridge()
-    conn = await bridge.register_device(
-        device_id=request.device_id,
-        openviking_url=request.openviking_url,
-        device_name=request.device_name,
-        tags=request.tags,
-        metadata=request.metadata,
-    )
+    try:
+        conn = await bridge.register_device(
+            device_id=request.device_id,
+            openviking_url=request.openviking_url,
+            device_name=request.device_name,
+            tags=request.tags,
+            metadata=request.metadata,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     return DeviceResponse(
         device_id=conn.device_id,
         device_name=conn.device_name,
@@ -105,7 +115,7 @@ async def register_device(request: DeviceRegisterRequest) -> DeviceResponse:
 
 
 @router.delete("/devices/{device_id}")
-async def unregister_device(device_id: str) -> Dict[str, Any]:
+async def unregister_device(device_id: str, _auth: dict = _admin_auth) -> Dict[str, Any]:
     """Unregister a device and close its OpenViking connection."""
     from mycosoft_mas.memory.openviking_bridge import get_openviking_bridge
 
@@ -117,7 +127,7 @@ async def unregister_device(device_id: str) -> Dict[str, Any]:
 
 
 @router.get("/devices", response_model=List[DeviceResponse])
-async def list_devices() -> List[DeviceResponse]:
+async def list_devices(_auth: dict = _read_auth) -> List[DeviceResponse]:
     """List all registered OpenViking devices."""
     from mycosoft_mas.memory.openviking_bridge import get_openviking_bridge
 
@@ -138,7 +148,7 @@ async def list_devices() -> List[DeviceResponse]:
 
 
 @router.post("/sync/{device_id}", response_model=SyncResponse)
-async def sync_device(device_id: str) -> SyncResponse:
+async def sync_device(device_id: str, _auth: dict = _write_auth) -> SyncResponse:
     """Trigger a manual bidirectional sync for a specific device."""
     from mycosoft_mas.memory.openviking_bridge import get_openviking_bridge
 
@@ -159,7 +169,7 @@ async def sync_device(device_id: str) -> SyncResponse:
 
 
 @router.post("/sync/all")
-async def sync_all_devices() -> List[Dict[str, Any]]:
+async def sync_all_devices(_auth: dict = _write_auth) -> List[Dict[str, Any]]:
     """Trigger a manual sync for all registered devices."""
     from mycosoft_mas.memory.openviking_bridge import get_openviking_bridge
 
@@ -171,6 +181,7 @@ async def sync_all_devices() -> List[Dict[str, Any]]:
 async def query_device_memory(
     device_id: str,
     request: QueryRequest,
+    _auth: dict = _read_auth,
 ) -> Dict[str, Any]:
     """Query a device's OpenViking memory with tiered context loading.
 
@@ -208,6 +219,7 @@ async def query_device_memory(
 async def push_to_device(
     device_id: str,
     request: PushRequest,
+    _auth: dict = _write_auth,
 ) -> Dict[str, Any]:
     """Push content to a device's OpenViking filesystem.
 
@@ -257,7 +269,7 @@ async def openviking_health() -> Dict[str, Any]:
 
 
 @router.get("/sync/status", response_model=SyncServiceStatus)
-async def sync_status() -> SyncServiceStatus:
+async def sync_status(_auth: dict = _read_auth) -> SyncServiceStatus:
     """Get the status of the background sync service."""
     from mycosoft_mas.memory.openviking_sync import get_openviking_sync
 
@@ -267,7 +279,7 @@ async def sync_status() -> SyncServiceStatus:
 
 
 @router.post("/sync/start")
-async def start_sync_service() -> Dict[str, str]:
+async def start_sync_service(_auth: dict = _admin_auth) -> Dict[str, str]:
     """Start the periodic background sync service."""
     from mycosoft_mas.memory.openviking_sync import get_openviking_sync
 
@@ -279,7 +291,7 @@ async def start_sync_service() -> Dict[str, str]:
 
 
 @router.post("/sync/stop")
-async def stop_sync_service() -> Dict[str, str]:
+async def stop_sync_service(_auth: dict = _admin_auth) -> Dict[str, str]:
     """Stop the periodic background sync service."""
     from mycosoft_mas.memory.openviking_sync import get_openviking_sync
 
@@ -291,7 +303,7 @@ async def stop_sync_service() -> Dict[str, str]:
 
 
 @router.get("/sync/history")
-async def sync_history(limit: int = 10) -> List[Dict[str, Any]]:
+async def sync_history(limit: int = 10, _auth: dict = _read_auth) -> List[Dict[str, Any]]:
     """Get recent sync cycle history."""
     from mycosoft_mas.memory.openviking_sync import get_openviking_sync
 
@@ -303,6 +315,7 @@ async def sync_history(limit: int = 10) -> List[Dict[str, Any]]:
 async def browse_device_filesystem(
     device_id: str,
     uri: str = "viking://",
+    _auth: dict = _read_auth,
 ) -> Dict[str, Any]:
     """Browse a device's OpenViking filesystem (ls)."""
     from mycosoft_mas.memory.openviking_bridge import get_openviking_bridge
@@ -328,6 +341,7 @@ async def read_device_content(
     device_id: str,
     uri: str,
     tier: str = "L1",
+    _auth: dict = _read_auth,
 ) -> Dict[str, Any]:
     """Read content from a device's OpenViking filesystem with tier selection."""
     from mycosoft_mas.memory.openviking_bridge import get_openviking_bridge
