@@ -380,3 +380,81 @@ Use OpenViking's retrieval trajectory visualization to debug MAS memory issues. 
 3. **Sync frequency:** 5 minutes default, or more/less aggressive?
 4. **Which device first:** Mushroom1 (192.168.0.123) or Hyphae1?
 5. **Start implementation now or wait for OpenViking to stabilize further?**
+
+---
+
+## Appendix: OpenViking Technical Deep Dive
+
+### Polyglot Architecture
+
+OpenViking spans four languages:
+- **Python** — Core logic, clients, services, server
+- **C++** — Native vector indexing (HNSW, IVF) via pybind11
+- **Go** — AGFS distributed filesystem server
+- **Rust** — CLI tool (`ov`)
+
+### Three Deployment Modes
+
+| Mode | Description | Best For |
+|------|-------------|----------|
+| **Embedded** | Single-process, AGFS as subprocess, vector index in-process | Jetson Orin (32-64GB) |
+| **HTTP Server** | FastAPI-based, port 1933, distributed | MAS VM 188 or MINDEX VM 189 |
+| **HTTP Client** | Thin client pointing to remote server | Low-RAM Jetson devices |
+
+```python
+# Embedded (local on Jetson Orin)
+client = AsyncOpenViking(path="./openviking_workspace")
+
+# HTTP Server (run on MAS/MINDEX)
+# $ openviking-server --host 0.0.0.0 --port 1933
+
+# HTTP Client (thin client on any device)
+client = AsyncHTTPClient(url="http://192.168.0.188:1933", api_key="key")
+```
+
+### Python SDK Methods
+
+**Filesystem operations:** `ls(uri)`, `tree(uri)`, `read(uri)`, `abstract(uri)`, `overview(uri)`, `glob(pattern)`
+**Search:** `find(query, top_k)`, `search(query)`, `grep(pattern, target_uri)`
+**Ingestion:** `add_resource(path, reason, target)`, `wait_processed(timeout)`
+**Session/Memory:** `session()`, `add_message(role, content)`, `used(uris)`, `commit()`
+
+### Directory Recursive Retrieval Algorithm
+
+1. **Intent Analysis** — VLM generates 0-5 expanded queries from original question
+2. **Initial Positioning** — Vector search on L0 abstracts identifies high-scoring directories
+3. **Refined Exploration** — Secondary search within promising directories using L1 overviews
+4. **Recursive Drill-down** — Score: `final_score = 0.5 * parent_score + 0.5 * embedding_similarity`
+5. **Result Aggregation** — Returns contextualized results with full hierarchy path
+
+### Storage Backends (AGFS)
+
+- `localfs` — OS filesystem (default, recommended for Jetson)
+- `s3fs` — AWS S3 or compatible (MinIO)
+- `memfs` — In-memory (testing only)
+
+### Vector Database Options
+
+- `LocalCollection` — C++ embedded index (HNSW, IVF) via pybind11
+- `VolcengineCollection` — Cloud VikingDB service
+- `HTTPCollection` — Remote OpenViking instance as vector backend
+
+### MCP Server Support
+
+OpenViking has official MCP server implementations, enabling direct integration with Claude, Cursor, and other MCP-compatible tools. Pipeline: `Agent Skills → MCP Client → MCP Server → HTTP Client → OpenViking API`
+
+### Multi-Tenant Isolation
+
+The `viking://` protocol enforces isolation via `RequestContext` with `account_id`, `user`, and `role` parameters:
+- `viking://resources/` — Shared project docs, code repos
+- `viking://user/{user_space}/` — User preferences, personal memories
+- `viking://agent/{agent_space}/` — Agent skills, operational memories
+- `viking://session/{session_id}/` — Conversation messages
+- `viking://_system/` — Hidden system metadata and indices
+
+### ARM64 / Jetson Compatibility
+
+OpenViking officially supports Linux ARM64 with KRL-optimized vector search for ARM architectures. On ARM64, the package compiles from source during `pip install` (requires Go 1.22+ and GCC 9+).
+
+**Jetson Orin (32-64GB):** Feasible in embedded mode with local storage
+**Jetson Nano (4GB):** Use thin HTTP client pointing to remote OpenViking server on MAS/MINDEX VM
