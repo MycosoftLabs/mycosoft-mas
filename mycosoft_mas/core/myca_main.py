@@ -90,6 +90,8 @@ from mycosoft_mas.core.routers.ingest_api import router as ingest_router
 from mycosoft_mas.core.routers.guardian_api import router as guardian_router
 from mycosoft_mas.core.routers.investigation_api import router as investigation_router
 from mycosoft_mas.core.routers.merkle_ledger_api import router as merkle_ledger_router
+from mycosoft_mas.core.routers.event_ledger_api import router as event_ledger_router
+from mycosoft_mas.core.routers.task_intake_api import router as task_intake_router
 
 # GPU Node API for mycosoft-gpu01 compute node
 try:
@@ -600,6 +602,8 @@ app.include_router(conversation_memory_router, tags=["memory", "myca-conversatio
 app.include_router(security_router, tags=["security"])
 app.include_router(guardian_router, tags=["guardian"])
 app.include_router(merkle_ledger_router, tags=["merkle-ledger"])
+app.include_router(event_ledger_router, tags=["event-ledger"])
+app.include_router(task_intake_router, tags=["task-intake"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
 app.include_router(nlq_router, tags=["nlq"])
 app.include_router(search_orchestrator_router, tags=["search"])
@@ -1445,6 +1449,24 @@ async def startup_event():
         except Exception as exc:
             logger.warning(f"STATIC index build skipped: {exc}")
 
+    # Start Agent Heartbeat Service (bridges runner → Redis → topology/dashboard)
+    try:
+        from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+        heartbeat_svc = get_heartbeat_service()
+        await heartbeat_svc.start()
+        logger.info("✓ Agent heartbeat service started (publishing to Redis every 15s)")
+    except Exception as exc:
+        logger.warning(f"Heartbeat service failed to start: {exc}")
+
+    # Start Agent Supervisor (lifecycle management: detect dead agents, restart)
+    try:
+        from mycosoft_mas.core.agent_supervisor import get_supervisor
+        supervisor = get_supervisor()
+        await supervisor.start()
+        logger.info("✓ Agent supervisor started (monitoring agent health every 30s)")
+    except Exception as exc:
+        logger.warning(f"Agent supervisor failed to start: {exc}")
+
     logger.info("✓ MAS ready - all agents operational 24/7")
 
 
@@ -1474,9 +1496,20 @@ async def shutdown_event():
             logger.info("WorkflowAutoMonitor stopped")
         except Exception as exc:
             logger.warning("WorkflowAutoMonitor stop error: %s", exc)
-
-
-
+    # Stop heartbeat service
+    try:
+        from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+        await get_heartbeat_service().stop()
+        logger.info("Heartbeat service stopped")
+    except Exception as exc:
+        logger.warning("Heartbeat service stop error: %s", exc)
+    # Stop agent supervisor
+    try:
+        from mycosoft_mas.core.agent_supervisor import get_supervisor
+        await get_supervisor().stop()
+        logger.info("Agent supervisor stopped")
+    except Exception as exc:
+        logger.warning("Agent supervisor stop error: %s", exc)
 
 
 
