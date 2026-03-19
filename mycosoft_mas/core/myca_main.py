@@ -91,6 +91,14 @@ from mycosoft_mas.core.routers.guardian_api import router as guardian_router
 from mycosoft_mas.core.routers.investigation_api import router as investigation_router
 from mycosoft_mas.core.routers.merkle_ledger_api import router as merkle_ledger_router
 
+# OpenViking — edge device context database bridge (March 2026)
+try:
+    from mycosoft_mas.core.routers.openviking_api import router as openviking_router
+    OPENVIKING_API_AVAILABLE = True
+except ImportError:
+    openviking_router = None
+    OPENVIKING_API_AVAILABLE = False
+
 # GPU Node API for mycosoft-gpu01 compute node
 try:
     from mycosoft_mas.core.routers.gpu_node import router as gpu_node_router
@@ -601,6 +609,8 @@ app.include_router(security_router, tags=["security"])
 app.include_router(guardian_router, tags=["guardian"])
 app.include_router(merkle_ledger_router, tags=["merkle-ledger"])
 app.include_router(memory_integration_router, tags=["memory-integration"])
+if OPENVIKING_API_AVAILABLE:
+    app.include_router(openviking_router, tags=["openviking", "edge-memory"])
 app.include_router(nlq_router, tags=["nlq"])
 app.include_router(search_orchestrator_router, tags=["search"])
 app.include_router(earth_search_router, tags=["earth-search"])

@@ -21,6 +21,25 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 ## MAS API Endpoints
 
+### OpenViking Edge Memory API (Mar 19, 2026)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/openviking/devices/register` | POST | Register edge device OpenViking instance |
+| `/api/openviking/devices/{device_id}` | DELETE | Unregister device |
+| `/api/openviking/devices` | GET | List all registered devices |
+| `/api/openviking/sync/{device_id}` | POST | Trigger manual bidirectional sync |
+| `/api/openviking/sync/all` | POST | Sync all devices |
+| `/api/openviking/query/{device_id}` | POST | Query device memory (L0/L1/L2 tier) |
+| `/api/openviking/push/{device_id}` | POST | Push content to device |
+| `/api/openviking/health` | GET | Bridge health + device status |
+| `/api/openviking/sync/status` | GET | Background sync service status |
+| `/api/openviking/sync/start` | POST | Start periodic sync |
+| `/api/openviking/sync/stop` | POST | Stop periodic sync |
+| `/api/openviking/sync/history` | GET | Recent sync cycle history |
+| `/api/openviking/devices/{device_id}/browse` | POST | Browse device filesystem |
+| `/api/openviking/devices/{device_id}/read` | POST | Read device content with tier |
+
 ### Recent Runtime Updates (Mar 6, 2026)
 
 | Endpoint | Method | Description |
