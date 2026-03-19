@@ -1,0 +1,112 @@
+# Deploy MAS orchestrator to VM 188 — build in CI, VM pull + restart only.
+# Same pattern as website deploy-sandbox-production.yml.
+#
+# Secrets (Settings → Secrets and variables → Actions):
+#   MAS_HOST             - 192.168.0.188
+#   VM_SSH_PRIVATE_KEY   - SSH private key for mycosoft user
+#   GHCR_PULL_TOKEN      - (Optional) PAT with read:packages for VM to pull image
+#   Any env vars the orchestrator needs at runtime (e.g. DB, Redis) — set on VM in .env or here and pass in deploy
+
+name: Deploy MAS to Production (VM 188)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mycosoft_mas/**'
+      - 'config/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - 'Dockerfile'
+      - '.github/workflows/deploy-mas-production.yml'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    name: Build MAS image in CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:mas-${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:mas-latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          network: host
+
+  deploy:
+    name: Deploy to MAS VM (188)
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    steps:
+      - name: Set image for deploy (GHCR uses lowercase)
+        run: echo "IMAGE_FULL=${{ env.REGISTRY }}/$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]'):mas-latest" >> $GITHUB_ENV
+
+      - name: Deploy to MAS VM
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_FULL: ${{ env.IMAGE_FULL }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+        with:
+          host: ${{ secrets.MAS_HOST }}
+          username: mycosoft
+          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
+          command_timeout: 10m
+          envs: IMAGE_FULL,GHCR_PULL_TOKEN
+          script: |
+            set -e
+            if [ -n "$GHCR_PULL_TOKEN" ]; then
+              echo "$GHCR_PULL_TOKEN" | docker login ghcr.io -u mycosoft --password-stdin
+            fi
+            echo "=== Pulling image ==="
+            docker pull "$IMAGE_FULL"
+            echo "=== Replacing container ==="
+            docker stop myca-orchestrator-new 2>/dev/null || true
+            docker rm myca-orchestrator-new 2>/dev/null || true
+            MAS_DIR="/home/mycosoft/mycosoft/mas"
+            [ -d "/opt/mycosoft/mas" ] && MAS_DIR="/opt/mycosoft/mas"
+            ENV_FILE_OPT=""
+            [ -f "$MAS_DIR/.env" ] && ENV_FILE_OPT="--env-file $MAS_DIR/.env"
+            docker run -d --name myca-orchestrator-new -p 8001:8000 \
+              $ENV_FILE_OPT \
+              -e MINDEX_API_URL=http://192.168.0.189:8000 \
+              --restart unless-stopped \
+              "$IMAGE_FULL"
+            echo "=== Waiting for health ==="
+            sleep 15
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              if curl -sf http://localhost:8001/health >/dev/null; then
+                echo "Health check passed"
+                break
+              fi
+              echo "Attempt $i: waiting 5s..."
+              sleep 5
+            done
+            curl -sf http://localhost:8001/health || exit 1

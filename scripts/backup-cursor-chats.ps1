@@ -1,7 +1,10 @@
 # Backup Cursor Chat History - Feb 6, 2026
+# DEPRECATED Mar 16, 2026: Use cursor-chat-backup.ps1 instead (Mycosoft-CursorChatBackup @ 1 AM).
+# This script is a DUPLICATE. Remove its task: Run scripts\remove-duplicate-backup-task.ps1 as Admin.
+#
 # Backs up workspaceStorage (chat DBs) to a safe location so chats are never lost again.
-# Schedule this daily: 
-#   schtasks /create /tn "Mycosoft-Cursor-Chat-Backup" /tr "powershell -ExecutionPolicy Bypass -File C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\scripts\backup-cursor-chats.ps1" /sc daily /st 12:00
+# Schedule this daily (use -WindowStyle Hidden to avoid pop-ups):
+#   schtasks /create /tn "Mycosoft-Cursor-Chat-Backup" /tr "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\scripts\backup-cursor-chats.ps1" /sc daily /st 12:00
 #
 # Manual run: .\backup-cursor-chats.ps1
 

@@ -26,21 +26,21 @@ When the user needs **servers** or **long-running services** (dev server, Moshi,
 
 ---
 
-## How to start the website dev server externally
+## How to start the website dev server externally (no window pop-up)
 
-From the **MAS repo** or **website repo**, run:
+From the **MAS repo** or **website repo**, run with **-WindowStyle Hidden** so no PowerShell window appears:
 
 ```powershell
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd 'C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website'; npm run dev:next-only"
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-NoProfile", "-NoExit", "-Command", "cd 'C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website'; npm run dev:next-only"
 ```
 
 Or from **WEBSITE/website**:
 
 ```powershell
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; npm run dev:next-only"
+Start-Process powershell -WindowStyle Hidden -ArgumentList "-NoProfile", "-NoExit", "-Command", "cd '$PWD'; npm run dev:next-only"
 ```
 
-This opens a **new PowerShell window** that runs the dev server. Cursor's terminal is not used and is not blocked.
+The dev server runs in a **hidden** process; Cursor's terminal is not used and no window pops up.
 
 ---
 

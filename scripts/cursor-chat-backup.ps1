@@ -310,7 +310,7 @@ function Install-Schedule {
     if (-not $scriptPath) { $scriptPath = $PSCommandPath }
 
     $action = New-ScheduledTaskAction -Execute "powershell.exe" `
-        -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
+        -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$scriptPath`""
 
     $trigger = New-ScheduledTaskTrigger -Daily -At "12:00AM"
 

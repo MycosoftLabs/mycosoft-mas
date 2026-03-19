@@ -21,8 +21,8 @@ Or:
 npm run dev:next-only
 ```
 
-To launch from Cursor in one shot (opens external window):  
-`Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd 'C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website'; npm run dev:next-only"`
+To launch from Cursor in one shot (no window — runs hidden):  
+`Start-Process powershell -WindowStyle Hidden -ArgumentList "-NoProfile", "-NoExit", "-Command", "cd 'C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website'; npm run dev:next-only"`
 
 Open **http://localhost:3010/test-voice**.
 

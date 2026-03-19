@@ -3,6 +3,8 @@
 ## MYCA2 PSILO Stack (Mar 17–18, 2026)
 - `docs/MYCA2_PLASTICITY_ROUTER_MOUNT_MAR18_2026.md` – **Plasticity router on MAS**: PSILO returned 404 until `plasticity_router` was mounted in `myca_main.py`; deploy MAS after merge; smoke POST body.
 - `docs/MYCA2_PSILO_STACK_COMPLETE_MAR17_2026.md` – **MYCA2 PSILO full-stack**: Sandbox runtime, PSILO protocol, MINDEX lineage/journal tables, registry-backed `myca2_*` routing, executive overlay, production promotion gates, AI Studio widget, verification.
+- `docs/MYCA2_VM_ROLLOUT_AND_SMOKE_MAR17_2026.md` – **VM rollout + smoke**: Postgres 189 migration, MINDEX API + MAS Docker on 188, `myca2_vm_rollout.py --all`, pytest `MYCA2_VM_SMOKE=1`, systemd rollback.
+- `docs/MYCA2_ROLLOUT_VM189_AND_TESTS_MAR17_2026.md` – **189 compose fix + LAN-only deploy**: earth-sync YAML heredoc; run rollout/tests from machine on `192.168.0.0/24`; MAS/MINDEX/website steps + smoke commands.
 
 ## MYCA Export Package (Mar 16, 2026)
 - `docs/MYCA_EXPORT_INDEX_MAR16_2026.md` – **MYCA export master index**: Master index for external AI systems (Base44, Claude, Perplexity, OpenAI, Grok); links to identity, soul, constitution, skills, external access.

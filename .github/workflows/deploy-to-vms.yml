@@ -1,5 +1,8 @@
-# Deploy to Mycosoft VMs - SSH + pull + rebuild + restart
-# Runs on push to main. Requires self-hosted runner on LAN or bastion reachable to 192.168.0.x
+# Deploy to Mycosoft VMs - SSH + git pull + rebuild/restart on VM (fallback).
+# For instant deploys (build in CI, VM pull only), use each repo's workflow:
+#   Website → website repo: deploy-sandbox-production.yml
+#   MAS     → this repo:    deploy-mas-production.yml
+#   MINDEX  → mindex repo:  deploy-mindex-vm.yml
 #
 # Secrets (Settings → Secrets and variables → Actions):
 #   VM_SSH_PRIVATE_KEY  - SSH private key for mycosoft user
@@ -64,6 +67,8 @@ jobs:
             sleep 10
             curl -sf http://localhost:8000/health || exit 1
 
+  # For website-only production deploys, use the website repo workflow:
+  # .github/workflows/deploy-sandbox-production.yml (uses GitHub secrets, no local .env).
   deploy-website:
     runs-on: ubuntu-latest
     if: github.event.inputs.target == 'website' || github.event.inputs.target == 'all'
@@ -71,7 +76,7 @@ jobs:
       - name: Deploy Website to VM 187
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VM_SANDBOX_HOST }}
+          host: ${{ secrets.PRODUCTION_HOST }}
           username: mycosoft
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           script: |

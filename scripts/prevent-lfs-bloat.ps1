@@ -13,7 +13,7 @@
 # This script is a SAFETY NET in case anything re-enables LFS.
 #
 # Usage: .\prevent-lfs-bloat.ps1
-# Scheduled hourly: schtasks /create /tn "Mycosoft-LFS-Cleanup" /tr "powershell -ExecutionPolicy Bypass -File C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\scripts\prevent-lfs-bloat.ps1" /sc hourly /f
+# Scheduled hourly (use -WindowStyle Hidden to avoid pop-ups): schtasks /create /tn "Mycosoft-LFS-Cleanup" /tr "powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\admin2\Desktop\MYCOSOFT\CODE\MAS\mycosoft-mas\scripts\prevent-lfs-bloat.ps1" /sc hourly /f
 
 param([switch]$Verbose)
 

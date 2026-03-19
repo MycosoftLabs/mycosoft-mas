@@ -30,7 +30,7 @@ if (-not $webOk) {
     Write-Host "[3] Website dev (3010): DOWN - starting..." -ForegroundColor Yellow
     $webRoot = "C:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website"
     if (Test-Path $webRoot) {
-        Start-Process -FilePath "npm" -ArgumentList "run","dev:next-only" -WorkingDirectory $webRoot -WindowStyle Normal
+        Start-Process -FilePath "npm" -ArgumentList "run","dev:next-only" -WorkingDirectory $webRoot -WindowStyle Hidden
         Start-Sleep -Seconds 5
     }
     Write-Host "    Wait for Next.js ready, then open http://localhost:3010/test-voice" -ForegroundColor Gray

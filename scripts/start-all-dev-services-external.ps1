@@ -10,26 +10,26 @@ if (-not $WebsiteRoot) { $WebsiteRoot = "C:\Users\admin2\Desktop\MYCOSOFT\CODE\W
 Write-Host "=== Starting Dev Services (External Windows) ===" -ForegroundColor Cyan
 Write-Host ""
 
-# 1. MycoBrain Service (new window)
+# 1. MycoBrain Service (hidden)
 $mycoScript = Join-Path $ScriptRoot "start-mycobrain-external.ps1"
-Write-Host "[1/2] Opening MycoBrain Service (port 8003)..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "`"$mycoScript`"" -WorkingDirectory $RepoRoot
+Write-Host "[1/2] Starting MycoBrain Service (port 8003)..." -ForegroundColor Green
+Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", "`"$mycoScript`"" -WorkingDirectory $RepoRoot -WindowStyle Hidden
 
 Start-Sleep -Seconds 2
 
-# 2. Website Dev Server (new window)
+# 2. Website Dev Server (hidden)
 $devScript = Join-Path $WebsiteRoot "scripts\start-dev-external.ps1"
 if (Test-Path $devScript) {
-    Write-Host "[2/2] Opening Website Dev Server (port 3010)..." -ForegroundColor Green
-    Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", "`"$devScript`"" -WorkingDirectory $WebsiteRoot
+    Write-Host "[2/2] Starting Website Dev Server (port 3010)..." -ForegroundColor Green
+    Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", "`"$devScript`"" -WorkingDirectory $WebsiteRoot -WindowStyle Hidden
 } else {
     Write-Host "[2/2] Dev script not found, starting npm directly..." -ForegroundColor Yellow
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd `"$WebsiteRoot`"; npm run dev:next-only"
+    Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", "cd `"$WebsiteRoot`"; npm run dev:next-only" -WindowStyle Hidden
 }
 
 Write-Host ""
-Write-Host "Done. Two windows opened:" -ForegroundColor Cyan
+Write-Host "Done. Two services started (running in background):" -ForegroundColor Cyan
 Write-Host "  - MycoBrain: http://localhost:8003" -ForegroundColor Gray
 Write-Host "  - Website:   http://localhost:3010" -ForegroundColor Gray
 Write-Host ""
-Write-Host "Close this window. Services run in their own windows." -ForegroundColor Gray
+Write-Host "Close this window. Services run in background (no visible windows)." -ForegroundColor Gray
