@@ -22,6 +22,7 @@ on:
   workflow_dispatch:
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -72,6 +73,7 @@ jobs:
       - name: Deploy to MAS VM
         uses: appleboy/ssh-action@v1.0.3
         env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           IMAGE_FULL: ${{ env.IMAGE_FULL }}
           GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
         with:
@@ -110,3 +112,4 @@ jobs:
               sleep 5
             done
             curl -sf http://localhost:8001/health || exit 1
+
