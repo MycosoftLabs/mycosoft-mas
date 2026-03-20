@@ -38,6 +38,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import json
 
+from mycosoft_mas.integrations.mindex_internal_auth import get_internal_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -163,16 +165,26 @@ class MINDEXClient:
             }
             if self.api_key:
                 headers["X-API-Key"] = self.api_key
-            
+            # Add internal service-to-service auth token
+            headers.update(get_internal_headers())
+
             self._http_client = httpx.AsyncClient(
                 base_url=self.api_url,
                 headers=headers,
                 timeout=self.timeout,
-                follow_redirects=True
+                follow_redirects=True,
+                event_hooks={"request": [self._refresh_internal_token]},
             )
-        
+
         return self._http_client
-    
+
+    @staticmethod
+    async def _refresh_internal_token(request: httpx.Request) -> None:
+        """Refresh the X-Internal-Token on every request so it never expires."""
+        fresh = get_internal_headers()
+        if fresh:
+            request.headers.update(fresh)
+
     async def get_taxa(
         self,
         limit: int = 25,
@@ -214,7 +226,7 @@ class MINDEXClient:
             if rank:
                 params["rank"] = rank
             
-            response = await client.get("/taxa", params=params)
+            response = await client.get("/api/mindex/internal/taxa", params=params)
             response.raise_for_status()
             data = response.json()
             
@@ -270,7 +282,7 @@ class MINDEXClient:
             if taxon_id:
                 params["taxon_id"] = taxon_id
             
-            response = await client.get("/observations", params=params)
+            response = await client.get("/api/mindex/internal/observations", params=params)
             response.raise_for_status()
             data = response.json()
             
@@ -309,7 +321,7 @@ class MINDEXClient:
             if device_id:
                 params["device_id"] = device_id
             
-            response = await client.get("/telemetry/devices/latest", params=params)
+            response = await client.get("/api/mindex/internal/telemetry/devices/latest", params=params)
             response.raise_for_status()
             data = response.json()
             
@@ -351,7 +363,7 @@ class MINDEXClient:
                 "offset": offset
             }
             
-            response = await client.get("/ip/assets", params=params)
+            response = await client.get("/api/mindex/internal/ip/assets", params=params)
             response.raise_for_status()
             data = response.json()
             
@@ -383,7 +395,7 @@ class MINDEXClient:
         try:
             client = await self._get_http_client()
             response = await client.post(
-                f"/ip/assets/{asset_id}/anchor/hypergraph",
+                f"/api/mindex/internal/ip/assets/{asset_id}/anchor/hypergraph",
                 json=payload
             )
             response.raise_for_status()
@@ -423,7 +435,7 @@ class MINDEXClient:
                 payload["token_account"] = token_account
             
             response = await client.post(
-                f"/ip/assets/{asset_id}/bind/solana",
+                f"/api/mindex/internal/ip/assets/{asset_id}/bind/solana",
                 json=payload
             )
             response.raise_for_status()
@@ -474,7 +486,7 @@ class MINDEXClient:
                 headers["X-Device-API-Key"] = api_key
             
             response = await client.post(
-                "/telemetry/mycobrain/ingest",
+                "/api/mindex/internal/telemetry/mycobrain/ingest",
                 json=telemetry_data,
                 headers=headers
             )
@@ -525,7 +537,7 @@ class MINDEXClient:
                 payload["metadata"] = metadata
             
             response = await client.post(
-                "/devices/mycobrain/register",
+                "/api/mindex/internal/devices/mycobrain/register",
                 json=payload
             )
             response.raise_for_status()
@@ -558,7 +570,7 @@ class MINDEXClient:
                 "device_type": "mycobrain"
             }
             
-            response = await client.get("/devices", params=params)
+            response = await client.get("/api/mindex/internal/devices", params=params)
             response.raise_for_status()
             data = response.json()
             
@@ -598,7 +610,7 @@ class MINDEXClient:
             if end_time:
                 params["end_time"] = end_time.isoformat()
             
-            response = await client.get("/telemetry/mycobrain", params=params)
+            response = await client.get("/api/mindex/internal/telemetry/mycobrain", params=params)
             response.raise_for_status()
             data = response.json()
             
@@ -671,7 +683,7 @@ class MINDEXClient:
         # Check API
         try:
             client = await self._get_http_client()
-            response = await client.get("/health", timeout=5)
+            response = await client.get("/api/mindex/internal/health", timeout=5)
             health["api_status"] = "ok" if response.status_code == 200 else "error"
         except Exception as e:
             health["api_status"] = "error"

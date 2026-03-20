@@ -27,6 +27,8 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
+from mycosoft_mas.integrations.mindex_internal_auth import get_internal_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,6 +44,8 @@ class MINDEXEarthClient:
         h: Dict[str, str] = {"Accept": "application/json"}
         if self.api_key:
             h["X-API-Key"] = self.api_key
+        # Add internal service-to-service auth
+        h.update(get_internal_headers())
         return h
 
     async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Optional[Any]:
@@ -93,7 +97,7 @@ class MINDEXEarthClient:
         if radius_km is not None:
             params["radius_km"] = radius_km
 
-        data = await self._get("/earth", params=params)
+        data = await self._get("/api/mindex/internal/earth", params=params)
         return data or {"results": [], "universal_results": [], "total": 0}
 
     async def earth_nearby(
@@ -111,12 +115,12 @@ class MINDEXEarthClient:
         if domains:
             params["domains"] = ",".join(domains)
 
-        data = await self._get("/earth/nearby", params=params)
+        data = await self._get("/api/mindex/internal/earth/nearby", params=params)
         return data or {"results": [], "total": 0}
 
     async def earth_domains(self) -> Dict[str, Any]:
         """Call MINDEX /earth/domains — list all searchable domains."""
-        data = await self._get("/earth/domains")
+        data = await self._get("/api/mindex/internal/earth/domains")
         return data or {"domains": [], "groups": {}}
 
     # ── Map / CREP ───────────────────────────────────────────────────────────
@@ -137,12 +141,12 @@ class MINDEXEarthClient:
         if layers:
             params["layers"] = ",".join(layers)
 
-        data = await self._get("/earth/map/bbox", params=params)
+        data = await self._get("/api/mindex/internal/earth/map/bbox", params=params)
         return data or {"layers": {}, "total": 0}
 
     async def map_layers(self) -> List[str]:
         """Get available CREP map layers from MINDEX."""
-        data = await self._get("/earth/map/layers")
+        data = await self._get("/api/mindex/internal/earth/map/layers")
         if data and isinstance(data, dict):
             return data.get("layers", [])
         if isinstance(data, list):
@@ -154,33 +158,33 @@ class MINDEXEarthClient:
         body = {}
         if domains:
             body["domains"] = domains
-        data = await self._post("/earth/crep/sync", json_body=body)
+        data = await self._post("/api/mindex/internal/earth/crep/sync", json_body=body)
         return data or {"status": "error"}
 
     # ── Stats ────────────────────────────────────────────────────────────────
 
     async def stats(self) -> Dict[str, Any]:
         """Get entity counts across all domains."""
-        data = await self._get("/earth/stats")
+        data = await self._get("/api/mindex/internal/earth/stats")
         return data or {}
 
     # ── Domain-specific shortcuts ────────────────────────────────────────────
 
     async def recent_earthquakes(self, limit: int = 20) -> List[Dict[str, Any]]:
-        data = await self._get("/earth/earthquakes/recent", params={"limit": limit})
+        data = await self._get("/api/mindex/internal/earth/earthquakes/recent", params={"limit": limit})
         return data if isinstance(data, list) else (data or {}).get("results", [])
 
     async def active_satellites(self, limit: int = 50) -> List[Dict[str, Any]]:
-        data = await self._get("/earth/satellites/active", params={"limit": limit})
+        data = await self._get("/api/mindex/internal/earth/satellites/active", params={"limit": limit})
         return data if isinstance(data, list) else (data or {}).get("results", [])
 
     async def recent_solar_events(self, limit: int = 10) -> List[Dict[str, Any]]:
-        data = await self._get("/earth/solar/recent", params={"limit": limit})
+        data = await self._get("/api/mindex/internal/earth/solar/recent", params={"limit": limit})
         return data if isinstance(data, list) else (data or {}).get("results", [])
 
     async def health(self) -> Dict[str, Any]:
         """Check MINDEX earth endpoints health."""
-        data = await self._get("/earth/stats")
+        data = await self._get("/api/mindex/internal/earth/stats")
         if data:
             return {"status": "healthy", "stats": data}
         return {"status": "unreachable"}

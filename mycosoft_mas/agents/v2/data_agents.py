@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from mycosoft_mas.nlm.inference.service import get_nlm_service, PredictionRequest, QueryType
+from mycosoft_mas.integrations.mindex_internal_auth import get_internal_headers
 from .base_agent_v2 import BaseAgentV2
 from mycosoft_mas.runtime import AgentTask, AgentCategory
 
@@ -67,17 +68,21 @@ class MindexAgent(BaseAgentV2):
         limit = task.payload.get("limit", 50)
 
         endpoint_map = {
-            "species": "/api/mindex/taxa",
-            "observations": "/api/mindex/observations",
-            "telemetry": "/api/mindex/telemetry/latest",
-            "compounds": "/api/mindex/compounds",
+            "species": "/api/mindex/internal/taxa",
+            "observations": "/api/mindex/internal/observations",
+            "telemetry": "/api/mindex/internal/telemetry/latest",
+            "compounds": "/api/mindex/internal/compounds",
         }
-        endpoint = endpoint_map.get(query_type, f"/api/mindex/{query_type}")
+        endpoint = endpoint_map.get(query_type, f"/api/mindex/internal/{query_type}")
 
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 params = {**filters, "limit": limit}
-                response = await client.get(f"{self.MINDEX_API_URL}{endpoint}", params=params)
+                response = await client.get(
+                    f"{self.MINDEX_API_URL}{endpoint}",
+                    params=params,
+                    headers=get_internal_headers(),
+                )
                 response.raise_for_status()
                 data = response.json()
 
@@ -103,7 +108,10 @@ class MindexAgent(BaseAgentV2):
         """Get ETL pipeline status from MINDEX."""
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{self.MINDEX_API_URL}/api/mindex/health")
+                response = await client.get(
+                    f"{self.MINDEX_API_URL}/api/mindex/internal/health",
+                    headers=get_internal_headers(),
+                )
                 response.raise_for_status()
                 health = response.json()
 
@@ -130,8 +138,9 @@ class MindexAgent(BaseAgentV2):
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.post(
-                    f"{self.MINDEX_API_URL}/api/mindex/search",
+                    f"{self.MINDEX_API_URL}/api/mindex/internal/search",
                     json={"query": query, "search_type": search_type, "limit": limit},
+                    headers=get_internal_headers(),
                 )
                 response.raise_for_status()
                 data = response.json()
@@ -148,7 +157,10 @@ class MindexAgent(BaseAgentV2):
         """Check MINDEX API health."""
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"{self.MINDEX_API_URL}/health")
+                response = await client.get(
+                    f"{self.MINDEX_API_URL}/api/mindex/internal/health",
+                    headers=get_internal_headers(),
+                )
                 response.raise_for_status()
                 return {"status": "healthy", "details": response.json()}
         except Exception as e:

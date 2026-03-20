@@ -16,6 +16,8 @@ from datetime import datetime
 
 import aiohttp
 
+from mycosoft_mas.integrations.mindex_internal_auth import get_internal_headers
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,13 +49,14 @@ class MINDEXClient:
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create HTTP session."""
         if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession(
-                headers={
-                    "X-API-Key": self.api_key,
-                    "Content-Type": "application/json",
-                    "User-Agent": "MYCA/1.0 (Mycosoft AI)",
-                }
-            )
+            headers = {
+                "X-API-Key": self.api_key,
+                "Content-Type": "application/json",
+                "User-Agent": "MYCA/1.0 (Mycosoft AI)",
+            }
+            # Add internal service-to-service auth
+            headers.update(get_internal_headers())
+            self._session = aiohttp.ClientSession(headers=headers)
         return self._session
     
     async def close(self):
@@ -71,13 +74,17 @@ class MINDEXClient:
         """Make request to MINDEX API."""
         session = await self._get_session()
         url = f"{self.base_url}{endpoint}"
-        
+
+        # Refresh internal token on every request (tokens are time-limited)
+        request_headers = get_internal_headers()
+
         try:
             async with session.request(
                 method,
                 url,
                 params=params,
                 json=json,
+                headers=request_headers,
                 timeout=aiohttp.ClientTimeout(total=self.timeout),
             ) as response:
                 if response.status == 200:
@@ -109,7 +116,7 @@ class MINDEXClient:
         """
         data = await self._request(
             "GET",
-            "/mindex/species/search",
+            "/api/mindex/internal/species/search",
             params={
                 "q": query,
                 "limit": limit,
@@ -123,11 +130,11 @@ class MINDEXClient:
     
     async def get_species_by_id(self, species_id: int) -> Optional[Dict[str, Any]]:
         """Get detailed species information by ID."""
-        return await self._request("GET", f"/mindex/species/{species_id}")
+        return await self._request("GET", f"/api/mindex/internal/species/{species_id}")
     
     async def get_species_by_name(self, scientific_name: str) -> Optional[Dict[str, Any]]:
         """Get species information by scientific name."""
-        return await self._request("GET", f"/mindex/species/by-name/{scientific_name}")
+        return await self._request("GET", f"/api/mindex/internal/species/by-name/{scientific_name}")
     
     # =========================================================================
     # IMAGE QUERIES
@@ -141,7 +148,7 @@ class MINDEXClient:
         """Get images for a species."""
         data = await self._request(
             "GET",
-            f"/mindex/images/for-species/{species_id}",
+            f"/api/mindex/internal/images/for-species/{species_id}",
             params={"limit": limit},
         )
         
@@ -164,7 +171,7 @@ class MINDEXClient:
         if gene_region:
             params["gene_region"] = gene_region
         
-        data = await self._request("GET", "/mindex/sequences/search", params=params)
+        data = await self._request("GET", "/api/mindex/internal/sequences/search", params=params)
         
         if data:
             return data if isinstance(data, list) else data.get("sequences", [])
@@ -183,7 +190,7 @@ class MINDEXClient:
         
         data = await self._request(
             "GET",
-            f"/mindex/sequences/for-species/{species_id}",
+            f"/api/mindex/internal/sequences/for-species/{species_id}",
             params=params,
         )
         
@@ -209,7 +216,7 @@ class MINDEXClient:
         if year_to:
             params["year_to"] = year_to
         
-        data = await self._request("GET", "/mindex/research/search", params=params)
+        data = await self._request("GET", "/api/mindex/internal/research/search", params=params)
         
         if data:
             return data if isinstance(data, list) else data.get("papers", [])
@@ -223,7 +230,7 @@ class MINDEXClient:
         """Get research papers for a species."""
         data = await self._request(
             "GET",
-            f"/mindex/research/for-species/{species_id}",
+            f"/api/mindex/internal/research/for-species/{species_id}",
             params={"limit": limit},
         )
         
@@ -246,7 +253,7 @@ class MINDEXClient:
         if compound_class:
             params["compound_class"] = compound_class
         
-        data = await self._request("GET", "/mindex/compounds/search", params=params)
+        data = await self._request("GET", "/api/mindex/internal/compounds/search", params=params)
         
         if data:
             return data if isinstance(data, list) else data.get("compounds", [])
@@ -260,7 +267,7 @@ class MINDEXClient:
         """Get compounds produced by a species."""
         data = await self._request(
             "GET",
-            f"/mindex/compounds/for-species/{species_id}",
+            f"/api/mindex/internal/compounds/for-species/{species_id}",
             params={"limit": limit},
         )
         
@@ -289,7 +296,7 @@ class MINDEXClient:
         """
         data = await self._request(
             "GET",
-            "/mindex/unified/search",
+            "/api/mindex/internal/unified/search",
             params={
                 "q": query,
                 "include_species": str(include_species).lower(),
@@ -324,7 +331,7 @@ class MINDEXClient:
         """Query the MINDEX knowledge graph."""
         data = await self._request(
             "POST",
-            "/mindex/knowledge/search",
+            "/api/mindex/internal/knowledge/search",
             json={"query": query, "limit": limit},
         )
         
@@ -340,7 +347,7 @@ class MINDEXClient:
         """Get a knowledge graph node with edges."""
         return await self._request(
             "GET",
-            f"/mindex/knowledge/nodes/{node_id}",
+            f"/api/mindex/internal/knowledge/nodes/{node_id}",
             params={"depth": depth},
         )
     
@@ -350,7 +357,7 @@ class MINDEXClient:
     
     async def get_stats(self) -> Dict[str, Any]:
         """Get MINDEX database statistics."""
-        data = await self._request("GET", "/mindex/stats")
+        data = await self._request("GET", "/api/mindex/internal/stats")
         return data or {
             "species": 0,
             "images": 0,

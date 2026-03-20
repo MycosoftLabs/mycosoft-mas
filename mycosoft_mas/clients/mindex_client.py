@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional, List
 from pydantic import BaseModel
 
 from .base_client import BaseClient, ClientResponse
+from mycosoft_mas.integrations.mindex_internal_auth import get_internal_headers
 
 
 class MINDEXSpecies(BaseModel):
@@ -53,6 +54,7 @@ class MINDEXClient(BaseClient):
         super().__init__(
             base_url=base_url,
             api_key=api_key,
+            headers=get_internal_headers(),
             **kwargs
         )
         
@@ -81,7 +83,7 @@ class MINDEXClient(BaseClient):
             **(filters or {})
         }
         
-        return await self.get("/api/v1/species/search", params=params)
+        return await self.get("/api/mindex/internal/species/search", params=params)
     
     async def get_species(self, species_id: str) -> ClientResponse:
         """
@@ -93,7 +95,7 @@ class MINDEXClient(BaseClient):
         Returns:
             ClientResponse with species data
         """
-        return await self.get(f"/api/v1/species/{species_id}", response_model=MINDEXSpecies)
+        return await self.get(f"/api/mindex/internal/species/{species_id}", response_model=MINDEXSpecies)
     
     async def get_cultivation_protocol(self, species_id: str) -> ClientResponse:
         """
@@ -105,7 +107,7 @@ class MINDEXClient(BaseClient):
         Returns:
             ClientResponse with cultivation protocol
         """
-        return await self.get(f"/api/v1/species/{species_id}/cultivation")
+        return await self.get(f"/api/mindex/internal/species/{species_id}/cultivation")
     
     async def log_growth_data(
         self,
@@ -123,7 +125,7 @@ class MINDEXClient(BaseClient):
             ClientResponse with logged data
         """
         return await self.post(
-            f"/api/v1/species/{species_id}/growth",
+            f"/api/mindex/internal/species/{species_id}/growth",
             json_data=data
         )
     
@@ -150,9 +152,9 @@ class MINDEXClient(BaseClient):
             **({"topic": topic} if topic else {})
         }
         
-        return await self.get("/api/v1/research", params=params)
+        return await self.get("/api/mindex/internal/research", params=params)
     
     async def health_check(self) -> bool:
         """Check MINDEX service health."""
-        response = await self.get("/health")
+        response = await self.get("/api/mindex/internal/health")
         return response.success

@@ -240,11 +240,13 @@ class MINDEXBridge:
         api_key = os.getenv("MINDEX_API_KEY") or os.getenv("API_KEYS", "").split(",")[0].strip()
         if api_key:
             headers["X-API-Key"] = api_key
+        # Add internal service-to-service auth
+        headers.update(get_internal_headers())
         try:
             async with self._session.post(
-                f"{self._mindex_api.rstrip('/')}/api/mindex/grounding/experience-packets",
+                f"{self._mindex_api.rstrip('/')}/api/mindex/internal/grounding/experience-packets",
                 json=body,
-                headers=headers or None,
+                headers=headers,
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 if resp.status in (200, 201):
@@ -289,8 +291,9 @@ class MINDEXBridge:
         try:
             # Try MINDEX unified-search first (taxa, compounds, genetics, etc.)
             async with self._session.get(
-                f"{self._mindex_api.rstrip('/')}/api/mindex/unified-search",
+                f"{self._mindex_api.rstrip('/')}/api/mindex/internal/unified-search",
                 params={"q": query, "limit": limit},
+                headers=get_internal_headers(),
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 if resp.status == 200:
@@ -307,8 +310,9 @@ class MINDEXBridge:
             pass
         try:
             async with self._session.get(
-                f"{self._mindex_api.rstrip('/')}/api/search",
+                f"{self._mindex_api.rstrip('/')}/api/mindex/internal/search",
                 params={"q": query, "limit": limit},
+                headers=get_internal_headers(),
                 timeout=aiohttp.ClientTimeout(total=10),
             ) as resp:
                 if resp.status == 200:

@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Optional
 import aiohttp
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.integrations.mindex_internal_auth import get_internal_headers
+
 
 class MINDEXItem(BaseModel):
     id: str
@@ -36,14 +38,14 @@ class MINDEXClient:
     async def health(self) -> bool:
         try:
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.timeout)) as session:
-                async with session.get(f"{self.base_url}/health", headers=self._headers()) as resp:
+                async with session.get(f"{self.base_url}/api/mindex/internal/health", headers=self._headers()) as resp:
                     return resp.status == 200
         except Exception:
             return False
 
     async def search(self, query: str, limit: int = 10) -> MINDEXResponse:
         payload = {"query": query, "limit": limit, "version": self.CONTRACT_VERSION}
-        data = await self._post_json("/search", payload)
+        data = await self._post_json("/api/mindex/internal/search", payload)
         return MINDEXResponse(**data)
 
     async def _post_json(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -64,7 +66,10 @@ class MINDEXClient:
         raise RuntimeError(f"MINDEX request failed after {self.max_retries} attempts: {last_error}")
 
     def _headers(self) -> Dict[str, str]:
-        return {
+        headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+        # Add internal service-to-service auth
+        headers.update(get_internal_headers())
+        return headers

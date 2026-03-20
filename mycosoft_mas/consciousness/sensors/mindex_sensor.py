@@ -205,10 +205,11 @@ class MINDEXSensor(BaseSensor):
         """Get information about a fungal species."""
         if not self._client or not self.is_connected:
             return {"error": "Not connected"}
-        
+
         try:
             response = await self._client.get(
-                f"{self._api_base}/fungi/{species}"
+                f"{self._api_base}/fungi/{species}",
+                headers=self._internal_headers(),
             )
             if response.status_code == 200:
                 return response.json()
