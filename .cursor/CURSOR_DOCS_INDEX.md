@@ -8,6 +8,14 @@
 
 ---
 
+## Platform Gap and Backlog (Mar 19, 2026) — default entry for "what's left"
+| Doc | Purpose |
+|-----|---------|
+| `docs/PLATFORM_GAP_AUDIT_AND_BACKLOG_MAR19_2026.md` | **Master backlog**: P0–P3 waves, gap_report_latest.json link, refresh commands. Use when asking "what's missing" or planning implementation. |
+| `docs/EXECUTION_WAVES_AND_ACCEPTANCE_MAR19_2026.md` | **Sprint waves**: Per-wave scope, tests, evidence, cadence. Use for execution order and acceptance. |
+| `docs/INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md` | **Integration contract matrix**: MAS↔MINDEX, BFF, CREP, voice, n8n. Use for integration status. |
+| `docs/DOC_DRIFT_AND_INDEX_TRIAGE_MAR19_2026.md` | **Doc drift triage**: Unchecked items, cursor_index_scan import. Use for backlog closure. |
+
 ## World View Search and Platform Cohesion (Mar 14, 2026)
 | Doc | Purpose |
 |-----|---------|

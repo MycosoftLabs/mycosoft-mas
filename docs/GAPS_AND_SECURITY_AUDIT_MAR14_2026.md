@@ -118,3 +118,9 @@ After fixes, update this doc (or add a completion note) and run a quick re-scan 
 - **2.2 Deploy scripts:** Verified; all use env/creds only.
 - **2.3 Base64:** Confirmed tool_orchestrator (form/selector) and llm_brain (screenshot image) use base64 for **non-secret** payloads only; comments added in code. No AES-GCM change required for these uses.
 - **2.4 backend_selection:** Confirmed api_key from config/env; Ollama empty string correct; no change.
+
+### P0 Wave (Mar 19, 2026) — additional fixes
+
+- **scripts/force_restart_container.py:** Previously had hardcoded `PROXMOX_TOKEN_ID` and `PROXMOX_TOKEN_SECRET`. Refactored to load from env (`PROXMOX_TOKEN_ID`, `PROXMOX_TOKEN_SECRET`) or `.credentials.local`; exits with error if missing.
+- **CREPDashboardClient.tsx:** Military layers (militaryAir, militaryNavy, militaryBases, tanks, militaryDrones) changed from `status: "mock", source: "Mock"` to `status: "planned_real", source: "—"` per no-mock-data policy.
+- **app/api/security/route.ts:** `test_ids` action clarified as IDS pipeline validation only (synthetic test event); comment added.

@@ -97,7 +97,7 @@ All repos live under: `C:\Users\admin2\Desktop\MYCOSOFT\CODE\`
 - 80+ TODOs/FIXMEs across MAS Python files
 - 50+ placeholder/stub implementations
 - 15 missing website pages (referenced but no page.tsx)
-- 7 API routes returning 501 "Not implemented"
+- Some MAS/MINDEX proxy routes may return 501; run route-validator and see DOC_DRIFT for current list
 - 17 incomplete plans/roadmaps (6+ months of work)
 - Security flaw: base64 used instead of AES-GCM encryption
 - Voice system only 40% complete

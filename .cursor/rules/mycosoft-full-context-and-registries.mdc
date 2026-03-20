@@ -179,7 +179,7 @@ Cursor-level skills in `~/.cursor/skills-cursor/`:
 | TODOs/FIXMEs in code | 80+ | Medium-High |
 | Placeholder/stub implementations | 50+ | Medium-High |
 | Missing website pages | 15 | High |
-| Broken API routes (501) | 7 | High |
+| Broken API routes (501) | Tracked in DOC_DRIFT; run route-validator | Medium |
 | Incomplete plans/roadmaps | 17 | Track |
 | Security flaw (base64 encryption) | 1 | Critical |
 | Voice system completion | 40% done | High |

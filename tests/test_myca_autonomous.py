@@ -220,15 +220,18 @@ class TestEconomySystem:
 
     def test_economy_state_initialized(self):
         """Economy state has wallets."""
-        from mycosoft_mas.core.routers.economy_api import _economy_state
-        assert "solana" in _economy_state["wallets"]
-        assert "bitcoin" in _economy_state["wallets"]
-        assert "x401" in _economy_state["wallets"]
+        from mycosoft_mas.core.persistence import economy_store
+
+        state = economy_store.get_state()
+        assert "solana" in state["wallets"]
+        assert "bitcoin" in state["wallets"]
+        assert "x401" in state["wallets"]
 
     def test_pricing_tiers_exist(self):
         """Pricing tiers are defined."""
-        from mycosoft_mas.core.routers.economy_api import _economy_state
-        tiers = _economy_state["pricing_tiers"]
+        from mycosoft_mas.core.persistence import economy_store
+
+        tiers = economy_store.get_state()["pricing_tiers"]
         assert "free" in tiers
         assert "agent" in tiers
         assert "premium" in tiers

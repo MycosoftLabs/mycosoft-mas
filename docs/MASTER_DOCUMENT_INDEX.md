@@ -1,5 +1,11 @@
 # Master Document Index
 
+## Platform Gap Docs (Mar 19, 2026)
+- `docs/PLATFORM_GAP_AUDIT_AND_BACKLOG_MAR19_2026.md` – **Master backlog**: Executive summary, P0–P3 waves, dependency graph, link to gap_report_latest.json, refresh via gap_scan_cursor_background / GET /agents/gap/scan.
+- `docs/INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md` – **Contract matrix**: Rows = MAS↔MINDEX, website BFF, NatureOS/SignalR, CREP command, device/MycoBrain, voice stack, n8n; columns = repo, env, health URLs, definition of done, canonical doc.
+- `docs/EXECUTION_WAVES_AND_ACCEPTANCE_MAR19_2026.md` – **Sprint-shaped waves**: Per-wave scope, files, tests, evidence artifacts, registry updates; weekly gap refresh + per-deploy checklist.
+- `docs/DOC_DRIFT_AND_INDEX_TRIAGE_MAR19_2026.md` – **Triaged inbox**: Unchecked lines from execution reports + cursor_index_scan; Status/Owner/Proof columns.
+
 ## MYCA2 PSILO Stack (Mar 17–18, 2026)
 - `docs/MYCA2_PLASTICITY_ROUTER_MOUNT_MAR18_2026.md` – **Plasticity router on MAS**: PSILO returned 404 until `plasticity_router` was mounted in `myca_main.py`; deploy MAS after merge; smoke POST body.
 - `docs/MYCA2_PSILO_STACK_COMPLETE_MAR17_2026.md` – **MYCA2 PSILO full-stack**: Sandbox runtime, PSILO protocol, MINDEX lineage/journal tables, registry-backed `myca2_*` routing, executive overlay, production promotion gates, AI Studio widget, verification.

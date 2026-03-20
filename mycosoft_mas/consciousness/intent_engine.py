@@ -103,6 +103,13 @@ class IntentEngine:
         r"\b(trigger|execute)\b.*\b(workflow|pipeline)\b",
     ]
     
+    _agent_patterns: List[re.Pattern[str]]
+    _tool_patterns: List[re.Pattern[str]]
+    _knowledge_patterns: List[re.Pattern[str]]
+    _conversational_knowledge_patterns: List[re.Pattern[str]]
+    _status_patterns: List[re.Pattern[str]]
+    _system_patterns: List[re.Pattern[str]]
+    
     def __init__(self):
         self.gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
         self._compile_patterns()
@@ -273,10 +280,15 @@ Respond with JSON only:
             re.search(r"^\s*(what is|what are|tell me about|explain|describe)\b", message_lower)
         )
         has_science_term = bool(
-            re.search(r"\b(mycelium|fungi|mushroom|species|genetics|compound|psilocybin|amanita|spore|hypha)\b", message_lower)
+            re.search(r"\b(mycelium|fungi|mushroom|species|genetics|compound|psilocybin|amanita|spore|hypha|climate change|impact)\b", message_lower)
         )
         if conversational_question and has_science_term:
             scores[IntentType.KNOWLEDGE_QUERY] = max(scores[IntentType.KNOWLEDGE_QUERY], 0.85)
+
+        # Ensure biological terms heavily override generic weather queries
+        if has_science_term and scores.get(IntentType.STATUS_QUERY, 0) > 0:
+            scores[IntentType.STATUS_QUERY] = 0.0
+            scores[IntentType.KNOWLEDGE_QUERY] = max(scores.get(IntentType.KNOWLEDGE_QUERY, 0), 0.9)
         
         # Find best match
         best_intent = IntentType.GENERAL_CHAT
@@ -369,7 +381,7 @@ Respond with JSON only:
                 "flights": ["flight", "aircraft", "plane", "aviation"],
                 "vessels": ["vessel", "ship", "boat", "marine", "maritime"],
                 "satellites": ["satellite", "orbit", "space"],
-                "weather": ["weather", "forecast", "temperature", "climate"],
+                "weather": ["weather", "forecast", "temperature"],
                 "agents": ["agent", "agents"],
                 "system": ["system", "service", "server"],
             }

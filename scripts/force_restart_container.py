@@ -1,20 +1,42 @@
 #!/usr/bin/env python3
-"""Force restart the container with the new image."""
+"""Force restart the container with the new image.
+Proxmox token from PROXMOX_TOKEN_ID, PROXMOX_TOKEN_SECRET env or .credentials.local."""
+import os
 import requests
 import urllib3
 import time
 import base64
 import sys
+from pathlib import Path
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 urllib3.disable_warnings()
 
-PROXMOX_HOST = "https://192.168.0.202:8006"
-PROXMOX_TOKEN_ID = "myca@pve!mas"
-PROXMOX_TOKEN_SECRET = "ca23b6c8-5746-46c4-8e36-fc6caad5a9e5"
-VM_ID = 103
-NODE = "pve"
-VM_MEDIA_PATH = "/opt/mycosoft/media/website/assets"
+def _load_proxmox_token():
+    """Load Proxmox API token from env or .credentials.local. Never hardcode."""
+    token_id = os.environ.get("PROXMOX_TOKEN_ID", "")
+    token_secret = os.environ.get("PROXMOX_TOKEN_SECRET", "")
+    creds_file = Path(__file__).resolve().parent.parent / ".credentials.local"
+    if creds_file.exists():
+        for line in creds_file.read_text().splitlines():
+            if "=" in line and not line.strip().startswith("#"):
+                k, v = line.strip().split("=", 1)
+                k, v = k.strip(), v.strip()
+                if k == "PROXMOX_TOKEN_ID":
+                    token_id = v
+                elif k == "PROXMOX_TOKEN_SECRET":
+                    token_secret = v
+    return token_id, token_secret
+
+PROXMOX_HOST = os.environ.get("PROXMOX_HOST", "https://192.168.0.202:8006")
+PROXMOX_TOKEN_ID, PROXMOX_TOKEN_SECRET = _load_proxmox_token()
+VM_ID = int(os.environ.get("PROXMOX_VM_ID", "103"))
+NODE = os.environ.get("PROXMOX_NODE", "pve")
+VM_MEDIA_PATH = os.environ.get("VM_MEDIA_PATH", "/opt/mycosoft/media/website/assets")
+
+if not PROXMOX_TOKEN_ID or not PROXMOX_TOKEN_SECRET:
+    print("ERROR: PROXMOX_TOKEN_ID and PROXMOX_TOKEN_SECRET must be set (env or .credentials.local)")
+    sys.exit(1)
 
 headers = {"Authorization": f"PVEAPIToken={PROXMOX_TOKEN_ID}={PROXMOX_TOKEN_SECRET}"}
 

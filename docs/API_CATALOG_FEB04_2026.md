@@ -40,6 +40,14 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/openviking/devices/{device_id}/browse` | POST | Browse device filesystem |
 | `/api/openviking/devices/{device_id}/read` | POST | Read device content with tier |
 
+### Economy API (`/api/economy/*`) – Mar 19, 2026
+
+**Router:** `mycosoft_mas/core/routers/economy_api.py`
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/economy/resources/needs` | GET | **No-forecast contract:** `needs` is always `[]`; `total_estimated_cost` and `revenue_needed` are always `null`; `current_balance` is the sum of all wallet `balance` values from `economy_store` state; `recorded_purchases` is the tail of stored purchases capped at **50** entries; `message` is exactly `RESOURCE_NEEDS_NO_FORECAST_MESSAGE` (explains that forecasts require a real planning source). Response `status` is `success`. |
+
 ### Recent Runtime Updates (Mar 6, 2026)
 
 | Endpoint | Method | Description |
