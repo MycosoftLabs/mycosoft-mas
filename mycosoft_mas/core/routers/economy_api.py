@@ -26,6 +26,14 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/economy", tags=["economy"])
 
+RECORDED_PURCHASES_CAP = 50
+
+RESOURCE_NEEDS_NO_FORECAST_MESSAGE = (
+    "Resource needs forecasts are not returned without a real planning source "
+    "(budget, capex plan, or inventory-linked forecast). "
+    "Recorded historical purchases and current wallet balances are provided below."
+)
+
 
 # ============================================================================
 # Request/Response Models
@@ -61,7 +69,7 @@ class WalletInfo(BaseModel):
 
 
 class RevenueMetrics(BaseModel):
-    """Revenue metrics."""
+    """Revenue metrics from completed transactions; period sums are UTC bucket totals."""
     daily_revenue: float
     weekly_revenue: float
     monthly_revenue: float
@@ -70,6 +78,7 @@ class RevenueMetrics(BaseModel):
     agent_clients: int
     human_clients: int
     avg_revenue_per_client: float
+    period_metrics_available: bool
     currency: str = "USD"
 
 
@@ -189,22 +198,26 @@ async def charge_for_service(request: ChargeRequest) -> ChargeResponse:
 
 @router.get("/revenue")
 async def get_revenue_metrics() -> RevenueMetrics:
-    """Get MYCA's revenue metrics."""
+    """Revenue from completed transactions only; UTC daily/weekly/monthly from parseable timestamps."""
     state = economy_store.get_state()
     clients = state["active_clients"]
     agent_count = sum(1 for c in clients.values() if c.get("type") == "agent")
     human_count = sum(1 for c in clients.values() if c.get("type") == "human")
-    total_clients = len(clients) or 1  # Avoid division by zero
+    n_clients = len(clients)
+    periods = economy_store.get_revenue_period_totals()
+
+    avg_per_client = 0.0 if n_clients == 0 else float(state["total_revenue"]) / n_clients
 
     return RevenueMetrics(
-        daily_revenue=state["total_revenue"] * 0.033,  # Estimate
-        weekly_revenue=state["total_revenue"] * 0.23,
-        monthly_revenue=state["total_revenue"],
-        total_revenue=state["total_revenue"],
-        active_clients=len(clients),
+        daily_revenue=float(periods["daily_revenue"]),
+        weekly_revenue=float(periods["weekly_revenue"]),
+        monthly_revenue=float(periods["monthly_revenue"]),
+        total_revenue=float(state["total_revenue"]),
+        active_clients=n_clients,
         agent_clients=agent_count,
         human_clients=human_count,
-        avg_revenue_per_client=state["total_revenue"] / total_clients,
+        avg_revenue_per_client=avg_per_client,
+        period_metrics_available=bool(periods["period_metrics_available"]),
     )
 
 
@@ -266,26 +279,22 @@ async def purchase_resource(request: ResourcePurchaseRequest) -> Dict[str, Any]:
 
 @router.get("/resources/needs")
 async def evaluate_resource_needs() -> Dict[str, Any]:
-    """Evaluate what resources MYCA needs to purchase."""
+    """
+    No speculative resource forecasts: empty needs, null cost totals.
+    Returns wallet-derived current_balance and a capped list of recorded purchases.
+    """
     state = economy_store.get_state()
-    total_balance = sum(w["balance"] for w in state["wallets"].values())
+    current_balance = float(sum(w["balance"] for w in state["wallets"].values()))
+    purchases = list(state.get("resource_purchases") or [])
+    recorded_purchases = purchases[-RECORDED_PURCHASES_CAP:]
     return {
         "status": "success",
-        "needs": [
-            {"resource": "gpu", "priority": "critical", "quantity": 4, "type": "A100/H100", "estimated_cost": 40000,
-             "reason": "Local LLM inference and fine-tuning"},
-            {"resource": "storage", "priority": "critical", "quantity": 10000, "unit": "TB", "estimated_cost": 50000,
-             "reason": "MINDEX data: all taxonomy, genetic, chemical, image data"},
-            {"resource": "nas", "priority": "high", "quantity": 5, "type": "Synology 8-bay", "estimated_cost": 15000,
-             "reason": "Distributed NAS for environmental and taxonomy images"},
-            {"resource": "compute", "priority": "high", "quantity": 8, "type": "vCPU nodes", "estimated_cost": 5000,
-             "reason": "Data ingestion and processing pipeline"},
-            {"resource": "memory", "priority": "medium", "quantity": 512, "unit": "GB", "estimated_cost": 2000,
-             "reason": "In-memory caching for real-time queries"},
-        ],
-        "total_estimated_cost": 112000,
-        "current_balance": total_balance,
-        "revenue_needed": 112000 - total_balance,
+        "needs": [],
+        "total_estimated_cost": None,
+        "revenue_needed": None,
+        "current_balance": current_balance,
+        "recorded_purchases": recorded_purchases,
+        "message": RESOURCE_NEEDS_NO_FORECAST_MESSAGE,
     }
 
 

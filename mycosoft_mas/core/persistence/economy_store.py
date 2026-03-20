@@ -8,7 +8,7 @@ Created: March 10, 2026
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from mycosoft_mas.core.persistence.supabase_client import (
@@ -19,6 +19,25 @@ from mycosoft_mas.core.persistence.supabase_client import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_iso(value: Any) -> Optional[datetime]:
+    """Parse ISO 8601 timestamps to timezone-aware UTC, or None if invalid."""
+    if not value or not isinstance(value, str):
+        return None
+    s = value.strip()
+    if not s:
+        return None
+    try:
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except ValueError:
+        return None
+
 
 _DEFAULT_TIERS = {
     "free": {"price_per_request": 0.0, "daily_limit": 10, "features": ["basic_query", "taxonomy_lookup"]},
@@ -142,6 +161,67 @@ class EconomyStore:
         """Return full economy state. Loads from Supabase on first call if available."""
         self._load_from_supabase()
         return self._memory
+
+    def get_revenue_period_totals(self) -> Dict[str, Any]:
+        """
+        Sum completed transaction amounts into daily / weekly / monthly buckets (UTC).
+
+        Returns keys: daily_revenue, weekly_revenue, monthly_revenue, period_metrics_available.
+        period_metrics_available is True when there are no completed transactions, or when
+        every completed transaction has a parseable timestamp. Otherwise False (period sums may
+        omit amounts from rows with bad/missing timestamps).
+        """
+        self._load_from_supabase()
+        txs = self._memory.get("transactions") or []
+        completed = [t for t in txs if (t.get("status") or "").lower() == "completed"]
+
+        if not completed:
+            return {
+                "daily_revenue": 0.0,
+                "weekly_revenue": 0.0,
+                "monthly_revenue": 0.0,
+                "period_metrics_available": True,
+            }
+
+        parsed: List[tuple[float, datetime]] = []
+        missing_ts = 0
+        for t in completed:
+            amt = float(t.get("amount", 0))
+            dt = _parse_iso(t.get("timestamp"))
+            if dt is None:
+                missing_ts += 1
+                continue
+            parsed.append((amt, dt))
+
+        if missing_ts == len(completed):
+            return {
+                "daily_revenue": 0.0,
+                "weekly_revenue": 0.0,
+                "monthly_revenue": 0.0,
+                "period_metrics_available": False,
+            }
+
+        now = datetime.now(timezone.utc)
+        day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start = day_start - timedelta(days=day_start.weekday())
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        daily = weekly = monthly = 0.0
+        for amt, dt in parsed:
+            if dt >= day_start:
+                daily += amt
+            if dt >= week_start:
+                weekly += amt
+            if dt >= month_start:
+                monthly += amt
+
+        period_ok = missing_ts == 0
+        return {
+            "daily_revenue": daily,
+            "weekly_revenue": weekly,
+            "monthly_revenue": monthly,
+            "period_metrics_available": period_ok,
+        }
 
     def record_charge(
         self,
