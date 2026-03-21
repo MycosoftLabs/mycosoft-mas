@@ -26,12 +26,12 @@ def _detect_architecture(config: dict[str, Any]) -> ArchitectureType:
     """Detect model architecture type from HF-format config.json fields."""
     model_type = config.get("model_type", "").lower()
 
-    # Check for Mamba/SSM indicators (must check before standard attention)
+    # Check for Mamba/SSM indicators
     has_mamba = any(
         k in config
         for k in ("mamba_d_state", "ssm_cfg", "mamba_layers", "ssm_d_state")
     )
-    # model_type contains "mamba" (e.g., "jamba", "mamba", "zamba")
+    # model_type: "mamba", "mamba2", "jamba", "zamba" are all hybrid
     if has_mamba or "mamba" in model_type or model_type in ("jamba", "zamba"):
         return ArchitectureType.HYBRID_ATTENTION_MAMBA
 

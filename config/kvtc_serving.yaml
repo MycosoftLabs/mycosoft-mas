@@ -1,0 +1,88 @@
+# KVTC Serving Lane Configuration
+# Part of Plasticity Forge Phase 1
+# Date: 2026-03-21
+
+# Default cache mode for new serving profiles
+default_cache_mode: baseline
+
+# Protected token regions (never compressed)
+hot_window_tokens: 128
+sink_tokens: 4
+
+# Artifact storage
+artifact_storage: ${KVTC_ARTIFACT_STORAGE:-/opt/mycosoft/artifacts/kvtc}
+
+# Calibration defaults
+calibration:
+  default_profile: mixed_fineweb_openr1
+  default_tokens: 160000
+  pca_rank_cap: 10000
+  max_bits_per_component: 8
+
+# Compression targets and their bit budgets
+compression_targets:
+  "8x":
+    bits_per_dim: 2.0
+    recommended_for: [fallback_local, myca_edge]
+  "16x":
+    bits_per_dim: 1.0
+    recommended_for: [myca_core, avani_core]
+  "32x":
+    bits_per_dim: 0.5
+    recommended_for: [myca_edge]
+  "64x":
+    bits_per_dim: 0.25
+    recommended_for: []  # experimental only
+
+# Target stack integrations
+target_stacks:
+  vllm:
+    hook_type: offload_restore
+    enabled: true
+  lmcache:
+    hook_type: offload_restore
+    enabled: true
+  megatron:
+    hook_type: transport
+    enabled: false
+  custom:
+    hook_type: offload_restore
+    enabled: true
+
+# Promotion thresholds
+promotion:
+  max_ttft_p95_ms: 500.0
+  warn_ttft_p95_ms: 300.0
+  fail_task_success_delta: -0.05
+  warn_task_success_delta: -0.02
+  fail_hallucination_delta: 0.05
+  min_compression_ratio: 1.5
+  min_cache_hit_rate: 0.5
+
+# Per-alias defaults
+alias_defaults:
+  myca_core:
+    cache_mode: kvtc16x
+    target_stack: vllm
+    edge_eligible: false
+  myca_edge:
+    cache_mode: kvtc8x
+    target_stack: vllm
+    edge_eligible: true
+  avani_core:
+    cache_mode: kvtc16x
+    target_stack: vllm
+    edge_eligible: false
+  fallback_local:
+    cache_mode: baseline
+    target_stack: ollama
+    edge_eligible: true
+
+# Safety: Nemotron architecture constraints
+nemotron_safety:
+  # Only apply KVTC after architecture inventory confirms standard attention
+  require_inventory_before_calibration: true
+  # If hybrid attention+Mamba, only compress attention path
+  force_attention_only_for_hybrid: true
+  # Never compress Mamba recurrent state
+  mamba_state_protected: true

@@ -12,6 +12,7 @@ Components:
 - promotion: Bundle promotion engine (shadow → canary → active → rollback)
 """
 
+from .config import get_alias_defaults, get_calibration_defaults, get_promotion_thresholds, load_kvtc_config
 from .schemas import (
     CacheMode,
     CalibrationRequest,
@@ -33,6 +34,10 @@ from .schemas import (
 )
 
 __all__ = [
+    "load_kvtc_config",
+    "get_alias_defaults",
+    "get_calibration_defaults",
+    "get_promotion_thresholds",
     "CacheMode",
     "CalibrationRequest",
     "CalibrationResponse",

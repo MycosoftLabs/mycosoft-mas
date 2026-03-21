@@ -18,9 +18,9 @@ Date: 2026-03-21
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from typing import Optional
-from uuid import UUID
+from datetime import datetime, timezone
+from typing import Any, Optional
+from uuid import UUID, uuid4
 
 from .bundle_manager import get_bundle_manager
 from .schemas import (
@@ -121,6 +121,9 @@ class BundlePromotionEngine:
                 request.reason,
             )
 
+        # Persist to MINDEX via plasticity registry
+        self._persist_to_mindex(bundle, previous_state, target_state, request.reason)
+
         return BundlePromotionResponse(
             deployment_bundle_id=bundle.deployment_bundle_id,
             previous_state=previous_state,
@@ -168,6 +171,70 @@ class BundlePromotionEngine:
                     f"Cannot promote to ACTIVE: no eval with PASS verdict. "
                     f"All evals are WARN — resolve warnings before activating."
                 )
+
+    def _persist_to_mindex(
+        self,
+        bundle: Any,
+        from_state: RolloutState,
+        to_state: RolloutState,
+        reason: str,
+    ) -> None:
+        """Persist promotion decision to MINDEX via plasticity registry.
+
+        Best-effort — does not fail the promotion if MINDEX is unreachable.
+        """
+        try:
+            from mycosoft_mas.integrations.plasticity_registry import (
+                create_promotion_decision,
+                lineage_event_create,
+                update_deployment_bundle,
+            )
+
+            # Update bundle state in MINDEX
+            promoted_at = None
+            if to_state == RolloutState.ACTIVE:
+                promoted_at = datetime.now(timezone.utc).isoformat()
+
+            update_deployment_bundle(
+                bundle_id=str(bundle.deployment_bundle_id),
+                rollout_state=to_state.value,
+                promoted_at=promoted_at,
+            )
+
+            # Record promotion decision
+            create_promotion_decision(
+                decision_id=str(uuid4()),
+                candidate_id=str(bundle.model_build_id),
+                from_lifecycle=from_state.value,
+                to_lifecycle=to_state.value,
+                alias=bundle.target_alias.value if hasattr(bundle.target_alias, 'value') else str(bundle.target_alias),
+                decided_by="serving_promotion_engine",
+            )
+
+            # Record lineage event
+            lineage_event_create(
+                event_id=str(uuid4()),
+                candidate_id=str(bundle.model_build_id),
+                event_type=f"bundle_promotion_{to_state.value}",
+                payload={
+                    "bundle_id": str(bundle.deployment_bundle_id),
+                    "from_state": from_state.value,
+                    "to_state": to_state.value,
+                    "reason": reason,
+                    "serving_profile_id": str(bundle.serving_profile_id),
+                },
+            )
+
+            logger.info(
+                "Persisted promotion to MINDEX: bundle=%s %s→%s",
+                bundle.deployment_bundle_id,
+                from_state.value,
+                to_state.value,
+            )
+        except Exception as e:
+            logger.warning(
+                "Failed to persist promotion to MINDEX (non-fatal): %s", e
+            )
 
 
 # Module-level singleton
