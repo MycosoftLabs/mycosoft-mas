@@ -655,6 +655,169 @@ class MINDEXClient:
 
         self.logger.info("MINDEX client connections closed")
 
+    # -------------------------------------------------------------------
+    # KVTC Serving Lane — MINDEX persistence for serving tables
+    # -------------------------------------------------------------------
+
+    async def upsert_serving_profile(self, profile_data: dict) -> dict:
+        """Persist a serving profile to MINDEX serving_profile table.
+
+        Args:
+            profile_data: Dict matching serving_profile schema.
+
+        Returns:
+            Created/updated record from MINDEX.
+        """
+        pool = await self._get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                INSERT INTO serving_profile (
+                    serving_profile_id, model_build_id, profile_name, cache_mode,
+                    hot_window_tokens, sink_tokens, rope_handling, attention_only,
+                    mla_latent_mode, offload_policy, transport_policy, target_stack,
+                    artifact_ref, edge_eligible, status
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11::jsonb, $12, $13, $14, $15)
+                ON CONFLICT (serving_profile_id) DO UPDATE SET
+                    status = EXCLUDED.status,
+                    artifact_ref = EXCLUDED.artifact_ref
+                RETURNING *
+                """,
+                profile_data.get("serving_profile_id"),
+                profile_data.get("model_build_id"),
+                profile_data.get("profile_name"),
+                profile_data.get("cache_mode", "baseline"),
+                profile_data.get("hot_window_tokens", 128),
+                profile_data.get("sink_tokens", 4),
+                profile_data.get("rope_handling"),
+                profile_data.get("attention_only", False),
+                profile_data.get("mla_latent_mode", False),
+                str(profile_data.get("offload_policy", "{}")),
+                str(profile_data.get("transport_policy", "{}")),
+                profile_data.get("target_stack", "vllm"),
+                profile_data.get("artifact_ref"),
+                profile_data.get("edge_eligible", False),
+                profile_data.get("status", "draft"),
+            )
+            return dict(row) if row else {}
+
+    async def upsert_kvtc_artifact(self, artifact_data: dict) -> dict:
+        """Persist a KVTC calibration artifact to MINDEX kvtc_artifact table."""
+        pool = await self._get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                INSERT INTO kvtc_artifact (
+                    kvtc_artifact_id, model_build_id, compression_target,
+                    vk_uri, vv_uri, muk_uri, muv_uri,
+                    key_bitplan, value_bitplan, pca_rank, calibration_tokens,
+                    rope_undo_required, attention_only, mla_latent_mode,
+                    calibration_dataset_hash, artifact_hash
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10, $11, $12, $13, $14, $15, $16)
+                ON CONFLICT (kvtc_artifact_id) DO NOTHING
+                RETURNING *
+                """,
+                artifact_data.get("kvtc_artifact_id"),
+                artifact_data.get("model_build_id"),
+                artifact_data.get("compression_target"),
+                artifact_data.get("vk_uri"),
+                artifact_data.get("vv_uri"),
+                artifact_data.get("muk_uri"),
+                artifact_data.get("muv_uri"),
+                str(artifact_data.get("key_bitplan", "[]")),
+                str(artifact_data.get("value_bitplan", "[]")),
+                artifact_data.get("pca_rank"),
+                artifact_data.get("calibration_tokens"),
+                artifact_data.get("rope_undo_required", False),
+                artifact_data.get("attention_only", False),
+                artifact_data.get("mla_latent_mode", False),
+                artifact_data.get("calibration_dataset_hash", ""),
+                artifact_data.get("artifact_hash", ""),
+            )
+            return dict(row) if row else {}
+
+    async def upsert_deployment_bundle(self, bundle_data: dict) -> dict:
+        """Persist a deployment bundle to MINDEX deployment_bundle table."""
+        pool = await self._get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                INSERT INTO deployment_bundle (
+                    deployment_bundle_id, model_build_id, adapter_set_id,
+                    serving_profile_id, cache_policy, target_alias, target_runtime,
+                    rollout_state, rollback_bundle_id, promoted_at
+                ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10)
+                ON CONFLICT (deployment_bundle_id) DO UPDATE SET
+                    rollout_state = EXCLUDED.rollout_state,
+                    promoted_at = EXCLUDED.promoted_at
+                RETURNING *
+                """,
+                bundle_data.get("deployment_bundle_id"),
+                bundle_data.get("model_build_id"),
+                bundle_data.get("adapter_set_id"),
+                bundle_data.get("serving_profile_id"),
+                str(bundle_data.get("cache_policy", "{}")),
+                bundle_data.get("target_alias"),
+                bundle_data.get("target_runtime"),
+                bundle_data.get("rollout_state", "shadow"),
+                bundle_data.get("rollback_bundle_id"),
+                bundle_data.get("promoted_at"),
+            )
+            return dict(row) if row else {}
+
+    async def insert_serving_eval_run(self, eval_data: dict) -> dict:
+        """Persist a serving eval run to MINDEX serving_eval_run table."""
+        pool = await self._get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                INSERT INTO serving_eval_run (
+                    serving_eval_run_id, deployment_bundle_id, eval_suite,
+                    ttft_ms_p50, ttft_ms_p95, cache_hit_rate, recomputation_rate,
+                    hbm_bytes_saved, warm_bytes_saved, transfer_bytes_saved,
+                    compression_ratio_actual, task_success_delta, tool_validity_delta,
+                    hallucination_delta, long_context_score, regression_verdict,
+                    raw_results
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17::jsonb)
+                RETURNING *
+                """,
+                eval_data.get("serving_eval_run_id"),
+                eval_data.get("deployment_bundle_id"),
+                eval_data.get("eval_suite"),
+                eval_data.get("ttft_ms_p50"),
+                eval_data.get("ttft_ms_p95"),
+                eval_data.get("cache_hit_rate"),
+                eval_data.get("recomputation_rate"),
+                eval_data.get("hbm_bytes_saved"),
+                eval_data.get("warm_bytes_saved"),
+                eval_data.get("transfer_bytes_saved"),
+                eval_data.get("compression_ratio_actual"),
+                eval_data.get("task_success_delta"),
+                eval_data.get("tool_validity_delta"),
+                eval_data.get("hallucination_delta"),
+                eval_data.get("long_context_score"),
+                eval_data.get("regression_verdict"),
+                str(eval_data.get("raw_results", "{}")),
+            )
+            return dict(row) if row else {}
+
+    async def get_active_bundle_for_alias(self, target_alias: str) -> dict | None:
+        """Get the active deployment bundle for a target alias."""
+        pool = await self._get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT b.*, sp.cache_mode, sp.target_stack, sp.artifact_ref
+                FROM deployment_bundle b
+                JOIN serving_profile sp ON b.serving_profile_id = sp.serving_profile_id
+                WHERE b.target_alias = $1 AND b.rollout_state = 'active'
+                ORDER BY b.promoted_at DESC NULLS LAST
+                LIMIT 1
+                """,
+                target_alias,
+            )
+            return dict(row) if row else None
+
     async def __aenter__(self):
         """Async context manager entry."""
         return self

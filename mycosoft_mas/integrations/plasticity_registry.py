@@ -346,3 +346,170 @@ def lineage_event_create(
     except Exception as e:
         logger.debug("lineage_event_create: %s", e)
         return None
+
+
+# ---------------------------------------------------------------------------
+# KVTC Serving Lane — Deployment Bundle persistence (MINDEX)
+# ---------------------------------------------------------------------------
+
+
+def create_serving_profile(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """
+    Persist a serving profile to MINDEX.
+    Payload must match serving_profile table schema.
+    """
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(
+                f"{_base_url()}/api/mindex/plasticity/serving-profiles",
+                json=payload,
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("create_serving_profile: %s", e)
+        return None
+
+
+def get_serving_profile(profile_id: str) -> Optional[Dict[str, Any]]:
+    """Fetch serving profile from MINDEX."""
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.get(
+                f"{_base_url()}/api/mindex/plasticity/serving-profiles/{profile_id}",
+                headers=_headers(),
+            )
+            if r.status_code == 404:
+                return None
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("get_serving_profile %s: %s", profile_id, e)
+        return None
+
+
+def create_kvtc_artifact(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Persist a KVTC calibration artifact to MINDEX."""
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(
+                f"{_base_url()}/api/mindex/plasticity/kvtc-artifacts",
+                json=payload,
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("create_kvtc_artifact: %s", e)
+        return None
+
+
+def get_kvtc_artifact(artifact_id: str) -> Optional[Dict[str, Any]]:
+    """Fetch KVTC artifact from MINDEX."""
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.get(
+                f"{_base_url()}/api/mindex/plasticity/kvtc-artifacts/{artifact_id}",
+                headers=_headers(),
+            )
+            if r.status_code == 404:
+                return None
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("get_kvtc_artifact %s: %s", artifact_id, e)
+        return None
+
+
+def create_deployment_bundle(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Persist a deployment bundle to MINDEX."""
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(
+                f"{_base_url()}/api/mindex/plasticity/deployment-bundles",
+                json=payload,
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("create_deployment_bundle: %s", e)
+        return None
+
+
+def get_deployment_bundle(bundle_id: str) -> Optional[Dict[str, Any]]:
+    """Fetch deployment bundle from MINDEX."""
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.get(
+                f"{_base_url()}/api/mindex/plasticity/deployment-bundles/{bundle_id}",
+                headers=_headers(),
+            )
+            if r.status_code == 404:
+                return None
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("get_deployment_bundle %s: %s", bundle_id, e)
+        return None
+
+
+def update_deployment_bundle(
+    bundle_id: str,
+    rollout_state: Optional[str] = None,
+    promoted_at: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Update deployment bundle rollout state in MINDEX."""
+    payload: Dict[str, Any] = {}
+    if rollout_state is not None:
+        payload["rollout_state"] = rollout_state
+    if promoted_at is not None:
+        payload["promoted_at"] = promoted_at
+    if not payload:
+        return {"updated": 0}
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.put(
+                f"{_base_url()}/api/mindex/plasticity/deployment-bundles/{bundle_id}",
+                json=payload,
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("update_deployment_bundle %s: %s", bundle_id, e)
+        return None
+
+
+def get_active_bundle_for_alias(alias: str) -> Optional[Dict[str, Any]]:
+    """Get the active deployment bundle for a target alias from MINDEX."""
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.get(
+                f"{_base_url()}/api/mindex/plasticity/deployment-bundles/active/{alias}",
+                headers=_headers(),
+            )
+            if r.status_code == 404:
+                return None
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("get_active_bundle_for_alias %s: %s", alias, e)
+        return None
+
+
+def create_serving_eval_run(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Persist a serving eval run to MINDEX."""
+    try:
+        with httpx.Client(timeout=_TIMEOUT) as client:
+            r = client.post(
+                f"{_base_url()}/api/mindex/plasticity/serving-eval-runs",
+                json=payload,
+                headers={**_headers(), "Content-Type": "application/json"},
+            )
+            r.raise_for_status()
+            return r.json()
+    except Exception as e:
+        logger.debug("create_serving_eval_run: %s", e)
+        return None

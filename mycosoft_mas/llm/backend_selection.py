@@ -40,12 +40,21 @@ FALLBACK = "fallback"
 
 @dataclass
 class BackendSelection:
-    """Resolved backend for a given role."""
+    """Resolved backend for a given role.
+
+    When a deployment bundle is active for the target alias, cache_mode and
+    serving_profile_id are populated from the bundle's serving profile.
+    """
 
     provider: str
     base_url: str
     model: str
     api_key: str = ""
+    # KVTC serving lane fields (populated when bundle is active)
+    cache_mode: str = "baseline"
+    serving_profile_id: str = ""
+    deployment_bundle_id: str = ""
+    kvtc_artifact_id: str = ""
 
 
 def _expand_env(s: str) -> str:
@@ -97,6 +106,38 @@ def get_backend_for_role(role: ModelRole) -> BackendSelection:
     model_roles = data.get("model_roles") or {}
 
     if role in _MYCA2_ROLES:
+        # First: check for active deployment bundle (KVTC-aware)
+        try:
+            from mycosoft_mas.serving.bundle_manager import get_bundle_manager
+            from mycosoft_mas.serving.profile_manager import get_profile_manager
+
+            bm = get_bundle_manager()
+            bundle = bm.get_active_bundle(role)
+            if bundle:
+                pm = get_profile_manager()
+                profile = pm.get_profile(bundle.serving_profile_id)
+                cache_mode = profile.cache_mode.value if profile else "baseline"
+                artifact_ref = str(profile.artifact_ref) if profile and profile.artifact_ref else ""
+
+                # Resolve base_url from plasticity registry for the underlying model
+                from mycosoft_mas.integrations.plasticity_registry import resolve_alias_to_backend_spec
+                spec = resolve_alias_to_backend_spec(role)
+                bu = (spec or {}).get("base_url") or ""
+                if bu.strip():
+                    return BackendSelection(
+                        provider="openai_compatible",
+                        base_url=bu.rstrip("/"),
+                        model=str((spec or {}).get("model") or "default").strip(),
+                        api_key=_expand_env(os.getenv("NEMOTRON_API_KEY", "")),
+                        cache_mode=cache_mode,
+                        serving_profile_id=str(bundle.serving_profile_id),
+                        deployment_bundle_id=str(bundle.deployment_bundle_id),
+                        kvtc_artifact_id=artifact_ref,
+                    )
+        except Exception:
+            pass
+
+        # Fallback: plasticity registry without bundle
         try:
             from mycosoft_mas.integrations.plasticity_registry import resolve_alias_to_backend_spec
 

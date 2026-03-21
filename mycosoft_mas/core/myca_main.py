@@ -168,6 +168,15 @@ from fastapi.responses import PlainTextResponse
 
 from mycosoft_mas.realtime.pubsub import get_hub
 
+# Serving API - KVTC serving profiles and deployment bundles
+try:
+    from mycosoft_mas.core.routers.serving_api import router as serving_router
+
+    SERVING_API_AVAILABLE = True
+except ImportError:
+    serving_router = None
+    SERVING_API_AVAILABLE = False
+
 # Earth-2 AI Weather Integration
 try:
     from mycosoft_mas.core.routers.earth2_api import router as earth2_router
@@ -901,6 +910,13 @@ except NameError:
 try:
     if NLM_API_AVAILABLE:
         app.include_router(nlm_router, tags=["nlm"])
+except NameError:
+    pass
+
+# Serving API - KVTC serving profiles and deployment bundles
+try:
+    if SERVING_API_AVAILABLE and serving_router:
+        app.include_router(serving_router)
 except NameError:
     pass
 
