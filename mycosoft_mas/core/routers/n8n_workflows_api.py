@@ -6,21 +6,20 @@ This is the interface for the orchestrator to control workflows 24/7/365.
 Full registry view and local+cloud sync for production and dev (Feb 18, 2026).
 """
 
-import os
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import logging
+import os
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel
 
 from mycosoft_mas.core.n8n_workflow_engine import (
     N8NWorkflowEngine,
-    WorkflowScheduler,
-    SyncResult,
-    WorkflowInfo,
     WorkflowCategory,
+    WorkflowScheduler,
     get_engine,
-    get_scheduler
+    get_scheduler,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,11 +82,13 @@ class SchedulerConfig(BaseModel):
 
 class WorkflowExecuteRequest(BaseModel):
     """Request body for voice/API workflow execution."""
+
     workflow_name: str
     data: Optional[Dict[str, Any]] = None
 
 
 # ==================== Workflow CRUD ====================
+
 
 @router.get("/health")
 async def workflow_health():
@@ -104,10 +105,7 @@ async def workflow_stats():
 
 
 @router.get("/list")
-async def list_workflows(
-    active_only: bool = False,
-    category: Optional[str] = None
-):
+async def list_workflows(active_only: bool = False, category: Optional[str] = None):
     """List all workflows"""
     engine = get_workflow_engine()
     cat = WorkflowCategory(category) if category else None
@@ -116,10 +114,7 @@ async def list_workflows(
 
 
 @router.get("/registry")
-async def workflow_registry(
-    active_only: bool = False,
-    category: Optional[str] = None
-):
+async def workflow_registry(active_only: bool = False, category: Optional[str] = None):
     """Full workflow registry for MYCA: all workflows with id, name, active, category, webhook path.
     Single source of truth view so MYCA can modify, rewire, and integrate workflows."""
     engine = get_workflow_engine()
@@ -163,9 +158,11 @@ async def sync_both_local_and_cloud(request: SyncRequest):
 async def execute_workflow(request: WorkflowExecuteRequest):
     """Execute an n8n workflow by name. Used by voice (run_workflow) and LLM tools."""
     import time
+
     start = time.perf_counter()
     try:
         from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
+
         agent = N8NWorkflowAgent(
             agent_id="n8n-workflow-api",
             name="N8N Workflow",
@@ -183,6 +180,7 @@ async def execute_workflow(request: WorkflowExecuteRequest):
         success = status == "success"
         try:
             from mycosoft_mas.services.learning_feedback import get_learning_service
+
             get_learning_service().record_workflow_execution(
                 workflow_name=request.workflow_name,
                 success=success,
@@ -192,12 +190,17 @@ async def execute_workflow(request: WorkflowExecuteRequest):
         except Exception as le:
             logger.debug("Learning feedback record skipped: %s", le)
         if success:
-            return {"status": "success", "result": result.get("result"), "message": "Workflow executed."}
+            return {
+                "status": "success",
+                "result": result.get("result"),
+                "message": "Workflow executed.",
+            }
         return {"status": status, "result": result, "message": result.get("message", str(result))}
     except Exception as e:
         duration = time.perf_counter() - start
         try:
             from mycosoft_mas.services.learning_feedback import get_learning_service
+
             get_learning_service().record_workflow_execution(
                 workflow_name=request.workflow_name,
                 success=False,
@@ -215,6 +218,7 @@ async def get_workflow_performance():
     """Aggregate workflow execution stats (success/failure rates, avg duration)."""
     try:
         from mycosoft_mas.services.learning_feedback import get_learning_service
+
         return get_learning_service().get_workflow_performance()
     except Exception as e:
         logger.warning("Workflow performance unavailable: %s", e)
@@ -278,6 +282,7 @@ async def delete_workflow(workflow_id: str, archive_first: bool = True):
 
 # ==================== Activation ====================
 
+
 @router.post("/{workflow_id}/activate")
 async def activate_workflow(workflow_id: str):
     """Activate a workflow"""
@@ -302,6 +307,7 @@ async def deactivate_workflow(workflow_id: str):
 
 # ==================== Archiving & Versioning ====================
 
+
 @router.post("/{workflow_id}/archive")
 async def archive_workflow(workflow_id: str, reason: str = "manual"):
     """Archive a workflow version"""
@@ -318,7 +324,12 @@ async def list_versions(workflow_id: str):
     """List archived versions of a workflow"""
     engine = get_workflow_engine()
     versions = engine.list_versions(workflow_id)
-    return {"versions": [{"version": v.version, "archived_at": v.archived_at, "reason": v.reason} for v in versions]}
+    return {
+        "versions": [
+            {"version": v.version, "archived_at": v.archived_at, "reason": v.reason}
+            for v in versions
+        ]
+    }
 
 
 @router.post("/{workflow_id}/restore")
@@ -335,6 +346,7 @@ async def restore_workflow(workflow_id: str, version: Optional[int] = None):
 
 
 # ==================== Import/Export & Sync ====================
+
 
 @router.post("/sync")
 async def sync_workflows(request: SyncRequest, background_tasks: BackgroundTasks):
@@ -379,11 +391,10 @@ async def clone_workflow(workflow_id: str, request: WorkflowCloneRequest):
 
 # ==================== Executions ====================
 
+
 @router.get("/executions/list")
 async def list_executions(
-    workflow_id: Optional[str] = None,
-    limit: int = 50,
-    status: Optional[str] = None
+    workflow_id: Optional[str] = None, limit: int = 50, status: Optional[str] = None
 ):
     """List workflow executions"""
     engine = get_workflow_engine()
@@ -412,13 +423,14 @@ async def get_execution_stats(workflow_id: str):
             "success_count": stats.success_count,
             "failure_count": stats.failure_count,
             "last_execution": stats.last_execution,
-            "last_status": stats.last_status
+            "last_status": stats.last_status,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 # ==================== Scheduler Control ====================
+
 
 @router.post("/scheduler/start")
 async def start_scheduler(config: SchedulerConfig, background_tasks: BackgroundTasks):
@@ -428,7 +440,7 @@ async def start_scheduler(config: SchedulerConfig, background_tasks: BackgroundT
         scheduler.start,
         sync_interval=config.sync_interval,
         health_interval=config.health_interval,
-        archive_interval=config.archive_interval
+        archive_interval=config.archive_interval,
     )
     return {"status": "starting", "config": config.dict()}
 
@@ -445,7 +457,4 @@ async def stop_scheduler():
 async def scheduler_status():
     """Get scheduler status"""
     scheduler = get_workflow_scheduler()
-    return {
-        "running": scheduler._running,
-        "tasks_count": len(scheduler._tasks)
-    }
+    return {"running": scheduler._running, "tasks_count": len(scheduler._tasks)}

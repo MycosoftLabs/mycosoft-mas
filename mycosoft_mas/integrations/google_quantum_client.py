@@ -14,10 +14,10 @@ Env vars:
     GOOGLE_APPLICATION_CREDENTIALS  -- path to GCP service account JSON
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -31,7 +31,9 @@ class GoogleQuantumClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.project_id = self.config.get("project_id") or os.getenv("GOOGLE_QUANTUM_PROJECT_ID", "")
+        self.project_id = self.config.get("project_id") or os.getenv(
+            "GOOGLE_QUANTUM_PROJECT_ID", ""
+        )
         self.timeout = self.config.get("timeout", 60)
         self._client: Optional[httpx.AsyncClient] = None
         self._token: Optional[str] = None
@@ -158,13 +160,24 @@ class GoogleQuantumClient:
                 {
                     "cirq_type": "Moment",
                     "operations": [
-                        {"cirq_type": "GateOperation", "gate": {"cirq_type": "HPowGate", "exponent": 1.0}, "qubits": [{"cirq_type": "GridQubit", "row": 0, "col": 0}]},
+                        {
+                            "cirq_type": "GateOperation",
+                            "gate": {"cirq_type": "HPowGate", "exponent": 1.0},
+                            "qubits": [{"cirq_type": "GridQubit", "row": 0, "col": 0}],
+                        },
                     ],
                 },
                 {
                     "cirq_type": "Moment",
                     "operations": [
-                        {"cirq_type": "GateOperation", "gate": {"cirq_type": "CNotPowGate", "exponent": 1.0}, "qubits": [{"cirq_type": "GridQubit", "row": 0, "col": 0}, {"cirq_type": "GridQubit", "row": 0, "col": 1}]},
+                        {
+                            "cirq_type": "GateOperation",
+                            "gate": {"cirq_type": "CNotPowGate", "exponent": 1.0},
+                            "qubits": [
+                                {"cirq_type": "GridQubit", "row": 0, "col": 0},
+                                {"cirq_type": "GridQubit", "row": 0, "col": 1},
+                            ],
+                        },
                     ],
                 },
             ],

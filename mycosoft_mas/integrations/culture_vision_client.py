@@ -13,11 +13,10 @@ Environment Variables:
     CULTURE_VISION_GPU_URL: Optional local GPU service URL for YOLO/SegFormer
 """
 
-import base64
 import json
 import logging
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import httpx
 
@@ -43,9 +42,7 @@ class CultureVisionClient:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.api_key = self.config.get("api_key", os.environ.get("OPENAI_API_KEY", ""))
-        self.gpu_url = self.config.get(
-            "gpu_url", os.environ.get("CULTURE_VISION_GPU_URL", "")
-        )
+        self.gpu_url = self.config.get("gpu_url", os.environ.get("CULTURE_VISION_GPU_URL", ""))
         self.timeout = self.config.get("timeout", 60)
         self._client: Optional[httpx.AsyncClient] = None
 
@@ -120,20 +117,14 @@ class CultureVisionClient:
                 logger.warning("OpenAI Vision request failed: %s", r.text[:200])
                 return None
             data = r.json()
-            text = (
-                data.get("choices", [{}])[0]
-                .get("message", {})
-                .get("content", "")
-            )
+            text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             if not text:
                 return None
             # Try to extract JSON from response (model might wrap in markdown)
             text = text.strip()
             if text.startswith("```"):
                 lines = text.split("\n")
-                text = "\n".join(
-                    l for l in lines if not l.startswith("```") and l != "json"
-                )
+                text = "\n".join(l for l in lines if not l.startswith("```") and l != "json")
             return json.loads(text)
         except json.JSONDecodeError as e:
             logger.warning("Culture Vision: failed to parse OpenAI response: %s", e)
@@ -193,20 +184,16 @@ class CultureVisionClient:
 
         result: Optional[Dict[str, Any]] = None
         if prefer_gpu and self.gpu_url:
-            result = await self.analyze_image_gpu(
-                image_url=image_url, image_base64=image_base64
-            )
+            result = await self.analyze_image_gpu(image_url=image_url, image_base64=image_base64)
         if result is None and self.api_key:
-            result = await self.analyze_image_openai(
-                image_url=image_url, image_base64=image_base64
-            )
+            result = await self.analyze_image_openai(image_url=image_url, image_base64=image_base64)
         if result is None and not prefer_gpu and self.gpu_url:
-            result = await self.analyze_image_gpu(
-                image_url=image_url, image_base64=image_base64
-            )
+            result = await self.analyze_image_gpu(image_url=image_url, image_base64=image_base64)
 
         if result is None:
-            return {"error": "No analysis backend available (OPENAI_API_KEY or CULTURE_VISION_GPU_URL)"}
+            return {
+                "error": "No analysis backend available (OPENAI_API_KEY or CULTURE_VISION_GPU_URL)"
+            }
         return result
 
     async def health_check(self) -> Dict[str, Any]:

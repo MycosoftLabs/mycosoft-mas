@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Optional
 
-from prometheus_client import Counter, Gauge, Histogram, Summary, REGISTRY
+from prometheus_client import REGISTRY, Counter, Gauge, Histogram, Summary
 
 
 def _get_existing(name: str) -> Optional[Any]:
@@ -24,14 +24,18 @@ def _get_existing(name: str) -> Optional[Any]:
     return getattr(REGISTRY, "_names_to_collectors", {}).get(name)
 
 
-def get_counter(name: str, documentation: str, labelnames: Iterable[str] = (), **kwargs: Any) -> Counter:
+def get_counter(
+    name: str, documentation: str, labelnames: Iterable[str] = (), **kwargs: Any
+) -> Counter:
     existing = _get_existing(name)
     if existing is not None:
         return existing
     return Counter(name, documentation, labelnames=labelnames, **kwargs)
 
 
-def get_gauge(name: str, documentation: str, labelnames: Iterable[str] = (), **kwargs: Any) -> Gauge:
+def get_gauge(
+    name: str, documentation: str, labelnames: Iterable[str] = (), **kwargs: Any
+) -> Gauge:
     existing = _get_existing(name)
     if existing is not None:
         return existing
@@ -50,9 +54,10 @@ def get_histogram(
     return Histogram(name, documentation, labelnames=labelnames, **kwargs)
 
 
-def get_summary(name: str, documentation: str, labelnames: Iterable[str] = (), **kwargs: Any) -> Summary:
+def get_summary(
+    name: str, documentation: str, labelnames: Iterable[str] = (), **kwargs: Any
+) -> Summary:
     existing = _get_existing(name)
     if existing is not None:
         return existing
     return Summary(name, documentation, labelnames=labelnames, **kwargs)
-

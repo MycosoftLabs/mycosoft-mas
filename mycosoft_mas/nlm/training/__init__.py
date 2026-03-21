@@ -9,7 +9,7 @@ Components:
 - TrainingMetrics: Metrics tracking and evaluation
 """
 
-from .trainer import NLMTrainer, DataCollator, TrainingMetrics
+from .trainer import DataCollator, NLMTrainer, TrainingMetrics
 
 __all__ = [
     "NLMTrainer",

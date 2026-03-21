@@ -43,14 +43,28 @@ class ConfirmationRequest:
 
 
 DESTRUCTIVE_ACTIONS: Set[str] = {
-    "delete", "modify", "bulk_update", "deploy", "restart",
-    "drop_table", "truncate", "shutdown", "reboot",
-    "rm", "rmdir", "format",
+    "delete",
+    "modify",
+    "bulk_update",
+    "deploy",
+    "restart",
+    "drop_table",
+    "truncate",
+    "shutdown",
+    "reboot",
+    "rm",
+    "rmdir",
+    "format",
 }
 
 HIGH_RISK_PATTERNS = {
-    "production", "main", "master", "live",
-    "database", "credentials", "secrets",
+    "production",
+    "main",
+    "master",
+    "live",
+    "database",
+    "credentials",
+    "secrets",
 }
 
 
@@ -61,7 +75,9 @@ class SafetyGates:
         self._pending_confirmations: Dict[str, ConfirmationRequest] = {}
 
     async def check_safety(
-        self, action: str, context: Dict[str, Any],
+        self,
+        action: str,
+        context: Dict[str, Any],
     ) -> SafetyResult:
         """Evaluate action safety. Returns whether to proceed or require confirmation."""
         action_lower = action.lower()
@@ -100,12 +116,16 @@ class SafetyGates:
         )
         logger.info(
             "Safety confirmation requested: %s (action=%s, approver=%s)",
-            request_id, action, approver_id,
+            request_id,
+            action,
+            approver_id,
         )
         return request_id
 
     async def submit_confirmation(
-        self, request_id: str, approved: bool,
+        self,
+        request_id: str,
+        approved: bool,
     ) -> bool:
         req = self._pending_confirmations.get(request_id)
         if not req:
@@ -116,7 +136,9 @@ class SafetyGates:
         return True
 
     async def await_confirmation(
-        self, request_id: str, timeout: int = 300,
+        self,
+        request_id: str,
+        timeout: int = 300,
     ) -> bool:
         """Wait for approval or denial. Returns True if approved."""
         deadline = time.time() + timeout

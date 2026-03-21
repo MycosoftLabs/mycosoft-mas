@@ -6,4 +6,4 @@ This package contains plugins that extend the functionality of the Eliza framewo
 
 from .bio_data_translator import BioDataTranslator
 
-__all__ = ['BioDataTranslator'] 
+__all__ = ["BioDataTranslator"]

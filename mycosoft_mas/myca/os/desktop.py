@@ -8,8 +8,8 @@ Date: 2026-03-05
 """
 
 import asyncio
-import os
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -61,7 +61,10 @@ async def desktop_screenshot(path: Optional[str] = None) -> dict:
         r = await system_run(cmd, timeout=10)
         if r["returncode"] == 0 and Path(out_path).exists():
             return {"status": "ok", "path": out_path}
-    return {"status": "failed", "error": "Screenshot capture failed (scrot/gnome-screenshot not available?)"}
+    return {
+        "status": "failed",
+        "error": "Screenshot capture failed (scrot/gnome-screenshot not available?)",
+    }
 
 
 async def desktop_click(x: int, y: int) -> dict:

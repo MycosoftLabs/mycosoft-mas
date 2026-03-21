@@ -13,6 +13,7 @@ def index_latlng_to_h3(lat: float, lon: float, resolution: int = 9) -> Optional[
     """Convert lat/lon to H3 cell ID. Returns None if h3 not installed."""
     try:
         import h3
+
         return h3.latlng_to_cell(lat, lon, resolution)
     except ImportError:
         return None

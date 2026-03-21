@@ -88,4 +88,3 @@ def instinct_score(signals: Dict[str, float]) -> float:
     for key, instinct in CORE_INSTINCTS.items():
         weighted += max(0.0, min(1.0, signals.get(key, 0.0))) * instinct.weight
     return max(0.0, min(1.0, weighted / total_weight))
-

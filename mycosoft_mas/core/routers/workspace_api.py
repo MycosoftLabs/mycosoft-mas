@@ -25,10 +25,13 @@ router = APIRouter(prefix="/api/workspace", tags=["workspace"])
 # Models
 # ---------------------------------------------------------------------------
 
+
 class SendMessageRequest(BaseModel):
     recipient: str = Field(..., description="Staff member name (morgan, rj, garret)")
     message: str = Field(..., min_length=1, max_length=10000)
-    platform: Optional[str] = Field(None, description="Override platform (slack, signal, email, etc.)")
+    platform: Optional[str] = Field(
+        None, description="Override platform (slack, signal, email, etc.)"
+    )
 
 
 class CreateTaskRequest(BaseModel):
@@ -74,6 +77,7 @@ def _get_agent():
     if _workspace_agent is None:
         try:
             from mycosoft_mas.agents.workspace_agent import WorkspaceAgent
+
             _workspace_agent = WorkspaceAgent(
                 agent_id="workspace_agent",
                 name="MYCA Workspace",
@@ -87,6 +91,7 @@ def _get_agent():
 # ---------------------------------------------------------------------------
 # Health / Status
 # ---------------------------------------------------------------------------
+
 
 @router.get("/health")
 async def workspace_health():
@@ -120,16 +125,19 @@ async def workspace_status():
 # Messaging
 # ---------------------------------------------------------------------------
 
+
 @router.post("/send")
 async def send_message(req: SendMessageRequest):
     """Send a message to a staff member."""
     agent = _get_agent()
     if not agent:
         raise HTTPException(503, "WorkspaceAgent not available")
-    return await agent.process_task({
-        "type": "send_message",
-        "parameters": req.model_dump(),
-    })
+    return await agent.process_task(
+        {
+            "type": "send_message",
+            "parameters": req.model_dump(),
+        }
+    )
 
 
 @router.get("/messages")
@@ -138,10 +146,12 @@ async def check_messages(platforms: str = "slack,discord,signal,whatsapp,email,a
     agent = _get_agent()
     if not agent:
         raise HTTPException(503, "WorkspaceAgent not available")
-    return await agent.process_task({
-        "type": "check_messages",
-        "parameters": {"platforms": platforms.split(",")},
-    })
+    return await agent.process_task(
+        {
+            "type": "check_messages",
+            "parameters": {"platforms": platforms.split(",")},
+        }
+    )
 
 
 @router.get("/inbox")
@@ -156,15 +166,18 @@ async def notify_staff(req: NotifyStaffRequest):
     agent = _get_agent()
     if not agent:
         raise HTTPException(503, "WorkspaceAgent not available")
-    return await agent.process_task({
-        "type": "notify_staff",
-        "parameters": req.model_dump(),
-    })
+    return await agent.process_task(
+        {
+            "type": "notify_staff",
+            "parameters": req.model_dump(),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # Task Management
 # ---------------------------------------------------------------------------
+
 
 @router.post("/tasks")
 async def create_task(req: CreateTaskRequest):
@@ -172,10 +185,12 @@ async def create_task(req: CreateTaskRequest):
     agent = _get_agent()
     if not agent:
         raise HTTPException(503, "WorkspaceAgent not available")
-    return await agent.process_task({
-        "type": "create_task",
-        "parameters": req.model_dump(),
-    })
+    return await agent.process_task(
+        {
+            "type": "create_task",
+            "parameters": req.model_dump(),
+        }
+    )
 
 
 @router.patch("/tasks")
@@ -184,15 +199,18 @@ async def update_task(req: UpdateTaskRequest):
     agent = _get_agent()
     if not agent:
         raise HTTPException(503, "WorkspaceAgent not available")
-    return await agent.process_task({
-        "type": "update_task",
-        "parameters": req.model_dump(),
-    })
+    return await agent.process_task(
+        {
+            "type": "update_task",
+            "parameters": req.model_dump(),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # Presence
 # ---------------------------------------------------------------------------
+
 
 @router.post("/presence")
 async def set_presence(req: SetPresenceRequest):
@@ -200,15 +218,18 @@ async def set_presence(req: SetPresenceRequest):
     agent = _get_agent()
     if not agent:
         raise HTTPException(503, "WorkspaceAgent not available")
-    return await agent.process_task({
-        "type": "set_presence",
-        "parameters": req.model_dump(),
-    })
+    return await agent.process_task(
+        {
+            "type": "set_presence",
+            "parameters": req.model_dump(),
+        }
+    )
 
 
 # ---------------------------------------------------------------------------
 # Daily Briefing
 # ---------------------------------------------------------------------------
+
 
 @router.post("/briefing")
 async def daily_briefing():
@@ -223,6 +244,7 @@ async def daily_briefing():
 # Webhooks (Slack, Discord, Signal incoming)
 # ---------------------------------------------------------------------------
 
+
 @router.post("/webhook/{platform}")
 async def receive_webhook(platform: str, request: Request):
     """Receive incoming webhooks from platforms (Slack events, Discord, etc.)."""
@@ -235,14 +257,16 @@ async def receive_webhook(platform: str, request: Request):
 
     agent = _get_agent()
     if agent:
-        await agent.process_task({
-            "type": "route_message",
-            "parameters": {
-                "platform": platform,
-                "sender": body.get("user", body.get("sender", "unknown")),
-                "content": body.get("text", body.get("message", "")),
-            },
-        })
+        await agent.process_task(
+            {
+                "type": "route_message",
+                "parameters": {
+                    "platform": platform,
+                    "sender": body.get("user", body.get("sender", "unknown")),
+                    "content": body.get("text", body.get("message", "")),
+                },
+            }
+        )
 
     return {"status": "received", "platform": platform}
 
@@ -250,6 +274,7 @@ async def receive_webhook(platform: str, request: Request):
 # ---------------------------------------------------------------------------
 # Staff Directory
 # ---------------------------------------------------------------------------
+
 
 @router.get("/staff")
 async def list_staff():
@@ -261,4 +286,5 @@ async def list_staff():
             "staff": agent.staff_directory,
         }
     from mycosoft_mas.agents.workspace_agent import STAFF_DIRECTORY
+
     return {"status": "success", "staff": STAFF_DIRECTORY}

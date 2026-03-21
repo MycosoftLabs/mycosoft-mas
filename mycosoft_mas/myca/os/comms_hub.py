@@ -19,13 +19,13 @@ Morgan's preferred channels for different urgency levels:
 Date: 2026-03-04
 """
 
-import os
 import asyncio
 import logging
-from email.parser import BytesParser
-from typing import Optional
+import os
 from dataclasses import dataclass
+from email.parser import BytesParser
 from enum import Enum
+from typing import Optional
 
 import aiohttp
 
@@ -50,15 +50,16 @@ class Channel(str, Enum):
 
 
 class Urgency(str, Enum):
-    LOW = "low"           # Log only, no notification
-    NORMAL = "normal"     # Discord
-    HIGH = "high"         # Slack + Discord
-    CRITICAL = "critical" # Signal + all channels
+    LOW = "low"  # Log only, no notification
+    NORMAL = "normal"  # Discord
+    HIGH = "high"  # Slack + Discord
+    CRITICAL = "critical"  # Signal + all channels
 
 
 @dataclass
 class InboundMessage:
     """A message received from any channel."""
+
     source: Channel
     sender: str
     content: str
@@ -92,11 +93,17 @@ class CommsHub:
         self._session: Optional[aiohttp.ClientSession] = None
         self._discord_webhook = _env_any("DISCORD_MYCA_WEBHOOK", "DISCORD_WEBHOOK_URL", default="")
         self._discord_bot_token = _env_any("MYCA_DISCORD_TOKEN", "DISCORD_BOT_TOKEN", default="")
-        self._signal_api = _env_any("MYCA_SIGNAL_CLI_URL", "SIGNAL_API_URL", default="http://192.168.0.191:8089")
+        self._signal_api = _env_any(
+            "MYCA_SIGNAL_CLI_URL", "SIGNAL_API_URL", default="http://192.168.0.191:8089"
+        )
         self._signal_number = _env_any("MYCA_SIGNAL_NUMBER", "SIGNAL_SENDER_NUMBER", default="")
-        self._slack_token = _env_any("MYCA_SLACK_BOT_TOKEN", "SLACK_BOT_TOKEN", "SLACK_OAUTH_TOKEN", default="")
+        self._slack_token = _env_any(
+            "MYCA_SLACK_BOT_TOKEN", "SLACK_BOT_TOKEN", "SLACK_OAUTH_TOKEN", default=""
+        )
         self._asana_token = _env_any("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN", default="")
-        self._workspace_url = _env_any("MYCA_WORKSPACE_URL", "MYCA_GATEWAY_URL", default="http://localhost:8100")
+        self._workspace_url = _env_any(
+            "MYCA_WORKSPACE_URL", "MYCA_GATEWAY_URL", default="http://localhost:8100"
+        )
         self._message_queue: asyncio.Queue = asyncio.Queue()
         self._imap_host = os.getenv("IMAP_HOST", "imap.gmail.com")
         self._imap_port = int(os.getenv("IMAP_PORT", "993"))
@@ -129,7 +136,9 @@ class CommsHub:
 
     # ── Outbound ─────────────────────────────────────────────────
 
-    async def send_to_morgan(self, message: str, channel: str = "discord", urgency: Urgency = Urgency.NORMAL):
+    async def send_to_morgan(
+        self, message: str, channel: str = "discord", urgency: Urgency = Urgency.NORMAL
+    ):
         """Send a message to Morgan on the specified channel."""
         if urgency == Urgency.CRITICAL:
             # Critical goes to Signal AND Discord
@@ -267,7 +276,9 @@ class CommsHub:
 
     # ── Channel Implementations ──────────────────────────────────
 
-    async def _send_discord(self, message: str, mention_morgan: bool = False, thread_id: str = None):
+    async def _send_discord(
+        self, message: str, mention_morgan: bool = False, thread_id: str = None
+    ):
         """Send message via Discord webhook."""
         if not self._discord_webhook:
             logger.debug("Discord webhook not configured")
@@ -320,7 +331,10 @@ class CommsHub:
             return
 
         # Open DM channel, then post
-        headers = {"Authorization": f"Bearer {self._slack_token}", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {self._slack_token}",
+            "Content-Type": "application/json",
+        }
         try:
             # Open conversation
             async with self._session.post(
@@ -348,7 +362,10 @@ class CommsHub:
         if not self._slack_token:
             return
 
-        headers = {"Authorization": f"Bearer {self._slack_token}", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {self._slack_token}",
+            "Content-Type": "application/json",
+        }
         async with self._session.post(
             "https://slack.com/api/chat.postMessage",
             headers=headers,
@@ -360,7 +377,9 @@ class CommsHub:
         """Send email via workspace API (which uses Google service account)."""
         await self._send_via_workspace(to, body, "email", extra={"subject": subject})
 
-    async def _send_via_workspace(self, recipient: str, message: str, platform: str, extra: dict = None):
+    async def _send_via_workspace(
+        self, recipient: str, message: str, platform: str, extra: dict = None
+    ):
         """Send via the MYCA workspace API."""
         payload = {
             "recipient": recipient,
@@ -401,13 +420,15 @@ class CommsHub:
                         data_msg = envelope.get("dataMessage", {})
                         if data_msg.get("message"):
                             sender = envelope.get("source", "")
-                            messages.append({
-                                "source": "signal",
-                                "sender": sender,
-                                "content": data_msg["message"],
-                                "is_morgan": sender == MORGAN_IDS.get(Channel.SIGNAL),
-                                "raw": item,
-                            })
+                            messages.append(
+                                {
+                                    "source": "signal",
+                                    "sender": sender,
+                                    "content": data_msg["message"],
+                                    "is_morgan": sender == MORGAN_IDS.get(Channel.SIGNAL),
+                                    "raw": item,
+                                }
+                            )
         except Exception:
             pass
         return messages
@@ -417,6 +438,7 @@ class CommsHub:
         messages = []
         try:
             from mycosoft_mas.integrations.whatsapp_client import WhatsAppClient
+
             client = WhatsAppClient()
             records = await client.get_messages(limit=20)
             await client.close()
@@ -424,14 +446,16 @@ class CommsHub:
                 content = item.get("message", {}).get("conversation", "")
                 sender = item.get("key", {}).get("remoteJid", "")
                 if content:
-                    messages.append({
-                        "source": "whatsapp",
-                        "sender": sender,
-                        "sender_id": sender,
-                        "content": content,
-                        "is_morgan": sender == MORGAN_IDS.get(Channel.WHATSAPP),
-                        "raw": item,
-                    })
+                    messages.append(
+                        {
+                            "source": "whatsapp",
+                            "sender": sender,
+                            "sender_id": sender,
+                            "content": content,
+                            "is_morgan": sender == MORGAN_IDS.get(Channel.WHATSAPP),
+                            "raw": item,
+                        }
+                    )
         except Exception:
             pass
         return messages
@@ -508,16 +532,20 @@ class CommsHub:
                     content = (subject + "\n\n" + body).strip() if subject else body.strip()
                     if not content:
                         content = "(no content)"
-                    is_morgan = MORGAN_IDS.get(Channel.EMAIL, "").lower() in (from_addr or "").lower()
-                    messages.append({
-                        "source": "email",
-                        "sender": from_addr,
-                        "content": content,
-                        "subject": subject,
-                        "is_morgan": is_morgan,
-                        "email_uid": uid,
-                        "raw": {"From": from_addr, "Subject": subject},
-                    })
+                    is_morgan = (
+                        MORGAN_IDS.get(Channel.EMAIL, "").lower() in (from_addr or "").lower()
+                    )
+                    messages.append(
+                        {
+                            "source": "email",
+                            "sender": from_addr,
+                            "content": content,
+                            "subject": subject,
+                            "is_morgan": is_morgan,
+                            "email_uid": uid,
+                            "raw": {"From": from_addr, "Subject": subject},
+                        }
+                    )
                     # Mark as seen so we don't reprocess
                     await client.uid("store", uid, "+FLAGS", "\\Seen")
                 except Exception as e:
@@ -596,16 +624,18 @@ class CommsHub:
                             continue
                         self._asana_seen_stories.add(sgid)
                         creator_name = created_by.get("name", "unknown")
-                        messages.append({
-                            "source": "asana",
-                            "sender": creator_name,
-                            "content": text,
-                            "is_morgan": False,
-                            "thread_id": task_gid,
-                            "asana_task_gid": task_gid,
-                            "asana_task_name": task_name,
-                            "asana_story_gid": sgid,
-                        })
+                        messages.append(
+                            {
+                                "source": "asana",
+                                "sender": creator_name,
+                                "content": text,
+                                "is_morgan": False,
+                                "thread_id": task_gid,
+                                "asana_task_gid": task_gid,
+                                "asana_task_name": task_name,
+                                "asana_story_gid": sgid,
+                            }
+                        )
                 except Exception as e:
                     logger.debug(f"Asana task {task_gid} stories: {e}")
         except Exception as e:

@@ -13,14 +13,13 @@ MYCA has access to developer-grade tools on her VM 191:
 Date: 2026-03-04
 """
 
-import os
 import asyncio
-import json
 import logging
+import os
 import re
 import subprocess
-from typing import Any, Dict, Optional, Tuple
 from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
 import aiohttp
 
@@ -145,7 +144,8 @@ class ToolOrchestrator:
         """Search the web using browser automation."""
         # Use Playwright headless
         cmd = [
-            "python3", "-c",
+            "python3",
+            "-c",
             f"""
 import asyncio
 from playwright.async_api import async_playwright
@@ -167,7 +167,7 @@ results = asyncio.run(search())
 for r in results:
     print(r)
     print('---')
-"""
+""",
         ]
         proc = await asyncio.create_subprocess_exec(
             *cmd,
@@ -184,7 +184,8 @@ for r in results:
     async def _browser_read(self, url: str) -> dict:
         """Read a webpage using Playwright."""
         cmd = [
-            "python3", "-c",
+            "python3",
+            "-c",
             f"""
 import asyncio
 from playwright.async_api import async_playwright
@@ -199,7 +200,7 @@ async def read():
         return text[:5000]
 
 print(asyncio.run(read()))
-"""
+""",
         ]
         proc = await asyncio.create_subprocess_exec(
             *cmd,
@@ -223,11 +224,12 @@ print(asyncio.run(read()))
         """Fill form fields and optionally submit."""
         import base64
         import json
+
         # Base64 used for non-secret payload encoding only (form fields/selectors).
         fields_b64 = base64.b64encode(json.dumps(fields).encode()).decode()
         submit_b64 = base64.b64encode((submit_selector or "").encode()).decode()
         headless_str = "True" if headless else "False"
-        script = f'''
+        script = f"""
 import asyncio
 import base64
 import json
@@ -254,9 +256,11 @@ async def fill():
         return content[:5000]
 
 print(asyncio.run(fill()))
-'''
+"""
         proc = await asyncio.create_subprocess_exec(
-            "python3", "-c", script,
+            "python3",
+            "-c",
+            script,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -278,7 +282,7 @@ print(asyncio.run(fill()))
     ) -> dict:
         """Take a screenshot of a webpage."""
         headless_str = "True" if headless else "False"
-        script = f'''
+        script = f"""
 import asyncio
 from playwright.async_api import async_playwright
 
@@ -292,15 +296,21 @@ async def shot():
     return "{path}"
 
 print(asyncio.run(shot()))
-'''
+"""
         proc = await asyncio.create_subprocess_exec(
-            "python3", "-c", script,
+            "python3",
+            "-c",
+            script,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=60)
         if proc.returncode != 0:
-            return {"status": "failed", "error": stderr.decode()[:500], "summary": f"Screenshot: {url}"}
+            return {
+                "status": "failed",
+                "error": stderr.decode()[:500],
+                "summary": f"Screenshot: {url}",
+            }
         return {
             "status": "completed",
             "path": path,
@@ -338,7 +348,7 @@ print(asyncio.run(shot()))
             return {"status": "failed", "error": f"Missing {user_env} or {pass_env}"}
 
         headless_str = "True" if headless else "False"
-        script = f'''
+        script = f"""
 import asyncio
 import os
 from playwright.async_api import async_playwright
@@ -370,10 +380,12 @@ async def login():
         return final_url
 
 print(asyncio.run(login()))
-'''
+"""
         proc_env = {**os.environ, "_MYCA_LOGIN_USER": user, "_MYCA_LOGIN_PWD": pwd}
         proc = await asyncio.create_subprocess_exec(
-            "python3", "-c", script,
+            "python3",
+            "-c",
+            script,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             env=proc_env,
@@ -395,10 +407,11 @@ print(asyncio.run(login()))
     ) -> dict:
         """Navigate to URL and click an element."""
         import base64
+
         # Base64 used for non-secret payload encoding only (selector string).
         sel_b64 = base64.b64encode(selector.encode()).decode()
         headless_str = "True" if headless else "False"
-        script = f'''
+        script = f"""
 import asyncio
 import base64
 from playwright.async_api import async_playwright
@@ -419,9 +432,11 @@ async def click():
         return content[:3000]
 
 print(asyncio.run(click()))
-'''
+"""
         proc = await asyncio.create_subprocess_exec(
-            "python3", "-c", script,
+            "python3",
+            "-c",
+            script,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -481,19 +496,49 @@ print(asyncio.run(click()))
 
         try:
             if operation == "health":
-                return {"status": "completed", "result": await client.health_check(), "summary": "GitHub health checked"}
+                return {
+                    "status": "completed",
+                    "result": await client.health_check(),
+                    "summary": "GitHub health checked",
+                }
             if operation == "list_issues" and owner and repo:
                 issues = await client.list_issues(owner, repo, limit=20)
-                return {"status": "completed", "issues": issues, "summary": f"Listed issues for {owner}/{repo}"}
+                return {
+                    "status": "completed",
+                    "issues": issues,
+                    "summary": f"Listed issues for {owner}/{repo}",
+                }
             if operation == "list_pull_requests" and owner and repo:
                 prs = await client.list_pull_requests(owner, repo, limit=20)
-                return {"status": "completed", "pull_requests": prs, "summary": f"Listed pull requests for {owner}/{repo}"}
+                return {
+                    "status": "completed",
+                    "pull_requests": prs,
+                    "summary": f"Listed pull requests for {owner}/{repo}",
+                }
             if operation == "create_issue" and owner and repo:
-                issue = await client.create_issue(owner, repo, task.get("title", "MYCA task"), task.get("body", task.get("description", "")))
-                return {"status": "completed" if issue else "failed", "issue": issue, "summary": f"Created issue in {owner}/{repo}"}
+                issue = await client.create_issue(
+                    owner,
+                    repo,
+                    task.get("title", "MYCA task"),
+                    task.get("body", task.get("description", "")),
+                )
+                return {
+                    "status": "completed" if issue else "failed",
+                    "issue": issue,
+                    "summary": f"Created issue in {owner}/{repo}",
+                }
             if operation == "comment_issue" and owner and repo and task.get("issue_number"):
-                comment = await client.add_issue_comment(owner, repo, int(task["issue_number"]), task.get("body", task.get("description", "")))
-                return {"status": "completed" if comment else "failed", "comment": comment, "summary": f"Commented on {owner}/{repo}#{task['issue_number']}"}
+                comment = await client.add_issue_comment(
+                    owner,
+                    repo,
+                    int(task["issue_number"]),
+                    task.get("body", task.get("description", "")),
+                )
+                return {
+                    "status": "completed" if comment else "failed",
+                    "comment": comment,
+                    "summary": f"Commented on {owner}/{repo}#{task['issue_number']}",
+                }
             return {"status": "failed", "error": "Unsupported GitHub task or missing owner/repo"}
         finally:
             await client.close()
@@ -502,13 +547,19 @@ print(asyncio.run(click()))
         """Run an Asana-native task via the REST client."""
         from mycosoft_mas.integrations.asana_client import AsanaClient
 
-        client = AsanaClient({"api_key": os.getenv("ASANA_API_KEY", "") or os.getenv("ASANA_PAT", "")})
+        client = AsanaClient(
+            {"api_key": os.getenv("ASANA_API_KEY", "") or os.getenv("ASANA_PAT", "")}
+        )
         operation = task.get("operation", "workspaces")
 
         try:
             if operation == "workspaces":
                 workspaces = await client.get_workspaces()
-                return {"status": "completed", "workspaces": workspaces, "summary": "Listed Asana workspaces"}
+                return {
+                    "status": "completed",
+                    "workspaces": workspaces,
+                    "summary": "Listed Asana workspaces",
+                }
             if operation == "create_task":
                 created = await client.create_task(
                     name=task.get("title", "MYCA task"),
@@ -516,12 +567,26 @@ print(asyncio.run(click()))
                     project_gid=task.get("project_gid"),
                     notes=task.get("notes", task.get("description", "")),
                 )
-                return {"status": "completed" if created else "failed", "task": created, "summary": "Created Asana task"}
+                return {
+                    "status": "completed" if created else "failed",
+                    "task": created,
+                    "summary": "Created Asana task",
+                }
             if operation == "comment_task" and task.get("task_gid"):
-                comment = await client.add_comment(task.get("task_gid", ""), task.get("body", task.get("description", "")))
-                return {"status": "completed" if comment else "failed", "comment": comment, "summary": f"Commented on Asana task {task.get('task_gid')}"}
+                comment = await client.add_comment(
+                    task.get("task_gid", ""), task.get("body", task.get("description", ""))
+                )
+                return {
+                    "status": "completed" if comment else "failed",
+                    "comment": comment,
+                    "summary": f"Commented on Asana task {task.get('task_gid')}",
+                }
             if operation == "list_tasks":
-                tasks = await client.list_tasks(project_gid=task.get("project_gid"), workspace_gid=task.get("workspace_gid"), limit=20)
+                tasks = await client.list_tasks(
+                    project_gid=task.get("project_gid"),
+                    workspace_gid=task.get("workspace_gid"),
+                    limit=20,
+                )
                 return {"status": "completed", "tasks": tasks, "summary": "Listed Asana tasks"}
             return {"status": "failed", "error": "Unsupported Asana task"}
         finally:
@@ -534,16 +599,34 @@ print(asyncio.run(click()))
         client = NATUREOSClient()
         operation = task.get("operation", "health")
         if operation == "health":
-            return {"status": "completed", "result": await client.get_matlab_health(), "summary": "NatureOS health checked"}
+            return {
+                "status": "completed",
+                "result": await client.get_matlab_health(),
+                "summary": "NatureOS health checked",
+            }
         if operation == "anomaly_detection":
             result = await client.run_anomaly_detection(task.get("device_id", "mushroom1"))
-            return {"status": "completed", "result": result, "summary": "NatureOS anomaly detection executed"}
+            return {
+                "status": "completed",
+                "result": result,
+                "summary": "NatureOS anomaly detection executed",
+            }
         if operation == "forecast":
-            result = await client.forecast_environmental(task.get("metric", "temperature"), int(task.get("hours", 24)))
-            return {"status": "completed", "result": result, "summary": "NatureOS forecast executed"}
+            result = await client.forecast_environmental(
+                task.get("metric", "temperature"), int(task.get("hours", 24))
+            )
+            return {
+                "status": "completed",
+                "result": result,
+                "summary": "NatureOS forecast executed",
+            }
         if operation == "device_sync":
             result = await client.sync_digital_twin(task.get("device_id", "mushroom1"))
-            return {"status": "completed", "result": result, "summary": "NatureOS digital twin sync executed"}
+            return {
+                "status": "completed",
+                "result": result,
+                "summary": "NatureOS digital twin sync executed",
+            }
         return {"status": "failed", "error": "Unsupported NatureOS task"}
 
     async def run_search_task(self, task: dict) -> dict:
@@ -554,21 +637,35 @@ print(asyncio.run(click()))
         limit = int(task.get("limit", 10))
         try:
             from mycosoft_mas.consciousness.search_orchestrator import run_unified_search
+
             result = await run_unified_search(
                 query=query,
                 search_context=task.get("context"),
                 limit=limit,
             )
-            results = (result.get("results") or {}).get("keyword", []) + (result.get("results") or {}).get("semantic", [])
-            return {"status": "completed", "results": results, "result_payload": result, "summary": f"Unified search completed for: {query[:80]}"}
+            results = (result.get("results") or {}).get("keyword", []) + (
+                result.get("results") or {}
+            ).get("semantic", [])
+            return {
+                "status": "completed",
+                "results": results,
+                "result_payload": result,
+                "summary": f"Unified search completed for: {query[:80]}",
+            }
         except Exception as e:
             logger.warning("Search orchestrator failed, falling back to mindex_bridge: %s", e)
             results = await self._os.mindex_bridge.search_knowledge(query, limit=limit)
-            return {"status": "completed", "results": results, "summary": f"Unified search completed for: {query[:80]}"}
+            return {
+                "status": "completed",
+                "results": results,
+                "summary": f"Unified search completed for: {query[:80]}",
+            }
 
     # ── CREP Map Control ───────────────────────────────────────────
 
-    def _infer_crep_tool_from_description(self, text: str) -> Optional[Tuple[str, Dict[str, Any], bool]]:
+    def _infer_crep_tool_from_description(
+        self, text: str
+    ) -> Optional[Tuple[str, Dict[str, Any], bool]]:
         """
         Infer CREP tool and args from natural language (title/description).
         Returns (tool, args, needs_confirmation) or None if unparseable.
@@ -703,12 +800,12 @@ print(asyncio.run(click()))
         """
         from mycosoft_mas.finance.discovery import (
             delegate_finance_task,
+            get_finance_alerts,
+            get_finance_status,
             list_finance_agents,
             list_finance_services,
-            list_finance_workloads,
             list_finance_tasks,
-            get_finance_status,
-            get_finance_alerts,
+            list_finance_workloads,
             submit_finance_report,
         )
 
@@ -719,7 +816,11 @@ print(asyncio.run(click()))
                 agent_id = task.get("agent_id") or task.get("agent")
                 if not agent_id:
                     return {"status": "failed", "error": "agent_id required for delegate"}
-                payload = {k: v for k, v in task.items() if k not in ("operation", "agent_id", "agent", "type")}
+                payload = {
+                    k: v
+                    for k, v in task.items()
+                    if k not in ("operation", "agent_id", "agent", "type")
+                }
                 result = await delegate_finance_task(agent_id, payload)
                 if result.get("status") == "ok":
                     return {
@@ -735,22 +836,46 @@ print(asyncio.run(click()))
                 }
             elif operation == "list_agents":
                 agents = list_finance_agents()
-                return {"status": "completed", "agents": agents, "summary": f"Listed {len(agents)} finance agents"}
+                return {
+                    "status": "completed",
+                    "agents": agents,
+                    "summary": f"Listed {len(agents)} finance agents",
+                }
             elif operation == "list_services":
                 services = list_finance_services()
-                return {"status": "completed", "services": services, "summary": f"Listed {len(services)} finance services"}
+                return {
+                    "status": "completed",
+                    "services": services,
+                    "summary": f"Listed {len(services)} finance services",
+                }
             elif operation == "list_workloads":
                 workloads = await list_finance_workloads()
-                return {"status": "completed", "workloads": workloads, "summary": f"Listed {len(workloads)} finance workloads"}
+                return {
+                    "status": "completed",
+                    "workloads": workloads,
+                    "summary": f"Listed {len(workloads)} finance workloads",
+                }
             elif operation == "list_tasks":
                 tasks = await list_finance_tasks()
-                return {"status": "completed", "tasks": tasks, "summary": f"Listed {len(tasks)} finance tasks"}
+                return {
+                    "status": "completed",
+                    "tasks": tasks,
+                    "summary": f"Listed {len(tasks)} finance tasks",
+                }
             elif operation == "status":
                 status = await get_finance_status()
-                return {"status": "completed", "status": status, "summary": "Finance status retrieved"}
+                return {
+                    "status": "completed",
+                    "status": status,
+                    "summary": "Finance status retrieved",
+                }
             elif operation == "alerts":
                 alerts = await get_finance_alerts()
-                return {"status": "completed", "alerts": alerts, "summary": f"Retrieved {len(alerts)} finance alerts"}
+                return {
+                    "status": "completed",
+                    "alerts": alerts,
+                    "summary": f"Retrieved {len(alerts)} finance alerts",
+                }
             elif operation == "submit_report":
                 result = await submit_finance_report(
                     role=task.get("role", "CFO"),
@@ -762,8 +887,16 @@ print(asyncio.run(click()))
                     escalated=task.get("escalated", False),
                 )
                 if "error" in result:
-                    return {"status": "failed", "error": result.get("error"), "summary": "Report submit failed"}
-                return {"status": "completed", "result": result, "summary": "Finance report submitted"}
+                    return {
+                        "status": "failed",
+                        "error": result.get("error"),
+                        "summary": "Report submit failed",
+                    }
+                return {
+                    "status": "completed",
+                    "result": result,
+                    "summary": "Finance report submitted",
+                }
             else:
                 return {"status": "failed", "error": f"Unknown finance operation: {operation}"}
         except Exception as e:
@@ -828,9 +961,15 @@ print(asyncio.run(click()))
 
         if target == "myca":
             # Local deployment on VM 191
-            cmd = [self._docker, "compose", "-f",
-                   "/opt/myca/docker-compose.myca-workspace.yml",
-                   "up", "-d", "--build"]
+            cmd = [
+                self._docker,
+                "compose",
+                "-f",
+                "/opt/myca/docker-compose.myca-workspace.yml",
+                "up",
+                "-d",
+                "--build",
+            ]
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
@@ -876,6 +1015,7 @@ print(asyncio.run(click()))
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             client.connect(vm, username=user, password=password, timeout=30)
             try:
+
                 def run(cmd, timeout=600):
                     _, stdout, stderr = client.exec_command(cmd, timeout=timeout)
                     out = stdout.read().decode("utf-8", errors="replace")
@@ -883,17 +1023,24 @@ print(asyncio.run(click()))
                     return stdout.channel.recv_exit_status(), out, err
 
                 # 1. Pull
-                ec, out, err = run("cd /opt/mycosoft/website && git fetch && git reset --hard origin/main && git log -1 --oneline")
+                ec, out, err = run(
+                    "cd /opt/mycosoft/website && git fetch && git reset --hard origin/main && git log -1 --oneline"
+                )
                 if ec != 0:
                     return False, f"Git pull failed: {err[:500]}"
 
                 # 2. Build
-                ec, out, err = run("cd /opt/mycosoft/website && docker build --no-cache -t mycosoft-always-on-mycosoft-website:latest . 2>&1", timeout=600)
+                ec, out, err = run(
+                    "cd /opt/mycosoft/website && docker build --no-cache -t mycosoft-always-on-mycosoft-website:latest . 2>&1",
+                    timeout=600,
+                )
                 if ec != 0:
                     return False, f"Docker build failed: {err[:500]}"
 
                 # 3. Stop/remove old container
-                run("docker stop mycosoft-website 2>/dev/null; docker rm mycosoft-website 2>/dev/null; echo done")
+                run(
+                    "docker stop mycosoft-website 2>/dev/null; docker rm mycosoft-website 2>/dev/null; echo done"
+                )
 
                 # 4. Start with NAS mount
                 ec, out, err = run(
@@ -938,10 +1085,13 @@ print(asyncio.run(click()))
         token = os.getenv("CLOUDFLARE_API_TOKEN")
         zone_id = os.getenv("CLOUDFLARE_ZONE_ID")
         if not token or not zone_id:
-            logger.debug("Cloudflare purge skipped: CLOUDFLARE_API_TOKEN/CLOUDFLARE_ZONE_ID not set")
+            logger.debug(
+                "Cloudflare purge skipped: CLOUDFLARE_API_TOKEN/CLOUDFLARE_ZONE_ID not set"
+            )
             return False
         try:
             import requests
+
             url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/purge_cache"
             resp = requests.post(
                 url,
@@ -960,13 +1110,14 @@ print(asyncio.run(click()))
     async def run_desktop_task(self, task: dict) -> dict:
         """Run desktop/computer-use tasks via desktop tools."""
         from mycosoft_mas.myca.os.desktop import (
-            desktop_screenshot,
-            desktop_click,
-            desktop_type,
-            desktop_key,
             app_launch,
+            desktop_click,
+            desktop_key,
+            desktop_screenshot,
+            desktop_type,
             system_run,
         )
+
         action = task.get("action", "screenshot")
         if action == "screenshot":
             return await desktop_screenshot(task.get("path"))
@@ -986,6 +1137,7 @@ print(asyncio.run(click()))
     async def run_skill_task(self, task: dict) -> dict:
         """Run a skill by ID."""
         from mycosoft_mas.myca.os.skills_manager import run_skill
+
         skill_id = task.get("skill_id", task.get("skill", ""))
         args = task.get("args", {})
         return await run_skill(skill_id, args, self._os)
@@ -995,10 +1147,12 @@ print(asyncio.run(click()))
     async def run_general_task(self, task: dict) -> dict:
         """Use Claude Code to figure out and execute a general task."""
         description = task.get("description", "")
-        return await self.run_claude_code({
-            "prompt": f"Execute this task autonomously: {description}",
-            "allow_edit": True,
-        })
+        return await self.run_claude_code(
+            {
+                "prompt": f"Execute this task autonomously: {description}",
+                "allow_edit": True,
+            }
+        )
 
     # ── Local Service Health ─────────────────────────────────────
 
@@ -1024,7 +1178,9 @@ print(asyncio.run(click()))
             ok = False
             for url in urls:
                 try:
-                    async with self._session.get(url, timeout=aiohttp.ClientTimeout(total=3)) as resp:
+                    async with self._session.get(
+                        url, timeout=aiohttp.ClientTimeout(total=3)
+                    ) as resp:
                         if resp.status < 500:
                             ok = True
                             break
@@ -1035,7 +1191,10 @@ print(asyncio.run(click()))
         # Check Docker via socket (faster than subprocess)
         try:
             proc = await asyncio.create_subprocess_exec(
-                self._docker, "ps", "--format", "{{.Names}}",
+                self._docker,
+                "ps",
+                "--format",
+                "{{.Names}}",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -1064,7 +1223,8 @@ print(asyncio.run(click()))
         for name, cmd in tools.items():
             try:
                 proc = await asyncio.create_subprocess_exec(
-                    cmd, "--version",
+                    cmd,
+                    "--version",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )

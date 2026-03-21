@@ -3,12 +3,12 @@ Voice Command Registry for MYCA
 Created: February 4, 2026
 """
 
-import re
-from typing import Dict, List, Optional, Callable, Any
-from dataclasses import dataclass, field
-from enum import Enum
-from datetime import datetime
 import logging
+import re
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class VoiceCommandRegistry:
         self._compiled: Dict[str, List[re.Pattern]] = {}
         self._load_default_commands()
         logger.info(f"VoiceCommandRegistry initialized with {len(self.commands)} commands")
-    
+
     def _load_default_commands(self):
         defaults = [
             RegisteredCommand(
@@ -112,7 +112,9 @@ class VoiceCommandRegistry:
                 description="Learn a new capability via LLM",
                 patterns=[r"learn\s+(?:how\s+to\s+)?(.+)"],
                 command_type=CommandType.AGENT,
-                handler=CommandHandler("agent", "skill-learning-agent", "/api/skills/learn", "POST"),
+                handler=CommandHandler(
+                    "agent", "skill-learning-agent", "/api/skills/learn", "POST"
+                ),
                 examples=["learn how to optimize containers", "learn kubernetes deployments"],
             ),
             RegisteredCommand(
@@ -147,7 +149,9 @@ class VoiceCommandRegistry:
                 command_id="navigate_dashboard",
                 name="Navigate Dashboard",
                 description="Navigate to a dashboard page",
-                patterns=[r"(?:go\s+to|open|navigate\s+to)\s+(?:the\s+)?(\w+)\s*(?:dashboard|page)?"],
+                patterns=[
+                    r"(?:go\s+to|open|navigate\s+to)\s+(?:the\s+)?(\w+)\s*(?:dashboard|page)?"
+                ],
                 command_type=CommandType.NAVIGATION,
                 handler=CommandHandler("navigation", "frontend-router"),
                 examples=["go to the MINDEX dashboard", "open settings page"],
@@ -162,7 +166,9 @@ class VoiceCommandRegistry:
                     r"analyze\s+zone\s+([A-Za-z0-9]+)",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["analyze soil quality in zone A", "analyze zone B"],
             ),
             RegisteredCommand(
@@ -174,7 +180,9 @@ class VoiceCommandRegistry:
                     r"forecast\s+(?:temperature|humidity)\s+(?:for\s+)?(\d+)\s*hours?",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["predict temperature for next 24 hours", "forecast humidity 12 hours"],
             ),
             RegisteredCommand(
@@ -187,7 +195,9 @@ class VoiceCommandRegistry:
                     r"run\s+anomaly\s+(?:scan|detection)",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["are there any sensor anomalies?", "check for anomalies"],
             ),
             RegisteredCommand(
@@ -199,7 +209,9 @@ class VoiceCommandRegistry:
                     r"classify\s+(?:this\s+)?(?:fungal|mushroom)\s+sample",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["identify this fungal sample"],
             ),
             RegisteredCommand(
@@ -211,7 +223,9 @@ class VoiceCommandRegistry:
                     r"(?:create|run)\s+biodiversity\s+report",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["generate biodiversity report"],
             ),
             RegisteredCommand(
@@ -224,7 +238,9 @@ class VoiceCommandRegistry:
                     r"earth\s+forecast",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["run earth2 forecast", "earth forecast"],
             ),
             RegisteredCommand(
@@ -236,7 +252,9 @@ class VoiceCommandRegistry:
                     r"petri\s+dish\s+simulation",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["simulate petri dish", "petri dish simulation"],
             ),
             RegisteredCommand(
@@ -248,7 +266,9 @@ class VoiceCommandRegistry:
                     r"mushroom\s+simulation",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["simulate mushroom", "mushroom simulation"],
             ),
             RegisteredCommand(
@@ -260,7 +280,9 @@ class VoiceCommandRegistry:
                     r"compound\s+simulation",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["simulate compound", "compound simulation"],
             ),
             RegisteredCommand(
@@ -272,7 +294,9 @@ class VoiceCommandRegistry:
                     r"genetic\s+circuit\s+simulation",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["simulate genetic circuit"],
             ),
             RegisteredCommand(
@@ -284,7 +308,9 @@ class VoiceCommandRegistry:
                     r"lifecycle\s+simulation",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["simulate lifecycle"],
             ),
             RegisteredCommand(
@@ -296,7 +322,9 @@ class VoiceCommandRegistry:
                     r"physics\s+simulation",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["simulate physics"],
             ),
             RegisteredCommand(
@@ -308,7 +336,9 @@ class VoiceCommandRegistry:
                     r"analyze\s+growth",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["run growth analytics"],
             ),
             RegisteredCommand(
@@ -320,7 +350,9 @@ class VoiceCommandRegistry:
                     r"run\s+retrosynthesis",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["run retrosynthesis"],
             ),
             RegisteredCommand(
@@ -332,7 +364,9 @@ class VoiceCommandRegistry:
                     r"run\s+alchemy",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["run alchemy lab"],
             ),
             RegisteredCommand(
@@ -344,7 +378,9 @@ class VoiceCommandRegistry:
                     r"update\s+digital\s+twin",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["sync digital twin"],
             ),
             RegisteredCommand(
@@ -356,7 +392,9 @@ class VoiceCommandRegistry:
                     r"analyze\s+symbiosis",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["analyze symbiosis network"],
             ),
             # Petri agent control (MYCA live monitoring, adjustment, autonomy)
@@ -369,7 +407,9 @@ class VoiceCommandRegistry:
                     r"petri\s+(?:simulation\s+)?(?:status|monitor)",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("simulation", "petri-agent", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "simulation", "petri-agent", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["monitor petri", "petri status"],
             ),
             RegisteredCommand(
@@ -381,7 +421,9 @@ class VoiceCommandRegistry:
                     r"set\s+petri\s+(?:temp|temperature|humidity|ph)\s+(?:to\s+)?(\d+(?:\.\d+)?)",
                 ],
                 command_type=CommandType.AGENT,
-                handler=CommandHandler("simulation", "petri-agent", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "simulation", "petri-agent", "/api/voice/tools/execute", "POST"
+                ),
                 requires_confirmation=False,
                 examples=["adjust petri environment temperature to 25", "set petri humidity 80"],
             ),
@@ -394,7 +436,9 @@ class VoiceCommandRegistry:
                     r"respond\s+to\s+petri\s+contamination",
                 ],
                 command_type=CommandType.AGENT,
-                handler=CommandHandler("simulation", "petri-agent", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "simulation", "petri-agent", "/api/voice/tools/execute", "POST"
+                ),
                 requires_confirmation=True,
                 examples=["petri contamination response"],
             ),
@@ -407,7 +451,9 @@ class VoiceCommandRegistry:
                     r"petri\s+batch\s+(\d+)",
                 ],
                 command_type=CommandType.AGENT,
-                handler=CommandHandler("simulation", "petri-agent", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "simulation", "petri-agent", "/api/voice/tools/execute", "POST"
+                ),
                 requires_confirmation=True,
                 examples=["run petri multi run of 100 iterations", "petri batch 50"],
             ),
@@ -421,37 +467,39 @@ class VoiceCommandRegistry:
                     r"spore\s+dispersal",
                 ],
                 command_type=CommandType.QUERY,
-                handler=CommandHandler("natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"),
+                handler=CommandHandler(
+                    "natureos", "natureos-matlab", "/api/voice/tools/execute", "POST"
+                ),
                 examples=["track spores", "spore dispersal"],
             ),
         ]
-        
+
         for cmd in defaults:
             self.register(cmd)
-    
+
     def register(self, command: RegisteredCommand) -> None:
         self.commands[command.command_id] = command
         self._compiled[command.command_id] = [
             re.compile(p, re.IGNORECASE) for p in command.patterns
         ]
         logger.debug(f"Registered command: {command.command_id}")
-    
+
     def unregister(self, command_id: str) -> bool:
         if command_id in self.commands:
             del self.commands[command_id]
             del self._compiled[command_id]
             return True
         return False
-    
+
     def match(self, transcript: str) -> Optional[CommandMatch]:
         best_match = None
         best_score = 0.0
-        
+
         for cmd_id, patterns in self._compiled.items():
             cmd = self.commands[cmd_id]
             if not cmd.enabled:
                 continue
-            
+
             for pattern in patterns:
                 m = pattern.search(transcript)
                 if m:
@@ -468,17 +516,17 @@ class VoiceCommandRegistry:
                             matched_pattern=pattern.pattern,
                             captured_groups=groups,
                         )
-        
+
         return best_match
-    
+
     def get_command(self, command_id: str) -> Optional[RegisteredCommand]:
         return self.commands.get(command_id)
-    
+
     def record_usage(self, command_id: str) -> None:
         if cmd := self.commands.get(command_id):
             cmd.usage_count += 1
             cmd.last_used = datetime.now()
-    
+
     def get_suggestions(self, partial: str, limit: int = 5) -> List[RegisteredCommand]:
         partial_lower = partial.lower()
         scored = []
@@ -511,6 +559,11 @@ def get_command_registry() -> VoiceCommandRegistry:
 
 
 __all__ = [
-    "VoiceCommandRegistry", "RegisteredCommand", "CommandHandler",
-    "CommandMatch", "CommandType", "ExecutionMode", "get_command_registry",
+    "VoiceCommandRegistry",
+    "RegisteredCommand",
+    "CommandHandler",
+    "CommandMatch",
+    "CommandType",
+    "ExecutionMode",
+    "get_command_registry",
 ]

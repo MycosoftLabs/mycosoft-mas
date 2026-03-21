@@ -29,6 +29,7 @@ router = APIRouter(prefix="/api/knowledge", tags=["knowledge"])
 
 class KnowledgeQueryRequest(BaseModel):
     """Request to query MYCA's knowledge."""
+
     query: str
     domain: Optional[str] = None
     depth: str = "comprehensive"  # quick, moderate, comprehensive, exhaustive
@@ -40,6 +41,7 @@ class KnowledgeQueryRequest(BaseModel):
 
 class KnowledgeQueryResponse(BaseModel):
     """Response from a knowledge query."""
+
     query: str
     domain: str
     answer: str
@@ -53,6 +55,7 @@ class KnowledgeQueryResponse(BaseModel):
 
 class DeepResearchRequest(BaseModel):
     """Request for deep multi-domain research."""
+
     query: str
     domains: List[str] = Field(default_factory=list)
     max_sources_per_domain: int = 10
@@ -73,6 +76,7 @@ def _get_knowledge_agent():
     if _knowledge_agent is None:
         try:
             from mycosoft_mas.agents.v2.knowledge_domain_agent import KnowledgeDomainAgent
+
             _knowledge_agent = KnowledgeDomainAgent()
         except Exception as e:
             logger.error("Failed to create KnowledgeDomainAgent: %s", e)
@@ -113,21 +117,26 @@ async def query_knowledge(request: KnowledgeQueryRequest) -> KnowledgeQueryRespo
     if not agent:
         raise HTTPException(status_code=503, detail="Knowledge agent not available")
 
-    result = await agent.process_task({
-        "type": "query",
-        "query": request.query,
-        "domain": request.domain,
-        "depth": request.depth,
-    })
+    result = await agent.process_task(
+        {
+            "type": "query",
+            "query": request.query,
+            "domain": request.domain,
+            "depth": request.depth,
+        }
+    )
 
     # Suggest widgets if requested
     suggested_widgets = []
     if request.include_widgets:
         try:
             from mycosoft_mas.core.routers.widget_api import _suggest_widgets_for_query
+
             suggestions = _suggest_widgets_for_query(request.query)
-            suggested_widgets = [{"type": s.widget_type.value, "title": s.title,
-                                  "relevance": s.relevance} for s in suggestions]
+            suggested_widgets = [
+                {"type": s.widget_type.value, "title": s.title, "relevance": s.relevance}
+                for s in suggestions
+            ]
         except Exception:
             pass
 
@@ -136,7 +145,7 @@ async def query_knowledge(request: KnowledgeQueryRequest) -> KnowledgeQueryRespo
         domain=result.get("domain", "general"),
         answer=result.get("answer", ""),
         confidence=result.get("confidence", 0.0),
-        sources=result.get("sources", [])[:request.max_sources],
+        sources=result.get("sources", [])[: request.max_sources],
         related_topics=result.get("related_topics", []),
         suggested_widgets=suggested_widgets,
         images=result.get("images", []) if request.include_images else [],
@@ -167,11 +176,13 @@ async def deep_research(request: DeepResearchRequest) -> Dict[str, Any]:
     if not agent:
         raise HTTPException(status_code=503, detail="Knowledge agent not available")
 
-    result = await agent.process_task({
-        "type": "deep_research",
-        "query": request.query,
-        "domains": request.domains or ["biology", "chemistry", "environmental_science"],
-    })
+    result = await agent.process_task(
+        {
+            "type": "deep_research",
+            "query": request.query,
+            "domains": request.domains or ["biology", "chemistry", "environmental_science"],
+        }
+    )
     return result
 
 

@@ -119,9 +119,7 @@ class MicahAgent(BaseAgent):
             metadata=task.get("metadata", {}),
         )
 
-        decision: GovernorDecision = await self._governor.evaluate_proposal(
-            proposal
-        )
+        decision: GovernorDecision = await self._governor.evaluate_proposal(proposal)
 
         # Store proposal and result
         proposal_id = f"prop_{proposal.timestamp.timestamp()}"
@@ -182,17 +180,17 @@ class MicahAgent(BaseAgent):
             )
 
             decision = await self._governor.evaluate_proposal(proposal)
-            results.append({
-                "step": i + 1,
-                "action_type": proposal.action_type,
-                "authorized": decision.approved,
-                "reason": decision.reason,
-            })
+            results.append(
+                {
+                    "step": i + 1,
+                    "action_type": proposal.action_type,
+                    "authorized": decision.approved,
+                    "reason": decision.reason,
+                }
+            )
 
             if not decision.approved:
-                logger.info(
-                    "Plan halted at step %d: %s", i + 1, decision.reason
-                )
+                logger.info("Plan halted at step %d: %s", i + 1, decision.reason)
                 break
 
         all_approved = all(r["authorized"] for r in results)
@@ -204,9 +202,7 @@ class MicahAgent(BaseAgent):
             "results": results,
         }
 
-    async def _handle_auth_status(
-        self, task: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _handle_auth_status(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Check the authorization status of a previous proposal."""
         proposal_id = task.get("proposal_id", "")
         record = self._proposals.get(proposal_id)

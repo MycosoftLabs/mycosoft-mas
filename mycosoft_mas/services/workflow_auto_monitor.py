@@ -6,15 +6,15 @@ Runs health check every 60s, drift detection every 15 min, auto-sync on drift.
 """
 
 import asyncio
-import json
 import hashlib
+import json
 import logging
 import os
-from typing import Callable, Dict, Any, Optional
+from typing import Any, Callable, Dict, Optional
 
 from mycosoft_mas.core.n8n_workflow_engine import (
-    N8NWorkflowEngine,
     WORKFLOWS_DIR,
+    N8NWorkflowEngine,
 )
 
 logger = logging.getLogger(__name__)
@@ -119,7 +119,9 @@ class WorkflowAutoMonitor:
                         engine_local.close()
                 except Exception as e:
                     local_health = {"status": "unhealthy", "error": str(e)}
-                    await self._emit_failure("Local n8n health check failed", {"error": str(e), "url": local_url})
+                    await self._emit_failure(
+                        "Local n8n health check failed", {"error": str(e), "url": local_url}
+                    )
 
                 self._last_health = {"local": local_health}
             except Exception as e:
@@ -168,7 +170,11 @@ class WorkflowAutoMonitor:
             return
         self._running = True
         self._task = asyncio.create_task(self._run_loops())
-        logger.info("WorkflowAutoMonitor started (health=%ss, drift=%ss)", self.health_interval, self.drift_interval)
+        logger.info(
+            "WorkflowAutoMonitor started (health=%ss, drift=%ss)",
+            self.health_interval,
+            self.drift_interval,
+        )
 
     async def _run_loops(self) -> None:
         await asyncio.gather(self._health_loop(), self._drift_loop())

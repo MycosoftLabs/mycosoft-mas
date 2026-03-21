@@ -5,13 +5,13 @@ Contains MYCA brain persona and sub-agent definitions.
 """
 
 from .sub_agents import (
-    UserTier,
     SubAgentPersona,
+    UserTier,
+    get_persona_prompt,
     get_sub_agent,
     get_sub_agent_for_tier,
+    get_sub_agent_router,
     list_sub_agents,
-    get_persona_prompt,
-    get_sub_agent_router
 )
 
 __all__ = [
@@ -21,5 +21,5 @@ __all__ = [
     "get_sub_agent_for_tier",
     "list_sub_agents",
     "get_persona_prompt",
-    "get_sub_agent_router"
+    "get_sub_agent_router",
 ]

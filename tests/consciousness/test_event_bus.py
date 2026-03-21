@@ -28,4 +28,3 @@ class TestAttentionEventBus:
         stats = bus.stats()
         assert stats["queued"] == 1
         assert stats["dropped"] >= 1
-

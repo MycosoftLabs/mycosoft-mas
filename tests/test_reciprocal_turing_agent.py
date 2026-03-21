@@ -9,8 +9,9 @@ Tests cover:
 - Mirrored question generation
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 
 class TestReciprocalTuringAgent:

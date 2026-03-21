@@ -12,11 +12,11 @@ Env vars:
     EPO_CONSUMER_SECRET  -- EPO OPS consumer secret
 """
 
-import os
-import logging
 import base64
-from typing import Any, Dict, List, Optional
+import logging
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import httpx
 
@@ -35,7 +35,9 @@ class PatentClient:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.epo_key = self.config.get("epo_consumer_key") or os.getenv("EPO_CONSUMER_KEY", "")
-        self.epo_secret = self.config.get("epo_consumer_secret") or os.getenv("EPO_CONSUMER_SECRET", "")
+        self.epo_secret = self.config.get("epo_consumer_secret") or os.getenv(
+            "EPO_CONSUMER_SECRET", ""
+        )
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
         self._epo_token: Optional[str] = None
@@ -50,7 +52,11 @@ class PatentClient:
             c = await self._http()
             r = await c.post(
                 USPTO_BASE,
-                json={"q": {"_text_any": {"patent_title": "test"}}, "f": ["patent_number"], "o": {"per_page": 1}},
+                json={
+                    "q": {"_text_any": {"patent_title": "test"}},
+                    "f": ["patent_number"],
+                    "o": {"per_page": 1},
+                },
             )
             return {
                 "status": "ok" if r.status_code == 200 else "degraded",
@@ -73,8 +79,11 @@ class PatentClient:
         """Search US patents by text query."""
         c = await self._http()
         default_fields = [
-            "patent_number", "patent_title", "patent_date",
-            "patent_abstract", "assignee_organization",
+            "patent_number",
+            "patent_title",
+            "patent_date",
+            "patent_abstract",
+            "assignee_organization",
         ]
         body = {
             "q": {"_text_any": {"patent_title": query}},
@@ -92,8 +101,13 @@ class PatentClient:
         body = {
             "q": {"patent_number": patent_number},
             "f": [
-                "patent_number", "patent_title", "patent_date", "patent_abstract",
-                "assignee_organization", "inventor_first_name", "inventor_last_name",
+                "patent_number",
+                "patent_title",
+                "patent_date",
+                "patent_abstract",
+                "assignee_organization",
+                "inventor_first_name",
+                "inventor_last_name",
                 "citedby_patent_number",
             ],
         }
@@ -119,7 +133,12 @@ class PatentClient:
         c = await self._http()
         body = {
             "q": {"patent_number": patent_number},
-            "f": ["patent_number", "citedby_patent_number", "citedby_patent_title", "citedby_patent_date"],
+            "f": [
+                "patent_number",
+                "citedby_patent_number",
+                "citedby_patent_title",
+                "citedby_patent_date",
+            ],
         }
         r = await c.post(USPTO_BASE, json=body)
         r.raise_for_status()
@@ -137,14 +156,19 @@ class PatentClient:
         creds = base64.b64encode(f"{self.epo_key}:{self.epo_secret}".encode()).decode()
         r = await c.post(
             EPO_AUTH_URL,
-            headers={"Authorization": f"Basic {creds}", "Content-Type": "application/x-www-form-urlencoded"},
+            headers={
+                "Authorization": f"Basic {creds}",
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
             data={"grant_type": "client_credentials"},
         )
         r.raise_for_status()
         self._epo_token = r.json()["access_token"]
         return self._epo_token
 
-    async def epo_search(self, query: str, range_begin: int = 1, range_end: int = 25) -> Dict[str, Any]:
+    async def epo_search(
+        self, query: str, range_begin: int = 1, range_end: int = 25
+    ) -> Dict[str, Any]:
         """Search European patents via EPO OPS."""
         token = await self._epo_auth()
         c = await self._http()
@@ -160,7 +184,9 @@ class PatentClient:
         r.raise_for_status()
         return r.json()
 
-    async def epo_publication(self, doc_type: str, doc_number: str, kind: str = "A1") -> Dict[str, Any]:
+    async def epo_publication(
+        self, doc_type: str, doc_number: str, kind: str = "A1"
+    ) -> Dict[str, Any]:
         """Get EPO publication details."""
         token = await self._epo_auth()
         c = await self._http()

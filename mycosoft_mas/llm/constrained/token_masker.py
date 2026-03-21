@@ -14,7 +14,7 @@ Created: March 3, 2026
 
 import logging
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 
@@ -119,9 +119,7 @@ class TokenMasker:
                 return next_state
         return -1
 
-    def _get_valid_mask(
-        self, state: int, step: int, vocab_size: int
-    ) -> np.ndarray:
+    def _get_valid_mask(self, state: int, step: int, vocab_size: int) -> np.ndarray:
         """Build a boolean mask of valid tokens for a given state and step."""
         mask = np.zeros(vocab_size, dtype=np.bool_)
 
@@ -137,9 +135,7 @@ class TokenMasker:
 
         return mask
 
-    def _get_children_cached(
-        self, state: int, step: int
-    ) -> List[Tuple[int, int]]:
+    def _get_children_cached(self, state: int, step: int) -> List[Tuple[int, int]]:
         """Get children with caching for repeated lookups."""
         cache_key = (state, step)
         if cache_key in self._transition_cache:
@@ -151,9 +147,7 @@ class TokenMasker:
         self._transition_cache[cache_key] = children
         return children
 
-    def _get_children(
-        self, state: int, step: int
-    ) -> List[Tuple[int, int]]:
+    def _get_children(self, state: int, step: int) -> List[Tuple[int, int]]:
         """Get children of a state using dense or sparse path."""
         children = []
         index = self.index

@@ -4,8 +4,9 @@ Tests for MCP Progress Notifier - February 9, 2026
 Unit tests for progress emission to agents:tool_calls.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestProgressNotifier:

@@ -9,7 +9,6 @@ Created: February 24, 2026
 import asyncio
 import logging
 import os
-import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -75,7 +74,11 @@ def _get_website_repo_root() -> Path:
     sibling = mas_root.parent / "website"
     if (sibling / "package.json").exists():
         return sibling
-    return mas_root.parent / "WEBSITE" / "website" if (mas_root.parent / "WEBSITE").exists() else sibling
+    return (
+        mas_root.parent / "WEBSITE" / "website"
+        if (mas_root.parent / "WEBSITE").exists()
+        else sibling
+    )
 
 
 async def _run_deploy_website(job_id: str) -> None:

@@ -8,10 +8,11 @@ Provides HTTP API for:
 - Health checks
 """
 
+import logging
+from typing import Dict, Optional
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Any, Dict, List, Optional
-import logging
 
 from mycosoft_mas.integrations.gpu_node_client import (
     GPUNodeClient,
@@ -89,21 +90,21 @@ async def check_reachable():
 async def get_gpu_status():
     """Get GPU-specific status (memory, utilization, temperature)."""
     client = GPUNodeClient()
-    
+
     if not await client.is_reachable():
         raise HTTPException(status_code=503, detail="GPU node not reachable")
-    
+
     gpu = await client.get_gpu_status()
     if not gpu:
         raise HTTPException(status_code=500, detail="Failed to get GPU status")
-    
+
     return {
         "name": gpu.name,
         "memory_used_mb": gpu.memory_used_mb,
         "memory_total_mb": gpu.memory_total_mb,
         "memory_free_mb": gpu.memory_total_mb - gpu.memory_used_mb,
         "utilization_percent": gpu.utilization_percent,
-        "temperature_c": gpu.temperature_c
+        "temperature_c": gpu.temperature_c,
     }
 
 
@@ -111,22 +112,17 @@ async def get_gpu_status():
 async def list_containers():
     """List all containers on GPU node."""
     client = GPUNodeClient()
-    
+
     if not await client.is_reachable():
         raise HTTPException(status_code=503, detail="GPU node not reachable")
-    
+
     containers = await client.list_containers()
     return {
         "count": len(containers),
         "containers": [
-            {
-                "name": c.name,
-                "image": c.image,
-                "status": c.status,
-                "ports": c.ports
-            }
+            {"name": c.name, "image": c.image, "status": c.status, "ports": c.ports}
             for c in containers
-        ]
+        ],
     }
 
 
@@ -134,10 +130,10 @@ async def list_containers():
 async def get_container_logs(name: str, tail: int = 100):
     """Get logs from a specific container."""
     client = GPUNodeClient()
-    
+
     if not await client.is_reachable():
         raise HTTPException(status_code=503, detail="GPU node not reachable")
-    
+
     logs = await client.get_container_logs(name, tail)
     return {"container": name, "logs": logs}
 
@@ -146,10 +142,10 @@ async def get_container_logs(name: str, tail: int = 100):
 async def check_container_running(name: str):
     """Check if a specific container is running."""
     client = GPUNodeClient()
-    
+
     if not await client.is_reachable():
         raise HTTPException(status_code=503, detail="GPU node not reachable")
-    
+
     running = await client.is_container_running(name)
     return {"container": name, "running": running}
 
@@ -158,27 +154,27 @@ async def check_container_running(name: str):
 async def deploy_container(request: DeployContainerRequest):
     """Deploy a custom container to GPU node."""
     client = GPUNodeClient()
-    
+
     if not await client.is_reachable():
         raise HTTPException(status_code=503, detail="GPU node not reachable")
-    
+
     success = await client.deploy_container(
         name=request.name,
         image=request.image,
         port=request.port,
         gpu=request.gpu,
         env_vars=request.env_vars,
-        volumes=request.volumes
+        volumes=request.volumes,
     )
-    
+
     if not success:
         raise HTTPException(status_code=500, detail="Container deployment failed")
-    
+
     return {
         "success": True,
         "container": request.name,
         "port": request.port,
-        "endpoint": f"http://{client.IP}:{request.port}"
+        "endpoint": f"http://{client.IP}:{request.port}",
     }
 
 
@@ -186,20 +182,20 @@ async def deploy_container(request: DeployContainerRequest):
 async def deploy_known_service(request: DeployServiceRequest):
     """Deploy a known GPU service (moshi-voice, earth2-inference, personaplex-bridge)."""
     result = await deploy_gpu_service(request.service_name)
-    
+
     if not result.get("success"):
         raise HTTPException(status_code=500, detail=result.get("error", "Deployment failed"))
-    
+
     # Get service port
     client = GPUNodeClient()
     service_config = client.SERVICES.get(request.service_name, {})
     port = service_config.get("port", "unknown")
-    
+
     return {
         "success": True,
         "service": request.service_name,
         "endpoint": f"http://{client.IP}:{port}",
-        "health": result.get("health")
+        "health": result.get("health"),
     }
 
 
@@ -224,10 +220,10 @@ async def deploy_personaplex_split_architecture(request: DeployPersonaPlexSplitR
 async def stop_container(name: str):
     """Stop and remove a container."""
     client = GPUNodeClient()
-    
+
     if not await client.is_reachable():
         raise HTTPException(status_code=503, detail="GPU node not reachable")
-    
+
     success = await client.stop_container(name)
     return {"success": success, "container": name, "action": "stopped"}
 
@@ -242,7 +238,7 @@ async def list_known_services():
                 "name": name,
                 "image": config["image"],
                 "port": config["port"],
-                "gpu_required": config["gpu"]
+                "gpu_required": config["gpu"],
             }
             for name, config in client.SERVICES.items()
         ]
@@ -253,12 +249,12 @@ async def list_known_services():
 async def get_service_health(service_name: str):
     """Check health of a deployed GPU service."""
     client = GPUNodeClient()
-    
+
     if service_name not in client.SERVICES:
         raise HTTPException(status_code=404, detail=f"Unknown service: {service_name}")
-    
+
     if not await client.is_reachable():
         raise HTTPException(status_code=503, detail="GPU node not reachable")
-    
+
     health = await client.get_service_health(service_name)
     return {"service": service_name, **health}

@@ -35,7 +35,9 @@ class MINDEXClient:
 
     async def health(self) -> bool:
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.timeout)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self.timeout)
+            ) as session:
                 async with session.get(f"{self.base_url}/health", headers=self._headers()) as resp:
                     return resp.status == 200
         except Exception:
@@ -53,7 +55,9 @@ class MINDEXClient:
         while attempt < self.max_retries:
             attempt += 1
             try:
-                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.timeout)) as session:
+                async with aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=self.timeout)
+                ) as session:
                     async with session.post(url, json=payload, headers=self._headers()) as resp:
                         if resp.status >= 400:
                             raise RuntimeError(f"MINDEX error {resp.status}")

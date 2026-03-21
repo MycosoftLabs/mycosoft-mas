@@ -13,12 +13,26 @@ from typing import Any, Dict, Optional
 logger = logging.getLogger(__name__)
 
 # Canonical CREP map command types (camelCase)
-VALID_MAP_TYPES = frozenset({
-    "flyTo", "geocodeAndFlyTo", "setZoom", "zoomBy", "panBy",
-    "showLayer", "hideLayer", "toggleLayer", "applyFilter", "clearFilters",
-    "getEntityDetails", "getViewContext", "setTimeCursor", "timelineSearch",
-    "getSystemStatus", "setMute",
-})
+VALID_MAP_TYPES = frozenset(
+    {
+        "flyTo",
+        "geocodeAndFlyTo",
+        "setZoom",
+        "zoomBy",
+        "panBy",
+        "showLayer",
+        "hideLayer",
+        "toggleLayer",
+        "applyFilter",
+        "clearFilters",
+        "getEntityDetails",
+        "getViewContext",
+        "setTimeCursor",
+        "timelineSearch",
+        "getSystemStatus",
+        "setMute",
+    }
+)
 
 # High-risk commands requiring confirmation (bulk/timeline mutation)
 REQUIRES_CONFIRMATION = frozenset({"clearFilters"})
@@ -182,9 +196,7 @@ class CrepCommandBus:
             cmd["duration"] = int(args["duration"])
         return cmd
 
-    def _speak_for_command(
-        self, tool_name: str, args: Dict[str, Any], cmd: Dict[str, Any]
-    ) -> str:
+    def _speak_for_command(self, tool_name: str, args: Dict[str, Any], cmd: Dict[str, Any]) -> str:
         """Generate speak text for the command."""
         t = cmd.get("type", "")
         if t == "flyTo":

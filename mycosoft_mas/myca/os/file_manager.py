@@ -26,14 +26,12 @@ VM 191 Directory Layout:
 Date: 2026-03-04
 """
 
-import os
-import asyncio
-import hashlib
 import logging
-from pathlib import Path
-from datetime import datetime, timezone
-from typing import Optional
+import os
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional
 
 logger = logging.getLogger("myca.os.files")
 
@@ -41,8 +39,9 @@ logger = logging.getLogger("myca.os.files")
 @dataclass
 class FileEntry:
     """A tracked file in MYCA's filesystem."""
+
     path: str
-    file_type: str = "unknown"      # document, code, config, media, data
+    file_type: str = "unknown"  # document, code, config, media, data
     category: str = "uncategorized"
     description: str = ""
     size_bytes: int = 0
@@ -54,22 +53,50 @@ class FileEntry:
 # File type classification by extension
 EXTENSION_TYPES = {
     # Code
-    ".py": "code", ".js": "code", ".ts": "code", ".go": "code",
-    ".rs": "code", ".java": "code", ".rb": "code", ".sh": "code",
-    ".sql": "code", ".html": "code", ".css": "code", ".vue": "code",
+    ".py": "code",
+    ".js": "code",
+    ".ts": "code",
+    ".go": "code",
+    ".rs": "code",
+    ".java": "code",
+    ".rb": "code",
+    ".sh": "code",
+    ".sql": "code",
+    ".html": "code",
+    ".css": "code",
+    ".vue": "code",
     # Config
-    ".yaml": "config", ".yml": "config", ".json": "config",
-    ".toml": "config", ".ini": "config", ".env": "config",
-    ".conf": "config", ".cfg": "config",
+    ".yaml": "config",
+    ".yml": "config",
+    ".json": "config",
+    ".toml": "config",
+    ".ini": "config",
+    ".env": "config",
+    ".conf": "config",
+    ".cfg": "config",
     # Document
-    ".md": "document", ".txt": "document", ".pdf": "document",
-    ".doc": "document", ".docx": "document", ".rst": "document",
+    ".md": "document",
+    ".txt": "document",
+    ".pdf": "document",
+    ".doc": "document",
+    ".docx": "document",
+    ".rst": "document",
     # Data
-    ".csv": "data", ".jsonl": "data", ".parquet": "data",
-    ".sqlite": "data", ".db": "data", ".xlsx": "data",
+    ".csv": "data",
+    ".jsonl": "data",
+    ".parquet": "data",
+    ".sqlite": "data",
+    ".db": "data",
+    ".xlsx": "data",
     # Media
-    ".png": "media", ".jpg": "media", ".jpeg": "media", ".gif": "media",
-    ".svg": "media", ".mp3": "media", ".mp4": "media", ".wav": "media",
+    ".png": "media",
+    ".jpg": "media",
+    ".jpeg": "media",
+    ".gif": "media",
+    ".svg": "media",
+    ".mp3": "media",
+    ".mp4": "media",
+    ".wav": "media",
 }
 
 
@@ -86,7 +113,11 @@ class FileManager:
 
     # Directories to never touch
     PROTECTED_DIRS = [
-        "/etc", "/usr", "/var", "/boot", "/root",
+        "/etc",
+        "/usr",
+        "/var",
+        "/boot",
+        "/root",
     ]
 
     def __init__(self, os_ref):
@@ -133,8 +164,12 @@ class FileManager:
                     continue
 
                 # Skip hidden directories and common noise
-                dirs[:] = [d for d in dirs if not d.startswith(".")
-                           and d not in ("node_modules", "__pycache__", ".git", "venv", ".venv")]
+                dirs[:] = [
+                    d
+                    for d in dirs
+                    if not d.startswith(".")
+                    and d not in ("node_modules", "__pycache__", ".git", "venv", ".venv")
+                ]
 
                 for fname in files:
                     fpath = os.path.join(root, fname)
@@ -150,8 +185,9 @@ class FileManager:
 
         return new_count
 
-    async def search(self, query: str = None, file_type: str = None,
-                     category: str = None, tags: list = None) -> list[FileEntry]:
+    async def search(
+        self, query: str = None, file_type: str = None, category: str = None, tags: list = None
+    ) -> list[FileEntry]:
         """Search the file index."""
         results = list(self._index.values())
 
@@ -163,10 +199,13 @@ class FileManager:
             results = [f for f in results if any(t in f.tags for t in tags)]
         if query:
             query_lower = query.lower()
-            results = [f for f in results if
-                       query_lower in f.path.lower() or
-                       query_lower in f.description.lower() or
-                       query_lower in " ".join(f.tags).lower()]
+            results = [
+                f
+                for f in results
+                if query_lower in f.path.lower()
+                or query_lower in f.description.lower()
+                or query_lower in " ".join(f.tags).lower()
+            ]
 
         return results
 
@@ -313,9 +352,14 @@ class FileManager:
                                    file_type = EXCLUDED.file_type,
                                    size_bytes = EXCLUDED.size_bytes,
                                    last_modified = EXCLUDED.last_modified""",
-                            entry.path, entry.file_type, entry.category,
-                            entry.description, entry.size_bytes, entry.checksum,
-                            entry.tags, entry.last_modified,
+                            entry.path,
+                            entry.file_type,
+                            entry.category,
+                            entry.description,
+                            entry.size_bytes,
+                            entry.checksum,
+                            entry.tags,
+                            entry.last_modified,
                         )
         except Exception as e:
             logger.warning(f"File index persist failed: {e}")

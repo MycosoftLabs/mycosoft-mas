@@ -8,7 +8,7 @@ Created: February 25, 2026
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -56,12 +56,14 @@ def parse_tle_lines(lines: List[str]) -> List[Dict[str, Any]]:
         norad_id = None
         if len(line2) >= 14:
             norad_id = line2[2:7].strip()
-        result.append({
-            "name": name,
-            "line1": line1,
-            "line2": line2,
-            "norad_id": norad_id,
-        })
+        result.append(
+            {
+                "name": name,
+                "line1": line1,
+                "line2": line2,
+                "norad_id": norad_id,
+            }
+        )
         i += 3
     return result
 

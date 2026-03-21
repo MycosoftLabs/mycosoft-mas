@@ -100,7 +100,7 @@ def test_nlm_store() -> None:
 
 
 def test_memory_scope_routing() -> None:
-    from mycosoft_mas.memory.service import get_memory_service, MemoryScope
+    from mycosoft_mas.memory.service import MemoryScope, get_memory_service
 
     service = get_memory_service()
     conv_backends = service._scope_backends.get(MemoryScope.CONVERSATION)
@@ -172,6 +172,7 @@ async def test_coordinator_store_retrieve_roundtrip() -> None:
     """Coordinator should store and retrieve across layers."""
     try:
         from mycosoft_mas.memory import get_memory_coordinator
+
         coord = await get_memory_coordinator()
         await coord.initialize()
     except Exception as e:
@@ -193,6 +194,7 @@ async def test_a2a_broadcast_query() -> None:
     """A2A memory should support broadcast and query."""
     try:
         from mycosoft_mas.memory.a2a_memory import A2AMemory
+
         a2a = A2AMemory()
         await a2a.initialize()
     except Exception as e:
@@ -210,6 +212,7 @@ async def test_a2a_broadcast_query() -> None:
 async def test_personaplex_bridge_memory_wiring() -> None:
     """PersonaPlex bridge should wire to memory when configured."""
     from mycosoft_mas.voice.personaplex_bridge import PersonaPlexBridge
+
     bridge = PersonaPlexBridge()
     session = bridge.create_session(conversation_id="test_conv")
     assert session is not None
@@ -228,6 +231,7 @@ async def test_personaplex_bridge_memory_wiring() -> None:
 async def test_n8n_client_memory_wiring() -> None:
     """N8N client should attempt memory storage when DB configured."""
     from mycosoft_mas.integrations.n8n_client import N8NClient
+
     client = N8NClient(config={"webhook_url": "http://invalid.test", "timeout": 1})
     client._memory_initialized = True
     client._n8n_memory = None
@@ -240,6 +244,7 @@ async def test_n8n_client_memory_wiring() -> None:
 def test_memory_stream_endpoint_exists() -> None:
     """Memory API should expose stream endpoint."""
     from mycosoft_mas.core.routers.memory_api import router
+
     paths = []
     for r in router.routes:
         if hasattr(r, "path"):
@@ -252,6 +257,7 @@ def test_memory_stream_endpoint_exists() -> None:
 def test_memory_audit_log_since_index() -> None:
     """Memory manager should support incremental audit log fetch."""
     from mycosoft_mas.core.routers.memory_api import get_memory_manager
+
     manager = get_memory_manager()
     entries, new_idx = manager.get_audit_log_since_index(0, limit=10)
     assert isinstance(entries, list)
@@ -262,8 +268,8 @@ def test_memory_audit_log_since_index() -> None:
 @pytest.mark.asyncio
 async def test_rto_rpo_memory_persistence() -> None:
     """Memory writes should be synchronous for critical layers (RPO)."""
-    from mycosoft_mas.core.routers.memory_api import get_memory_manager
-    from mycosoft_mas.core.routers.memory_api import MemoryScope
+    from mycosoft_mas.core.routers.memory_api import MemoryScope, get_memory_manager
+
     manager = get_memory_manager()
     ok = await manager.write(
         MemoryScope.AGENT,
@@ -280,4 +286,3 @@ async def test_rto_rpo_memory_persistence() -> None:
     assert value is not None
     assert value.get("critical") == "data"
     await manager.delete(MemoryScope.AGENT, "rpo_test_namespace", "rpo_test_key")
-

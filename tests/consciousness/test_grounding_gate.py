@@ -6,10 +6,10 @@ Created: February 17, 2026
 """
 
 import os
-import pytest
+import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import sys
+import pytest
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +27,7 @@ class TestExperiencePacketCreation:
 
     def test_ep_creation_has_timestamp(self):
         """EP always has monotonic_ts."""
-        from mycosoft_mas.schemas.experience_packet import ExperiencePacket, GroundTruth
+        from mycosoft_mas.schemas.experience_packet import ExperiencePacket
 
         ep = ExperiencePacket()
         assert ep.ground_truth is not None
@@ -40,7 +40,7 @@ class TestExperiencePacketCreation:
         from mycosoft_mas.schemas.experience_packet import ExperiencePacket
 
         consciousness = MagicMock()
-        gate = GroundingGate(consciousness)
+        GroundingGate(consciousness)
 
         ep = ExperiencePacket()
         ep.uncertainty.missingness["geo"] = True
@@ -97,7 +97,9 @@ class TestProcessInputWithGrounding:
         """With flag on, EP is created and attached to deliberation."""
         with patch.dict(os.environ, {"MYCA_GROUNDED_COGNITION": "1"}):
             import importlib
+
             import mycosoft_mas.consciousness.core as core_module
+
             importlib.reload(core_module)
 
             consciousness = core_module.MYCAConsciousness()
@@ -141,9 +143,7 @@ class TestProcessInputWithGrounding:
 
             with patch("mycosoft_mas.monitoring.health_check.get_health_checker") as mock_hc:
                 checker = MagicMock()
-                checker.check_all = AsyncMock(
-                    return_value={"status": "healthy", "components": []}
-                )
+                checker.check_all = AsyncMock(return_value={"status": "healthy", "components": []})
                 mock_hc.return_value = checker
                 tokens = []
                 async for t in consciousness.process_input("hello", "text"):
@@ -165,7 +165,9 @@ class TestDeliberationEnforcement:
         """Deliberation rejects call if no EP when grounded cognition enabled."""
         with patch.dict(os.environ, {"MYCA_GROUNDED_COGNITION": "1"}):
             import importlib
+
             import mycosoft_mas.consciousness.deliberation as delib_module
+
             importlib.reload(delib_module)
 
             consciousness = MagicMock()

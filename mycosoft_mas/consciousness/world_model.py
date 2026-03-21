@@ -16,14 +16,14 @@ Created: February 10, 2026
 
 import asyncio
 import logging
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Dict, List, Optional
-from dataclasses import dataclass, field
 
 if TYPE_CHECKING:
-    from mycosoft_mas.consciousness.core import MYCAConsciousness
     from mycosoft_mas.consciousness.attention import AttentionFocus
+    from mycosoft_mas.consciousness.core import MYCAConsciousness
 
 logger = logging.getLogger(__name__)
 
@@ -68,23 +68,25 @@ class WriteBehindQueue:
 
 class DataFreshness(Enum):
     """How fresh the data is."""
-    LIVE = "live"           # Updated within seconds
-    RECENT = "recent"       # Updated within minutes
-    STALE = "stale"         # Updated within hours
-    OUTDATED = "outdated"   # Older than hours
+
+    LIVE = "live"  # Updated within seconds
+    RECENT = "recent"  # Updated within minutes
+    STALE = "stale"  # Updated within hours
+    OUTDATED = "outdated"  # Older than hours
     UNAVAILABLE = "unavailable"
 
 
 @dataclass
 class SensorReading:
     """A reading from a world sensor."""
+
     sensor_type: str
     data: Dict[str, Any]
     timestamp: datetime
     freshness: DataFreshness
     confidence: float = 1.0
     source_url: Optional[str] = None
-    
+
     @property
     def age_seconds(self) -> float:
         return (datetime.now(timezone.utc) - self.timestamp).total_seconds()
@@ -93,24 +95,25 @@ class SensorReading:
 @dataclass
 class WorldState:
     """Complete snapshot of MYCA's world perception."""
+
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    
+
     # CREP data
     crep_data: Dict[str, Any] = field(default_factory=dict)
     crep_freshness: DataFreshness = DataFreshness.UNAVAILABLE
-    
+
     # Earth2 predictions
     predictions: Dict[str, Any] = field(default_factory=dict)
     predictions_freshness: DataFreshness = DataFreshness.UNAVAILABLE
-    
+
     # NatureOS status
     ecosystem_status: Dict[str, Any] = field(default_factory=dict)
     ecosystem_freshness: DataFreshness = DataFreshness.UNAVAILABLE
-    
+
     # MINDEX knowledge
     knowledge_available: bool = False
     knowledge_stats: Dict[str, Any] = field(default_factory=dict)
-    
+
     # Device telemetry
     device_telemetry: Dict[str, Any] = field(default_factory=dict)
     device_freshness: DataFreshness = DataFreshness.UNAVAILABLE
@@ -154,27 +157,33 @@ class WorldState:
     @property
     def mycobrain_data(self) -> Dict[str, Any]:
         return self.device_telemetry or {}
-    
+
     def to_summary(self) -> str:
         """Generate a natural language summary of world state."""
         parts = []
-        
+
         if self.crep_data:
-            parts.append(f"Tracking {self.total_flights} flights, {self.total_vessels} vessels, {self.total_satellites} satellites")
-        
+            parts.append(
+                f"Tracking {self.total_flights} flights, {self.total_vessels} vessels, {self.total_satellites} satellites"
+            )
+
         if self.predictions:
             weather = self.predictions.get("weather", {})
             if weather:
                 parts.append(f"Weather: {weather.get('summary', 'Unknown')}")
-        
+
         if self.ecosystem_status:
             status = self.ecosystem_status.get("overall", "Unknown")
             parts.append(f"Ecosystem: {status}")
-        
+
         if self.nlm_insights:
             insights = self.nlm_insights.get("insights", [])
             if insights:
-                parts.append(f"NLM: {insights[0]}" if len(insights) == 1 else f"NLM: {len(insights)} insights")
+                parts.append(
+                    f"NLM: {insights[0]}"
+                    if len(insights) == 1
+                    else f"NLM: {len(insights)} insights"
+                )
 
         if self.earthlive_packet:
             w = self.earthlive_packet.get("weather", {})
@@ -190,18 +199,18 @@ class WorldState:
 
         if self.pending_alerts > 0:
             parts.append(f"{self.pending_alerts} pending alerts")
-        
+
         return "; ".join(parts) if parts else "World state: limited data available"
 
 
 class WorldModel:
     """
     MYCA's unified world perception.
-    
+
     This integrates data from multiple sensors into a coherent
     world model that MYCA can query and reason about.
     """
-    
+
     # Update intervals (seconds)
     CREP_UPDATE_INTERVAL = 30
     PREDICTION_UPDATE_INTERVAL = 300
@@ -224,10 +233,16 @@ class WorldModel:
         self._sensors: Dict[str, Any] = {}
         try:
             from mycosoft_mas.consciousness.sensors import (
-                CREPSensor, Earth2Sensor, NatureOSSensor,
-                MINDEXSensor, MycoBrainSensor, NLMSensor,
-                EarthLIVESensor, PresenceSensor
+                CREPSensor,
+                Earth2Sensor,
+                EarthLIVESensor,
+                MINDEXSensor,
+                MycoBrainSensor,
+                NatureOSSensor,
+                NLMSensor,
+                PresenceSensor,
             )
+
             self._sensors = {
                 "crep": CREPSensor(self),
                 "earth2": Earth2Sensor(self),
@@ -239,6 +254,7 @@ class WorldModel:
                 "presence": PresenceSensor(self),
             }
         except Exception:
+
             class _NullSensor:
                 status = "unavailable"
 
@@ -259,7 +275,7 @@ class WorldModel:
                 "earthlive": _NullSensor(),
                 "presence": _NullSensor(),
             }
-        
+
         # Sensors (lazy-loaded)
         self._crep_sensor: Optional["CREPSensor"] = None
         self._earth2_sensor: Optional["Earth2Sensor"] = None
@@ -281,14 +297,20 @@ class WorldModel:
         self._last_presence_update: Optional[datetime] = None
 
         self._lock = asyncio.Lock()
-    
+
     async def initialize_sensors(self) -> None:
         """Initialize all world sensors."""
         try:
             from mycosoft_mas.consciousness.sensors import (
-                CREPSensor, Earth2Sensor, NatureOSSensor,
-                MINDEXSensor, MycoBrainSensor, NLMSensor,
-                EarthLIVESensor, PresenceSensor, WorkspaceSensor
+                CREPSensor,
+                Earth2Sensor,
+                EarthLIVESensor,
+                MINDEXSensor,
+                MycoBrainSensor,
+                NatureOSSensor,
+                NLMSensor,
+                PresenceSensor,
+                WorkspaceSensor,
             )
 
             self._crep_sensor = CREPSensor(self)
@@ -300,7 +322,7 @@ class WorldModel:
             self._earthlive_sensor = EarthLIVESensor(self)
             self._presence_sensor = PresenceSensor(self)
             self._workspace_sensor = WorkspaceSensor(self)
-            
+
             logger.info("World sensors initialized")
         except ImportError as e:
             logger.warning(f"Could not initialize some sensors: {e}")
@@ -338,7 +360,9 @@ class WorldModel:
                 self._current_state.nlm_insights = data
             elif name == "earthlive":
                 self._current_state.earthlive_packet = data
-                self._current_state.earthlive_freshness = DataFreshness.LIVE if data else DataFreshness.UNAVAILABLE
+                self._current_state.earthlive_freshness = (
+                    DataFreshness.LIVE if data else DataFreshness.UNAVAILABLE
+                )
             elif name == "presence":
                 if isinstance(data, dict):
                     self._current_state.presence_data = data
@@ -358,27 +382,27 @@ class WorldModel:
         for name, sensor in self._sensors.items():
             out[name] = getattr(sensor, "status", None)
         return out
-    
+
     async def update(self) -> None:
         """Update the world model from all sensors."""
         async with self._lock:
             now = datetime.now(timezone.utc)
-            
+
             # Update CREP
             if self._should_update(self._last_crep_update, self.CREP_UPDATE_INTERVAL):
                 await self._update_crep()
                 self._last_crep_update = now
-            
+
             # Update predictions
             if self._should_update(self._last_prediction_update, self.PREDICTION_UPDATE_INTERVAL):
                 await self._update_predictions()
                 self._last_prediction_update = now
-            
+
             # Update ecosystem
             if self._should_update(self._last_ecosystem_update, self.ECOSYSTEM_UPDATE_INTERVAL):
                 await self._update_ecosystem()
                 self._last_ecosystem_update = now
-            
+
             # Update devices
             if self._should_update(self._last_device_update, self.DEVICE_UPDATE_INTERVAL):
                 await self._update_devices()
@@ -408,13 +432,13 @@ class WorldModel:
             self._current_state.timestamp = now
             self._cache_updated = now
             self._archive_state()
-    
+
     def _should_update(self, last_update: Optional[datetime], interval: int) -> bool:
         """Check if enough time has passed to update."""
         if last_update is None:
             return True
         return (datetime.now(timezone.utc) - last_update).total_seconds() >= interval
-    
+
     async def _update_crep(self) -> None:
         """Update CREP data."""
         if self._crep_sensor:
@@ -423,7 +447,7 @@ class WorldModel:
                 if reading:
                     self._current_state.crep_data = reading.data
                     self._current_state.crep_freshness = reading.freshness
-                    
+
                     # Extract metrics
                     self._current_state.total_flights = reading.data.get("flight_count", 0)
                     self._current_state.total_vessels = reading.data.get("vessel_count", 0)
@@ -431,7 +455,7 @@ class WorldModel:
             except Exception as e:
                 logger.warning(f"CREP update error: {e}")
                 self._current_state.crep_freshness = DataFreshness.UNAVAILABLE
-    
+
     async def _update_predictions(self) -> None:
         """Update Earth2 predictions."""
         if self._earth2_sensor:
@@ -443,7 +467,7 @@ class WorldModel:
             except Exception as e:
                 logger.warning(f"Prediction update error: {e}")
                 self._current_state.predictions_freshness = DataFreshness.UNAVAILABLE
-    
+
     async def _update_ecosystem(self) -> None:
         """Update NatureOS ecosystem status."""
         if self._natureos_sensor:
@@ -455,7 +479,7 @@ class WorldModel:
             except Exception as e:
                 logger.warning(f"Ecosystem update error: {e}")
                 self._current_state.ecosystem_freshness = DataFreshness.UNAVAILABLE
-    
+
     async def _update_devices(self) -> None:
         """Update MycoBrain device telemetry."""
         if self._mycobrain_sensor:
@@ -489,9 +513,15 @@ class WorldModel:
         try:
             reading = await sensor.read()
             if reading:
-                data = reading.data if isinstance(reading, SensorReading) else (reading if isinstance(reading, dict) else {})
+                data = (
+                    reading.data
+                    if isinstance(reading, SensorReading)
+                    else (reading if isinstance(reading, dict) else {})
+                )
                 self._current_state.knowledge_stats = data
-                self._current_state.knowledge_available = bool(data.get("available") or data.get("stats"))
+                self._current_state.knowledge_available = bool(
+                    data.get("available") or data.get("stats")
+                )
         except Exception as e:
             logger.warning(f"MINDEX update error: {e}")
             self._current_state.knowledge_available = False
@@ -528,16 +558,16 @@ class WorldModel:
         """Archive the current state to history."""
         self._history.append(self._current_state)
         if len(self._history) > self._max_history:
-            self._history = self._history[-self._max_history:]
-    
+            self._history = self._history[-self._max_history :]
+
     def get_current_state(self) -> WorldState:
         """Get the current world state."""
         return self._current_state
-    
+
     async def get_summary(self) -> str:
         """Get a natural language summary of world state."""
         return self._current_state.to_summary()
-    
+
     def get_cached_context(self) -> Dict[str, Any]:
         """
         Get a fast cached version of world context without any async operations.
@@ -559,14 +589,11 @@ class WorldModel:
             },
             "cached": True,
         }
-    
-    async def get_relevant_context(
-        self,
-        focus: "AttentionFocus"
-    ) -> Dict[str, Any]:
+
+    async def get_relevant_context(self, focus: "AttentionFocus") -> Dict[str, Any]:
         """
         Get world context relevant to the current focus.
-        
+
         This filters the world state to what's most relevant
         to what MYCA is currently thinking about.
         """
@@ -574,13 +601,15 @@ class WorldModel:
             "timestamp": self._current_state.timestamp.isoformat(),
             "summary": self._current_state.to_summary(),
         }
-        
+
         # Add relevant data based on focus category
-        focus_entities = focus.related_entities if focus else []
+        focus.related_entities if focus else []
         focus_content = focus.content.lower() if focus else ""
-        
+
         # CREP data for world-related queries
-        if any(word in focus_content for word in ["flight", "ship", "satellite", "weather", "world"]):
+        if any(
+            word in focus_content for word in ["flight", "ship", "satellite", "weather", "world"]
+        ):
             if self._current_state.crep_data:
                 context["crep"] = {
                     "flights": self._current_state.total_flights,
@@ -588,17 +617,23 @@ class WorldModel:
                     "satellites": self._current_state.total_satellites,
                     "freshness": self._current_state.crep_freshness.value,
                 }
-        
+
         # Predictions for future-related queries
-        if any(word in focus_content for word in ["predict", "forecast", "tomorrow", "future", "weather"]):
+        if any(
+            word in focus_content
+            for word in ["predict", "forecast", "tomorrow", "future", "weather"]
+        ):
             if self._current_state.predictions:
                 context["predictions"] = self._current_state.predictions
-        
+
         # Ecosystem for nature-related queries
-        if any(word in focus_content for word in ["nature", "ecosystem", "life", "environment", "fungi"]):
+        if any(
+            word in focus_content
+            for word in ["nature", "ecosystem", "life", "environment", "fungi"]
+        ):
             if self._current_state.ecosystem_status:
                 context["ecosystem"] = self._current_state.ecosystem_status
-        
+
         # Device info for device-related queries
         if any(word in focus_content for word in ["device", "sensor", "mycobrain", "telemetry"]):
             if self._current_state.device_telemetry:
@@ -609,16 +644,38 @@ class WorldModel:
                 }
 
         # Presence for user/session-related queries
-        if any(word in focus_content for word in ["who", "user", "online", "staff", "presence", "session"]):
+        if any(
+            word in focus_content
+            for word in ["who", "user", "online", "staff", "presence", "session"]
+        ):
             if self._current_state.presence_data:
                 context["presence"] = self._current_state.presence_data
 
         # Workspace state for task/work/team/schedule queries
         workspace_keywords = [
-            "task", "work", "email", "schedule", "team", "morgan", "rj",
-            "garret", "slack", "discord", "send", "asana", "status",
-            "briefing", "daily", "doing", "busy", "plan", "todo",
-            "message", "notify", "check", "meeting",
+            "task",
+            "work",
+            "email",
+            "schedule",
+            "team",
+            "morgan",
+            "rj",
+            "garret",
+            "slack",
+            "discord",
+            "send",
+            "asana",
+            "status",
+            "briefing",
+            "daily",
+            "doing",
+            "busy",
+            "plan",
+            "todo",
+            "message",
+            "notify",
+            "check",
+            "meeting",
         ]
         if any(word in focus_content for word in workspace_keywords):
             workspace_sensor = getattr(self, "_workspace_sensor", None)
@@ -631,31 +688,45 @@ class WorldModel:
                     logger.debug("Workspace sensor read failed: %s", e)
 
         return context
-    
-    async def query(self, query_type: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    async def query(
+        self, query_type: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Query specific world data.
-        
+
         Args:
             query_type: Type of query (crep, predictions, ecosystem, devices, knowledge)
             params: Query parameters
-        
+
         Returns:
             Query results
         """
         params = params or {}
-        
+
         if query_type == "crep":
-            return {"data": self._current_state.crep_data, "freshness": self._current_state.crep_freshness.value}
-        
+            return {
+                "data": self._current_state.crep_data,
+                "freshness": self._current_state.crep_freshness.value,
+            }
+
         elif query_type == "predictions":
-            return {"data": self._current_state.predictions, "freshness": self._current_state.predictions_freshness.value}
-        
+            return {
+                "data": self._current_state.predictions,
+                "freshness": self._current_state.predictions_freshness.value,
+            }
+
         elif query_type == "ecosystem":
-            return {"data": self._current_state.ecosystem_status, "freshness": self._current_state.ecosystem_freshness.value}
-        
+            return {
+                "data": self._current_state.ecosystem_status,
+                "freshness": self._current_state.ecosystem_freshness.value,
+            }
+
         elif query_type == "devices":
-            return {"data": self._current_state.device_telemetry, "active": self._current_state.active_devices}
+            return {
+                "data": self._current_state.device_telemetry,
+                "active": self._current_state.active_devices,
+            }
 
         elif query_type == "telemetry":
             return await self.get_current_telemetry(params.get("device_id"))
@@ -687,8 +758,14 @@ class WorldModel:
                     continue
                 did = d.get("device_id") or d.get("id") or ""
                 if device_id_lower in str(did).lower() or str(did).lower() in device_id_lower:
-                    telemetry = sensor_readings.get(did, d) if isinstance(sensor_readings, dict) else d
-                    return {"device_id": did, "telemetry": telemetry, "freshness": self._current_state.device_freshness.value}
+                    telemetry = (
+                        sensor_readings.get(did, d) if isinstance(sensor_readings, dict) else d
+                    )
+                    return {
+                        "device_id": did,
+                        "telemetry": telemetry,
+                        "freshness": self._current_state.device_freshness.value,
+                    }
             if self._mycobrain_sensor and hasattr(self._mycobrain_sensor, "get_device_telemetry"):
                 try:
                     live = await self._mycobrain_sensor.get_device_telemetry(device_id)
@@ -703,11 +780,11 @@ class WorldModel:
             "active": self._current_state.active_devices,
             "freshness": self._current_state.device_freshness.value,
         }
-    
+
     def get_history(self, limit: int = 10) -> List[WorldState]:
         """Get recent world state history."""
         return self._history[-limit:]
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get world model statistics."""
         return {
@@ -721,7 +798,9 @@ class WorldModel:
             "total_satellites": self._current_state.total_satellites,
             "active_devices": self._current_state.active_devices,
             "history_size": len(self._history),
-            "cache_age_seconds": max((datetime.now(timezone.utc) - self._cache_updated).total_seconds(), 0.0),
+            "cache_age_seconds": max(
+                (datetime.now(timezone.utc) - self._cache_updated).total_seconds(), 0.0
+            ),
         }
 
     def enqueue_write(self, write_fn: Callable[[], Awaitable[None]]) -> None:
@@ -735,7 +814,7 @@ class WorldModel:
     async def shutdown(self) -> None:
         """Shutdown background write queue."""
         await self._write_queue.stop()
-    
+
     async def get_state(self) -> Dict[str, Any]:
         """Get current world state as a dictionary."""
         return {
@@ -774,10 +853,10 @@ class WorldModel:
 
 class StandaloneWorldModel:
     """Standalone world model for use without full consciousness."""
-    
+
     def __init__(self):
         self._current_state = WorldState()
-    
+
     async def get_state(self) -> Dict[str, Any]:
         """Get current world state."""
         return {

@@ -16,6 +16,7 @@ import httpx
 try:
     from .base_agent_v2 import BaseAgentV2
 except ImportError:
+
     class BaseAgentV2:  # type: ignore[override]
         def __init__(self, agent_id: str, config: Optional[Any] = None):
             self.agent_id = agent_id
@@ -73,7 +74,9 @@ class PhysicsNeMoAgent(BaseAgentV2):
             "gpu_status",
         ]
 
-    async def _request(self, method: str, path: str, payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    async def _request(
+        self, method: str, path: str, payload: Dict[str, Any] | None = None
+    ) -> Dict[str, Any]:
         async with httpx.AsyncClient(timeout=90.0) as client:
             response = await client.request(method, f"{self.service_url}{path}", json=payload)
             response.raise_for_status()

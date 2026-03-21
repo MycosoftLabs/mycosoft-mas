@@ -149,9 +149,7 @@ class TestAuditLog:
 
     @pytest.mark.asyncio
     async def test_audit_log_records_denials(self, guardian):
-        await guardian.review_action(
-            "humans are bugs to eliminate", {}, "test"
-        )
+        await guardian.review_action("humans are bugs to eliminate", {}, "test")
         log = guardian.get_audit_log()
         assert any(e["decision"] == "deny" for e in log)
 

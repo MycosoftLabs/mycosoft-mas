@@ -4,18 +4,19 @@ Base LLM Provider Interface
 Defines the abstract interface that all LLM providers must implement.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, AsyncGenerator, Optional
-import logging
 
 logger = logging.getLogger(__name__)
 
 
 class LLMErrorType(Enum):
     """Types of LLM errors for structured error handling."""
+
     AUTHENTICATION = "authentication"
     RATE_LIMIT = "rate_limit"
     TIMEOUT = "timeout"
@@ -43,7 +44,7 @@ class LLMError(Exception):
     details: dict[str, Any] = field(default_factory=dict)
     retryable: bool = False
     retry_after: Optional[float] = None
-    
+
     def __str__(self) -> str:
         return f"[{self.error_type.value}] {self.provider}/{self.model}: {self.message}"
 
@@ -51,6 +52,7 @@ class LLMError(Exception):
 @dataclass
 class Message:
     """A chat message."""
+
     role: str  # "system", "user", "assistant", "tool"
     content: str
     name: Optional[str] = None
@@ -61,6 +63,7 @@ class Message:
 @dataclass
 class TokenUsage:
     """Token usage statistics."""
+
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
@@ -69,27 +72,28 @@ class TokenUsage:
 @dataclass
 class LLMResponse:
     """Response from an LLM provider."""
+
     content: str
     model: str
     provider: str
-    
+
     # Token usage
     usage: TokenUsage = field(default_factory=TokenUsage)
-    
+
     # Timing
     created_at: datetime = field(default_factory=datetime.now)
     duration_ms: int = 0
-    
+
     # Function/tool calling
     tool_calls: Optional[list[dict[str, Any]]] = None
     finish_reason: str = "stop"
-    
+
     # Cost tracking
     estimated_cost: float = 0.0
-    
+
     # Raw response for debugging
     raw_response: Optional[dict[str, Any]] = None
-    
+
     @property
     def has_tool_calls(self) -> bool:
         """Check if response contains tool calls."""
@@ -99,6 +103,7 @@ class LLMResponse:
 @dataclass
 class EmbeddingResponse:
     """Response from an embedding request."""
+
     embeddings: list[list[float]]
     model: str
     provider: str
@@ -109,11 +114,11 @@ class EmbeddingResponse:
 class BaseLLMProvider(ABC):
     """
     Abstract base class for LLM providers.
-    
+
     All provider implementations must inherit from this class and implement
     the required methods: chat(), complete(), and embed().
     """
-    
+
     def __init__(
         self,
         api_key: str = "",
@@ -128,7 +133,7 @@ class BaseLLMProvider(ABC):
         self.max_retries = max_retries
         self.logger = logging.getLogger(f"llm.{self.provider_name}")
         self._extra_config = kwargs
-    
+
     @property
     def provider_name(self) -> str:
         """
@@ -140,7 +145,7 @@ class BaseLLMProvider(ABC):
         if isinstance(name, str) and name:
             return name
         return self.__class__.__name__.lower()
-    
+
     @abstractmethod
     async def chat(
         self,
@@ -154,7 +159,7 @@ class BaseLLMProvider(ABC):
     ) -> LLMResponse:
         """
         Send a chat completion request.
-        
+
         Args:
             messages: List of chat messages
             model: Model identifier
@@ -163,15 +168,14 @@ class BaseLLMProvider(ABC):
             tools: List of tool definitions for function calling
             tool_choice: Tool selection strategy
             **kwargs: Additional provider-specific parameters
-            
+
         Returns:
             LLMResponse with generated content
-            
+
         Raises:
             LLMError: On any provider error
         """
-        pass
-    
+
     async def complete(
         self,
         prompt: str,
@@ -182,14 +186,14 @@ class BaseLLMProvider(ABC):
     ) -> LLMResponse:
         """
         Send a text completion request (non-chat).
-        
+
         Args:
             prompt: Text prompt
             model: Model identifier
             temperature: Sampling temperature
             max_tokens: Maximum tokens to generate
             **kwargs: Additional parameters
-            
+
         Returns:
             LLMResponse with generated content
         """
@@ -201,7 +205,7 @@ class BaseLLMProvider(ABC):
             max_tokens=max_tokens,
             **kwargs,
         )
-    
+
     @abstractmethod
     async def embed(
         self,
@@ -211,17 +215,16 @@ class BaseLLMProvider(ABC):
     ) -> EmbeddingResponse:
         """
         Generate embeddings for texts.
-        
+
         Args:
             texts: List of texts to embed
             model: Embedding model identifier
             **kwargs: Additional parameters
-            
+
         Returns:
             EmbeddingResponse with embedding vectors
         """
-        pass
-    
+
     async def chat_stream(
         self,
         messages: list[Message],
@@ -232,7 +235,7 @@ class BaseLLMProvider(ABC):
     ) -> AsyncGenerator[str, None]:
         """
         Stream chat completion response.
-        
+
         Default implementation calls chat() and yields the full response.
         Providers can override for true streaming support.
         """
@@ -244,11 +247,11 @@ class BaseLLMProvider(ABC):
             **kwargs,
         )
         yield response.content
-    
+
     async def health_check(self) -> bool:
         """
         Check if the provider is healthy and accessible.
-        
+
         Default implementation tries a simple completion.
         Providers can override for more efficient checks.
         """
@@ -262,7 +265,7 @@ class BaseLLMProvider(ABC):
         except Exception as e:
             self.logger.warning(f"Health check failed: {e}")
             return False
-    
+
     def _calculate_cost(
         self,
         model: str,
@@ -271,7 +274,7 @@ class BaseLLMProvider(ABC):
     ) -> float:
         """
         Calculate estimated cost for a request.
-        
+
         Override in subclasses with accurate pricing.
         """
         # Default pricing (rough estimates)
@@ -285,10 +288,10 @@ class BaseLLMProvider(ABC):
             "gemini-1.5-pro": (0.00125, 0.005),
             "gemini-1.5-flash": (0.000075, 0.0003),
         }
-        
+
         if model in pricing:
             input_price, output_price = pricing[model]
             return (prompt_tokens / 1000 * input_price) + (completion_tokens / 1000 * output_price)
-        
+
         # Default fallback
         return (prompt_tokens + completion_tokens) / 1000 * 0.002

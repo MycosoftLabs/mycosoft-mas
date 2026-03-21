@@ -29,9 +29,7 @@ class WhatsAppClient:
             self.config.get("base_url")
             or os.getenv("MYCA_EVOLUTION_API_URL", DEFAULT_EVOLUTION_URL)
         ).rstrip("/")
-        self.instance = self.config.get("instance") or os.getenv(
-            "MYCA_WHATSAPP_INSTANCE", "myca"
-        )
+        self.instance = self.config.get("instance") or os.getenv("MYCA_WHATSAPP_INSTANCE", "myca")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
 

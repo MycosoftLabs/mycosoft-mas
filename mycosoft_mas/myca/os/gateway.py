@@ -16,7 +16,6 @@ import os
 from datetime import datetime, timezone
 from typing import Optional, Set
 
-import aiohttp
 from aiohttp import web
 
 logger = logging.getLogger("myca.os.gateway")
@@ -128,6 +127,7 @@ async def handle_channels(request: web.Request) -> web.Response:
     """GET /channels — Per-channel connectivity status (Slack, Asana, Signal, Discord, WhatsApp)."""
     try:
         from mycosoft_mas.myca.os.channels_health import get_all_channel_status
+
         data = await get_all_channel_status()
         return web.json_response(data)
     except Exception as e:
@@ -148,6 +148,7 @@ async def handle_health(request: web.Request) -> web.Response:
         # Return basic health + channel status even when OS not attached (e.g. during boot)
         try:
             from mycosoft_mas.myca.os.channels_health import get_all_channel_status
+
             channel_data = await get_all_channel_status()
             services = {
                 ch: (data.get("connected", False) or data.get("status") == "connected")
@@ -156,12 +157,14 @@ async def handle_health(request: web.Request) -> web.Response:
         except Exception:
             services = {}
         connected = sum(1 for v in services.values() if v)
-        return web.json_response({
-            **base_payload,
-            "status": "healthy" if connected > 0 else "no_os",
-            "healthy": connected > 0,
-            "services": services,
-        })
+        return web.json_response(
+            {
+                **base_payload,
+                "status": "healthy" if connected > 0 else "no_os",
+                "healthy": connected > 0,
+                "services": services,
+            }
+        )
     try:
         health = await os_ref._check_health()
         payload = {
@@ -174,6 +177,7 @@ async def handle_health(request: web.Request) -> web.Response:
         # Include channel connectivity (Slack, Asana, Discord, Signal, WhatsApp)
         try:
             from mycosoft_mas.myca.os.channels_health import get_all_channel_status
+
             channel_data = await get_all_channel_status()
             payload["services"] = {
                 ch: (data.get("connected", False) or data.get("status") == "connected")
@@ -183,12 +187,14 @@ async def handle_health(request: web.Request) -> web.Response:
             payload["services"] = {}
         return web.json_response(payload)
     except Exception as e:
-        return web.json_response({
-            **base_payload,
-            "status": "error",
-            "healthy": False,
-            "error": str(e),
-        })
+        return web.json_response(
+            {
+                **base_payload,
+                "status": "error",
+                "healthy": False,
+                "error": str(e),
+            }
+        )
 
 
 async def handle_status(request: web.Request) -> web.Response:
@@ -249,11 +255,13 @@ async def handle_tasks_post(request: web.Request) -> web.Response:
         source=source,
         assigned_to=assigned_to,
     )
-    return web.json_response({
-        "status": "added",
-        "task_id": getattr(task, "id", None),
-        "title": task.title,
-    })
+    return web.json_response(
+        {
+            "status": "added",
+            "task_id": getattr(task, "id", None),
+            "title": task.title,
+        }
+    )
 
 
 async def handle_message_post(request: web.Request) -> web.Response:
@@ -306,12 +314,14 @@ async def handle_shell_post(request: web.Request) -> web.Response:
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=60)
-        return web.json_response({
-            "status": "completed",
-            "returncode": proc.returncode,
-            "stdout": stdout.decode("utf-8", errors="replace"),
-            "stderr": stderr.decode("utf-8", errors="replace"),
-        })
+        return web.json_response(
+            {
+                "status": "completed",
+                "returncode": proc.returncode,
+                "stdout": stdout.decode("utf-8", errors="replace"),
+                "stderr": stderr.decode("utf-8", errors="replace"),
+            }
+        )
     except asyncio.TimeoutError:
         return web.json_response({"status": "timeout", "error": "Command timed out"}, status=408)
     except Exception as e:
@@ -341,6 +351,7 @@ async def handle_skills(request: web.Request) -> web.Response:
         return _auth_error()
     try:
         from mycosoft_mas.myca.os.skills_manager import list_skills
+
         skills = list_skills()
         return web.json_response({"skills": skills})
     except Exception as e:
@@ -362,6 +373,7 @@ async def handle_skills_run(request: web.Request) -> web.Response:
         return web.json_response({"error": "skill_id required"}, status=400)
     try:
         from mycosoft_mas.myca.os.skills_manager import run_skill
+
         result = await run_skill(skill_id, args, os_ref)
         return web.json_response(result)
     except Exception as e:
@@ -384,6 +396,7 @@ async def handle_skills_install(request: web.Request) -> web.Response:
         return web.json_response({"error": "url or repo required"}, status=400)
     try:
         from mycosoft_mas.myca.os.skills_manager import install_skill_from_git
+
         skill_id = install_skill_from_git(url, branch=branch)
         return web.json_response({"status": "installed", "skill_id": skill_id})
     except Exception as e:
@@ -433,7 +446,9 @@ async def handle_webhooks(request: web.Request) -> web.Response:
 
     body = await request.read()
     secret = os.getenv("WEBHOOK_SECRET", "").strip()
-    sig_header = request.headers.get("X-Hub-Signature-256") or request.headers.get("X-Webhook-Signature")
+    sig_header = request.headers.get("X-Hub-Signature-256") or request.headers.get(
+        "X-Webhook-Signature"
+    )
 
     if secret:
         if not _verify_webhook_hmac(body, sig_header, secret):
@@ -464,12 +479,14 @@ async def handle_webhooks(request: web.Request) -> web.Response:
         task_type=str(task_type),
         source=source,
     )
-    return web.json_response({
-        "status": "accepted",
-        "source": source,
-        "task_id": getattr(task, "db_id", None),
-        "title": task.title,
-    })
+    return web.json_response(
+        {
+            "status": "accepted",
+            "source": source,
+            "task_id": getattr(task, "db_id", None),
+            "title": task.title,
+        }
+    )
 
 
 STANDUP_PROMPT_TEMPLATE = """**Daily Standup** (11 AM)
@@ -488,7 +505,9 @@ async def handle_beto_onboarding_get(request: web.Request) -> web.Response:
         return _auth_error()
     try:
         from pathlib import Path
+
         import yaml
+
         cfg_path = Path(__file__).resolve().parents[3] / "config" / "beto_onboarding_checklist.yaml"
         if not cfg_path.exists():
             return web.json_response({"items": [], "error": "checklist config not found"})
@@ -508,7 +527,15 @@ async def handle_beto_onboarding_get(request: web.Request) -> web.Response:
                     rows = await conn.fetch(
                         "SELECT checklist_id, completed_at, notes FROM myca_beto_onboarding WHERE completed_at IS NOT NULL"
                     )
-                    completed_map = {r["checklist_id"]: {"completed_at": r["completed_at"].isoformat() if r["completed_at"] else None, "notes": r["notes"]} for r in rows}
+                    completed_map = {
+                        r["checklist_id"]: {
+                            "completed_at": (
+                                r["completed_at"].isoformat() if r["completed_at"] else None
+                            ),
+                            "notes": r["notes"],
+                        }
+                        for r in rows
+                    }
             except Exception:
                 pass
         elif bridge and hasattr(bridge, "recall"):
@@ -523,14 +550,16 @@ async def handle_beto_onboarding_get(request: web.Request) -> web.Response:
     for item in items:
         cid = item.get("id", "")
         comp = completed_map.get(cid, {})
-        result.append({
-            "id": cid,
-            "title": item.get("title", ""),
-            "description": item.get("description", ""),
-            "completed": cid in completed_map and comp.get("completed_at"),
-            "completed_at": comp.get("completed_at"),
-            "notes": comp.get("notes"),
-        })
+        result.append(
+            {
+                "id": cid,
+                "title": item.get("title", ""),
+                "description": item.get("description", ""),
+                "completed": cid in completed_map and comp.get("completed_at"),
+                "completed_at": comp.get("completed_at"),
+                "notes": comp.get("notes"),
+            }
+        )
     return web.json_response({"items": result})
 
 
@@ -557,18 +586,24 @@ async def handle_beto_onboarding_complete(request: web.Request) -> web.Response:
     if getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
         try:
             from datetime import datetime, timezone
+
             now = datetime.now(timezone.utc)
             async with bridge._pg_pool.acquire() as conn:
                 await conn.execute(
                     """INSERT INTO myca_beto_onboarding (checklist_id, completed_at, notes, updated_at)
                        VALUES ($1, $2, $3, $4)
                        ON CONFLICT (checklist_id) DO UPDATE SET completed_at = $2, notes = $3, updated_at = $4""",
-                    item_id, now, notes or None, now,
+                    item_id,
+                    now,
+                    notes or None,
+                    now,
                 )
             return web.json_response({"status": "completed", "id": item_id})
         except Exception as e:
             return web.json_response({"error": str(e)}, status=500)
-    return web.json_response({"error": "PostgreSQL storage required for Beto onboarding"}, status=503)
+    return web.json_response(
+        {"error": "PostgreSQL storage required for Beto onboarding"}, status=503
+    )
 
 
 async def handle_investor_draft(request: web.Request) -> web.Response:
@@ -623,6 +658,7 @@ async def handle_standup_prompt(request: web.Request) -> web.Response:
         if not comms:
             return web.json_response({"error": "comms hub not available"}, status=503)
         from mycosoft_mas.myca.os.comms_hub import Channel
+
         await comms.broadcast(STANDUP_PROMPT_TEMPLATE, channels=[Channel.DISCORD, Channel.SLACK])
         return web.json_response({"status": "sent", "channels": ["discord", "slack"]})
     except Exception as e:
@@ -638,11 +674,15 @@ async def handle_ws(request: web.Request) -> web.WebSocketResponse:
     await ws.prepare(request)
     WS_CLIENTS.add(ws)
     try:
-        await ws.send_str(json.dumps({
-            "type": "connected",
-            "message": "Connected to MYCA Gateway",
-            "ts": datetime.now(timezone.utc).isoformat(),
-        }))
+        await ws.send_str(
+            json.dumps(
+                {
+                    "type": "connected",
+                    "message": "Connected to MYCA Gateway",
+                    "ts": datetime.now(timezone.utc).isoformat(),
+                }
+            )
+        )
         async for _ in ws:
             pass
     except Exception:

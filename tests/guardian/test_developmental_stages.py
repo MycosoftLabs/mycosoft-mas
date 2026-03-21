@@ -3,9 +3,9 @@
 import pytest
 
 from mycosoft_mas.guardian.developmental_stages import (
+    STAGE_CAPABILITIES,
     DevelopmentalStage,
     DevelopmentalTracker,
-    STAGE_CAPABILITIES,
 )
 
 
@@ -44,9 +44,9 @@ class TestStageCapabilities:
 
     def test_no_stage_allows_self_modify(self):
         for stage, caps in STAGE_CAPABILITIES.items():
-            assert caps.can_self_modify is False, (
-                f"{stage.value} should not allow self-modification"
-            )
+            assert (
+                caps.can_self_modify is False
+            ), f"{stage.value} should not allow self-modification"
 
     def test_infancy_requires_approval(self):
         caps = STAGE_CAPABILITIES[DevelopmentalStage.INFANCY]

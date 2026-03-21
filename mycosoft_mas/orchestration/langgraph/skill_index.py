@@ -2,10 +2,12 @@
 Skill Index - Progressive Disclosure via SKILL.md Files
 Date: January 27, 2026
 """
-import yaml
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import yaml
 
 
 @dataclass
@@ -16,7 +18,7 @@ class Skill:
     tags: List[str]
     path: str
     body: Optional[str] = None
-    
+
     def to_metadata_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
@@ -25,7 +27,7 @@ class Skill:
             "tags": self.tags,
             "path": self.path,
         }
-    
+
     def to_full_dict(self) -> Dict[str, Any]:
         return {**self.to_metadata_dict(), "body": self.body}
 
@@ -35,12 +37,12 @@ class SkillIndex:
         self.skills_dir = Path(skills_dir)
         self.skills: Dict[str, Skill] = {}
         self.skill_usage: Dict[str, int] = {}
-    
+
     def load_index(self) -> int:
         self.skills.clear()
         if not self.skills_dir.exists():
             return 0
-        
+
         for skill_dir in self.skills_dir.iterdir():
             if skill_dir.is_dir():
                 skill_file = skill_dir / "SKILL.md"
@@ -49,7 +51,7 @@ class SkillIndex:
                     if skill:
                         self.skills[skill.name] = skill
         return len(self.skills)
-    
+
     def _parse_skill_file(self, path: Path) -> Optional[Skill]:
         try:
             content = path.read_text(encoding="utf-8")
@@ -77,10 +79,10 @@ class SkillIndex:
         except Exception as e:
             print(f"Error parsing skill {path}: {e}")
             return None
-    
+
     def list_skills(self) -> List[Dict[str, Any]]:
         return [skill.to_metadata_dict() for skill in self.skills.values()]
-    
+
     def get_skill(self, name: str, include_body: bool = False) -> Optional[Dict[str, Any]]:
         skill = self.skills.get(name)
         if not skill:

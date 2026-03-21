@@ -15,12 +15,12 @@ the Mycorrhizae Protocol, and MINDEX storage.
 """
 
 import os
-import httpx
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+import httpx
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
 
 # MINDEX API URL for pattern storage
@@ -28,17 +28,8 @@ MINDEX_API_URL = os.environ.get("MINDEX_API_URL", "http://192.168.0.189:8000")
 
 # Try to import Mycorrhizae Protocol components
 try:
-    from mycorrhizae.protocol import (
-        MycorrhizaeEnvelope,
-        EnvelopeFactory,
-        SemanticTranslator,
-        translate_pattern,
-    )
-    from mycorrhizae.fci import (
-        FCISignalProcessor,
-        BiologicalPattern,
-        ProcessedSignal,
-    )
+    pass
+
     HAS_MYCORRHIZAE = True
 except ImportError:
     HAS_MYCORRHIZAE = False
@@ -120,7 +111,7 @@ _pending_commands: Dict[str, List[FCIStimulusCommand]] = {}
 async def store_pattern_to_mindex(device_id: str, result: "FCIPatternResult") -> None:
     """
     Store a detected pattern to MINDEX for persistence.
-    
+
     This runs as a background task to not block the response.
     """
     try:
@@ -130,21 +121,29 @@ async def store_pattern_to_mindex(device_id: str, result: "FCIPatternResult") ->
                 "pattern_name": result.pattern_name,
                 "pattern_category": result.category,
                 "confidence_score": result.confidence,
-                "confidence_level": "high" if result.confidence > 0.8 else ("moderate" if result.confidence > 0.6 else "low"),
+                "confidence_level": (
+                    "high"
+                    if result.confidence > 0.8
+                    else ("moderate" if result.confidence > 0.6 else "low")
+                ),
                 "interpretation_meaning": result.semantic_meaning,
                 "interpretation_implications": result.implications or [],
                 "interpretation_actions": result.recommended_actions or [],
             }
-            
+
             response = await client.post(
                 f"{MINDEX_API_URL}/api/fci/patterns",
                 json=payload,
             )
-            
+
             if response.status_code == 201:
-                print(f"[FCI] Pattern '{result.pattern_name}' stored to MINDEX for device {device_id}")
+                print(
+                    f"[FCI] Pattern '{result.pattern_name}' stored to MINDEX for device {device_id}"
+                )
             else:
-                print(f"[FCI] Failed to store pattern to MINDEX: {response.status_code} - {response.text}")
+                print(
+                    f"[FCI] Failed to store pattern to MINDEX: {response.status_code} - {response.text}"
+                )
     except Exception as e:
         # Log but don't fail - storage is best-effort
         print(f"[FCI] Error storing pattern to MINDEX: {e}")
@@ -286,12 +285,12 @@ async def persist_device_to_mindex(device: FCIDeviceStatus) -> None:
                 "sample_rate_hz": 128,
                 "electrode_materials": ["copper", "steel"],
             }
-            
+
             response = await client.post(
                 f"{MINDEX_API_URL}/api/fci/devices",
                 json=payload,
             )
-            
+
             if response.status_code in (201, 409):  # 409 = already exists, OK
                 print(f"[FCI] Device '{device.device_id}' persisted to MINDEX")
             else:
@@ -306,7 +305,7 @@ async def load_devices_from_mindex() -> List[FCIDeviceStatus]:
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(f"{MINDEX_API_URL}/api/fci/devices")
-            
+
             if response.status_code == 200:
                 data = response.json()
                 for d in data:
@@ -323,7 +322,7 @@ async def load_devices_from_mindex() -> List[FCIDeviceStatus]:
                 print(f"[FCI] Loaded {len(devices)} devices from MINDEX")
     except Exception as e:
         print(f"[FCI] Error loading devices from MINDEX: {e}")
-    
+
     return devices
 
 
@@ -344,14 +343,14 @@ async def list_fci_devices(
         persisted = await load_devices_from_mindex()
         for dev in persisted:
             _connected_devices[dev.device_id] = dev
-    
+
     devices = list(_connected_devices.values())
-    
+
     if status:
         devices = [d for d in devices if d.status == status]
     if probe_type:
         devices = [d for d in devices if d.probe_type == probe_type]
-    
+
     return devices
 
 
@@ -375,11 +374,11 @@ async def register_fci_device(
         channels=channels,
     )
     _connected_devices[device_id] = device
-    
+
     # Persist to MINDEX in background
     if background_tasks:
         background_tasks.add_task(persist_device_to_mindex, device)
-    
+
     return device
 
 
@@ -391,13 +390,13 @@ async def device_heartbeat(device_id: str):
         persisted = await load_devices_from_mindex()
         for dev in persisted:
             _connected_devices[dev.device_id] = dev
-    
+
     if device_id not in _connected_devices:
         raise HTTPException(status_code=404, detail="Device not registered")
-    
+
     _connected_devices[device_id].last_seen = datetime.now(timezone.utc)
     _connected_devices[device_id].status = "online"
-    
+
     # Return any pending commands
     commands = _pending_commands.pop(device_id, [])
     return {"status": "ok", "pending_commands": [c.dict() for c in commands]}
@@ -410,6 +409,7 @@ async def device_heartbeat(device_id: str):
 
 class FCIFingerprintResponse(BaseModel):
     """Signal fingerprint - unique bioelectric signature of a device/mycelium."""
+
     device_id: str
     fingerprint: Dict[str, Any]
     generated_at: datetime
@@ -418,6 +418,7 @@ class FCIFingerprintResponse(BaseModel):
 
 class FCICorrelationResponse(BaseModel):
     """Correlation between FCI signal and environmental event."""
+
     event_type: str
     source: str  # earth2, crep, petri_dish, manual
     correlation_strength: float
@@ -442,7 +443,7 @@ def _std(values: List[float], mean_value: float) -> float:
 async def get_device_fingerprint(device_id: str):
     """
     Get the signal fingerprint for a device.
-    
+
     The fingerprint is a unique bioelectric signature derived from
     the mycelium's baseline activity patterns, useful for:
     - Device identification
@@ -469,10 +470,24 @@ async def get_device_fingerprint(device_id: str):
     except Exception as exc:
         print(f"[FCI] Fingerprint telemetry fetch failed for {device_id}: {exc}")
 
-    amplitudes = [float(r.get("amplitude_uv", 0.0)) for r in telemetry_rows if r.get("amplitude_uv") is not None]
-    frequencies = [float(r.get("dominant_freq_hz", 0.0)) for r in telemetry_rows if r.get("dominant_freq_hz") is not None]
-    snr_values = [float(r.get("snr_db", 0.0)) for r in telemetry_rows if r.get("snr_db") is not None]
-    quality_values = [float(r.get("quality_score", 0.0)) for r in telemetry_rows if r.get("quality_score") is not None]
+    amplitudes = [
+        float(r.get("amplitude_uv", 0.0))
+        for r in telemetry_rows
+        if r.get("amplitude_uv") is not None
+    ]
+    frequencies = [
+        float(r.get("dominant_freq_hz", 0.0))
+        for r in telemetry_rows
+        if r.get("dominant_freq_hz") is not None
+    ]
+    snr_values = [
+        float(r.get("snr_db", 0.0)) for r in telemetry_rows if r.get("snr_db") is not None
+    ]
+    quality_values = [
+        float(r.get("quality_score", 0.0))
+        for r in telemetry_rows
+        if r.get("quality_score") is not None
+    ]
 
     baseline_frequency = _mean(frequencies)
     baseline_amplitude_mv = _mean(amplitudes) / 1000 if amplitudes else 0.0
@@ -489,9 +504,17 @@ async def get_device_fingerprint(device_id: str):
             idx = int((len(sorted_freq) - 1) * quantile)
             dominant_harmonics.append(round(sorted_freq[idx], 3))
 
-    spectral_entropy = min(1.0, max(0.0, frequency_std / (baseline_frequency + 1e-6))) if baseline_frequency > 0 else 0.0
-    signal_complexity = min(1.0, max(0.0, amplitude_std / (_mean(amplitudes) + 1e-6))) if amplitudes else 0.0
-    phase_coherence = min(1.0, max(0.0, avg_quality if avg_quality > 0 else (1.0 / (1.0 + frequency_std))))
+    spectral_entropy = (
+        min(1.0, max(0.0, frequency_std / (baseline_frequency + 1e-6)))
+        if baseline_frequency > 0
+        else 0.0
+    )
+    signal_complexity = (
+        min(1.0, max(0.0, amplitude_std / (_mean(amplitudes) + 1e-6))) if amplitudes else 0.0
+    )
+    phase_coherence = min(
+        1.0, max(0.0, avg_quality if avg_quality > 0 else (1.0 / (1.0 + frequency_std)))
+    )
 
     fingerprint = {
         "baseline_frequency_hz": round(baseline_frequency, 4),
@@ -506,7 +529,7 @@ async def get_device_fingerprint(device_id: str):
         "channels": _connected_devices[device_id].channels,
         "source": "mindex_fci_telemetry",
     }
-    
+
     return FCIFingerprintResponse(
         device_id=device_id,
         fingerprint=fingerprint,
@@ -523,13 +546,13 @@ async def get_device_correlations(
 ):
     """
     Get event correlations for a device.
-    
+
     Correlations link FCI signal patterns with external events from:
     - Earth2 (weather, seismic)
     - CREP (environmental data)
     - Petri Dish simulator
     - Manual observations
-    
+
     Returns correlations from the last N hours with strength >= threshold.
     """
     if device_id not in _connected_devices:
@@ -579,7 +602,9 @@ async def get_device_correlations(
                 if lag_seconds > 3600:
                     continue
 
-                confidence = float(pattern.get("confidence_score") or pattern.get("confidence") or 0.0)
+                confidence = float(
+                    pattern.get("confidence_score") or pattern.get("confidence") or 0.0
+                )
                 temporal_score = max(0.0, 1.0 - (lag_seconds / 3600))
                 correlation_strength = round((confidence + temporal_score) / 2, 4)
                 if correlation_strength < min_strength:
@@ -609,7 +634,7 @@ async def get_device_correlations(
         correlations = correlations[:200]
     except Exception as exc:
         print(f"[FCI] Correlation query failed for {device_id}: {exc}")
-    
+
     return {
         "device_id": device_id,
         "correlations": correlations,
@@ -630,7 +655,7 @@ async def get_device_correlations(
 async def process_signal(data: FCISignalData, background_tasks: BackgroundTasks):
     """
     Process incoming bioelectric signal data and detect patterns.
-    
+
     This endpoint:
     1. Receives raw signal features from FCI firmware
     2. Applies GFST pattern matching
@@ -640,68 +665,104 @@ async def process_signal(data: FCISignalData, background_tasks: BackgroundTasks)
     # Extract channel data
     if not data.channels:
         raise HTTPException(status_code=400, detail="No channel data provided")
-    
+
     # Use first channel for primary analysis
     channel = data.channels[0]
-    
+
     # Match against GFST patterns
     detected_pattern = "baseline"
     confidence = 0.5
-    
+
     dominant_freq = channel.get("dominant_frequency", 0.3)
     amplitude_mv = channel.get("amplitude_mv", 0.5)
-    
+
     # Simple pattern matching based on frequency and amplitude
     for pattern in GFST_PATTERNS:
-        if (pattern.frequency_min <= dominant_freq <= pattern.frequency_max and
-            pattern.amplitude_min <= amplitude_mv <= pattern.amplitude_max):
+        if (
+            pattern.frequency_min <= dominant_freq <= pattern.frequency_max
+            and pattern.amplitude_min <= amplitude_mv <= pattern.amplitude_max
+        ):
             detected_pattern = pattern.pattern_name
             # Calculate confidence based on how well it matches
             freq_match = 1 - abs(
-                (dominant_freq - (pattern.frequency_min + pattern.frequency_max) / 2) /
-                ((pattern.frequency_max - pattern.frequency_min) / 2 + 0.01)
+                (dominant_freq - (pattern.frequency_min + pattern.frequency_max) / 2)
+                / ((pattern.frequency_max - pattern.frequency_min) / 2 + 0.01)
             )
             amp_match = 1 - abs(
-                (amplitude_mv - (pattern.amplitude_min + pattern.amplitude_max) / 2) /
-                ((pattern.amplitude_max - pattern.amplitude_min) / 2 + 0.01)
+                (amplitude_mv - (pattern.amplitude_min + pattern.amplitude_max) / 2)
+                / ((pattern.amplitude_max - pattern.amplitude_min) / 2 + 0.01)
             )
             confidence = max(0.4, min(0.95, (freq_match + amp_match) / 2))
             break
-    
+
     # Generate semantic interpretation
     semantic_mapping = {
         "baseline": ("Normal metabolic activity", ["Mycelium is stable"], ["Continue monitoring"]),
-        "active_growth": ("Active nutrient uptake detected", ["Healthy growth phase", "Good substrate colonization"], ["Maintain optimal conditions"]),
-        "nutrient_seeking": ("Foraging behavior active", ["May need substrate enrichment"], ["Consider adding nutrients"]),
-        "temperature_stress": ("Thermal stress detected", ["Temperature outside optimal range"], ["Check heating/cooling", "Adjust environmental controls"]),
-        "chemical_stress": ("Chemical stressor detected", ["Possible toxin or pH issue"], ["Check substrate chemistry", "Monitor air quality"]),
-        "network_communication": ("Inter-colony signaling", ["Mycorrhizal network active"], ["Monitor connected organisms"]),
-        "action_potential": ("Rapid spike detected", ["Strong signal event"], ["Investigate trigger"]),
-        "seismic_precursor": ("Ultra-low frequency detected", ["Possible geological precursor"], ["Cross-reference with seismic data", "Alert monitoring systems"]),
-        "defense_activation": ("Defense response active", ["Pathogen or predator detected"], ["Inspect for contamination"]),
-        "sporulation_initiation": ("Reproductive signaling", ["Sporulation may begin"], ["Prepare for spore collection if desired"]),
+        "active_growth": (
+            "Active nutrient uptake detected",
+            ["Healthy growth phase", "Good substrate colonization"],
+            ["Maintain optimal conditions"],
+        ),
+        "nutrient_seeking": (
+            "Foraging behavior active",
+            ["May need substrate enrichment"],
+            ["Consider adding nutrients"],
+        ),
+        "temperature_stress": (
+            "Thermal stress detected",
+            ["Temperature outside optimal range"],
+            ["Check heating/cooling", "Adjust environmental controls"],
+        ),
+        "chemical_stress": (
+            "Chemical stressor detected",
+            ["Possible toxin or pH issue"],
+            ["Check substrate chemistry", "Monitor air quality"],
+        ),
+        "network_communication": (
+            "Inter-colony signaling",
+            ["Mycorrhizal network active"],
+            ["Monitor connected organisms"],
+        ),
+        "action_potential": (
+            "Rapid spike detected",
+            ["Strong signal event"],
+            ["Investigate trigger"],
+        ),
+        "seismic_precursor": (
+            "Ultra-low frequency detected",
+            ["Possible geological precursor"],
+            ["Cross-reference with seismic data", "Alert monitoring systems"],
+        ),
+        "defense_activation": (
+            "Defense response active",
+            ["Pathogen or predator detected"],
+            ["Inspect for contamination"],
+        ),
+        "sporulation_initiation": (
+            "Reproductive signaling",
+            ["Sporulation may begin"],
+            ["Prepare for spore collection if desired"],
+        ),
     }
-    
+
     meaning, implications, actions = semantic_mapping.get(
-        detected_pattern, 
-        ("Unknown pattern", ["Requires analysis"], ["Log for review"])
+        detected_pattern, ("Unknown pattern", ["Requires analysis"], ["Log for review"])
     )
-    
+
     result = FCIPatternResult(
         pattern_name=detected_pattern,
         category=next(
-            (p.category for p in GFST_PATTERNS if p.pattern_name == detected_pattern),
-            "unknown"
+            (p.category for p in GFST_PATTERNS if p.pattern_name == detected_pattern), "unknown"
         ),
         confidence=confidence,
         semantic_meaning=meaning,
         implications=implications,
         recommended_actions=actions,
     )
-    
+
     # Store pattern to MINDEX in background (won't block response)
     background_tasks.add_task(store_pattern_to_mindex, data.device_id, result)
-    
+
     return result
 
 
@@ -714,32 +775,26 @@ async def process_signal(data: FCISignalData, background_tasks: BackgroundTasks)
 async def send_stimulus(command: FCIStimulusCommand):
     """
     Send a stimulation command to an FCI device.
-    
+
     The command is queued and delivered on the device's next heartbeat.
     """
     device_id = command.device_id
-    
+
     if device_id not in _connected_devices:
         raise HTTPException(status_code=404, detail="Device not registered")
-    
+
     # Validate safety limits
     if command.amplitude_mv > 20.0:
-        raise HTTPException(
-            status_code=400, 
-            detail="Amplitude exceeds safety limit of 20mV"
-        )
-    
+        raise HTTPException(status_code=400, detail="Amplitude exceeds safety limit of 20mV")
+
     if command.duration_ms > 10000:
-        raise HTTPException(
-            status_code=400,
-            detail="Duration exceeds safety limit of 10 seconds"
-        )
-    
+        raise HTTPException(status_code=400, detail="Duration exceeds safety limit of 10 seconds")
+
     # Queue the command
     if device_id not in _pending_commands:
         _pending_commands[device_id] = []
     _pending_commands[device_id].append(command)
-    
+
     return {
         "status": "queued",
         "command_id": str(uuid4()),
@@ -756,10 +811,10 @@ async def send_stimulus(command: FCIStimulusCommand):
 async def list_gfst_patterns(category: Optional[str] = None):
     """Get the GFST pattern library."""
     patterns = GFST_PATTERNS
-    
+
     if category:
         patterns = [p for p in patterns if p.category == category]
-    
+
     return patterns
 
 
@@ -769,7 +824,7 @@ async def get_gfst_pattern(pattern_name: str):
     for pattern in GFST_PATTERNS:
         if pattern.pattern_name == pattern_name:
             return pattern
-    
+
     raise HTTPException(status_code=404, detail=f"Pattern '{pattern_name}' not found")
 
 
@@ -782,16 +837,17 @@ async def get_gfst_pattern(pattern_name: str):
 async def execute_hpl_program(request: HPLProgramRequest):
     """
     Execute an HPL (Hypha Programming Language) program.
-    
+
     This endpoint parses and executes HPL code for interacting with FCI devices.
     """
     if not HAS_MYCORRHIZAE:
-        raise HTTPException(
-            status_code=503,
-            detail="Mycorrhizae Protocol not installed"
-        )
-    
-    lines = [line.strip() for line in request.program.splitlines() if line.strip() and not line.strip().startswith("#")]
+        raise HTTPException(status_code=503, detail="Mycorrhizae Protocol not installed")
+
+    lines = [
+        line.strip()
+        for line in request.program.splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
     if not lines:
         raise HTTPException(status_code=400, detail="Program is empty")
 
@@ -828,7 +884,9 @@ async def execute_hpl_program(request: HPLProgramRequest):
             channel=int(variables.get("channel", 0)),
         )
         _pending_commands.setdefault(target_device, []).append(command)
-        operations.append({"line": None, "op": "dispatch", "device_id": target_device, "command_id": command_id})
+        operations.append(
+            {"line": None, "op": "dispatch", "device_id": target_device, "command_id": command_id}
+        )
 
     return {
         "status": "executed",

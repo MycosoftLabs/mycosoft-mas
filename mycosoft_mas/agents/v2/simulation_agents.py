@@ -5,14 +5,15 @@ Created: February 3, 2026
 """
 
 import logging
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
 from enum import Enum
-from pydantic import BaseModel
+from typing import Any, Dict
+from uuid import uuid4
+
+
 from .scientific_agents import BaseScientificAgent, ScientificTask
 
 logger = logging.getLogger(__name__)
+
 
 class SimulationType(str, Enum):
     MOLECULAR_DYNAMICS = "molecular_dynamics"
@@ -22,6 +23,7 @@ class SimulationType(str, Enum):
     REACTION_DIFFUSION = "reaction_diffusion"
     AGENT_BASED = "agent_based"
     FINITE_ELEMENT = "finite_element"
+
 
 class SimulationStatus(str, Enum):
     QUEUED = "queued"
@@ -33,14 +35,20 @@ class SimulationStatus(str, Enum):
 
 class AlphaFoldAgent(BaseScientificAgent):
     """Interfaces with AlphaFold for protein structure prediction via EBI AlphaFold DB API."""
+
     def __init__(self):
-        super().__init__("alphafold_agent", "AlphaFold Agent", "Predicts protein structures using AlphaFold2/3 via EBI AlphaFold DB")
+        super().__init__(
+            "alphafold_agent",
+            "AlphaFold Agent",
+            "Predicts protein structures using AlphaFold2/3 via EBI AlphaFold DB",
+        )
         self._client = None
 
     def _get_client(self):
         if self._client is None:
             try:
                 from mycosoft_mas.integrations.alphafold_client import AlphaFoldClient
+
                 self._client = AlphaFoldClient()
             except ImportError:
                 pass
@@ -74,7 +82,9 @@ class AlphaFoldAgent(BaseScientificAgent):
                     "pdb_url": urls.get("pdb"),
                     "cif_url": urls.get("cif"),
                     "pae_image_url": urls.get("pae_image"),
-                    "metadata": {k: v for k, v in pred.items() if k not in ("entryId", "uniprotSequence")},
+                    "metadata": {
+                        k: v for k, v in pred.items() if k not in ("entryId", "uniprotSequence")
+                    },
                 }
         if client and sequence:
             summary = await client.search_by_sequence(sequence)
@@ -87,7 +97,13 @@ class AlphaFoldAgent(BaseScientificAgent):
                 "sequence": sequence[:50] + "..." if len(sequence) > 50 else sequence,
             }
         logger.info("Predicting monomer structure for %s residues", len(sequence) or 0)
-        return {"prediction_id": str(uuid4()), "sequence_length": len(sequence), "pLDDT": None, "pdb_path": None, "note": "Provide uniprot_id for EBI AlphaFold DB lookup"}
+        return {
+            "prediction_id": str(uuid4()),
+            "sequence_length": len(sequence),
+            "pLDDT": None,
+            "pdb_path": None,
+            "note": "Provide uniprot_id for EBI AlphaFold DB lookup",
+        }
 
     async def _predict_multimer(self, data: Dict[str, Any]) -> Dict[str, Any]:
         uniprot_ids = data.get("uniprot_ids", [])
@@ -99,11 +115,22 @@ class AlphaFoldAgent(BaseScientificAgent):
                 pred = await client.get_prediction(str(uid))
                 if pred:
                     urls = await client.get_prediction_urls(str(uid))
-                    results.append({"uniprot_id": uid, "entry_id": pred.get("entryId"), "pdb_url": urls.get("pdb"), "cif_url": urls.get("cif")})
+                    results.append(
+                        {
+                            "uniprot_id": uid,
+                            "entry_id": pred.get("entryId"),
+                            "pdb_url": urls.get("pdb"),
+                            "cif_url": urls.get("cif"),
+                        }
+                    )
             if results:
                 return {"predictions": results, "num_chains": len(results)}
         logger.info("Predicting multimer with %s chains", len(sequences) or len(uniprot_ids) or 0)
-        return {"prediction_id": str(uuid4()), "num_chains": len(sequences) or len(uniprot_ids), "note": "Provide uniprot_ids for EBI AlphaFold DB lookup"}
+        return {
+            "prediction_id": str(uuid4()),
+            "num_chains": len(sequences) or len(uniprot_ids),
+            "note": "Provide uniprot_ids for EBI AlphaFold DB lookup",
+        }
 
     async def _fetch_prediction(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Fetch existing AlphaFold prediction by UniProt ID."""
@@ -120,21 +147,32 @@ class AlphaFoldAgent(BaseScientificAgent):
         out = {"uniprot_id": uniprot_id, "entry_id": pred.get("entryId"), "metadata": pred}
         if fetch_pdb:
             pdb_content = await client.fetch_pdb_content(uniprot_id)
-            out["pdb_content"] = pdb_content[:5000] + "..." if pdb_content and len(pdb_content) > 5000 else pdb_content
+            out["pdb_content"] = (
+                pdb_content[:5000] + "..."
+                if pdb_content and len(pdb_content) > 5000
+                else pdb_content
+            )
         urls = await client.get_prediction_urls(uniprot_id)
         out["urls"] = urls
         return out
 
     async def _refine_structure(self, data: Dict[str, Any]) -> Dict[str, Any]:
         pdb_path = data.get("pdb_path")
-        return {"refined_id": str(uuid4()), "original": pdb_path, "note": "Structure refinement requires local tools (e.g. OpenMM, Rosetta)"}
+        return {
+            "refined_id": str(uuid4()),
+            "original": pdb_path,
+            "note": "Structure refinement requires local tools (e.g. OpenMM, Rosetta)",
+        }
 
 
 class BoltzGenAgent(BaseScientificAgent):
     """Interfaces with BoltzGen for generative protein design."""
+
     def __init__(self):
-        super().__init__("boltzgen_agent", "BoltzGen Agent", "Generates novel proteins using BoltzGen")
-    
+        super().__init__(
+            "boltzgen_agent", "BoltzGen Agent", "Generates novel proteins using BoltzGen"
+        )
+
     async def execute_task(self, task: ScientificTask) -> Dict[str, Any]:
         task_type = task.task_type
         if task_type == "generate_binder":
@@ -145,28 +183,38 @@ class BoltzGenAgent(BaseScientificAgent):
             return await self._optimize_binding(task.input_data)
         else:
             return {"error": f"Unknown task type: {task_type}"}
-    
+
     async def _generate_binder(self, data: Dict[str, Any]) -> Dict[str, Any]:
         target_pdb = data.get("target_pdb")
-        hotspot_residues = data.get("hotspot_residues", [])
+        data.get("hotspot_residues", [])
         num_designs = data.get("num_designs", 10)
-        return {"generation_id": str(uuid4()), "target": target_pdb, "num_designs": num_designs, "designs": []}
-    
+        return {
+            "generation_id": str(uuid4()),
+            "target": target_pdb,
+            "num_designs": num_designs,
+            "designs": [],
+        }
+
     async def _generate_scaffold(self, data: Dict[str, Any]) -> Dict[str, Any]:
         functional_site = data.get("functional_site")
         return {"scaffold_id": str(uuid4()), "functional_site": functional_site, "sequences": []}
-    
+
     async def _optimize_binding(self, data: Dict[str, Any]) -> Dict[str, Any]:
         binder_sequence = data.get("binder_sequence")
-        target = data.get("target")
-        return {"optimization_id": str(uuid4()), "improved_sequence": binder_sequence, "predicted_affinity": 0.0}
+        data.get("target")
+        return {
+            "optimization_id": str(uuid4()),
+            "improved_sequence": binder_sequence,
+            "predicted_affinity": 0.0,
+        }
 
 
 class COBRAAgent(BaseScientificAgent):
     """Constraint-based metabolic modeling with COBRApy."""
+
     def __init__(self):
         super().__init__("cobra_agent", "COBRA Agent", "Metabolic modeling and flux analysis")
-    
+
     async def execute_task(self, task: ScientificTask) -> Dict[str, Any]:
         task_type = task.task_type
         if task_type == "load_model":
@@ -179,31 +227,53 @@ class COBRAAgent(BaseScientificAgent):
             return await self._knockout_analysis(task.input_data)
         else:
             return {"error": f"Unknown task type: {task_type}"}
-    
+
     async def _load_model(self, data: Dict[str, Any]) -> Dict[str, Any]:
         model_name = data.get("model_name", "iMM904")
-        return {"model_id": str(uuid4()), "model_name": model_name, "reactions": 0, "metabolites": 0, "genes": 0}
-    
+        return {
+            "model_id": str(uuid4()),
+            "model_name": model_name,
+            "reactions": 0,
+            "metabolites": 0,
+            "genes": 0,
+        }
+
     async def _fba(self, data: Dict[str, Any]) -> Dict[str, Any]:
         model_id = data.get("model_id")
         objective = data.get("objective", "biomass")
-        return {"analysis_id": str(uuid4()), "model_id": model_id, "objective": objective, "objective_value": 0.0, "fluxes": {}}
-    
+        return {
+            "analysis_id": str(uuid4()),
+            "model_id": model_id,
+            "objective": objective,
+            "objective_value": 0.0,
+            "fluxes": {},
+        }
+
     async def _fva(self, data: Dict[str, Any]) -> Dict[str, Any]:
         model_id = data.get("model_id")
         return {"analysis_id": str(uuid4()), "model_id": model_id, "flux_ranges": {}}
-    
+
     async def _knockout_analysis(self, data: Dict[str, Any]) -> Dict[str, Any]:
         model_id = data.get("model_id")
         genes = data.get("genes", [])
-        return {"analysis_id": str(uuid4()), "model_id": model_id, "knockouts": genes, "growth_rate": 0.0}
+        return {
+            "analysis_id": str(uuid4()),
+            "model_id": model_id,
+            "knockouts": genes,
+            "growth_rate": 0.0,
+        }
 
 
 class MyceliumSimulatorAgent(BaseScientificAgent):
     """Simulates mycelial network growth and computation."""
+
     def __init__(self):
-        super().__init__("mycelium_simulator_agent", "Mycelium Simulator Agent", "Simulates fungal network growth and behavior")
-    
+        super().__init__(
+            "mycelium_simulator_agent",
+            "Mycelium Simulator Agent",
+            "Simulates fungal network growth and behavior",
+        )
+
     async def execute_task(self, task: ScientificTask) -> Dict[str, Any]:
         task_type = task.task_type
         if task_type == "grow_network":
@@ -214,28 +284,50 @@ class MyceliumSimulatorAgent(BaseScientificAgent):
             return await self._simulate_signals(task.input_data)
         else:
             return {"error": f"Unknown task type: {task_type}"}
-    
+
     async def _grow_network(self, data: Dict[str, Any]) -> Dict[str, Any]:
         substrate = data.get("substrate", "agar")
         time_hours = data.get("time_hours", 24)
-        nutrient_sources = data.get("nutrient_sources", [])
-        return {"simulation_id": str(uuid4()), "substrate": substrate, "time_hours": time_hours, "nodes": 0, "edges": 0, "network_graph": None}
-    
+        data.get("nutrient_sources", [])
+        return {
+            "simulation_id": str(uuid4()),
+            "substrate": substrate,
+            "time_hours": time_hours,
+            "nodes": 0,
+            "edges": 0,
+            "network_graph": None,
+        }
+
     async def _solve_maze(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        maze_config = data.get("maze_config", {})
-        return {"simulation_id": str(uuid4()), "maze_solved": True, "path_length": 0, "time_steps": 0}
-    
+        data.get("maze_config", {})
+        return {
+            "simulation_id": str(uuid4()),
+            "maze_solved": True,
+            "path_length": 0,
+            "time_steps": 0,
+        }
+
     async def _simulate_signals(self, data: Dict[str, Any]) -> Dict[str, Any]:
         network_id = data.get("network_id")
-        stimulus = data.get("stimulus", {})
-        return {"simulation_id": str(uuid4()), "network_id": network_id, "signal_propagation": [], "response_time_ms": 0}
+        data.get("stimulus", {})
+        return {
+            "simulation_id": str(uuid4()),
+            "network_id": network_id,
+            "signal_propagation": [],
+            "response_time_ms": 0,
+        }
 
 
 class PhysicsSimulatorAgent(BaseScientificAgent):
     """General physics simulations including FEM and diffusion."""
+
     def __init__(self):
-        super().__init__("physics_simulator_agent", "Physics Simulator Agent", "Runs physics simulations for various phenomena")
-    
+        super().__init__(
+            "physics_simulator_agent",
+            "Physics Simulator Agent",
+            "Runs physics simulations for various phenomena",
+        )
+
     async def execute_task(self, task: ScientificTask) -> Dict[str, Any]:
         task_type = task.task_type
         if task_type == "diffusion":
@@ -246,21 +338,26 @@ class PhysicsSimulatorAgent(BaseScientificAgent):
             return await self._heat_transfer(task.input_data)
         else:
             return {"error": f"Unknown task type: {task_type}"}
-    
+
     async def _diffusion(self, data: Dict[str, Any]) -> Dict[str, Any]:
         diffusion_coefficient = data.get("diffusion_coefficient", 1e-9)
-        domain = data.get("domain", {})
+        data.get("domain", {})
         time_steps = data.get("time_steps", 100)
-        return {"simulation_id": str(uuid4()), "diffusion_coefficient": diffusion_coefficient, "time_steps": time_steps, "concentration_field": None}
-    
+        return {
+            "simulation_id": str(uuid4()),
+            "diffusion_coefficient": diffusion_coefficient,
+            "time_steps": time_steps,
+            "concentration_field": None,
+        }
+
     async def _electrical_network(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        network_topology = data.get("network_topology", {})
-        conductances = data.get("conductances", {})
+        data.get("network_topology", {})
+        data.get("conductances", {})
         return {"simulation_id": str(uuid4()), "voltages": {}, "currents": {}}
-    
+
     async def _heat_transfer(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        geometry = data.get("geometry", {})
-        boundary_conditions = data.get("boundary_conditions", {})
+        data.get("geometry", {})
+        data.get("boundary_conditions", {})
         return {"simulation_id": str(uuid4()), "temperature_field": None, "steady_state": True}
 
 
@@ -320,7 +417,9 @@ class UnifiedLatentsAgent(BaseScientificAgent):
         noise_level = data.get("noise_level", 0.0)
         logger.info(
             "UL encode: input=%s checkpoint=%s noise=%.4f",
-            input_path, checkpoint, noise_level,
+            input_path,
+            checkpoint,
+            noise_level,
         )
         return {
             "latent_id": str(uuid4()),
@@ -335,7 +434,9 @@ class UnifiedLatentsAgent(BaseScientificAgent):
         latent_id = data.get("latent_id", "")
         num_diffusion_steps = data.get("num_diffusion_steps", 50)
         logger.info(
-            "UL decode: latent=%s steps=%d", latent_id, num_diffusion_steps,
+            "UL decode: latent=%s steps=%d",
+            latent_id,
+            num_diffusion_steps,
         )
         return {
             "decode_id": str(uuid4()),
@@ -357,7 +458,10 @@ class UnifiedLatentsAgent(BaseScientificAgent):
 
         logger.info(
             "UL generate_image: prompt='%s' res=%d n=%d checkpoint=%s",
-            prompt[:60], resolution, num_samples, checkpoint,
+            prompt[:60],
+            resolution,
+            num_samples,
+            checkpoint,
         )
         return {
             "generation_id": str(uuid4()),
@@ -382,7 +486,10 @@ class UnifiedLatentsAgent(BaseScientificAgent):
 
         logger.info(
             "UL generate_video: prompt='%s' res=%d frames=%d checkpoint=%s",
-            prompt[:60], resolution, num_frames, checkpoint,
+            prompt[:60],
+            resolution,
+            num_frames,
+            checkpoint,
         )
         return {
             "generation_id": str(uuid4()),
@@ -411,7 +518,11 @@ class UnifiedLatentsAgent(BaseScientificAgent):
         run_id = str(uuid4())
         logger.info(
             "UL train: run=%s dataset=%s lr=%.1e steps=%d schedule=%s",
-            run_id, dataset, learning_rate, max_steps, noise_schedule,
+            run_id,
+            dataset,
+            learning_rate,
+            max_steps,
+            noise_schedule,
         )
         self.active_runs[run_id] = {
             "run_id": run_id,
@@ -443,7 +554,10 @@ class UnifiedLatentsAgent(BaseScientificAgent):
 
         logger.info(
             "UL evaluate: checkpoint=%s dataset=%s samples=%d metrics=%s",
-            checkpoint, dataset, num_samples, metrics_requested,
+            checkpoint,
+            dataset,
+            num_samples,
+            metrics_requested,
         )
         return {
             "evaluation_id": str(uuid4()),
@@ -462,6 +576,7 @@ SIMULATION_AGENTS = {
     "physics_simulator": PhysicsSimulatorAgent,
     "unified_latents": UnifiedLatentsAgent,
 }
+
 
 def get_simulation_agent(agent_type: str) -> BaseScientificAgent:
     if agent_type not in SIMULATION_AGENTS:

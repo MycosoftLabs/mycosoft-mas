@@ -9,8 +9,8 @@ Environment Variables:
                        Create at https://api.slack.com/apps
 """
 
-import os
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -82,7 +82,9 @@ class SlackClient:
             return []
         client = await self._get_client()
         try:
-            r = await client.get("/conversations.list", params={"limit": limit, "types": "public_channel"})
+            r = await client.get(
+                "/conversations.list", params={"limit": limit, "types": "public_channel"}
+            )
             data = r.json()
             if not data.get("ok"):
                 return []

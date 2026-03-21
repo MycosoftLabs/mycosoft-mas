@@ -12,7 +12,7 @@ Created: March 8, 2026
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -26,6 +26,7 @@ router = APIRouter(prefix="/api/cfo-mcp", tags=["cfo-mcp"])
 
 class ToolCallRequest(BaseModel):
     """Request to call a CFO MCP tool."""
+
     name: str = Field(..., description="Tool name (e.g., list_finance_agents)")
     arguments: Dict[str, Any] = Field(default_factory=dict, description="Tool arguments")
 

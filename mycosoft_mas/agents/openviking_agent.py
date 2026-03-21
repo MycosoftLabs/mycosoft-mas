@@ -15,7 +15,7 @@ Created: March 19, 2026
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 
@@ -224,11 +224,7 @@ class OpenVikingAgent(BaseAgent):
         else:
             return {
                 "devices": [d.to_dict() for d in self._bridge.list_devices()],
-                "sync_status": (
-                    self._sync_service.get_status()
-                    if self._sync_service
-                    else None
-                ),
+                "sync_status": (self._sync_service.get_status() if self._sync_service else None),
             }
 
     async def _handle_share_knowledge(self, task: Dict[str, Any]) -> Dict[str, Any]:

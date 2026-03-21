@@ -54,8 +54,12 @@ class BaseConnector(ABC):
             await asyncio.sleep(min_interval - elapsed)
         self._last_request = time.time()
 
-    async def _get(self, url: str, params: Optional[Dict[str, Any]] = None,
-                   headers: Optional[Dict[str, str]] = None) -> Optional[Any]:
+    async def _get(
+        self,
+        url: str,
+        params: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> Optional[Any]:
         await self._rate_limit()
         client = await self._http()
         try:
@@ -67,9 +71,13 @@ class BaseConnector(ABC):
             logger.warning("%s GET %s error: %s", self.source_id, url, e)
         return None
 
-    async def _post(self, url: str, json_body: Optional[Dict[str, Any]] = None,
-                    data: Optional[str] = None,
-                    headers: Optional[Dict[str, str]] = None) -> Optional[Any]:
+    async def _post(
+        self,
+        url: str,
+        json_body: Optional[Dict[str, Any]] = None,
+        data: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> Optional[Any]:
         await self._rate_limit()
         client = await self._http()
         try:

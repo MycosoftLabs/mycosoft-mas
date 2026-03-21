@@ -24,9 +24,7 @@ class PerplexityClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_key = self.config.get(
-            "api_key", os.environ.get("PERPLEXITY_API_KEY", "")
-        )
+        self.api_key = self.config.get("api_key", os.environ.get("PERPLEXITY_API_KEY", ""))
         self.timeout = self.config.get("timeout", 60)
         self._client: Optional[httpx.AsyncClient] = None
 

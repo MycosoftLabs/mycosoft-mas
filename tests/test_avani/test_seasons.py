@@ -9,12 +9,12 @@ Verifies seasonal state transitions follow the correct rules:
 - Recovery paths require proper authority
 """
 
-import pytest
 from datetime import datetime, timedelta, timezone
+
+import pytest
 
 from mycosoft_mas.avani.season_engine.seasons import (
     SEASON_RISK_CEILING,
-    SEASON_THROTTLE,
     Season,
     SeasonEngine,
     SeasonMetrics,
@@ -135,9 +135,7 @@ class TestSeasonEngine:
 
     def test_transition_callback(self, engine):
         transitions = []
-        engine.on_transition(
-            lambda old, new, reason: transitions.append((old, new, reason))
-        )
+        engine.on_transition(lambda old, new, reason: transitions.append((old, new, reason)))
         metrics = SeasonMetrics(toxicity_detected=True)
         engine.update(metrics)
         assert len(transitions) == 1

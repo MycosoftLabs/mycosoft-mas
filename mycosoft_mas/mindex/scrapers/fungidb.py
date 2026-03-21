@@ -22,21 +22,21 @@ logger = logging.getLogger(__name__)
 
 class FungiDBScraper(BaseScraper):
     """Scraper for FungiDB genomic data."""
-    
+
     def __init__(self, config: Optional[ScraperConfig] = None):
         # FungiDB has strict rate limits
         if config is None:
             config = ScraperConfig(rate_limit_per_second=0.5)
         super().__init__(config)
-    
+
     @property
     def source_name(self) -> str:
         return "FungiDB"
-    
+
     @property
     def base_url(self) -> str:
         return "https://fungidb.org/fungidb/service"
-    
+
     async def search_species(
         self,
         query: str,
@@ -45,7 +45,7 @@ class FungiDBScraper(BaseScraper):
         """Search for organisms/species in FungiDB."""
         records = []
         errors = []
-        
+
         try:
             # FungiDB uses a custom search API
             data = await self._request(
@@ -62,18 +62,18 @@ class FungiDBScraper(BaseScraper):
                     },
                 },
             )
-            
+
             if data and "records" in data:
                 for record in data["records"]:
                     normalized = self.normalize_record(record)
                     if self.validate_record(normalized):
                         records.append(normalized)
-                        
+
         except Exception as e:
             logger.error(f"Error searching FungiDB: {e}")
             errors.append(str(e))
             # Return empty result on API error - FungiDB API can be complex
-        
+
         return ScraperResult(
             source=self.source_name,
             data_type="species_search",
@@ -82,7 +82,7 @@ class FungiDBScraper(BaseScraper):
             errors=errors,
             metadata={"query": query},
         )
-    
+
     async def get_species_details(
         self,
         species_id: str,
@@ -95,7 +95,7 @@ class FungiDBScraper(BaseScraper):
         except Exception as e:
             logger.error(f"Error getting species {species_id}: {e}")
         return None
-    
+
     async def get_genes(
         self,
         organism: str,
@@ -105,7 +105,7 @@ class FungiDBScraper(BaseScraper):
         """Get genes for a specific organism."""
         records = []
         errors = []
-        
+
         try:
             data = await self._request(
                 "record-types/gene/searches/GenesByTaxon/reports/standard",
@@ -121,17 +121,17 @@ class FungiDBScraper(BaseScraper):
                     },
                 },
             )
-            
+
             if data and "records" in data:
                 for record in data["records"]:
                     normalized = self._normalize_gene(record)
                     if self.validate_record(normalized):
                         records.append(normalized)
-                        
+
         except Exception as e:
             logger.error(f"Error fetching genes for {organism}: {e}")
             errors.append(str(e))
-        
+
         return ScraperResult(
             source=self.source_name,
             data_type="genes",
@@ -140,7 +140,7 @@ class FungiDBScraper(BaseScraper):
             errors=errors,
             metadata={"organism": organism, "offset": offset},
         )
-    
+
     async def fetch_all(
         self,
         limit: Optional[int] = None,
@@ -148,20 +148,20 @@ class FungiDBScraper(BaseScraper):
         """Fetch all available organisms."""
         # Get list of organisms first
         organisms_result = await self._get_organisms()
-        
-        for organism in organisms_result.records[:limit or 100]:
+
+        for organism in organisms_result.records[: limit or 100]:
             org_name = organism.get("organism_name", "")
             if org_name:
                 genes_result = await self.get_genes(org_name, limit=100)
                 yield genes_result
-                
+
                 logger.info(f"Fetched genes for {org_name} from FungiDB")
-    
+
     async def _get_organisms(self) -> ScraperResult:
         """Get list of all organisms in FungiDB."""
         records = []
         errors = []
-        
+
         try:
             data = await self._request("record-types/organism/records")
             if data and "records" in data:
@@ -171,7 +171,7 @@ class FungiDBScraper(BaseScraper):
         except Exception as e:
             logger.error(f"Error fetching organisms: {e}")
             errors.append(str(e))
-        
+
         return ScraperResult(
             source=self.source_name,
             data_type="organisms",
@@ -179,20 +179,24 @@ class FungiDBScraper(BaseScraper):
             total_count=len(records),
             errors=errors,
         )
-    
+
     def validate_record(self, record: dict[str, Any]) -> bool:
         """Validate a FungiDB record."""
         if not record:
             return False
         return bool(record.get("organism_name") or record.get("id"))
-    
+
     def normalize_record(self, record: dict[str, Any]) -> dict[str, Any]:
         """Normalize an organism record to MINDEX format."""
         attributes = record.get("attributes", {})
-        
+
         return {
             "source": self.source_name,
-            "source_id": record.get("id", {}).get("value", "") if isinstance(record.get("id"), dict) else str(record.get("id", "")),
+            "source_id": (
+                record.get("id", {}).get("value", "")
+                if isinstance(record.get("id"), dict)
+                else str(record.get("id", ""))
+            ),
             "organism_name": attributes.get("organism_name", ""),
             "strain": attributes.get("strain", ""),
             "taxonomy": {
@@ -212,14 +216,18 @@ class FungiDBScraper(BaseScraper):
             "scraped_at": datetime.utcnow().isoformat(),
             "raw_data": record,
         }
-    
+
     def _normalize_gene(self, record: dict[str, Any]) -> dict[str, Any]:
         """Normalize a gene record."""
         attributes = record.get("attributes", {})
-        
+
         return {
             "source": self.source_name,
-            "source_id": record.get("id", {}).get("value", "") if isinstance(record.get("id"), dict) else str(record.get("id", "")),
+            "source_id": (
+                record.get("id", {}).get("value", "")
+                if isinstance(record.get("id"), dict)
+                else str(record.get("id", ""))
+            ),
             "type": "gene",
             "gene_id": attributes.get("gene_source_id", ""),
             "gene_name": attributes.get("gene_name", ""),

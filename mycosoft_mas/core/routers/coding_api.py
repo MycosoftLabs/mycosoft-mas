@@ -11,11 +11,12 @@ Endpoints for code modifications:
 - POST /api/code/halt - Emergency halt all changes
 """
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from pydantic import BaseModel, Field
-from typing import List, Optional, Any, Dict
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ router = APIRouter(prefix="/api/code", tags=["code-modification"])
 # Request/Response Models
 class CodeChangeRequest(BaseModel):
     """Request model for code changes."""
+
     requester_id: str = Field(..., description="Agent ID or 'orchestrator'")
     change_type: str = Field(..., description="Type: fix_bug, create_agent, update_code, etc.")
     description: str = Field(..., description="What code change to make")
@@ -37,6 +39,7 @@ class CodeChangeRequest(BaseModel):
 
 class CodeChangeResponse(BaseModel):
     """Response model for code change requests."""
+
     change_id: str
     status: str
     message: str
@@ -45,6 +48,7 @@ class CodeChangeResponse(BaseModel):
 
 class ChangeStatusResponse(BaseModel):
     """Response model for change status."""
+
     change_id: str
     status: str
     message: str
@@ -56,11 +60,13 @@ class ChangeStatusResponse(BaseModel):
 
 class SecurityScanRequest(BaseModel):
     """Request model for security scans."""
+
     file_paths: List[str] = Field(..., description="Files to scan")
 
 
 class SecurityScanResponse(BaseModel):
     """Response model for security scans."""
+
     scanned_files: int
     vulnerabilities_found: int
     vulnerabilities: List[Dict[str, Any]]
@@ -69,6 +75,7 @@ class SecurityScanResponse(BaseModel):
 
 class ServiceStatsResponse(BaseModel):
     """Response model for service statistics."""
+
     pending_count: int
     completed_count: int
     total_changes: int
@@ -79,6 +86,7 @@ class ServiceStatsResponse(BaseModel):
 
 class ManualApprovalRequest(BaseModel):
     """Request model for manual approval."""
+
     approver_id: str = Field(..., description="Who is approving")
     reason: Optional[str] = Field(default=None, description="Approval reason")
 
@@ -88,6 +96,7 @@ async def get_code_service():
     """Get the CodeModificationService instance."""
     try:
         from mycosoft_mas.services.code_modification_service import get_code_modification_service
+
         return await get_code_modification_service()
     except Exception as e:
         logger.error(f"Failed to get CodeModificationService: {e}")
@@ -98,6 +107,7 @@ async def get_security_reviewer():
     """Get the SecurityCodeReviewer instance."""
     try:
         from mycosoft_mas.security.code_reviewer import get_security_reviewer
+
         return get_security_reviewer()
     except Exception as e:
         logger.error(f"Failed to get SecurityCodeReviewer: {e}")
@@ -107,12 +117,11 @@ async def get_security_reviewer():
 # Endpoints
 @router.post("/request", response_model=CodeChangeResponse)
 async def request_code_change(
-    request: CodeChangeRequest,
-    code_service=Depends(get_code_service)
+    request: CodeChangeRequest, code_service=Depends(get_code_service)
 ) -> CodeChangeResponse:
     """
     Request a code change.
-    
+
     This is the main entry point for agents and orchestrator to request code modifications.
     The request goes through:
     1. Security review (automatic)
@@ -130,14 +139,14 @@ async def request_code_change(
             code_content=request.code_content,
             context=request.context,
         )
-        
+
         return CodeChangeResponse(
             change_id=result["change_id"],
             status=result["status"],
             message=result["message"],
             require_pr=result.get("require_pr"),
         )
-        
+
     except Exception as e:
         logger.error(f"Error requesting code change: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -145,8 +154,7 @@ async def request_code_change(
 
 @router.get("/status/{change_id}", response_model=ChangeStatusResponse)
 async def get_change_status(
-    change_id: str,
-    code_service=Depends(get_code_service)
+    change_id: str, code_service=Depends(get_code_service)
 ) -> ChangeStatusResponse:
     """Get the status of a code change request."""
     try:
@@ -159,9 +167,7 @@ async def get_change_status(
 
 @router.get("/history")
 async def get_change_history(
-    limit: int = 50,
-    status: Optional[str] = None,
-    code_service=Depends(get_code_service)
+    limit: int = 50, status: Optional[str] = None, code_service=Depends(get_code_service)
 ) -> List[Dict[str, Any]]:
     """Get history of code changes."""
     try:
@@ -172,9 +178,7 @@ async def get_change_history(
 
 
 @router.get("/stats", response_model=ServiceStatsResponse)
-async def get_service_stats(
-    code_service=Depends(get_code_service)
-) -> ServiceStatsResponse:
+async def get_service_stats(code_service=Depends(get_code_service)) -> ServiceStatsResponse:
     """Get code modification service statistics."""
     try:
         stats = code_service.get_stats()
@@ -186,35 +190,32 @@ async def get_service_stats(
 
 @router.post("/approve/{change_id}")
 async def manual_approval(
-    change_id: str,
-    request: ManualApprovalRequest,
-    code_service=Depends(get_code_service)
+    change_id: str, request: ManualApprovalRequest, code_service=Depends(get_code_service)
 ) -> Dict[str, Any]:
     """
     Manually approve a blocked or pending change.
-    
+
     Use this when a change was blocked by security but needs to proceed
     with human override.
     """
     try:
         # Check if change exists and is in a state that can be approved
         status = await code_service.get_change_status(change_id)
-        
+
         if status["status"] == "not_found":
             raise HTTPException(status_code=404, detail="Change request not found")
-        
+
         if status["status"] not in ["blocked", "pending", "reviewing"]:
             raise HTTPException(
-                status_code=400, 
-                detail=f"Cannot approve change in status: {status['status']}"
+                status_code=400, detail=f"Cannot approve change in status: {status['status']}"
             )
-        
+
         # NOTE: Pending implementation - Manual approval override requires:
         # 1. Audit log entry via AuditService.log_override(change_id, approver_id, reason)
         # 2. GuardianAgent notification via message queue
         # 3. Re-queue with bypass_security=True flag (CEO/CTO approval only)
         # SECURITY: This bypasses safety checks - requires elevated privileges
-        
+
         return {
             "change_id": change_id,
             "approved_by": request.approver_id,
@@ -222,7 +223,7 @@ async def manual_approval(
             "message": "Manual approval recorded - change will be re-processed",
             "warning": "Manual override bypasses security checks",
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -231,10 +232,7 @@ async def manual_approval(
 
 
 @router.post("/cancel/{change_id}")
-async def cancel_change(
-    change_id: str,
-    code_service=Depends(get_code_service)
-) -> Dict[str, Any]:
+async def cancel_change(change_id: str, code_service=Depends(get_code_service)) -> Dict[str, Any]:
     """Cancel a pending code change request."""
     try:
         result = await code_service.cancel_pending_request(change_id)
@@ -249,12 +247,10 @@ async def cancel_change(
 
 
 @router.post("/halt")
-async def emergency_halt(
-    code_service=Depends(get_code_service)
-) -> Dict[str, Any]:
+async def emergency_halt(code_service=Depends(get_code_service)) -> Dict[str, Any]:
     """
     Emergency halt all pending code changes.
-    
+
     Use this to immediately stop all code modification activity.
     """
     try:
@@ -268,12 +264,11 @@ async def emergency_halt(
 
 @router.post("/security/scan", response_model=SecurityScanResponse)
 async def security_scan(
-    request: SecurityScanRequest,
-    security_reviewer=Depends(get_security_reviewer)
+    request: SecurityScanRequest, security_reviewer=Depends(get_security_reviewer)
 ) -> SecurityScanResponse:
     """
     Run a security scan on specified files.
-    
+
     Scans for:
     - Hardcoded secrets (API keys, passwords)
     - SQL injection patterns
@@ -281,7 +276,7 @@ async def security_scan(
     """
     try:
         vulnerabilities = await security_reviewer.scan_for_vulnerabilities(request.file_paths)
-        
+
         # Determine overall risk level
         if any(v.get("severity") == "critical" for v in vulnerabilities):
             risk_level = "critical"
@@ -293,23 +288,21 @@ async def security_scan(
             risk_level = "low"
         else:
             risk_level = "none"
-        
+
         return SecurityScanResponse(
             scanned_files=len(request.file_paths),
             vulnerabilities_found=len(vulnerabilities),
             vulnerabilities=vulnerabilities,
             risk_level=risk_level,
         )
-        
+
     except Exception as e:
         logger.error(f"Error in security scan: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/security/stats")
-async def security_stats(
-    security_reviewer=Depends(get_security_reviewer)
-) -> Dict[str, Any]:
+async def security_stats(security_reviewer=Depends(get_security_reviewer)) -> Dict[str, Any]:
     """Get security review statistics."""
     try:
         return security_reviewer.get_review_stats()
@@ -320,8 +313,7 @@ async def security_stats(
 
 @router.get("/security/recent-blocks")
 async def recent_blocks(
-    limit: int = 10,
-    security_reviewer=Depends(get_security_reviewer)
+    limit: int = 10, security_reviewer=Depends(get_security_reviewer)
 ) -> List[Dict[str, Any]]:
     """Get recently blocked code changes."""
     try:
@@ -338,23 +330,27 @@ async def health_check() -> Dict[str, Any]:
         # Check dependencies
         code_service_ok = False
         security_ok = False
-        
+
         try:
-            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+            from mycosoft_mas.services.code_modification_service import (
+                get_code_modification_service,
+            )
+
             service = await get_code_modification_service()
             code_service_ok = service is not None
         except Exception:
             pass
-        
+
         try:
             from mycosoft_mas.security.code_reviewer import get_security_reviewer
+
             reviewer = get_security_reviewer()
             security_ok = reviewer is not None
         except Exception:
             pass
-        
+
         healthy = code_service_ok and security_ok
-        
+
         return {
             "status": "healthy" if healthy else "degraded",
             "components": {
@@ -363,7 +359,7 @@ async def health_check() -> Dict[str, Any]:
             },
             "timestamp": datetime.now().isoformat(),
         }
-        
+
     except Exception as e:
         return {
             "status": "unhealthy",

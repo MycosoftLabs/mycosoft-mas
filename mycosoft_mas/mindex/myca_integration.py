@@ -11,8 +11,7 @@ No fallback to external APIs - all data comes from MINDEX.
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
-from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 
@@ -28,11 +27,11 @@ MINDEX_TIMEOUT = 8  # seconds
 class MINDEXClient:
     """
     MINDEX client for MYCA to query fungal data.
-    
+
     All data queries should go through this client to ensure
     consistent access to the canonical MINDEX database.
     """
-    
+
     def __init__(
         self,
         base_url: Optional[str] = None,
@@ -43,7 +42,7 @@ class MINDEXClient:
         self.api_key = api_key or MINDEX_API_KEY
         self.timeout = timeout
         self._session: Optional[aiohttp.ClientSession] = None
-    
+
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create HTTP session."""
         if self._session is None or self._session.closed:
@@ -55,12 +54,12 @@ class MINDEXClient:
                 }
             )
         return self._session
-    
+
     async def close(self):
         """Close HTTP session."""
         if self._session and not self._session.closed:
             await self._session.close()
-    
+
     async def _request(
         self,
         method: str,
@@ -71,7 +70,7 @@ class MINDEXClient:
         """Make request to MINDEX API."""
         session = await self._get_session()
         url = f"{self.base_url}{endpoint}"
-        
+
         try:
             async with session.request(
                 method,
@@ -91,11 +90,11 @@ class MINDEXClient:
         except aiohttp.ClientError as e:
             logger.warning(f"MINDEX request error: {e}")
             return None
-    
+
     # =========================================================================
     # SPECIES QUERIES
     # =========================================================================
-    
+
     async def search_species(
         self,
         query: str,
@@ -104,7 +103,7 @@ class MINDEXClient:
     ) -> List[Dict[str, Any]]:
         """
         Search for fungal species by name.
-        
+
         Returns list of species with basic info and images.
         """
         data = await self._request(
@@ -116,23 +115,23 @@ class MINDEXClient:
                 "include_images": str(include_images).lower(),
             },
         )
-        
+
         if data:
             return data if isinstance(data, list) else data.get("results", [])
         return []
-    
+
     async def get_species_by_id(self, species_id: int) -> Optional[Dict[str, Any]]:
         """Get detailed species information by ID."""
         return await self._request("GET", f"/mindex/species/{species_id}")
-    
+
     async def get_species_by_name(self, scientific_name: str) -> Optional[Dict[str, Any]]:
         """Get species information by scientific name."""
         return await self._request("GET", f"/mindex/species/by-name/{scientific_name}")
-    
+
     # =========================================================================
     # IMAGE QUERIES
     # =========================================================================
-    
+
     async def get_species_images(
         self,
         species_id: int,
@@ -144,15 +143,15 @@ class MINDEXClient:
             f"/mindex/images/for-species/{species_id}",
             params={"limit": limit},
         )
-        
+
         if data:
             return data if isinstance(data, list) else data.get("images", [])
         return []
-    
+
     # =========================================================================
     # DNA SEQUENCE QUERIES
     # =========================================================================
-    
+
     async def search_sequences(
         self,
         query: str,
@@ -163,13 +162,13 @@ class MINDEXClient:
         params = {"q": query, "limit": limit}
         if gene_region:
             params["gene_region"] = gene_region
-        
+
         data = await self._request("GET", "/mindex/sequences/search", params=params)
-        
+
         if data:
             return data if isinstance(data, list) else data.get("sequences", [])
         return []
-    
+
     async def get_species_sequences(
         self,
         species_id: int,
@@ -180,21 +179,21 @@ class MINDEXClient:
         params = {"limit": limit}
         if gene_region:
             params["gene_region"] = gene_region
-        
+
         data = await self._request(
             "GET",
             f"/mindex/sequences/for-species/{species_id}",
             params=params,
         )
-        
+
         if data:
             return data if isinstance(data, list) else data.get("sequences", [])
         return []
-    
+
     # =========================================================================
     # RESEARCH PAPER QUERIES
     # =========================================================================
-    
+
     async def search_research(
         self,
         query: str,
@@ -208,13 +207,13 @@ class MINDEXClient:
             params["year_from"] = year_from
         if year_to:
             params["year_to"] = year_to
-        
+
         data = await self._request("GET", "/mindex/research/search", params=params)
-        
+
         if data:
             return data if isinstance(data, list) else data.get("papers", [])
         return []
-    
+
     async def get_species_research(
         self,
         species_id: int,
@@ -226,15 +225,15 @@ class MINDEXClient:
             f"/mindex/research/for-species/{species_id}",
             params={"limit": limit},
         )
-        
+
         if data:
             return data if isinstance(data, list) else data.get("papers", [])
         return []
-    
+
     # =========================================================================
     # COMPOUND QUERIES
     # =========================================================================
-    
+
     async def search_compounds(
         self,
         query: str,
@@ -245,13 +244,13 @@ class MINDEXClient:
         params = {"q": query, "limit": limit}
         if compound_class:
             params["compound_class"] = compound_class
-        
+
         data = await self._request("GET", "/mindex/compounds/search", params=params)
-        
+
         if data:
             return data if isinstance(data, list) else data.get("compounds", [])
         return []
-    
+
     async def get_species_compounds(
         self,
         species_id: int,
@@ -263,15 +262,15 @@ class MINDEXClient:
             f"/mindex/compounds/for-species/{species_id}",
             params={"limit": limit},
         )
-        
+
         if data:
             return data if isinstance(data, list) else data.get("compounds", [])
         return []
-    
+
     # =========================================================================
     # UNIFIED SEARCH
     # =========================================================================
-    
+
     async def unified_search(
         self,
         query: str,
@@ -284,7 +283,7 @@ class MINDEXClient:
     ) -> Dict[str, Any]:
         """
         Unified search across all MINDEX data types.
-        
+
         Returns combined results from species, compounds, sequences, research.
         """
         data = await self._request(
@@ -300,7 +299,7 @@ class MINDEXClient:
                 "limit": limit,
             },
         )
-        
+
         return data or {
             "query": query,
             "results": {
@@ -311,11 +310,11 @@ class MINDEXClient:
             },
             "totalCount": 0,
         }
-    
+
     # =========================================================================
     # KNOWLEDGE GRAPH QUERIES
     # =========================================================================
-    
+
     async def query_knowledge_graph(
         self,
         query: str,
@@ -327,11 +326,11 @@ class MINDEXClient:
             "/mindex/knowledge/search",
             json={"query": query, "limit": limit},
         )
-        
+
         if data:
             return data if isinstance(data, list) else data.get("nodes", [])
         return []
-    
+
     async def get_knowledge_node(
         self,
         node_id: str,
@@ -343,11 +342,11 @@ class MINDEXClient:
             f"/mindex/knowledge/nodes/{node_id}",
             params={"depth": depth},
         )
-    
+
     # =========================================================================
     # STATS
     # =========================================================================
-    
+
     async def get_stats(self) -> Dict[str, Any]:
         """Get MINDEX database statistics."""
         data = await self._request("GET", "/mindex/stats")
@@ -376,41 +375,44 @@ def get_mindex_client() -> MINDEXClient:
 # HELPER FUNCTIONS FOR MYCA RESPONSES
 # =========================================================================
 
+
 async def get_species_summary(species_name: str) -> str:
     """
     Get a summary about a fungal species for MYCA to use in responses.
     """
     client = get_mindex_client()
-    
+
     # Search for species
     species_list = await client.search_species(species_name, limit=1)
-    
+
     if not species_list:
-        return f"I don't have detailed information about '{species_name}' in my MINDEX database yet."
-    
+        return (
+            f"I don't have detailed information about '{species_name}' in my MINDEX database yet."
+        )
+
     species = species_list[0]
-    
+
     # Build summary
     parts = []
-    
+
     name = species.get("scientific_name", species_name)
     common_name = species.get("common_name")
     if common_name and common_name != name:
         parts.append(f"{common_name} ({name})")
     else:
         parts.append(name)
-    
+
     # Taxonomy
     taxonomy = species.get("taxonomy", {})
     family = taxonomy.get("family") or species.get("family")
     if family:
         parts.append(f"Family: {family}")
-    
+
     # Description
     description = species.get("description", "")
     if description:
         parts.append(description[:300] + "..." if len(description) > 300 else description)
-    
+
     return " | ".join(parts)
 
 
@@ -419,32 +421,32 @@ async def get_compound_info(compound_name: str) -> str:
     Get information about a fungal compound for MYCA.
     """
     client = get_mindex_client()
-    
+
     compounds = await client.search_compounds(compound_name, limit=1)
-    
+
     if not compounds:
         return f"I don't have detailed information about '{compound_name}' in MINDEX."
-    
+
     compound = compounds[0]
-    
+
     parts = [compound.get("name", compound_name)]
-    
+
     formula = compound.get("molecular_formula") or compound.get("formula")
     if formula:
         parts.append(f"Formula: {formula}")
-    
+
     compound_class = compound.get("compound_class") or compound.get("chemicalClass")
     if compound_class:
         parts.append(f"Class: {compound_class}")
-    
+
     species = compound.get("producing_species", [])
     if species:
         parts.append(f"Produced by: {', '.join(species[:3])}")
-    
+
     activities = compound.get("biologicalActivity", [])
     if activities:
         parts.append(f"Activity: {', '.join(activities[:3])}")
-    
+
     return " | ".join(parts)
 
 
@@ -454,7 +456,7 @@ async def search_fungal_knowledge(query: str) -> Dict[str, Any]:
     Returns structured data for MYCA to format into a response.
     """
     client = get_mindex_client()
-    
+
     return await client.unified_search(
         query=query,
         include_species=True,
@@ -470,9 +472,9 @@ async def get_mindex_context_for_query(query: str) -> str:
     Get MINDEX context to inject into MYCA's LLM prompt for answering questions.
     """
     result = await search_fungal_knowledge(query)
-    
+
     parts = []
-    
+
     # Species
     species = result.get("results", {}).get("species", [])
     if species:
@@ -483,7 +485,7 @@ async def get_mindex_context_for_query(query: str) -> str:
             desc = sp.get("description", "")[:150]
             species_info.append(f"- {common} ({name}): {desc}")
         parts.append("SPECIES FROM MINDEX:\n" + "\n".join(species_info))
-    
+
     # Compounds
     compounds = result.get("results", {}).get("compounds", [])
     if compounds:
@@ -493,7 +495,7 @@ async def get_mindex_context_for_query(query: str) -> str:
             formula = c.get("formula", c.get("molecular_formula", ""))
             compound_info.append(f"- {name} ({formula})")
         parts.append("COMPOUNDS FROM MINDEX:\n" + "\n".join(compound_info))
-    
+
     # Research
     research = result.get("results", {}).get("research", [])
     if research:
@@ -501,10 +503,10 @@ async def get_mindex_context_for_query(query: str) -> str:
         for r in research[:2]:
             title = r.get("title", "")
             year = r.get("year", "")
-            research_info.append(f"- \"{title}\" ({year})")
+            research_info.append(f'- "{title}" ({year})')
         parts.append("RESEARCH FROM MINDEX:\n" + "\n".join(research_info))
-    
+
     if not parts:
         return f"No MINDEX data found for query: {query}"
-    
+
     return "\n\n".join(parts)

@@ -50,7 +50,10 @@ class GitHubClient:
             await self._client.aclose()
 
     async def list_repos(
-        self, owner: Optional[str] = None, type_: str = "all", limit: int = 30,
+        self,
+        owner: Optional[str] = None,
+        type_: str = "all",
+        limit: int = 30,
     ) -> List[Dict[str, Any]]:
         """List repositories for owner (org or user)."""
         owner = owner or self.owner
@@ -58,10 +61,14 @@ class GitHubClient:
             return []
         client = await self._get_client()
         try:
-            r = await client.get(f"/orgs/{owner}/repos", params={"type": type_, "per_page": min(limit, 100)})
+            r = await client.get(
+                f"/orgs/{owner}/repos", params={"type": type_, "per_page": min(limit, 100)}
+            )
             if r.is_success:
                 return r.json()
-            r = await client.get(f"/users/{owner}/repos", params={"type": type_, "per_page": min(limit, 100)})
+            r = await client.get(
+                f"/users/{owner}/repos", params={"type": type_, "per_page": min(limit, 100)}
+            )
             if r.is_success:
                 return r.json()
             return []
@@ -94,7 +101,11 @@ class GitHubClient:
             return None
 
     async def list_issues(
-        self, owner: str, repo: str, state: str = "open", limit: int = 30,
+        self,
+        owner: str,
+        repo: str,
+        state: str = "open",
+        limit: int = 30,
     ) -> List[Dict[str, Any]]:
         """List issues in a repo."""
         client = await self._get_client()
@@ -110,7 +121,11 @@ class GitHubClient:
             return []
 
     async def create_issue(
-        self, owner: str, repo: str, title: str, body: Optional[str] = None,
+        self,
+        owner: str,
+        repo: str,
+        title: str,
+        body: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Create an issue."""
         if not self.token:
@@ -128,7 +143,11 @@ class GitHubClient:
             return None
 
     async def add_issue_comment(
-        self, owner: str, repo: str, issue_number: int, body: str,
+        self,
+        owner: str,
+        repo: str,
+        issue_number: int,
+        body: str,
     ) -> Optional[Dict[str, Any]]:
         """Add a comment to an issue or pull request."""
         if not self.token:
@@ -146,7 +165,11 @@ class GitHubClient:
             return None
 
     async def list_pull_requests(
-        self, owner: str, repo: str, state: str = "open", limit: int = 30,
+        self,
+        owner: str,
+        repo: str,
+        state: str = "open",
+        limit: int = 30,
     ) -> List[Dict[str, Any]]:
         """List pull requests."""
         client = await self._get_client()
@@ -200,7 +223,10 @@ class GitHubClient:
             return []
 
     async def list_workflow_runs(
-        self, owner: str, repo: str, limit: int = 20,
+        self,
+        owner: str,
+        repo: str,
+        limit: int = 20,
     ) -> List[Dict[str, Any]]:
         """List workflow runs (CI/CD)."""
         if not self.token:
@@ -218,7 +244,11 @@ class GitHubClient:
             return []
 
     async def trigger_workflow(
-        self, owner: str, repo: str, workflow_id: str, ref: str = "main",
+        self,
+        owner: str,
+        repo: str,
+        workflow_id: str,
+        ref: str = "main",
     ) -> Optional[Dict[str, Any]]:
         """Trigger a workflow dispatch."""
         if not self.token:

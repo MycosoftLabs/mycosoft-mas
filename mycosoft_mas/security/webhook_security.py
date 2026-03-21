@@ -28,9 +28,14 @@ def verify_slack_signature(
         return False
 
     sig_basestring = f"v0:{timestamp}:{body.decode('utf-8')}"
-    computed = "v0=" + hmac.new(
-        secret.encode(), sig_basestring.encode(), hashlib.sha256,
-    ).hexdigest()
+    computed = (
+        "v0="
+        + hmac.new(
+            secret.encode(),
+            sig_basestring.encode(),
+            hashlib.sha256,
+        ).hexdigest()
+    )
     return hmac.compare_digest(computed, signature)
 
 
@@ -48,6 +53,7 @@ def verify_discord_signature(
 
     try:
         from nacl.signing import VerifyKey
+
         verify_key = VerifyKey(bytes.fromhex(key_hex))
         message = timestamp.encode() + body
         verify_key.verify(message, bytes.fromhex(signature))
@@ -71,6 +77,7 @@ class RateLimiter:
         if self._redis is None:
             try:
                 import redis.asyncio as aioredis
+
                 self._redis = aioredis.from_url(self._redis_url, decode_responses=True)
             except Exception as exc:
                 logger.debug("Redis unavailable for rate limiting: %s", exc)
@@ -108,6 +115,7 @@ class RateLimiter:
 def sanitize_input(text: str) -> str:
     """Strip common injection patterns from user input."""
     import re
+
     text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL)
     text = re.sub(r"javascript:", "", text, flags=re.IGNORECASE)
     dangerous_patterns = [

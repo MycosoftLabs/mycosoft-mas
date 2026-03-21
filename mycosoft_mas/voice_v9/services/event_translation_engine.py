@@ -7,8 +7,7 @@ Uses MDP_PROTOCOL_CONTRACTS_MAR07_2026.md for device/gateway payload normalizati
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from mycosoft_mas.voice_v9.schemas import EventSource, SpeechworthyEvent
 
@@ -45,7 +44,9 @@ class EventTranslationEngine:
             return self._translate_system(session_id, raw)
         return None
 
-    def _translate_mdp_device(self, session_id: str, raw: Dict[str, Any]) -> Optional[SpeechworthyEvent]:
+    def _translate_mdp_device(
+        self, session_id: str, raw: Dict[str, Any]
+    ) -> Optional[SpeechworthyEvent]:
         """
         MDP device telemetry/event per MDP_PROTOCOL_CONTRACTS.
         Supports: TELEMETRY, EVENT, HELLO shapes from gateway/device upstream.
@@ -91,7 +92,9 @@ class EventTranslationEngine:
             metadata={"device_id": device_id, "event_type": event_type},
         )
 
-    def _translate_mas_task(self, session_id: str, raw: Dict[str, Any]) -> Optional[SpeechworthyEvent]:
+    def _translate_mas_task(
+        self, session_id: str, raw: Dict[str, Any]
+    ) -> Optional[SpeechworthyEvent]:
         """MAS task started/completed/failed."""
         task_id = raw.get("task_id") or raw.get("id", "unknown")
         status = raw.get("status") or raw.get("state", "unknown")
@@ -126,7 +129,9 @@ class EventTranslationEngine:
             metadata={"task_id": task_id, "status": status},
         )
 
-    def _translate_tool_completion(self, session_id: str, raw: Dict[str, Any]) -> Optional[SpeechworthyEvent]:
+    def _translate_tool_completion(
+        self, session_id: str, raw: Dict[str, Any]
+    ) -> Optional[SpeechworthyEvent]:
         """Tool/agent completion event."""
         tool = raw.get("tool") or raw.get("agent", "tool")
         success = raw.get("success", True)
@@ -190,7 +195,9 @@ class EventTranslationEngine:
             metadata={},
         )
 
-    def _translate_mycorrhizae(self, session_id: str, raw: Dict[str, Any]) -> Optional[SpeechworthyEvent]:
+    def _translate_mycorrhizae(
+        self, session_id: str, raw: Dict[str, Any]
+    ) -> Optional[SpeechworthyEvent]:
         """Mycorrhizae/MMP telemetry (staged; contract from MYCORRHIZAE_MYCA_TELEMETRY_BRIDGE)."""
         device_id = raw.get("device_id") or raw.get("deviceId", "unknown")
         payload_type = raw.get("payload_type") or raw.get("type", "telemetry")
@@ -206,7 +213,9 @@ class EventTranslationEngine:
             metadata={"device_id": device_id, "payload_type": payload_type},
         )
 
-    def _translate_system(self, session_id: str, raw: Dict[str, Any]) -> Optional[SpeechworthyEvent]:
+    def _translate_system(
+        self, session_id: str, raw: Dict[str, Any]
+    ) -> Optional[SpeechworthyEvent]:
         """System-level events."""
         summary = raw.get("summary") or raw.get("message", "System event")
         return SpeechworthyEvent(

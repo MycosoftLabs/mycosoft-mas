@@ -26,16 +26,12 @@ class PayPalClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.client_id = self.config.get(
-            "client_id", os.environ.get("PAYPAL_CLIENT_ID", "")
-        )
+        self.client_id = self.config.get("client_id", os.environ.get("PAYPAL_CLIENT_ID", ""))
         self.client_secret = self.config.get(
             "client_secret", os.environ.get("PAYPAL_CLIENT_SECRET", "")
         )
         self.sandbox = self.config.get("sandbox", True)
-        self.base_url = (
-            PAYPAL_API_BASE_SANDBOX if self.sandbox else PAYPAL_API_BASE_LIVE
-        )
+        self.base_url = PAYPAL_API_BASE_SANDBOX if self.sandbox else PAYPAL_API_BASE_LIVE
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
         self._access_token: Optional[str] = None

@@ -14,8 +14,7 @@ Created: March 3, 2026
 
 import logging
 import time
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -205,9 +204,7 @@ class ConstraintEngine:
                     : min(vs, len(index.start_mask))
                 ]
         else:
-            valid_tokens = self.get_valid_tokens_at_step(
-                index_name, current_states, step
-            )
+            valid_tokens = self.get_valid_tokens_at_step(index_name, current_states, step)
             for b, state in enumerate(current_states):
                 for token, _ in valid_tokens.get(state, []):
                     if 0 <= token < vs:
@@ -260,9 +257,7 @@ class ConstraintEngine:
             logits = logit_fn(partial_seqs, step)
 
             # Build constraint mask
-            mask = self.build_logit_mask(
-                index_name, current_states, step, logits.shape[-1]
-            )
+            mask = self.build_logit_mask(index_name, current_states, step, logits.shape[-1])
 
             # Count violations that would be blocked
             for b in range(len(beams)):
@@ -276,9 +271,7 @@ class ConstraintEngine:
 
             # Expand beams
             candidates: List[Tuple[float, List[int], int]] = []
-            valid_tokens_map = self.get_valid_tokens_at_step(
-                index_name, current_states, step
-            )
+            valid_tokens_map = self.get_valid_tokens_at_step(index_name, current_states, step)
 
             for b, (score, seq, state) in enumerate(beams):
                 children = valid_tokens_map.get(state, [])
@@ -286,9 +279,7 @@ class ConstraintEngine:
                     if 0 <= token < masked_logits.shape[1]:
                         token_score = float(masked_logits[b, token])
                         if token_score > -1e6:
-                            candidates.append(
-                                (score + token_score, seq + [token], next_state)
-                            )
+                            candidates.append((score + token_score, seq + [token], next_state))
 
             if not candidates:
                 break

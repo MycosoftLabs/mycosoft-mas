@@ -4,8 +4,6 @@ Unit tests for helpers; persist_search_to_mindex is tested with mocked HTTP.
 Created: March 14, 2026
 """
 
-import pytest
-
 from mycosoft_mas.consciousness.search_registration import (
     _normalize_query,
     _result_hash,

@@ -4,11 +4,11 @@ Tests for Agent Event Bus - February 9, 2026
 Unit tests for event schema, agent bus router, and session management.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timezone
+from unittest.mock import patch
 
-from mycosoft_mas.realtime.event_schema import AgentEvent, EVENT_TYPES
+import pytest
+
+from mycosoft_mas.realtime.event_schema import AgentEvent
 
 
 class TestAgentEventSchema:

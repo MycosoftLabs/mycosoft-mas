@@ -71,9 +71,7 @@ async def session_heartbeat(
     agent: AgentAccount = Depends(require_raas_auth),
 ) -> SessionHeartbeatResponse:
     """Send heartbeat to keep session active. Deducts 1 minute per elapsed minute."""
-    success, balance, minutes_used, err = await heartbeat_session(
-        body.session_id, agent.agent_id
-    )
+    success, balance, minutes_used, err = await heartbeat_session(body.session_id, agent.agent_id)
     if not success and err == "insufficient_balance":
         raise _402("Insufficient balance to continue session", balance_minutes=balance)
     if not success and err == "session_not_found":
@@ -104,9 +102,7 @@ async def session_stop(
     agent: AgentAccount = Depends(require_raas_auth),
 ) -> SessionStopResponse:
     """Stop an active session."""
-    success, total_used, balance, err = await stop_session(
-        body.session_id, agent.agent_id
-    )
+    success, total_used, balance, err = await stop_session(body.session_id, agent.agent_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -133,9 +129,7 @@ async def get_usage_endpoint(
     limit: int = 20,
 ) -> BalanceUsageResponse:
     """Get balance and recent session usage."""
-    bal, active_session_id, recent_sessions = await get_usage(
-        agent.agent_id, limit=limit
-    )
+    bal, active_session_id, recent_sessions = await get_usage(agent.agent_id, limit=limit)
     return BalanceUsageResponse(
         agent_id=bal.agent_id,
         balance_minutes=bal.balance_minutes,

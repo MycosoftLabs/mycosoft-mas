@@ -20,13 +20,13 @@ try:
     from .corporate_agents import (
         CEOAgent,
         CFOAgent,
-        CTOAgent,
         COOAgent,
-        LegalAgent,
+        CTOAgent,
         HRAgent,
+        LegalAgent,
         MarketingAgent,
-        SalesAgent,
         ProcurementAgent,
+        SalesAgent,
     )
 except Exception as e:
     _log.warning("v2 corporate_agents unavailable: %s", e)
@@ -35,14 +35,14 @@ except Exception as e:
 
 try:
     from .infrastructure_agents import (
-        ProxmoxAgent,
-        DockerAgent,
-        NetworkAgent,
-        StorageAgent,
-        MonitoringAgent,
-        DeploymentAgent,
         CloudflareAgent,
+        DeploymentAgent,
+        DockerAgent,
+        MonitoringAgent,
+        NetworkAgent,
+        ProxmoxAgent,
         SecurityAgent,
+        StorageAgent,
     )
 except Exception as e:
     _log.warning("v2 infrastructure_agents unavailable: %s", e)
@@ -51,12 +51,12 @@ except Exception as e:
 
 try:
     from .device_agents import (
-        MycoBrainCoordinatorAgent,
-        MycoBrainDeviceAgent,
         BME688SensorAgent,
         BME690SensorAgent,
-        LoRaGatewayAgent,
         FirmwareAgent,
+        LoRaGatewayAgent,
+        MycoBrainCoordinatorAgent,
+        MycoBrainDeviceAgent,
         MycoDroneAgent,
         SpectrometerAgent,
     )
@@ -67,11 +67,11 @@ except Exception as e:
 
 try:
     from .data_agents import (
-        MindexAgent,
         ETLAgent,
-        SearchAgent,
-        RouteMonitorAgent,
+        MindexAgent,
         NLMAgent,
+        RouteMonitorAgent,
+        SearchAgent,
     )
 except Exception as e:
     _log.warning("v2 data_agents unavailable: %s", e)
@@ -79,17 +79,17 @@ except Exception as e:
 
 try:
     from .integration_agents import (
-        N8NAgent,
-        ElevenLabsAgent,
-        ZapierAgent,
-        IFTTTAgent,
-        OpenAIAgent,
         AnthropicAgent,
+        ElevenLabsAgent,
         GeminiAgent,
         GrokAgent,
-        SupabaseAgent,
+        IFTTTAgent,
+        N8NAgent,
         NotionAgent,
+        OpenAIAgent,
+        SupabaseAgent,
         WebsiteAgent,
+        ZapierAgent,
     )
 except Exception as e:
     _log.warning("v2 integration_agents unavailable: %s", e)
@@ -100,10 +100,10 @@ except Exception as e:
 try:
     from .security_agents import (
         GuardianAgentV2,
-        SecurityMonitorAgentV2,
-        ThreatResponseAgentV2,
         RiskLevel,
+        SecurityMonitorAgentV2,
         ThreatCategory,
+        ThreatResponseAgentV2,
     )
 except Exception as e:
     _log.warning("v2 security_agents unavailable: %s", e)
@@ -113,10 +113,10 @@ except Exception as e:
 try:
     from .autonomous_economy_agent import (
         AutonomousEconomyAgent,
-        WalletType,
-        TransactionType,
-        ServicePricing,
         ResourceMarketplace,
+        ServicePricing,
+        TransactionType,
+        WalletType,
     )
 except Exception as e:
     _log.warning("v2 autonomous_economy_agent unavailable: %s", e)
@@ -125,9 +125,9 @@ except Exception as e:
 
 try:
     from .taxonomy_ingestion_agent import (
-        TaxonomyIngestionAgent,
-        IngestionTarget,
         IngestionState,
+        IngestionTarget,
+        TaxonomyIngestionAgent,
     )
 except Exception as e:
     _log.warning("v2 taxonomy_ingestion_agent unavailable: %s", e)
@@ -206,17 +206,77 @@ __all__ = [
 def _build_registry():
     reg = {}
     if CEOAgent is not None:
-        reg.update({"ceo-agent": CEOAgent, "cfo-agent": CFOAgent, "cto-agent": CTOAgent, "coo-agent": COOAgent, "legal-agent": LegalAgent, "hr-agent": HRAgent, "marketing-agent": MarketingAgent, "sales-agent": SalesAgent, "procurement-agent": ProcurementAgent})
+        reg.update(
+            {
+                "ceo-agent": CEOAgent,
+                "cfo-agent": CFOAgent,
+                "cto-agent": CTOAgent,
+                "coo-agent": COOAgent,
+                "legal-agent": LegalAgent,
+                "hr-agent": HRAgent,
+                "marketing-agent": MarketingAgent,
+                "sales-agent": SalesAgent,
+                "procurement-agent": ProcurementAgent,
+            }
+        )
     if ProxmoxAgent is not None:
-        reg.update({"proxmox-agent": ProxmoxAgent, "docker-agent": DockerAgent, "network-agent": NetworkAgent, "storage-agent": StorageAgent, "monitoring-agent": MonitoringAgent, "deployment-agent": DeploymentAgent, "cloudflare-agent": CloudflareAgent, "security-agent": SecurityAgent})
+        reg.update(
+            {
+                "proxmox-agent": ProxmoxAgent,
+                "docker-agent": DockerAgent,
+                "network-agent": NetworkAgent,
+                "storage-agent": StorageAgent,
+                "monitoring-agent": MonitoringAgent,
+                "deployment-agent": DeploymentAgent,
+                "cloudflare-agent": CloudflareAgent,
+                "security-agent": SecurityAgent,
+            }
+        )
     if MycoBrainCoordinatorAgent is not None:
-        reg.update({"mycobrain-coordinator": MycoBrainCoordinatorAgent, "bme688-agent": BME688SensorAgent, "bme690-agent": BME690SensorAgent, "lora-gateway-agent": LoRaGatewayAgent, "firmware-agent": FirmwareAgent, "mycodrone-agent": MycoDroneAgent, "spectrometer-agent": SpectrometerAgent})
+        reg.update(
+            {
+                "mycobrain-coordinator": MycoBrainCoordinatorAgent,
+                "bme688-agent": BME688SensorAgent,
+                "bme690-agent": BME690SensorAgent,
+                "lora-gateway-agent": LoRaGatewayAgent,
+                "firmware-agent": FirmwareAgent,
+                "mycodrone-agent": MycoDroneAgent,
+                "spectrometer-agent": SpectrometerAgent,
+            }
+        )
     if MindexAgent is not None:
-        reg.update({"mindex-agent": MindexAgent, "etl-agent": ETLAgent, "search-agent": SearchAgent, "nlm-agent": NLMAgent})
+        reg.update(
+            {
+                "mindex-agent": MindexAgent,
+                "etl-agent": ETLAgent,
+                "search-agent": SearchAgent,
+                "nlm-agent": NLMAgent,
+            }
+        )
     if N8NAgent is not None:
-        reg.update({"n8n-agent": N8NAgent, "elevenlabs-agent": ElevenLabsAgent, "zapier-agent": ZapierAgent, "ifttt-agent": IFTTTAgent, "openai-agent": OpenAIAgent, "anthropic-agent": AnthropicAgent, "gemini-agent": GeminiAgent, "grok-agent": GrokAgent, "supabase-agent": SupabaseAgent, "notion-agent": NotionAgent, "website-agent": WebsiteAgent})
+        reg.update(
+            {
+                "n8n-agent": N8NAgent,
+                "elevenlabs-agent": ElevenLabsAgent,
+                "zapier-agent": ZapierAgent,
+                "ifttt-agent": IFTTTAgent,
+                "openai-agent": OpenAIAgent,
+                "anthropic-agent": AnthropicAgent,
+                "gemini-agent": GeminiAgent,
+                "grok-agent": GrokAgent,
+                "supabase-agent": SupabaseAgent,
+                "notion-agent": NotionAgent,
+                "website-agent": WebsiteAgent,
+            }
+        )
     if GuardianAgentV2 is not None:
-        reg.update({"guardian-agent-v2": GuardianAgentV2, "security-monitor-agent-v2": SecurityMonitorAgentV2, "threat-response-agent-v2": ThreatResponseAgentV2})
+        reg.update(
+            {
+                "guardian-agent-v2": GuardianAgentV2,
+                "security-monitor-agent-v2": SecurityMonitorAgentV2,
+                "threat-response-agent-v2": ThreatResponseAgentV2,
+            }
+        )
     if AutonomousEconomyAgent is not None:
         reg.update({"autonomous-economy-agent": AutonomousEconomyAgent})
     if TaxonomyIngestionAgent is not None:

@@ -25,6 +25,7 @@ def _get_engine():
     global _engine
     if _engine is None:
         from mycosoft_mas.ethics import EthicsEngine
+
         _engine = EthicsEngine()
     return _engine
 
@@ -33,6 +34,7 @@ def _get_auditor():
     global _auditor
     if _auditor is None:
         from mycosoft_mas.agents.incentive_auditor_agent import IncentiveAuditorAgent
+
         _auditor = IncentiveAuditorAgent()
     return _auditor
 
@@ -41,6 +43,7 @@ def _get_attention_budget():
     global _attention_budget
     if _attention_budget is None:
         from mycosoft_mas.ethics.attention_budget import AttentionBudget
+
         _attention_budget = AttentionBudget()
     return _attention_budget
 
@@ -49,6 +52,7 @@ def _get_simulator():
     global _simulator
     if _simulator is None:
         from mycosoft_mas.ethics.simulator import SecondOrderSimulator
+
         _simulator = SecondOrderSimulator()
     return _simulator
 
@@ -115,7 +119,12 @@ async def simulate(payload: SimulateInput) -> Dict[str, Any]:
     return {
         "action": result.action,
         "causal_chain": [
-            {"description": n.description, "order": n.order, "risk_flag": n.risk_flag, "confidence": n.confidence}
+            {
+                "description": n.description,
+                "order": n.order,
+                "risk_flag": n.risk_flag,
+                "confidence": n.confidence,
+            }
             for n in result.causal_chain
         ],
         "risk_flags": result.risk_flags,
@@ -126,7 +135,12 @@ async def simulate(payload: SimulateInput) -> Dict[str, Any]:
 @router.get("/constitution")
 async def get_constitution() -> Dict[str, Any]:
     """Return the System Constitution for transparency."""
-    path = Path(__file__).resolve().parent.parent.parent / "myca" / "constitution" / "SYSTEM_CONSTITUTION.md"
+    path = (
+        Path(__file__).resolve().parent.parent.parent
+        / "myca"
+        / "constitution"
+        / "SYSTEM_CONSTITUTION.md"
+    )
     if not path.exists():
         raise HTTPException(status_code=404, detail="System Constitution not found")
     text = path.read_text(encoding="utf-8")
@@ -137,10 +151,10 @@ async def get_constitution() -> Dict[str, Any]:
 async def ethics_health() -> Dict[str, Any]:
     """Ethics engine health check."""
     try:
-        engine = _get_engine()
-        auditor = _get_auditor()
-        budget = _get_attention_budget()
-        sim = _get_simulator()
+        _get_engine()
+        _get_auditor()
+        _get_attention_budget()
+        _get_simulator()
         return {
             "status": "healthy",
             "components": {

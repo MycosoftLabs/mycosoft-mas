@@ -5,11 +5,12 @@ Comprehensive API endpoints for MINDEX species, images, sequences, research, and
 This is the canonical data layer for all Mycosoft applications.
 """
 
-from fastapi import APIRouter, HTTPException, Query, Body, Path, Depends
-from typing import Optional, List, Dict, Any, Union
-from pydantic import BaseModel, Field
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, HTTPException, Path, Query
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ router = APIRouter(prefix="/mindex", tags=["MINDEX"])
 # =============================================================================
 # Request/Response Models
 # =============================================================================
+
 
 class SpeciesSearchRequest(BaseModel):
     query: str
@@ -110,6 +112,7 @@ class CompoundResponse(BaseModel):
 
 class WebResultResponse(BaseModel):
     """A semantic web search result (Exa)."""
+
     url: str
     title: str
     score: float = 0.0
@@ -136,16 +139,19 @@ class UnifiedSearchResponse(BaseModel):
 # Database connection helper (placeholder - inject real connection)
 # =============================================================================
 
+
 async def get_db():
     """Get database connection. Override in production."""
     # This should be replaced with actual database connection
     from mycosoft_mas.mindex.database import get_mindex_db
+
     return await get_mindex_db()
 
 
 # =============================================================================
 # Species Endpoints
 # =============================================================================
+
 
 @router.get("/species/search", response_model=List[SpeciesResponse])
 async def search_species(
@@ -156,12 +162,12 @@ async def search_species(
 ):
     """
     Search for fungal species by name.
-    
+
     Searches scientific names, common names, and synonyms.
     """
     try:
         db = await get_db()
-        
+
         query = """
         SELECT 
             t.id, t.scientific_name, t.common_name, t.kingdom, t.phylum,
@@ -180,14 +186,14 @@ async def search_species(
             t.scientific_name
         LIMIT $3 OFFSET $4
         """
-        
+
         search_pattern = f"%{q}%"
         exact_pattern = f"{q}%"
-        
+
         rows = await db.fetch(query, search_pattern, exact_pattern, limit, offset)
-        
+
         return [SpeciesResponse(**dict(row)) for row in rows]
-        
+
     except Exception as e:
         logger.error(f"Species search error: {e}")
         # Fallback to empty results on error
@@ -201,7 +207,7 @@ async def get_species(
     """Get detailed species information by ID."""
     try:
         db = await get_db()
-        
+
         query = """
         SELECT 
             t.id, t.scientific_name, t.common_name, t.kingdom, t.phylum,
@@ -213,14 +219,14 @@ async def get_species(
         LEFT JOIN core.species_with_images si ON t.scientific_name = si.scientific_name
         WHERE t.id = $1
         """
-        
+
         row = await db.fetchone(query, species_id)
-        
+
         if not row:
             raise HTTPException(status_code=404, detail="Species not found")
-        
+
         return SpeciesResponse(**dict(row))
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -235,7 +241,7 @@ async def get_species_by_name(
     """Get species by scientific name."""
     try:
         db = await get_db()
-        
+
         query = """
         SELECT 
             t.id, t.scientific_name, t.common_name, t.kingdom, t.phylum,
@@ -248,14 +254,14 @@ async def get_species_by_name(
         WHERE t.scientific_name ILIKE $1
         LIMIT 1
         """
-        
+
         row = await db.fetchone(query, scientific_name)
-        
+
         if not row:
             raise HTTPException(status_code=404, detail="Species not found")
-        
+
         return SpeciesResponse(**dict(row))
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -267,6 +273,7 @@ async def get_species_by_name(
 # Images Endpoints
 # =============================================================================
 
+
 @router.get("/images/for-species/{species_id}", response_model=List[ImageResponse])
 async def get_images_for_species(
     species_id: int = Path(..., description="Species ID"),
@@ -275,7 +282,7 @@ async def get_images_for_species(
     """Get images for a species by ID."""
     try:
         db = await get_db()
-        
+
         query = """
         SELECT 
             si.id::text, si.taxon_id as species_id, si.scientific_name,
@@ -289,11 +296,11 @@ async def get_images_for_species(
         ORDER BY si.is_primary DESC, si.quality_score DESC
         LIMIT $2
         """
-        
+
         rows = await db.fetch(query, species_id, limit)
-        
+
         return [ImageResponse(**dict(row)) for row in rows]
-        
+
     except Exception as e:
         logger.error(f"Get images error: {e}")
         return []
@@ -307,7 +314,7 @@ async def search_images(
     """Search images by species name."""
     try:
         db = await get_db()
-        
+
         query = """
         SELECT 
             si.id::text, si.taxon_id as species_id, si.scientific_name,
@@ -321,11 +328,11 @@ async def search_images(
         ORDER BY si.is_primary DESC, si.quality_score DESC
         LIMIT $2
         """
-        
+
         rows = await db.fetch(query, f"%{q}%", limit)
-        
+
         return [ImageResponse(**dict(row)) for row in rows]
-        
+
     except Exception as e:
         logger.error(f"Search images error: {e}")
         return []
@@ -334,6 +341,7 @@ async def search_images(
 # =============================================================================
 # DNA Sequences Endpoints
 # =============================================================================
+
 
 @router.get("/sequences/for-species/{species_id}", response_model=List[SequenceResponse])
 async def get_sequences_for_species(
@@ -346,12 +354,13 @@ async def get_sequences_for_species(
     if gene_region:
         try:
             from mycosoft_mas.llm.constrained.validator import get_static_validator
+
             validator = get_static_validator()
             if not validator.is_valid_gene_region(gene_region):
                 raise HTTPException(
                     400,
                     f"Invalid gene_region '{gene_region}'. "
-                    f"Valid regions include: ITS, LSU, SSU, COX1, TEF1, RPB2, etc."
+                    f"Valid regions include: ITS, LSU, SSU, COX1, TEF1, RPB2, etc.",
                 )
         except ImportError:
             pass
@@ -377,11 +386,11 @@ async def get_sequences_for_species(
         else:
             query += " ORDER BY ds.sequence_length DESC LIMIT $2"
             params.append(limit)
-        
+
         rows = await db.fetch(query, *params)
-        
+
         return [SequenceResponse(**dict(row)) for row in rows]
-        
+
     except Exception as e:
         logger.error(f"Get sequences error: {e}")
         return []
@@ -396,7 +405,7 @@ async def search_sequences(
     """Search DNA sequences by species name or accession."""
     try:
         db = await get_db()
-        
+
         query = """
         SELECT 
             ds.id, ds.accession, ds.scientific_name, ds.gene_region,
@@ -405,9 +414,9 @@ async def search_sequences(
         FROM core.dna_sequences ds
         WHERE (ds.scientific_name ILIKE $1 OR ds.accession ILIKE $1)
         """
-        
+
         params = [f"%{q}%"]
-        
+
         if gene_region:
             query += " AND ds.gene_region = $2"
             params.append(gene_region)
@@ -416,11 +425,11 @@ async def search_sequences(
         else:
             query += " ORDER BY ds.sequence_length DESC LIMIT $2"
             params.append(limit)
-        
+
         rows = await db.fetch(query, *params)
-        
+
         return [SequenceResponse(**dict(row)) for row in rows]
-        
+
     except Exception as e:
         logger.error(f"Search sequences error: {e}")
         return []
@@ -433,7 +442,7 @@ async def get_sequence_by_accession(
     """Get a specific DNA sequence by accession number."""
     try:
         db = await get_db()
-        
+
         query = """
         SELECT 
             ds.id, ds.accession, ds.scientific_name, ds.gene_region,
@@ -442,14 +451,14 @@ async def get_sequence_by_accession(
         FROM core.dna_sequences ds
         WHERE ds.accession = $1
         """
-        
+
         row = await db.fetchone(query, accession)
-        
+
         if not row:
             raise HTTPException(status_code=404, detail="Sequence not found")
-        
+
         return SequenceResponse(**dict(row))
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -461,6 +470,7 @@ async def get_sequence_by_accession(
 # Research Papers Endpoints
 # =============================================================================
 
+
 @router.get("/research/for-species/{species_id}", response_model=List[ResearchPaperResponse])
 async def get_research_for_species(
     species_id: int = Path(..., description="Species ID"),
@@ -469,16 +479,16 @@ async def get_research_for_species(
     """Get research papers related to a species."""
     try:
         db = await get_db()
-        
+
         # First get the species name
         species_query = "SELECT scientific_name FROM core.taxon WHERE id = $1"
         species_row = await db.fetchone(species_query, species_id)
-        
+
         if not species_row:
             return []
-        
+
         scientific_name = species_row["scientific_name"]
-        
+
         query = """
         SELECT 
             rp.id, rp.pmid, rp.doi, rp.title, rp.authors, rp.journal,
@@ -489,11 +499,11 @@ async def get_research_for_species(
         ORDER BY rp.year DESC, rp.citation_count DESC
         LIMIT $2
         """
-        
+
         rows = await db.fetch(query, scientific_name, limit)
-        
+
         return [ResearchPaperResponse(**dict(row)) for row in rows]
-        
+
     except Exception as e:
         logger.error(f"Get research error: {e}")
         return []
@@ -509,7 +519,7 @@ async def search_research(
     """Search research papers by title, abstract, or keywords."""
     try:
         db = await get_db()
-        
+
         query = """
         SELECT 
             rp.id, rp.pmid, rp.doi, rp.title, rp.authors, rp.journal,
@@ -523,27 +533,27 @@ async def search_research(
             OR $2 = ANY(rp.related_species)
         )
         """
-        
+
         params = [f"%{q}%", q]
         param_idx = 3
-        
+
         if year_from:
             query += f" AND rp.year >= ${param_idx}"
             params.append(year_from)
             param_idx += 1
-        
+
         if year_to:
             query += f" AND rp.year <= ${param_idx}"
             params.append(year_to)
             param_idx += 1
-        
+
         query += f" ORDER BY rp.year DESC, rp.citation_count DESC LIMIT ${param_idx}"
         params.append(limit)
-        
+
         rows = await db.fetch(query, *params)
-        
+
         return [ResearchPaperResponse(**dict(row)) for row in rows]
-        
+
     except Exception as e:
         logger.error(f"Search research error: {e}")
         return []
@@ -553,6 +563,7 @@ async def search_research(
 # Compounds Endpoints
 # =============================================================================
 
+
 @router.get("/compounds/for-species/{species_id}", response_model=List[CompoundResponse])
 async def get_compounds_for_species(
     species_id: int = Path(..., description="Species ID"),
@@ -561,16 +572,16 @@ async def get_compounds_for_species(
     """Get chemical compounds produced by a species."""
     try:
         db = await get_db()
-        
+
         # First get the species name
         species_query = "SELECT scientific_name FROM core.taxon WHERE id = $1"
         species_row = await db.fetchone(species_query, species_id)
-        
+
         if not species_row:
             return []
-        
+
         scientific_name = species_row["scientific_name"]
-        
+
         query = """
         SELECT 
             c.id, c.name, c.iupac_name, c.molecular_formula, c.molecular_weight,
@@ -581,11 +592,11 @@ async def get_compounds_for_species(
         ORDER BY c.name
         LIMIT $2
         """
-        
+
         rows = await db.fetch(query, scientific_name, limit)
-        
+
         return [CompoundResponse(**dict(row)) for row in rows]
-        
+
     except Exception as e:
         logger.error(f"Get compounds error: {e}")
         return []
@@ -602,13 +613,14 @@ async def search_compounds(
     if compound_class:
         try:
             from mycosoft_mas.llm.constrained.validator import get_static_validator
+
             validator = get_static_validator()
             if not validator.is_valid_compound_class(compound_class):
                 raise HTTPException(
                     400,
                     f"Invalid compound_class '{compound_class}'. "
                     f"Valid classes include: Alkaloid, Terpenoid, Polyketide, "
-                    f"Polysaccharide, Flavonoid, Beta-glucan, etc."
+                    f"Polysaccharide, Flavonoid, Beta-glucan, etc.",
                 )
         except ImportError:
             pass
@@ -634,11 +646,11 @@ async def search_compounds(
         else:
             query += " ORDER BY c.name LIMIT $2"
             params.append(limit)
-        
+
         rows = await db.fetch(query, *params)
-        
+
         return [CompoundResponse(**dict(row)) for row in rows]
-        
+
     except Exception as e:
         logger.error(f"Search compounds error: {e}")
         return []
@@ -648,6 +660,7 @@ async def search_compounds(
 # Unified Search Endpoint
 # =============================================================================
 
+
 @router.get("/unified/search", response_model=UnifiedSearchResponse)
 async def unified_search(
     q: str = Query(..., min_length=2, description="Search query"),
@@ -656,37 +669,39 @@ async def unified_search(
     include_sequences: bool = Query(False),
     include_research: bool = Query(False),
     include_compounds: bool = Query(False),
-    include_web: bool = Query(False, description="Include Exa semantic web results (requires EXA_API_KEY)"),
+    include_web: bool = Query(
+        False, description="Include Exa semantic web results (requires EXA_API_KEY)"
+    ),
     limit: int = Query(10, ge=1, le=50),
 ):
     """
     Unified search across all MINDEX data types.
-    
+
     This is the primary endpoint for search applications.
     """
     results = UnifiedSearchResponse(query=q, total_results=0)
-    
+
     try:
         if include_species:
             species = await search_species(q=q, limit=limit)
             results.species = species
             results.total_results += len(species)
-        
+
         if include_images:
             images = await search_images(q=q, limit=limit)
             results.images = images
             results.total_results += len(images)
-        
+
         if include_sequences:
             sequences = await search_sequences(q=q, limit=limit)
             results.sequences = sequences
             results.total_results += len(sequences)
-        
+
         if include_research:
             papers = await search_research(q=q, limit=limit)
             results.papers = papers
             results.total_results += len(papers)
-        
+
         if include_compounds:
             compounds = await search_compounds(q=q, limit=limit)
             results.compounds = compounds
@@ -722,10 +737,10 @@ async def unified_search(
                         await exa.close()
                     except Exception:
                         pass
-        
+
     except Exception as e:
         logger.error(f"Unified search error: {e}")
-    
+
     return results
 
 
@@ -733,14 +748,15 @@ async def unified_search(
 # Stats Endpoint
 # =============================================================================
 
+
 @router.get("/stats")
 async def get_mindex_stats():
     """Get MINDEX database statistics."""
     try:
         db = await get_db()
-        
+
         stats = {}
-        
+
         # Count tables
         tables = [
             ("species", "core.taxon"),
@@ -750,18 +766,18 @@ async def get_mindex_stats():
             ("compounds", "core.compounds"),
             ("blobs", "core.blobs"),
         ]
-        
+
         for name, table in tables:
             try:
                 row = await db.fetchone(f"SELECT COUNT(*) as count FROM {table}")
                 stats[name] = row["count"] if row else 0
             except Exception:
                 stats[name] = 0
-        
+
         stats["last_updated"] = datetime.utcnow().isoformat()
-        
+
         return stats
-        
+
     except Exception as e:
         logger.error(f"Get stats error: {e}")
         return {

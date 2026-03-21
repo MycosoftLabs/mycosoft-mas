@@ -11,16 +11,20 @@ Features:
 - Tag-based categorization
 """
 
-import os
 import logging
-import asyncio
-import httpx
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 from urllib.parse import urljoin
 
+import httpx
+
 from mycosoft_mas.registry.system_registry import (
-    get_registry, SystemRegistry, APIInfo, SystemInfo, SystemType
+    APIInfo,
+    SystemInfo,
+    SystemRegistry,
+    SystemType,
+    get_registry,
 )
 
 logger = logging.getLogger("APIIndexer")
@@ -36,32 +40,32 @@ SYSTEM_CONFIGS = {
         "type": SystemType.MAS,
         "url": os.getenv("MAS_URL", "http://192.168.0.188:8001"),
         "openapi_path": "/openapi.json",
-        "description": "Mycosoft Multi-Agent System Orchestrator"
+        "description": "Mycosoft Multi-Agent System Orchestrator",
     },
     "Website": {
         "type": SystemType.WEBSITE,
         "url": os.getenv("WEBSITE_URL", "http://192.168.0.187:3000"),
         "openapi_path": None,  # Next.js API routes
-        "description": "Mycosoft Website and Dashboard"
+        "description": "Mycosoft Website and Dashboard",
     },
     "MINDEX": {
         "type": SystemType.MINDEX,
         "url": os.getenv("MINDEX_URL", "http://192.168.0.189:8000"),
         "openapi_path": "/openapi.json",
-        "description": "Memory Index and Knowledge Graph Service"
+        "description": "Memory Index and Knowledge Graph Service",
     },
     "NatureOS": {
         "type": SystemType.NATUREOS,
         "url": os.getenv("NATUREOS_URL", "http://192.168.0.188:5000"),
         "openapi_path": "/swagger/v1/swagger.json",  # .NET Core Swagger
-        "description": "Nature Operating System Backend"
+        "description": "Nature Operating System Backend",
     },
     "NLM": {
         "type": SystemType.NLM,
         "url": os.getenv("NLM_URL", "http://192.168.0.188:8200"),
         "openapi_path": "/openapi.json",
-        "description": "Nature Learning Model Service"
-    }
+        "description": "Nature Learning Model Service",
+    },
 }
 
 
@@ -69,32 +73,32 @@ class APIIndexer:
     """
     Discovers and indexes APIs across all Mycosoft systems.
     """
-    
+
     def __init__(self, registry: Optional[SystemRegistry] = None):
         self._registry = registry or get_registry()
         self._http_client: Optional[httpx.AsyncClient] = None
         self._indexed_apis: Set[str] = set()
-    
+
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create HTTP client."""
         if self._http_client is None or self._http_client.is_closed:
             self._http_client = httpx.AsyncClient(timeout=30.0)
         return self._http_client
-    
+
     async def close(self) -> None:
         """Close HTTP client."""
         if self._http_client:
             await self._http_client.aclose()
-    
+
     async def index_all_systems(self) -> Dict[str, Any]:
         """Index APIs from all known systems."""
         results = {
             "indexed_at": datetime.now(timezone.utc).isoformat(),
             "systems": {},
             "total_apis": 0,
-            "errors": []
+            "errors": [],
         }
-        
+
         for system_name, config in SYSTEM_CONFIGS.items():
             try:
                 # Register/update system
@@ -103,10 +107,10 @@ class APIIndexer:
                     type=config["type"],
                     url=config["url"],
                     description=config["description"],
-                    status="active"
+                    status="active",
                 )
                 await self._registry.register_system(system)
-                
+
                 # Index APIs
                 if config.get("openapi_path"):
                     api_count = await self._index_openapi_system(
@@ -115,38 +119,32 @@ class APIIndexer:
                 else:
                     # Manual API discovery for non-OpenAPI systems
                     api_count = await self._index_manual_apis(system_name, config)
-                
+
                 results["systems"][system_name] = {
                     "url": config["url"],
                     "api_count": api_count,
-                    "status": "indexed"
+                    "status": "indexed",
                 }
                 results["total_apis"] += api_count
-                
+
             except Exception as e:
                 logger.error(f"Failed to index {system_name}: {e}")
-                results["errors"].append({
-                    "system": system_name,
-                    "error": str(e)
-                })
+                results["errors"].append({"system": system_name, "error": str(e)})
                 results["systems"][system_name] = {
                     "url": config["url"],
                     "api_count": 0,
-                    "status": "error"
+                    "status": "error",
                 }
-        
+
         return results
-    
+
     async def _index_openapi_system(
-        self,
-        system_name: str,
-        base_url: str,
-        openapi_path: str
+        self, system_name: str, base_url: str, openapi_path: str
     ) -> int:
         """Index a system using its OpenAPI specification."""
         client = await self._get_client()
         openapi_url = urljoin(base_url, openapi_path)
-        
+
         try:
             response = await client.get(openapi_url)
             response.raise_for_status()
@@ -155,10 +153,10 @@ class APIIndexer:
             logger.warning(f"Could not fetch OpenAPI spec from {openapi_url}: {e}")
             # Fall back to known routes
             return await self._index_known_routes(system_name, base_url)
-        
+
         api_count = 0
         paths = spec.get("paths", {})
-        
+
         for path, methods in paths.items():
             for method, details in methods.items():
                 if method.upper() in ["GET", "POST", "PUT", "DELETE", "PATCH"]:
@@ -167,24 +165,25 @@ class APIIndexer:
                         method=method.upper(),
                         description=details.get("summary") or details.get("description"),
                         tags=details.get("tags", []),
-                        request_schema=details.get("requestBody", {}).get("content", {}).get(
-                            "application/json", {}
-                        ).get("schema"),
+                        request_schema=details.get("requestBody", {})
+                        .get("content", {})
+                        .get("application/json", {})
+                        .get("schema"),
                         response_schema=self._extract_response_schema(details),
                         auth_required="security" in details or "security" in spec,
                         deprecated=details.get("deprecated", False),
                         metadata={
                             "operation_id": details.get("operationId"),
-                            "indexed_from": "openapi"
-                        }
+                            "indexed_from": "openapi",
+                        },
                     )
-                    
+
                     await self._registry.register_api(api, system_name)
                     api_count += 1
-        
+
         logger.info(f"Indexed {api_count} APIs from {system_name}")
         return api_count
-    
+
     def _extract_response_schema(self, details: Dict) -> Optional[Dict]:
         """Extract response schema from OpenAPI operation."""
         responses = details.get("responses", {})
@@ -194,7 +193,7 @@ class APIIndexer:
                 if "application/json" in content:
                     return content["application/json"].get("schema")
         return None
-    
+
     async def _index_known_routes(self, system_name: str, base_url: str) -> int:
         """Index known routes for a system without OpenAPI."""
         # Known MAS routes
@@ -236,37 +235,33 @@ class APIIndexer:
                 ("/api/registry/agents", "GET", "List agents"),
                 ("/api/graph/nodes", "GET", "List graph nodes"),
                 ("/api/graph/edges", "GET", "List graph edges"),
-            ]
+            ],
         }
-        
+
         routes = known_routes.get(system_name, [])
         api_count = 0
-        
+
         for path, method, description in routes:
             api = APIInfo(
                 path=path,
                 method=method,
                 description=description,
                 tags=[system_name.lower()],
-                metadata={"indexed_from": "known_routes"}
+                metadata={"indexed_from": "known_routes"},
             )
             await self._registry.register_api(api, system_name)
             api_count += 1
-        
+
         return api_count
-    
-    async def _index_manual_apis(
-        self,
-        system_name: str,
-        config: Dict[str, Any]
-    ) -> int:
+
+    async def _index_manual_apis(self, system_name: str, config: Dict[str, Any]) -> int:
         """Manually index APIs for systems without OpenAPI."""
         # Website Next.js API routes
         if system_name == "Website":
             return await self._index_nextjs_routes(config["url"])
-        
+
         return await self._index_known_routes(system_name, config["url"])
-    
+
     async def _index_nextjs_routes(self, base_url: str) -> int:
         """Index Next.js API routes (known routes)."""
         routes = [
@@ -284,7 +279,7 @@ class APIIndexer:
             ("/api/scientific/experiments", "POST", "Create experiment"),
             ("/api/bio/sensors", "GET", "Biosensor data"),
         ]
-        
+
         api_count = 0
         for path, method, description in routes:
             api = APIInfo(
@@ -292,28 +287,35 @@ class APIIndexer:
                 method=method,
                 description=description,
                 tags=["website", "nextjs"],
-                metadata={"indexed_from": "manual", "framework": "nextjs"}
+                metadata={"indexed_from": "manual", "framework": "nextjs"},
             )
             await self._registry.register_api(api, "Website")
             api_count += 1
-        
+
         return api_count
-    
+
     async def discover_live_endpoints(self, system_name: str) -> List[str]:
         """Probe common endpoints to discover live APIs."""
         config = SYSTEM_CONFIGS.get(system_name)
         if not config:
             return []
-        
+
         base_url = config["url"]
         client = await self._get_client()
-        
+
         common_paths = [
-            "/health", "/api/health", "/status",
-            "/api", "/api/v1", "/api/v2",
-            "/docs", "/redoc", "/openapi.json", "/swagger.json"
+            "/health",
+            "/api/health",
+            "/status",
+            "/api",
+            "/api/v1",
+            "/api/v2",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/swagger.json",
         ]
-        
+
         live_endpoints = []
         for path in common_paths:
             try:
@@ -323,7 +325,7 @@ class APIIndexer:
                     live_endpoints.append(path)
             except Exception:
                 pass
-        
+
         return live_endpoints
 
 

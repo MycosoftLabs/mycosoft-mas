@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -22,6 +21,7 @@ from typing import Any, Dict, List, Optional
 
 class ScenarioType(str, Enum):
     """Types of deterministic eval scenarios."""
+
     TELEMETRY_REPLAY = "telemetry_replay"
     ANOMALY_INJECTION = "anomaly_injection"
     TOOL_FAILURE = "tool_failure"
@@ -35,12 +35,15 @@ class ScenarioType(str, Enum):
 @dataclass
 class SimulationScenario:
     """A single scenario: type, input payload, expected scoring contract."""
+
     scenario_id: str
     scenario_type: str  # ScenarioType value
     name: str
     description: Optional[str] = None
     input_payload: Dict[str, Any] = field(default_factory=dict)
-    expected_contract: Dict[str, Any] = field(default_factory=dict)  # e.g. min_groundedness, max_latency_ms
+    expected_contract: Dict[str, Any] = field(
+        default_factory=dict
+    )  # e.g. min_groundedness, max_latency_ms
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     deterministic_seed: Optional[int] = None
 
@@ -104,7 +107,11 @@ def make_tool_failure_scenario(
     fallback_expected: bool = True,
 ) -> SimulationScenario:
     """Build tool-failure scenario for graceful degradation eval."""
-    payload = {"tool_id": tool_id, "failure_mode": failure_mode, "fallback_expected": fallback_expected}
+    payload = {
+        "tool_id": tool_id,
+        "failure_mode": failure_mode,
+        "fallback_expected": fallback_expected,
+    }
     sid = f"tool_fail_{_hash_payload(payload)}"
     return SimulationScenario(
         scenario_id=sid,
@@ -192,7 +199,12 @@ def make_control_task_scenario(
     seed: Optional[int] = None,
 ) -> SimulationScenario:
     """Build control task (e.g. setpoint, trajectory) for closed-loop eval."""
-    payload = {"task_id": task_id, "control_type": control_type, "params": params or {}, "seed": seed}
+    payload = {
+        "task_id": task_id,
+        "control_type": control_type,
+        "params": params or {},
+        "seed": seed,
+    }
     sid = f"control_{_hash_payload(payload)}"
     return SimulationScenario(
         scenario_id=sid,

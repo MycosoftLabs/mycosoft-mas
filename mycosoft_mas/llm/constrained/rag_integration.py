@@ -15,18 +15,15 @@ Created: March 3, 2026
 
 import logging
 from typing import Any, Callable, Dict, List, Optional
-from uuid import UUID
 
-import numpy as np
 
+from mycosoft_mas.llm.constrained.constraint_engine import (
+    ConstraintEngine,
+)
 from mycosoft_mas.llm.constrained.static_index import (
     IndexConfig,
     STATICIndex,
     build_index_from_strings,
-)
-from mycosoft_mas.llm.constrained.constraint_engine import (
-    ConstraintEngine,
-    ConstrainedGenerationResult,
 )
 
 logger = logging.getLogger(__name__)
@@ -129,10 +126,7 @@ class ConstrainedRAGEngine:
         if score_fn:
             scored = [(entity, score_fn(entity)) for entity in entity_map]
         else:
-            scored = [
-                (entity, _simple_match_score(query_context, entity))
-                for entity in entity_map
-            ]
+            scored = [(entity, _simple_match_score(query_context, entity)) for entity in entity_map]
 
         # Sort by score
         scored.sort(key=lambda x: x[1], reverse=True)

@@ -44,7 +44,8 @@ class NaturePacket:
             "bme688": self.bme688,
             "fci": self.fci,
             "camera_frame_ref": self.camera_frame_ref,
-            "has_frame": self.camera_frame_bytes is not None and len(self.camera_frame_bytes or b"") > 0,
+            "has_frame": self.camera_frame_bytes is not None
+            and len(self.camera_frame_bytes or b"") > 0,
             "audio_level_db": self.audio_level_db,
             "audio_transcript": self.audio_transcript,
             "proprioception": self.proprioception,
@@ -111,7 +112,11 @@ async def _fetch_mycobrain_devices() -> List[str]:
             r = await client.get(f"{MYCOBRAIN_URL}/devices")
             r.raise_for_status()
             data = r.json()
-            devices = data.get("devices", data) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+            devices = (
+                data.get("devices", data)
+                if isinstance(data, dict)
+                else (data if isinstance(data, list) else [])
+            )
             if not isinstance(devices, list):
                 return []
             ids = []

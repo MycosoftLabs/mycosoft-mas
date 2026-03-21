@@ -11,11 +11,11 @@ Env vars:
     TAXBIT_API_KEY         -- TaxBit API key
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
-from datetime import datetime
+import os
 from collections import defaultdict
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import httpx
 
@@ -30,7 +30,9 @@ class CryptoTaxClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.cointracker_key = self.config.get("cointracker_api_key") or os.getenv("COINTRACKER_API_KEY", "")
+        self.cointracker_key = self.config.get("cointracker_api_key") or os.getenv(
+            "COINTRACKER_API_KEY", ""
+        )
         self.taxbit_key = self.config.get("taxbit_api_key") or os.getenv("TAXBIT_API_KEY", "")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
@@ -60,9 +62,7 @@ class CryptoTaxClient:
         r.raise_for_status()
         return r.json()
 
-    async def cointracker_transactions(
-        self, page: int = 1, per_page: int = 50
-    ) -> Dict[str, Any]:
+    async def cointracker_transactions(self, page: int = 1, per_page: int = 50) -> Dict[str, Any]:
         """Get transaction history from CoinTracker."""
         c = await self._http()
         r = await c.get(
@@ -174,14 +174,16 @@ class CryptoTaxClient:
 
                 gain = proceeds - cost_basis
                 total_gain += gain
-                gains.append({
-                    "asset": asset,
-                    "amount": amount,
-                    "proceeds": round(proceeds, 2),
-                    "cost_basis": round(cost_basis, 2),
-                    "gain": round(gain, 2),
-                    "date": date,
-                })
+                gains.append(
+                    {
+                        "asset": asset,
+                        "amount": amount,
+                        "proceeds": round(proceeds, 2),
+                        "cost_basis": round(cost_basis, 2),
+                        "gain": round(gain, 2),
+                        "date": date,
+                    }
+                )
 
         return {
             "method": "FIFO",

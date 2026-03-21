@@ -9,11 +9,11 @@ Created: February 25, 2026
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List
 from uuid import UUID, uuid4
 
 if TYPE_CHECKING:
-    from mycosoft_mas.nlm.telemetry_envelopes import TelemetryEnvelope
+    pass
 
 
 @dataclass
@@ -43,9 +43,7 @@ class NatureMessageFrame:
             "timestamp": self.timestamp.isoformat(),
             "bio_tokens": self.bio_tokens,
             "structured_output": self.structured_output,
-            "envelopes": [
-                e.to_dict() if hasattr(e, "to_dict") else e for e in self.envelopes
-            ],
+            "envelopes": [e.to_dict() if hasattr(e, "to_dict") else e for e in self.envelopes],
             "context": self.context,
             "confidence": self.confidence,
             "source_id": self.source_id,

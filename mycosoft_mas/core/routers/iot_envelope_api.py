@@ -15,7 +15,6 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-
 router = APIRouter(prefix="/api/iot", tags=["iot"])
 
 

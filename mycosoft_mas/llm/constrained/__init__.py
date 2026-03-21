@@ -17,37 +17,37 @@ Key concepts:
 Created: March 3, 2026
 """
 
-from mycosoft_mas.llm.constrained.static_index import (
-    STATICIndex,
-    build_static_index,
-    IndexConfig,
-)
 from mycosoft_mas.llm.constrained.constraint_engine import (
-    ConstraintEngine,
     ConstrainedGenerationResult,
-)
-from mycosoft_mas.llm.constrained.token_masker import (
-    TokenMasker,
-    MaskingStrategy,
+    ConstraintEngine,
 )
 from mycosoft_mas.llm.constrained.domain_builders import (
-    build_all_domain_indexes,
-    build_mindex_species_index,
-    build_taxonomy_index,
-    build_crep_index,
-    build_nlm_index,
+    DOMAIN_BUILDERS,
+    DomainIndexReport,
     build_agent_index,
-    build_device_index,
-    build_signal_index,
-    build_user_index,
+    build_all_domain_indexes,
     build_biosphere_index,
+    build_crep_index,
+    build_device_index,
     build_environment_index,
-    build_infrastructure_index,
     build_geospatial_index,
+    build_infrastructure_index,
+    build_mindex_species_index,
+    build_nlm_index,
     build_observation_index,
     build_search_index,
-    DomainIndexReport,
-    DOMAIN_BUILDERS,
+    build_signal_index,
+    build_taxonomy_index,
+    build_user_index,
+)
+from mycosoft_mas.llm.constrained.static_index import (
+    IndexConfig,
+    STATICIndex,
+    build_static_index,
+)
+from mycosoft_mas.llm.constrained.token_masker import (
+    MaskingStrategy,
+    TokenMasker,
 )
 from mycosoft_mas.llm.constrained.validator import (
     STATICValidator,

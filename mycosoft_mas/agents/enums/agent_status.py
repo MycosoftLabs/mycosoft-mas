@@ -1,7 +1,9 @@
 from enum import Enum
 
+
 class AgentStatus(Enum):
     """Agent lifecycle status enumeration."""
+
     INITIALIZED = "initialized"  # Agent created but not yet started
     INITIALIZING = "initializing"  # Agent is starting up
     RUNNING = "running"  # Legacy/test alias for "active"
@@ -12,4 +14,4 @@ class AgentStatus(Enum):
     ERROR = "error"  # Agent encountered an error
     RECOVERING = "recovering"  # Agent is recovering from an error
     SHUTDOWN = "shutdown"  # Agent has been stopped
-    TERMINATED = "terminated"  # Agent has been forcefully stopped 
+    TERMINATED = "terminated"  # Agent has been forcefully stopped

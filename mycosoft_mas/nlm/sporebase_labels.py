@@ -49,4 +49,3 @@ class SporebaseLabelStore:
             item.segment_id: {"species": item.species, "confidence": item.confidence}
             for item in self.load_labels()
         }
-

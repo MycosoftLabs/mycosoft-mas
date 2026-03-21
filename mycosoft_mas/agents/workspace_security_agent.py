@@ -15,7 +15,7 @@ Created: March 3, 2026
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 
@@ -131,18 +131,22 @@ class WorkspaceSecurityAgent(BaseAgent):
         for token_name in critical_tokens:
             value = os.getenv(token_name, "")
             if not value:
-                issues.append({
-                    "type": "missing_token",
-                    "token": token_name,
-                    "severity": "medium",
-                })
+                issues.append(
+                    {
+                        "type": "missing_token",
+                        "token": token_name,
+                        "severity": "medium",
+                    }
+                )
             elif len(value) < 20:
-                issues.append({
-                    "type": "suspicious_token_length",
-                    "token": token_name,
-                    "length": len(value),
-                    "severity": "medium",
-                })
+                issues.append(
+                    {
+                        "type": "suspicious_token_length",
+                        "token": token_name,
+                        "length": len(value),
+                        "severity": "medium",
+                    }
+                )
 
         # Check credential files
         cred_dir = "/opt/myca/credentials"
@@ -155,13 +159,15 @@ class WorkspaceSecurityAgent(BaseAgent):
                         # Check permissions — should be 600 (owner-only)
                         mode = oct(stat.st_mode)[-3:]
                         if mode != "600":
-                            issues.append({
-                                "type": "insecure_permissions",
-                                "file": path,
-                                "mode": mode,
-                                "expected": "600",
-                                "severity": "high",
-                            })
+                            issues.append(
+                                {
+                                    "type": "insecure_permissions",
+                                    "file": path,
+                                    "mode": mode,
+                                    "expected": "600",
+                                    "severity": "high",
+                                }
+                            )
                     except Exception:
                         pass
 
@@ -189,30 +195,36 @@ class WorkspaceSecurityAgent(BaseAgent):
         try:
             name = subprocess.check_output(
                 ["git", "config", "--global", "user.name"],
-                text=True, timeout=5,
+                text=True,
+                timeout=5,
             ).strip()
             git_config["user.name"] = name
             if name != "MYCA":
-                issues.append({
-                    "type": "wrong_git_name",
-                    "current": name,
-                    "expected": "MYCA",
-                })
+                issues.append(
+                    {
+                        "type": "wrong_git_name",
+                        "current": name,
+                        "expected": "MYCA",
+                    }
+                )
         except Exception:
             issues.append({"type": "git_name_not_set"})
 
         try:
             email = subprocess.check_output(
                 ["git", "config", "--global", "user.email"],
-                text=True, timeout=5,
+                text=True,
+                timeout=5,
             ).strip()
             git_config["user.email"] = email
             if email != "myca@mycosoft.org":
-                issues.append({
-                    "type": "wrong_git_email",
-                    "current": email,
-                    "expected": "myca@mycosoft.org",
-                })
+                issues.append(
+                    {
+                        "type": "wrong_git_email",
+                        "current": email,
+                        "expected": "myca@mycosoft.org",
+                    }
+                )
         except Exception:
             issues.append({"type": "git_email_not_set"})
 
@@ -273,10 +285,12 @@ class WorkspaceSecurityAgent(BaseAgent):
         if not os.path.exists(log_path):
             # Try journalctl as fallback
             import subprocess
+
             try:
                 output = subprocess.check_output(
                     ["journalctl", "-u", "ssh", "--no-pager", "-n", "100"],
-                    text=True, timeout=5,
+                    text=True,
+                    timeout=5,
                 )
                 return output.strip().split("\n")
             except Exception:
@@ -309,6 +323,7 @@ class WorkspaceSecurityAgent(BaseAgent):
         webhook_url = os.getenv("DISCORD_MYCA_WEBHOOK", "")
         if webhook_url:
             import httpx
+
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     await client.post(

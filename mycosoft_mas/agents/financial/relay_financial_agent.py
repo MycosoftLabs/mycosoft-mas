@@ -18,7 +18,12 @@ logger = logging.getLogger(__name__)
 class RelayFinancialAgent(BaseAgent):
     """Agent for Relay Financial banking operations."""
 
-    def __init__(self, agent_id: str, name: str = "Relay Financial Agent", config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        agent_id: str,
+        name: str = "Relay Financial Agent",
+        config: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(agent_id=agent_id, name=name, config=config or {})
         self.capabilities.update({"banking", "treasury", "payments"})
         self.relay_api_key = os.getenv("RELAY_API_KEY", "")

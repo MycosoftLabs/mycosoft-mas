@@ -6,12 +6,10 @@ code generation, testing, linting, and PR creation.
 """
 
 import asyncio
-import json
 import logging
 import os
-import subprocess
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -78,21 +76,27 @@ class CodeAgentBridge:
             )
         except asyncio.TimeoutError:
             return CodeResult(
-                files_changed=[], tests_passed=False,
+                files_changed=[],
+                tests_passed=False,
                 error=f"Task timed out after {timeout}s",
             )
         except FileNotFoundError:
             return CodeResult(
-                files_changed=[], tests_passed=False,
+                files_changed=[],
+                tests_passed=False,
                 error=f"Claude Code CLI not found at '{self._claude_code}'",
             )
         except Exception as exc:
             return CodeResult(
-                files_changed=[], tests_passed=False, error=str(exc),
+                files_changed=[],
+                tests_passed=False,
+                error=str(exc),
             )
 
     async def run_tests(
-        self, repo_path: str, test_command: str = "pytest",
+        self,
+        repo_path: str,
+        test_command: str = "pytest",
     ) -> CodeResult:
         """Run tests in a repository."""
         try:
@@ -141,10 +145,15 @@ class CodeAgentBridge:
         """Create a pull request via GitHub CLI."""
         try:
             proc = await asyncio.create_subprocess_exec(
-                "gh", "pr", "create",
-                "--title", title,
-                "--body", body,
-                "--head", branch,
+                "gh",
+                "pr",
+                "create",
+                "--title",
+                title,
+                "--body",
+                body,
+                "--head",
+                branch,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 cwd=repo_path,
@@ -164,7 +173,9 @@ class CodeAgentBridge:
     async def _get_changed_files(self, repo_path: str) -> List[str]:
         try:
             proc = await asyncio.create_subprocess_exec(
-                "git", "diff", "--name-only",
+                "git",
+                "diff",
+                "--name-only",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
                 cwd=repo_path,

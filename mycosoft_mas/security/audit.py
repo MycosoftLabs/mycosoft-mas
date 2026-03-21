@@ -4,15 +4,22 @@ Created: February 3, 2026
 Updated: February 12, 2026 - Added Ed25519 cryptographic signing
 Updated: February 17, 2026 - Added MYCA EventLedger integration
 """
+
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
+
 from pydantic import BaseModel
-import logging
 
 # Import Ed25519 signing
 try:
-    from mycosoft_mas.security.crypto_signing import get_audit_signer, sign_audit_log, verify_audit_log
+    from mycosoft_mas.security.crypto_signing import (
+        get_audit_signer,
+        sign_audit_log,
+        verify_audit_log,
+    )
+
     SIGNING_AVAILABLE = True
 except ImportError:
     SIGNING_AVAILABLE = False
@@ -23,6 +30,7 @@ except ImportError:
 # Import MYCA EventLedger
 try:
     from mycosoft_mas.myca.event_ledger import EventLedger, hash_args
+
     EVENT_LEDGER_AVAILABLE = True
 except ImportError:
     EVENT_LEDGER_AVAILABLE = False
@@ -34,6 +42,7 @@ logger = logging.getLogger(__name__)
 
 class AuditEntry(BaseModel):
     """Audit entry with Ed25519 signature."""
+
     entry_id: UUID
     timestamp: datetime
     user_id: UUID
@@ -49,11 +58,11 @@ class AuditEntry(BaseModel):
 
 class AuditLogger:
     """Audit logging for security compliance with Ed25519 signing."""
-    
+
     def __init__(self):
         self._entries: List[AuditEntry] = []
         self._signer = get_audit_signer() if SIGNING_AVAILABLE else None
-    
+
     def log(
         self,
         user_id: UUID,
@@ -65,7 +74,7 @@ class AuditLogger:
     ) -> UUID:
         """
         Log an audit entry with Ed25519 signature.
-        
+
         Args:
             user_id: User performing the action
             action: Action being performed
@@ -73,7 +82,7 @@ class AuditLogger:
             details: Additional details
             success: Whether action succeeded
             ip_address: Client IP address
-            
+
         Returns:
             Entry ID
         """
@@ -87,7 +96,7 @@ class AuditLogger:
             ip_address=ip_address,
             success=success,
         )
-        
+
         # Sign the entry with Ed25519
         if self._signer and self._signer.is_signing_enabled:
             try:
@@ -96,45 +105,45 @@ class AuditLogger:
                 entry_dict["entry_id"] = str(entry_dict["entry_id"])
                 entry_dict["user_id"] = str(entry_dict["user_id"])
                 entry_dict["timestamp"] = entry_dict["timestamp"].isoformat()
-                
+
                 entry.signature = self._signer.sign_log_entry(entry_dict)
                 entry.key_fingerprint = self._signer.get_public_key_fingerprint()
                 logger.debug(f"Signed audit entry {entry.entry_id}")
             except Exception as e:
                 logger.warning(f"Failed to sign audit entry: {e}")
-        
+
         self._entries.append(entry)
         return entry.entry_id
-    
+
     def verify(self, entry: AuditEntry) -> bool:
         """
         Verify the Ed25519 signature of an audit entry.
-        
+
         Args:
             entry: Audit entry to verify
-            
+
         Returns:
             True if signature is valid, False otherwise
         """
         if not entry.signature:
             logger.warning(f"Audit entry {entry.entry_id} has no signature")
             return False
-        
+
         if not self._signer or not self._signer.is_verification_enabled:
             logger.warning("Signature verification not available")
             return False
-        
+
         try:
             entry_dict = entry.model_dump()
             entry_dict["entry_id"] = str(entry_dict["entry_id"])
             entry_dict["user_id"] = str(entry_dict["user_id"])
             entry_dict["timestamp"] = entry_dict["timestamp"].isoformat()
-            
+
             return self._signer.verify_log_entry(entry_dict, entry.signature)
         except Exception as e:
             logger.error(f"Failed to verify audit entry: {e}")
             return False
-    
+
     def query(
         self,
         user_id: Optional[UUID] = None,
@@ -150,11 +159,11 @@ class AuditLogger:
         if start_time:
             results = [e for e in results if e.timestamp >= start_time]
         return results
-    
+
     def verify_all(self) -> Dict[str, Any]:
         """
         Verify integrity of all audit entries.
-        
+
         Returns:
             Summary of verification results
         """
@@ -166,7 +175,7 @@ class AuditLogger:
             "invalid": 0,
             "errors": [],
         }
-        
+
         for entry in self._entries:
             if entry.signature:
                 results["signed"] += 1
@@ -174,18 +183,19 @@ class AuditLogger:
                     results["valid"] += 1
                 else:
                     results["invalid"] += 1
-                    results["errors"].append({
-                        "entry_id": str(entry.entry_id),
-                        "error": "Invalid signature - possible tampering",
-                    })
+                    results["errors"].append(
+                        {
+                            "entry_id": str(entry.entry_id),
+                            "error": "Invalid signature - possible tampering",
+                        }
+                    )
             else:
                 results["unsigned"] += 1
-        
+
         results["integrity_percentage"] = (
-            (results["valid"] / results["signed"] * 100)
-            if results["signed"] > 0 else 100.0
+            (results["valid"] / results["signed"] * 100) if results["signed"] > 0 else 100.0
         )
-        
+
         return results
 
 
@@ -193,40 +203,41 @@ class AuditLogger:
 # MYCA EventLedger Bridge
 # ---------------------------------------------------------------------------
 
+
 class AuditEventBridge:
     """
     Bridge between AuditLogger and MYCA EventLedger.
-    
+
     Provides unified logging to both the existing Ed25519-signed audit log
     and the MYCA EventLedger for tool call auditing.
-    
+
     Created: February 17, 2026
     """
-    
+
     def __init__(self, audit_logger: Optional[AuditLogger] = None):
         """
         Initialize the bridge.
-        
+
         Args:
             audit_logger: Optional existing AuditLogger instance.
                          If not provided, creates a new one.
         """
         self._audit_logger = audit_logger or AuditLogger()
         self._event_ledger = EventLedger() if EVENT_LEDGER_AVAILABLE else None
-        
+
         if not self._event_ledger:
             logger.debug("MYCA EventLedger not available - bridge will use AuditLogger only")
-    
+
     @property
     def audit_logger(self) -> AuditLogger:
         """Get the underlying AuditLogger."""
         return self._audit_logger
-    
+
     @property
     def event_ledger(self) -> Optional["EventLedger"]:
         """Get the MYCA EventLedger if available."""
         return self._event_ledger
-    
+
     def log_tool_call(
         self,
         agent_id: str,
@@ -240,7 +251,7 @@ class AuditEventBridge:
     ) -> UUID:
         """
         Log a tool call to both AuditLogger and EventLedger.
-        
+
         Args:
             agent_id: ID of the agent making the call
             tool: Name of the tool being called
@@ -250,7 +261,7 @@ class AuditEventBridge:
             result_summary: Brief summary of result (first 200 chars)
             risk_flags: List of risk flags (e.g., ["SECRETS_READ", "WRITE_OP"])
             success: Whether the call succeeded
-            
+
         Returns:
             AuditLogger entry ID
         """
@@ -269,7 +280,7 @@ class AuditEventBridge:
             success=success,
             ip_address=ip_address,
         )
-        
+
         # Log to MYCA EventLedger
         if self._event_ledger:
             try:
@@ -282,9 +293,9 @@ class AuditEventBridge:
                 )
             except Exception as e:
                 logger.warning(f"Failed to log to EventLedger: {e}")
-        
+
         return entry_id
-    
+
     def log_denial(
         self,
         agent_id: str,
@@ -296,7 +307,7 @@ class AuditEventBridge:
     ) -> UUID:
         """
         Log a permission denial to both AuditLogger and EventLedger.
-        
+
         Args:
             agent_id: ID of the agent making the call
             tool: Name of the tool that was denied
@@ -304,7 +315,7 @@ class AuditEventBridge:
             reason: Reason for denial
             user_id: User ID for AuditLogger
             ip_address: Client IP address
-            
+
         Returns:
             AuditLogger entry ID
         """
@@ -322,7 +333,7 @@ class AuditEventBridge:
             success=False,
             ip_address=ip_address,
         )
-        
+
         # Log to MYCA EventLedger
         if self._event_ledger:
             try:
@@ -334,9 +345,9 @@ class AuditEventBridge:
                 )
             except Exception as e:
                 logger.warning(f"Failed to log denial to EventLedger: {e}")
-        
+
         return entry_id
-    
+
     def log_risk_event(
         self,
         agent_id: str,
@@ -348,7 +359,7 @@ class AuditEventBridge:
     ) -> UUID:
         """
         Log a security risk event to both AuditLogger and EventLedger.
-        
+
         Args:
             agent_id: ID of the agent involved
             risk_type: Type of risk (e.g., "prompt_injection", "data_exfil")
@@ -356,7 +367,7 @@ class AuditEventBridge:
             severity: Risk severity ("low", "medium", "high", "critical")
             user_id: User ID for AuditLogger
             ip_address: Client IP address
-            
+
         Returns:
             AuditLogger entry ID
         """
@@ -374,7 +385,7 @@ class AuditEventBridge:
             success=False,
             ip_address=ip_address,
         )
-        
+
         # Log to MYCA EventLedger
         if self._event_ledger:
             try:
@@ -386,9 +397,9 @@ class AuditEventBridge:
                 )
             except Exception as e:
                 logger.warning(f"Failed to log risk event to EventLedger: {e}")
-        
+
         return entry_id
-    
+
     def get_failure_summary(
         self,
         since_ts: Optional[float] = None,
@@ -396,17 +407,17 @@ class AuditEventBridge:
     ) -> Dict[str, Any]:
         """
         Get a summary of failures from EventLedger.
-        
+
         Args:
             since_ts: Optional timestamp to filter events
             agent_filter: Optional agent ID to filter events
-            
+
         Returns:
             Summary dictionary with failure counts and details
         """
         if not self._event_ledger:
             return {"error": "EventLedger not available", "failures": []}
-        
+
         try:
             return self._event_ledger.summarize_failures(
                 since_ts=since_ts,
@@ -415,11 +426,11 @@ class AuditEventBridge:
         except Exception as e:
             logger.warning(f"Failed to get failure summary: {e}")
             return {"error": str(e), "failures": []}
-    
+
     def verify_audit_integrity(self) -> Dict[str, Any]:
         """
         Verify integrity of all audit entries.
-        
+
         Returns:
             Combined verification results from AuditLogger and EventLedger
         """
@@ -427,7 +438,7 @@ class AuditEventBridge:
             "audit_logger": self._audit_logger.verify_all(),
             "event_ledger": None,
         }
-        
+
         if self._event_ledger:
             try:
                 # Get event ledger stats
@@ -437,21 +448,23 @@ class AuditEventBridge:
                     "by_event_type": {},
                     "by_agent": {},
                 }
-                
+
                 for event in events:
                     # Count by event type
                     event_type = event.get("event_type", "unknown")
-                    results["event_ledger"]["by_event_type"][event_type] = \
+                    results["event_ledger"]["by_event_type"][event_type] = (
                         results["event_ledger"]["by_event_type"].get(event_type, 0) + 1
-                    
+                    )
+
                     # Count by agent
                     agent_id = event.get("agent_id", "unknown")
-                    results["event_ledger"]["by_agent"][agent_id] = \
+                    results["event_ledger"]["by_agent"][agent_id] = (
                         results["event_ledger"]["by_agent"].get(agent_id, 0) + 1
-                        
+                    )
+
             except Exception as e:
                 results["event_ledger"] = {"error": str(e)}
-        
+
         return results
 
 

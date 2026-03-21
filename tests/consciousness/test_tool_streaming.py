@@ -15,9 +15,13 @@ from mycosoft_mas.consciousness.speech_planner import SpeechActType
 
 
 async def progress_stream() -> AsyncGenerator[ToolProgress, None]:
-    yield ToolProgress(state="starting", tool_name="taxonomy_lookup", message="I'm looking that up...")
+    yield ToolProgress(
+        state="starting", tool_name="taxonomy_lookup", message="I'm looking that up..."
+    )
     await asyncio.sleep(0.001)
-    yield ToolProgress(state="working", tool_name="taxonomy_lookup", message="Still checking records...")
+    yield ToolProgress(
+        state="working", tool_name="taxonomy_lookup", message="Still checking records..."
+    )
     await asyncio.sleep(0.001)
     yield ToolProgress(state="completed", tool_name="taxonomy_lookup", message="Found it.")
 
@@ -46,10 +50,11 @@ class TestToolStreaming:
         async def cancellable_stream() -> AsyncGenerator[ToolProgress, None]:
             yield ToolProgress(state="starting", tool_name="lookup", message="Starting lookup.")
             token.cancel()
-            yield ToolProgress(state="working", tool_name="lookup", message="Should never be spoken")
+            yield ToolProgress(
+                state="working", tool_name="lookup", message="Should never be spoken"
+            )
 
         with pytest.raises(asyncio.CancelledError):
             await session.stream_tool_progress(cancellable_stream(), token=token)
 
         assert emitted == ["Starting lookup."]
-

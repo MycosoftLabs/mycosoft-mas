@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-
 router = APIRouter(prefix="/api/evolution", tags=["evolution"])
 
 
@@ -45,7 +44,11 @@ async def run_full_scan() -> Dict[str, Any]:
     now = datetime.utcnow()
     ideas_count = 0
     if IDEAS_DOC.exists():
-        ideas_count = sum(1 for line in IDEAS_DOC.read_text(encoding="utf-8").splitlines() if line.startswith("- "))
+        ideas_count = sum(
+            1
+            for line in IDEAS_DOC.read_text(encoding="utf-8").splitlines()
+            if line.startswith("- ")
+        )
 
     report = {
         "timestamp": now.isoformat(),

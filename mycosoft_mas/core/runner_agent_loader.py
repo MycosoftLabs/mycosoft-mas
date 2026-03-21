@@ -70,7 +70,9 @@ class LoadedRunnerAgent:
                 }
 
         # Fallback low-resource cycle to keep all agents online in runner
-        summary = f"{self.definition.display_name} online in fallback mode (cycle {self._cycle_count})"
+        summary = (
+            f"{self.definition.display_name} online in fallback mode (cycle {self._cycle_count})"
+        )
         if self.error:
             summary += f"; reason: {self.error}"
         return {
@@ -107,7 +109,7 @@ def _instantiate_native_agent(definition: AgentDefinition) -> Any:
         try:
             return attempt()
         except Exception as exc:  # noqa: BLE001
-            last_error = exc
+            pass
 
     # Last try: construct with whatever optional params exist
     signature = inspect.signature(cls.__init__)
@@ -137,7 +139,9 @@ def load_core_runner_agents() -> tuple[list[LoadedRunnerAgent], RunnerLoadResult
     for definition in active_definitions:
         try:
             delegate = _instantiate_native_agent(definition)
-            agents.append(LoadedRunnerAgent(definition=definition, delegate=delegate, mode="native"))
+            agents.append(
+                LoadedRunnerAgent(definition=definition, delegate=delegate, mode="native")
+            )
             native_loaded += 1
         except Exception as exc:  # noqa: BLE001
             agents.append(

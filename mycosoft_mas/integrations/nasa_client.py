@@ -29,12 +29,8 @@ class NasaClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_key = (
-            self.config.get("api_key") or os.environ.get("NASA_API_KEY", "DEMO_KEY")
-        )
-        self.firms_key = (
-            self.config.get("firms_key") or os.environ.get("FIRMS_MAP_KEY", "")
-        )
+        self.api_key = self.config.get("api_key") or os.environ.get("NASA_API_KEY", "DEMO_KEY")
+        self.firms_key = self.config.get("firms_key") or os.environ.get("FIRMS_MAP_KEY", "")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
 

@@ -7,23 +7,21 @@ Verifies that constitutional articles, rights, and red lines are:
 - Correctly categorized by tier and domain
 """
 
-import pytest
 from dataclasses import FrozenInstanceError
+
+import pytest
 
 from mycosoft_mas.avani.constitution.articles import (
     CONSTITUTION,
-    Article,
     Tier,
     get_articles_by_tier,
 )
 from mycosoft_mas.avani.constitution.red_lines import (
     RED_LINES,
-    RedLine,
     check_red_line_violation,
 )
 from mycosoft_mas.avani.constitution.rights import (
     RIGHTS_CHARTER,
-    Right,
     RightsDomain,
     get_rights_by_domain,
 )

@@ -9,7 +9,6 @@ Environment Variables:
     TECAN_FLUENT_URL: Optional FluentControl/SiLA2 endpoint (e.g. http://localhost:50053)
 """
 
-import io
 import logging
 import os
 from pathlib import Path
@@ -158,6 +157,9 @@ class TecanClient:
         try:
             client = await self._get_client()
             r = await client.get(f"{self.fluent_url.rstrip('/')}/health")
-            return {"ok": r.status_code == 200, "message": "Fluent reachable" if r.ok else "Fluent error"}
+            return {
+                "ok": r.status_code == 200,
+                "message": "Fluent reachable" if r.ok else "Fluent error",
+            }
         except Exception as e:
             return {"ok": False, "message": str(e)}

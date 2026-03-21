@@ -8,13 +8,11 @@ Handles:
 4. Training dataset creation
 """
 
-import os
 import json
 import logging
-from typing import Dict, List, Optional, Any, Generator
-from pathlib import Path
 from datetime import datetime
-import asyncio
+from pathlib import Path
+from typing import Any, Dict, Generator, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +20,7 @@ logger = logging.getLogger(__name__)
 class NLMDataPipeline:
     """
     Data pipeline for Nature Learning Model training.
-    
+
     Ingests data from:
     - Species databases (taxonomy, descriptions)
     - Research papers and documents
@@ -31,7 +29,7 @@ class NLMDataPipeline:
     - Geographic/distribution data
     - Mycosoft internal knowledge bases
     """
-    
+
     def __init__(
         self,
         output_dir: str = "/data/nlm_training",
@@ -40,7 +38,7 @@ class NLMDataPipeline:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.min_quality_score = min_quality_score
-        
+
         # Data sources configuration
         self.sources = {
             "mindex": {
@@ -64,16 +62,16 @@ class NLMDataPipeline:
                 "collections": ["species", "research", "interactions"],
             },
         }
-    
+
     async def ingest_from_mindex(self) -> Generator[Dict[str, Any], None, None]:
         """
         Ingest species and taxonomy data from MINDEX.
-        
+
         Yields:
             Processed data records
         """
         logger.info("Ingesting from MINDEX...")
-        
+
         # This would call the actual MINDEX API
         # For now, yield sample structure
         sample_data = [
@@ -98,21 +96,21 @@ class NLMDataPipeline:
                 },
             }
         ]
-        
+
         for record in sample_data:
             processed = self._process_species_record(record)
             if self._quality_check(processed):
                 yield processed
-    
+
     async def ingest_from_sensors(self) -> Generator[Dict[str, Any], None, None]:
         """
         Ingest environmental sensor data.
-        
+
         Yields:
             Processed sensor readings with context
         """
         logger.info("Ingesting sensor data...")
-        
+
         sample_data = [
             {
                 "sensor_id": "env_001",
@@ -127,25 +125,25 @@ class NLMDataPipeline:
                 "context": "Oyster mushroom cultivation",
             }
         ]
-        
+
         for record in sample_data:
             processed = self._process_sensor_record(record)
             if self._quality_check(processed):
                 yield processed
-    
+
     async def ingest_from_papers(self) -> Generator[Dict[str, Any], None, None]:
         """
         Ingest research papers and documents.
-        
+
         Yields:
             Processed document records
         """
         logger.info("Ingesting research papers...")
-        
+
         papers_path = Path(self.sources["research_papers"]["path"])
         if not papers_path.exists():
             return
-        
+
         for file_path in papers_path.glob("**/*.json"):
             try:
                 with open(file_path) as f:
@@ -155,14 +153,16 @@ class NLMDataPipeline:
                     yield processed
             except Exception as e:
                 logger.warning(f"Failed to process {file_path}: {e}")
-    
+
     def _process_species_record(self, record: Dict) -> Dict[str, Any]:
         """Process a species record into training format."""
-        taxonomy_str = " > ".join([
-            record["taxonomy"].get(level, "Unknown")
-            for level in ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
-        ])
-        
+        taxonomy_str = " > ".join(
+            [
+                record["taxonomy"].get(level, "Unknown")
+                for level in ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
+            ]
+        )
+
         return {
             "type": "species",
             "id": record["id"],
@@ -177,13 +177,11 @@ Characteristics: {json.dumps(record.get('characteristics', {}))}""",
                 "name": record["name"],
             },
         }
-    
+
     def _process_sensor_record(self, record: Dict) -> Dict[str, Any]:
         """Process a sensor reading into training format."""
-        readings_str = ", ".join([
-            f"{k}: {v}" for k, v in record.get("readings", {}).items()
-        ])
-        
+        readings_str = ", ".join([f"{k}: {v}" for k, v in record.get("readings", {}).items()])
+
         return {
             "type": "sensor",
             "id": record["sensor_id"],
@@ -198,7 +196,7 @@ Timestamp: {record.get('timestamp', '')}""",
                 "location": record.get("location"),
             },
         }
-    
+
     def _process_paper_record(self, paper: Dict) -> Dict[str, Any]:
         """Process a research paper into training format."""
         return {
@@ -215,11 +213,11 @@ Keywords: {', '.join(paper.get('keywords', []))}""",
                 "title": paper.get("title"),
             },
         }
-    
+
     def _quality_check(self, record: Dict) -> bool:
         """
         Check if a record meets quality standards.
-        
+
         Returns:
             True if record passes quality checks
         """
@@ -227,13 +225,13 @@ Keywords: {', '.join(paper.get('keywords', []))}""",
         text = record.get("text", "")
         if len(text) < 50:
             return False
-        
+
         # Check for required fields
         if not record.get("type") or not record.get("metadata"):
             return False
-        
+
         return True
-    
+
     async def run_pipeline(
         self,
         sources: Optional[List[str]] = None,
@@ -241,41 +239,40 @@ Keywords: {', '.join(paper.get('keywords', []))}""",
     ) -> Dict[str, int]:
         """
         Run the full data pipeline.
-        
+
         Args:
             sources: Specific sources to process (default: all)
             output_format: Output format (jsonl, parquet, etc.)
-            
+
         Returns:
             Statistics about processed records
         """
         stats = {"total": 0, "by_source": {}}
-        
+
         # Determine sources to process
         source_methods = {
             "mindex": self.ingest_from_mindex,
             "sensors": self.ingest_from_sensors,
             "papers": self.ingest_from_papers,
         }
-        
+
         sources_to_process = sources or list(source_methods.keys())
-        
+
         # Process each source
         for source_name in sources_to_process:
             if source_name not in source_methods:
                 continue
-            
+
             output_file = self.output_dir / f"{source_name}_data.jsonl"
             count = 0
-            
+
             with open(output_file, "w") as f:
                 async for record in source_methods[source_name]():
                     f.write(json.dumps(record) + "\n")
                     count += 1
-            
+
             stats["by_source"][source_name] = count
             stats["total"] += count
             logger.info(f"Processed {count} records from {source_name}")
-        
-        return stats
 
+        return stats

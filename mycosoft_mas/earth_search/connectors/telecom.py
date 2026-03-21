@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import math
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from mycosoft_mas.earth_search.connectors.base import BaseConnector
 from mycosoft_mas.earth_search.models import (
@@ -24,8 +24,10 @@ from mycosoft_mas.earth_search.models import (
 logger = logging.getLogger(__name__)
 
 TELECOM_DOMAINS = {
-    EarthSearchDomain.CELL_TOWERS, EarthSearchDomain.AM_FM_ANTENNAS,
-    EarthSearchDomain.WIFI_HOTSPOTS, EarthSearchDomain.INTERNET_CABLES,
+    EarthSearchDomain.CELL_TOWERS,
+    EarthSearchDomain.AM_FM_ANTENNAS,
+    EarthSearchDomain.WIFI_HOTSPOTS,
+    EarthSearchDomain.INTERNET_CABLES,
     EarthSearchDomain.SIGNAL_MAPS,
 }
 
@@ -86,24 +88,26 @@ class TelecomConnector(BaseConnector):
         for elem in data.get("elements", []):
             tags = elem.get("tags", {})
             name = tags.get("name", "Communication Tower")
-            results.append(EarthSearchResult(
-                result_id=f"tower-{elem.get('id', uuid.uuid4().hex[:8])}",
-                domain=EarthSearchDomain.CELL_TOWERS,
-                source="osm_overpass",
-                title=name,
-                description=f"Operator: {tags.get('operator', 'N/A')}, Height: {tags.get('height', 'N/A')}",
-                data={
-                    "osm_id": elem.get("id"),
-                    "operator": tags.get("operator"),
-                    "height": tags.get("height"),
-                    "tower_type": tags.get("tower:type"),
-                    "communication_type": tags.get("communication:mobile_phone"),
-                },
-                lat=elem.get("lat"),
-                lng=elem.get("lon"),
-                confidence=0.85,
-                crep_layer="cell_towers",
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"tower-{elem.get('id', uuid.uuid4().hex[:8])}",
+                    domain=EarthSearchDomain.CELL_TOWERS,
+                    source="osm_overpass",
+                    title=name,
+                    description=f"Operator: {tags.get('operator', 'N/A')}, Height: {tags.get('height', 'N/A')}",
+                    data={
+                        "osm_id": elem.get("id"),
+                        "operator": tags.get("operator"),
+                        "height": tags.get("height"),
+                        "tower_type": tags.get("tower:type"),
+                        "communication_type": tags.get("communication:mobile_phone"),
+                    },
+                    lat=elem.get("lat"),
+                    lng=elem.get("lon"),
+                    confidence=0.85,
+                    crep_layer="cell_towers",
+                )
+            )
         return results
 
     async def _search_submarine_cables(self, query: str, limit: int) -> List[EarthSearchResult]:
@@ -118,23 +122,25 @@ class TelecomConnector(BaseConnector):
             name = cable.get("name", "")
             if q_lower and q_lower != "*" and q_lower not in name.lower():
                 continue
-            results.append(EarthSearchResult(
-                result_id=f"cable-{cable.get('id', uuid.uuid4().hex[:8])}",
-                domain=EarthSearchDomain.INTERNET_CABLES,
-                source="telegeography",
-                title=name,
-                description=f"Length: {cable.get('length', 'N/A')} km, RFS: {cable.get('rfs', 'N/A')}",
-                data={
-                    "cable_id": cable.get("id"),
-                    "length_km": cable.get("length"),
-                    "rfs": cable.get("rfs"),
-                    "owners": cable.get("owners"),
-                    "url": cable.get("url"),
-                },
-                confidence=0.9,
-                crep_layer="internet_cables",
-                url=cable.get("url"),
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"cable-{cable.get('id', uuid.uuid4().hex[:8])}",
+                    domain=EarthSearchDomain.INTERNET_CABLES,
+                    source="telegeography",
+                    title=name,
+                    description=f"Length: {cable.get('length', 'N/A')} km, RFS: {cable.get('rfs', 'N/A')}",
+                    data={
+                        "cable_id": cable.get("id"),
+                        "length_km": cable.get("length"),
+                        "rfs": cable.get("rfs"),
+                        "owners": cable.get("owners"),
+                        "url": cable.get("url"),
+                    },
+                    confidence=0.9,
+                    crep_layer="internet_cables",
+                    url=cable.get("url"),
+                )
+            )
             if len(results) >= limit:
                 break
         return results
@@ -158,16 +164,18 @@ class TelecomConnector(BaseConnector):
         for elem in data.get("elements", []):
             tags = elem.get("tags", {})
             name = tags.get("name", "WiFi Hotspot")
-            results.append(EarthSearchResult(
-                result_id=f"wifi-{elem.get('id', uuid.uuid4().hex[:8])}",
-                domain=EarthSearchDomain.WIFI_HOTSPOTS,
-                source="osm_overpass",
-                title=name,
-                description=f"Type: {tags.get('amenity', 'N/A')}, Fee: {tags.get('internet_access:fee', 'N/A')}",
-                data={"osm_id": elem.get("id"), "tags": tags},
-                lat=elem.get("lat"),
-                lng=elem.get("lon"),
-                confidence=0.8,
-                crep_layer="wifi_hotspots",
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"wifi-{elem.get('id', uuid.uuid4().hex[:8])}",
+                    domain=EarthSearchDomain.WIFI_HOTSPOTS,
+                    source="osm_overpass",
+                    title=name,
+                    description=f"Type: {tags.get('amenity', 'N/A')}, Fee: {tags.get('internet_access:fee', 'N/A')}",
+                    data={"osm_id": elem.get("id"), "tags": tags},
+                    lat=elem.get("lat"),
+                    lng=elem.get("lon"),
+                    confidence=0.8,
+                    crep_layer="wifi_hotspots",
+                )
+            )
         return results

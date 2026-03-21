@@ -26,7 +26,9 @@ class ProviderConfig(BaseModel):
 
 class ModelRegistry(BaseModel):
     providers: Dict[str, ProviderConfig] = Field(default_factory=dict)
-    roles: Dict[str, str] = Field(default_factory=dict)  # e.g., "planning_model": "openai:gpt-4o-mini"
+    roles: Dict[str, str] = Field(
+        default_factory=dict
+    )  # e.g., "planning_model": "openai:gpt-4o-mini"
 
     def get_model_target(self, role: str) -> Optional[tuple[str, str]]:
         """
@@ -38,7 +40,10 @@ class ModelRegistry(BaseModel):
         if ":" in role_value:
             provider_key, model_name = role_value.split(":", 1)
             return provider_key, model_name
-        return role_value, self.providers.get(role_value, ProviderConfig(provider=role_value, model="")).model
+        return (
+            role_value,
+            self.providers.get(role_value, ProviderConfig(provider=role_value, model="")).model,
+        )
 
 
 class RuntimeSettings(BaseModel):
@@ -70,15 +75,21 @@ class RuntimeSettings(BaseModel):
         merged_config = raw_config.copy()
 
         database_url = os.getenv("DATABASE_URL", raw_config.get("database", {}).get("url", ""))
-        redis_url = os.getenv("REDIS_URL", raw_config.get("redis", {}).get("url", "redis://redis:6379/0"))
-        qdrant_url = os.getenv("QDRANT_URL", raw_config.get("qdrant", {}).get("url", "http://qdrant:6333"))
+        redis_url = os.getenv(
+            "REDIS_URL", raw_config.get("redis", {}).get("url", "redis://redis:6379/0")
+        )
+        qdrant_url = os.getenv(
+            "QDRANT_URL", raw_config.get("qdrant", {}).get("url", "http://qdrant:6333")
+        )
 
         model_registry = _build_model_registry(raw_models)
         settings = cls(
             database_url=database_url,
             redis_url=redis_url,
             qdrant_url=qdrant_url,
-            llm_default_provider=os.getenv("LLM_DEFAULT_PROVIDER", raw_models.get("default_provider")),
+            llm_default_provider=os.getenv(
+                "LLM_DEFAULT_PROVIDER", raw_models.get("default_provider")
+            ),
             llm_base_url=os.getenv("LLM_BASE_URL", raw_models.get("default_base_url")),
             llm_api_key=os.getenv("LLM_API_KEY"),
             model_registry=model_registry,

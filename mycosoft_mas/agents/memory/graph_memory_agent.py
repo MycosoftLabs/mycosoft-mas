@@ -89,7 +89,9 @@ class GraphMemoryAgent(BaseAgent if BaseAgent is not object else object):  # typ
             return {"status": "success", "result": {"node": node}}
         if task_type == "find_nodes":
             nodes = await graph.find_nodes(
-                node_type=_parse_node_type(task.get("node_type")) if task.get("node_type") else None,
+                node_type=(
+                    _parse_node_type(task.get("node_type")) if task.get("node_type") else None
+                ),
                 name_contains=task.get("name_contains"),
                 properties_filter=task.get("properties_filter"),
                 limit=int(task.get("limit", 50)),
@@ -99,13 +101,17 @@ class GraphMemoryAgent(BaseAgent if BaseAgent is not object else object):  # typ
             edges = await graph.get_edges(
                 source_id=task.get("source_id"),
                 target_id=task.get("target_id"),
-                edge_type=_parse_edge_type(task.get("edge_type")) if task.get("edge_type") else None,
+                edge_type=(
+                    _parse_edge_type(task.get("edge_type")) if task.get("edge_type") else None
+                ),
             )
             return {"status": "success", "result": {"edges": edges}}
         if task_type == "get_neighbors":
             traversal = await graph.get_neighbors(
                 node_id=task.get("node_id", ""),
-                edge_type=_parse_edge_type(task.get("edge_type")) if task.get("edge_type") else None,
+                edge_type=(
+                    _parse_edge_type(task.get("edge_type")) if task.get("edge_type") else None
+                ),
                 direction=task.get("direction", "both"),
                 max_depth=int(task.get("max_depth", 1)),
             )
@@ -116,7 +122,9 @@ class GraphMemoryAgent(BaseAgent if BaseAgent is not object else object):  # typ
                 return {"status": "error", "error": "embedding_required"}
             results = await graph.semantic_search(
                 embedding=embedding,
-                node_type=_parse_node_type(task.get("node_type")) if task.get("node_type") else None,
+                node_type=(
+                    _parse_node_type(task.get("node_type")) if task.get("node_type") else None
+                ),
                 limit=int(task.get("limit", 10)),
                 min_similarity=float(task.get("min_similarity", 0.5)),
             )

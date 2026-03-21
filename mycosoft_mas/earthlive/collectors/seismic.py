@@ -8,8 +8,7 @@ Created: February 25, 2026
 """
 
 import logging
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -68,17 +67,19 @@ class SeismicCollector:
             props = f.get("properties", {})
             geom = f.get("geometry", {})
             coords = geom.get("coordinates", [0, 0, 0])
-            events.append({
-                "id": f.get("id"),
-                "magnitude": props.get("mag"),
-                "place": props.get("place"),
-                "time_ms": props.get("time"),
-                "latitude": coords[1] if len(coords) > 1 else None,
-                "longitude": coords[0] if len(coords) > 0 else None,
-                "depth_km": coords[2] if len(coords) > 2 else None,
-                "title": props.get("title"),
-                "url": props.get("url"),
-            })
+            events.append(
+                {
+                    "id": f.get("id"),
+                    "magnitude": props.get("mag"),
+                    "place": props.get("place"),
+                    "time_ms": props.get("time"),
+                    "latitude": coords[1] if len(coords) > 1 else None,
+                    "longitude": coords[0] if len(coords) > 0 else None,
+                    "depth_km": coords[2] if len(coords) > 2 else None,
+                    "title": props.get("title"),
+                    "url": props.get("url"),
+                }
+            )
 
         return {
             "source": "usgs",

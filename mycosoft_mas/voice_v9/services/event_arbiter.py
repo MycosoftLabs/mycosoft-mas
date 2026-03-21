@@ -7,7 +7,7 @@ Determines which events should be spoken vs only shown in UI.
 
 from __future__ import annotations
 
-from typing import Callable, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from mycosoft_mas.voice_v9.schemas import SpeechworthyEvent
 
@@ -37,6 +37,7 @@ class EventArbiter:
         Returns (speak: bool, priority: float, reasoning: str).
         """
         import time
+
         now = time.time()
         # Trim old entries
         cutoff = now - 60.0
@@ -98,9 +99,10 @@ class EventArbiter:
     def record_spoken(self) -> None:
         """Call when an event is actually spoken (for rate limiting)."""
         import time
+
         self._recent_speech_ts.append(time.time())
         if len(self._recent_speech_ts) > self._max_history:
-            self._recent_speech_ts = self._recent_speech_ts[-self._max_history:]
+            self._recent_speech_ts = self._recent_speech_ts[-self._max_history :]
 
 
 _arbiter: Optional[EventArbiter] = None

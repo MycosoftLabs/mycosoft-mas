@@ -58,7 +58,10 @@ class AttentionBudget:
         if events:
             last = max(events)
             if now - last < self.cool_down_seconds:
-                return False, f"Cool-down active: {self.cool_down_seconds - (now - last):.0f}s remaining"
+                return (
+                    False,
+                    f"Cool-down active: {self.cool_down_seconds - (now - last):.0f}s remaining",
+                )
 
         # Per-hour check
         recent = [t for t in events if now - t < 3600]

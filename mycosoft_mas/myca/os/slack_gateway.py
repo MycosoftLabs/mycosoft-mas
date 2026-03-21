@@ -11,11 +11,11 @@ Morgan must enable Socket Mode and generate the App-Level Token.
 Date: 2026-03-04
 """
 
-import os
-import logging
-import threading
 import asyncio
-from typing import Optional, Any
+import logging
+import os
+import threading
+from typing import Any, Optional
 
 logger = logging.getLogger("myca.os.slack")
 
@@ -43,9 +43,7 @@ class SlackGateway:
             )
             return False
         if not self._app_token.startswith("xapp-"):
-            logger.warning(
-                "SLACK_APP_TOKEN must be an App-Level Token (xapp-...) — disabled"
-            )
+            logger.warning("SLACK_APP_TOKEN must be an App-Level Token (xapp-...) — disabled")
             return False
         return True
 
@@ -91,9 +89,7 @@ class SlackGateway:
             try:
                 loop = getattr(self._os, "_loop", None)
                 if loop and not loop.is_closed():
-                    future = asyncio.run_coroutine_threadsafe(
-                        self._os._handle_message(msg), loop
-                    )
+                    future = asyncio.run_coroutine_threadsafe(self._os._handle_message(msg), loop)
                     future.result(timeout=120)
                 else:
                     asyncio.run(self._os._handle_message(msg))

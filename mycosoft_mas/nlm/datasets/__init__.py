@@ -9,7 +9,7 @@ Components:
 - MINDEXConnector: Fetch data from MINDEX knowledge base
 """
 
-from .loaders import NLMDataLoader, DataProcessor, MINDEXConnector
+from .loaders import DataProcessor, MINDEXConnector, NLMDataLoader
 
 __all__ = [
     "NLMDataLoader",

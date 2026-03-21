@@ -34,7 +34,9 @@ def _to_epoch_seconds(value: Optional[str]) -> Optional[float]:
         return None
 
 
-def _passes_filter(payload: dict[str, Any], allowed_types: set[str], time_from: Optional[float]) -> bool:
+def _passes_filter(
+    payload: dict[str, Any], allowed_types: set[str], time_from: Optional[float]
+) -> bool:
     entity_type = payload.get("type")
     if allowed_types and entity_type not in allowed_types:
         return False
@@ -72,7 +74,11 @@ async def entity_stream(
     queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=512)
     client = await get_client()
 
-    channels = [f"entities:{cell}" for cell in cell_ids] if cell_ids else ["entities:lifecycle", "crep:live"]
+    channels = (
+        [f"entities:{cell}" for cell in cell_ids]
+        if cell_ids
+        else ["entities:lifecycle", "crep:live"]
+    )
 
     async def on_message(message: PubSubMessage):
         payload = message.data if isinstance(message.data, dict) else {"data": message.data}

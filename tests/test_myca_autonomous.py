@@ -5,11 +5,7 @@ Tests for MYCA Autonomous Systems - Soul, Economy, Knowledge, Taxonomy, Widgets
 Tests the foundational components of MYCA's autonomous AI capabilities.
 """
 
-import asyncio
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timezone
-
 
 # ============================================================================
 # Soul Persona Tests
@@ -22,6 +18,7 @@ class TestMycaSoulPersona:
     def test_soul_persona_loads(self):
         """Soul persona loads with default values."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MycaSoulPersona
+
         persona = MycaSoulPersona()
         assert persona.name == "MYCA"
         assert persona.pronunciation == "MY-kah"
@@ -31,31 +28,52 @@ class TestMycaSoulPersona:
     def test_soul_persona_has_deep_identity(self):
         """Soul persona has 10,000+ character identity text."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MYCA_SOUL_PERSONA
-        assert len(MYCA_SOUL_PERSONA) > 10000, f"Soul text only {len(MYCA_SOUL_PERSONA)} chars, need 10,000+"
+
+        assert (
+            len(MYCA_SOUL_PERSONA) > 10000
+        ), f"Soul text only {len(MYCA_SOUL_PERSONA)} chars, need 10,000+"
 
     def test_soul_persona_knowledge_domains(self):
         """Soul persona has all required knowledge domains."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MycaSoulPersona
+
         persona = MycaSoulPersona()
         domain_names = [d.name for d in persona.knowledge_domains]
-        required = ["mycology", "biology", "chemistry", "physics", "genetics",
-                     "virology", "bacteriology", "taxonomy", "geospatial"]
+        required = [
+            "mycology",
+            "biology",
+            "chemistry",
+            "physics",
+            "genetics",
+            "virology",
+            "bacteriology",
+            "taxonomy",
+            "geospatial",
+        ]
         for domain in required:
             assert domain in domain_names, f"Missing knowledge domain: {domain}"
 
     def test_soul_persona_autonomous_capabilities(self):
         """Soul persona has all autonomous capabilities."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MycaSoulPersona
+
         persona = MycaSoulPersona()
         cap_names = [c.name for c in persona.autonomous_capabilities]
-        required = ["self_healing", "self_improving", "self_learning",
-                     "self_aware", "self_promoting", "self_funded"]
+        required = [
+            "self_healing",
+            "self_improving",
+            "self_learning",
+            "self_aware",
+            "self_promoting",
+            "self_funded",
+        ]
         for cap in required:
             assert cap in cap_names, f"Missing capability: {cap}"
 
     def test_soul_persona_personality_traits(self):
         """Soul persona has personality traits."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MycaSoulPersona
+
         persona = MycaSoulPersona()
         assert "warmth" in persona.personality
         assert "curiosity" in persona.personality
@@ -65,6 +83,7 @@ class TestMycaSoulPersona:
     def test_soul_persona_evolve_personality(self):
         """Personality traits can evolve."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MycaSoulPersona
+
         persona = MycaSoulPersona()
         old_curiosity = persona.personality["curiosity"]
         persona.evolve_personality("curiosity", 0.02, "learned new species")
@@ -74,6 +93,7 @@ class TestMycaSoulPersona:
     def test_soul_persona_core_values(self):
         """Soul persona has immutable core values."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MycaSoulPersona
+
         persona = MycaSoulPersona()
         assert any("Protect all life" in v for v in persona.core_values)
         assert any("truth" in v.lower() for v in persona.core_values)
@@ -81,12 +101,14 @@ class TestMycaSoulPersona:
     def test_soul_persona_forbidden_phrases(self):
         """Soul persona has forbidden phrases that MYCA never says."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MycaSoulPersona
+
         persona = MycaSoulPersona()
         assert "I'm just an AI" in persona.forbidden_phrases
 
     def test_soul_persona_system_prompt(self):
         """System prompt includes soul text."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MycaSoulPersona
+
         persona = MycaSoulPersona()
         prompt = persona.get_system_prompt()
         assert "MYCA" in prompt
@@ -95,6 +117,7 @@ class TestMycaSoulPersona:
     def test_soul_persona_serialization(self):
         """Soul persona can be serialized and restored."""
         from mycosoft_mas.myca.soul.myca_soul_persona import MycaSoulPersona
+
         persona = MycaSoulPersona()
         persona.record_interaction()
         persona.record_learning("mycology", "iNaturalist")
@@ -106,6 +129,7 @@ class TestMycaSoulPersona:
     def test_load_soul_persona(self):
         """load_soul_persona returns a valid persona."""
         from mycosoft_mas.myca.soul.myca_soul_persona import load_soul_persona
+
         persona = load_soul_persona()
         assert persona.name == "MYCA"
         assert len(persona.knowledge_domains) >= 10
@@ -122,6 +146,7 @@ class TestKnowledgeDomainAgent:
     def test_agent_creates(self):
         """Agent initializes with all domains."""
         from mycosoft_mas.agents.v2.knowledge_domain_agent import KnowledgeDomainAgent
+
         agent = KnowledgeDomainAgent()
         assert agent.agent_id == "knowledge_domain_agent"
         assert len(agent.capabilities) > 20
@@ -129,7 +154,11 @@ class TestKnowledgeDomainAgent:
     @pytest.mark.asyncio
     async def test_classify_query_domain(self):
         """Classifies queries into correct domains."""
-        from mycosoft_mas.agents.v2.knowledge_domain_agent import KnowledgeDomainAgent, KnowledgeDomain
+        from mycosoft_mas.agents.v2.knowledge_domain_agent import (
+            KnowledgeDomain,
+            KnowledgeDomainAgent,
+        )
+
         agent = KnowledgeDomainAgent()
 
         domain = await agent.classify_query_domain("What species of mushroom is this?")
@@ -145,6 +174,7 @@ class TestKnowledgeDomainAgent:
     async def test_get_domain_stats(self):
         """Returns domain statistics."""
         from mycosoft_mas.agents.v2.knowledge_domain_agent import KnowledgeDomainAgent
+
         agent = KnowledgeDomainAgent()
         stats = agent._get_domain_stats()
         assert stats["status"] == "success"
@@ -154,11 +184,11 @@ class TestKnowledgeDomainAgent:
     async def test_process_classify_task(self):
         """Processes domain classification task."""
         from mycosoft_mas.agents.v2.knowledge_domain_agent import KnowledgeDomainAgent
+
         agent = KnowledgeDomainAgent()
-        result = await agent.process_task({
-            "type": "classify_domain",
-            "query": "How does mycelium grow?"
-        })
+        result = await agent.process_task(
+            {"type": "classify_domain", "query": "How does mycelium grow?"}
+        )
         assert result["status"] == "success"
         assert result["domain"] == "mycology"
 
@@ -174,6 +204,7 @@ class TestWidgetSystem:
     def test_widget_types_exist(self):
         """All widget types are defined."""
         from mycosoft_mas.core.routers.widget_api import WidgetType
+
         assert WidgetType.MAP
         assert WidgetType.TAXONOMY_TREE
         assert WidgetType.MOLECULE_3D
@@ -182,7 +213,8 @@ class TestWidgetSystem:
 
     def test_suggest_widgets_for_species_query(self):
         """Suggests species-related widgets."""
-        from mycosoft_mas.core.routers.widget_api import _suggest_widgets_for_query, WidgetType
+        from mycosoft_mas.core.routers.widget_api import WidgetType, _suggest_widgets_for_query
+
         suggestions = _suggest_widgets_for_query("Show me the Amanita muscaria mushroom")
         assert len(suggestions) > 0
         types = [s.widget_type for s in suggestions]
@@ -190,14 +222,16 @@ class TestWidgetSystem:
 
     def test_suggest_widgets_for_map_query(self):
         """Suggests map widgets for location queries."""
-        from mycosoft_mas.core.routers.widget_api import _suggest_widgets_for_query, WidgetType
+        from mycosoft_mas.core.routers.widget_api import WidgetType, _suggest_widgets_for_query
+
         suggestions = _suggest_widgets_for_query("Where is this species found?")
         types = [s.widget_type for s in suggestions]
         assert WidgetType.MAP in types
 
     def test_suggest_widgets_for_chemistry_query(self):
         """Suggests molecule widgets for chemistry queries."""
-        from mycosoft_mas.core.routers.widget_api import _suggest_widgets_for_query, WidgetType
+        from mycosoft_mas.core.routers.widget_api import WidgetType, _suggest_widgets_for_query
+
         suggestions = _suggest_widgets_for_query("Show the molecular structure of psilocybin")
         types = [s.widget_type for s in suggestions]
         assert WidgetType.MOLECULE_3D in types
@@ -205,7 +239,10 @@ class TestWidgetSystem:
     def test_generate_map_widget(self):
         """Generates a map widget."""
         from mycosoft_mas.core.routers.widget_api import _generate_map_widget
-        widget = _generate_map_widget("distribution of Amanita", {"center": [45.0, -122.0], "zoom": 5})
+
+        widget = _generate_map_widget(
+            "distribution of Amanita", {"center": [45.0, -122.0], "zoom": 5}
+        )
         assert widget.widget_type.value == "map"
         assert "mapbox" in widget.render_config.get("renderer", "")
 
@@ -250,7 +287,8 @@ class TestNvidiaProvider:
 
     def test_provider_creates(self):
         """Provider initializes with config."""
-        from mycosoft_mas.llm.nvidia_provider import NvidiaModelProvider, NvidiaConfig
+        from mycosoft_mas.llm.nvidia_provider import NvidiaConfig, NvidiaModelProvider
+
         config = NvidiaConfig()
         provider = NvidiaModelProvider(config)
         assert provider.config.gpu_node_ip == "192.168.0.190"
@@ -258,6 +296,7 @@ class TestNvidiaProvider:
     def test_simulation_types(self):
         """All simulation types are defined."""
         from mycosoft_mas.llm.nvidia_provider import SimulationType
+
         assert SimulationType.WEATHER_FORECAST
         assert SimulationType.CLIMATE_PROJECTION
         assert SimulationType.FLUID_DYNAMICS
@@ -266,12 +305,14 @@ class TestNvidiaProvider:
     def test_model_types(self):
         """All NVIDIA model types are defined."""
         from mycosoft_mas.llm.nvidia_provider import NvidiaModelType
+
         assert NvidiaModelType.EARTH2_FOURCASTNET
         assert NvidiaModelType.PHYSICSNEMO_MODULUS
 
     def test_provider_metrics(self):
         """Provider returns metrics."""
         from mycosoft_mas.llm.nvidia_provider import NvidiaModelProvider
+
         provider = NvidiaModelProvider()
         metrics = provider.get_metrics()
         assert "total_simulations" in metrics
@@ -289,6 +330,7 @@ class TestAutonomousSelf:
     def test_autonomous_self_imports(self):
         """AutonomousSelf imports successfully."""
         from mycosoft_mas.consciousness.autonomous_self import AutonomousSelf
+
         auto_self = AutonomousSelf()
         assert auto_self is not None
 
@@ -296,6 +338,7 @@ class TestAutonomousSelf:
     async def test_assess_self(self):
         """Self-assessment returns valid data."""
         from mycosoft_mas.consciousness.autonomous_self import AutonomousSelf
+
         auto_self = AutonomousSelf()
         assessment = await auto_self.assess_self()
         assert "state" in assessment
@@ -305,12 +348,14 @@ class TestAutonomousSelf:
     def test_self_healing_engine(self):
         """Self-healing engine initializes."""
         from mycosoft_mas.consciousness.autonomous_self import SelfHealingEngine
+
         engine = SelfHealingEngine()
         assert engine is not None
 
     def test_self_learning_engine(self):
         """Self-learning engine initializes."""
         from mycosoft_mas.consciousness.autonomous_self import SelfLearningEngine
+
         engine = SelfLearningEngine()
         assert engine is not None
 
@@ -326,40 +371,48 @@ class TestModuleIntegration:
     def test_soul_module_imports(self):
         """Soul module imports cleanly."""
         from mycosoft_mas.myca.soul import MycaSoulPersona, load_soul_persona
+
         assert MycaSoulPersona is not None
         assert load_soul_persona is not None
 
     def test_knowledge_agent_imports(self):
         """Knowledge agent imports cleanly."""
         from mycosoft_mas.agents.v2.knowledge_domain_agent import KnowledgeDomainAgent
+
         assert KnowledgeDomainAgent is not None
 
     def test_nvidia_provider_imports(self):
         """NVIDIA provider imports cleanly."""
         from mycosoft_mas.llm.nvidia_provider import NvidiaModelProvider
+
         assert NvidiaModelProvider is not None
 
     def test_economy_router_imports(self):
         """Economy router imports cleanly."""
         from mycosoft_mas.core.routers.economy_api import router
+
         assert router is not None
 
     def test_widget_router_imports(self):
         """Widget router imports cleanly."""
         from mycosoft_mas.core.routers.widget_api import router
+
         assert router is not None
 
     def test_taxonomy_router_imports(self):
         """Taxonomy router imports cleanly."""
         from mycosoft_mas.core.routers.taxonomy_api import router
+
         assert router is not None
 
     def test_knowledge_router_imports(self):
         """Knowledge router imports cleanly."""
         from mycosoft_mas.core.routers.knowledge_api import router
+
         assert router is not None
 
     def test_ollama_provider_imports(self):
         """Ollama local provider imports cleanly."""
         from mycosoft_mas.llm.ollama_local_provider import OllamaLocalProvider
+
         assert OllamaLocalProvider is not None

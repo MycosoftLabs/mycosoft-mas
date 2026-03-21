@@ -280,7 +280,9 @@ def psilo_session_patch(session_id: str, body: Dict[str, Any]) -> Optional[Dict[
         return None
 
 
-def psilo_append_event(session_id: str, event_type: str, payload: Optional[Dict[str, Any]] = None) -> bool:
+def psilo_append_event(
+    session_id: str, event_type: str, payload: Optional[Dict[str, Any]] = None
+) -> bool:
     try:
         with httpx.Client(timeout=_TIMEOUT) as client:
             r = client.post(

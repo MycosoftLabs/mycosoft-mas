@@ -8,7 +8,7 @@ Created: February 25, 2026
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from uuid import UUID, uuid4
 
 
@@ -56,9 +56,9 @@ async def assemble_from_collectors(
     satellite_group: str = "starlink",
 ) -> EarthLIVEPacket:
     """Run all collectors and assemble unified packet."""
-    from mycosoft_mas.earthlive.collectors.weather import WeatherCollector
-    from mycosoft_mas.earthlive.collectors.seismic import SeismicCollector
     from mycosoft_mas.earthlive.collectors.satellite import SatelliteCollector
+    from mycosoft_mas.earthlive.collectors.seismic import SeismicCollector
+    from mycosoft_mas.earthlive.collectors.weather import WeatherCollector
 
     wc = WeatherCollector(latitude=latitude, longitude=longitude)
     sc = SeismicCollector(feed=seismic_feed)

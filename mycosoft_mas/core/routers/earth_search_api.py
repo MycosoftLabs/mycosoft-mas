@@ -26,12 +26,11 @@ from mycosoft_mas.earth_search.models import (
     EarthSearchQuery,
     EarthSearchResponse,
     GeoFilter,
-    TemporalFilter,
 )
 from mycosoft_mas.earth_search.registry import (
     EARTH_DATA_SOURCES,
-    get_sources_for_domain,
     get_all_realtime_sources,
+    get_sources_for_domain,
 )
 
 logger = logging.getLogger(__name__)
@@ -54,6 +53,7 @@ async def earth_search_query(request: EarthSearchQuery) -> EarthSearchResponse:
     """
     try:
         from mycosoft_mas.earth_search.orchestrator import run_earth_search
+
         return await run_earth_search(request)
     except Exception as e:
         logger.error("Earth search failed: %s", e)
@@ -82,13 +82,15 @@ async def list_domains() -> Dict[str, Any]:
             if domain in members:
                 group = g
                 break
-        domain_infos.append(DomainInfo(
-            domain=domain.value,
-            group=group,
-            source_count=len(sources),
-            sources=[s.source_id for s in sources],
-            has_realtime=any(s.realtime for s in sources),
-        ))
+        domain_infos.append(
+            DomainInfo(
+                domain=domain.value,
+                group=group,
+                source_count=len(sources),
+                sources=[s.source_id for s in sources],
+                has_realtime=any(s.realtime for s in sources),
+            )
+        )
 
     return {
         "total_domains": len(EarthSearchDomain),
@@ -131,6 +133,7 @@ async def earth_search_health() -> Dict[str, Any]:
 
 class CREPSearchRequest(BaseModel):
     """Search with automatic CREP map visualization."""
+
     query: str = Field(..., min_length=1)
     domains: List[EarthSearchDomain] = Field(default_factory=list)
     lat: Optional[float] = None
@@ -145,7 +148,11 @@ async def earth_search_crep(request: CREPSearchRequest) -> Dict[str, Any]:
     Search and simultaneously render results on the CREP map.
     Returns both search results and CREP command sequence.
     """
-    geo = GeoFilter(lat=request.lat, lng=request.lng, radius_km=request.radius_km) if request.lat and request.lng else None
+    geo = (
+        GeoFilter(lat=request.lat, lng=request.lng, radius_km=request.radius_km)
+        if request.lat and request.lng
+        else None
+    )
 
     search_query = EarthSearchQuery(
         query=request.query,
@@ -157,11 +164,13 @@ async def earth_search_crep(request: CREPSearchRequest) -> Dict[str, Any]:
 
     try:
         from mycosoft_mas.earth_search.orchestrator import run_earth_search
+
         response = await run_earth_search(search_query)
 
         # Also emit CREP commands via Redis pub/sub for real-time map update
         try:
             from mycosoft_mas.crep.command_bus import emit_crep_commands
+
             if response.crep_commands:
                 await emit_crep_commands(response.crep_commands)
         except Exception as e:
@@ -178,6 +187,7 @@ async def earth_search_crep(request: CREPSearchRequest) -> Dict[str, Any]:
 
 class IngestRequest(BaseModel):
     """Manually trigger ingestion of external data."""
+
     domain: EarthSearchDomain
     source: str
     records: List[Dict[str, Any]]
@@ -186,22 +196,25 @@ class IngestRequest(BaseModel):
 @router.post("/ingest")
 async def manual_ingest(request: IngestRequest) -> Dict[str, Any]:
     """Manually ingest external data into MINDEX + Supabase."""
-    from mycosoft_mas.earth_search.ingestion.pipeline import IngestionPipeline
     import uuid
+
+    from mycosoft_mas.earth_search.ingestion.pipeline import IngestionPipeline
 
     results = []
     for rec in request.records:
-        results.append(EarthSearchResult(
-            result_id=rec.get("id", f"manual-{uuid.uuid4().hex[:8]}"),
-            domain=request.domain,
-            source=request.source,
-            title=rec.get("title", ""),
-            description=rec.get("description", ""),
-            data=rec.get("data", {}),
-            lat=rec.get("lat"),
-            lng=rec.get("lng"),
-            confidence=rec.get("confidence", 0.5),
-        ))
+        results.append(
+            EarthSearchResult(
+                result_id=rec.get("id", f"manual-{uuid.uuid4().hex[:8]}"),
+                domain=request.domain,
+                source=request.source,
+                title=rec.get("title", ""),
+                description=rec.get("description", ""),
+                data=rec.get("data", {}),
+                lat=rec.get("lat"),
+                lng=rec.get("lng"),
+                confidence=rec.get("confidence", 0.5),
+            )
+        )
 
     pipeline = IngestionPipeline()
     await pipeline.ingest_batch(results, f"manual_ingest:{request.domain.value}")

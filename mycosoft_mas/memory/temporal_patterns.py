@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TemporalPattern:
     """A stored temporal pattern (e.g. daily mean, anomaly)."""
+
     stream_key: str
     pattern_type: str
     hour_of_day: Optional[int] = None
@@ -64,9 +65,9 @@ class TemporalPatternStore:
         key = pattern.stream_key
         existing = [p for p in self._patterns[key] if self._matches(p, pattern)]
         if existing:
-            existing[0].mean = (existing[0].mean * existing[0].sample_count + pattern.mean * pattern.sample_count) / (
-                existing[0].sample_count + pattern.sample_count
-            )
+            existing[0].mean = (
+                existing[0].mean * existing[0].sample_count + pattern.mean * pattern.sample_count
+            ) / (existing[0].sample_count + pattern.sample_count)
             existing[0].sample_count += pattern.sample_count
             existing[0].last_updated = datetime.now(timezone.utc)
         else:
@@ -115,10 +116,7 @@ class TemporalPatternStore:
         """Persist patterns to file."""
         try:
             self._persist_path.parent.mkdir(parents=True, exist_ok=True)
-            data = {
-                k: [p.to_dict() for p in v]
-                for k, v in self._patterns.items()
-            }
+            data = {k: [p.to_dict() for p in v] for k, v in self._patterns.items()}
             self._persist_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
         except Exception as e:
             logger.warning("Failed to save temporal patterns: %s", e)

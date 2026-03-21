@@ -14,17 +14,17 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import json
 import logging
 import os
+import uuid
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
-import uuid
 
-from fastapi import FastAPI, HTTPException
 import httpx
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from .opclaw_client import OpenClawClient
@@ -81,7 +81,7 @@ class GatewayRouter:
         self.upstream_mycorrhizae = os.getenv("MYCORRHIZAE_API_URL", "").rstrip("/")
         self.upstream_mindex = os.getenv("MINDEX_API_URL", "").rstrip("/")
         self.upstream_ingest = os.getenv("TELEMETRY_INGEST_URL", "").rstrip("/")
-        self.nlm_api_url = (os.getenv("NLM_API_URL", "").rstrip("/") or None)
+        self.nlm_api_url = os.getenv("NLM_API_URL", "").rstrip("/") or None
         self.max_attempts = int(os.getenv("GATEWAY_MAX_ATTEMPTS", "8"))
         self.flush_interval_seconds = int(os.getenv("GATEWAY_FLUSH_INTERVAL_SECONDS", "5"))
         self.heartbeat_interval_seconds = int(os.getenv("GATEWAY_HEARTBEAT_INTERVAL_SECONDS", "30"))
@@ -126,7 +126,10 @@ class GatewayRouter:
                 "transport": req.transport,
                 "last_seen": msg.received_at,
             }
-        await self._audit("ingest", {"message_id": msg.message_id, "device_id": msg.device_id, "transport": msg.transport})
+        await self._audit(
+            "ingest",
+            {"message_id": msg.message_id, "device_id": msg.device_id, "transport": msg.transport},
+        )
         return msg
 
     def _build_envelope(self, device_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -143,7 +146,9 @@ class GatewayRouter:
             "received_at": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def _translate_via_nlm(self, client: httpx.AsyncClient, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def _translate_via_nlm(
+        self, client: httpx.AsyncClient, payload: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Call NLM /api/translate for ingested telemetry. Returns NMF or None."""
         if not self.nlm_api_url:
             return None
@@ -189,7 +194,10 @@ class GatewayRouter:
                 failed += 1
                 msg.attempts += 1
                 msg.last_error = err
-                await self._audit("publish_failed", {"message_id": msg.message_id, "error": err, "attempts": msg.attempts})
+                await self._audit(
+                    "publish_failed",
+                    {"message_id": msg.message_id, "error": err, "attempts": msg.attempts},
+                )
                 if msg.attempts >= self.max_attempts:
                     async with self._queue_lock:
                         self.queue = [m for m in self.queue if m.message_id != msg.message_id]
@@ -235,12 +243,17 @@ class GatewayRouter:
 
                 if self.upstream_ingest:
                     ingest_url = self.upstream_ingest
-                    if "/api/iot/envelope/ingest" not in ingest_url and "/api/devices/ingest" not in ingest_url:
+                    if (
+                        "/api/iot/envelope/ingest" not in ingest_url
+                        and "/api/devices/ingest" not in ingest_url
+                    ):
                         ingest_url = ingest_url + "/api/iot/envelope/ingest"
                     await client.post(ingest_url, json=data_for_ingest)
 
                 if self.upstream_mindex:
-                    await client.post(f"{self.upstream_mindex}/api/fci/telemetry", json=data_for_ingest)
+                    await client.post(
+                        f"{self.upstream_mindex}/api/fci/telemetry", json=data_for_ingest
+                    )
 
                 if self.upstream_mycorrhizae:
                     env_pub = {
@@ -249,9 +262,13 @@ class GatewayRouter:
                         "payload_type": "telemetry",
                         "payload": data_for_ingest,
                     }
-                    await client.post(f"{self.upstream_mycorrhizae}/api/channels/publish", json=env_pub)
+                    await client.post(
+                        f"{self.upstream_mycorrhizae}/api/channels/publish", json=env_pub
+                    )
 
-            await self._audit("published", {"message_id": msg.message_id, "device_id": msg.device_id})
+            await self._audit(
+                "published", {"message_id": msg.message_id, "device_id": msg.device_id}
+            )
             return True, None
         except Exception as exc:  # noqa: BLE001
             return False, str(exc)
@@ -272,7 +289,9 @@ class GatewayRouter:
             "extra": {"gateway_id": self.gateway_id, "location": self.location},
         }
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.post(f"{self.upstream_mas}/api/devices/heartbeat", json=heartbeat)
+            response = await client.post(
+                f"{self.upstream_mas}/api/devices/heartbeat", json=heartbeat
+            )
             response.raise_for_status()
             data = response.json()
         await self._audit("gateway_registered", {"gateway_id": self.gateway_id})
@@ -282,11 +301,19 @@ class GatewayRouter:
         if not self.opclaw:
             raise HTTPException(status_code=400, detail="gateway_openclaw_not_configured")
         result = await self.opclaw.run_task(req.task, api_key=self.opclaw_api_key)
-        await self._audit("openclaw_task", {"source": req.source, "task": req.task, "result": result})
+        await self._audit(
+            "openclaw_task", {"source": req.source, "task": req.task, "result": result}
+        )
         return result
 
     async def _audit(self, event_type: str, payload: Dict[str, Any]) -> None:
-        line = json.dumps({"ts": _utc_now(), "event_type": event_type, "payload": payload}, separators=(",", ":")) + "\n"
+        line = (
+            json.dumps(
+                {"ts": _utc_now(), "event_type": event_type, "payload": payload},
+                separators=(",", ":"),
+            )
+            + "\n"
+        )
         await asyncio.to_thread(self._append_line, line)
 
     def _append_line(self, line: str) -> None:
@@ -360,7 +387,11 @@ async def list_devices() -> Dict[str, Any]:
     """List all ingested device IDs and their last-seen time."""
     async with router._device_lock:
         devices = [
-            {"device_id": dev_id, "transport": info.get("transport"), "last_seen": info.get("last_seen")}
+            {
+                "device_id": dev_id,
+                "transport": info.get("transport"),
+                "last_seen": info.get("last_seen"),
+            }
             for dev_id, info in router._device_registry.items()
         ]
     return {"gateway_id": router.gateway_id, "devices": devices}

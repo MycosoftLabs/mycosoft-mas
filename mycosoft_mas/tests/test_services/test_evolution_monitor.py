@@ -1,8 +1,11 @@
-import pytest
 import asyncio
 from datetime import datetime
+
+import pytest
+
 from mycosoft_mas.services.evolution_monitor import EvolutionMonitor
 from mycosoft_mas.services.exceptions import EvolutionMonitorError
+
 
 class TestEvolutionMonitor:
     @pytest.fixture
@@ -24,7 +27,7 @@ class TestEvolutionMonitor:
         # Simulate new technology detection
         updates = await monitor.check_for_updates()
         assert isinstance(updates["new_technologies"], list)
-        
+
         # Verify technology structure
         if updates["new_technologies"]:
             tech = updates["new_technologies"][0]
@@ -38,7 +41,7 @@ class TestEvolutionMonitor:
         # Simulate evolution alerts
         updates = await monitor.check_for_updates()
         assert isinstance(updates["evolution_alerts"], list)
-        
+
         # Verify alert structure
         if updates["evolution_alerts"]:
             alert = updates["evolution_alerts"][0]
@@ -51,7 +54,7 @@ class TestEvolutionMonitor:
         # Simulate system updates
         updates = await monitor.check_for_updates()
         assert isinstance(updates["system_updates"], list)
-        
+
         # Verify update structure
         if updates["system_updates"]:
             update = updates["system_updates"][0]
@@ -73,10 +76,10 @@ class TestEvolutionMonitor:
     async def test_clear_updates(self, monitor):
         # First check for updates
         await monitor.check_for_updates()
-        
+
         # Clear updates
         await monitor.clear_updates()
-        
+
         # Verify updates are cleared
         status = monitor.get_status()
         assert status["updates_found"] == 0
@@ -92,9 +95,7 @@ class TestEvolutionMonitor:
     @pytest.mark.asyncio
     async def test_concurrent_checks(self, monitor):
         # Test concurrent update checks
-        tasks = [
-            monitor.check_for_updates() for _ in range(5)
-        ]
+        tasks = [monitor.check_for_updates() for _ in range(5)]
         results = await asyncio.gather(*tasks)
         assert len(results) == 5
         assert all(isinstance(r, dict) for r in results)
@@ -123,7 +124,7 @@ class TestEvolutionMonitor:
         start_time = datetime.now()
         await monitor.check_for_updates()
         end_time = datetime.now()
-        
+
         status = monitor.get_status()
         assert status["processing_time"] >= 0
         assert (end_time - start_time).total_seconds() >= status["processing_time"]
@@ -132,12 +133,12 @@ class TestEvolutionMonitor:
     async def test_error_counting(self, monitor):
         # Test error counting
         initial_errors = monitor.get_status()["error_count"]
-        
+
         # Simulate an error
         monitor.check_interval = -1
         try:
             await monitor.check_for_updates()
         except EvolutionMonitorError:
             pass
-            
-        assert monitor.get_status()["error_count"] == initial_errors + 1 
+
+        assert monitor.get_status()["error_count"] == initial_errors + 1

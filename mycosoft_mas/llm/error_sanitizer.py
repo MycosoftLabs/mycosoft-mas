@@ -8,7 +8,6 @@ Created: February 17, 2026
 """
 
 import re
-from typing import Optional
 
 # Patterns that indicate sensitive data (case-insensitive)
 SENSITIVE_PATTERNS = [
@@ -54,10 +53,11 @@ def sanitize_for_user(error: Exception) -> str:
     # Always return generic message for users - never raw exception text
     redacted = _redact_sensitive(msg)
     if redacted != msg or any(
-        s in msg.lower()
-        for s in ("api", "key", "token", "credential", "connection", "timeout")
+        s in msg.lower() for s in ("api", "key", "token", "credential", "connection", "timeout")
     ):
-        return "I'm having a moment of difficulty with that request. Could you try again in a moment?"
+        return (
+            "I'm having a moment of difficulty with that request. Could you try again in a moment?"
+        )
     # For benign-looking errors, still avoid exposing internals
     return "I'm having a moment of difficulty with that request. Could you try again in a moment?"
 

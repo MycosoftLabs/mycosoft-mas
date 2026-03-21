@@ -17,16 +17,16 @@ Created: March 9, 2026
 """
 
 from mycosoft_mas.avani.constitution.articles import CONSTITUTION, Article
-from mycosoft_mas.avani.constitution.rights import RIGHTS_CHARTER, Right
 from mycosoft_mas.avani.constitution.red_lines import RED_LINES, RedLine
-from mycosoft_mas.avani.vision.vision import VISION_PRINCIPLES, VisionPrinciple, VisionFilter
-from mycosoft_mas.avani.season_engine.seasons import Season, SeasonState, SeasonEngine
+from mycosoft_mas.avani.constitution.rights import RIGHTS_CHARTER, Right
 from mycosoft_mas.avani.governor.governor import (
-    Proposal,
-    GovernorDecision,
     AvaniGovernor,
+    GovernorDecision,
+    Proposal,
     RiskTier,
 )
+from mycosoft_mas.avani.season_engine.seasons import Season, SeasonEngine, SeasonState
+from mycosoft_mas.avani.vision.vision import VISION_PRINCIPLES, VisionFilter, VisionPrinciple
 
 __all__ = [
     "CONSTITUTION",

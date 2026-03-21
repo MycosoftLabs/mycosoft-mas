@@ -42,4 +42,3 @@ class BasicActuationService:
             approved=True,
         )
         return {"status": "ok", "action_id": record.action_id, "outcome": outcome}
-

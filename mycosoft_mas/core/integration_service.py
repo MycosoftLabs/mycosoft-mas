@@ -1,12 +1,15 @@
-from typing import Dict, List, Optional
 import asyncio
-import websockets
 import json
 from datetime import datetime
+from typing import Dict
+
+import websockets
+
 from .base_agent import BaseAgent
-from .metrics_collector import MetricsCollector
 from .knowledge_graph import KnowledgeGraph
+from .metrics_collector import MetricsCollector
 from .network_monitor import NetworkMonitor
+
 
 class IntegrationService:
     def __init__(self):
@@ -69,7 +72,7 @@ class IntegrationService:
             "type": "metrics",
             "timestamp": datetime.now().isoformat(),
             "metrics": metrics,
-            "network": network_stats
+            "network": network_stats,
         }
         await self._broadcast(message)
 
@@ -81,14 +84,14 @@ class IntegrationService:
                 "name": agent.name,
                 "status": agent.status,
                 "last_update": agent.last_update.isoformat() if agent.last_update else None,
-                "metrics": agent.metrics
+                "metrics": agent.metrics,
             }
             for agent_id, agent in self.agents.items()
         }
         message = {
             "type": "status",
             "timestamp": datetime.now().isoformat(),
-            "agents": agent_statuses
+            "agents": agent_statuses,
         }
         await self._broadcast(message)
 
@@ -126,4 +129,4 @@ class IntegrationService:
         except websockets.exceptions.ConnectionClosed:
             pass
         finally:
-            self.websocket_clients.remove(websocket) 
+            self.websocket_clients.remove(websocket)

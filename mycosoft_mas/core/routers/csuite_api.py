@@ -12,15 +12,16 @@ Created: March 7, 2026
 """
 
 import json
-import os
 import logging
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-import redis
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
+
+import redis
 
 logger = logging.getLogger("CSUITE")
 
@@ -154,20 +155,26 @@ def _set_cto_task(task_id: str, task: Dict[str, Any]) -> None:
 
 class CSuiteHeartbeat(BaseModel):
     """Heartbeat from an executive assistant VM."""
+
     role: str = Field(..., description="CEO | CFO | CTO | COO")
     assistant_name: str = Field(..., description="Atlas | Meridian | Forge | Nexus")
     ip: str = Field(..., description="VM IP (192.168.0.192-195)")
     status: str = Field(default="healthy", description="healthy | degraded | error")
     openclaw_version: Optional[str] = Field(default=None)
-    primary_tool: Optional[str] = Field(default=None, description="MYCAOS | Perplexity | Cursor | Claude Cowork")
+    primary_tool: Optional[str] = Field(
+        default=None, description="MYCAOS | Perplexity | Cursor | Claude Cowork"
+    )
     extra: Dict[str, Any] = Field(default_factory=dict)
 
 
 class CSuiteReport(BaseModel):
     """Task completion, executive summary, or operating report."""
+
     role: str = Field(..., description="CEO | CFO | CTO | COO")
     assistant_name: str = Field(...)
-    report_type: str = Field(..., description="task_completion | executive_summary | operating_report")
+    report_type: str = Field(
+        ..., description="task_completion | executive_summary | operating_report"
+    )
     summary: str = Field(..., description="Brief summary")
     details: Optional[Dict[str, Any]] = Field(default=None)
     task_id: Optional[str] = Field(default=None)
@@ -176,6 +183,7 @@ class CSuiteReport(BaseModel):
 
 class CSuiteEscalation(BaseModel):
     """Escalation request when assistant needs Morgan's decision."""
+
     role: str = Field(...)
     assistant_name: str = Field(...)
     subject: str = Field(..., description="Escalation subject")
@@ -186,6 +194,7 @@ class CSuiteEscalation(BaseModel):
 
 class FinanceDirectiveBody(BaseModel):
     """Finance directive from Meridian (CFO) to steer finance agents."""
+
     source: str = Field(default="Meridian", description="Meridian | CFO | Perplexity")
     directive: str = Field(..., description="Directive text or instruction")
     priority: str = Field(default="normal", description="low | normal | high | urgent")
@@ -195,6 +204,7 @@ class FinanceDirectiveBody(BaseModel):
 
 class AgentReportBody(BaseModel):
     """Report from a finance agent back to CFO."""
+
     agent_id: str = Field(..., description="Finance agent ID")
     report_type: str = Field(..., description="task_completion | status | escalation")
     summary: str = Field(..., description="Brief summary")
@@ -204,6 +214,7 @@ class AgentReportBody(BaseModel):
 
 class ForgeTaskCreate(BaseModel):
     """CTO task posted by MYCA/Morgan for Forge."""
+
     title: str = Field(..., description="Task title")
     description: str = Field(..., description="Task description or instructions")
     priority: str = Field(default="normal", description="low | normal | high | urgent")
@@ -213,6 +224,7 @@ class ForgeTaskCreate(BaseModel):
 
 class ForgeTaskAck(BaseModel):
     """Forge acknowledges or completes a task."""
+
     status: str = Field(..., description="in_progress | complete | failed")
     summary: Optional[str] = Field(default=None, description="Completion summary")
     details: Optional[Dict[str, Any]] = Field(default=None)
@@ -238,7 +250,9 @@ async def csuite_heartbeat(body: CSuiteHeartbeat) -> Dict[str, Any]:
         "extra": body.extra,
     }
     _save_registry()
-    logger.info(f"C-Suite heartbeat: {body.role} ({body.assistant_name}) @ {body.ip} — {body.status}")
+    logger.info(
+        f"C-Suite heartbeat: {body.role} ({body.assistant_name}) @ {body.ip} — {body.status}"
+    )
     return {"status": "ok", "assistant_id": aid, "registered_at": now.isoformat()}
 
 
@@ -280,7 +294,9 @@ async def csuite_escalation(body: CSuiteEscalation) -> Dict[str, Any]:
     """Receive escalation request when assistant needs Morgan's decision."""
     aid = _assistant_id(body.role)
     now = datetime.now(timezone.utc)
-    logger.warning(f"C-Suite escalation: {body.role} ({body.assistant_name}) — {body.subject} [{body.urgency}]")
+    logger.warning(
+        f"C-Suite escalation: {body.role} ({body.assistant_name}) — {body.subject} [{body.urgency}]"
+    )
     if aid not in _assistant_registry:
         _assistant_registry[aid] = {}
     esc_entry = {
@@ -302,6 +318,7 @@ async def csuite_escalation(body: CSuiteEscalation) -> Dict[str, Any]:
     # Forward to MAS notifications (Morgan) — email, webhook, SMS per priority
     try:
         from mycosoft_mas.services.admin_notifications import notify_morgan
+
         msg = f"{body.subject}\n\n{body.context}"
         if body.options:
             msg += "\n\nOptions: " + "; ".join(body.options)
@@ -317,7 +334,12 @@ async def csuite_escalation(body: CSuiteEscalation) -> Dict[str, Any]:
     except Exception as e:
         logger.warning("C-Suite: escalation notify_morgan failed: %s", e)
 
-    return {"status": "ok", "assistant_id": aid, "escalation_received": True, "urgency": body.urgency}
+    return {
+        "status": "ok",
+        "assistant_id": aid,
+        "escalation_received": True,
+        "urgency": body.urgency,
+    }
 
 
 @router.get("/assistants")
@@ -345,17 +367,19 @@ async def list_assistants(
         effective_status = "stale" if is_stale else data.get("status", "unknown")
         if status and effective_status != status:
             continue
-        results.append({
-            "assistant_id": aid,
-            "role": r,
-            "assistant_name": data.get("assistant_name", ""),
-            "ip": data.get("ip", ""),
-            "status": effective_status,
-            "primary_tool": data.get("primary_tool", ""),
-            "last_heartbeat": last,
-            "last_report": data.get("last_report"),
-            "last_escalation": data.get("last_escalation"),
-        })
+        results.append(
+            {
+                "assistant_id": aid,
+                "role": r,
+                "assistant_name": data.get("assistant_name", ""),
+                "ip": data.get("ip", ""),
+                "status": effective_status,
+                "primary_tool": data.get("primary_tool", ""),
+                "last_heartbeat": last,
+                "last_report": data.get("last_report"),
+                "last_escalation": data.get("last_escalation"),
+            }
+        )
     return {"assistants": results, "count": len(results)}
 
 
@@ -372,7 +396,9 @@ async def csuite_finance_directive(body: FinanceDirectiveBody) -> Dict[str, Any]
         "at": now.isoformat(),
     }
     _push_history(_CFO_DIRECTIVES_KEY, entry)
-    logger.info(f"C-Suite finance directive [{body.priority}]: {body.source} — {body.directive[:80]}...")
+    logger.info(
+        f"C-Suite finance directive [{body.priority}]: {body.source} — {body.directive[:80]}..."
+    )
     return {"status": "ok", "directive_received": True, "at": now.isoformat()}
 
 
@@ -389,7 +415,9 @@ async def csuite_agent_report(body: AgentReportBody) -> Dict[str, Any]:
         "at": now.isoformat(),
     }
     _push_history(_CFO_AGENT_REPORTS_KEY, entry)
-    logger.info(f"C-Suite agent report: {body.agent_id} [{body.report_type}] — {body.summary[:80]}...")
+    logger.info(
+        f"C-Suite agent report: {body.agent_id} [{body.report_type}] — {body.summary[:80]}..."
+    )
     return {"status": "ok", "report_received": True, "at": now.isoformat()}
 
 
@@ -404,6 +432,7 @@ async def cfo_dashboard() -> Dict[str, Any]:
     stale_tasks: List[Dict[str, Any]] = []
     try:
         from mycosoft_mas.finance.discovery import list_finance_tasks
+
         tasks = await list_finance_tasks()
         now = datetime.now(timezone.utc)
         for t in tasks:
@@ -508,7 +537,9 @@ async def forge_create_task(body: ForgeTaskCreate) -> Dict[str, Any]:
 
 @router.get("/forge/tasks")
 async def forge_list_tasks(
-    status: Optional[str] = Query(None, description="Filter: pending | in_progress | complete | failed"),
+    status: Optional[str] = Query(
+        None, description="Filter: pending | in_progress | complete | failed"
+    ),
 ) -> Dict[str, Any]:
     """List CTO tasks for Forge to fetch."""
     tasks_map = _get_cto_tasks()
@@ -638,17 +669,19 @@ async def csuite_org_state() -> Dict[str, Any]:
                 is_stale = age > _heartbeat_ttl_seconds
             except Exception:
                 is_stale = True
-        assistants.append({
-            "assistant_id": aid,
-            "role": data.get("role", ""),
-            "assistant_name": data.get("assistant_name", ""),
-            "ip": data.get("ip", ""),
-            "status": "stale" if is_stale else data.get("status", "unknown"),
-            "primary_tool": data.get("primary_tool", ""),
-            "last_heartbeat": last,
-            "last_report": data.get("last_report"),
-            "last_escalation": data.get("last_escalation"),
-        })
+        assistants.append(
+            {
+                "assistant_id": aid,
+                "role": data.get("role", ""),
+                "assistant_name": data.get("assistant_name", ""),
+                "ip": data.get("ip", ""),
+                "status": "stale" if is_stale else data.get("status", "unknown"),
+                "primary_tool": data.get("primary_tool", ""),
+                "last_heartbeat": last,
+                "last_report": data.get("last_report"),
+                "last_escalation": data.get("last_escalation"),
+            }
+        )
 
     tasks_map = _get_cto_tasks()
     all_tasks = list(tasks_map.values())
@@ -658,6 +691,7 @@ async def csuite_org_state() -> Dict[str, Any]:
     budget = {"total_revenue": 0.0, "currency": "USD"}
     try:
         from mycosoft_mas.core.persistence import economy_store
+
         state = economy_store.get_state()
         budget["total_revenue"] = float(state.get("total_revenue", 0))
         budget["active_clients"] = len(state.get("active_clients", {}))

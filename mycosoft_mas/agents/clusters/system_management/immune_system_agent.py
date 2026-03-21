@@ -7,32 +7,29 @@ system for potential threats and takes appropriate defensive actions.
 """
 
 import asyncio
-import logging
 import hashlib
-import re
 import json
+import re
 import uuid
-import os
-import time
-import aiohttp
-import feedparser
-from typing import Dict, List, Optional, Any, Set, Tuple, Union, Callable, Awaitable
-from datetime import datetime, timedelta
-from pathlib import Path
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum, auto
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 
 from mycosoft_mas.agents.base_agent import BaseAgent
+from mycosoft_mas.agents.enums import AgentStatus
 from mycosoft_mas.security.vulnerability_scanner import (
-    VulnerabilityScanner,
-    VulnerabilitySeverity,
     VulnerabilityCategory,
+    VulnerabilitySeverity,
     get_vulnerability_scanner,
 )
-from mycosoft_mas.agents.enums import AgentStatus, TaskType, TaskStatus, TaskPriority
+
 
 class ThreatType(Enum):
     """Types of security threats"""
+
     MALWARE = auto()
     VULNERABILITY = auto()
     ZERO_DAY = auto()
@@ -44,16 +41,20 @@ class ThreatType(Enum):
     DATA_POISONING = auto()
     UNKNOWN = auto()
 
+
 class ThreatSeverity(Enum):
     """Severity levels for threats"""
+
     CRITICAL = auto()
     HIGH = auto()
     MEDIUM = auto()
     LOW = auto()
     INFO = auto()
 
+
 class DefenseAction(Enum):
     """Actions to take against threats"""
+
     BLOCK = auto()
     ISOLATE = auto()
     QUARANTINE = auto()
@@ -62,9 +63,11 @@ class DefenseAction(Enum):
     ALERT = auto()
     IGNORE = auto()
 
+
 @dataclass
 class Threat:
     """Information about a security threat"""
+
     threat_id: str
     name: str
     description: str
@@ -86,9 +89,11 @@ class Threat:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
+
 @dataclass
 class Vulnerability:
     """Information about a system vulnerability"""
+
     vulnerability_id: str
     name: str
     description: str
@@ -106,9 +111,11 @@ class Vulnerability:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
+
 @dataclass
 class SecurityScan:
     """Information about a security scan"""
+
     scan_id: str
     scan_type: str
     target: str
@@ -122,9 +129,11 @@ class SecurityScan:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
+
 @dataclass
 class DefenseRule:
     """Rule for defending against threats"""
+
     rule_id: str
     name: str
     description: str
@@ -138,9 +147,10 @@ class DefenseRule:
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
+
 class ImmuneSystemAgent(BaseAgent):
     """Agent for protecting the Mycosoft MAS from security threats"""
-    
+
     def __init__(self, agent_id: str):
         super().__init__(agent_id)
         self.threats: Dict[str, Threat] = {}
@@ -154,21 +164,23 @@ class ImmuneSystemAgent(BaseAgent):
         self.scan_queue: asyncio.Queue = asyncio.Queue()
         self.threat_queue: asyncio.Queue = asyncio.Queue()
         self.defense_queue: asyncio.Queue = asyncio.Queue()
-        
+
         # Create necessary directories
         self.data_dir = Path("data/immune_system")
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Initialize metrics
-        self.metrics.update({
-            "threats_detected": 0,
-            "threats_blocked": 0,
-            "vulnerabilities_found": 0,
-            "vulnerabilities_patched": 0,
-            "security_scans_run": 0,
-            "defense_actions_taken": 0
-        })
-    
+        self.metrics.update(
+            {
+                "threats_detected": 0,
+                "threats_blocked": 0,
+                "vulnerabilities_found": 0,
+                "vulnerabilities_patched": 0,
+                "security_scans_run": 0,
+                "defense_actions_taken": 0,
+            }
+        )
+
     async def initialize(self) -> None:
         """Initialize the agent"""
         await super().initialize()
@@ -176,87 +188,81 @@ class ImmuneSystemAgent(BaseAgent):
         await self._register_default_defense_rules()
         self.status = AgentStatus.READY
         self.logger.info("Immune System Agent initialized")
-    
+
     async def stop(self) -> None:
         """Stop the agent"""
         self.status = AgentStatus.STOPPING
         self.logger.info("Stopping Immune System Agent")
         await self._save_data()
         await super().stop()
-    
+
     async def register_agent(
         self,
         agent_id: str,
         agent_type: str,
         capabilities: List[str],
         dependencies: List[str],
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Register an agent and calculate its signature"""
         # Calculate agent signature based on its properties
         signature_data = f"{agent_id}:{agent_type}:{','.join(sorted(capabilities))}:{','.join(sorted(dependencies))}"
         signature = hashlib.sha256(signature_data.encode()).hexdigest()
-        
+
         self.agent_signatures[agent_id] = signature
         await self._save_data()
-    
+
     async def scan_agent(self, agent_id: str) -> str:
         """Scan an agent for security issues"""
         scan_id = f"scan_{uuid.uuid4().hex[:8]}"
-        
+
         scan = SecurityScan(
-            scan_id=scan_id,
-            scan_type="agent_scan",
-            target=agent_id,
-            start_time=datetime.utcnow()
+            scan_id=scan_id, scan_type="agent_scan", target=agent_id, start_time=datetime.utcnow()
         )
-        
+
         self.security_scans[scan_id] = scan
         await self._save_data()
-        
+
         # Add to scan queue
         await self.scan_queue.put(scan_id)
-        
+
         return scan_id
-    
+
     async def scan_network(self, network_id: str) -> str:
         """Scan a network for security issues"""
         scan_id = f"scan_{uuid.uuid4().hex[:8]}"
-        
+
         scan = SecurityScan(
             scan_id=scan_id,
             scan_type="network_scan",
             target=network_id,
-            start_time=datetime.utcnow()
+            start_time=datetime.utcnow(),
         )
-        
+
         self.security_scans[scan_id] = scan
         await self._save_data()
-        
+
         # Add to scan queue
         await self.scan_queue.put(scan_id)
-        
+
         return scan_id
-    
+
     async def scan_file(self, file_path: str) -> str:
         """Scan a file for security issues"""
         scan_id = f"scan_{uuid.uuid4().hex[:8]}"
-        
+
         scan = SecurityScan(
-            scan_id=scan_id,
-            scan_type="file_scan",
-            target=file_path,
-            start_time=datetime.utcnow()
+            scan_id=scan_id, scan_type="file_scan", target=file_path, start_time=datetime.utcnow()
         )
-        
+
         self.security_scans[scan_id] = scan
         await self._save_data()
-        
+
         # Add to scan queue
         await self.scan_queue.put(scan_id)
-        
+
         return scan_id
-    
+
     async def detect_threat(
         self,
         name: str,
@@ -270,11 +276,11 @@ class ImmuneSystemAgent(BaseAgent):
         affected_agents: Optional[List[str]] = None,
         affected_files: Optional[List[str]] = None,
         affected_networks: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Detect a new security threat"""
         threat_id = f"threat_{uuid.uuid4().hex[:8]}"
-        
+
         threat = Threat(
             threat_id=threat_id,
             name=name,
@@ -289,19 +295,19 @@ class ImmuneSystemAgent(BaseAgent):
             affected_agents=affected_agents or [],
             affected_files=affected_files or [],
             affected_networks=affected_networks or [],
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
-        
+
         self.threats[threat_id] = threat
         await self._save_data()
-        
+
         self.metrics["threats_detected"] += 1
-        
+
         # Add to threat queue
         await self.threat_queue.put(threat_id)
-        
+
         return threat_id
-    
+
     async def detect_vulnerability(
         self,
         name: str,
@@ -312,11 +318,11 @@ class ImmuneSystemAgent(BaseAgent):
         patch_available: bool = False,
         patch_url: Optional[str] = None,
         patch_notes: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Detect a new vulnerability"""
         vulnerability_id = f"vuln_{uuid.uuid4().hex[:8]}"
-        
+
         vulnerability = Vulnerability(
             vulnerability_id=vulnerability_id,
             name=name,
@@ -327,16 +333,16 @@ class ImmuneSystemAgent(BaseAgent):
             patch_available=patch_available,
             patch_url=patch_url,
             patch_notes=patch_notes,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
-        
+
         self.vulnerabilities[vulnerability_id] = vulnerability
         await self._save_data()
-        
+
         self.metrics["vulnerabilities_found"] += 1
-        
+
         return vulnerability_id
-    
+
     async def create_defense_rule(
         self,
         name: str,
@@ -346,11 +352,11 @@ class ImmuneSystemAgent(BaseAgent):
         conditions: Dict[str, Any],
         actions: List[DefenseAction],
         priority: int = 0,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Create a new defense rule"""
         rule_id = f"rule_{uuid.uuid4().hex[:8]}"
-        
+
         rule = DefenseRule(
             rule_id=rule_id,
             name=name,
@@ -360,155 +366,146 @@ class ImmuneSystemAgent(BaseAgent):
             conditions=conditions,
             actions=actions,
             priority=priority,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
-        
+
         self.defense_rules[rule_id] = rule
         await self._save_data()
-        
+
         return rule_id
-    
+
     async def apply_defense_action(
-        self,
-        threat_id: str,
-        action: DefenseAction,
-        notes: Optional[str] = None
+        self, threat_id: str, action: DefenseAction, notes: Optional[str] = None
     ) -> bool:
         """Apply a defense action to a threat"""
         if threat_id not in self.threats:
             self.logger.error(f"Threat {threat_id} not found")
             return False
-        
+
         threat = self.threats[threat_id]
-        
+
         if action not in threat.defense_actions:
             threat.defense_actions.append(action)
             threat.updated_at = datetime.utcnow()
-            
+
             if action == DefenseAction.BLOCK:
                 self.metrics["threats_blocked"] += 1
-            
+
             self.metrics["defense_actions_taken"] += 1
-            
+
             # If the threat is resolved, update its status
             if action in [DefenseAction.BLOCK, DefenseAction.QUARANTINE, DefenseAction.PATCH]:
                 threat.status = "resolved"
                 threat.resolution_time = datetime.utcnow()
                 threat.resolution_notes = notes
-            
+
             await self._save_data()
             return True
-        
+
         return False
-    
+
     async def patch_vulnerability(
-        self,
-        vulnerability_id: str,
-        patch_notes: Optional[str] = None
+        self, vulnerability_id: str, patch_notes: Optional[str] = None
     ) -> bool:
         """Patch a vulnerability"""
         if vulnerability_id not in self.vulnerabilities:
             self.logger.error(f"Vulnerability {vulnerability_id} not found")
             return False
-        
+
         vulnerability = self.vulnerabilities[vulnerability_id]
-        
+
         if vulnerability.status == "open":
             vulnerability.status = "patched"
             vulnerability.resolution_time = datetime.utcnow()
             vulnerability.resolution_notes = patch_notes
             vulnerability.updated_at = datetime.utcnow()
-            
+
             self.metrics["vulnerabilities_patched"] += 1
-            
+
             await self._save_data()
             return True
-        
+
         return False
-    
+
     async def get_threat(self, threat_id: str) -> Optional[Threat]:
         """Get a threat by ID"""
         return self.threats.get(threat_id)
-    
+
     async def get_vulnerability(self, vulnerability_id: str) -> Optional[Vulnerability]:
         """Get a vulnerability by ID"""
         return self.vulnerabilities.get(vulnerability_id)
-    
+
     async def get_security_scan(self, scan_id: str) -> Optional[SecurityScan]:
         """Get a security scan by ID"""
         return self.security_scans.get(scan_id)
-    
+
     async def get_defense_rule(self, rule_id: str) -> Optional[DefenseRule]:
         """Get a defense rule by ID"""
         return self.defense_rules.get(rule_id)
-    
+
     async def get_active_threats(
         self,
         threat_type: Optional[ThreatType] = None,
         severity: Optional[ThreatSeverity] = None,
-        limit: int = 10
+        limit: int = 10,
     ) -> List[Threat]:
         """Get active threats"""
         active = []
-        
+
         for threat in self.threats.values():
             if threat.status != "active":
                 continue
-            
+
             if threat_type and threat.threat_type != threat_type:
                 continue
-            
+
             if severity and threat.severity != severity:
                 continue
-            
+
             active.append(threat)
-        
+
         # Sort by severity and detection time
         active.sort(key=lambda x: (x.severity.value, x.detection_time), reverse=True)
-        
+
         return active[:limit]
-    
+
     async def get_open_vulnerabilities(
-        self,
-        severity: Optional[ThreatSeverity] = None,
-        limit: int = 10
+        self, severity: Optional[ThreatSeverity] = None, limit: int = 10
     ) -> List[Vulnerability]:
         """Get open vulnerabilities"""
         open_vulns = []
-        
+
         for vulnerability in self.vulnerabilities.values():
             if vulnerability.status != "open":
                 continue
-            
+
             if severity and vulnerability.severity != severity:
                 continue
-            
+
             open_vulns.append(vulnerability)
-        
+
         # Sort by severity and detection time
         open_vulns.sort(key=lambda x: (x.severity.value, x.detection_time), reverse=True)
-        
+
         return open_vulns[:limit]
-    
+
     async def get_recent_security_scans(
-        self,
-        scan_type: Optional[str] = None,
-        limit: int = 10
+        self, scan_type: Optional[str] = None, limit: int = 10
     ) -> List[SecurityScan]:
         """Get recent security scans"""
         recent = []
-        
+
         for scan in self.security_scans.values():
             if scan_type and scan.scan_type != scan_type:
                 continue
-            
+
             recent.append(scan)
-        
+
         # Sort by start time
         recent.sort(key=lambda x: x.start_time, reverse=True)
-        
+
         return recent[:limit]
-    
+
     async def _register_default_defense_rules(self) -> None:
         """Register default defense rules"""
         # Rule for blocking malware
@@ -519,9 +516,9 @@ class ImmuneSystemAgent(BaseAgent):
             severity=ThreatSeverity.HIGH,
             conditions={"signature_match": True},
             actions=[DefenseAction.BLOCK, DefenseAction.QUARANTINE],
-            priority=10
+            priority=10,
         )
-        
+
         # Rule for blocking zero-day exploits
         await self.create_defense_rule(
             name="Block Zero-Day Exploits",
@@ -530,9 +527,9 @@ class ImmuneSystemAgent(BaseAgent):
             severity=ThreatSeverity.CRITICAL,
             conditions={"signature_match": True},
             actions=[DefenseAction.BLOCK, DefenseAction.ISOLATE],
-            priority=10
+            priority=10,
         )
-        
+
         # Rule for blocking unauthorized access
         await self.create_defense_rule(
             name="Block Unauthorized Access",
@@ -541,9 +538,9 @@ class ImmuneSystemAgent(BaseAgent):
             severity=ThreatSeverity.HIGH,
             conditions={"authentication_failure": True},
             actions=[DefenseAction.BLOCK, DefenseAction.ALERT],
-            priority=8
+            priority=8,
         )
-        
+
         # Rule for blocking code injection
         await self.create_defense_rule(
             name="Block Code Injection",
@@ -552,9 +549,9 @@ class ImmuneSystemAgent(BaseAgent):
             severity=ThreatSeverity.HIGH,
             conditions={"pattern_match": True},
             actions=[DefenseAction.BLOCK, DefenseAction.ALERT],
-            priority=8
+            priority=8,
         )
-        
+
         # Rule for blocking network attacks
         await self.create_defense_rule(
             name="Block Network Attacks",
@@ -563,9 +560,9 @@ class ImmuneSystemAgent(BaseAgent):
             severity=ThreatSeverity.HIGH,
             conditions={"traffic_pattern": "malicious"},
             actions=[DefenseAction.BLOCK, DefenseAction.ALERT],
-            priority=8
+            priority=8,
         )
-        
+
         # Rule for monitoring agent compromise
         await self.create_defense_rule(
             name="Monitor Agent Compromise",
@@ -574,9 +571,9 @@ class ImmuneSystemAgent(BaseAgent):
             severity=ThreatSeverity.CRITICAL,
             conditions={"behavior_anomaly": True},
             actions=[DefenseAction.MONITOR, DefenseAction.ALERT],
-            priority=9
+            priority=9,
         )
-        
+
         # Rule for monitoring data poisoning
         await self.create_defense_rule(
             name="Monitor Data Poisoning",
@@ -585,34 +582,34 @@ class ImmuneSystemAgent(BaseAgent):
             severity=ThreatSeverity.HIGH,
             conditions={"data_anomaly": True},
             actions=[DefenseAction.MONITOR, DefenseAction.ALERT],
-            priority=7
+            priority=7,
         )
-    
+
     async def _scan_agent_implementation(self, agent_id: str) -> List[str]:
         """Scan an agent's implementation for security issues using real VulnerabilityScanner"""
         self.logger.info(f"Scanning agent implementation: {agent_id}")
-        
+
         threat_ids = []
-        
+
         # Get the real vulnerability scanner
         try:
             scanner = await get_vulnerability_scanner()
         except Exception as e:
             self.logger.error(f"Could not initialize VulnerabilityScanner: {e}")
             return threat_ids
-        
+
         # Attempt to find the agent's source file
         agent_file_patterns = [
             f"mycosoft_mas/agents/{agent_id}.py",
             f"mycosoft_mas/agents/v2/{agent_id}.py",
             f"mycosoft_mas/agents/clusters/**/{agent_id}.py",
         ]
-        
+
         # Scan the agents directory for real vulnerabilities
         agents_dir = Path(__file__).parent.parent.parent / "agents"
         if agents_dir.exists():
             vulnerabilities = await scanner.scan_directory(str(agents_dir), recursive=True)
-            
+
             # Process real findings
             for vuln in vulnerabilities:
                 severity_map = {
@@ -622,7 +619,7 @@ class ImmuneSystemAgent(BaseAgent):
                     VulnerabilitySeverity.LOW.value: ThreatSeverity.LOW,
                 }
                 threat_severity = severity_map.get(vuln.get("severity"), ThreatSeverity.MEDIUM)
-                
+
                 # Determine threat type from category
                 category_to_type = {
                     VulnerabilityCategory.SECRET.value: ThreatType.DATA_LEAK,
@@ -632,7 +629,7 @@ class ImmuneSystemAgent(BaseAgent):
                     VulnerabilityCategory.CRYPTO.value: ThreatType.VULNERABILITY,
                 }
                 threat_type = category_to_type.get(vuln.get("category"), ThreatType.VULNERABILITY)
-                
+
                 # Create vulnerability record
                 vulnerability_id = await self.detect_vulnerability(
                     name=vuln.get("message", "Security Issue"),
@@ -641,9 +638,9 @@ class ImmuneSystemAgent(BaseAgent):
                     severity=threat_severity,
                     affected_components=[agent_id, vuln.get("file", "")],
                     patch_available=False,
-                    patch_notes=f"Review and fix: {vuln.get('message')}"
+                    patch_notes=f"Review and fix: {vuln.get('message')}",
                 )
-                
+
                 # Create a threat based on the real vulnerability
                 threat_id = await self.detect_threat(
                     name=f"Security Issue: {vuln.get('message', 'Unknown')[:50]}",
@@ -659,27 +656,27 @@ class ImmuneSystemAgent(BaseAgent):
                         "file": vuln.get("file"),
                         "line": vuln.get("line"),
                         "pattern": vuln.get("pattern"),
-                    }
+                    },
                 )
-                
+
                 threat_ids.append(threat_id)
-        
+
         self.logger.info(f"Agent scan complete: {len(threat_ids)} threats found for {agent_id}")
         return threat_ids
-    
+
     async def _scan_network_implementation(self, network_id: str) -> List[str]:
         """Scan network configuration for security issues using real analysis"""
         self.logger.info(f"Scanning network configuration: {network_id}")
-        
+
         threat_ids = []
-        
+
         # Get the real vulnerability scanner
         try:
             scanner = await get_vulnerability_scanner()
         except Exception as e:
             self.logger.error(f"Could not initialize VulnerabilityScanner: {e}")
             return threat_ids
-        
+
         # Scan network-related configuration files
         config_patterns = [
             "docker-compose*.yml",
@@ -688,10 +685,10 @@ class ImmuneSystemAgent(BaseAgent):
             "*.conf",
             "Caddyfile",
         ]
-        
+
         # Scan the MAS repo root for network configs
         repo_root = Path(__file__).parent.parent.parent.parent.parent
-        
+
         # Check for common network security issues in config files
         env_files = list(repo_root.glob(".env*"))
         for env_file in env_files:
@@ -710,12 +707,14 @@ class ImmuneSystemAgent(BaseAgent):
                             "file": str(env_file),
                             "line": vuln.get("line"),
                             "category": vuln.get("category"),
-                        }
+                        },
                     )
                     threat_ids.append(threat_id)
-        
+
         # Check for insecure CORS or firewall configurations
-        docker_files = list(repo_root.glob("docker-compose*.yml")) + list(repo_root.glob("docker-compose*.yaml"))
+        docker_files = list(repo_root.glob("docker-compose*.yml")) + list(
+            repo_root.glob("docker-compose*.yaml")
+        )
         for docker_file in docker_files:
             vulns = await scanner.scan_file(str(docker_file))
             for vuln in vulns:
@@ -725,9 +724,9 @@ class ImmuneSystemAgent(BaseAgent):
                     severity=ThreatSeverity.MEDIUM,
                     affected_components=[network_id, str(docker_file)],
                     patch_available=True,
-                    patch_notes="Review Docker configuration for security best practices"
+                    patch_notes="Review Docker configuration for security best practices",
                 )
-                
+
                 threat_id = await self.detect_threat(
                     name="Network Configuration Vulnerability",
                     description=f"Security issue in Docker/network configuration: {vuln.get('message')}",
@@ -740,35 +739,35 @@ class ImmuneSystemAgent(BaseAgent):
                         "vulnerability_id": vulnerability_id,
                         "file": str(docker_file),
                         "line": vuln.get("line"),
-                    }
+                    },
                 )
                 threat_ids.append(threat_id)
-        
+
         self.logger.info(f"Network scan complete: {len(threat_ids)} threats found for {network_id}")
         return threat_ids
-    
+
     async def _scan_file_implementation(self, file_path: str) -> List[str]:
         """Scan a file for security issues using real VulnerabilityScanner"""
         self.logger.info(f"Scanning file: {file_path}")
-        
+
         threat_ids = []
-        
+
         # Get the real vulnerability scanner
         try:
             scanner = await get_vulnerability_scanner()
         except Exception as e:
             self.logger.error(f"Could not initialize VulnerabilityScanner: {e}")
             return threat_ids
-        
+
         # Check if file exists
         target_path = Path(file_path)
         if not target_path.exists():
             self.logger.warning(f"File does not exist: {file_path}")
             return threat_ids
-        
+
         # Scan the file for real vulnerabilities
         vulnerabilities = await scanner.scan_file(str(target_path))
-        
+
         for vuln in vulnerabilities:
             # Map scanner severity to ThreatSeverity
             severity_map = {
@@ -778,7 +777,7 @@ class ImmuneSystemAgent(BaseAgent):
                 VulnerabilitySeverity.LOW.value: ThreatSeverity.LOW,
             }
             threat_severity = severity_map.get(vuln.get("severity"), ThreatSeverity.MEDIUM)
-            
+
             # Determine threat type from category
             category_to_type = {
                 VulnerabilityCategory.SECRET.value: ThreatType.DATA_LEAK,
@@ -788,7 +787,7 @@ class ImmuneSystemAgent(BaseAgent):
                 VulnerabilityCategory.CRYPTO.value: ThreatType.VULNERABILITY,
             }
             threat_type = category_to_type.get(vuln.get("category"), ThreatType.VULNERABILITY)
-            
+
             # Create vulnerability record
             vulnerability_id = await self.detect_vulnerability(
                 name=vuln.get("message", "File Security Issue"),
@@ -797,9 +796,9 @@ class ImmuneSystemAgent(BaseAgent):
                 severity=threat_severity,
                 affected_components=[file_path],
                 patch_available=False,
-                patch_notes=f"Review and fix: {vuln.get('message')}"
+                patch_notes=f"Review and fix: {vuln.get('message')}",
             )
-            
+
             # Create threat based on real vulnerability
             threat_id = await self.detect_threat(
                 name=f"File Issue: {vuln.get('message', 'Unknown')[:50]}",
@@ -814,79 +813,90 @@ class ImmuneSystemAgent(BaseAgent):
                     "category": vuln.get("category"),
                     "line": vuln.get("line"),
                     "pattern": vuln.get("pattern"),
-                }
+                },
             )
-            
+
             threat_ids.append(threat_id)
-        
+
         self.logger.info(f"File scan complete: {len(threat_ids)} threats found in {file_path}")
         return threat_ids
-    
+
     async def _process_threat(self, threat_id: str) -> None:
         """Process a detected threat"""
         if threat_id not in self.threats:
             return
-        
+
         threat = self.threats[threat_id]
-        
+
         # Find matching defense rules
         matching_rules = []
-        
+
         for rule in self.defense_rules.values():
             if not rule.is_active:
                 continue
-            
+
             if rule.threat_type != threat.threat_type:
                 continue
-            
+
             if rule.severity.value > threat.severity.value:
                 continue
-            
+
             # Check conditions
             conditions_met = True
-            
+
             for key, value in rule.conditions.items():
                 if key == "signature_match" and value:
                     if not threat.signature:
                         conditions_met = False
                         break
-                
+
                 elif key == "pattern_match" and value:
-                    if not any(re.search(pattern, threat.description) for pattern in threat.indicators):
+                    if not any(
+                        re.search(pattern, threat.description) for pattern in threat.indicators
+                    ):
                         conditions_met = False
                         break
-                
+
                 elif key == "authentication_failure" and value:
                     if "authentication" not in threat.description.lower():
                         conditions_met = False
                         break
-                
+
                 elif key == "traffic_pattern" and value == "malicious":
-                    if not any(pattern in threat.description.lower() for pattern in ["traffic", "network", "connection"]):
+                    if not any(
+                        pattern in threat.description.lower()
+                        for pattern in ["traffic", "network", "connection"]
+                    ):
                         conditions_met = False
                         break
-                
+
                 elif key == "behavior_anomaly" and value:
-                    if not any(pattern in threat.description.lower() for pattern in ["behavior", "anomaly", "unusual"]):
+                    if not any(
+                        pattern in threat.description.lower()
+                        for pattern in ["behavior", "anomaly", "unusual"]
+                    ):
                         conditions_met = False
                         break
-                
+
                 elif key == "data_anomaly" and value:
-                    if not any(pattern in threat.description.lower() for pattern in ["data", "poison", "corrupt"]):
+                    if not any(
+                        pattern in threat.description.lower()
+                        for pattern in ["data", "poison", "corrupt"]
+                    ):
                         conditions_met = False
                         break
-            
+
             if conditions_met:
                 matching_rules.append(rule)
-        
+
         # Sort rules by priority
         matching_rules.sort(key=lambda x: x.priority, reverse=True)
-        
+
         # Apply actions from matching rules
         for rule in matching_rules:
             for action in rule.actions:
                 await self.apply_defense_action(threat_id, action)
-    
+
     async def _load_data(self) -> None:
         """Load data from disk"""
         # Load threats
@@ -894,7 +904,7 @@ class ImmuneSystemAgent(BaseAgent):
         if threats_file.exists():
             with open(threats_file, "r") as f:
                 threats_data = json.load(f)
-                
+
                 for threat_data in threats_data:
                     threat = Threat(
                         threat_id=threat_data["threat_id"],
@@ -911,22 +921,29 @@ class ImmuneSystemAgent(BaseAgent):
                         affected_agents=threat_data.get("affected_agents", []),
                         affected_files=threat_data.get("affected_files", []),
                         affected_networks=threat_data.get("affected_networks", []),
-                        defense_actions=[DefenseAction[action] for action in threat_data.get("defense_actions", [])],
-                        resolution_time=datetime.fromisoformat(threat_data["resolution_time"]) if threat_data.get("resolution_time") else None,
+                        defense_actions=[
+                            DefenseAction[action]
+                            for action in threat_data.get("defense_actions", [])
+                        ],
+                        resolution_time=(
+                            datetime.fromisoformat(threat_data["resolution_time"])
+                            if threat_data.get("resolution_time")
+                            else None
+                        ),
                         resolution_notes=threat_data.get("resolution_notes"),
                         metadata=threat_data.get("metadata", {}),
                         created_at=datetime.fromisoformat(threat_data["created_at"]),
-                        updated_at=datetime.fromisoformat(threat_data["updated_at"])
+                        updated_at=datetime.fromisoformat(threat_data["updated_at"]),
                     )
-                    
+
                     self.threats[threat.threat_id] = threat
-        
+
         # Load vulnerabilities
         vulnerabilities_file = self.data_dir / "vulnerabilities.json"
         if vulnerabilities_file.exists():
             with open(vulnerabilities_file, "r") as f:
                 vulnerabilities_data = json.load(f)
-                
+
                 for vulnerability_data in vulnerabilities_data:
                     vulnerability = Vulnerability(
                         vulnerability_id=vulnerability_data["vulnerability_id"],
@@ -940,45 +957,53 @@ class ImmuneSystemAgent(BaseAgent):
                         patch_available=vulnerability_data.get("patch_available", False),
                         patch_url=vulnerability_data.get("patch_url"),
                         patch_notes=vulnerability_data.get("patch_notes"),
-                        resolution_time=datetime.fromisoformat(vulnerability_data["resolution_time"]) if vulnerability_data.get("resolution_time") else None,
+                        resolution_time=(
+                            datetime.fromisoformat(vulnerability_data["resolution_time"])
+                            if vulnerability_data.get("resolution_time")
+                            else None
+                        ),
                         resolution_notes=vulnerability_data.get("resolution_notes"),
                         metadata=vulnerability_data.get("metadata", {}),
                         created_at=datetime.fromisoformat(vulnerability_data["created_at"]),
-                        updated_at=datetime.fromisoformat(vulnerability_data["updated_at"])
+                        updated_at=datetime.fromisoformat(vulnerability_data["updated_at"]),
                     )
-                    
+
                     self.vulnerabilities[vulnerability.vulnerability_id] = vulnerability
-        
+
         # Load security scans
         scans_file = self.data_dir / "security_scans.json"
         if scans_file.exists():
             with open(scans_file, "r") as f:
                 scans_data = json.load(f)
-                
+
                 for scan_data in scans_data:
                     scan = SecurityScan(
                         scan_id=scan_data["scan_id"],
                         scan_type=scan_data["scan_type"],
                         target=scan_data["target"],
                         start_time=datetime.fromisoformat(scan_data["start_time"]),
-                        end_time=datetime.fromisoformat(scan_data["end_time"]) if scan_data.get("end_time") else None,
+                        end_time=(
+                            datetime.fromisoformat(scan_data["end_time"])
+                            if scan_data.get("end_time")
+                            else None
+                        ),
                         status=scan_data.get("status", "running"),
                         threats_found=scan_data.get("threats_found", []),
                         vulnerabilities_found=scan_data.get("vulnerabilities_found", []),
                         scan_results=scan_data.get("scan_results", {}),
                         metadata=scan_data.get("metadata", {}),
                         created_at=datetime.fromisoformat(scan_data["created_at"]),
-                        updated_at=datetime.fromisoformat(scan_data["updated_at"])
+                        updated_at=datetime.fromisoformat(scan_data["updated_at"]),
                     )
-                    
+
                     self.security_scans[scan.scan_id] = scan
-        
+
         # Load defense rules
         rules_file = self.data_dir / "defense_rules.json"
         if rules_file.exists():
             with open(rules_file, "r") as f:
                 rules_data = json.load(f)
-                
+
                 for rule_data in rules_data:
                     rule = DefenseRule(
                         rule_id=rule_data["rule_id"],
@@ -992,41 +1017,41 @@ class ImmuneSystemAgent(BaseAgent):
                         priority=rule_data.get("priority", 0),
                         metadata=rule_data.get("metadata", {}),
                         created_at=datetime.fromisoformat(rule_data["created_at"]),
-                        updated_at=datetime.fromisoformat(rule_data["updated_at"])
+                        updated_at=datetime.fromisoformat(rule_data["updated_at"]),
                     )
-                    
+
                     self.defense_rules[rule.rule_id] = rule
-        
+
         # Load agent signatures
         signatures_file = self.data_dir / "agent_signatures.json"
         if signatures_file.exists():
             with open(signatures_file, "r") as f:
                 self.agent_signatures = json.load(f)
-        
+
         # Load file signatures
         file_signatures_file = self.data_dir / "file_signatures.json"
         if file_signatures_file.exists():
             with open(file_signatures_file, "r") as f:
                 self.file_signatures = json.load(f)
-        
+
         # Load network signatures
         network_signatures_file = self.data_dir / "network_signatures.json"
         if network_signatures_file.exists():
             with open(network_signatures_file, "r") as f:
                 self.network_signatures = json.load(f)
-        
+
         # Load threat intelligence
         intelligence_file = self.data_dir / "threat_intelligence.json"
         if intelligence_file.exists():
             with open(intelligence_file, "r") as f:
                 self.threat_intelligence = json.load(f)
-    
+
     async def _save_data(self) -> None:
         """Save data to disk"""
         # Save threats
         threats_file = self.data_dir / "threats.json"
         threats_data = []
-        
+
         for threat in self.threats.values():
             threat_data = {
                 "threat_id": threat.threat_id,
@@ -1044,21 +1069,23 @@ class ImmuneSystemAgent(BaseAgent):
                 "affected_files": threat.affected_files,
                 "affected_networks": threat.affected_networks,
                 "defense_actions": [action.name for action in threat.defense_actions],
-                "resolution_time": threat.resolution_time.isoformat() if threat.resolution_time else None,
+                "resolution_time": (
+                    threat.resolution_time.isoformat() if threat.resolution_time else None
+                ),
                 "resolution_notes": threat.resolution_notes,
                 "metadata": threat.metadata,
                 "created_at": threat.created_at.isoformat(),
-                "updated_at": threat.updated_at.isoformat()
+                "updated_at": threat.updated_at.isoformat(),
             }
             threats_data.append(threat_data)
-        
+
         with open(threats_file, "w") as f:
             json.dump(threats_data, f, indent=2)
-        
+
         # Save vulnerabilities
         vulnerabilities_file = self.data_dir / "vulnerabilities.json"
         vulnerabilities_data = []
-        
+
         for vulnerability in self.vulnerabilities.values():
             vulnerability_data = {
                 "vulnerability_id": vulnerability.vulnerability_id,
@@ -1072,21 +1099,25 @@ class ImmuneSystemAgent(BaseAgent):
                 "patch_available": vulnerability.patch_available,
                 "patch_url": vulnerability.patch_url,
                 "patch_notes": vulnerability.patch_notes,
-                "resolution_time": vulnerability.resolution_time.isoformat() if vulnerability.resolution_time else None,
+                "resolution_time": (
+                    vulnerability.resolution_time.isoformat()
+                    if vulnerability.resolution_time
+                    else None
+                ),
                 "resolution_notes": vulnerability.resolution_notes,
                 "metadata": vulnerability.metadata,
                 "created_at": vulnerability.created_at.isoformat(),
-                "updated_at": vulnerability.updated_at.isoformat()
+                "updated_at": vulnerability.updated_at.isoformat(),
             }
             vulnerabilities_data.append(vulnerability_data)
-        
+
         with open(vulnerabilities_file, "w") as f:
             json.dump(vulnerabilities_data, f, indent=2)
-        
+
         # Save security scans
         scans_file = self.data_dir / "security_scans.json"
         scans_data = []
-        
+
         for scan in self.security_scans.values():
             scan_data = {
                 "scan_id": scan.scan_id,
@@ -1100,17 +1131,17 @@ class ImmuneSystemAgent(BaseAgent):
                 "scan_results": scan.scan_results,
                 "metadata": scan.metadata,
                 "created_at": scan.created_at.isoformat(),
-                "updated_at": scan.updated_at.isoformat()
+                "updated_at": scan.updated_at.isoformat(),
             }
             scans_data.append(scan_data)
-        
+
         with open(scans_file, "w") as f:
             json.dump(scans_data, f, indent=2)
-        
+
         # Save defense rules
         rules_file = self.data_dir / "defense_rules.json"
         rules_data = []
-        
+
         for rule in self.defense_rules.values():
             rule_data = {
                 "rule_id": rule.rule_id,
@@ -1124,92 +1155,92 @@ class ImmuneSystemAgent(BaseAgent):
                 "priority": rule.priority,
                 "metadata": rule.metadata,
                 "created_at": rule.created_at.isoformat(),
-                "updated_at": rule.updated_at.isoformat()
+                "updated_at": rule.updated_at.isoformat(),
             }
             rules_data.append(rule_data)
-        
+
         with open(rules_file, "w") as f:
             json.dump(rules_data, f, indent=2)
-        
+
         # Save agent signatures
         signatures_file = self.data_dir / "agent_signatures.json"
         with open(signatures_file, "w") as f:
             json.dump(self.agent_signatures, f, indent=2)
-        
+
         # Save file signatures
         file_signatures_file = self.data_dir / "file_signatures.json"
         with open(file_signatures_file, "w") as f:
             json.dump(self.file_signatures, f, indent=2)
-        
+
         # Save network signatures
         network_signatures_file = self.data_dir / "network_signatures.json"
         with open(network_signatures_file, "w") as f:
             json.dump(self.network_signatures, f, indent=2)
-        
+
         # Save threat intelligence
         intelligence_file = self.data_dir / "threat_intelligence.json"
         with open(intelligence_file, "w") as f:
             json.dump(self.threat_intelligence, f, indent=2)
-    
+
     async def _process_scan_queue(self) -> None:
         """Process the scan queue"""
         while self.status == AgentStatus.RUNNING:
             try:
                 # Get next scan to run
                 scan_id = await self.scan_queue.get()
-                
+
                 # Run the scan
                 await self._run_scan(scan_id)
-                
+
                 # Mark task as complete
                 self.scan_queue.task_done()
-                
+
             except Exception as e:
                 self.logger.error(f"Error processing scan queue: {str(e)}")
                 continue
-    
+
     async def _process_threat_queue(self) -> None:
         """Process the threat queue"""
         while self.status == AgentStatus.RUNNING:
             try:
                 # Get next threat to process
                 threat_id = await self.threat_queue.get()
-                
+
                 # Process the threat
                 await self._process_threat(threat_id)
-                
+
                 # Mark task as complete
                 self.threat_queue.task_done()
-                
+
             except Exception as e:
                 self.logger.error(f"Error processing threat queue: {str(e)}")
                 continue
-    
+
     async def _run_scan(self, scan_id: str) -> None:
         """Run a security scan"""
         if scan_id not in self.security_scans:
             return
-        
+
         scan = self.security_scans[scan_id]
         scan.status = "running"
         scan.updated_at = datetime.utcnow()
-        
+
         self.metrics["security_scans_run"] += 1
-        
+
         # Run scan based on type
         threat_ids = []
-        
+
         if scan.scan_type == "agent_scan":
             threat_ids = await self._scan_agent_implementation(scan.target)
         elif scan.scan_type == "network_scan":
             threat_ids = await self._scan_network_implementation(scan.target)
         elif scan.scan_type == "file_scan":
             threat_ids = await self._scan_file_implementation(scan.target)
-        
+
         # Update scan results
         scan.threats_found = threat_ids
         scan.end_time = datetime.utcnow()
         scan.status = "completed"
         scan.updated_at = datetime.utcnow()
-        
-        await self._save_data() 
+
+        await self._save_data()

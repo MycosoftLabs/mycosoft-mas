@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,7 @@ router = APIRouter(prefix="/api/liquid-fungal", tags=["liquid-fungal"])
 # ---------------------------------------------------------------------------
 # Request / Response models
 # ---------------------------------------------------------------------------
+
 
 class ProcessBiosignalRequest(BaseModel):
     channel_id: str = "ch0"
@@ -61,6 +62,7 @@ def _get_processor():
     global _processor
     if _processor is None:
         from mycosoft_mas.engines.liquid_temporal import LiquidTemporalProcessor
+
         _processor = LiquidTemporalProcessor()
     return _processor
 
@@ -69,6 +71,7 @@ def _get_memory_bridge():
     global _memory_bridge
     if _memory_bridge is None:
         from mycosoft_mas.memory.fungal_memory_bridge import FungalMemoryBridge
+
         _memory_bridge = FungalMemoryBridge()
     return _memory_bridge
 
@@ -79,9 +82,11 @@ def _get_improvement_engine():
         from mycosoft_mas.engines.recursive_improvement import (
             RecursiveSelfImprovementEngine,
         )
+
         learning_feedback = None
         try:
             from mycosoft_mas.services.learning_feedback import get_learning_service
+
             learning_feedback = get_learning_service()
         except Exception:
             pass
@@ -94,6 +99,7 @@ def _get_improvement_engine():
 # ---------------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------------
+
 
 @router.get("/health")
 async def health():
@@ -112,6 +118,7 @@ async def health():
 # ---------------------------------------------------------------------------
 # Temporal Processing
 # ---------------------------------------------------------------------------
+
 
 @router.post("/process")
 async def process_biosignal(req: ProcessBiosignalRequest):
@@ -155,6 +162,7 @@ async def get_adaptation_metrics():
 # ---------------------------------------------------------------------------
 # Memory Bridge
 # ---------------------------------------------------------------------------
+
 
 @router.post("/memory/bookmark")
 async def create_bookmark(req: CreateBookmarkRequest):
@@ -218,6 +226,7 @@ async def consolidate_patterns():
 # ---------------------------------------------------------------------------
 # Recursive Self-Improvement
 # ---------------------------------------------------------------------------
+
 
 @router.post("/improvement/cycle")
 async def run_improvement_cycle():

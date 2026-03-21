@@ -159,4 +159,3 @@ class DeadlineScheduler:
             "max_workers": self.max_workers,
             "known_jobs": len(self._jobs),
         }
-

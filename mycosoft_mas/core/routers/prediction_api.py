@@ -14,20 +14,17 @@ from pydantic import BaseModel, Field
 
 from mycosoft_mas.prediction import (
     AircraftPredictor,
-    VesselPredictor,
-    SatellitePredictor,
-    WildlifePredictor,
-    HazardPredictor,
-    Earth2Forecaster,
     EntityState,
     EntityType,
     GeoPoint,
+    HazardPredictor,
     PredictedPosition,
     PredictionRequest,
-    PredictionResult,
+    SatellitePredictor,
     Velocity,
+    VesselPredictor,
+    WildlifePredictor,
     get_earth2_forecaster,
-    get_prediction_store,
 )
 
 logger = logging.getLogger("PredictionAPI")
@@ -35,6 +32,7 @@ router = APIRouter(prefix="/prediction", tags=["prediction"])
 
 
 # === Pydantic Models ===
+
 
 class GeoPointModel(BaseModel):
     lat: float = Field(..., ge=-90, le=90)
@@ -122,6 +120,7 @@ class WeatherForecastResponse(BaseModel):
 
 # === Helper Functions ===
 
+
 def _get_predictor(entity_type: str):
     """Get appropriate predictor for entity type."""
     predictors = {
@@ -133,14 +132,11 @@ def _get_predictor(entity_type: str):
         "wildfire": HazardPredictor,
         "storm": HazardPredictor,
     }
-    
+
     predictor_class = predictors.get(entity_type.lower())
     if not predictor_class:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unknown entity type: {entity_type}"
-        )
-    
+        raise HTTPException(status_code=400, detail=f"Unknown entity type: {entity_type}")
+
     return predictor_class()
 
 
@@ -155,11 +151,15 @@ def _state_model_to_entity(model: EntityStateModel) -> EntityState:
             lng=model.position.lng,
             altitude=model.position.altitude,
         ),
-        velocity=Velocity(
-            speed=model.velocity.speed,
-            heading=model.velocity.heading,
-            climb_rate=model.velocity.climb_rate,
-        ) if model.velocity else None,
+        velocity=(
+            Velocity(
+                speed=model.velocity.speed,
+                heading=model.velocity.heading,
+                climb_rate=model.velocity.climb_rate,
+            )
+            if model.velocity
+            else None
+        ),
         metadata=model.metadata or {},
         flight_plan=model.flight_plan,
         destination=model.destination,
@@ -180,11 +180,15 @@ def _prediction_to_model(pred: PredictedPosition) -> PredictedPositionModel:
             lng=pred.position.lng,
             altitude=pred.position.altitude,
         ),
-        velocity=VelocityModel(
-            speed=pred.velocity.speed,
-            heading=pred.velocity.heading,
-            climb_rate=pred.velocity.climb_rate,
-        ) if pred.velocity else None,
+        velocity=(
+            VelocityModel(
+                speed=pred.velocity.speed,
+                heading=pred.velocity.heading,
+                climb_rate=pred.velocity.climb_rate,
+            )
+            if pred.velocity
+            else None
+        ),
         confidence=pred.confidence,
         uncertainty_radius_m=pred.uncertainty.radius_meters if pred.uncertainty else None,
         prediction_source=pred.prediction_source.value,
@@ -194,17 +198,18 @@ def _prediction_to_model(pred: PredictedPosition) -> PredictedPositionModel:
 
 # === Endpoints ===
 
+
 @router.post("/predict", response_model=PredictionResponseModel)
 async def predict_entity(request: PredictionRequestModel):
     """
     Generate predictions for a single entity.
     """
     predictor = _get_predictor(request.entity_type)
-    
+
     # Determine time range
     from_time = request.from_time or datetime.now(timezone.utc)
     to_time = request.to_time or (from_time + timedelta(hours=request.hours_ahead))
-    
+
     # Get or create entity state
     if request.current_state:
         state = _state_model_to_entity(request.current_state)
@@ -213,9 +218,9 @@ async def predict_entity(request: PredictionRequestModel):
         if state is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Entity {request.entity_id} not found and no state provided"
+                detail=f"Entity {request.entity_id} not found and no state provided",
             )
-    
+
     # Create prediction request
     pred_request = PredictionRequest(
         entity_id=request.entity_id,
@@ -225,10 +230,10 @@ async def predict_entity(request: PredictionRequestModel):
         resolution_seconds=request.resolution_seconds,
         include_uncertainty=request.include_uncertainty,
     )
-    
+
     # Generate predictions
     result = await predictor.predict(pred_request)
-    
+
     return PredictionResponseModel(
         entity_id=result.entity_id,
         entity_type=result.entity_type.value,
@@ -246,8 +251,9 @@ async def predict_batch(request: BatchPredictionRequest):
     Generate predictions for multiple entities in parallel.
     """
     import time
+
     start = time.time()
-    
+
     async def process_one(req: PredictionRequestModel) -> PredictionResponseModel:
         try:
             return await predict_entity(req)
@@ -262,9 +268,9 @@ async def predict_batch(request: BatchPredictionRequest):
                 computation_time_ms=0,
                 warnings=[str(e)],
             )
-    
+
     results = await asyncio.gather(*[process_one(req) for req in request.requests])
-    
+
     return BatchPredictionResponse(
         results=list(results),
         total_computation_time_ms=(time.time() - start) * 1000,
@@ -280,12 +286,14 @@ async def predict_aircraft_endpoint(
     """
     Get aircraft prediction by ID.
     """
-    return await predict_entity(PredictionRequestModel(
-        entity_id=entity_id,
-        entity_type="aircraft",
-        hours_ahead=hours,
-        resolution_seconds=resolution,
-    ))
+    return await predict_entity(
+        PredictionRequestModel(
+            entity_id=entity_id,
+            entity_type="aircraft",
+            hours_ahead=hours,
+            resolution_seconds=resolution,
+        )
+    )
 
 
 @router.get("/vessel/{entity_id}", response_model=PredictionResponseModel)
@@ -297,12 +305,14 @@ async def predict_vessel_endpoint(
     """
     Get vessel prediction by ID.
     """
-    return await predict_entity(PredictionRequestModel(
-        entity_id=entity_id,
-        entity_type="vessel",
-        hours_ahead=hours,
-        resolution_seconds=resolution,
-    ))
+    return await predict_entity(
+        PredictionRequestModel(
+            entity_id=entity_id,
+            entity_type="vessel",
+            hours_ahead=hours,
+            resolution_seconds=resolution,
+        )
+    )
 
 
 @router.get("/satellite/{norad_id}", response_model=PredictionResponseModel)
@@ -314,12 +324,14 @@ async def predict_satellite_endpoint(
     """
     Get satellite prediction by NORAD ID.
     """
-    return await predict_entity(PredictionRequestModel(
-        entity_id=norad_id,
-        entity_type="satellite",
-        hours_ahead=hours,
-        resolution_seconds=resolution,
-    ))
+    return await predict_entity(
+        PredictionRequestModel(
+            entity_id=norad_id,
+            entity_type="satellite",
+            hours_ahead=hours,
+            resolution_seconds=resolution,
+        )
+    )
 
 
 @router.get("/wildlife/{entity_id}", response_model=PredictionResponseModel)
@@ -338,11 +350,11 @@ async def predict_wildlife_endpoint(
         hours_ahead=hours,
         resolution_seconds=resolution,
     )
-    
+
     if species:
         # Would need to create state with species
         pass
-    
+
     return await predict_entity(request)
 
 
@@ -352,15 +364,15 @@ async def get_weather_forecast(request: WeatherForecastRequest):
     Get weather forecast for a location.
     """
     forecaster = await get_earth2_forecaster()
-    
+
     location = GeoPoint(
         lat=request.location.lat,
         lng=request.location.lng,
     )
-    
+
     from_time = datetime.now(timezone.utc)
     to_time = from_time + timedelta(hours=request.hours_ahead)
-    
+
     forecasts = await forecaster.get_weather_forecast(
         location=location,
         from_time=from_time,
@@ -368,7 +380,7 @@ async def get_weather_forecast(request: WeatherForecastRequest):
         resolution_hours=request.resolution_hours,
         model=request.model,
     )
-    
+
     return WeatherForecastResponse(
         location=request.location,
         forecasts=forecasts,
@@ -389,13 +401,13 @@ async def get_storm_predictions(
     Get storm track predictions for a region.
     """
     forecaster = await get_earth2_forecaster()
-    
+
     storms = await forecaster.get_storm_tracks(
         region_bounds=(min_lat, min_lng, max_lat, max_lng),
         from_time=datetime.now(timezone.utc),
         to_time=datetime.now(timezone.utc) + timedelta(hours=hours),
     )
-    
+
     return {"storms": storms}
 
 
@@ -412,7 +424,7 @@ async def predict_wildfire_spread(
     Predict wildfire spread from a point.
     """
     forecaster = await get_earth2_forecaster()
-    
+
     predictions = await forecaster.get_wildfire_spread(
         fire_location=GeoPoint(lat=lat, lng=lng),
         wind_speed=wind_speed,
@@ -420,7 +432,7 @@ async def predict_wildfire_spread(
         fuel_moisture=fuel_moisture,
         hours_ahead=hours,
     )
-    
+
     return {"predictions": predictions}
 
 
@@ -430,7 +442,7 @@ async def health_check():
     Prediction engine health check.
     """
     forecaster = await get_earth2_forecaster()
-    
+
     return {
         "status": "healthy",
         "predictors": {

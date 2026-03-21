@@ -102,6 +102,7 @@ async def run_earth_search(query: EarthSearchQuery) -> EarthSearchResponse:
     mindex_results: List[EarthSearchResult] = []
     try:
         from mycosoft_mas.earth_search.mindex_earth_client import get_mindex_earth_client
+
         mindex = get_mindex_earth_client()
 
         mindex_params = {
@@ -129,23 +130,25 @@ async def run_earth_search(query: EarthSearchQuery) -> EarthSearchResponse:
                 except ValueError:
                     domain_enum = EarthSearchDomain.ALL_SPECIES
 
-                mindex_results.append(EarthSearchResult(
-                    result_id=f"mindex-{r.get('id', r.get('entity_id', id(r)))}",
-                    domain=domain_enum,
-                    source="mindex_local",
-                    title=r.get("title", r.get("name", query.query)),
-                    description=r.get("description", r.get("summary", "")),
-                    data=r.get("data", r),
-                    lat=r.get("lat") or r.get("latitude"),
-                    lng=r.get("lng") or r.get("longitude"),
-                    timestamp=r.get("timestamp") or r.get("observed_at"),
-                    confidence=float(r.get("confidence", r.get("score", 0.9))),
-                    crep_layer=r.get("crep_layer") or r.get("layer"),
-                    crep_entity_id=r.get("crep_entity_id") or r.get("entity_id"),
-                    mindex_id=str(r.get("id", "")),
-                    url=r.get("url"),
-                    image_url=r.get("image_url"),
-                ))
+                mindex_results.append(
+                    EarthSearchResult(
+                        result_id=f"mindex-{r.get('id', r.get('entity_id', id(r)))}",
+                        domain=domain_enum,
+                        source="mindex_local",
+                        title=r.get("title", r.get("name", query.query)),
+                        description=r.get("description", r.get("summary", "")),
+                        data=r.get("data", r),
+                        lat=r.get("lat") or r.get("latitude"),
+                        lng=r.get("lng") or r.get("longitude"),
+                        timestamp=r.get("timestamp") or r.get("observed_at"),
+                        confidence=float(r.get("confidence", r.get("score", 0.9))),
+                        crep_layer=r.get("crep_layer") or r.get("layer"),
+                        crep_entity_id=r.get("crep_entity_id") or r.get("entity_id"),
+                        mindex_id=str(r.get("id", "")),
+                        url=r.get("url"),
+                        image_url=r.get("image_url"),
+                    )
+                )
     except Exception as e:
         logger.warning("MINDEX earth search failed (will use external connectors): %s", e)
 
@@ -154,7 +157,12 @@ async def run_earth_search(query: EarthSearchQuery) -> EarthSearchResponse:
     for connector in _CONNECTORS:
         tasks.append(
             _safe_connector_search(
-                connector, query.query, domains, query.geo, query.temporal, query.limit,
+                connector,
+                query.query,
+                domains,
+                query.geo,
+                query.temporal,
+                query.limit,
             )
         )
 
@@ -182,7 +190,7 @@ async def run_earth_search(query: EarthSearchQuery) -> EarthSearchResponse:
 
     # Sort by confidence desc
     results.sort(key=lambda r: r.confidence, reverse=True)
-    results = results[:query.limit]
+    results = results[: query.limit]
 
     # Generate CREP commands for map visualization
     crep_commands: List[Dict[str, Any]] = []
@@ -197,6 +205,7 @@ async def run_earth_search(query: EarthSearchQuery) -> EarthSearchResponse:
     # Fire-and-forget ingestion
     try:
         from mycosoft_mas.earth_search.ingestion.pipeline import IngestionPipeline
+
         pipeline = IngestionPipeline()
         asyncio.create_task(pipeline.ingest_batch(results, query.query, query.session_id))
     except Exception as e:
@@ -218,7 +227,9 @@ async def run_earth_search(query: EarthSearchQuery) -> EarthSearchResponse:
     )
 
 
-async def _safe_connector_search(connector, query, domains, geo, temporal, limit) -> List[EarthSearchResult]:
+async def _safe_connector_search(
+    connector, query, domains, geo, temporal, limit
+) -> List[EarthSearchResult]:
     """Run a single connector's search with error isolation."""
     try:
         return await asyncio.wait_for(
@@ -233,7 +244,9 @@ async def _safe_connector_search(connector, query, domains, geo, temporal, limit
         return []
 
 
-def _generate_crep_commands(results: List[EarthSearchResult], query: EarthSearchQuery) -> List[Dict[str, Any]]:
+def _generate_crep_commands(
+    results: List[EarthSearchResult], query: EarthSearchQuery
+) -> List[Dict[str, Any]]:
     """Generate CREP command bus commands to visualize search results on the map."""
     commands: List[Dict[str, Any]] = []
 
@@ -251,32 +264,38 @@ def _generate_crep_commands(results: List[EarthSearchResult], query: EarthSearch
 
     # If geo filter, fly to that location
     if query.geo:
-        commands.append({
-            "command": "flyTo",
-            "args": {
-                "lat": query.geo.lat,
-                "lng": query.geo.lng,
-                "zoom": _radius_to_zoom(query.geo.radius_km),
-            },
-        })
+        commands.append(
+            {
+                "command": "flyTo",
+                "args": {
+                    "lat": query.geo.lat,
+                    "lng": query.geo.lng,
+                    "zoom": _radius_to_zoom(query.geo.radius_km),
+                },
+            }
+        )
     elif geo_results:
         # Fly to the center of first result
-        commands.append({
-            "command": "flyTo",
-            "args": {
-                "lat": geo_results[0].lat,
-                "lng": geo_results[0].lng,
-                "zoom": 8,
-            },
-        })
+        commands.append(
+            {
+                "command": "flyTo",
+                "args": {
+                    "lat": geo_results[0].lat,
+                    "lng": geo_results[0].lng,
+                    "zoom": 8,
+                },
+            }
+        )
 
     # Add entity details for top results
     for r in geo_results[:5]:
         if r.crep_entity_id:
-            commands.append({
-                "command": "getEntityDetails",
-                "args": {"entityId": r.crep_entity_id, "layer": r.crep_layer},
-            })
+            commands.append(
+                {
+                    "command": "getEntityDetails",
+                    "args": {"entityId": r.crep_entity_id, "layer": r.crep_layer},
+                }
+            )
 
     return commands
 
@@ -304,6 +323,7 @@ async def _llm_synthesize(query: str, results: List[EarthSearchResult]) -> Optio
     """Use LLM to synthesize a natural language answer from search results."""
     try:
         from mycosoft_mas.llm.brain import get_brain
+
         brain = get_brain()
         if not brain:
             return None
@@ -315,7 +335,7 @@ async def _llm_synthesize(query: str, results: List[EarthSearchResult]) -> Optio
 
         context = "\n".join(context_parts)
         prompt = (
-            f"Based on these search results for \"{query}\", provide a concise, accurate answer:\n\n"
+            f'Based on these search results for "{query}", provide a concise, accurate answer:\n\n'
             f"{context}\n\n"
             f"Answer concisely and factually. Cite specific data points from the results."
         )

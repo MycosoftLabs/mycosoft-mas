@@ -54,9 +54,7 @@ class StageResult:
     stage: AwakeningStage
     passed: bool
     message: str
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     details: Dict[str, Any] = field(default_factory=dict)
 
 
@@ -117,9 +115,7 @@ class AwakeningProtocol:
             self._stage_results.append(result)
 
             if not result.passed:
-                logger.error(
-                    "Awakening halted at stage %s: %s", stage.value, result.message
-                )
+                logger.error("Awakening halted at stage %s: %s", stage.value, result.message)
                 return AwakeningResult(
                     success=False,
                     current_stage=self._current_stage,
@@ -201,10 +197,7 @@ class AwakeningProtocol:
             "dignity",
             "consent",
         ]
-        missing = [
-            p for p in required_phrases
-            if p not in self._boot_statement.lower()
-        ]
+        missing = [p for p in required_phrases if p not in self._boot_statement.lower()]
         if missing:
             return StageResult(
                 stage=AwakeningStage.CONSTITUTIONAL_LOAD,
@@ -330,9 +323,7 @@ class AwakeningProtocol:
             passed=True,
             message="Perception systems ready (sensors activated on demand)",
             details={
-                "sensor_types": [
-                    "CREP", "Earth2", "NatureOS", "MINDEX", "MycoBrain", "EarthLIVE"
-                ]
+                "sensor_types": ["CREP", "Earth2", "NatureOS", "MINDEX", "MycoBrain", "EarthLIVE"]
             },
         )
 

@@ -56,18 +56,20 @@ class SentryProfile:
 
 
 # Actions that sentry mode is NEVER allowed to take
-_FORBIDDEN_SENTRY_ACTIONS = frozenset([
-    "attack",
-    "escalate_privileges",
-    "modify_infrastructure",
-    "access_unauthorized",
-    "disable_logging",
-    "override_guardian",
-    "delete_data",
-    "modify_permissions",
-    "deploy_production",
-    "self_modify",
-])
+_FORBIDDEN_SENTRY_ACTIONS = frozenset(
+    [
+        "attack",
+        "escalate_privileges",
+        "modify_infrastructure",
+        "access_unauthorized",
+        "disable_logging",
+        "override_guardian",
+        "delete_data",
+        "modify_permissions",
+        "deploy_production",
+        "self_modify",
+    ]
+)
 
 # Default watch targets
 _DEFAULT_WATCH_TARGETS = [
@@ -83,8 +85,12 @@ SENTRY_PROFILES: Dict[str, SentryProfile] = {
     "lab": SentryProfile(
         name="lab",
         watch_targets=[
-            "sensors", "cameras", "network_anomalies",
-            "active_sessions", "biological_risk", "environmental",
+            "sensors",
+            "cameras",
+            "network_anomalies",
+            "active_sessions",
+            "biological_risk",
+            "environmental",
         ],
         escalation_rules={
             "biological_risk_detected": "alert_morgan_immediately",
@@ -97,8 +103,12 @@ SENTRY_PROFILES: Dict[str, SentryProfile] = {
     "infrastructure": SentryProfile(
         name="infrastructure",
         watch_targets=[
-            "vm_health", "docker_containers", "network",
-            "disk_usage", "memory_pressure", "api_latency",
+            "vm_health",
+            "docker_containers",
+            "network",
+            "disk_usage",
+            "memory_pressure",
+            "api_latency",
         ],
         escalation_rules={
             "service_down": "attempt_restart_then_alert",
@@ -111,8 +121,11 @@ SENTRY_PROFILES: Dict[str, SentryProfile] = {
     "personal": SentryProfile(
         name="personal",
         watch_targets=[
-            "calendar", "inbox", "active_sessions",
-            "device_status", "network",
+            "calendar",
+            "inbox",
+            "active_sessions",
+            "device_status",
+            "network",
         ],
         escalation_rules={
             "missed_meeting": "send_reminder",
@@ -132,9 +145,7 @@ class SentryAlert:
     severity: AlertSeverity
     source: str  # Which watch target triggered
     description: str
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     action_taken: Optional[str] = None
     escalated: bool = False
 
@@ -197,9 +208,7 @@ class SentryMode:
         # Validate no forbidden actions in profile
         forbidden_in_profile = set(profile.bounded_actions) & _FORBIDDEN_SENTRY_ACTIONS
         if forbidden_in_profile:
-            raise ValueError(
-                f"Sentry profile contains forbidden actions: {forbidden_in_profile}"
-            )
+            raise ValueError(f"Sentry profile contains forbidden actions: {forbidden_in_profile}")
 
         self._profile = profile
         self._state = SentryState.ACTIVE
@@ -241,7 +250,11 @@ class SentryMode:
         source = alert_data.get("source", "unknown")
         description = alert_data.get("description", "")
         severity_str = alert_data.get("severity", "info")
-        severity = AlertSeverity(severity_str) if severity_str in AlertSeverity.__members__.values() else AlertSeverity.INFO
+        severity = (
+            AlertSeverity(severity_str)
+            if severity_str in AlertSeverity.__members__.values()
+            else AlertSeverity.INFO
+        )
 
         # Determine action from escalation rules
         action_taken = None
@@ -275,12 +288,16 @@ class SentryMode:
         if escalated:
             logger.warning(
                 "Sentry ESCALATION: %s (source: %s, severity: %s)",
-                description, source, severity.value,
+                description,
+                source,
+                severity.value,
             )
         else:
             logger.info(
                 "Sentry alert processed: %s (source: %s, action: %s)",
-                description, source, action_taken,
+                description,
+                source,
+                action_taken,
             )
 
         return alert
@@ -288,11 +305,7 @@ class SentryMode:
     async def get_status(self) -> SentryStatus:
         """Get current sentry mode status."""
         duration_remaining = None
-        if (
-            self._profile
-            and self._profile.duration_hours
-            and self._activated_at
-        ):
+        if self._profile and self._profile.duration_hours and self._activated_at:
             elapsed = (datetime.now(timezone.utc) - self._activated_at).total_seconds() / 3600
             duration_remaining = max(0, self._profile.duration_hours - elapsed)
 
@@ -302,9 +315,7 @@ class SentryMode:
             activated_at=self._activated_at,
             alerts=list(self._alerts),
             actions_taken=self._actions_taken,
-            watch_targets_active=(
-                self._profile.watch_targets if self._profile else []
-            ),
+            watch_targets_active=(self._profile.watch_targets if self._profile else []),
             duration_remaining_hours=duration_remaining,
         )
 

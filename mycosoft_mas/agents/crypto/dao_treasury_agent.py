@@ -33,6 +33,7 @@ class DAOTreasuryAgent(BaseAgent):
         if self._solana is None:
             try:
                 from mycosoft_mas.integrations.solana_client import SolanaClient
+
                 self._solana = SolanaClient(self.config)
             except ImportError:
                 pass
@@ -42,6 +43,7 @@ class DAOTreasuryAgent(BaseAgent):
         if self._dex is None:
             try:
                 from mycosoft_mas.integrations.solana_dex_client import SolanaDexClient
+
                 self._dex = SolanaDexClient(self.config)
             except ImportError:
                 pass

@@ -57,9 +57,7 @@ class CapabilityRequest:
     requester_agent: str
     urgency: str = "normal"  # "low", "normal", "high"
     request_id: str = field(default_factory=lambda: str(uuid4()))
-    requested_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    requested_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -85,9 +83,7 @@ class CapabilityAdapter:
     source_candidate: CapabilityCandidate
     code: Optional[str] = None  # Adapter code if generated
     config: Dict[str, Any] = field(default_factory=dict)
-    built_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    built_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -98,9 +94,7 @@ class PipelineStageResult:
     passed: bool
     message: str
     details: Dict[str, Any] = field(default_factory=dict)
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -141,9 +135,7 @@ class CapabilityFoundry:
         self._completed: List[CapabilityResult] = []
         self._registered_capabilities: Dict[str, Dict[str, Any]] = {}
 
-    async def acquire_capability(
-        self, request: CapabilityRequest
-    ) -> CapabilityResult:
+    async def acquire_capability(self, request: CapabilityRequest) -> CapabilityResult:
         """
         Run the full capability acquisition pipeline.
 
@@ -159,9 +151,7 @@ class CapabilityFoundry:
 
         try:
             # Stage 1: Detect missing capability
-            detection = await self.detect_missing(
-                {"description": request.task_description}
-            )
+            detection = await self.detect_missing({"description": request.task_description})
             result.pipeline_results.append(
                 PipelineStageResult(
                     stage="detection",
@@ -243,7 +233,11 @@ class CapabilityFoundry:
                 PipelineStageResult(
                     stage="registration",
                     passed=capability_id is not None,
-                    message=f"Registered as: {capability_id}" if capability_id else "Registration failed",
+                    message=(
+                        f"Registered as: {capability_id}"
+                        if capability_id
+                        else "Registration failed"
+                    ),
                     details={"capability_id": capability_id},
                 )
             )
@@ -292,9 +286,7 @@ class CapabilityFoundry:
         # Generic capability name from description
         return f"custom_{description_lower[:30].replace(' ', '_')}"
 
-    async def search_sources(
-        self, capability_name: str
-    ) -> List[CapabilityCandidate]:
+    async def search_sources(self, capability_name: str) -> List[CapabilityCandidate]:
         """Search approved sources for capability candidates."""
         # Import discovery module
         try:
@@ -306,9 +298,7 @@ class CapabilityFoundry:
             logger.warning("CapabilityDiscovery not available, returning empty")
             return []
 
-    async def build_adapter(
-        self, candidate: CapabilityCandidate
-    ) -> Optional[CapabilityAdapter]:
+    async def build_adapter(self, candidate: CapabilityCandidate) -> Optional[CapabilityAdapter]:
         """Build an adapter for a capability candidate."""
         return CapabilityAdapter(
             adapter_id=str(uuid4()),
@@ -322,9 +312,7 @@ class CapabilityFoundry:
             },
         )
 
-    async def sandbox_test(
-        self, adapter: CapabilityAdapter
-    ) -> PipelineStageResult:
+    async def sandbox_test(self, adapter: CapabilityAdapter) -> PipelineStageResult:
         """Test capability in sandbox environment."""
         # In production, this would use safety/sandboxing.py CodeSandbox
         return PipelineStageResult(
@@ -334,9 +322,7 @@ class CapabilityFoundry:
             details={"adapter_id": adapter.adapter_id},
         )
 
-    async def policy_check(
-        self, adapter: CapabilityAdapter
-    ) -> PipelineStageResult:
+    async def policy_check(self, adapter: CapabilityAdapter) -> PipelineStageResult:
         """Check capability against governance policies."""
         risk_tier = adapter.config.get("risk_tier", "medium")
 
@@ -356,16 +342,19 @@ class CapabilityFoundry:
             details={"risk_tier": risk_tier},
         )
 
-    async def security_scan(
-        self, adapter: CapabilityAdapter
-    ) -> PipelineStageResult:
+    async def security_scan(self, adapter: CapabilityAdapter) -> PipelineStageResult:
         """Run security scan on capability."""
         # In production, this would use security/skill_scanner.py
         if adapter.code:
             # Check for obvious dangerous patterns
             dangerous_patterns = [
-                "eval(", "exec(", "__import__", "subprocess",
-                "os.system", "curl | bash", "wget | sh",
+                "eval(",
+                "exec(",
+                "__import__",
+                "subprocess",
+                "os.system",
+                "curl | bash",
+                "wget | sh",
             ]
             for pattern in dangerous_patterns:
                 if pattern in adapter.code:
@@ -382,9 +371,7 @@ class CapabilityFoundry:
             message="Security scan passed",
         )
 
-    async def register_and_deploy(
-        self, adapter: CapabilityAdapter
-    ) -> Optional[str]:
+    async def register_and_deploy(self, adapter: CapabilityAdapter) -> Optional[str]:
         """Register capability in skill registry and deploy."""
         capability_id = f"cap_{adapter.adapter_id[:8]}"
         self._registered_capabilities[capability_id] = {

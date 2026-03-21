@@ -5,7 +5,7 @@ ITAR classification, EAR ECCN lookup, deemed export screening, license tracking.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.enums import AgentStatus
@@ -25,16 +25,25 @@ class ExportControlAgent(BaseAgent):
         config: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(agent_id=agent_id, name=name, config=config or {})
-        self.capabilities.update({
-            "itar", "ear", "eccn", "usml", "deemed_export",
-            "screening", "license_tracking", "export_compliance"
-        })
+        self.capabilities.update(
+            {
+                "itar",
+                "ear",
+                "eccn",
+                "usml",
+                "deemed_export",
+                "screening",
+                "license_tracking",
+                "export_compliance",
+            }
+        )
         self._client = None
 
     def _get_client(self):
         if self._client is None:
             try:
                 from mycosoft_mas.integrations.export_control_client import ExportControlClient
+
                 self._client = ExportControlClient(self.config)
             except ImportError:
                 logger.warning("ExportControlClient not available")
@@ -71,7 +80,13 @@ class ExportControlAgent(BaseAgent):
         return {
             "status": "error",
             "error": f"Unknown task type: {task_type}",
-            "supported": ["itar_classify", "eccn_lookup", "deemed_export_screen", "license_track", "list_usml"],
+            "supported": [
+                "itar_classify",
+                "eccn_lookup",
+                "deemed_export_screen",
+                "license_track",
+                "list_usml",
+            ],
         }
 
     async def _itar_classify(self, payload: Dict[str, Any]) -> Dict[str, Any]:

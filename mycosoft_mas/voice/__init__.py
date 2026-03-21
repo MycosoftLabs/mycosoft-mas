@@ -5,27 +5,25 @@ Created: February 4, 2026
 Core voice processing components for the MYCA AI system.
 """
 
-from mycosoft_mas.voice.intent_classifier import (
-    IntentClassifier,
-    ClassifiedIntent,
-    ExtractedEntity,
-    IntentPriority,
-    ConfirmationLevel,
-    get_intent_classifier,
-    classify_voice_command,
-    INTENT_CATEGORIES,
-)
-
 from mycosoft_mas.voice.command_registry import (
-    VoiceCommandRegistry,
-    RegisteredCommand,
     CommandHandler,
     CommandMatch,
     CommandType,
     ExecutionMode,
+    RegisteredCommand,
+    VoiceCommandRegistry,
     get_command_registry,
 )
-
+from mycosoft_mas.voice.intent_classifier import (
+    INTENT_CATEGORIES,
+    ClassifiedIntent,
+    ConfirmationLevel,
+    ExtractedEntity,
+    IntentClassifier,
+    IntentPriority,
+    classify_voice_command,
+    get_intent_classifier,
+)
 from mycosoft_mas.voice.memory_bridge import (
     VoiceMemoryBridge,
     get_voice_memory_bridge,

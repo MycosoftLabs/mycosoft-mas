@@ -10,7 +10,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from mycosoft_mas.gateway.control_plane import GatewayControlPlane
@@ -67,7 +67,9 @@ class MycoBrainCoordinator:
             for tool_name, desc in self.EDGE_TOOLS.items():
                 self._gateway.register_tool(
                     name=f"{tool_name}:{device_id}",
-                    handler=lambda **kw, _d=device_id, _t=tool_name: self._handle_edge_tool(_d, _t, kw),
+                    handler=lambda _d=device_id, _t=tool_name, **kw: self._handle_edge_tool(
+                        _d, _t, kw
+                    ),
                     description=f"{desc} ({device_id})",
                 )
 
@@ -126,6 +128,7 @@ class MycoBrainCoordinator:
     async def _init_mqtt(self):
         try:
             import paho.mqtt.client as mqtt
+
             self._mqtt_client = mqtt.Client(client_id="myca-coordinator")
             self._mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
             self._mqtt_client.loop_start()
@@ -135,6 +138,9 @@ class MycoBrainCoordinator:
             self._mqtt_client = None
 
     async def _handle_edge_tool(
-        self, device_id: str, tool_name: str, args: Dict[str, Any],
+        self,
+        device_id: str,
+        tool_name: str,
+        args: Dict[str, Any],
     ) -> Dict[str, Any]:
         return await self.route_to_edge(device_id, {"tool": tool_name, **args})

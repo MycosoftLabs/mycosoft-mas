@@ -12,8 +12,7 @@ All heavy inference is dispatched to the GPU node (192.168.0.190).
 """
 
 import logging
-from typing import Any, Dict, List, Optional
-from uuid import uuid4
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -123,9 +122,10 @@ async def info():
 @router.post("/generate/image")
 async def generate_image(request: GenerateImageRequest):
     """Generate images using the Unified Latents diffusion pipeline."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
     from datetime import datetime, timezone
     from uuid import uuid4 as _uuid4
+
+    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
 
     agent = _get_agent()
     task = ScientificTask(
@@ -145,9 +145,10 @@ async def generate_image(request: GenerateImageRequest):
 @router.post("/generate/video")
 async def generate_video(request: GenerateVideoRequest):
     """Generate video using the Unified Latents diffusion pipeline."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
     from datetime import datetime, timezone
     from uuid import uuid4 as _uuid4
+
+    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
 
     agent = _get_agent()
     task = ScientificTask(
@@ -167,9 +168,10 @@ async def generate_video(request: GenerateVideoRequest):
 @router.post("/encode")
 async def encode_to_latent(request: EncodeRequest):
     """Encode an image or video into the unified latent space."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
     from datetime import datetime, timezone
     from uuid import uuid4 as _uuid4
+
+    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
 
     agent = _get_agent()
     task = ScientificTask(
@@ -189,9 +191,10 @@ async def encode_to_latent(request: EncodeRequest):
 @router.post("/decode")
 async def decode_from_latent(request: DecodeRequest):
     """Decode a latent representation back to pixel space."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
     from datetime import datetime, timezone
     from uuid import uuid4 as _uuid4
+
+    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
 
     agent = _get_agent()
     task = ScientificTask(
@@ -211,9 +214,10 @@ async def decode_from_latent(request: DecodeRequest):
 @router.post("/train")
 async def train_model(request: TrainModelRequest):
     """Launch a Unified Latents training run on the GPU node."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
     from datetime import datetime, timezone
     from uuid import uuid4 as _uuid4
+
+    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
 
     agent = _get_agent()
     task = ScientificTask(
@@ -233,9 +237,10 @@ async def train_model(request: TrainModelRequest):
 @router.get("/train/{run_id}")
 async def get_training_status(run_id: str):
     """Get status of a training run."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
     from datetime import datetime, timezone
     from uuid import uuid4 as _uuid4
+
+    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
 
     agent = _get_agent()
     task = ScientificTask(
@@ -255,9 +260,10 @@ async def get_training_status(run_id: str):
 @router.post("/evaluate")
 async def evaluate_model(request: EvaluateModelRequest):
     """Evaluate a UL checkpoint computing FID, FVD, PSNR metrics."""
-    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
     from datetime import datetime, timezone
     from uuid import uuid4 as _uuid4
+
+    from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
 
     agent = _get_agent()
     task = ScientificTask(

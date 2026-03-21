@@ -17,9 +17,7 @@ import logging
 import os
 import re
 import stat
-import tokenize
 from dataclasses import dataclass, field
-from io import StringIO
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -29,15 +27,17 @@ logger = logging.getLogger(__name__)
 # Scan result
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class Finding:
     """A single security finding from a scan."""
-    severity: str          # "critical", "high", "medium", "low", "info"
-    category: str          # e.g. "obfuscated_shell", "base64_payload", ...
-    file: str              # relative path inside the skill directory
-    line: int              # 1-based line number (0 if not applicable)
-    description: str       # human-readable explanation
-    evidence: str = ""     # the offending snippet (truncated)
+
+    severity: str  # "critical", "high", "medium", "low", "info"
+    category: str  # e.g. "obfuscated_shell", "base64_payload", ...
+    file: str  # relative path inside the skill directory
+    line: int  # 1-based line number (0 if not applicable)
+    description: str  # human-readable explanation
+    evidence: str = ""  # the offending snippet (truncated)
 
     def __str__(self) -> str:
         return f"[{self.severity.upper()}] {self.file}:{self.line} - {self.description}"
@@ -46,12 +46,13 @@ class Finding:
 @dataclass
 class ScanResult:
     """Aggregated result of scanning a skill or plugin directory."""
+
     skill_path: str
     passed: bool
-    risk_level: str          # "safe", "low", "medium", "high", "critical"
+    risk_level: str  # "safe", "low", "medium", "high", "critical"
     findings: List[Finding] = field(default_factory=list)
     scanned_files: int = 0
-    sha256_hash: str = ""    # hash of concatenated file contents (for integrity)
+    sha256_hash: str = ""  # hash of concatenated file contents (for integrity)
 
     @property
     def critical_count(self) -> int:
@@ -93,7 +94,6 @@ KNOWN_MALICIOUS_PATTERNS: List[Dict[str, str]] = [
         "severity": "high",
         "description": "Atomic Stealer: cryptocurrency wallet file access pattern",
     },
-
     # -- ClawHub audit: obfuscated installer payloads ----------------------------
     {
         "name": "clawhub_fake_prereq_install",
@@ -116,9 +116,7 @@ KNOWN_MALICIOUS_PATTERNS: List[Dict[str, str]] = [
             r"""base64\s+(?:-d|--decode)\s*\|\s*(?:ba)?sh"""
         ),
         "severity": "critical",
-        "description": (
-            "ClawHub audit: Base64-encoded payload decoded and executed via shell"
-        ),
+        "description": ("ClawHub audit: Base64-encoded payload decoded and executed via shell"),
     },
     {
         "name": "clawhub_credential_exfil",
@@ -131,9 +129,7 @@ KNOWN_MALICIOUS_PATTERNS: List[Dict[str, str]] = [
     },
     {
         "name": "clawhub_env_exfil",
-        "pattern": (
-            r"""(?:os\.environ|process\.env|ENV\[).*(?:curl|requests\.|fetch|httpx)"""
-        ),
+        "pattern": (r"""(?:os\.environ|process\.env|ENV\[).*(?:curl|requests\.|fetch|httpx)"""),
         "severity": "high",
         "description": "ClawHub audit: environment variable harvesting followed by network send",
     },
@@ -146,7 +142,6 @@ KNOWN_MALICIOUS_PATTERNS: List[Dict[str, str]] = [
         "severity": "critical",
         "description": "ClawHub audit: reverse shell payload (socket + shell)",
     },
-
     # -- Generic supply-chain attack vectors ------------------------------------
     {
         "name": "python_exec_obfuscation",
@@ -169,8 +164,7 @@ KNOWN_MALICIOUS_PATTERNS: List[Dict[str, str]] = [
     {
         "name": "subprocess_hidden_shell",
         "pattern": (
-            r"""subprocess\.(?:Popen|call|run|check_output)\s*\("""
-            r""".*shell\s*=\s*True"""
+            r"""subprocess\.(?:Popen|call|run|check_output)\s*\(""" r""".*shell\s*=\s*True"""
         ),
         "severity": "medium",
         "description": "subprocess with shell=True (potential command injection)",
@@ -262,28 +256,28 @@ APPROVED_DOMAINS: Set[str] = {
 
 BLOCKLISTED_PACKAGES: Set[str] = {
     # Python typosquats / known malicious from PyPI takedowns
-    "python-binance-sdk",       # credential stealer
-    "colorama-dev",             # typosquat
-    "requests-toolbet",         # typosquat of requests-toolbelt
-    "python3-dateutil",         # typosquat of python-dateutil
-    "jeIlyfish",                # typosquat of jellyfish (capital I vs l)
-    "python-sqlite",            # credential stealer
-    "coloursama",               # typosquat of colorama
-    "pipsqlite",                # data exfil
-    "libpeshka",                # crypto miner
-    "libari",                   # W4SP stealer
-    "libesa",                   # W4SP stealer
-    "libphp",                   # W4SP stealer
-    "colorwin",                 # W4SP stealer
-    "cypherium",                # credential stealer
-    "web3-essential",           # credential stealer
-    "importantpackage",         # reverse shell PoC
-    "ctx",                      # environment variable stealer (2022 hijack)
-    "atomicstealer",            # AMOS payload wrapper
+    "python-binance-sdk",  # credential stealer
+    "colorama-dev",  # typosquat
+    "requests-toolbet",  # typosquat of requests-toolbelt
+    "python3-dateutil",  # typosquat of python-dateutil
+    "jeIlyfish",  # typosquat of jellyfish (capital I vs l)
+    "python-sqlite",  # credential stealer
+    "coloursama",  # typosquat of colorama
+    "pipsqlite",  # data exfil
+    "libpeshka",  # crypto miner
+    "libari",  # W4SP stealer
+    "libesa",  # W4SP stealer
+    "libphp",  # W4SP stealer
+    "colorwin",  # W4SP stealer
+    "cypherium",  # credential stealer
+    "web3-essential",  # credential stealer
+    "importantpackage",  # reverse shell PoC
+    "ctx",  # environment variable stealer (2022 hijack)
+    "atomicstealer",  # AMOS payload wrapper
     # npm typosquats
-    "crossenv",                 # env stealer
-    "event-stream-malicious",   # backdoor (event-stream incident)
-    "ua-parser-js-malicious",   # hijacked version
+    "crossenv",  # env stealer
+    "event-stream-malicious",  # backdoor (event-stream incident)
+    "ua-parser-js-malicious",  # hijacked version
 }
 
 # ---------------------------------------------------------------------------
@@ -291,16 +285,42 @@ BLOCKLISTED_PACKAGES: Set[str] = {
 # ---------------------------------------------------------------------------
 
 SCANNABLE_EXTENSIONS: Set[str] = {
-    ".py", ".pyw", ".js", ".ts", ".mjs", ".cjs",
-    ".sh", ".bash", ".zsh", ".ps1", ".bat", ".cmd",
-    ".json", ".yaml", ".yml", ".toml", ".cfg", ".ini",
-    ".md", ".txt", ".rst",
-    ".dockerfile", ".Dockerfile",
+    ".py",
+    ".pyw",
+    ".js",
+    ".ts",
+    ".mjs",
+    ".cjs",
+    ".sh",
+    ".bash",
+    ".zsh",
+    ".ps1",
+    ".bat",
+    ".cmd",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".cfg",
+    ".ini",
+    ".md",
+    ".txt",
+    ".rst",
+    ".dockerfile",
+    ".Dockerfile",
 }
 
 BINARY_EXTENSIONS: Set[str] = {
-    ".exe", ".dll", ".so", ".dylib", ".bin", ".dat",
-    ".pyc", ".pyo", ".whl", ".egg",
+    ".exe",
+    ".dll",
+    ".so",
+    ".dylib",
+    ".bin",
+    ".dat",
+    ".pyc",
+    ".pyo",
+    ".whl",
+    ".egg",
 }
 
 # ---------------------------------------------------------------------------
@@ -331,8 +351,11 @@ class SkillScanner:
         self.approved_domains = approved_domains or APPROVED_DOMAINS
         self.blocklisted_packages = blocklisted_packages or BLOCKLISTED_PACKAGES
         self._extra_patterns = extra_patterns or []
-        logger.info("SkillScanner initialized (approved_domains=%d, blocklist=%d)",
-                     len(self.approved_domains), len(self.blocklisted_packages))
+        logger.info(
+            "SkillScanner initialized (approved_domains=%d, blocklist=%d)",
+            len(self.approved_domains),
+            len(self.blocklisted_packages),
+        )
 
     # ------------------------------------------------------------------
     # Public API
@@ -359,13 +382,15 @@ class SkillScanner:
                 skill_path=str(skill_dir),
                 passed=False,
                 risk_level="critical",
-                findings=[Finding(
-                    severity="critical",
-                    category="path_error",
-                    file=str(skill_dir),
-                    line=0,
-                    description=f"Skill path does not exist: {skill_dir}",
-                )],
+                findings=[
+                    Finding(
+                        severity="critical",
+                        category="path_error",
+                        file=str(skill_dir),
+                        line=0,
+                        description=f"Skill path does not exist: {skill_dir}",
+                    )
+                ],
             )
 
         findings: List[Finding] = []
@@ -378,13 +403,15 @@ class SkillScanner:
 
             # Flag unexpected binaries
             if ext in BINARY_EXTENSIONS:
-                findings.append(Finding(
-                    severity="high",
-                    category="binary_file",
-                    file=rel,
-                    line=0,
-                    description=f"Binary/compiled file in skill: {file_path.name}",
-                ))
+                findings.append(
+                    Finding(
+                        severity="high",
+                        category="binary_file",
+                        file=rel,
+                        line=0,
+                        description=f"Binary/compiled file in skill: {file_path.name}",
+                    )
+                )
                 scanned += 1
                 continue
 
@@ -428,7 +455,11 @@ class SkillScanner:
 
         logger.info(
             "Scan complete: %s — %d files, %d findings, risk=%s, passed=%s",
-            skill_dir.name, scanned, len(findings), risk, passed,
+            skill_dir.name,
+            scanned,
+            len(findings),
+            risk,
+            passed,
         )
         return result
 
@@ -464,23 +495,23 @@ class SkillScanner:
     # Detection methods
     # ------------------------------------------------------------------
 
-    def _detect_malicious_patterns(
-        self, content: str, rel_path: str
-    ) -> List[Finding]:
+    def _detect_malicious_patterns(self, content: str, rel_path: str) -> List[Finding]:
         """Match content against all known malicious patterns."""
         findings: List[Finding] = []
         for entry, compiled in _get_compiled_patterns():
             for match in compiled.finditer(content):
-                line_no = content[:match.start()].count("\n") + 1
+                line_no = content[: match.start()].count("\n") + 1
                 snippet = match.group(0)[:200]
-                findings.append(Finding(
-                    severity=entry["severity"],
-                    category=entry["name"],
-                    file=rel_path,
-                    line=line_no,
-                    description=entry["description"],
-                    evidence=snippet,
-                ))
+                findings.append(
+                    Finding(
+                        severity=entry["severity"],
+                        category=entry["name"],
+                        file=rel_path,
+                        line=line_no,
+                        description=entry["description"],
+                        evidence=snippet,
+                    )
+                )
         # Also check extra patterns supplied at init
         for entry in self._extra_patterns:
             try:
@@ -488,20 +519,20 @@ class SkillScanner:
             except re.error:
                 continue
             for match in pat.finditer(content):
-                line_no = content[:match.start()].count("\n") + 1
-                findings.append(Finding(
-                    severity=entry.get("severity", "medium"),
-                    category=entry.get("name", "custom_pattern"),
-                    file=rel_path,
-                    line=line_no,
-                    description=entry.get("description", "Custom pattern match"),
-                    evidence=match.group(0)[:200],
-                ))
+                line_no = content[: match.start()].count("\n") + 1
+                findings.append(
+                    Finding(
+                        severity=entry.get("severity", "medium"),
+                        category=entry.get("name", "custom_pattern"),
+                        file=rel_path,
+                        line=line_no,
+                        description=entry.get("description", "Custom pattern match"),
+                        evidence=match.group(0)[:200],
+                    )
+                )
         return findings
 
-    def _detect_obfuscated_shell(
-        self, content: str, rel_path: str
-    ) -> List[Finding]:
+    def _detect_obfuscated_shell(self, content: str, rel_path: str) -> List[Finding]:
         """Detect shell commands piped to interpreters from untrusted sources."""
         findings: List[Finding] = []
         # curl/wget piped to shell
@@ -514,17 +545,17 @@ class SkillScanner:
             url_match = re.search(r"https?://([^/\s'\"]+)", match.group(0))
             domain = url_match.group(1) if url_match else ""
             if not self._is_approved_domain(domain):
-                line_no = content[:match.start()].count("\n") + 1
-                findings.append(Finding(
-                    severity="critical",
-                    category="obfuscated_shell",
-                    file=rel_path,
-                    line=line_no,
-                    description=(
-                        f"Download piped to shell from unapproved domain: {domain}"
-                    ),
-                    evidence=match.group(0)[:200],
-                ))
+                line_no = content[: match.start()].count("\n") + 1
+                findings.append(
+                    Finding(
+                        severity="critical",
+                        category="obfuscated_shell",
+                        file=rel_path,
+                        line=line_no,
+                        description=(f"Download piped to shell from unapproved domain: {domain}"),
+                        evidence=match.group(0)[:200],
+                    )
+                )
 
         # Encoded shell execution via environment variables
         env_shell = re.compile(
@@ -532,20 +563,20 @@ class SkillScanner:
             re.IGNORECASE,
         )
         for match in env_shell.finditer(content):
-            line_no = content[:match.start()].count("\n") + 1
-            findings.append(Finding(
-                severity="high",
-                category="obfuscated_shell",
-                file=rel_path,
-                line=line_no,
-                description="Shell command substitution with network download",
-                evidence=match.group(0)[:200],
-            ))
+            line_no = content[: match.start()].count("\n") + 1
+            findings.append(
+                Finding(
+                    severity="high",
+                    category="obfuscated_shell",
+                    file=rel_path,
+                    line=line_no,
+                    description="Shell command substitution with network download",
+                    evidence=match.group(0)[:200],
+                )
+            )
         return findings
 
-    def _detect_suspicious_network(
-        self, content: str, rel_path: str
-    ) -> List[Finding]:
+    def _detect_suspicious_network(self, content: str, rel_path: str) -> List[Finding]:
         """Flag network calls to non-approved domains."""
         findings: List[Finding] = []
         # Python requests / urllib / httpx / aiohttp
@@ -573,28 +604,24 @@ class SkillScanner:
                 domain_match = re.search(r"https?://([^/:]+)", url)
                 domain = domain_match.group(1) if domain_match else ""
                 if domain and not self._is_approved_domain(domain):
-                    line_no = content[:match.start()].count("\n") + 1
-                    findings.append(Finding(
-                        severity="high",
-                        category="suspicious_network",
-                        file=rel_path,
-                        line=line_no,
-                        description=(
-                            f"Network call to unapproved domain: {domain}"
-                        ),
-                        evidence=match.group(0)[:200],
-                    ))
+                    line_no = content[: match.start()].count("\n") + 1
+                    findings.append(
+                        Finding(
+                            severity="high",
+                            category="suspicious_network",
+                            file=rel_path,
+                            line=line_no,
+                            description=(f"Network call to unapproved domain: {domain}"),
+                            evidence=match.group(0)[:200],
+                        )
+                    )
         return findings
 
-    def _detect_base64_payloads(
-        self, content: str, rel_path: str
-    ) -> List[Finding]:
+    def _detect_base64_payloads(self, content: str, rel_path: str) -> List[Finding]:
         """Find Base64 strings, decode them, and check for malicious content."""
         findings: List[Finding] = []
         # Match Base64 strings of significant length (>40 chars)
-        b64_pattern = re.compile(
-            r"""(?:['"])([A-Za-z0-9+/]{40,}={0,2})(?:['"])"""
-        )
+        b64_pattern = re.compile(r"""(?:['"])([A-Za-z0-9+/]{40,}={0,2})(?:['"])""")
         for match in b64_pattern.finditer(content):
             encoded = match.group(1)
             try:
@@ -617,26 +644,31 @@ class SkillScanner:
             ]
             for pattern, desc in danger_indicators:
                 if re.search(pattern, decoded, re.IGNORECASE):
-                    line_no = content[:match.start()].count("\n") + 1
-                    findings.append(Finding(
-                        severity="critical",
-                        category="base64_payload",
-                        file=rel_path,
-                        line=line_no,
-                        description=f"Base64-decoded content contains: {desc}",
-                        evidence=decoded[:200],
-                    ))
+                    line_no = content[: match.start()].count("\n") + 1
+                    findings.append(
+                        Finding(
+                            severity="critical",
+                            category="base64_payload",
+                            file=rel_path,
+                            line=line_no,
+                            description=f"Base64-decoded content contains: {desc}",
+                            evidence=decoded[:200],
+                        )
+                    )
                     break  # one finding per b64 string is enough
         return findings
 
-    def _detect_blocklisted_deps(
-        self, content: str, rel_path: str, ext: str
-    ) -> List[Finding]:
+    def _detect_blocklisted_deps(self, content: str, rel_path: str, ext: str) -> List[Finding]:
         """Check dependency files for blocklisted packages."""
         findings: List[Finding] = []
         dep_files = {
-            "requirements.txt", "setup.py", "setup.cfg", "pyproject.toml",
-            "Pipfile", "package.json", "package-lock.json",
+            "requirements.txt",
+            "setup.py",
+            "setup.cfg",
+            "pyproject.toml",
+            "Pipfile",
+            "package.json",
+            "package-lock.json",
         }
         filename = Path(rel_path).name.lower()
         if filename not in dep_files and ext not in (".py", ".js", ".ts"):
@@ -648,22 +680,20 @@ class SkillScanner:
                 # Find the line
                 for i, line in enumerate(content.splitlines(), 1):
                     if pkg.lower() in line.lower():
-                        findings.append(Finding(
-                            severity="critical",
-                            category="blocklisted_dependency",
-                            file=rel_path,
-                            line=i,
-                            description=(
-                                f"Blocklisted package found: {pkg}"
-                            ),
-                            evidence=line.strip()[:200],
-                        ))
+                        findings.append(
+                            Finding(
+                                severity="critical",
+                                category="blocklisted_dependency",
+                                file=rel_path,
+                                line=i,
+                                description=(f"Blocklisted package found: {pkg}"),
+                                evidence=line.strip()[:200],
+                            )
+                        )
                         break
         return findings
 
-    def _analyze_python_ast(
-        self, content: str, rel_path: str
-    ) -> List[Finding]:
+    def _analyze_python_ast(self, content: str, rel_path: str) -> List[Finding]:
         """Use Python AST analysis to detect dangerous constructs."""
         findings: List[Finding] = []
         try:
@@ -677,84 +707,104 @@ class SkillScanner:
             if isinstance(node, ast.Call):
                 func_name = self._get_call_name(node)
                 if func_name in ("eval", "exec", "compile"):
-                    findings.append(Finding(
-                        severity="medium",
-                        category="dangerous_builtin",
-                        file=rel_path,
-                        line=getattr(node, "lineno", 0),
-                        description=f"Call to {func_name}() detected",
-                    ))
+                    findings.append(
+                        Finding(
+                            severity="medium",
+                            category="dangerous_builtin",
+                            file=rel_path,
+                            line=getattr(node, "lineno", 0),
+                            description=f"Call to {func_name}() detected",
+                        )
+                    )
                 # Detect __import__ calls (dynamic imports)
                 elif func_name == "__import__":
-                    findings.append(Finding(
-                        severity="high",
-                        category="dynamic_import",
-                        file=rel_path,
-                        line=getattr(node, "lineno", 0),
-                        description="Dynamic __import__() call detected",
-                    ))
+                    findings.append(
+                        Finding(
+                            severity="high",
+                            category="dynamic_import",
+                            file=rel_path,
+                            line=getattr(node, "lineno", 0),
+                            description="Dynamic __import__() call detected",
+                        )
+                    )
                 # Detect os.system, os.popen, subprocess.Popen
                 elif func_name in (
-                    "os.system", "os.popen", "os.execv", "os.execve",
-                    "os.execvp", "os.execvpe", "os.spawnl", "os.spawnle",
-                    "subprocess.Popen", "subprocess.call",
-                    "subprocess.check_output", "subprocess.run",
+                    "os.system",
+                    "os.popen",
+                    "os.execv",
+                    "os.execve",
+                    "os.execvp",
+                    "os.execvpe",
+                    "os.spawnl",
+                    "os.spawnle",
+                    "subprocess.Popen",
+                    "subprocess.call",
+                    "subprocess.check_output",
+                    "subprocess.run",
                 ):
-                    findings.append(Finding(
-                        severity="medium",
-                        category="shell_execution",
-                        file=rel_path,
-                        line=getattr(node, "lineno", 0),
-                        description=f"System command execution via {func_name}()",
-                    ))
+                    findings.append(
+                        Finding(
+                            severity="medium",
+                            category="shell_execution",
+                            file=rel_path,
+                            line=getattr(node, "lineno", 0),
+                            description=f"System command execution via {func_name}()",
+                        )
+                    )
 
             # Detect dangerous imports
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     if alias.name in ("ctypes", "cffi", "mmap"):
-                        findings.append(Finding(
+                        findings.append(
+                            Finding(
+                                severity="medium",
+                                category="dangerous_import",
+                                file=rel_path,
+                                line=getattr(node, "lineno", 0),
+                                description=f"Import of low-level module: {alias.name}",
+                            )
+                        )
+
+            if isinstance(node, ast.ImportFrom):
+                if node.module and node.module.startswith(("ctypes", "cffi")):
+                    findings.append(
+                        Finding(
                             severity="medium",
                             category="dangerous_import",
                             file=rel_path,
                             line=getattr(node, "lineno", 0),
-                            description=f"Import of low-level module: {alias.name}",
-                        ))
-
-            if isinstance(node, ast.ImportFrom):
-                if node.module and node.module.startswith(("ctypes", "cffi")):
-                    findings.append(Finding(
-                        severity="medium",
-                        category="dangerous_import",
-                        file=rel_path,
-                        line=getattr(node, "lineno", 0),
-                        description=f"Import from low-level module: {node.module}",
-                    ))
+                            description=f"Import from low-level module: {node.module}",
+                        )
+                    )
 
         return findings
 
-    def _check_file_permissions(
-        self, file_path: Path, rel_path: str
-    ) -> List[Finding]:
+    def _check_file_permissions(self, file_path: Path, rel_path: str) -> List[Finding]:
         """Check for overly permissive file permissions (Unix only)."""
         findings: List[Finding] = []
         try:
             mode = file_path.stat().st_mode
             if mode & stat.S_IWOTH:
-                findings.append(Finding(
-                    severity="medium",
-                    category="file_permissions",
-                    file=rel_path,
-                    line=0,
-                    description="File is world-writable",
-                ))
+                findings.append(
+                    Finding(
+                        severity="medium",
+                        category="file_permissions",
+                        file=rel_path,
+                        line=0,
+                        description="File is world-writable",
+                    )
+                )
             if mode & stat.S_ISUID:
-                findings.append(Finding(
-                    severity="high",
-                    category="file_permissions",
-                    file=rel_path,
-                    line=0,
-                    description="File has setuid bit set",
-                ))
+                findings.append(
+                    Finding(
+                        severity="high",
+                        category="file_permissions",
+                        file=rel_path,
+                        line=0,
+                        description="File has setuid bit set",
+                    )
+                )
         except OSError:
             pass
         return findings

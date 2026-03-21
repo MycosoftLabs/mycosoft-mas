@@ -37,6 +37,7 @@ class ApprovalStatus(str, Enum):
 @dataclass
 class CommercePolicyDecision:
     """Result of policy gate check."""
+
     allowed: bool
     risk_tier: RiskTier
     approval_required: bool
@@ -47,6 +48,7 @@ class CommercePolicyDecision:
 @dataclass
 class DiscoverResult:
     """Result of discover (merchant/capability discovery)."""
+
     success: bool
     merchants: List[Dict[str, Any]] = field(default_factory=list)
     capabilities: List[str] = field(default_factory=list)
@@ -56,6 +58,7 @@ class DiscoverResult:
 @dataclass
 class QuoteResult:
     """Result of quote (price/terms)."""
+
     success: bool
     quote_id: Optional[str] = None
     line_items: List[Dict[str, Any]] = field(default_factory=list)
@@ -67,6 +70,7 @@ class QuoteResult:
 @dataclass
 class CheckoutResult:
     """Result of checkout initiation."""
+
     success: bool
     checkout_id: Optional[str] = None
     status: Optional[str] = None
@@ -77,6 +81,7 @@ class CheckoutResult:
 @dataclass
 class OrderStatusResult:
     """Result of order status query."""
+
     success: bool
     order_id: Optional[str] = None
     status: Optional[str] = None
@@ -161,6 +166,7 @@ class UCPCommerceAdapter:
 
         try:
             import httpx
+
             async with httpx.AsyncClient() as client:
                 r = await client.get(f"{self._base_url}/discover", timeout=10)
                 if r.status_code == 200:
@@ -188,10 +194,7 @@ class UCPCommerceAdapter:
             return QuoteResult(success=False, error=decision.reason)
 
         if not self._enabled:
-            total = sum(
-                int(item.get("price", 0)) * int(item.get("quantity", 1))
-                for item in items
-            )
+            total = sum(int(item.get("price", 0)) * int(item.get("quantity", 1)) for item in items)
             return QuoteResult(
                 success=True,
                 quote_id="stub_quote_001",
@@ -202,6 +205,7 @@ class UCPCommerceAdapter:
 
         try:
             import httpx
+
             async with httpx.AsyncClient() as client:
                 r = await client.post(
                     f"{self._base_url}/quote",
@@ -246,6 +250,7 @@ class UCPCommerceAdapter:
 
         try:
             import httpx
+
             payload = {"quote_id": quote_id, "items": items or [], "buyer": buyer or {}}
             async with httpx.AsyncClient() as client:
                 r = await client.post(
@@ -288,6 +293,7 @@ class UCPCommerceAdapter:
 
         try:
             import httpx
+
             async with httpx.AsyncClient() as client:
                 r = await client.get(
                     f"{self._base_url}/orders/{order_id}",

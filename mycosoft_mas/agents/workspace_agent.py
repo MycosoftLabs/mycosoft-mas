@@ -12,7 +12,6 @@ active conversations, task tracking, and cross-platform message routing.
 Runs on: 192.168.0.191 (MYCA VM)
 """
 
-import asyncio
 import logging
 import os
 from datetime import datetime, timezone
@@ -59,7 +58,9 @@ class WorkspaceAgent(BaseAgent):
         self.vm_ip = config.get("vm_ip", "192.168.0.191")
         self.mas_url = config.get("mas_url", "http://192.168.0.188:8001")
         self.mindex_url = config.get("mindex_url", "http://192.168.0.189:8000")
-        self.staff_directory = config.get("staff_directory") or load_staff_directory() or STAFF_DIRECTORY
+        self.staff_directory = (
+            config.get("staff_directory") or load_staff_directory() or STAFF_DIRECTORY
+        )
 
     async def process_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Route incoming tasks to the appropriate handler."""
@@ -94,7 +95,12 @@ class WorkspaceAgent(BaseAgent):
         if self._slack_client is None:
             try:
                 from mycosoft_mas.integrations.slack_client import SlackClient
-                token = os.getenv("MYCA_SLACK_BOT_TOKEN", "") or os.getenv("SLACK_BOT_TOKEN", "") or os.getenv("SLACK_OAUTH_TOKEN", "")
+
+                token = (
+                    os.getenv("MYCA_SLACK_BOT_TOKEN", "")
+                    or os.getenv("SLACK_BOT_TOKEN", "")
+                    or os.getenv("SLACK_OAUTH_TOKEN", "")
+                )
                 if not token:
                     token = self._read_credential("slack/bot_token")
                 self._slack_client = SlackClient({"token": token})
@@ -108,6 +114,7 @@ class WorkspaceAgent(BaseAgent):
         if self._discord_client is None:
             try:
                 from mycosoft_mas.integrations.discord_client import DiscordClient
+
                 token = os.getenv("MYCA_DISCORD_TOKEN", "") or os.getenv("DISCORD_BOT_TOKEN", "")
                 self._discord_client = DiscordClient({"token": token})
                 self._platform_status["discord"] = "connected"
@@ -120,6 +127,7 @@ class WorkspaceAgent(BaseAgent):
         if self._notion_client is None:
             try:
                 from mycosoft_mas.integrations.notion_client import NotionClient
+
                 token = os.getenv("NOTION_TOKEN", "")
                 if not token:
                     token = self._read_credential("notion/integration_token")
@@ -135,6 +143,7 @@ class WorkspaceAgent(BaseAgent):
         if self._signal_client is None:
             try:
                 from mycosoft_mas.integrations.signal_client import SignalClient
+
                 self._signal_client = SignalClient()
                 self._platform_status["signal"] = "connected"
             except Exception as e:
@@ -146,6 +155,7 @@ class WorkspaceAgent(BaseAgent):
         if self._whatsapp_client is None:
             try:
                 from mycosoft_mas.integrations.whatsapp_client import WhatsAppClient
+
                 self._whatsapp_client = WhatsAppClient()
                 self._platform_status["whatsapp"] = "connected"
             except Exception as e:
@@ -157,7 +167,10 @@ class WorkspaceAgent(BaseAgent):
         if self._asana_client is None:
             try:
                 from mycosoft_mas.integrations.asana_client import AsanaClient
-                self._asana_client = AsanaClient({"api_key": os.getenv("ASANA_API_KEY", "") or os.getenv("ASANA_PAT", "")})
+
+                self._asana_client = AsanaClient(
+                    {"api_key": os.getenv("ASANA_API_KEY", "") or os.getenv("ASANA_PAT", "")}
+                )
                 self._platform_status["asana"] = "connected"
             except Exception as e:
                 logger.warning("Asana client init failed: %s", e)
@@ -168,6 +181,7 @@ class WorkspaceAgent(BaseAgent):
         if self._google_client is None:
             try:
                 from mycosoft_mas.integrations.google_workspace_client import GoogleWorkspaceClient
+
                 self._google_client = GoogleWorkspaceClient()
                 self._platform_status["email"] = "connected"
             except Exception as e:
@@ -228,7 +242,9 @@ class WorkspaceAgent(BaseAgent):
     async def _handle_check_messages(self, task: Dict) -> Dict:
         """Check for new messages across all platforms."""
         params = task.get("parameters", {})
-        platforms = params.get("platforms", ["slack", "discord", "signal", "whatsapp", "email", "asana"])
+        platforms = params.get(
+            "platforms", ["slack", "discord", "signal", "whatsapp", "email", "asana"]
+        )
 
         messages = []
         for platform in platforms:
@@ -359,7 +375,7 @@ class WorkspaceAgent(BaseAgent):
         """Set MYCA's presence status across platforms."""
         params = task.get("parameters", {})
         status = params.get("status", "online")  # online, away, dnd
-        status_text = params.get("status_text", "")
+        params.get("status_text", "")
 
         results = {}
         # Set Slack presence
@@ -442,7 +458,9 @@ class WorkspaceAgent(BaseAgent):
         """Send a message via the specified platform."""
         logger.info(
             "Dispatching message to %s via %s (%d chars)",
-            recipient["name"], platform, len(message),
+            recipient["name"],
+            platform,
+            len(message),
         )
 
         if platform == "slack":
@@ -459,7 +477,11 @@ class WorkspaceAgent(BaseAgent):
             if discord and channel_id:
                 try:
                     resp = await discord.send_message(channel_id, message)
-                    return {"status": "sent" if resp else "error", "platform": "discord", "result": resp}
+                    return {
+                        "status": "sent" if resp else "error",
+                        "platform": "discord",
+                        "result": resp,
+                    }
                 except Exception as e:
                     return {"status": "error", "platform": "discord", "error": str(e)}
 
@@ -469,7 +491,11 @@ class WorkspaceAgent(BaseAgent):
                 try:
                     phone = recipient.get("channels", {}).get("signal", "")
                     resp = await signal.send_message(phone, message) if phone else None
-                    return {"status": "sent" if resp else "error", "platform": "signal", "result": resp}
+                    return {
+                        "status": "sent" if resp else "error",
+                        "platform": "signal",
+                        "result": resp,
+                    }
                 except Exception as e:
                     return {"status": "error", "platform": "signal", "error": str(e)}
 
@@ -479,7 +505,11 @@ class WorkspaceAgent(BaseAgent):
                 try:
                     phone = recipient.get("channels", {}).get("whatsapp", "")
                     resp = await whatsapp.send_message(phone, message) if phone else None
-                    return {"status": "sent" if resp else "error", "platform": "whatsapp", "result": resp}
+                    return {
+                        "status": "sent" if resp else "error",
+                        "platform": "whatsapp",
+                        "result": resp,
+                    }
                 except Exception as e:
                     return {"status": "error", "platform": "whatsapp", "error": str(e)}
 
@@ -487,7 +517,11 @@ class WorkspaceAgent(BaseAgent):
             try:
                 google = await self._get_google()
                 email = recipient.get("email", "")
-                resp = await google.send_email(email, "Message from MYCA", message) if google and email else None
+                resp = (
+                    await google.send_email(email, "Message from MYCA", message)
+                    if google and email
+                    else None
+                )
                 return {"status": "sent" if resp else "error", "platform": "email", "result": resp}
             except Exception as e:
                 return {"status": "error", "platform": "email", "error": str(e)}
@@ -499,7 +533,11 @@ class WorkspaceAgent(BaseAgent):
                     task_gid = recipient.get("asana_task_gid", "")
                     if task_gid:
                         resp = await asana.add_comment(task_gid, message)
-                        return {"status": "sent" if resp else "error", "platform": "asana", "result": resp}
+                        return {
+                            "status": "sent" if resp else "error",
+                            "platform": "asana",
+                            "result": resp,
+                        }
                 except Exception as e:
                     return {"status": "error", "platform": "asana", "error": str(e)}
 
@@ -552,18 +590,23 @@ class WorkspaceAgent(BaseAgent):
             messages = await google.read_inbox(max_results=10)
             normalized = []
             for msg in messages:
-                headers = {h.get("name"): h.get("value") for h in msg.get("payload", {}).get("headers", [])}
-                normalized.append({
-                    "platform": "email",
-                    "sender_id": headers.get("From", ""),
-                    "content": headers.get("Subject", ""),
-                })
+                headers = {
+                    h.get("name"): h.get("value") for h in msg.get("payload", {}).get("headers", [])
+                }
+                normalized.append(
+                    {
+                        "platform": "email",
+                        "sender_id": headers.get("From", ""),
+                        "content": headers.get("Subject", ""),
+                    }
+                )
             return normalized
 
         return []
 
-    async def _log_interaction(self, staff_member: str, platform: str,
-                               direction: str, content: str):
+    async def _log_interaction(
+        self, staff_member: str, platform: str, direction: str, content: str
+    ):
         """Log a staff interaction for audit/memory."""
         try:
             await self.remember(

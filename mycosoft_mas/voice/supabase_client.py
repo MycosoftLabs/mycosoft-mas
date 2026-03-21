@@ -7,11 +7,9 @@ UPDATED: Added load_conversation_history and get_user_conversations
 for Phase 2 voice session persistence.
 """
 
-import asyncio
 import json
 import logging
 import os
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
@@ -20,27 +18,32 @@ logger = logging.getLogger("VoiceSessionStore")
 
 class VoiceSessionStore:
     """Persist voice sessions to Supabase/PostgreSQL."""
-    
+
     def __init__(self):
         self._pool = None
-        self._url = os.getenv("DATABASE_URL", os.getenv("SUPABASE_DATABASE_URL",
-            "postgresql://postgres:postgres@localhost:5432/mycosoft"))
-    
+        self._url = os.getenv(
+            "DATABASE_URL",
+            os.getenv(
+                "SUPABASE_DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/mycosoft"
+            ),
+        )
+
     async def connect(self) -> bool:
         try:
             import asyncpg
+
             self._pool = await asyncpg.create_pool(self._url, min_size=1, max_size=5)
             logger.info("VoiceSessionStore connected to database")
             return True
         except Exception as e:
             logger.error(f"VoiceSessionStore connection failed: {e}")
             return False
-    
+
     async def disconnect(self) -> None:
         if self._pool:
             await self._pool.close()
             self._pool = None
-    
+
     async def create_session(
         self,
         session_id: str,
@@ -49,29 +52,37 @@ class VoiceSessionStore:
         persona: str = "myca",
         user_id: Optional[str] = None,
         voice_prompt: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> bool:
         if not self._pool:
             await self.connect()
-        
+
         try:
             metadata_json = json.dumps(metadata or {})
             async with self._pool.acquire() as conn:
-                await conn.execute('''
+                await conn.execute(
+                    """
                     INSERT INTO memory.voice_sessions 
                         (session_id, conversation_id, mode, persona, user_id, voice_prompt, metadata)
                     VALUES ($1, $2, $3, $4, $5::uuid, $6, $7::jsonb)
                     ON CONFLICT (session_id) DO UPDATE SET
                         is_active = TRUE,
                         metadata = memory.voice_sessions.metadata || EXCLUDED.metadata
-                ''', session_id, conversation_id, mode, persona,
-                    user_id, voice_prompt, metadata_json)
+                """,
+                    session_id,
+                    conversation_id,
+                    mode,
+                    persona,
+                    user_id,
+                    voice_prompt,
+                    metadata_json,
+                )
             logger.info(f"Created voice session: {session_id}")
             return True
         except Exception as e:
             logger.error(f"Failed to create session: {e}")
             return False
-    
+
     async def add_turn(
         self,
         session_id: str,
@@ -80,31 +91,44 @@ class VoiceSessionStore:
         duration_ms: Optional[int] = None,
         latency_ms: Optional[int] = None,
         confidence: Optional[float] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Optional[str]:
         if not self._pool:
             await self.connect()
-        
+
         turn_id = str(uuid4())
         try:
             metadata_json = json.dumps(metadata or {})
             async with self._pool.acquire() as conn:
-                await conn.execute('''
+                await conn.execute(
+                    """
                     INSERT INTO memory.voice_turns 
                         (turn_id, session_id, speaker, text, duration_ms, latency_ms, confidence, metadata)
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
-                ''', turn_id, session_id, speaker, text, duration_ms, latency_ms, confidence, metadata_json)
-                
-                await conn.execute('''
+                """,
+                    turn_id,
+                    session_id,
+                    speaker,
+                    text,
+                    duration_ms,
+                    latency_ms,
+                    confidence,
+                    metadata_json,
+                )
+
+                await conn.execute(
+                    """
                     UPDATE memory.voice_sessions 
                     SET turn_count = turn_count + 1
                     WHERE session_id = $1
-                ''', session_id)
+                """,
+                    session_id,
+                )
             return turn_id
         except Exception as e:
             logger.error(f"Failed to add turn: {e}")
             return None
-    
+
     async def log_tool_invocation(
         self,
         session_id: str,
@@ -115,68 +139,85 @@ class VoiceSessionStore:
         input_params: Optional[Dict[str, Any]] = None,
         result: Optional[Dict[str, Any]] = None,
         latency_ms: Optional[int] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> Optional[str]:
         if not self._pool:
             await self.connect()
-        
+
         invocation_id = str(uuid4())
         try:
             input_params_json = json.dumps(input_params or {})
             result_json = json.dumps(result) if result else None
             async with self._pool.acquire() as conn:
-                await conn.execute('''
+                await conn.execute(
+                    """
                     INSERT INTO memory.voice_tool_invocations 
                         (invocation_id, session_id, turn_id, agent, action, status, 
                          input_params, result, latency_ms, error_message,
                          completed_at)
                     VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9, $10,
                          CASE WHEN $6 IN ('success', 'error', 'cancelled') THEN NOW() ELSE NULL END)
-                ''', invocation_id, session_id, turn_id, agent, action, status,
-                    input_params_json, result_json, latency_ms, error_message)
-                
-                if status in ('success', 'error'):
-                    await conn.execute('''
+                """,
+                    invocation_id,
+                    session_id,
+                    turn_id,
+                    agent,
+                    action,
+                    status,
+                    input_params_json,
+                    result_json,
+                    latency_ms,
+                    error_message,
+                )
+
+                if status in ("success", "error"):
+                    await conn.execute(
+                        """
                         UPDATE memory.voice_sessions 
                         SET tool_count = tool_count + 1
                         WHERE session_id = $1
-                    ''', session_id)
+                    """,
+                        session_id,
+                    )
             return invocation_id
         except Exception as e:
             logger.error(f"Failed to log tool invocation: {e}")
             return None
-    
+
     async def log_barge_in(
         self,
         session_id: str,
         cancelled_text: Optional[str] = None,
         cancelled_at_position_ms: Optional[int] = None,
-        user_intent: Optional[str] = None
+        user_intent: Optional[str] = None,
     ) -> Optional[str]:
         if not self._pool:
             await self.connect()
-        
+
         event_id = str(uuid4())
         try:
             async with self._pool.acquire() as conn:
-                await conn.execute('''
+                await conn.execute(
+                    """
                     INSERT INTO memory.voice_barge_in_events 
                         (event_id, session_id, cancelled_text, cancelled_at_position_ms, user_intent)
                     VALUES ($1, $2, $3, $4, $5)
-                ''', event_id, session_id, cancelled_text, cancelled_at_position_ms, user_intent)
+                """,
+                    event_id,
+                    session_id,
+                    cancelled_text,
+                    cancelled_at_position_ms,
+                    user_intent,
+                )
             return event_id
         except Exception as e:
             logger.error(f"Failed to log barge-in: {e}")
             return None
-    
-    async def end_session(
-        self,
-        session_id: str,
-        summary: Optional[str] = None
-    ) -> bool:
+
+    async def end_session(self, session_id: str, summary: Optional[str] = None) -> bool:
         if not self._pool:
             await self.connect()
-        
+
         try:
             async with self._pool.acquire() as conn:
                 await conn.execute("SELECT memory.end_voice_session($1, $2)", session_id, summary)
@@ -185,66 +226,72 @@ class VoiceSessionStore:
         except Exception as e:
             logger.error(f"Failed to end session: {e}")
             return False
-    
+
     async def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
         if not self._pool:
             await self.connect()
-        
+
         try:
             async with self._pool.acquire() as conn:
-                row = await conn.fetchrow('''
+                row = await conn.fetchrow(
+                    """
                     SELECT * FROM memory.voice_sessions WHERE session_id = $1
-                ''', session_id)
+                """,
+                    session_id,
+                )
                 if row:
                     return dict(row)
                 return None
         except Exception as e:
             logger.error(f"Failed to get session: {e}")
             return None
-    
+
     async def get_session_with_turns(self, session_id: str) -> Optional[Dict[str, Any]]:
         if not self._pool:
             await self.connect()
-        
+
         try:
             async with self._pool.acquire() as conn:
-                row = await conn.fetchrow('''
+                row = await conn.fetchrow(
+                    """
                     SELECT * FROM memory.get_session_with_turns($1)
-                ''', session_id)
+                """,
+                    session_id,
+                )
                 if row:
                     return dict(row)
                 return None
         except Exception as e:
             logger.error(f"Failed to get session with turns: {e}")
             return None
-    
-    async def get_user_sessions(
-        self,
-        user_id: str,
-        limit: int = 10
-    ) -> List[Dict[str, Any]]:
+
+    async def get_user_sessions(self, user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
         if not self._pool:
             await self.connect()
-        
+
         try:
             async with self._pool.acquire() as conn:
-                rows = await conn.fetch('''
+                rows = await conn.fetch(
+                    """
                     SELECT session_id, conversation_id, mode, persona, 
                            turn_count, tool_count, started_at, ended_at, is_active
                     FROM memory.voice_sessions 
                     WHERE user_id = $1::uuid
                     ORDER BY started_at DESC
                     LIMIT $2
-                ''', user_id, limit)
+                """,
+                    user_id,
+                    limit,
+                )
                 return [dict(row) for row in rows]
         except Exception as e:
             logger.error(f"Failed to get user sessions: {e}")
             return []
-    
+
     async def get_session_stats(self) -> Dict[str, Any]:
         if not self._pool:
             await self.connect()
-        
+
         try:
             async with self._pool.acquire() as conn:
                 row = await conn.fetchrow("SELECT * FROM memory.voice_session_stats")
@@ -254,40 +301,39 @@ class VoiceSessionStore:
         except Exception as e:
             logger.error(f"Failed to get session stats: {e}")
             return {}
-    
+
     # =========================================================================
     # Phase 2: Voice Session Persistence - New Methods
     # =========================================================================
-    
+
     async def load_conversation_history(
-        self,
-        conversation_id: str,
-        limit: int = 50
+        self, conversation_id: str, limit: int = 50
     ) -> List[Dict[str, Any]]:
         """
         Load conversation history for a given conversation_id.
-        
+
         Queries voice_turns table to get all turns from sessions
         with this conversation_id, ordered by timestamp.
-        
+
         Args:
             conversation_id: The conversation ID to load history for
             limit: Maximum number of turns to return
-            
+
         Returns:
             List of conversation turns with role/content for LLM context
         """
         if not self._pool:
             await self.connect()
-        
+
         if not self._pool:
             logger.warning("Database not connected, returning empty history")
             return []
-        
+
         try:
             async with self._pool.acquire() as conn:
                 # Get all sessions for this conversation
-                rows = await conn.fetch('''
+                rows = await conn.fetch(
+                    """
                     SELECT 
                         t.speaker as role,
                         t.text as content,
@@ -300,60 +346,65 @@ class VoiceSessionStore:
                     WHERE s.conversation_id = $1
                     ORDER BY t.created_at ASC
                     LIMIT $2
-                ''', conversation_id, limit)
-                
+                """,
+                    conversation_id,
+                    limit,
+                )
+
                 history = []
                 for row in rows:
                     # Map speaker to role for LLM compatibility
                     role = row["role"]
                     if role == "myca":
                         role = "assistant"
-                    
-                    history.append({
-                        "role": role,
-                        "content": row["content"],
-                        "timestamp": row["timestamp"].isoformat() if row["timestamp"] else None,
-                        "turn_id": row["turn_id"],
-                        "session_id": row["session_id"],
-                    })
-                
-                logger.info(f"Loaded {len(history)} turns for conversation {conversation_id[:8]}...")
+
+                    history.append(
+                        {
+                            "role": role,
+                            "content": row["content"],
+                            "timestamp": row["timestamp"].isoformat() if row["timestamp"] else None,
+                            "turn_id": row["turn_id"],
+                            "session_id": row["session_id"],
+                        }
+                    )
+
+                logger.info(
+                    f"Loaded {len(history)} turns for conversation {conversation_id[:8]}..."
+                )
                 return history
-                
+
         except Exception as e:
             logger.error(f"Failed to load conversation history: {e}")
             return []
-    
+
     async def get_user_conversations(
-        self,
-        user_id: str,
-        limit: int = 10,
-        include_active: bool = True
+        self, user_id: str, limit: int = 10, include_active: bool = True
     ) -> List[Dict[str, Any]]:
         """
         Get all conversation IDs and summaries for a user.
-        
+
         Groups sessions by conversation_id and returns metadata
         about each conversation.
-        
+
         Args:
             user_id: User ID to get conversations for
             limit: Maximum number of conversations to return
             include_active: Whether to include currently active conversations
-            
+
         Returns:
             List of conversation summaries
         """
         if not self._pool:
             await self.connect()
-        
+
         if not self._pool:
             logger.warning("Database not connected, returning empty conversations")
             return []
-        
+
         try:
             async with self._pool.acquire() as conn:
-                rows = await conn.fetch('''
+                rows = await conn.fetch(
+                    """
                     SELECT 
                         conversation_id,
                         COUNT(DISTINCT session_id) as session_count,
@@ -368,66 +419,76 @@ class VoiceSessionStore:
                     HAVING ($2 OR NOT BOOL_OR(is_active))
                     ORDER BY MAX(COALESCE(ended_at, started_at)) DESC
                     LIMIT $3
-                ''', user_id, include_active, limit)
-                
+                """,
+                    user_id,
+                    include_active,
+                    limit,
+                )
+
                 conversations = []
                 for row in rows:
-                    conversations.append({
-                        "conversation_id": row["conversation_id"],
-                        "session_count": row["session_count"],
-                        "total_turns": row["total_turns"],
-                        "first_started": row["first_started"].isoformat() if row["first_started"] else None,
-                        "last_activity": row["last_activity"].isoformat() if row["last_activity"] else None,
-                        "has_active_session": row["has_active_session"],
-                        "summary": row["last_summary"],
-                    })
-                
+                    conversations.append(
+                        {
+                            "conversation_id": row["conversation_id"],
+                            "session_count": row["session_count"],
+                            "total_turns": row["total_turns"],
+                            "first_started": (
+                                row["first_started"].isoformat() if row["first_started"] else None
+                            ),
+                            "last_activity": (
+                                row["last_activity"].isoformat() if row["last_activity"] else None
+                            ),
+                            "has_active_session": row["has_active_session"],
+                            "summary": row["last_summary"],
+                        }
+                    )
+
                 logger.info(f"Found {len(conversations)} conversations for user {user_id}")
                 return conversations
-                
+
         except Exception as e:
             logger.error(f"Failed to get user conversations: {e}")
             return []
-    
-    async def get_conversation_summary(
-        self,
-        conversation_id: str
-    ) -> Optional[str]:
+
+    async def get_conversation_summary(self, conversation_id: str) -> Optional[str]:
         """
         Get a summary of a conversation.
-        
+
         Args:
             conversation_id: The conversation ID
-            
+
         Returns:
             Summary string or None if not found
         """
         if not self._pool:
             await self.connect()
-        
+
         if not self._pool:
             return None
-        
+
         try:
             async with self._pool.acquire() as conn:
-                row = await conn.fetchrow('''
+                row = await conn.fetchrow(
+                    """
                     SELECT summary FROM memory.voice_sessions
                     WHERE conversation_id = $1 AND summary IS NOT NULL
                     ORDER BY ended_at DESC NULLS LAST
                     LIMIT 1
-                ''', conversation_id)
-                
+                """,
+                    conversation_id,
+                )
+
                 if row and row["summary"]:
                     return row["summary"]
-                
+
                 # Generate basic summary from turns if no summary exists
                 turns = await self.load_conversation_history(conversation_id, limit=5)
                 if turns:
                     contents = [t["content"][:50] for t in turns[-3:]]
                     return " | ".join(contents)
-                
+
                 return None
-                
+
         except Exception as e:
             logger.error(f"Failed to get conversation summary: {e}")
             return None

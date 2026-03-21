@@ -9,8 +9,8 @@ Date: 2026-03-06
 
 from __future__ import annotations
 
-import os
 import logging
+import os
 from typing import Optional
 
 import aiohttp
@@ -24,7 +24,9 @@ class PresenceBridge:
     def __init__(self, os_ref):
         self._os = os_ref
         self._session: Optional[aiohttp.ClientSession] = None
-        self._presence_url = os.getenv("PRESENCE_API_URL", "http://192.168.0.187:3000/api/presence").rstrip("/")
+        self._presence_url = os.getenv(
+            "PRESENCE_API_URL", "http://192.168.0.187:3000/api/presence"
+        ).rstrip("/")
 
     async def initialize(self):
         self._session = aiohttp.ClientSession()

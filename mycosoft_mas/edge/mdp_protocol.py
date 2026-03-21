@@ -10,9 +10,9 @@ Implements:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 import struct
+from dataclasses import dataclass
 from typing import Any, Dict
 
 MDP_MAGIC = 0xA15A

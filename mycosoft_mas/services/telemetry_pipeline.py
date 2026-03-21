@@ -25,10 +25,15 @@ MINDEX_API_PREFIX = "/api/mindex"
 TELEMETRY_FORWARD_INTERVAL = int(os.getenv("TELEMETRY_FORWARD_INTERVAL", "60"))
 
 
-def _mycobrain_to_envelope(device_id: str, telemetry: Dict[str, Any], ts: datetime) -> Dict[str, Any]:
+def _mycobrain_to_envelope(
+    device_id: str, telemetry: Dict[str, Any], ts: datetime
+) -> Dict[str, Any]:
     """Transform MycoBrain telemetry to MINDEX envelope format."""
     pack: List[Dict[str, Any]] = []
-    for sensor_key, sensor_data in [("bme1", telemetry.get("bme1")), ("bme2", telemetry.get("bme2"))]:
+    for sensor_key, sensor_data in [
+        ("bme1", telemetry.get("bme1")),
+        ("bme2", telemetry.get("bme2")),
+    ]:
         if not isinstance(sensor_data, dict):
             continue
         for key, val in sensor_data.items():
@@ -65,7 +70,9 @@ def _mycobrain_to_mycobrain_payload(telemetry: Dict[str, Any]) -> Dict[str, Any]
     bme = None
     for k in ("bme1", "bme2"):
         d = telemetry.get(k)
-        if isinstance(d, dict) and (d.get("temperature") is not None or d.get("humidity") is not None):
+        if isinstance(d, dict) and (
+            d.get("temperature") is not None or d.get("humidity") is not None
+        ):
             bme = {
                 "temperature_c": d.get("temperature"),
                 "humidity_percent": d.get("humidity"),
@@ -96,7 +103,11 @@ async def forward_mycobrain_to_mindex() -> Dict[str, Any]:
             result["errors"].append(str(e))
             return result
 
-        device_list = devices.get("devices", devices) if isinstance(devices, dict) else (devices if isinstance(devices, list) else [])
+        device_list = (
+            devices.get("devices", devices)
+            if isinstance(devices, dict)
+            else (devices if isinstance(devices, list) else [])
+        )
         if not isinstance(device_list, list):
             device_list = []
 
@@ -116,7 +127,11 @@ async def forward_mycobrain_to_mindex() -> Dict[str, Any]:
 
             telemetry = data.get("telemetry", data) if isinstance(data, dict) else {}
             ts_str = data.get("timestamp") if isinstance(data, dict) else None
-            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00")) if ts_str else datetime.now(timezone.utc)
+            ts = (
+                datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                if ts_str
+                else datetime.now(timezone.utc)
+            )
 
             # Forward via envelope ingest (creates device by slug, works without pre-registration)
             envelope = _mycobrain_to_envelope(device_id, telemetry, ts)
@@ -134,7 +149,9 @@ async def forward_mycobrain_to_mindex() -> Dict[str, Any]:
                         result["forwarded"] += 1
                         logger.debug("Forwarded telemetry for %s", device_id)
                     else:
-                        result["errors"].append(f"{device_id} envelope: {er.status_code} {er.text[:100]}")
+                        result["errors"].append(
+                            f"{device_id} envelope: {er.status_code} {er.text[:100]}"
+                        )
                 except Exception as e:
                     result["errors"].append(f"{device_id} envelope: {e}")
 
@@ -150,7 +167,10 @@ async def forward_mycobrain_to_mindex() -> Dict[str, Any]:
                             "payload": payload_dict,
                             "recorded_at": ts.isoformat(),
                         },
-                        headers={"Content-Type": "application/json", **({"X-API-Key": MINDEX_API_KEY} if MINDEX_API_KEY else {})},
+                        headers={
+                            "Content-Type": "application/json",
+                            **({"X-API-Key": MINDEX_API_KEY} if MINDEX_API_KEY else {}),
+                        },
                     )
                     if mr.status_code in (200, 201):
                         result["forwarded"] += 1

@@ -13,8 +13,8 @@ from typing import Any, Dict, List, Optional
 
 from mycosoft_mas.llm.finger_registry import FingerRegistry
 from mycosoft_mas.llm.frontier_router import ConversationContext, FrontierLLMRouter
-from mycosoft_mas.llm.router import LLMRouter
 from mycosoft_mas.llm.providers.base import Message
+from mycosoft_mas.llm.router import LLMRouter
 from mycosoft_mas.llm.truth_arbitrator import (
     ArbitrationCandidate,
     ArbitrationResult,
@@ -137,4 +137,3 @@ class EnsembleController:
                 for c in candidates
             ],
         )
-

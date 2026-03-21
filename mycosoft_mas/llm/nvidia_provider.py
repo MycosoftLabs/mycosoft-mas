@@ -22,25 +22,27 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class NvidiaModelType(str, Enum):
     """NVIDIA model types available to MYCA."""
+
     EARTH2_FOURCASTNET = "earth2_fourcastnet"  # Global weather forecasting
-    EARTH2_CORRDIFF = "earth2_corrdiff"        # Corrective diffusion for high-res weather
-    EARTH2_DLWP = "earth2_dlwp"                # Deep Learning Weather Prediction
+    EARTH2_CORRDIFF = "earth2_corrdiff"  # Corrective diffusion for high-res weather
+    EARTH2_DLWP = "earth2_dlwp"  # Deep Learning Weather Prediction
     PHYSICSNEMO_MODULUS = "physicsnemo_modulus"  # Physics-informed neural networks
-    PHYSICSNEMO_FLUID = "physicsnemo_fluid"      # Fluid dynamics
-    PHYSICSNEMO_HEAT = "physicsnemo_heat"        # Heat transfer
-    NEMO_LLM = "nemo_llm"                       # NeMo language model
-    NEMO_MULTIMODAL = "nemo_multimodal"          # Multimodal model
+    PHYSICSNEMO_FLUID = "physicsnemo_fluid"  # Fluid dynamics
+    PHYSICSNEMO_HEAT = "physicsnemo_heat"  # Heat transfer
+    NEMO_LLM = "nemo_llm"  # NeMo language model
+    NEMO_MULTIMODAL = "nemo_multimodal"  # Multimodal model
 
 
 class SimulationType(str, Enum):
     """Types of simulations NVIDIA models can run."""
+
     WEATHER_FORECAST = "weather_forecast"
     CLIMATE_PROJECTION = "climate_projection"
     FLUID_DYNAMICS = "fluid_dynamics"
@@ -54,6 +56,7 @@ class SimulationType(str, Enum):
 @dataclass
 class NvidiaConfig:
     """Configuration for NVIDIA model integration."""
+
     api_key: str = ""
     earth2_endpoint: str = "http://192.168.0.190:8080"  # GPU node
     physicsnemo_endpoint: str = "http://192.168.0.190:8081"
@@ -70,6 +73,7 @@ class NvidiaConfig:
 @dataclass
 class SimulationRequest:
     """A physics/climate simulation request."""
+
     simulation_type: SimulationType
     parameters: Dict[str, Any]
     resolution: str = "medium"  # "low", "medium", "high", "ultra"
@@ -81,6 +85,7 @@ class SimulationRequest:
 @dataclass
 class SimulationResult:
     """Result from a physics/climate simulation."""
+
     simulation_type: SimulationType
     data: Dict[str, Any]
     confidence: float
@@ -123,17 +128,24 @@ class NvidiaModelProvider:
         for name, endpoint in endpoints.items():
             try:
                 import httpx
+
                 async with httpx.AsyncClient(timeout=5.0) as client:
                     resp = await client.get(f"{endpoint}/health")
-                    results[name] = {"status": "healthy" if resp.status_code == 200 else "unhealthy"}
+                    results[name] = {
+                        "status": "healthy" if resp.status_code == 200 else "unhealthy"
+                    }
             except Exception as e:
                 results[name] = {"status": "unreachable", "error": str(e)}
 
         return results
 
-    async def forecast_weather(self, latitude: float, longitude: float,
-                               hours_ahead: int = 72,
-                               model: NvidiaModelType = NvidiaModelType.EARTH2_FOURCASTNET) -> SimulationResult:
+    async def forecast_weather(
+        self,
+        latitude: float,
+        longitude: float,
+        hours_ahead: int = 72,
+        model: NvidiaModelType = NvidiaModelType.EARTH2_FOURCASTNET,
+    ) -> SimulationResult:
         """
         Forecast weather using NVIDIA Earth2.
 
@@ -151,6 +163,7 @@ class NvidiaModelProvider:
 
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=self.config.timeout) as client:
                 resp = await client.post(
                     f"{self.config.earth2_endpoint}/api/earth2/forecast",
@@ -159,8 +172,14 @@ class NvidiaModelProvider:
                         "longitude": longitude,
                         "hours_ahead": min(hours_ahead, 240),
                         "model": model.value,
-                        "variables": ["temperature", "precipitation", "wind_speed", "humidity", "pressure"],
-                    }
+                        "variables": [
+                            "temperature",
+                            "precipitation",
+                            "wind_speed",
+                            "humidity",
+                            "pressure",
+                        ],
+                    },
                 )
                 if resp.status_code == 200:
                     data = resp.json()
@@ -209,6 +228,7 @@ class NvidiaModelProvider:
 
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=self.config.timeout) as client:
                 resp = await client.post(
                     f"{self.config.physicsnemo_endpoint}/api/physicsnemo/simulate",
@@ -217,7 +237,7 @@ class NvidiaModelProvider:
                         "parameters": request.parameters,
                         "resolution": request.resolution,
                         "time_steps": request.time_steps,
-                    }
+                    },
                 )
                 if resp.status_code == 200:
                     data = resp.json()
@@ -243,9 +263,9 @@ class NvidiaModelProvider:
             resolution=request.resolution,
         )
 
-    async def climate_projection(self, region: Dict[str, float],
-                                 years_ahead: int = 10,
-                                 scenario: str = "ssp245") -> SimulationResult:
+    async def climate_projection(
+        self, region: Dict[str, float], years_ahead: int = 10, scenario: str = "ssp245"
+    ) -> SimulationResult:
         """
         Run a climate projection using Earth2.
 
@@ -259,6 +279,7 @@ class NvidiaModelProvider:
 
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=self.config.timeout) as client:
                 resp = await client.post(
                     f"{self.config.earth2_endpoint}/api/earth2/climate",
@@ -266,8 +287,12 @@ class NvidiaModelProvider:
                         "region": region,
                         "years_ahead": years_ahead,
                         "scenario": scenario,
-                        "variables": ["temperature_anomaly", "precipitation_change", "sea_level_rise"],
-                    }
+                        "variables": [
+                            "temperature_anomaly",
+                            "precipitation_change",
+                            "sea_level_rise",
+                        ],
+                    },
                 )
                 if resp.status_code == 200:
                     data = resp.json()
@@ -293,8 +318,9 @@ class NvidiaModelProvider:
             resolution="none",
         )
 
-    async def ecosystem_simulation(self, ecosystem_type: str,
-                                   parameters: Dict[str, Any]) -> SimulationResult:
+    async def ecosystem_simulation(
+        self, ecosystem_type: str, parameters: Dict[str, Any]
+    ) -> SimulationResult:
         """
         Simulate an ecosystem model combining Earth2 environmental data
         with PhysicsNeMo physics.
@@ -311,10 +337,12 @@ class NvidiaModelProvider:
             parameters.get("longitude", 0),
             hours_ahead=parameters.get("hours", 168),
         )
-        physics_task = self.run_physics_simulation(SimulationRequest(
-            simulation_type=SimulationType.FLUID_DYNAMICS,
-            parameters={"medium": "water", "ecosystem": ecosystem_type},
-        ))
+        physics_task = self.run_physics_simulation(
+            SimulationRequest(
+                simulation_type=SimulationType.FLUID_DYNAMICS,
+                parameters={"medium": "water", "ecosystem": ecosystem_type},
+            )
+        )
 
         env_result, physics_result = await asyncio.gather(env_task, physics_task)
 

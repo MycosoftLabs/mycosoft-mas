@@ -6,7 +6,6 @@ from mycosoft_mas.guardian.moral_precedence import (
     ANTI_EXTINCTION_CLAUSE,
     MORAL_PRECEDENCE,
     MoralPrecedenceEngine,
-    MoralRule,
     MoralTier,
 )
 

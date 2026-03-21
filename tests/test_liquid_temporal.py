@@ -9,6 +9,7 @@ Validates:
 """
 
 import math
+
 import pytest
 
 from mycosoft_mas.engines.liquid_temporal.processor import (

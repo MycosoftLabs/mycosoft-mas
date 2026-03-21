@@ -33,6 +33,7 @@ def _get_safety_gates() -> SafetyGates:
         _safety_gates = SafetyGates()
     return _safety_gates
 
+
 MAS_URL = os.getenv("MAS_URL", "http://192.168.0.188:8001")
 MINDEX_URL = os.getenv("MINDEX_URL", "http://192.168.0.189:8000")
 
@@ -44,6 +45,7 @@ MINDEX_URL = os.getenv("MINDEX_URL", "http://192.168.0.189:8000")
 
 class MemoryQueryRequest(BaseModel):
     """Request to query user/conversation memory for n8n context."""
+
     user_id: str = Field(..., description="User ID or sender email")
     agent_id: str = Field("myca_orchestrator", description="Agent namespace")
     query: Optional[str] = Field(None, description="Semantic search query")
@@ -52,6 +54,7 @@ class MemoryQueryRequest(BaseModel):
 
 class MemoryStoreRequest(BaseModel):
     """Request to store task result or user preference."""
+
     agent_id: str = Field("myca_orchestrator", description="Agent namespace")
     content: Dict[str, Any] = Field(..., description="Content to remember")
     layer: str = Field("working", description="Memory layer")
@@ -66,6 +69,7 @@ class MemoryStoreRequest(BaseModel):
 
 class SandboxExecuteRequest(BaseModel):
     """Request to execute code in sandbox via Gateway."""
+
     tool_name: str = Field("code_execute", description="Tool: code_execute, exec, browser")
     args: Dict[str, Any] = Field(..., description="Tool arguments")
     session_id: Optional[str] = Field(None, description="Session ID (auto-generated if omitted)")
@@ -78,20 +82,28 @@ class SandboxExecuteRequest(BaseModel):
 
 class MindexSearchRequest(BaseModel):
     """Request to search MINDEX."""
+
     q: str = Field(..., description="Search query")
-    types: Optional[str] = Field(None, description="Comma-separated: taxa, compounds, observations, etc.")
+    types: Optional[str] = Field(
+        None, description="Comma-separated: taxa, compounds, observations, etc."
+    )
     limit: int = Field(20, ge=1, le=100)
 
 
 class EvaluateTaskCompletionRequest(BaseModel):
     """Request to evaluate if a sub-task result means the original goal is complete."""
+
     goal: str = Field(..., description="Original user goal")
     result: str = Field(..., description="Current sub-task result")
     iteration: int = Field(0, ge=0, le=10)
     max_iterations: int = Field(5, ge=1, le=10)
-    session_start_time: Optional[float] = Field(None, description="Unix timestamp when session started (5-min timeout)")
+    session_start_time: Optional[float] = Field(
+        None, description="Unix timestamp when session started (5-min timeout)"
+    )
     tokens_used: int = Field(0, ge=0, description="Cumulative tokens this session (50K budget)")
-    iteration_history: Optional[list[Dict[str, Any]]] = Field(None, description="Last N iterations for duplicate detection")
+    iteration_history: Optional[list[Dict[str, Any]]] = Field(
+        None, description="Last N iterations for duplicate detection"
+    )
 
 
 # =============================================================================
@@ -101,12 +113,16 @@ class EvaluateTaskCompletionRequest(BaseModel):
 
 class SafetyCheckRequest(BaseModel):
     """Request to check if an action is safe (no confirmation needed) or requires confirmation."""
+
     action: str = Field(..., description="Action type: deploy, restart, delete, etc.")
-    context: Dict[str, Any] = Field(default_factory=dict, description="Action context (resource names, targets)")
+    context: Dict[str, Any] = Field(
+        default_factory=dict, description="Action context (resource names, targets)"
+    )
 
 
 class SafetyRequestConfirmationRequest(BaseModel):
     """Request to create a confirmation request for destructive action."""
+
     action: str = Field(..., description="Action requiring confirmation")
     context: Dict[str, Any] = Field(default_factory=dict, description="Action context")
     approver_id: str = Field(..., description="Slack user ID or email of approver (leadership)")
@@ -114,6 +130,7 @@ class SafetyRequestConfirmationRequest(BaseModel):
 
 class SafetySubmitConfirmationRequest(BaseModel):
     """Request to approve or deny a pending confirmation."""
+
     request_id: str = Field(..., description="Confirmation request ID")
     approved: bool = Field(..., description="True to approve, False to deny")
 
@@ -353,7 +370,11 @@ async def safety_check(req: SafetyCheckRequest) -> Dict[str, Any]:
     return {
         "safe": result.safe,
         "requires_confirmation": result.requires_confirmation,
-        "risk_level": result.risk_level.value if hasattr(result.risk_level, "value") else str(result.risk_level),
+        "risk_level": (
+            result.risk_level.value
+            if hasattr(result.risk_level, "value")
+            else str(result.risk_level)
+        ),
         "reason": result.reason,
     }
 

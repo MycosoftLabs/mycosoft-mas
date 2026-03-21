@@ -57,7 +57,7 @@ class Orchestrator:
         self._mcp_servers = {}
 
         # Optional MCP server config (best-effort)
-        for entry in (self._config.get("mcp_servers") or []):
+        for entry in self._config.get("mcp_servers") or []:
             if not isinstance(entry, dict):
                 continue
             name = str(entry.get("name") or entry.get("id") or "")
@@ -139,4 +139,3 @@ class Orchestrator:
 
 
 __all__ = ["Orchestrator", "MCPServer"]
-

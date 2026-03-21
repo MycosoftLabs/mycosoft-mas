@@ -7,15 +7,16 @@ with automatic fallback to local TTS when ElevenLabs is unavailable or unconfigu
 Enhanced for natural, conversational speech with proper text preprocessing.
 """
 
+import logging
 import os
 import re
+from typing import Optional
+
 import httpx
-import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
-from typing import Optional
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -63,108 +64,108 @@ def clean_text_for_speech(text: str) -> str:
     """
     if not text:
         return ""
-    
+
     # Store original for logging
     original = text[:100] + "..." if len(text) > 100 else text
-    
+
     # Remove markdown bold/italic markers (**, *, __, _)
-    text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)  # **bold**
-    text = re.sub(r'\*([^*]+)\*', r'\1', text)       # *italic*
-    text = re.sub(r'__([^_]+)__', r'\1', text)       # __bold__
-    text = re.sub(r'_([^_]+)_', r'\1', text)         # _italic_
-    
+    text = re.sub(r"\*\*([^*]+)\*\*", r"\1", text)  # **bold**
+    text = re.sub(r"\*([^*]+)\*", r"\1", text)  # *italic*
+    text = re.sub(r"__([^_]+)__", r"\1", text)  # __bold__
+    text = re.sub(r"_([^_]+)_", r"\1", text)  # _italic_
+
     # Remove markdown headers
-    text = re.sub(r'^#{1,6}\s+', '', text, flags=re.MULTILINE)
-    
+    text = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
+
     # Remove markdown links [text](url) -> text
-    text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', text)
-    
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+
     # Remove markdown code blocks and inline code
-    text = re.sub(r'```[^`]*```', '', text, flags=re.DOTALL)
-    text = re.sub(r'`([^`]+)`', r'\1', text)
-    
+    text = re.sub(r"```[^`]*```", "", text, flags=re.DOTALL)
+    text = re.sub(r"`([^`]+)`", r"\1", text)
+
     # Remove bullet points and list markers
-    text = re.sub(r'^[\s]*[-*•]\s+', '', text, flags=re.MULTILINE)
-    text = re.sub(r'^[\s]*\d+\.\s+', '', text, flags=re.MULTILINE)
-    
+    text = re.sub(r"^[\s]*[-*•]\s+", "", text, flags=re.MULTILINE)
+    text = re.sub(r"^[\s]*\d+\.\s+", "", text, flags=re.MULTILINE)
+
     # Remove standalone asterisks and other noise
-    text = re.sub(r'\s*\*+\s*', ' ', text)
-    text = re.sub(r'\s*_+\s*', ' ', text)
-    
+    text = re.sub(r"\s*\*+\s*", " ", text)
+    text = re.sub(r"\s*_+\s*", " ", text)
+
     # Clean up special characters that don't speak well
-    text = text.replace('→', 'to')
-    text = text.replace('←', 'from')
-    text = text.replace('•', ',')
-    text = text.replace('…', '...')
-    text = text.replace('—', ', ')
-    text = text.replace('–', ', ')
+    text = text.replace("→", "to")
+    text = text.replace("←", "from")
+    text = text.replace("•", ",")
+    text = text.replace("…", "...")
+    text = text.replace("—", ", ")
+    text = text.replace("–", ", ")
     text = text.replace('"', '"').replace('"', '"')
-    text = text.replace(''', "'").replace(''', "'")
-    
+    text = text.replace(""", "'").replace(""", "'")
+
     # Expand common abbreviations for natural speech
     abbreviations = {
-        'VM': 'V M',
-        'VMs': 'V Ms',
-        'API': 'A P I',
-        'APIs': 'A P Is',
-        'CPU': 'C P U',
-        'GPU': 'G P U',
-        'RAM': 'ram',
-        'NAS': 'nas',
-        'URL': 'U R L',
-        'HTTP': 'H T T P',
-        'HTTPS': 'H T T P S',
-        'JSON': 'jason',
-        'SQL': 'sequel',
-        'SSH': 'S S H',
-        'ID': 'I D',
-        'IDs': 'I Ds',
-        'LLM': 'L L M',
-        'AI': 'A I',
-        'MAS': 'M A S',
-        'MYCA': 'My-Kah',
-        'TTS': 'T T S',
-        'STT': 'S T T',
-        'n8n': 'n 8 n',
-        'OK': 'okay',
-        'ok': 'okay',
+        "VM": "V M",
+        "VMs": "V Ms",
+        "API": "A P I",
+        "APIs": "A P Is",
+        "CPU": "C P U",
+        "GPU": "G P U",
+        "RAM": "ram",
+        "NAS": "nas",
+        "URL": "U R L",
+        "HTTP": "H T T P",
+        "HTTPS": "H T T P S",
+        "JSON": "jason",
+        "SQL": "sequel",
+        "SSH": "S S H",
+        "ID": "I D",
+        "IDs": "I Ds",
+        "LLM": "L L M",
+        "AI": "A I",
+        "MAS": "M A S",
+        "MYCA": "My-Kah",
+        "TTS": "T T S",
+        "STT": "S T T",
+        "n8n": "n 8 n",
+        "OK": "okay",
+        "ok": "okay",
     }
-    
+
     for abbr, expansion in abbreviations.items():
         # Only replace whole words
-        text = re.sub(rf'\b{abbr}\b', expansion, text)
-    
+        text = re.sub(rf"\b{abbr}\b", expansion, text)
+
     # Convert numbers with units for natural reading
-    text = re.sub(r'(\d+)%', r'\1 percent', text)
-    text = re.sub(r'(\d+)GB', r'\1 gigabytes', text)
-    text = re.sub(r'(\d+)MB', r'\1 megabytes', text)
-    text = re.sub(r'(\d+)KB', r'\1 kilobytes', text)
-    text = re.sub(r'(\d+)ms', r'\1 milliseconds', text)
-    
+    text = re.sub(r"(\d+)%", r"\1 percent", text)
+    text = re.sub(r"(\d+)GB", r"\1 gigabytes", text)
+    text = re.sub(r"(\d+)MB", r"\1 megabytes", text)
+    text = re.sub(r"(\d+)KB", r"\1 kilobytes", text)
+    text = re.sub(r"(\d+)ms", r"\1 milliseconds", text)
+
     # Add natural pauses after colons (for lists)
-    text = re.sub(r':\s*\n', '. ', text)
-    text = re.sub(r':\s+', ', ', text)
-    
+    text = re.sub(r":\s*\n", ". ", text)
+    text = re.sub(r":\s+", ", ", text)
+
     # Clean up multiple spaces and newlines
-    text = re.sub(r'\n+', '. ', text)
-    text = re.sub(r'\s+', ' ', text)
-    
+    text = re.sub(r"\n+", ". ", text)
+    text = re.sub(r"\s+", " ", text)
+
     # Clean up multiple periods
-    text = re.sub(r'\.{2,}', '.', text)
-    text = re.sub(r'\.\s*\.', '.', text)
-    
+    text = re.sub(r"\.{2,}", ".", text)
+    text = re.sub(r"\.\s*\.", ".", text)
+
     # Ensure sentences end properly for natural pauses
-    text = re.sub(r'([.!?])\s*([A-Z])', r'\1 \2', text)
-    
+    text = re.sub(r"([.!?])\s*([A-Z])", r"\1 \2", text)
+
     # Remove leading/trailing whitespace
     text = text.strip()
-    
+
     # Ensure text ends with punctuation for proper cadence
-    if text and text[-1] not in '.!?':
-        text += '.'
-    
+    if text and text[-1] not in ".!?":
+        text += "."
+
     logger.debug(f"Text cleaned: '{original}' -> '{text[:100]}...'")
-    
+
     return text
 
 
@@ -184,8 +185,20 @@ async def list_models():
     return {
         "object": "list",
         "data": [
-            {"id": "tts-1", "object": "model", "created": 0, "owned_by": "elevenlabs", "description": "Standard quality (eleven_turbo_v2_5)"},
-            {"id": "tts-1-hd", "object": "model", "created": 0, "owned_by": "elevenlabs", "description": "High quality (eleven_multilingual_v2)"},
+            {
+                "id": "tts-1",
+                "object": "model",
+                "created": 0,
+                "owned_by": "elevenlabs",
+                "description": "Standard quality (eleven_turbo_v2_5)",
+            },
+            {
+                "id": "tts-1-hd",
+                "object": "model",
+                "created": 0,
+                "owned_by": "elevenlabs",
+                "description": "High quality (eleven_multilingual_v2)",
+            },
         ],
     }
 
@@ -198,7 +211,7 @@ async def create_speech(request: TTSRequest):
     """
     # Clean the text for natural speech
     cleaned_text = clean_text_for_speech(request.input)
-    
+
     if not cleaned_text:
         raise HTTPException(status_code=400, detail="Empty input text after cleaning")
 
@@ -216,11 +229,11 @@ async def create_speech(request: TTSRequest):
 async def _elevenlabs_tts(text: str, request: TTSRequest) -> Response:
     """
     Call ElevenLabs API for premium natural TTS.
-    
+
     Model selection:
     - tts-1 -> eleven_turbo_v2_5 (fast, good quality)
     - tts-1-hd -> eleven_multilingual_v2 (best quality, most natural)
-    
+
     Voice settings optimized for conversational speech:
     - Stability: 0.35-0.5 (lower = more expressive, higher = more consistent)
     - Similarity boost: 0.75 (voice fidelity)
@@ -228,17 +241,17 @@ async def _elevenlabs_tts(text: str, request: TTSRequest) -> Response:
     - Speaker boost: True (clarity)
     """
     voice_id = VOICE_MAP.get(request.voice.lower(), MYCA_VOICE_ID)
-    
+
     # Select model based on OpenAI model mapping
     if request.model == "tts-1-hd":
         model_id = "eleven_multilingual_v2"  # Best quality, most natural
     else:
         model_id = "eleven_turbo_v2_5"  # Fast and good quality
-    
+
     # Override with env if set
     if DEFAULT_MODEL and DEFAULT_MODEL != "eleven_multilingual_v2":
         model_id = DEFAULT_MODEL
-    
+
     logger.info(f"MYCA TTS: model={model_id}, voice_id={voice_id}")
     logger.info(f"Text ({len(text)} chars): {text[:80]}...")
 
@@ -249,23 +262,23 @@ async def _elevenlabs_tts(text: str, request: TTSRequest) -> Response:
         "Content-Type": "application/json",
         "Accept": "audio/mpeg",
     }
-    
+
     # Voice settings optimized for natural conversational speech
     # Lower stability = more expressive/natural variation
     # Higher similarity = stays closer to original voice
     voice_settings = {
-        "stability": 0.40,          # Slightly lower for more natural variation
-        "similarity_boost": 0.75,   # Good voice fidelity
+        "stability": 0.40,  # Slightly lower for more natural variation
+        "similarity_boost": 0.75,  # Good voice fidelity
         "style": request.style if request.style is not None else 0.15,  # Slight expressiveness
         "use_speaker_boost": True,  # Enhanced clarity
     }
-    
+
     payload = {
         "text": text,
         "model_id": model_id,
         "voice_settings": voice_settings,
     }
-    
+
     # For turbo models, enable streaming optimization
     if "turbo" in model_id or "flash" in model_id:
         payload["optimize_streaming_latency"] = 3
@@ -273,7 +286,7 @@ async def _elevenlabs_tts(text: str, request: TTSRequest) -> Response:
     async with httpx.AsyncClient(timeout=120) as client:
         resp = await client.post(url, headers=headers, json=payload)
         resp.raise_for_status()
-        
+
         audio_size = len(resp.content)
         logger.info(f"MYCA TTS success: {audio_size} bytes, model={model_id}")
 
@@ -296,7 +309,11 @@ async def _fallback_tts(text: str, request: TTSRequest) -> Response:
     url = f"{FALLBACK_TTS_URL}/v1/audio/speech"
     payload = {
         "model": request.model,
-        "voice": request.voice if request.voice in ["alloy", "echo", "fable", "onyx", "nova", "shimmer"] else "alloy",
+        "voice": (
+            request.voice
+            if request.voice in ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+            else "alloy"
+        ),
         "input": text,
     }
 
@@ -325,7 +342,9 @@ async def preview_cleaned_text(request: TTSRequest):
         "cleaned": cleaned,
         "original_length": len(original),
         "cleaned_length": len(cleaned),
-        "model_to_use": "eleven_multilingual_v2" if request.model == "tts-1-hd" else "eleven_turbo_v2_5",
+        "model_to_use": (
+            "eleven_multilingual_v2" if request.model == "tts-1-hd" else "eleven_turbo_v2_5"
+        ),
     }
 
 
@@ -340,7 +359,7 @@ async def health():
         "default_model": DEFAULT_MODEL,
         "features": [
             "text_cleaning",
-            "markdown_removal", 
+            "markdown_removal",
             "abbreviation_expansion",
             "natural_pauses",
             "conversational_voice_settings",

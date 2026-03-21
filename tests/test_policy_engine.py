@@ -13,8 +13,6 @@ from unittest.mock import patch
 from mycosoft_mas.realtime.event_schema import AgentEvent
 from mycosoft_mas.security.policy_engine import (
     PolicyEngine,
-    PolicyResult,
-    ALLOWED_CLASSIFICATIONS,
 )
 
 

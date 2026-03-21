@@ -66,9 +66,7 @@ class AuthorityResult:
     moral_approved: bool
     guardian_verdict: Optional[GuardianVerdict] = None
     warnings: List[str] = field(default_factory=list)
-    checked_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    checked_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     pipeline_stages: List[Dict[str, Any]] = field(default_factory=list)
 
 
@@ -218,9 +216,7 @@ class AuthorityEngine:
         # Default to medium for unknown actions
         return RiskTier.MEDIUM
 
-    def _log_decision(
-        self, request: AuthorityRequest, result: AuthorityResult
-    ) -> None:
+    def _log_decision(self, request: AuthorityRequest, result: AuthorityResult) -> None:
         """Log the authority decision for audit."""
         self._decision_log.append(
             {

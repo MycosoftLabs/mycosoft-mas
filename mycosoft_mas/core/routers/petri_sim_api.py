@@ -11,7 +11,7 @@ import asyncio
 import os
 import time
 import uuid
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 import httpx
 import numpy as np
@@ -54,6 +54,7 @@ class BatchRunRequest(BaseModel):
 
 class ScaleBatchRequest(BaseModel):
     """High-volume batch: up to 1M iterations, chunked execution."""
+
     iterations: int = Field(ge=1, le=1_000_000)
     dt: float = Field(gt=0)
     initial_fields: Optional[Dict[str, List[List[float]]]] = None
@@ -62,6 +63,7 @@ class ScaleBatchRequest(BaseModel):
 
 class AgentControlRequest(BaseModel):
     """MYCA/agent-driven Petri control with guardrails."""
+
     action: str  # adjust_env | contamination_response | multi_run | monitor
     source: str = "agent"
     params: Dict[str, Any] = Field(default_factory=dict)
@@ -71,10 +73,13 @@ class AgentControlRequest(BaseModel):
 _sessions: Dict[str, Dict[str, Any]] = {}
 
 
-async def _notify_nlm_outcome(outcome_type: str, summary: Dict[str, Any], metrics: Optional[Dict[str, Any]] = None) -> None:
+async def _notify_nlm_outcome(
+    outcome_type: str, summary: Dict[str, Any], metrics: Optional[Dict[str, Any]] = None
+) -> None:
     """Fire-and-forget NLM notification for learning workflows."""
     try:
         from mycosoft_mas.simulation.petri_persistence import notify_nlm_petri_outcome
+
         await notify_nlm_petri_outcome(
             session_id=summary.get("session_id", "batch"),
             outcome_type=outcome_type,
@@ -83,6 +88,8 @@ async def _notify_nlm_outcome(outcome_type: str, summary: Dict[str, Any], metric
         )
     except Exception:
         pass
+
+
 _latest_fields: Optional[Dict[str, List[List[float]]]] = None
 
 
@@ -148,11 +155,16 @@ async def calibrate(payload: CalibrationRequest) -> Dict[str, Any]:
                 )
                 if res.status_code == 200:
                     cal_result = res.json()
-                    asyncio.create_task(_notify_nlm_outcome(
-                        "calibration_complete",
-                        {"species_name": payload.species_name, "calibrated_params": cal_result.get("calibrated_params", {})},
-                        cal_result,
-                    ))
+                    asyncio.create_task(
+                        _notify_nlm_outcome(
+                            "calibration_complete",
+                            {
+                                "species_name": payload.species_name,
+                                "calibrated_params": cal_result.get("calibrated_params", {}),
+                            },
+                            cal_result,
+                        )
+                    )
                     return cal_result
         except Exception:
             pass
@@ -274,11 +286,13 @@ async def batch_run(payload: BatchRunRequest) -> Dict[str, Any]:
             }
 
     _latest_fields = fields
-    asyncio.create_task(_notify_nlm_outcome(
-        "batch_complete",
-        {"iterations": payload.iterations, "sample_count": len(results)},
-        {"results": results[-10:]} if results else None,
-    ))
+    asyncio.create_task(
+        _notify_nlm_outcome(
+            "batch_complete",
+            {"iterations": payload.iterations, "sample_count": len(results)},
+            {"results": results[-10:]} if results else None,
+        )
+    )
     return {"status": "ok", "iterations": payload.iterations, "results": results}
 
 
@@ -299,7 +313,10 @@ async def agent_control(payload: AgentControlRequest) -> Dict[str, Any]:
     MYCA/agent-driven Petri control: environment adjustments, contamination response,
     multi-run orchestration, monitoring. Actions are logged for audit.
     """
-    from mycosoft_mas.simulation.petri_persistence import log_petri_agent_action, get_petri_audit_trail
+    from mycosoft_mas.simulation.petri_persistence import (
+        get_petri_audit_trail,
+        log_petri_agent_action,
+    )
 
     action = (payload.action or "").strip().lower()
     if action not in ("adjust_env", "contamination_response", "multi_run", "monitor"):
@@ -404,4 +421,5 @@ async def batch_scale_cancel(job_id: str) -> Dict[str, Any]:
 async def agent_audit_trail(limit: int = 50) -> Dict[str, Any]:
     """Return audit trail of agent-driven Petri actions."""
     from mycosoft_mas.simulation.petri_persistence import get_petri_audit_trail
+
     return {"entries": get_petri_audit_trail(limit=min(100, max(1, limit)))}

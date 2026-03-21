@@ -17,7 +17,7 @@ Created: March 3, 2026
 
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -204,9 +204,7 @@ def build_static_index(
     for d in range(max_len):
         if d == 0:
             # Level 0: unique first tokens
-            unique_tokens, inverse = np.unique(
-                sorted_seqs[:, 0], return_inverse=True
-            )
+            unique_tokens, inverse = np.unique(sorted_seqs[:, 0], return_inverse=True)
             # Filter out padding (-1)
             valid_mask = unique_tokens >= 0
             token_to_state = {}
@@ -252,9 +250,7 @@ def build_static_index(
                     branching_count += 1
 
                     # Track children per parent for branching stats
-                    parent_children[parent_state] = (
-                        parent_children.get(parent_state, 0) + 1
-                    )
+                    parent_children[parent_state] = parent_children.get(parent_state, 0) + 1
                 else:
                     # Same node as previous row at this depth
                     state_ids[i, d] = state_ids[i - 1, d]
@@ -289,23 +285,15 @@ def build_static_index(
         depth_edges = edges_by_depth.get(d, [])
         children_per_parent: Dict[int, int] = {}
         for parent, token, child in depth_edges:
-            children_per_parent[parent] = (
-                children_per_parent.get(parent, 0) + 1
-            )
+            children_per_parent[parent] = children_per_parent.get(parent, 0) + 1
         if children_per_parent:
-            max_children_dense = max(
-                max_children_dense, max(children_per_parent.values())
-            )
+            max_children_dense = max(max_children_dense, max(children_per_parent.values()))
 
     # Build dense arrays
     # dense_masks[d][state] = boolean mask of valid children slots
     # dense_states[d][state][slot] = (token, next_state) packed as int64
-    dense_masks = np.zeros(
-        (dense_depth, num_states, max_children_dense), dtype=np.bool_
-    )
-    dense_states = np.zeros(
-        (dense_depth, num_states, max_children_dense, 2), dtype=dtype
-    )
+    dense_masks = np.zeros((dense_depth, num_states, max_children_dense), dtype=np.bool_)
+    dense_states = np.zeros((dense_depth, num_states, max_children_dense, 2), dtype=dtype)
 
     for d in range(dense_depth):
         depth_edges = edges_by_depth.get(d, [])

@@ -11,7 +11,7 @@ Environment Variables:
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -25,9 +25,7 @@ class SamGovClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_key = (
-            self.config.get("api_key") or os.environ.get("SAM_GOV_API_KEY", "")
-        )
+        self.api_key = self.config.get("api_key") or os.environ.get("SAM_GOV_API_KEY", "")
         self.base_url = (
             self.config.get("base_url") or os.environ.get("SAM_GOV_BASE_URL", DEFAULT_BASE)
         ).rstrip("/")

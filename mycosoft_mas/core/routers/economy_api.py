@@ -42,6 +42,7 @@ RESOURCE_NEEDS_NO_FORECAST_MESSAGE = (
 
 class ChargeRequest(BaseModel):
     """Request to charge for a service."""
+
     client_id: str
     service_type: str
     amount: Optional[float] = None
@@ -51,6 +52,7 @@ class ChargeRequest(BaseModel):
 
 class ChargeResponse(BaseModel):
     """Response from a charge operation."""
+
     transaction_id: str
     client_id: str
     amount: float
@@ -61,6 +63,7 @@ class ChargeResponse(BaseModel):
 
 class WalletInfo(BaseModel):
     """Wallet information."""
+
     wallet_type: str
     address: str
     balance: float
@@ -70,6 +73,7 @@ class WalletInfo(BaseModel):
 
 class RevenueMetrics(BaseModel):
     """Revenue metrics from completed transactions; period sums are UTC bucket totals."""
+
     daily_revenue: float
     weekly_revenue: float
     monthly_revenue: float
@@ -84,6 +88,7 @@ class RevenueMetrics(BaseModel):
 
 class ResourcePurchaseRequest(BaseModel):
     """Request to purchase a resource."""
+
     resource_type: str  # "gpu", "storage", "compute", "memory"
     quantity: int
     max_price: float
@@ -93,6 +98,7 @@ class ResourcePurchaseRequest(BaseModel):
 
 class PricingTierInfo(BaseModel):
     """Information about a pricing tier."""
+
     tier: str
     price_per_request: float
     daily_limit: int
@@ -102,6 +108,7 @@ class PricingTierInfo(BaseModel):
 
 class IncentiveRequest(BaseModel):
     """Request to create an agent incentive."""
+
     agent_id: str
     incentive_type: str  # "discount", "bonus", "free_tier", "referral"
     value: float
@@ -138,13 +145,15 @@ async def list_wallets() -> List[WalletInfo]:
     state = economy_store.get_state()
     wallets = []
     for wtype, wdata in state["wallets"].items():
-        wallets.append(WalletInfo(
-            wallet_type=wtype,
-            address=wdata["address"],
-            balance=wdata["balance"],
-            currency=wdata["currency"],
-            last_updated=datetime.now(timezone.utc).isoformat(),
-        ))
+        wallets.append(
+            WalletInfo(
+                wallet_type=wtype,
+                address=wdata["address"],
+                balance=wdata["balance"],
+                currency=wdata["currency"],
+                last_updated=datetime.now(timezone.utc).isoformat(),
+            )
+        )
     return wallets
 
 
@@ -184,7 +193,13 @@ async def charge_for_service(request: ChargeRequest) -> ChargeResponse:
         service_type=request.service_type,
     )
 
-    logger.info("Charged %s %.6f %s for %s", request.client_id, amount, request.currency, request.service_type)
+    logger.info(
+        "Charged %s %.6f %s for %s",
+        request.client_id,
+        amount,
+        request.currency,
+        request.service_type,
+    )
 
     return ChargeResponse(
         transaction_id=tx_id,
@@ -268,7 +283,12 @@ async def purchase_resource(request: ResourcePurchaseRequest) -> Dict[str, Any]:
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
-    logger.info("Resource purchase initiated: %d x %s at $%.2f", request.quantity, request.resource_type, total_cost)
+    logger.info(
+        "Resource purchase initiated: %d x %s at $%.2f",
+        request.quantity,
+        request.resource_type,
+        total_cost,
+    )
 
     return {
         "status": "purchase_initiated",
@@ -318,7 +338,12 @@ async def create_agent_incentive(request: IncentiveRequest) -> Dict[str, Any]:
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
 
-    logger.info("Created incentive for %s: %s (%.2f)", request.agent_id, request.incentive_type, request.value)
+    logger.info(
+        "Created incentive for %s: %s (%.2f)",
+        request.agent_id,
+        request.incentive_type,
+        request.value,
+    )
 
     return {"status": "success", "incentive": incentive}
 
@@ -340,8 +365,10 @@ async def get_economic_summary() -> Dict[str, Any]:
     state = economy_store.get_state()
     return {
         "status": "success",
-        "wallets": {k: {"balance": v["balance"], "currency": v["currency"]}
-                    for k, v in state["wallets"].items()},
+        "wallets": {
+            k: {"balance": v["balance"], "currency": v["currency"]}
+            for k, v in state["wallets"].items()
+        },
         "total_revenue": state["total_revenue"],
         "total_transactions": len(state["transactions"]),
         "active_clients": len(state["active_clients"]),
@@ -359,6 +386,7 @@ async def get_economic_summary() -> Dict[str, Any]:
 
 class MeterRequest(BaseModel):
     """Request to record usage for billing (x402-style metering)."""
+
     client_id: str
     service_type: str
     units: float = 1.0
@@ -368,6 +396,7 @@ class MeterRequest(BaseModel):
 
 class SettleRequest(BaseModel):
     """Request to settle a metered usage to a charge."""
+
     usage_id: str
 
 
@@ -377,8 +406,12 @@ async def meter_usage(request: MeterRequest) -> Dict[str, Any]:
     state = economy_store.get_state()
     client_tier = state["active_clients"].get(request.client_id, {}).get("tier", "agent")
     tier_pricing = state["pricing_tiers"].get(client_tier, state["pricing_tiers"]["agent"])
-    unit_price = request.unit_price if request.unit_price is not None else tier_pricing["price_per_request"]
-    usage_id = f"usage_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{request.client_id[:8]}"
+    unit_price = (
+        request.unit_price if request.unit_price is not None else tier_pricing["price_per_request"]
+    )
+    usage_id = (
+        f"usage_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{request.client_id[:8]}"
+    )
     economy_store.record_meter(
         usage_id=usage_id,
         client_id=request.client_id,
@@ -407,7 +440,10 @@ async def settle_usage(request: SettleRequest) -> Dict[str, Any]:
     tx_id = f"tx_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_settle"
     ok = economy_store.settle_metered(usage_id=request.usage_id, transaction_id=tx_id)
     if not ok:
-        raise HTTPException(status_code=404, detail=f"Metered usage '{request.usage_id}' not found or already settled")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Metered usage '{request.usage_id}' not found or already settled",
+        )
     return {
         "status": "settled",
         "usage_id": request.usage_id,
@@ -446,8 +482,9 @@ async def authorize_payment(
 
 
 @router.post("/clients/register")
-async def register_client(client_id: str, client_type: str = "agent",
-                          tier: str = "agent") -> Dict[str, Any]:
+async def register_client(
+    client_id: str, client_type: str = "agent", tier: str = "agent"
+) -> Dict[str, Any]:
     """Register a new client (agent or human) in the economy."""
     economy_store.register_client(client_id=client_id, client_type=client_type, tier=tier)
     logger.info("New client registered: %s (type=%s, tier=%s)", client_id, client_type, tier)

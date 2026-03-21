@@ -24,7 +24,7 @@ import time
 import uuid
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Coroutine, Dict, List, Optional
 
@@ -47,8 +47,10 @@ _MAX_IMPROVEMENT_HISTORY_SIZE = 200
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class HealthStatus(Enum):
     """Overall health status of a monitored component."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -57,6 +59,7 @@ class HealthStatus(Enum):
 
 class IssueSeverity(Enum):
     """Severity of a detected issue."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -65,6 +68,7 @@ class IssueSeverity(Enum):
 
 class ImprovementCategory(Enum):
     """Category of a proposed improvement."""
+
     PERFORMANCE = "performance"
     RELIABILITY = "reliability"
     ACCURACY = "accuracy"
@@ -78,9 +82,11 @@ class ImprovementCategory(Enum):
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class AutonomousState:
     """Tracks the autonomous system's aggregate state across all engines."""
+
     is_running: bool = False
     started_at: Optional[datetime] = None
     last_cycle_at: Optional[datetime] = None
@@ -111,6 +117,7 @@ class AutonomousState:
 @dataclass
 class DetectedIssue:
     """An issue detected by the self-healing engine."""
+
     issue_id: str
     detected_at: datetime
     component: str
@@ -136,6 +143,7 @@ class DetectedIssue:
 @dataclass
 class ImprovementProposal:
     """A concrete improvement identified by the self-improvement engine."""
+
     proposal_id: str
     created_at: datetime
     category: ImprovementCategory
@@ -161,6 +169,7 @@ class ImprovementProposal:
 @dataclass
 class LearningItem:
     """An item in the self-learning queue."""
+
     item_id: str
     queued_at: datetime
     source: str
@@ -174,6 +183,7 @@ class LearningItem:
 @dataclass
 class IntrospectionEntry:
     """A single entry in the self-awareness introspection log."""
+
     timestamp: datetime
     observation: str
     cognitive_load: float  # 0.0 - 1.0
@@ -184,6 +194,7 @@ class IntrospectionEntry:
 # ---------------------------------------------------------------------------
 # Self-Healing Engine
 # ---------------------------------------------------------------------------
+
 
 class SelfHealingEngine:
     """
@@ -229,9 +240,7 @@ class SelfHealingEngine:
         """Run all registered health checks and return component statuses."""
         for component, check_fn in self._health_checks.items():
             try:
-                healthy = await asyncio.wait_for(
-                    check_fn(), timeout=_HEALTH_CHECK_TIMEOUT_SECONDS
-                )
+                healthy = await asyncio.wait_for(check_fn(), timeout=_HEALTH_CHECK_TIMEOUT_SECONDS)
                 if healthy:
                     self._component_status[component] = HealthStatus.HEALTHY
                     self._consecutive_failures[component] = 0
@@ -266,9 +275,7 @@ class SelfHealingEngine:
         for component, status in self._component_status.items():
             if status in (HealthStatus.DEGRADED, HealthStatus.UNHEALTHY):
                 severity = (
-                    IssueSeverity.HIGH
-                    if status == HealthStatus.UNHEALTHY
-                    else IssueSeverity.MEDIUM
+                    IssueSeverity.HIGH if status == HealthStatus.UNHEALTHY else IssueSeverity.MEDIUM
                 )
                 issue = DetectedIssue(
                     issue_id=f"issue-{uuid.uuid4().hex[:12]}",
@@ -341,7 +348,8 @@ class SelfHealingEngine:
             "heal_success_count": self._heal_success_count,
             "heal_failure_count": self._heal_failure_count,
             "heal_success_rate": (
-                self._heal_success_count / max(1, self._heal_success_count + self._heal_failure_count)
+                self._heal_success_count
+                / max(1, self._heal_success_count + self._heal_failure_count)
             ),
             "recent_issues": [i.to_dict() for i in list(self._issue_history)[-10:]],
         }
@@ -350,6 +358,7 @@ class SelfHealingEngine:
 # ---------------------------------------------------------------------------
 # Self-Improvement Engine
 # ---------------------------------------------------------------------------
+
 
 class SelfImprovementEngine:
     """
@@ -424,9 +433,7 @@ class SelfImprovementEngine:
 
         return analysis
 
-    async def propose_improvements(
-        self, analysis: Dict[str, Any]
-    ) -> List[ImprovementProposal]:
+    async def propose_improvements(self, analysis: Dict[str, Any]) -> List[ImprovementProposal]:
         """Generate improvement proposals from a performance analysis."""
         proposals: List[ImprovementProposal] = []
         now = datetime.now(timezone.utc)
@@ -471,9 +478,7 @@ class SelfImprovementEngine:
                 proposal.applied_at = datetime.now(timezone.utc)
                 proposal.outcome = outcome
                 self._applied_count += 1
-                logger.info(
-                    "Applied improvement '%s': %s", proposal_id, proposal.description[:80]
-                )
+                logger.info("Applied improvement '%s': %s", proposal_id, proposal.description[:80])
                 return True
         return False
 
@@ -501,6 +506,7 @@ class SelfImprovementEngine:
 # ---------------------------------------------------------------------------
 # Self-Learning Engine
 # ---------------------------------------------------------------------------
+
 
 class SelfLearningEngine:
     """
@@ -572,7 +578,9 @@ class SelfLearningEngine:
 
         if processed > 0:
             self._last_learning_at = datetime.now(timezone.utc)
-            logger.info("Self-learning processed %d items (total: %d)", processed, self._processed_count)
+            logger.info(
+                "Self-learning processed %d items (total: %d)", processed, self._processed_count
+            )
 
         return processed
 
@@ -585,6 +593,7 @@ class SelfLearningEngine:
         """
         try:
             from mycosoft_mas.memory.coordinator import get_memory_coordinator
+
             coordinator = await get_memory_coordinator()
             await coordinator.store(
                 key=f"learned:{item.domain}:{item.item_id}",
@@ -629,6 +638,7 @@ class SelfLearningEngine:
 # ---------------------------------------------------------------------------
 # Self-Awareness Monitor
 # ---------------------------------------------------------------------------
+
 
 class SelfAwarenessMonitor:
     """
@@ -680,9 +690,7 @@ class SelfAwarenessMonitor:
             self._detected_biases[bias] = self._detected_biases.get(bias, 0) + 1
 
         if entry.bias_flags:
-            logger.info(
-                "Self-awareness detected biases: %s", ", ".join(entry.bias_flags)
-            )
+            logger.info("Self-awareness detected biases: %s", ", ".join(entry.bias_flags))
 
     async def _capture_resource_snapshot(self) -> Dict[str, float]:
         """Capture a lightweight resource usage snapshot."""
@@ -770,6 +778,7 @@ class SelfAwarenessMonitor:
 # ---------------------------------------------------------------------------
 # AutonomousSelf -- main orchestrator
 # ---------------------------------------------------------------------------
+
 
 class AutonomousSelf:
     """
@@ -860,9 +869,7 @@ class AutonomousSelf:
                     bias_flags=["error_recovery_bias"],
                 )
             try:
-                await asyncio.wait_for(
-                    self._shutdown_event.wait(), timeout=self.cycle_interval
-                )
+                await asyncio.wait_for(self._shutdown_event.wait(), timeout=self.cycle_interval)
                 break  # shutdown requested
             except asyncio.TimeoutError:
                 pass  # normal timeout, continue loop
@@ -1011,7 +1018,9 @@ class AutonomousSelf:
         Convenience method so external code can feed knowledge into the
         learning engine without accessing it directly.
         """
-        return self.learning.enqueue(source=source, content=content, domain=domain, priority=priority)
+        return self.learning.enqueue(
+            source=source, content=content, domain=domain, priority=priority
+        )
 
 
 # ---------------------------------------------------------------------------

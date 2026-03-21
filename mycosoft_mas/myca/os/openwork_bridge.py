@@ -47,7 +47,11 @@ class OpenWorkBridge:
         try:
             async with self._session.get(f"{self._base_url}/global/health") as r:
                 ok = r.status == 200
-                body = await r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+                body = (
+                    await r.json()
+                    if r.headers.get("content-type", "").startswith("application/json")
+                    else {}
+                )
                 return {"healthy": ok, "status": r.status, "detail": body}
         except Exception as e:
             logger.debug("OpenCode health check failed: %s", e)
@@ -86,7 +90,8 @@ class OpenWorkBridge:
             texts = [
                 p.get("text", "") or p.get("content", "")
                 for p in parts
-                if isinstance(p, dict) and (p.get("type") == "text" or "text" in p or "content" in p)
+                if isinstance(p, dict)
+                and (p.get("type") == "text" or "text" in p or "content" in p)
             ]
             output = "\n".join(t for t in texts if t)
 

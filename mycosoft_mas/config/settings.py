@@ -4,7 +4,8 @@ Mycosoft Multi-Agent System (MAS) - Configuration Settings
 
 import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -87,6 +88,7 @@ MONITORING_CONFIG = {
     "enable_tracing": os.getenv("ENABLE_TRACING", "False").lower() == "true",
 }
 
+
 def get_settings() -> Dict[str, Any]:
     """Get all settings as a dictionary."""
     return {
@@ -99,4 +101,4 @@ def get_settings() -> Dict[str, Any]:
         "security": SECURITY_CONFIG,
         "ml": ML_CONFIG,
         "monitoring": MONITORING_CONFIG,
-    } 
+    }

@@ -10,13 +10,13 @@ Each client follows a consistent pattern with:
 
 Usage:
     from mycosoft_mas.clients import MINDEXClient, NatureOSClient
-    
+
     # Initialize client
     mindex = MINDEXClient(
         base_url="https://api.mindex.io",
         api_key="your-api-key",
     )
-    
+
     # Make requests
     result = await mindex.search(query="fungal species")
 """

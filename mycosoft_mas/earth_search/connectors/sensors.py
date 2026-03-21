@@ -23,8 +23,10 @@ from mycosoft_mas.earth_search.models import (
 logger = logging.getLogger(__name__)
 
 SENSOR_DOMAINS = {
-    EarthSearchDomain.OCEAN_BUOYS, EarthSearchDomain.WEATHER_STATIONS,
-    EarthSearchDomain.SEISMIC_STATIONS, EarthSearchDomain.MYCOBRAIN_DEVICES,
+    EarthSearchDomain.OCEAN_BUOYS,
+    EarthSearchDomain.WEATHER_STATIONS,
+    EarthSearchDomain.SEISMIC_STATIONS,
+    EarthSearchDomain.MYCOBRAIN_DEVICES,
 }
 
 
@@ -74,28 +76,30 @@ class SensorConnector(BaseConnector):
         for dev in devices[:limit]:
             name = dev.get("name") or dev.get("device_id") or "MycoBrain Sensor"
             telemetry = dev.get("telemetry", dev.get("latest", {}))
-            results.append(EarthSearchResult(
-                result_id=f"mcb-{dev.get('device_id', uuid.uuid4().hex[:8])}",
-                domain=EarthSearchDomain.MYCOBRAIN_DEVICES,
-                source="mycobrain",
-                title=f"MycoBrain: {name}",
-                description=f"Temp: {telemetry.get('temperature', '?')}°C, Humidity: {telemetry.get('humidity', '?')}%, Gas: {telemetry.get('gas_resistance', '?')}Ω",
-                data={
-                    "device_id": dev.get("device_id"),
-                    "temperature": telemetry.get("temperature"),
-                    "humidity": telemetry.get("humidity"),
-                    "pressure": telemetry.get("pressure"),
-                    "gas_resistance": telemetry.get("gas_resistance"),
-                    "iaq": telemetry.get("iaq"),
-                    "co2_equivalent": telemetry.get("co2_equivalent"),
-                    "voc": telemetry.get("voc"),
-                    "firmware": dev.get("firmware_version"),
-                },
-                lat=dev.get("lat") or dev.get("latitude"),
-                lng=dev.get("lng") or dev.get("longitude"),
-                confidence=0.95,
-                crep_layer="mycobrain_devices",
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"mcb-{dev.get('device_id', uuid.uuid4().hex[:8])}",
+                    domain=EarthSearchDomain.MYCOBRAIN_DEVICES,
+                    source="mycobrain",
+                    title=f"MycoBrain: {name}",
+                    description=f"Temp: {telemetry.get('temperature', '?')}°C, Humidity: {telemetry.get('humidity', '?')}%, Gas: {telemetry.get('gas_resistance', '?')}Ω",
+                    data={
+                        "device_id": dev.get("device_id"),
+                        "temperature": telemetry.get("temperature"),
+                        "humidity": telemetry.get("humidity"),
+                        "pressure": telemetry.get("pressure"),
+                        "gas_resistance": telemetry.get("gas_resistance"),
+                        "iaq": telemetry.get("iaq"),
+                        "co2_equivalent": telemetry.get("co2_equivalent"),
+                        "voc": telemetry.get("voc"),
+                        "firmware": dev.get("firmware_version"),
+                    },
+                    lat=dev.get("lat") or dev.get("latitude"),
+                    lng=dev.get("lng") or dev.get("longitude"),
+                    confidence=0.95,
+                    crep_layer="mycobrain_devices",
+                )
+            )
         return results
 
     async def _search_seismic_stations(self, geo: GeoFilter, limit: int) -> List[EarthSearchResult]:
@@ -108,7 +112,9 @@ class SensorConnector(BaseConnector):
             "level": "station",
         }
         # FDSN station service returns text by default
-        data = await self._get(f"{self.USGS_SEISMIC_BASE}/query", params={**params, "format": "text"})
+        data = await self._get(
+            f"{self.USGS_SEISMIC_BASE}/query", params={**params, "format": "text"}
+        )
         # Text parsing is complex; for JSON we'd need a different approach
         # Fallback: return structured placeholder indicating the data source is available
         return []

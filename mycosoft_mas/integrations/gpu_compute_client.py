@@ -14,10 +14,10 @@ Env vars:
     TOGETHER_API_KEY   -- Together.ai API key
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import httpx
 
@@ -126,7 +126,9 @@ class GpuComputeClient:
         r.raise_for_status()
         return r.json()
 
-    async def runpod_serverless_run(self, endpoint_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def runpod_serverless_run(
+        self, endpoint_id: str, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         c = await self._http()
         r = await c.post(
             f"{RUNPOD_BASE}/{endpoint_id}/run",
@@ -184,7 +186,12 @@ class GpuComputeClient:
         r = await c.post(
             f"{TOGETHER_BASE}/completions",
             headers={"Authorization": f"Bearer {self.together_key}"},
-            json={"model": model, "prompt": prompt, "max_tokens": max_tokens, "temperature": temperature},
+            json={
+                "model": model,
+                "prompt": prompt,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            },
         )
         r.raise_for_status()
         return r.json()

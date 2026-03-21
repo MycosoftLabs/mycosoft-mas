@@ -28,11 +28,15 @@ class SessionManager:
         if self._redis is None:
             try:
                 import redis.asyncio as aioredis
+
                 self._redis = aioredis.from_url(
-                    self._redis_url, decode_responses=True,
+                    self._redis_url,
+                    decode_responses=True,
                 )
             except Exception as exc:
-                logger.warning("Redis unavailable (%s), using local cache: %s", self._redis_url, exc)
+                logger.warning(
+                    "Redis unavailable (%s), using local cache: %s", self._redis_url, exc
+                )
         return self._redis
 
     async def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
@@ -85,7 +89,8 @@ class SessionManager:
         """Remove locally-cached sessions older than TTL."""
         now = time.time()
         expired = [
-            sid for sid, state in self._local_cache.items()
+            sid
+            for sid, state in self._local_cache.items()
             if now - state.get("_updated_at", 0) > SESSION_TTL_SECONDS
         ]
         for sid in expired:

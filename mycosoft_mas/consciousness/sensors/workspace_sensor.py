@@ -19,11 +19,10 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import httpx
 
-from mycosoft_mas.consciousness.sensors.base_sensor import BaseSensor, SensorStatus
+from mycosoft_mas.consciousness.sensors.base_sensor import BaseSensor
 
 if TYPE_CHECKING:
     from mycosoft_mas.consciousness.world_model import (
-        DataFreshness,
         SensorReading,
         WorldModel,
     )
@@ -40,13 +39,9 @@ class WorkspaceSensor(BaseSensor):
     in every response.
     """
 
-    WORKSPACE_API_BASE = os.getenv(
-        "MYCA_WORKSPACE_URL", "http://192.168.0.191:8100"
-    )
+    WORKSPACE_API_BASE = os.getenv("MYCA_WORKSPACE_URL", "http://192.168.0.191:8100")
     # Fallback: workspace API may also run on MAS VM during early dev
-    FALLBACK_API_BASE = os.getenv(
-        "MAS_API_URL", "http://192.168.0.188:8001"
-    )
+    FALLBACK_API_BASE = os.getenv("MAS_API_URL", "http://192.168.0.188:8001")
 
     def __init__(self, world_model: Optional["WorldModel"] = None):
         super().__init__(world_model, "workspace")
@@ -64,9 +59,7 @@ class WorkspaceSensor(BaseSensor):
 
             # Try VM 191 first
             try:
-                resp = await self._client.get(
-                    f"{self.WORKSPACE_API_BASE}/api/workspace/health"
-                )
+                resp = await self._client.get(f"{self.WORKSPACE_API_BASE}/api/workspace/health")
                 if resp.status_code == 200:
                     self._api_base = self.WORKSPACE_API_BASE
                     self._mark_connected()
@@ -76,9 +69,7 @@ class WorkspaceSensor(BaseSensor):
 
             # Fallback to MAS VM workspace router
             try:
-                resp = await self._client.get(
-                    f"{self.FALLBACK_API_BASE}/api/workspace/health"
-                )
+                resp = await self._client.get(f"{self.FALLBACK_API_BASE}/api/workspace/health")
                 if resp.status_code == 200:
                     self._api_base = self.FALLBACK_API_BASE
                     self._mark_connected()

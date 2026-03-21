@@ -5,11 +5,11 @@ Created: February 4, 2026
 Intelligent conversation and memory summarization using LLM.
 """
 
+import json
 import logging
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime
-import json
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ConversationTurn:
     """A single turn in a conversation."""
+
     role: str  # user, assistant, system
     content: str
     timestamp: datetime = field(default_factory=datetime.now)
@@ -27,6 +28,7 @@ class ConversationTurn:
 @dataclass
 class ConversationSummary:
     """Summary of a conversation."""
+
     summary_id: str
     conversation_id: str
     summary: str
@@ -44,6 +46,7 @@ class ConversationSummary:
 @dataclass
 class MemorySummary:
     """Summary of memories."""
+
     summary_id: str
     user_id: str
     summary: str
@@ -59,7 +62,7 @@ class MemorySummary:
 class MemorySummarizer:
     """
     LLM-powered summarization for conversations and memories.
-    
+
     Features:
     - Conversation summarization
     - Memory consolidation
@@ -67,14 +70,14 @@ class MemorySummarizer:
     - Action item identification
     - Sentiment analysis
     """
-    
+
     def __init__(self, llm_client: Optional[Any] = None):
         self.llm_client = llm_client
         self.conversation_buffer: Dict[str, List[ConversationTurn]] = {}
         self.summaries: Dict[str, ConversationSummary] = {}
-        
+
         logger.info("MemorySummarizer initialized")
-    
+
     async def summarize_conversation(
         self,
         conversation_id: str,
@@ -83,29 +86,32 @@ class MemorySummarizer:
     ) -> ConversationSummary:
         """
         Summarize a conversation.
-        
+
         Args:
             conversation_id: ID of the conversation
             turns: List of conversation turns
             max_summary_length: Maximum summary length in words
-            
+
         Returns:
             ConversationSummary
         """
         logger.info(f"Summarizing conversation: {conversation_id} ({len(turns)} turns)")
-        
+
         # Build conversation text
         conv_text = self._format_conversation(turns)
-        
+
         # Generate summary using LLM
         if self.llm_client:
             summary_data = await self._llm_summarize_conversation(conv_text, max_summary_length)
         else:
             summary_data = self._basic_summarize_conversation(turns)
-        
+
         import hashlib
-        summary_id = hashlib.md5(f"{conversation_id}{datetime.now().isoformat()}".encode()).hexdigest()[:12]
-        
+
+        summary_id = hashlib.md5(
+            f"{conversation_id}{datetime.now().isoformat()}".encode()
+        ).hexdigest()[:12]
+
         summary = ConversationSummary(
             summary_id=summary_id,
             conversation_id=conversation_id,
@@ -118,10 +124,10 @@ class MemorySummarizer:
             sentiment=summary_data.get("sentiment", "neutral"),
             turn_count=len(turns),
         )
-        
+
         self.summaries[summary_id] = summary
         return summary
-    
+
     async def _llm_summarize_conversation(self, conv_text: str, max_length: int) -> Dict[str, Any]:
         """Use LLM to summarize conversation."""
         prompt = f"""Summarize this conversation concisely (max {max_length} words).
@@ -140,36 +146,36 @@ Provide JSON with:
     "sentiment": "positive/negative/neutral"
 }}
 """
-        
+
         try:
             response = await self.llm_client.generate(prompt)
             return json.loads(response)
         except Exception as e:
             logger.warning(f"LLM summarization failed: {e}")
             return {"summary": "Summarization failed", "key_points": []}
-    
+
     def _basic_summarize_conversation(self, turns: List[ConversationTurn]) -> Dict[str, Any]:
         """Basic summarization without LLM."""
         # Extract key info from turns
         topics = set()
         entities = set()
-        
+
         for turn in turns:
             # Simple topic extraction
             words = turn.content.lower().split()
             for word in words:
                 if len(word) > 5:
                     topics.add(word)
-            
+
             # Get entities if available
             entities.update(turn.entities)
-        
+
         # Create basic summary
         user_turns = [t for t in turns if t.role == "user"]
         assistant_turns = [t for t in turns if t.role == "assistant"]
-        
+
         summary = f"Conversation with {len(user_turns)} user messages and {len(assistant_turns)} responses."
-        
+
         return {
             "summary": summary,
             "key_points": [t.content[:50] + "..." for t in user_turns[:3]],
@@ -179,7 +185,7 @@ Provide JSON with:
             "entities": list(entities),
             "sentiment": "neutral",
         }
-    
+
     async def summarize_memories(
         self,
         user_id: str,
@@ -187,29 +193,32 @@ Provide JSON with:
     ) -> MemorySummary:
         """
         Summarize a collection of memories.
-        
+
         Args:
             user_id: User ID
             memories: List of memory entries
-            
+
         Returns:
             MemorySummary
         """
         logger.info(f"Summarizing {len(memories)} memories for user {user_id}")
-        
+
         if self.llm_client:
             summary_data = await self._llm_summarize_memories(memories)
         else:
             summary_data = self._basic_summarize_memories(memories)
-        
+
         import hashlib
-        summary_id = hashlib.md5(f"mem_{user_id}{datetime.now().isoformat()}".encode()).hexdigest()[:12]
-        
+
+        summary_id = hashlib.md5(f"mem_{user_id}{datetime.now().isoformat()}".encode()).hexdigest()[
+            :12
+        ]
+
         # Get time range
-        timestamps = [m.created_at for m in memories if hasattr(m, 'created_at')]
+        timestamps = [m.created_at for m in memories if hasattr(m, "created_at")]
         time_start = min(timestamps) if timestamps else None
         time_end = max(timestamps) if timestamps else None
-        
+
         return MemorySummary(
             summary_id=summary_id,
             user_id=user_id,
@@ -221,13 +230,11 @@ Provide JSON with:
             time_range_start=time_start,
             time_range_end=time_end,
         )
-    
+
     async def _llm_summarize_memories(self, memories: List[Any]) -> Dict[str, Any]:
         """Use LLM to summarize memories."""
-        memory_text = "\n".join([
-            f"- {m.content}" for m in memories if hasattr(m, 'content')
-        ])
-        
+        memory_text = "\n".join([f"- {m.content}" for m in memories if hasattr(m, "content")])
+
         prompt = f"""Summarize these user memories:
 
 {memory_text}
@@ -240,50 +247,50 @@ Provide JSON with:
     "skills": ["skill 1"]
 }}
 """
-        
+
         try:
             response = await self.llm_client.generate(prompt)
             return json.loads(response)
         except Exception as e:
             logger.warning(f"LLM memory summarization failed: {e}")
             return {"summary": "Summarization failed", "key_facts": []}
-    
+
     def _basic_summarize_memories(self, memories: List[Any]) -> Dict[str, Any]:
         """Basic memory summarization without LLM."""
         facts = []
         preferences = []
-        
+
         for mem in memories[:10]:
-            content = getattr(mem, 'content', str(mem))
+            content = getattr(mem, "content", str(mem))
             if len(content) < 100:
-                mem_type = getattr(mem, 'memory_type', None)
-                if mem_type and 'preference' in str(mem_type).lower():
+                mem_type = getattr(mem, "memory_type", None)
+                if mem_type and "preference" in str(mem_type).lower():
                     preferences.append(content)
                 else:
                     facts.append(content)
-        
+
         return {
             "summary": f"{len(memories)} memories stored.",
             "key_facts": facts[:5],
             "preferences": preferences[:3],
             "skills": [],
         }
-    
+
     def add_turn(self, conversation_id: str, turn: ConversationTurn):
         """Add a turn to the conversation buffer."""
         if conversation_id not in self.conversation_buffer:
             self.conversation_buffer[conversation_id] = []
         self.conversation_buffer[conversation_id].append(turn)
-    
+
     def get_buffer(self, conversation_id: str) -> List[ConversationTurn]:
         """Get buffered turns for a conversation."""
         return self.conversation_buffer.get(conversation_id, [])
-    
+
     def clear_buffer(self, conversation_id: str):
         """Clear the conversation buffer."""
         if conversation_id in self.conversation_buffer:
             del self.conversation_buffer[conversation_id]
-    
+
     async def get_context_for_prompt(
         self,
         conversation_id: str,
@@ -292,38 +299,36 @@ Provide JSON with:
     ) -> str:
         """
         Get conversation context for prompting.
-        
+
         Args:
             conversation_id: Conversation ID
             max_turns: Maximum recent turns to include
             include_summary: Whether to include summary of older turns
-            
+
         Returns:
             Formatted context string
         """
         turns = self.get_buffer(conversation_id)
-        
+
         if len(turns) <= max_turns:
             return self._format_conversation(turns)
-        
+
         # Split into old and recent
         old_turns = turns[:-max_turns]
         recent_turns = turns[-max_turns:]
-        
+
         context_parts = []
-        
+
         if include_summary and old_turns:
             summary = await self.summarize_conversation(
-                f"{conversation_id}_partial",
-                old_turns,
-                max_summary_length=100
+                f"{conversation_id}_partial", old_turns, max_summary_length=100
             )
             context_parts.append(f"[Previous context summary: {summary.summary}]")
-        
+
         context_parts.append(self._format_conversation(recent_turns))
-        
+
         return "\n\n".join(context_parts)
-    
+
     def _format_conversation(self, turns: List[ConversationTurn]) -> str:
         """Format turns into readable text."""
         lines = []
@@ -331,7 +336,7 @@ Provide JSON with:
             role = turn.role.capitalize()
             lines.append(f"{role}: {turn.content}")
         return "\n".join(lines)
-    
+
     def get_summary(self, summary_id: str) -> Optional[ConversationSummary]:
         """Get a summary by ID."""
         return self.summaries.get(summary_id)

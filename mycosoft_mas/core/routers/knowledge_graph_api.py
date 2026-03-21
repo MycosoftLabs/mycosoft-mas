@@ -4,9 +4,7 @@ Knowledge Graph API - February 6, 2026
 REST endpoints for knowledge graph and memory operations.
 """
 
-import json
 import logging
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -20,6 +18,7 @@ router = APIRouter(prefix="/api/graph", tags=["knowledge-graph"])
 # ============================================
 # REQUEST/RESPONSE MODELS
 # ============================================
+
 
 class CreateNodeRequest(BaseModel):
     node_type: str
@@ -64,18 +63,19 @@ class UserContextUpdate(BaseModel):
 # NODE ENDPOINTS
 # ============================================
 
+
 @router.get("/node/{node_id}")
 async def get_node(node_id: str):
     """Get a node by ID."""
     try:
         from mycosoft_mas.memory.mindex_graph import get_graph
-        
+
         graph = await get_graph()
         node = await graph.get_node(node_id)
-        
+
         if not node:
             raise HTTPException(status_code=404, detail="Node not found")
-        
+
         return {
             "id": node.id,
             "node_type": node.node_type.value,
@@ -106,17 +106,17 @@ async def search_nodes(
     if node_type:
         try:
             from mycosoft_mas.llm.constrained.validator import get_static_validator
+
             validator = get_static_validator()
             if not validator.is_valid_graph_node_type(node_type):
                 raise HTTPException(
-                    400,
-                    f"Invalid node_type '{node_type}'. Use a valid graph node type."
+                    400, f"Invalid node_type '{node_type}'. Use a valid graph node type."
                 )
         except ImportError:
             pass
     try:
-        from mycosoft_mas.memory.mindex_graph import get_graph
         from mycosoft_mas.memory.graph_schema import NodeType
+        from mycosoft_mas.memory.mindex_graph import get_graph
 
         graph = await get_graph()
 
@@ -126,7 +126,7 @@ async def search_nodes(
             name_contains=name or query,
             limit=limit,
         )
-        
+
         return {
             "count": len(nodes),
             "nodes": [
@@ -138,7 +138,7 @@ async def search_nodes(
                     "importance": n.importance,
                 }
                 for n in nodes
-            ]
+            ],
         }
     except Exception as e:
         logger.error(f"Search nodes error: {e}")
@@ -153,14 +153,14 @@ async def traverse_graph(
 ):
     """Traverse graph from a node."""
     try:
-        from mycosoft_mas.memory.mindex_graph import get_graph
         from mycosoft_mas.memory.graph_schema import EdgeType
-        
+        from mycosoft_mas.memory.mindex_graph import get_graph
+
         graph = await get_graph()
-        
+
         et = EdgeType(edge_type) if edge_type else None
         result = await graph.get_neighbors(from_id, edge_type=et, max_depth=depth)
-        
+
         return {
             "start_node": {
                 "id": result.start_node.id,
@@ -179,11 +179,11 @@ async def traverse_graph(
 async def create_node(request: CreateNodeRequest):
     """Create a new node."""
     try:
-        from mycosoft_mas.memory.mindex_graph import get_graph
         from mycosoft_mas.memory.graph_schema import NodeType
-        
+        from mycosoft_mas.memory.mindex_graph import get_graph
+
         graph = await get_graph()
-        
+
         node = await graph.create_node(
             node_type=NodeType(request.node_type),
             name=request.name,
@@ -192,7 +192,7 @@ async def create_node(request: CreateNodeRequest):
             source=request.source,
             importance=request.importance,
         )
-        
+
         return {"id": node.id, "name": node.name}
     except Exception as e:
         logger.error(f"Create node error: {e}")
@@ -203,11 +203,11 @@ async def create_node(request: CreateNodeRequest):
 async def create_edge(request: CreateEdgeRequest):
     """Create an edge between nodes."""
     try:
-        from mycosoft_mas.memory.mindex_graph import get_graph
         from mycosoft_mas.memory.graph_schema import EdgeType
-        
+        from mycosoft_mas.memory.mindex_graph import get_graph
+
         graph = await get_graph()
-        
+
         edge = await graph.create_edge(
             source_id=request.source_id,
             target_id=request.target_id,
@@ -216,7 +216,7 @@ async def create_edge(request: CreateEdgeRequest):
             weight=request.weight,
             is_bidirectional=request.is_bidirectional,
         )
-        
+
         return {"id": edge.id, "edge_type": edge.edge_type.value}
     except Exception as e:
         logger.error(f"Create edge error: {e}")
@@ -227,21 +227,22 @@ async def create_edge(request: CreateEdgeRequest):
 # SEMANTIC MEMORY ENDPOINTS
 # ============================================
 
+
 @router.post("/memory/search")
 async def semantic_search(request: SemanticSearchRequest):
     """Search nodes by semantic similarity."""
     try:
         from mycosoft_mas.memory.vector_memory import get_vector_memory
-        
+
         vector_mem = await get_vector_memory()
-        
+
         results = await vector_mem.semantic_search(
             query=request.query,
             node_type=request.node_type,
             top_k=request.limit,
             min_similarity=request.min_similarity,
         )
-        
+
         return {
             "query": request.query,
             "count": len(results),
@@ -256,13 +257,13 @@ async def semantic_search(request: SemanticSearchRequest):
 async def store_fact(request: StoreFactRequest):
     """Store a fact in memory."""
     try:
+        from mycosoft_mas.memory.graph_schema import EdgeType, NodeType
         from mycosoft_mas.memory.mindex_graph import get_graph
         from mycosoft_mas.memory.vector_memory import get_vector_memory
-        from mycosoft_mas.memory.graph_schema import NodeType, EdgeType
-        
+
         graph = await get_graph()
         vector_mem = await get_vector_memory()
-        
+
         # Create fact node
         node = await graph.create_node(
             node_type=NodeType.FACT,
@@ -270,10 +271,10 @@ async def store_fact(request: StoreFactRequest):
             description=request.fact,
             importance=request.importance,
         )
-        
+
         # Store embedding
         await vector_mem.embed_and_store(node.id, request.fact)
-        
+
         # Link to entity if provided
         if request.entity_id:
             await graph.create_edge(
@@ -281,7 +282,7 @@ async def store_fact(request: StoreFactRequest):
                 target_id=node.id,
                 edge_type=EdgeType.RELATED_TO,
             )
-        
+
         return {"id": node.id, "stored": True}
     except Exception as e:
         logger.error(f"Store fact error: {e}")
@@ -292,19 +293,20 @@ async def store_fact(request: StoreFactRequest):
 # USER CONTEXT ENDPOINTS
 # ============================================
 
+
 @router.get("/context/user/{user_id}")
 async def get_user_context(user_id: str):
     """Get user context."""
     try:
         from mycosoft_mas.memory.user_context import get_context_manager
-        
+
         manager = await get_context_manager()
         context = await manager.get_context(user_id)
-        
+
         if not context:
             # Create new context
             context = await manager.create_context(user_id)
-        
+
         return {
             "user_id": context.user_id,
             "display_name": context.display_name,
@@ -325,13 +327,13 @@ async def update_user_context(user_id: str, update: UserContextUpdate):
     """Update user context."""
     try:
         from mycosoft_mas.memory.user_context import get_context_manager
-        
+
         manager = await get_context_manager()
         context = await manager.get_context(user_id)
-        
+
         if not context:
             context = await manager.create_context(user_id)
-        
+
         if update.display_name is not None:
             context.display_name = update.display_name
         if update.language is not None:
@@ -342,9 +344,9 @@ async def update_user_context(user_id: str, update: UserContextUpdate):
             context.preferred_layers = update.preferred_layers
         if update.default_zoom_level is not None:
             context.default_zoom_level = update.default_zoom_level
-        
+
         await manager.update_context(context)
-        
+
         return {"success": True, "user_id": user_id}
     except Exception as e:
         logger.error(f"Update user context error: {e}")
@@ -355,18 +357,19 @@ async def update_user_context(user_id: str, update: UserContextUpdate):
 # SESSION CONTEXT ENDPOINTS
 # ============================================
 
+
 @router.get("/context/session/{session_id}")
 async def get_session_context(session_id: str):
     """Get session context."""
     try:
         from mycosoft_mas.memory.session_memory import get_session_manager
-        
+
         manager = await get_session_manager()
         session = await manager.get_session(session_id)
-        
+
         if not session:
             session = await manager.create_session(session_id)
-        
+
         return {
             "session_id": session.session_id,
             "user_id": session.user_id,
@@ -390,10 +393,10 @@ async def add_session_message(
     """Add message to session history."""
     try:
         from mycosoft_mas.memory.session_memory import get_session_manager
-        
+
         manager = await get_session_manager()
         await manager.add_message(session_id, role, content)
-        
+
         return {"success": True}
     except Exception as e:
         logger.error(f"Add message error: {e}")

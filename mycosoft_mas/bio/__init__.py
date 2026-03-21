@@ -1,15 +1,16 @@
 """Bio-computing modules for MycoBrain and DNA storage"""
-from .mycobrain_production import mycobrain_system, MycoBrainProductionSystem
-from .dna_storage import dna_storage_system, DNAStorageSystem
-from .fci import FungalComputerInterface, FCISession, StimulationType
+
+from .dna_storage import DNAStorageSystem, dna_storage_system
+from .fci import FCISession, FungalComputerInterface, StimulationType
+from .mycobrain_production import MycoBrainProductionSystem, mycobrain_system
 from .sdr_pipeline import (
-    SDRPipeline,
-    SDRConfig,
-    FilterPreset,
     EMFPreset,
-    RFPreset,
-    ProcessedSample,
-    SpectrumAnalysis,
+    FilterPreset,
     GFSTMatch,
+    ProcessedSample,
+    RFPreset,
+    SDRConfig,
+    SDRPipeline,
+    SpectrumAnalysis,
     create_pipeline_from_preset,
 )

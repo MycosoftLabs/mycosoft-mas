@@ -5,10 +5,9 @@ Routes through GatewayControlPlane -> SandboxManager -> Node daemon
 for safe, isolated command execution.
 """
 
-import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from mycosoft_mas.gateway.control_plane import GatewayControlPlane
@@ -77,7 +76,9 @@ class ExecTool:
             )
 
         return ExecResult(
-            exit_code=-1, stdout="", stderr="Gateway not available",
+            exit_code=-1,
+            stdout="",
+            stderr="Gateway not available",
         )
 
     async def run_background(
@@ -100,7 +101,10 @@ class ExecTool:
         raise RuntimeError("Gateway not available")
 
     async def send_input(
-        self, sandbox_id: str, pid: int, data: str,
+        self,
+        sandbox_id: str,
+        pid: int,
+        data: str,
     ):
         """Send input to an interactive process."""
         if self._gateway:

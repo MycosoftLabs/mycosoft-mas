@@ -66,6 +66,7 @@ class ExportControlClient:
         if self._client is None:
             try:
                 import httpx
+
                 self._client = httpx.AsyncClient(timeout=30.0)
             except ImportError:
                 logger.warning("httpx not installed; export control screening limited")
@@ -80,7 +81,9 @@ class ExportControlClient:
             "message": "TRADE_GOV_API_KEY required for screening" if not ok else "Ready",
         }
 
-    async def screen_entity(self, name: str, countries: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def screen_entity(
+        self, name: str, countries: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """
         Screen an entity (person or company) against the Consolidated Screening List.
         Returns potential matches; requires manual verification.

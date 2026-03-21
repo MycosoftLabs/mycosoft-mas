@@ -14,11 +14,11 @@ Components:
 
 Quick Start:
     from mycosoft_mas.nlm import get_nlm_service, get_nlm_config
-    
+
     # Get the inference service
     service = get_nlm_service()
     await service.load_model()
-    
+
     # Make a prediction
     from mycosoft_mas.nlm.inference import PredictionRequest
     request = PredictionRequest(text="What is Psilocybe cubensis?")
@@ -37,7 +37,7 @@ Architecture:
 
 For training a new model:
     from mycosoft_mas.nlm.training import NLMTrainer
-    
+
     trainer = NLMTrainer()
     await trainer.prepare_data()
     results = await trainer.train()
@@ -45,41 +45,41 @@ For training a new model:
 
 # Configuration
 from .config import (
-    NLMConfig,
-    ModelArchitectureConfig,
-    TrainingConfig,
     DataConfig,
     InferenceConfig,
+    ModelArchitectureConfig,
+    NLMConfig,
+    TrainingConfig,
     get_nlm_config,
     reset_nlm_config,
 )
 
-# Models
-from .models import NLMBaseModel, NLMEmbeddingModel
+# Legacy exports for backward compatibility
+from .data_pipeline import NLMDataPipeline
 
-# Training
-from .training import NLMTrainer, DataCollator, TrainingMetrics
+# Data loading
+from .datasets import DataProcessor, MINDEXConnector, NLMDataLoader
 
 # Inference
 from .inference import NLMService, PredictionRequest, PredictionResult
 from .inference.service import get_nlm_service, reset_nlm_service
 
-# Data loading
-from .datasets import NLMDataLoader, DataProcessor, MINDEXConnector
-
 # Memory integration
 from .memory_store import NLMMemoryStore, get_nlm_store
 
-# Legacy exports for backward compatibility
-from .data_pipeline import NLMDataPipeline
+# Models
+from .models import NLMBaseModel, NLMEmbeddingModel
+
+# Training
+from .training import DataCollator, NLMTrainer, TrainingMetrics
 
 # NLM-to-workflow bridge (trigger workflows from predictions)
 from .workflow_bridge import (
-    get_workflow_for_prediction,
-    trigger_workflow_from_nlm,
-    maybe_trigger_workflow_from_prediction,
-    NLM_TO_WORKFLOW_MAP,
     DEFAULT_CONFIDENCE_THRESHOLD,
+    NLM_TO_WORKFLOW_MAP,
+    get_workflow_for_prediction,
+    maybe_trigger_workflow_from_prediction,
+    trigger_workflow_from_nlm,
 )
 
 # Alias NLMInference to NLMService for backward compatibility
@@ -94,32 +94,26 @@ __all__ = [
     "InferenceConfig",
     "get_nlm_config",
     "reset_nlm_config",
-    
     # Models
     "NLMBaseModel",
     "NLMEmbeddingModel",
-    
     # Training
     "NLMTrainer",
     "DataCollator",
     "TrainingMetrics",
-    
     # Inference
     "NLMService",
     "PredictionRequest",
     "PredictionResult",
     "get_nlm_service",
     "reset_nlm_service",
-    
     # Data loading
     "NLMDataLoader",
     "DataProcessor",
     "MINDEXConnector",
-    
     # Memory
     "NLMMemoryStore",
     "get_nlm_store",
-    
     # Legacy
     "NLMDataPipeline",
     "NLMInference",

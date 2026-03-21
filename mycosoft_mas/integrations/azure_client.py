@@ -21,10 +21,11 @@ Typical Usage:
         rgs = await azure.list_resource_groups()
 """
 
-import os
 import logging
-from typing import Dict, Any, List, Optional
+import os
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -47,9 +48,15 @@ class AzureClient:
         # Auth settings
         self.tenant_id = self.config.get("tenant_id") or os.getenv("AZURE_TENANT_ID", "")
         self.client_id = self.config.get("client_id") or os.getenv("AZURE_CLIENT_ID", "")
-        self.client_secret = self.config.get("client_secret") or os.getenv("AZURE_CLIENT_SECRET", "")
-        self.subscription_id = self.config.get("subscription_id") or os.getenv("AZURE_SUBSCRIPTION_ID", "")
-        self.scope = self.config.get("scope") or os.getenv("AZURE_SCOPE", "https://management.azure.com/.default")
+        self.client_secret = self.config.get("client_secret") or os.getenv(
+            "AZURE_CLIENT_SECRET", ""
+        )
+        self.subscription_id = self.config.get("subscription_id") or os.getenv(
+            "AZURE_SUBSCRIPTION_ID", ""
+        )
+        self.scope = self.config.get("scope") or os.getenv(
+            "AZURE_SCOPE", "https://management.azure.com/.default"
+        )
 
         # Connection settings
         self.timeout = self.config.get("timeout", 30)
@@ -74,7 +81,9 @@ class AzureClient:
             return self._token
 
         if not all([self.tenant_id, self.client_id, self.client_secret]):
-            raise ValueError("Azure credentials missing (tenant_id, client_id, client_secret required)")
+            raise ValueError(
+                "Azure credentials missing (tenant_id, client_id, client_secret required)"
+            )
 
         token_url = f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token"
         data = {
@@ -113,7 +122,9 @@ class AzureClient:
         data = resp.json()
         return data.get("value", [])
 
-    async def list_resource_groups(self, subscription_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def list_resource_groups(
+        self, subscription_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """List resource groups for a subscription."""
         sub = subscription_id or self.subscription_id
         if not sub:
@@ -167,4 +178,3 @@ class AzureClient:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.close()
-

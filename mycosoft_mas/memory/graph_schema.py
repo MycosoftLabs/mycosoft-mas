@@ -8,11 +8,11 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
-import uuid
 
 
 class NodeType(str, Enum):
     """Types of nodes in the knowledge graph."""
+
     SPECIES = "species"
     DEVICE = "device"
     LOCATION = "location"
@@ -28,6 +28,7 @@ class NodeType(str, Enum):
 
 class EdgeType(str, Enum):
     """Types of edges in the knowledge graph."""
+
     RELATED_TO = "related_to"
     CONTAINS = "contains"
     LOCATED_AT = "located_at"
@@ -44,6 +45,7 @@ class EdgeType(str, Enum):
 @dataclass
 class KnowledgeNode:
     """A node in the knowledge graph."""
+
     id: str
     node_type: NodeType
     name: str
@@ -80,6 +82,7 @@ class KnowledgeNode:
 @dataclass
 class KnowledgeEdge:
     """An edge in the knowledge graph."""
+
     id: str
     source_id: str
     target_id: str
@@ -108,6 +111,7 @@ class KnowledgeEdge:
 @dataclass
 class GraphSearchResult:
     """Result from a graph search."""
+
     nodes: List[KnowledgeNode]
     edges: List[KnowledgeEdge]
     total_count: int
@@ -116,6 +120,7 @@ class GraphSearchResult:
 @dataclass
 class GraphTraversalResult:
     """Result from graph traversal."""
+
     start_node: KnowledgeNode
     neighbors: List[Dict[str, Any]]
     depth: int
@@ -124,6 +129,7 @@ class GraphTraversalResult:
 @dataclass
 class SemanticSearchResult:
     """Result from semantic search."""
+
     node: KnowledgeNode
     similarity: float
 
@@ -131,6 +137,7 @@ class SemanticSearchResult:
 @dataclass
 class EntityReference:
     """Reference to an entity viewed by user."""
+
     entity_id: str
     entity_type: str
     entity_name: str
@@ -140,6 +147,7 @@ class EntityReference:
 @dataclass
 class BoundingBox:
     """Geographic bounding box."""
+
     north: float
     south: float
     east: float
@@ -149,6 +157,7 @@ class BoundingBox:
 @dataclass
 class TimeRange:
     """Time range specification."""
+
     start: str
     end: str
 
@@ -156,6 +165,7 @@ class TimeRange:
 @dataclass
 class SavedView:
     """User saved map view."""
+
     id: str
     name: str
     center_lat: float
@@ -169,6 +179,7 @@ class SavedView:
 @dataclass
 class ConversationSummary:
     """Summary of a conversation session."""
+
     session_id: str
     summary: str
     key_topics: List[str]

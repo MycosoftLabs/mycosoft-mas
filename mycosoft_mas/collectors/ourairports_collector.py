@@ -134,7 +134,9 @@ class OurAirportsCollector(BaseCollector):
                             "airport_type": airport_type,
                             "iso_country": iso_country,
                             "iso_region": iso_region,
-                            "elevation_ft": int(elevation) if elevation and elevation != "\\N" else None,
+                            "elevation_ft": (
+                                int(elevation) if elevation and elevation != "\\N" else None
+                            ),
                         },
                         raw_data=dict(row),
                     )

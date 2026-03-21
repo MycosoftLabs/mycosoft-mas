@@ -3,18 +3,20 @@ Bio-Computing API Router
 REST endpoints for MycoBrain production and DNA storage
 """
 
-from fastapi import APIRouter, HTTPException, Body, Query
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter()
 
-# Import systems
-from mycosoft_mas.bio.mycobrain_production import mycobrain_system
 from mycosoft_mas.bio.dna_storage import dna_storage_system
 
+# Import systems
+from mycosoft_mas.bio.mycobrain_production import mycobrain_system
 
 # --- MycoBrain API ---
+
 
 class ComputeJobRequest(BaseModel):
     mode: str
@@ -45,6 +47,7 @@ class AnalogComputeRequest(BaseModel):
 
 
 # MycoBrain endpoints
+
 
 @router.get("/mycobrain/status")
 async def get_mycobrain_status():
@@ -144,6 +147,7 @@ async def validate_job_result(job_id: str):
 
 # --- DNA Storage API ---
 
+
 class EncodeDataRequest(BaseModel):
     data: str
     name: str
@@ -174,10 +178,7 @@ async def get_stored_data(data_id: str):
 @router.post("/dna-storage/encode")
 async def encode_data(request: EncodeDataRequest):
     job = await dna_storage_system.encode_data(
-        request.data,
-        request.name,
-        request.redundancy,
-        request.errorCorrection
+        request.data, request.name, request.redundancy, request.errorCorrection
     )
     return job.dict()
 

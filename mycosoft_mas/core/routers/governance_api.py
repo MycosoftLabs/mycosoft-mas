@@ -39,4 +39,3 @@ async def list_stakeholders(custom: Optional[str] = None) -> StakeholdersRespons
             if name and name not in stakeholders:
                 stakeholders.append(name)
     return StakeholdersResponse(stakeholders=stakeholders)
-

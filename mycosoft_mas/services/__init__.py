@@ -7,13 +7,13 @@ Background services for the Multi-Agent System:
 - deployment_feedback: Monitor deployment health and learn
 """
 
-from mycosoft_mas.services.learning_feedback import (
-    LearningFeedbackService,
-    get_learning_service,
-)
 from mycosoft_mas.services.deployment_feedback import (
     DeploymentFeedbackService,
     get_deployment_service,
+)
+from mycosoft_mas.services.learning_feedback import (
+    LearningFeedbackService,
+    get_learning_service,
 )
 from mycosoft_mas.services.workflow_auto_monitor import (
     WorkflowAutoMonitor,

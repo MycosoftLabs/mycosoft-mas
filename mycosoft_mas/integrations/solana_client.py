@@ -9,8 +9,6 @@ Environment Variables:
     SOLANA_WALLET_PRIVATE_KEY: Base58 private key for signing (optional)
 """
 
-import base64
-import json
 import logging
 import os
 from typing import Any, Dict, List, Optional
@@ -71,13 +69,15 @@ class SolanaClient:
             return result["value"]
         return None
 
-    async def get_token_accounts(
-        self, wallet_address: str
-    ) -> List[Dict[str, Any]]:
+    async def get_token_accounts(self, wallet_address: str) -> List[Dict[str, Any]]:
         """Get SPL token accounts for a wallet."""
         result = await self._rpc(
             "getTokenAccountsByOwner",
-            [wallet_address, {"programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"}, {"encoding": "jsonParsed"}],
+            [
+                wallet_address,
+                {"programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"},
+                {"encoding": "jsonParsed"},
+            ],
         )
         if not result or "value" not in result:
             return []

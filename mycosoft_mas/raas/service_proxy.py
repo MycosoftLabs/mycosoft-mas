@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -41,9 +41,7 @@ router = APIRouter(prefix="/api/raas/invoke", tags=["RaaS - Service Invocation"]
 # ---------------------------------------------------------------------------
 
 
-async def _charge_and_check(
-    agent: AgentAccount, service_id: str
-) -> int:
+async def _charge_and_check(agent: AgentAccount, service_id: str) -> int:
     """Deduct credits for a service. Raises 402 if insufficient."""
     cost = CREDIT_COSTS.get(service_id)
     if cost is None:
@@ -51,9 +49,7 @@ async def _charge_and_check(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unknown service: {service_id}",
         )
-    success, remaining = await credit_system.deduct_credits(
-        agent.agent_id, cost, service_id
-    )
+    success, remaining = await credit_system.deduct_credits(agent.agent_id, cost, service_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
@@ -194,9 +190,7 @@ async def invoke_earth2(
 ) -> InvokeResponse:
     """Earth2 climate simulation — forecasts, nowcasts, spore dispersal."""
     start = time.time()
-    cost_key = (
-        "earth2_nowcast" if body.forecast_type == "short_range" else "earth2_forecast"
-    )
+    cost_key = "earth2_nowcast" if body.forecast_type == "short_range" else "earth2_forecast"
     cost = CREDIT_COSTS[cost_key]
     remaining = await _charge_and_check(agent, cost_key)
 
@@ -267,9 +261,7 @@ async def invoke_data(
 ) -> InvokeResponse:
     """MINDEX data query — species, taxonomy, compounds, knowledge graph."""
     start = time.time()
-    cost_key = (
-        "knowledge_graph" if body.query_type == "knowledge_graph" else "mindex_query"
-    )
+    cost_key = "knowledge_graph" if body.query_type == "knowledge_graph" else "mindex_query"
     cost = CREDIT_COSTS[cost_key]
     remaining = await _charge_and_check(agent, cost_key)
 

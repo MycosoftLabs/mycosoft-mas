@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from mycosoft_mas.integrations.mindex_client import MINDEXClient
 from mycosoft_mas.raas.models import CreditBalance, CreditPackage, CreditTransaction
@@ -91,8 +91,7 @@ async def _ensure_tables() -> None:
     """Create credit tables if they don't exist (idempotent)."""
     pool = await _mindex._get_db_pool()
     async with pool.acquire() as conn:
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS raas_credits (
                 agent_id TEXT PRIMARY KEY,
                 balance INTEGER DEFAULT 0,
@@ -100,10 +99,8 @@ async def _ensure_tables() -> None:
                 total_used INTEGER DEFAULT 0,
                 updated_at TIMESTAMP DEFAULT NOW()
             );
-            """
-        )
-        await conn.execute(
-            """
+            """)
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS raas_credit_transactions (
                 id TEXT PRIMARY KEY,
                 agent_id TEXT NOT NULL,
@@ -113,8 +110,7 @@ async def _ensure_tables() -> None:
                 service_id TEXT,
                 created_at TIMESTAMP DEFAULT NOW()
             );
-            """
-        )
+            """)
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_raas_credit_tx_agent "
             "ON raas_credit_transactions(agent_id);"
@@ -132,14 +128,11 @@ async def get_balance(agent_id: str) -> CreditBalance:
     pool = await _mindex._get_db_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
-            "SELECT balance, total_purchased, total_used "
-            "FROM raas_credits WHERE agent_id = $1",
+            "SELECT balance, total_purchased, total_used " "FROM raas_credits WHERE agent_id = $1",
             agent_id,
         )
     if not row:
-        return CreditBalance(
-            agent_id=agent_id, balance=0, total_purchased=0, total_used=0
-        )
+        return CreditBalance(agent_id=agent_id, balance=0, total_purchased=0, total_used=0)
     return CreditBalance(
         agent_id=agent_id,
         balance=int(row["balance"]),
@@ -204,9 +197,7 @@ async def add_credits(
     return new_balance
 
 
-async def deduct_credits(
-    agent_id: str, amount: int, service_id: str
-) -> Tuple[bool, int]:
+async def deduct_credits(agent_id: str, amount: int, service_id: str) -> Tuple[bool, int]:
     """Atomically deduct credits. Returns (success, remaining_balance)."""
     await _ensure_tables()
     pool = await _mindex._get_db_pool()
@@ -255,9 +246,7 @@ async def deduct_credits(
     return True, remaining
 
 
-async def get_transactions(
-    agent_id: str, limit: int = 50
-) -> List[CreditTransaction]:
+async def get_transactions(agent_id: str, limit: int = 50) -> List[CreditTransaction]:
     """Return recent credit transactions for an agent."""
     await _ensure_tables()
     pool = await _mindex._get_db_pool()

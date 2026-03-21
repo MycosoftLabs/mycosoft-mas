@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from typing import Any, Dict
 
 from fastapi import HTTPException, Request, status
 
@@ -32,8 +31,7 @@ async def _ensure_agents_table() -> None:
     """Create raas_agents table if it doesn't exist (idempotent)."""
     pool = await _mindex._get_db_pool()
     async with pool.acquire() as conn:
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS raas_agents (
                 agent_id TEXT PRIMARY KEY,
                 agent_name TEXT NOT NULL,
@@ -50,11 +48,9 @@ async def _ensure_agents_table() -> None:
                 activated_at TIMESTAMP,
                 metadata JSONB DEFAULT '{}'
             );
-            """
-        )
+            """)
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_raas_agents_key_hash "
-            "ON raas_agents(api_key_hash);"
+            "CREATE INDEX IF NOT EXISTS idx_raas_agents_key_hash " "ON raas_agents(api_key_hash);"
         )
 
 

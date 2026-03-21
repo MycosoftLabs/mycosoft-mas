@@ -2,22 +2,23 @@
 Unit tests for MyceliumSeg segmentation metrics (IoU, F1, Boundary IoU, HD95, ASSD).
 Plan: docs/MYCELIUMSEG_INTEGRATION_PLAN_FEB06_2026.md
 """
-import numpy as np
-import pytest
 
 # Import from scripts path
 import sys
 from pathlib import Path
+
+import numpy as np
+
 _root = Path(__file__).resolve().parents[1]
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
 from scripts.myceliumseg.metrics import (
-    iou_f1,
-    boundary_iou,
-    hausdorff_95,
     assd,
+    boundary_iou,
     compute_all_metrics,
+    hausdorff_95,
+    iou_f1,
 )
 
 

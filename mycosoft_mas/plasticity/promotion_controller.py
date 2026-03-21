@@ -30,7 +30,9 @@ def _production_plasticity_allowed() -> bool:
     )
 
 
-def promote_to_active(alias: str, candidate_id: str, decided_by: str | None = None) -> Dict[str, Any]:
+def promote_to_active(
+    alias: str, candidate_id: str, decided_by: str | None = None
+) -> Dict[str, Any]:
     """
     Promote a candidate (shadow or canary) to active for the given alias.
     Production aliases myca_core/myca_edge require MYCA_ALLOW_PRODUCTION_PLASTICITY_PROMOTE=1.
@@ -57,18 +59,24 @@ def promote_to_active(alias: str, candidate_id: str, decided_by: str | None = No
 
     if not plasticity_registry.set_alias(alias, candidate_id):
         raise ValueError("registry set_alias failed")
-    if plasticity_registry.update_candidate(
-        candidate_id, lifecycle=CandidateLifecycle.ACTIVE.value, promoted_at=now_iso
-    ) is None:
+    if (
+        plasticity_registry.update_candidate(
+            candidate_id, lifecycle=CandidateLifecycle.ACTIVE.value, promoted_at=now_iso
+        )
+        is None
+    ):
         raise ValueError("registry update_candidate failed")
-    if plasticity_registry.create_promotion_decision(
-        decision_id=decision_id,
-        candidate_id=candidate_id,
-        from_lifecycle=lifecycle,
-        to_lifecycle=CandidateLifecycle.ACTIVE.value,
-        alias=alias,
-        decided_by=decided_by,
-    ) is None:
+    if (
+        plasticity_registry.create_promotion_decision(
+            decision_id=decision_id,
+            candidate_id=candidate_id,
+            from_lifecycle=lifecycle,
+            to_lifecycle=CandidateLifecycle.ACTIVE.value,
+            alias=alias,
+            decided_by=decided_by,
+        )
+        is None
+    ):
         raise ValueError("registry create_promotion_decision failed")
 
     return {
@@ -106,25 +114,33 @@ def rollback(alias: str, decided_by: str | None = None) -> Dict[str, Any]:
 
     rollback_target = current.get("rollback_target_candidate_id")
     if not rollback_target:
-        raise ValueError(f"candidate {current_id} has no rollback_target_candidate_id; cannot rollback")
+        raise ValueError(
+            f"candidate {current_id} has no rollback_target_candidate_id; cannot rollback"
+        )
 
     decision_id = f"rollback-{uuid.uuid4().hex[:12]}"
     current_lifecycle = (current.get("lifecycle") or "active").lower()
 
     if not plasticity_registry.set_alias(alias, rollback_target):
         raise ValueError("registry set_alias failed")
-    if plasticity_registry.update_candidate(
-        current_id, lifecycle=CandidateLifecycle.ROLLBACK.value
-    ) is None:
+    if (
+        plasticity_registry.update_candidate(
+            current_id, lifecycle=CandidateLifecycle.ROLLBACK.value
+        )
+        is None
+    ):
         raise ValueError("registry update_candidate failed")
-    if plasticity_registry.create_promotion_decision(
-        decision_id=decision_id,
-        candidate_id=current_id,
-        from_lifecycle=current_lifecycle,
-        to_lifecycle=CandidateLifecycle.ROLLBACK.value,
-        alias=alias,
-        decided_by=decided_by,
-    ) is None:
+    if (
+        plasticity_registry.create_promotion_decision(
+            decision_id=decision_id,
+            candidate_id=current_id,
+            from_lifecycle=current_lifecycle,
+            to_lifecycle=CandidateLifecycle.ROLLBACK.value,
+            alias=alias,
+            decided_by=decided_by,
+        )
+        is None
+    ):
         raise ValueError("registry create_promotion_decision failed")
 
     plasticity_registry.create_rollback_event(

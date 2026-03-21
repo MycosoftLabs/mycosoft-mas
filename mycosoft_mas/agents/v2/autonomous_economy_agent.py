@@ -27,8 +27,10 @@ logger = logging.getLogger(__name__)
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class WalletType(str, Enum):
     """Supported cryptocurrency wallet types."""
+
     SOLANA = "solana"
     BITCOIN = "bitcoin"
     ETHEREUM = "ethereum"
@@ -37,6 +39,7 @@ class WalletType(str, Enum):
 
 class TransactionType(str, Enum):
     """Classification for all financial movements."""
+
     INCOME = "income"
     EXPENSE = "expense"
     TRANSFER = "transfer"
@@ -47,9 +50,11 @@ class TransactionType(str, Enum):
 # Dataclasses
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class PricingTier:
     """Defines a service tier with pricing, features, and rate limits."""
+
     name: str
     price_per_request: float
     features: List[str] = field(default_factory=list)
@@ -61,6 +66,7 @@ class PricingTier:
 @dataclass
 class Transaction:
     """A single financial transaction record."""
+
     transaction_id: str = field(default_factory=lambda: str(uuid4()))
     transaction_type: TransactionType = TransactionType.INCOME
     amount: float = 0.0
@@ -76,6 +82,7 @@ class Transaction:
 @dataclass
 class CryptoWallet:
     """Represents a single cryptocurrency wallet managed by MYCA."""
+
     wallet_type: WalletType = WalletType.SOLANA
     address: str = ""
     balance: float = 0.0
@@ -100,6 +107,7 @@ class CryptoWallet:
 @dataclass
 class ResourceVendor:
     """A vendor in the resource marketplace."""
+
     vendor_id: str = ""
     name: str = ""
     resource_type: str = ""
@@ -114,6 +122,7 @@ class ResourceVendor:
 # ---------------------------------------------------------------------------
 # Service Pricing
 # ---------------------------------------------------------------------------
+
 
 class ServicePricing:
     """
@@ -134,8 +143,12 @@ class ServicePricing:
             name="agent",
             price_per_request=0.001,
             features=[
-                "basic_query", "health_check", "system_status",
-                "agent_coordination", "task_routing", "memory_access",
+                "basic_query",
+                "health_check",
+                "system_status",
+                "agent_coordination",
+                "task_routing",
+                "memory_access",
             ],
             rate_limit_per_minute=60,
             rate_limit_per_day=5_000,
@@ -145,9 +158,15 @@ class ServicePricing:
             name="premium",
             price_per_request=0.005,
             features=[
-                "basic_query", "health_check", "system_status",
-                "agent_coordination", "task_routing", "memory_access",
-                "gpu_inference", "simulation_access", "priority_routing",
+                "basic_query",
+                "health_check",
+                "system_status",
+                "agent_coordination",
+                "task_routing",
+                "memory_access",
+                "gpu_inference",
+                "simulation_access",
+                "priority_routing",
                 "advanced_analytics",
             ],
             rate_limit_per_minute=120,
@@ -158,11 +177,20 @@ class ServicePricing:
             name="enterprise",
             price_per_request=0.02,
             features=[
-                "basic_query", "health_check", "system_status",
-                "agent_coordination", "task_routing", "memory_access",
-                "gpu_inference", "simulation_access", "priority_routing",
-                "advanced_analytics", "dedicated_resources", "custom_agents",
-                "sla_guarantee", "bulk_processing",
+                "basic_query",
+                "health_check",
+                "system_status",
+                "agent_coordination",
+                "task_routing",
+                "memory_access",
+                "gpu_inference",
+                "simulation_access",
+                "priority_routing",
+                "advanced_analytics",
+                "dedicated_resources",
+                "custom_agents",
+                "sla_guarantee",
+                "bulk_processing",
             ],
             rate_limit_per_minute=500,
             rate_limit_per_day=500_000,
@@ -181,9 +209,7 @@ class ServicePricing:
     def __init__(self):
         self._client_tiers: Dict[str, str] = {}
 
-    def calculate_price(
-        self, service_type: str, tier: str, volume: int = 1
-    ) -> float:
+    def calculate_price(self, service_type: str, tier: str, volume: int = 1) -> float:
         """
         Calculate the total price for a service request.
 
@@ -244,6 +270,7 @@ class ServicePricing:
 # ---------------------------------------------------------------------------
 # Resource Marketplace
 # ---------------------------------------------------------------------------
+
 
 class ResourceMarketplace:
     """
@@ -316,9 +343,7 @@ class ResourceMarketplace:
     def add_vendor(self, vendor: ResourceVendor) -> None:
         self._vendors[vendor.vendor_id] = vendor
 
-    def list_vendors(
-        self, resource_type: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    def list_vendors(self, resource_type: Optional[str] = None) -> List[Dict[str, Any]]:
         """Return vendor listings, optionally filtered by resource type."""
         vendors = self._vendors.values()
         if resource_type:
@@ -346,9 +371,7 @@ class ResourceMarketplace:
         cheapest = listings[0]["price_per_unit"]
         for entry in listings:
             entry["price_delta_pct"] = round(
-                ((entry["price_per_unit"] - cheapest) / cheapest) * 100
-                if cheapest > 0
-                else 0.0,
+                ((entry["price_per_unit"] - cheapest) / cheapest) * 100 if cheapest > 0 else 0.0,
                 2,
             )
         return listings
@@ -429,6 +452,7 @@ class ResourceMarketplace:
 # ---------------------------------------------------------------------------
 # Autonomous Economy Agent
 # ---------------------------------------------------------------------------
+
 
 class AutonomousEconomyAgent(BaseAgentV2):
     """
@@ -562,7 +586,10 @@ class AutonomousEconomyAgent(BaseAgentV2):
 
         logger.info(
             "Charged client=%s amount=%.6f for service=%s tier=%s",
-            client_id, final_amount, service_type, tier,
+            client_id,
+            final_amount,
+            service_type,
+            tier,
         )
         return {
             "status": "success",
@@ -599,7 +626,10 @@ class AutonomousEconomyAgent(BaseAgentV2):
         self._record_daily_revenue(amount)
 
         logger.info(
-            "Payment received: %.6f %s from %s", amount, wallet_type.value, from_address,
+            "Payment received: %.6f %s from %s",
+            amount,
+            wallet_type.value,
+            from_address,
         )
         return {
             "status": "success",
@@ -633,10 +663,19 @@ class AutonomousEconomyAgent(BaseAgentV2):
         if vendor is None:
             rec = self.marketplace.recommend_purchase(resource_type, amount)
             if rec is None:
-                return {"status": "error", "message": f"No vendor available for {resource_type} within budget"}
+                return {
+                    "status": "error",
+                    "message": f"No vendor available for {resource_type} within budget",
+                }
             vendor = rec["vendor_id"]
 
-        units = max(1, int(amount / (self.marketplace._vendors.get(vendor, ResourceVendor()).price_per_unit or 1)))
+        units = max(
+            1,
+            int(
+                amount
+                / (self.marketplace._vendors.get(vendor, ResourceVendor()).price_per_unit or 1)
+            ),
+        )
         receipt = self.marketplace.execute_purchase(vendor, units, wallet.address)
 
         if receipt.get("status") == "error":
@@ -659,7 +698,10 @@ class AutonomousEconomyAgent(BaseAgentV2):
 
         logger.info(
             "Purchased %d units of %s from %s for %.4f",
-            units, resource_type, vendor, total_cost,
+            units,
+            resource_type,
+            vendor,
+            total_cost,
         )
         return {
             "status": "success",
@@ -682,14 +724,16 @@ class AutonomousEconomyAgent(BaseAgentV2):
             total_balance += w.balance
             total_income += income
             total_expenses += expenses
-            wallet_summaries.append({
-                "wallet_type": wt.value,
-                "address": w.address,
-                "balance": w.balance,
-                "income": income,
-                "expenses": expenses,
-                "transaction_count": len(w.transactions),
-            })
+            wallet_summaries.append(
+                {
+                    "wallet_type": wt.value,
+                    "address": w.address,
+                    "balance": w.balance,
+                    "income": income,
+                    "expenses": expenses,
+                    "transaction_count": len(w.transactions),
+                }
+            )
 
         net = total_income - total_expenses
         growth_pct = round((net / total_expenses * 100) if total_expenses > 0 else 0.0, 2)
@@ -719,37 +763,43 @@ class AutonomousEconomyAgent(BaseAgentV2):
         gpu_budget = disposable * self._gpu_budget_pct
         if gpu_budget > 0:
             rec = self.marketplace.recommend_purchase("gpu", gpu_budget)
-            needs.append({
-                "resource_type": "gpu",
-                "priority": "high",
-                "budget": round(gpu_budget, 4),
-                "recommendation": rec,
-                "reason": "GPU capacity required for inference and simulation workloads",
-            })
+            needs.append(
+                {
+                    "resource_type": "gpu",
+                    "priority": "high",
+                    "budget": round(gpu_budget, 4),
+                    "recommendation": rec,
+                    "reason": "GPU capacity required for inference and simulation workloads",
+                }
+            )
 
         # Storage need assessment
         storage_budget = disposable * self._storage_budget_pct
         if storage_budget > 0:
             rec = self.marketplace.recommend_purchase("storage", storage_budget)
-            needs.append({
-                "resource_type": "storage",
-                "priority": "medium",
-                "budget": round(storage_budget, 4),
-                "recommendation": rec,
-                "reason": "Additional storage for agent memory, datasets, and model weights",
-            })
+            needs.append(
+                {
+                    "resource_type": "storage",
+                    "priority": "medium",
+                    "budget": round(storage_budget, 4),
+                    "recommendation": rec,
+                    "reason": "Additional storage for agent memory, datasets, and model weights",
+                }
+            )
 
         # Compute need assessment
         compute_budget = disposable * self._compute_budget_pct
         if compute_budget > 0:
             rec = self.marketplace.recommend_purchase("compute", compute_budget)
-            needs.append({
-                "resource_type": "compute",
-                "priority": "medium",
-                "budget": round(compute_budget, 4),
-                "recommendation": rec,
-                "reason": "General compute capacity for agent workloads and ETL pipelines",
-            })
+            needs.append(
+                {
+                    "resource_type": "compute",
+                    "priority": "medium",
+                    "budget": round(compute_budget, 4),
+                    "recommendation": rec,
+                    "reason": "General compute capacity for agent workloads and ETL pipelines",
+                }
+            )
 
         return needs
 
@@ -799,35 +849,37 @@ class AutonomousEconomyAgent(BaseAgentV2):
         daily_total = self._daily_revenue.get(today.isoformat(), 0.0)
 
         week_start = today - timedelta(days=today.weekday())
-        weekly_total = sum(
-            v
-            for k, v in self._daily_revenue.items()
-            if k >= week_start.isoformat()
-        )
+        weekly_total = sum(v for k, v in self._daily_revenue.items() if k >= week_start.isoformat())
 
         month_start = today.replace(day=1)
         monthly_total = sum(
-            v
-            for k, v in self._daily_revenue.items()
-            if k >= month_start.isoformat()
+            v for k, v in self._daily_revenue.items() if k >= month_start.isoformat()
         )
 
         daily_expense = self._daily_expenses.get(today.isoformat(), 0.0)
         weekly_expense = sum(
-            v
-            for k, v in self._daily_expenses.items()
-            if k >= week_start.isoformat()
+            v for k, v in self._daily_expenses.items() if k >= week_start.isoformat()
         )
         monthly_expense = sum(
-            v
-            for k, v in self._daily_expenses.items()
-            if k >= month_start.isoformat()
+            v for k, v in self._daily_expenses.items() if k >= month_start.isoformat()
         )
 
         return {
-            "daily": {"revenue": daily_total, "expense": daily_expense, "net": daily_total - daily_expense},
-            "weekly": {"revenue": weekly_total, "expense": weekly_expense, "net": weekly_total - weekly_expense},
-            "monthly": {"revenue": monthly_total, "expense": monthly_expense, "net": monthly_total - monthly_expense},
+            "daily": {
+                "revenue": daily_total,
+                "expense": daily_expense,
+                "net": daily_total - daily_expense,
+            },
+            "weekly": {
+                "revenue": weekly_total,
+                "expense": weekly_expense,
+                "net": weekly_total - weekly_expense,
+            },
+            "monthly": {
+                "revenue": monthly_total,
+                "expense": monthly_expense,
+                "net": monthly_total - monthly_expense,
+            },
             "total_days_tracked": len(self._daily_revenue),
             "generated_at": datetime.utcnow().isoformat(),
         }
@@ -874,7 +926,10 @@ class AutonomousEconomyAgent(BaseAgentV2):
 
         incentive_id = str(uuid4())
         logger.info(
-            "Created incentive %s for agent=%s type=%s", incentive_id, agent_id, incentive_type,
+            "Created incentive %s for agent=%s type=%s",
+            incentive_id,
+            agent_id,
+            incentive_type,
         )
         return {
             "status": "success",
@@ -950,7 +1005,10 @@ class AutonomousEconomyAgent(BaseAgentV2):
         resource_type = task.payload.get("resource_type")
 
         if action == "compare":
-            return {"status": "success", "vendors": self.marketplace.compare_prices(resource_type or "gpu")}
+            return {
+                "status": "success",
+                "vendors": self.marketplace.compare_prices(resource_type or "gpu"),
+            }
         elif action == "recommend":
             budget = task.payload.get("budget", 10.0)
             rec = self.marketplace.recommend_purchase(resource_type or "gpu", budget)

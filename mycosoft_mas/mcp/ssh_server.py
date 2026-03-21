@@ -90,12 +90,11 @@ class SSHMCPServer:
         """Lazy import paramiko."""
         try:
             import paramiko
+
             self._paramiko = paramiko
             logger.info("SSH MCP Server initialized (paramiko %s)", paramiko.__version__)
         except ImportError:
-            logger.error(
-                "paramiko not installed. Run: pip install paramiko"
-            )
+            logger.error("paramiko not installed. Run: pip install paramiko")
             raise
 
     def _define_tools(self) -> List[MCPToolDefinition]:
@@ -328,7 +327,7 @@ class SSHMCPServer:
             if len(out) > max_len:
                 out = out[:max_len] + f"\n... (truncated, {len(out)} total chars)"
             if len(err) > max_len:
-                err = err[:max_len] + f"\n... (truncated)"
+                err = err[:max_len] + "\n... (truncated)"
 
             return {
                 "host": args["host"],
@@ -412,7 +411,10 @@ class SSHMCPServer:
                 return {"error": str(e)}
         else:
             for alias, info in VM_INVENTORY.items():
-                hosts_to_check[alias] = {"ip": info["ip"], "user": info.get("user", self._default_user)}
+                hosts_to_check[alias] = {
+                    "ip": info["ip"],
+                    "user": info.get("user", self._default_user),
+                }
 
         for alias, info in hosts_to_check.items():
             ip = info["ip"]
@@ -456,6 +458,7 @@ class SSHMCPServer:
 # MCP Protocol Handler (JSON-RPC over stdio)
 # ---------------------------------------------------------------------------
 
+
 class MCPProtocolHandler:
     def __init__(self, server: SSHMCPServer):
         self._server = server
@@ -496,11 +499,7 @@ class MCPProtocolHandler:
             return {
                 "jsonrpc": "2.0",
                 "id": msg_id,
-                "result": {
-                    "content": [
-                        {"type": "text", "text": json.dumps(result, indent=2)}
-                    ]
-                },
+                "result": {"content": [{"type": "text", "text": json.dumps(result, indent=2)}]},
             }
 
         else:

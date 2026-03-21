@@ -91,9 +91,7 @@ async def cmd_balance(args: argparse.Namespace) -> None:
 
 async def cmd_usage(args: argparse.Namespace) -> None:
     """Get usage history."""
-    result = await _request(
-        "GET", "/api/raas/agents/me/usage", args.base_url, api_key=args.api_key
-    )
+    result = await _request("GET", "/api/raas/agents/me/usage", args.base_url, api_key=args.api_key)
     print(json.dumps(result, indent=2))
 
 
@@ -133,7 +131,10 @@ async def cmd_invoke(args: argparse.Namespace) -> None:
             "parameters": json.loads(args.params) if args.params else {},
         }
     elif service == "devices":
-        body = {"device_id": args.device_id, "query_type": "telemetry" if args.device_id else "list"}
+        body = {
+            "device_id": args.device_id,
+            "query_type": "telemetry" if args.device_id else "list",
+        }
 
     result = await _request(
         "POST",

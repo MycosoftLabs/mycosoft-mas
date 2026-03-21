@@ -25,6 +25,7 @@ logger = logging.getLogger("CFOMCP")
 @dataclass
 class MCPToolDefinition:
     """Definition of an MCP tool."""
+
     name: str
     description: str
     parameters: Dict[str, Any]

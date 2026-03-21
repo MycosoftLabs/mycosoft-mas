@@ -14,7 +14,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import httpx
 
@@ -33,10 +33,14 @@ class IngestionPipeline:
     def __init__(self):
         self._mindex_key = os.getenv("MINDEX_API_KEY", "")
         self._supabase_url = os.getenv("SUPABASE_URL", "")
-        self._supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "") or os.getenv("SUPABASE_SERVICE_KEY", "")
+        self._supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "") or os.getenv(
+            "SUPABASE_SERVICE_KEY", ""
+        )
         self.TRAINING_SINK_DIR.mkdir(parents=True, exist_ok=True)
 
-    async def ingest_batch(self, results: List[EarthSearchResult], query: str, session_id: Optional[str] = None):
+    async def ingest_batch(
+        self, results: List[EarthSearchResult], query: str, session_id: Optional[str] = None
+    ):
         """Ingest a batch of search results into all sinks. Fire-and-forget safe."""
         if not results:
             return
@@ -71,11 +75,15 @@ class IngestionPipeline:
                     headers=headers,
                 )
                 if resp.status_code not in (200, 201, 202):
-                    logger.warning("MINDEX ingest returned %d: %s", resp.status_code, resp.text[:200])
+                    logger.warning(
+                        "MINDEX ingest returned %d: %s", resp.status_code, resp.text[:200]
+                    )
         except Exception as e:
             logger.warning("MINDEX ingest failed: %s", e)
 
-    async def _ingest_supabase(self, results: List[EarthSearchResult], query: str, session_id: Optional[str]):
+    async def _ingest_supabase(
+        self, results: List[EarthSearchResult], query: str, session_id: Optional[str]
+    ):
         """Store results in Supabase for cloud persistence and web access."""
         headers = {
             "apikey": self._supabase_key,
@@ -87,25 +95,31 @@ class IngestionPipeline:
 
         rows = []
         for r in results:
-            rows.append({
-                "result_id": r.result_id,
-                "domain": r.domain.value,
-                "source": r.source,
-                "title": r.title,
-                "description": r.description[:1000] if r.description else "",
-                "data": json.dumps(r.data),
-                "lat": r.lat,
-                "lng": r.lng,
-                "timestamp": r.timestamp.isoformat() if isinstance(r.timestamp, datetime) else r.timestamp,
-                "confidence": r.confidence,
-                "crep_layer": r.crep_layer,
-                "mindex_id": r.mindex_id,
-                "url": r.url,
-                "image_url": r.image_url,
-                "query": query,
-                "session_id": session_id,
-                "ingested_at": datetime.now(timezone.utc).isoformat(),
-            })
+            rows.append(
+                {
+                    "result_id": r.result_id,
+                    "domain": r.domain.value,
+                    "source": r.source,
+                    "title": r.title,
+                    "description": r.description[:1000] if r.description else "",
+                    "data": json.dumps(r.data),
+                    "lat": r.lat,
+                    "lng": r.lng,
+                    "timestamp": (
+                        r.timestamp.isoformat()
+                        if isinstance(r.timestamp, datetime)
+                        else r.timestamp
+                    ),
+                    "confidence": r.confidence,
+                    "crep_layer": r.crep_layer,
+                    "mindex_id": r.mindex_id,
+                    "url": r.url,
+                    "image_url": r.image_url,
+                    "query": query,
+                    "session_id": session_id,
+                    "ingested_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
 
         try:
             async with httpx.AsyncClient(timeout=15) as client:
@@ -113,22 +127,33 @@ class IngestionPipeline:
                 headers["Prefer"] = "return=minimal,resolution=merge-duplicates"
                 resp = await client.post(rest_url, json=rows, headers=headers)
                 if resp.status_code not in (200, 201):
-                    logger.warning("Supabase ingest returned %d: %s", resp.status_code, resp.text[:200])
+                    logger.warning(
+                        "Supabase ingest returned %d: %s", resp.status_code, resp.text[:200]
+                    )
         except Exception as e:
             logger.warning("Supabase ingest failed: %s", e)
 
-    async def _ingest_training_sink(self, results: List[EarthSearchResult], query: str, session_id: Optional[str]):
+    async def _ingest_training_sink(
+        self, results: List[EarthSearchResult], query: str, session_id: Optional[str]
+    ):
         """Append results to JSONL training sink for NLM training."""
-        sink_file = self.TRAINING_SINK_DIR / f"earth_search_{datetime.now(timezone.utc).strftime('%Y%m%d')}.jsonl"
+        sink_file = (
+            self.TRAINING_SINK_DIR
+            / f"earth_search_{datetime.now(timezone.utc).strftime('%Y%m%d')}.jsonl"
+        )
         try:
             lines = []
             for r in results:
-                lines.append(json.dumps({
-                    "query": query,
-                    "session_id": session_id,
-                    "result": r.model_dump(mode="json"),
-                    "ts": datetime.now(timezone.utc).isoformat(),
-                }))
+                lines.append(
+                    json.dumps(
+                        {
+                            "query": query,
+                            "session_id": session_id,
+                            "result": r.model_dump(mode="json"),
+                            "ts": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
+                )
             async with asyncio.Lock():
                 with open(sink_file, "a", encoding="utf-8") as f:
                     f.write("\n".join(lines) + "\n")

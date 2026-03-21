@@ -3,12 +3,13 @@ Admin Notification Service for Morgan
 Sends notifications via multiple channels: Twilio SMS, Email, Push, n8n webhooks.
 """
 
-import os
-import logging
 import json
+import logging
+import os
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Dict, Any, List, Optional
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional
+
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ TWILIO_ENABLED = bool(os.getenv("TWILIO_ACCOUNT_SID"))
 @dataclass
 class NotificationPayload:
     """Notification payload structure."""
+
     title: str
     message: str
     type: str
@@ -36,7 +38,7 @@ class NotificationPayload:
 class AdminNotificationService:
     """
     Send notifications to Morgan (super admin) via multiple channels.
-    
+
     Channels:
     - Twilio SMS (for critical/high priority)
     - Email (for all notifications)
@@ -67,7 +69,7 @@ class AdminNotificationService:
     ) -> Dict[str, Any]:
         """
         Send notification to Morgan via specified channels.
-        
+
         Args:
             title: Notification title
             message: Notification body
@@ -88,9 +90,9 @@ class AdminNotificationService:
             data=data,
             requires_action=requires_action,
         )
-        
+
         self._notification_history.append(payload)
-        
+
         # Determine channels based on priority if not specified
         if channels is None:
             if priority == "critical":
@@ -101,24 +103,24 @@ class AdminNotificationService:
                 channels = ["email", "webhook"]
             else:
                 channels = ["webhook"]
-        
+
         results = {}
-        
+
         # Send to each channel
         if "sms" in channels:
             results["sms"] = await self._send_sms(payload)
-        
+
         if "email" in channels:
             results["email"] = await self._send_email(payload)
-        
+
         if "webhook" in channels:
             results["webhook"] = await self._send_webhook(payload)
-        
+
         if "push" in channels:
             results["push"] = await self._send_push(payload)
-        
+
         logger.info(f"[ADMIN NOTIFICATION] {priority.upper()}: {title} -> Channels: {channels}")
-        
+
         return {
             "status": "sent",
             "payload": asdict(payload),
@@ -129,28 +131,28 @@ class AdminNotificationService:
         """Send SMS via Twilio."""
         if not TWILIO_ENABLED:
             return {"status": "skipped", "reason": "Twilio not configured"}
-        
+
         try:
             client = await self._get_client()
-            
+
             # Send via MAS Twilio endpoint
             sms_message = f"[MYCA {payload.priority.upper()}] {payload.title}\n\n{payload.message}"
             if payload.requires_action:
                 sms_message += "\n\n⚠️ ACTION REQUIRED"
-            
+
             response = await client.post(
                 "http://localhost:8001/twilio/sms/send",
                 json={
                     "to": ADMIN_PHONE,
                     "message": sms_message,
-                }
+                },
             )
-            
+
             if response.status_code == 200:
                 return {"status": "sent", "to": ADMIN_PHONE}
             else:
                 return {"status": "error", "error": response.text}
-                
+
         except Exception as e:
             logger.error(f"SMS notification failed: {e}")
             return {"status": "error", "error": str(e)}
@@ -159,7 +161,7 @@ class AdminNotificationService:
         """Send email notification via n8n or SMTP."""
         try:
             client = await self._get_client()
-            
+
             # Use n8n email workflow
             email_payload = {
                 "to": ADMIN_EMAIL,
@@ -167,17 +169,17 @@ class AdminNotificationService:
                 "body": self._format_email_body(payload),
                 "priority": payload.priority,
             }
-            
+
             response = await client.post(
                 f"{N8N_WEBHOOK_URL}/webhook/myca/email",
                 json=email_payload,
             )
-            
+
             if response.status_code == 200:
                 return {"status": "sent", "to": ADMIN_EMAIL}
             else:
                 return {"status": "webhook_error", "error": "n8n email workflow not available"}
-                
+
         except Exception as e:
             logger.error(f"Email notification failed: {e}")
             return {"status": "error", "error": str(e)}
@@ -191,7 +193,7 @@ class AdminNotificationService:
             "low": "#6b7280",
         }
         color = priority_colors.get(payload.priority, "#2563eb")
-        
+
         html = f"""
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: {color}; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -217,17 +219,17 @@ class AdminNotificationService:
         """Send to n8n webhook for processing."""
         try:
             client = await self._get_client()
-            
+
             response = await client.post(
                 f"{N8N_WEBHOOK_URL}/webhook/myca/admin-notification",
                 json=asdict(payload),
             )
-            
+
             if response.status_code == 200:
                 return {"status": "sent"}
             else:
                 return {"status": "error", "code": response.status_code}
-                
+
         except Exception as e:
             logger.error(f"Webhook notification failed: {e}")
             return {"status": "error", "error": str(e)}
@@ -266,15 +268,10 @@ async def notify_morgan(
     type: str = "info",
     agent: str = "MYCA",
     priority: str = "normal",
-    **kwargs
+    **kwargs,
 ) -> Dict[str, Any]:
     """Convenience function to notify Morgan."""
     service = get_admin_notification_service()
     return await service.notify(
-        title=title,
-        message=message,
-        type=type,
-        agent=agent,
-        priority=priority,
-        **kwargs
+        title=title, message=message, type=type, agent=agent, priority=priority, **kwargs
     )

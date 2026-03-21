@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 class EventSource(str, Enum):
     """Origin of a speechworthy event."""
+
     MDP_DEVICE = "mdp_device"
     CREP = "crep"
     NLM = "nlm"
@@ -30,6 +31,7 @@ class SpeechworthyEvent(BaseModel):
     Normalized event that may be spoken or shown in UI.
     Both speech and UI consume this structure for truth consistency.
     """
+
     event_id: str = Field(default_factory=lambda: str(uuid4()))
     session_id: str
     source: EventSource
@@ -44,6 +46,7 @@ class SpeechworthyEvent(BaseModel):
 
 class GroundedSpeechDecision(BaseModel):
     """Decision from speech_grounding_gate: whether to speak and how."""
+
     event_id: str
     session_id: str
     speak: bool = True

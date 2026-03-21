@@ -58,10 +58,14 @@ class NatureEmbeddingEncoder:
         vec[14] = vec[5] * vec[1]
         vec[15] = 1.0
 
-        anomaly_score = self._anomaly_score(temp=temp, humidity=humidity, iaq=iaq, fungal_strength=fungal_strength)
+        anomaly_score = self._anomaly_score(
+            temp=temp, humidity=humidity, iaq=iaq, fungal_strength=fungal_strength
+        )
         return NatureEmbeddingResult(vector=vec, anomaly_score=anomaly_score)
 
-    def _anomaly_score(self, temp: float, humidity: float, iaq: float, fungal_strength: float) -> float:
+    def _anomaly_score(
+        self, temp: float, humidity: float, iaq: float, fungal_strength: float
+    ) -> float:
         score = 0.0
         if temp < -5 or temp > 45:
             score += 0.35
@@ -72,4 +76,3 @@ class NatureEmbeddingEncoder:
         if fungal_strength > 1200:
             score += 0.25
         return min(score, 1.0)
-

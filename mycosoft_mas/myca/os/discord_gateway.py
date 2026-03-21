@@ -9,10 +9,10 @@ Requires: DISCORD_BOT_TOKEN, Message Content Intent enabled in Discord Developer
 Date: 2026-03-04
 """
 
-import os
 import asyncio
 import logging
-from typing import Optional, Any
+import os
+from typing import Any, Optional
 
 logger = logging.getLogger("myca.os.discord")
 
@@ -67,10 +67,7 @@ class DiscordGateway:
 
             # Only handle DMs or @mentions
             is_dm = message.guild is None
-            is_mention = (
-                message.guild is not None
-                and bot.user in message.mentions
-            )
+            is_mention = message.guild is not None and bot.user in message.mentions
             if not is_dm and not is_mention:
                 return
 
@@ -94,7 +91,11 @@ class DiscordGateway:
                 "discord_message_id": message.id,
                 "discord_reference": message.reference,
             }
-            if message.channel and hasattr(message.channel, "parent_id") and message.channel.parent_id:
+            if (
+                message.channel
+                and hasattr(message.channel, "parent_id")
+                and message.channel.parent_id
+            ):
                 msg["discord_thread_id"] = message.channel.id
 
             try:
@@ -137,6 +138,7 @@ class DiscordGateway:
             return False
         try:
             import discord
+
             channel = self._client.get_channel(channel_id)
             if not channel:
                 channel = await self._client.fetch_channel(channel_id)

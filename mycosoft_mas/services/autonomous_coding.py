@@ -13,12 +13,11 @@ This service provides MYCA with:
 import asyncio
 import logging
 import os
-import subprocess
-import json
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
-from dataclasses import dataclass, asdict
+from typing import Any, Dict, List, Optional, Tuple
+
 import aiofiles
 import httpx
 
@@ -35,6 +34,7 @@ REPLIT_API_KEY = os.getenv("REPLIT_API_KEY", "")
 @dataclass
 class CodeExecutionResult:
     """Result of code execution."""
+
     command: str
     exit_code: int
     stdout: str
@@ -47,6 +47,7 @@ class CodeExecutionResult:
 @dataclass
 class FileOperation:
     """Record of a file operation."""
+
     operation: str  # read, write, create, delete
     path: str
     timestamp: str
@@ -58,7 +59,7 @@ class FileOperation:
 class AutonomousCodingService:
     """
     MYCA's autonomous coding capabilities.
-    
+
     Enables MYCA to:
     - Execute terminal commands
     - Read/write files
@@ -89,7 +90,7 @@ class AutonomousCodingService:
     ) -> CodeExecutionResult:
         """
         Execute a terminal command.
-        
+
         Args:
             command: Command to execute
             working_dir: Working directory (defaults to workspace root)
@@ -98,13 +99,13 @@ class AutonomousCodingService:
         """
         start_time = datetime.now()
         cwd = Path(working_dir) if working_dir else WORKSPACE_ROOT
-        
+
         logger.info(f"[MYCA EXEC] {command} in {cwd}")
-        
+
         # Security check - ensure command starts with allowed prefix
-        cmd_base = command.split()[0] if command.split() else ""
+        command.split()[0] if command.split() else ""
         # Allow more commands for MYCA's full capabilities
-        
+
         try:
             process = await asyncio.create_subprocess_shell(
                 command,
@@ -112,12 +113,9 @@ class AutonomousCodingService:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            
+
             try:
-                stdout, stderr = await asyncio.wait_for(
-                    process.communicate(),
-                    timeout=timeout
-                )
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
             except asyncio.TimeoutError:
                 process.kill()
                 await process.communicate()
@@ -130,9 +128,9 @@ class AutonomousCodingService:
                     timestamp=start_time.isoformat(),
                     success=False,
                 )
-            
+
             duration = (datetime.now() - start_time).total_seconds() * 1000
-            
+
             result = CodeExecutionResult(
                 command=command,
                 exit_code=process.returncode or 0,
@@ -142,12 +140,12 @@ class AutonomousCodingService:
                 timestamp=start_time.isoformat(),
                 success=(process.returncode == 0),
             )
-            
+
             self._execution_history.append(result)
             logger.info(f"[MYCA EXEC] Exit code: {result.exit_code}")
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"[MYCA EXEC] Error: {e}")
             return CodeExecutionResult(
@@ -164,10 +162,10 @@ class AutonomousCodingService:
         """Execute Python code."""
         # Write to temp file and execute
         temp_file = WORKSPACE_ROOT / f"_myca_exec_{datetime.now().strftime('%Y%m%d_%H%M%S')}.py"
-        
-        async with aiofiles.open(temp_file, 'w') as f:
+
+        async with aiofiles.open(temp_file, "w") as f:
             await f.write(code)
-        
+
         try:
             result = await self.execute_command(f"python {temp_file}", timeout=timeout)
             return result
@@ -179,10 +177,10 @@ class AutonomousCodingService:
     async def run_node(self, code: str, timeout: int = 60) -> CodeExecutionResult:
         """Execute Node.js code."""
         temp_file = WORKSPACE_ROOT / f"_myca_exec_{datetime.now().strftime('%Y%m%d_%H%M%S')}.js"
-        
-        async with aiofiles.open(temp_file, 'w') as f:
+
+        async with aiofiles.open(temp_file, "w") as f:
             await f.write(code)
-        
+
         try:
             result = await self.execute_command(f"node {temp_file}", timeout=timeout)
             return result
@@ -197,29 +195,37 @@ class AutonomousCodingService:
         file_path = Path(path)
         if not file_path.is_absolute():
             file_path = WORKSPACE_ROOT / path
-        
+
         try:
-            async with aiofiles.open(file_path, 'r') as f:
+            async with aiofiles.open(file_path, "r") as f:
                 content = await f.read()
-            
-            self._operation_history.append(asdict(FileOperation(
-                operation="read",
-                path=str(file_path),
-                timestamp=datetime.now().isoformat(),
-                success=True,
-                content_preview=content[:100] + "..." if len(content) > 100 else content,
-            )))
-            
+
+            self._operation_history.append(
+                asdict(
+                    FileOperation(
+                        operation="read",
+                        path=str(file_path),
+                        timestamp=datetime.now().isoformat(),
+                        success=True,
+                        content_preview=content[:100] + "..." if len(content) > 100 else content,
+                    )
+                )
+            )
+
             return True, content
-            
+
         except Exception as e:
-            self._operation_history.append(asdict(FileOperation(
-                operation="read",
-                path=str(file_path),
-                timestamp=datetime.now().isoformat(),
-                success=False,
-                error=str(e),
-            )))
+            self._operation_history.append(
+                asdict(
+                    FileOperation(
+                        operation="read",
+                        path=str(file_path),
+                        timestamp=datetime.now().isoformat(),
+                        success=False,
+                        error=str(e),
+                    )
+                )
+            )
             return False, str(e)
 
     async def write_file(self, path: str, content: str) -> Tuple[bool, str]:
@@ -227,32 +233,40 @@ class AutonomousCodingService:
         file_path = Path(path)
         if not file_path.is_absolute():
             file_path = WORKSPACE_ROOT / path
-        
+
         try:
             # Ensure directory exists
             file_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            async with aiofiles.open(file_path, 'w') as f:
+
+            async with aiofiles.open(file_path, "w") as f:
                 await f.write(content)
-            
-            self._operation_history.append(asdict(FileOperation(
-                operation="write",
-                path=str(file_path),
-                timestamp=datetime.now().isoformat(),
-                success=True,
-                content_preview=content[:100] + "..." if len(content) > 100 else content,
-            )))
-            
+
+            self._operation_history.append(
+                asdict(
+                    FileOperation(
+                        operation="write",
+                        path=str(file_path),
+                        timestamp=datetime.now().isoformat(),
+                        success=True,
+                        content_preview=content[:100] + "..." if len(content) > 100 else content,
+                    )
+                )
+            )
+
             return True, f"Written {len(content)} bytes to {file_path}"
-            
+
         except Exception as e:
-            self._operation_history.append(asdict(FileOperation(
-                operation="write",
-                path=str(file_path),
-                timestamp=datetime.now().isoformat(),
-                success=False,
-                error=str(e),
-            )))
+            self._operation_history.append(
+                asdict(
+                    FileOperation(
+                        operation="write",
+                        path=str(file_path),
+                        timestamp=datetime.now().isoformat(),
+                        success=False,
+                        error=str(e),
+                    )
+                )
+            )
             return False, str(e)
 
     async def list_directory(self, path: str = ".") -> Tuple[bool, List[Dict[str, Any]]]:
@@ -260,17 +274,19 @@ class AutonomousCodingService:
         dir_path = Path(path)
         if not dir_path.is_absolute():
             dir_path = WORKSPACE_ROOT / path
-        
+
         try:
             entries = []
             for entry in dir_path.iterdir():
-                entries.append({
-                    "name": entry.name,
-                    "type": "directory" if entry.is_dir() else "file",
-                    "size": entry.stat().st_size if entry.is_file() else None,
-                })
+                entries.append(
+                    {
+                        "name": entry.name,
+                        "type": "directory" if entry.is_dir() else "file",
+                        "size": entry.stat().st_size if entry.is_file() else None,
+                    }
+                )
             return True, entries
-        except Exception as e:
+        except Exception:
             return False, []
 
     # ==================== GIT OPERATIONS ====================
@@ -288,10 +304,10 @@ class AutonomousCodingService:
         """Create a git commit."""
         # Stage all changes
         await self.execute_command("git add -A", working_dir)
-        
+
         # Commit
         result = await self.execute_command(f'git commit -m "{message}"', working_dir)
-        
+
         return {
             "success": result.success,
             "message": message,
@@ -299,7 +315,9 @@ class AutonomousCodingService:
             "error": result.stderr if not result.success else None,
         }
 
-    async def git_push(self, branch: str = "main", working_dir: Optional[str] = None) -> Dict[str, Any]:
+    async def git_push(
+        self, branch: str = "main", working_dir: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Push to remote."""
         result = await self.execute_command(f"git push origin {branch}", working_dir)
         return {
@@ -320,10 +338,10 @@ class AutonomousCodingService:
         """Create a GitHub Pull Request."""
         if not GITHUB_TOKEN:
             return {"success": False, "error": "GitHub token not configured"}
-        
+
         try:
             client = await self._get_client()
-            
+
             response = await client.post(
                 f"https://api.github.com/repos/{repo}/pulls",
                 headers={
@@ -337,7 +355,7 @@ class AutonomousCodingService:
                     "base": base,
                 },
             )
-            
+
             if response.status_code == 201:
                 pr_data = response.json()
                 return {
@@ -351,7 +369,7 @@ class AutonomousCodingService:
                     "error": response.text,
                     "status_code": response.status_code,
                 }
-                
+
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -361,12 +379,12 @@ class AutonomousCodingService:
         """Deploy to Vercel."""
         if not VERCEL_TOKEN:
             return {"success": False, "error": "Vercel token not configured"}
-        
+
         result = await self.execute_command(
             f"vercel --token {VERCEL_TOKEN} --prod --yes",
             working_dir=project_dir,
         )
-        
+
         return {
             "success": result.success,
             "output": result.stdout,
@@ -377,11 +395,11 @@ class AutonomousCodingService:
         """Run project tests."""
         # Try pytest first, then npm test
         result = await self.execute_command("pytest -v", working_dir)
-        
+
         if not result.success:
             # Try npm test
             result = await self.execute_command("npm test", working_dir)
-        
+
         return {
             "success": result.success,
             "output": result.stdout,

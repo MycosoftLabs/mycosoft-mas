@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import aiohttp
-from mycosoft_mas.monitoring.prometheus_utils import get_counter, get_histogram
 
 from mycosoft_mas.config.runtime_settings import RuntimeSettings
+from mycosoft_mas.monitoring.prometheus_utils import get_counter, get_histogram
 
 
 class LLMError(RuntimeError):
@@ -27,10 +27,14 @@ class LLMResult:
 class BaseLLMProvider:
     name: str
 
-    async def chat(self, messages: List[Dict[str, str]], *, model: Optional[str] = None, **kwargs) -> LLMResult:
+    async def chat(
+        self, messages: List[Dict[str, str]], *, model: Optional[str] = None, **kwargs
+    ) -> LLMResult:
         raise NotImplementedError
 
-    async def embed(self, inputs: List[str], *, model: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    async def embed(
+        self, inputs: List[str], *, model: Optional[str] = None, **kwargs
+    ) -> Dict[str, Any]:
         raise NotImplementedError
 
 
@@ -42,7 +46,9 @@ class OpenAIProvider(BaseLLMProvider):
         self.timeout = timeout
         self.name = "openai"
 
-    async def chat(self, messages: List[Dict[str, str]], *, model: Optional[str] = None, **kwargs) -> LLMResult:
+    async def chat(
+        self, messages: List[Dict[str, str]], *, model: Optional[str] = None, **kwargs
+    ) -> LLMResult:
         payload = {
             "model": model or self.default_model,
             "messages": messages,
@@ -52,7 +58,9 @@ class OpenAIProvider(BaseLLMProvider):
         }
         return await self._post("/chat/completions", payload)
 
-    async def embed(self, inputs: List[str], *, model: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+    async def embed(
+        self, inputs: List[str], *, model: Optional[str] = None, **kwargs
+    ) -> Dict[str, Any]:
         payload = {
             "model": model or self.default_model,
             "input": inputs,
@@ -67,11 +75,15 @@ class OpenAIProvider(BaseLLMProvider):
         }
         url = f"{self.base_url}{path}"
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.timeout)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self.timeout)
+            ) as session:
                 async with session.post(url, json=payload, headers=headers) as resp:
                     data = await resp.json()
                     if resp.status >= 400:
-                        raise LLMError(data.get("error", {}).get("message", f"OpenAI error {resp.status}"))
+                        raise LLMError(
+                            data.get("error", {}).get("message", f"OpenAI error {resp.status}")
+                        )
                     choice = (data.get("choices") or [{}])[0]
                     message = choice.get("message", {})
                     content = message.get("content") or ""
@@ -92,7 +104,9 @@ class OpenAICompatibleProvider(OpenAIProvider):
     """OpenAI-compatible endpoints such as LiteLLM, vLLM, or Ollama-proxy."""
 
     def __init__(self, api_key: str, base_url: str, default_model: str, timeout: int = 30):
-        super().__init__(api_key=api_key, base_url=base_url, default_model=default_model, timeout=timeout)
+        super().__init__(
+            api_key=api_key, base_url=base_url, default_model=default_model, timeout=timeout
+        )
         self.name = "openai_compatible"
 
 
@@ -103,7 +117,9 @@ class GeminiProvider(BaseLLMProvider):
         self.timeout = timeout
         self.name = "gemini"
 
-    async def chat(self, messages: List[Dict[str, str]], *, model: Optional[str] = None, **kwargs) -> LLMResult:
+    async def chat(
+        self, messages: List[Dict[str, str]], *, model: Optional[str] = None, **kwargs
+    ) -> LLMResult:
         # Gemini expects a single prompt list; we flatten the message content.
         prompt = "\n".join([msg.get("content", "") for msg in messages if msg.get("content")])
         target_model = model or self.default_model
@@ -113,14 +129,18 @@ class GeminiProvider(BaseLLMProvider):
         )
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.timeout)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=self.timeout)
+            ) as session:
                 async with session.post(url, json=payload) as resp:
                     data = await resp.json()
                     if resp.status >= 400:
-                        message = data.get("error", {}).get("message", f"Gemini error {resp.status}")
+                        message = data.get("error", {}).get(
+                            "message", f"Gemini error {resp.status}"
+                        )
                         raise LLMError(message)
                     candidates = data.get("candidates") or [{}]
-                    parts = (candidates[0].get("content", {}).get("parts") or [{}])
+                    parts = candidates[0].get("content", {}).get("parts") or [{}]
                     content = parts[0].get("text", "")
                     return LLMResult(
                         content=content,
@@ -166,11 +186,18 @@ class LLMRouter:
             if provider_type == "gemini":
                 providers[key] = GeminiProvider(api_key=api_key, default_model=cfg.model)
             elif provider_type == "openai_compatible":
-                providers[key] = OpenAICompatibleProvider(api_key=api_key, base_url=base_url, default_model=cfg.model)
+                providers[key] = OpenAICompatibleProvider(
+                    api_key=api_key, base_url=base_url, default_model=cfg.model
+                )
             else:
-                providers[key] = OpenAIProvider(api_key=api_key, base_url=base_url, default_model=cfg.model)
+                providers[key] = OpenAIProvider(
+                    api_key=api_key, base_url=base_url, default_model=cfg.model
+                )
         # Default provider if missing
-        if self.settings.llm_default_provider and self.settings.llm_default_provider not in providers:
+        if (
+            self.settings.llm_default_provider
+            and self.settings.llm_default_provider not in providers
+        ):
             providers[self.settings.llm_default_provider] = OpenAICompatibleProvider(
                 api_key=self.settings.llm_api_key or "",
                 base_url=self.settings.llm_base_url or "https://api.openai.com/v1",
@@ -191,7 +218,11 @@ class LLMRouter:
         if not provider:
             raise LLMError(f"No provider configured for role={role} and fallback={fallback_key}")
         model_name = self.registry.roles.get(role, "")
-        model_name = model_name.split(":", 1)[1] if ":" in model_name else model_name or getattr(provider, "default_model", "")
+        model_name = (
+            model_name.split(":", 1)[1]
+            if ":" in model_name
+            else model_name or getattr(provider, "default_model", "")
+        )
         return provider, model_name
 
     async def chat(self, role: str, messages: List[Dict[str, str]], **kwargs) -> LLMResult:
@@ -199,10 +230,14 @@ class LLMRouter:
         start = time.time()
         try:
             result = await provider.chat(messages, model=model_name, **kwargs)
-            self.REQUEST_COUNT.labels(provider=provider.name, model=model_name, status="success").inc()
+            self.REQUEST_COUNT.labels(
+                provider=provider.name, model=model_name, status="success"
+            ).inc()
             return result
         except LLMError:
-            self.REQUEST_COUNT.labels(provider=provider.name, model=model_name, status="error").inc()
+            self.REQUEST_COUNT.labels(
+                provider=provider.name, model=model_name, status="error"
+            ).inc()
             # Try fallback if configured
             fallback_target = self.registry.get_model_target("fallback_model")
             if fallback_target:
@@ -212,4 +247,6 @@ class LLMRouter:
                     return await fb_provider.chat(messages, model=fb_model, **kwargs)
             raise
         finally:
-            self.REQUEST_LATENCY.labels(provider=provider.name, model=model_name).observe(time.time() - start)
+            self.REQUEST_LATENCY.labels(provider=provider.name, model=model_name).observe(
+                time.time() - start
+            )

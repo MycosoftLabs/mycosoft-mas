@@ -10,7 +10,7 @@ import json
 import logging
 import random
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -31,16 +31,21 @@ class EdgeMockClient:
 
     async def connect(self):
         import websockets
+
         self._ws = await websockets.connect(self.gateway_url)
-        await self._ws.send(json.dumps({
-            "type": "handshake",
-            "payload": {
-                "role": "edge",
-                "device_id": self.device_id,
-                "capabilities": ["sensor_read", "gpio_write", "device_command"],
-                "token": "",
-            },
-        }))
+        await self._ws.send(
+            json.dumps(
+                {
+                    "type": "handshake",
+                    "payload": {
+                        "role": "edge",
+                        "device_id": self.device_id,
+                        "capabilities": ["sensor_read", "gpio_write", "device_command"],
+                        "token": "",
+                    },
+                }
+            )
+        )
         ack = json.loads(await self._ws.recv())
         logger.info("Edge mock connected: %s", ack)
         self._running = True
@@ -103,6 +108,7 @@ class EdgeMockClient:
 
 async def main():
     import sys
+
     device_id = sys.argv[1] if len(sys.argv) > 1 else "mock-mycobrain-01"
     client = EdgeMockClient(device_id=device_id)
     await client.connect()

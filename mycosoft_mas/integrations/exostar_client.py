@@ -11,7 +11,7 @@ Environment Variables:
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -23,10 +23,9 @@ class ExostarClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_url = (
-            self.config.get("api_url")
-            or os.environ.get("EXOSTAR_API_URL", "")
-        ).rstrip("/")
+        self.api_url = (self.config.get("api_url") or os.environ.get("EXOSTAR_API_URL", "")).rstrip(
+            "/"
+        )
         self.api_key = self.config.get("api_key") or os.environ.get("EXOSTAR_API_KEY", "")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
@@ -59,9 +58,7 @@ class ExostarClient:
             "message": "Exostar API requires partnership. Set EXOSTAR_API_URL and EXOSTAR_API_KEY.",
         }
 
-    async def check_compliance_status(
-        self, entity_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def check_compliance_status(self, entity_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Check CMMC/compliance status for an entity or organization.
         entity_id: Optional Exostar entity identifier.
@@ -79,9 +76,7 @@ class ExostarClient:
             logger.warning("Exostar check_compliance_status failed: %s", e)
             return {"status": "error", "error": str(e)}
 
-    async def get_supply_chain_risk(
-        self, supplier_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def get_supply_chain_risk(self, supplier_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Get supply chain risk assessment data.
         supplier_id: Optional supplier/vendor identifier.

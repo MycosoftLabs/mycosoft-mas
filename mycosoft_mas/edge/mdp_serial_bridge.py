@@ -4,8 +4,8 @@ Serial bridge for MDP v1 framed communication.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import threading
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from .mdp_protocol import (

@@ -5,14 +5,13 @@ SOC Security System Integration - Audit logging and monitoring endpoints.
 Now with PostgreSQL persistence and cryptographic integrity.
 """
 
-import os
 import logging
-import asyncio
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("SecurityAuditAPI")
@@ -21,7 +20,8 @@ router = APIRouter(prefix="/api/security", tags=["security"])
 
 # Integrity service import
 try:
-    from mycosoft_mas.security.integrity_service import hash_and_record, get_integrity_service
+    from mycosoft_mas.security.integrity_service import hash_and_record
+
     INTEGRITY_AVAILABLE = True
 except ImportError:
     INTEGRITY_AVAILABLE = False
@@ -32,8 +32,10 @@ except ImportError:
 # Models
 # ============================================================================
 
+
 class AuditEntry(BaseModel):
     """Audit log entry."""
+
     entry_id: str = Field(default_factory=lambda: str(uuid4()))
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     user_id: str
@@ -48,6 +50,7 @@ class AuditEntry(BaseModel):
 
 class AuditLogRequest(BaseModel):
     """Request to log an audit entry."""
+
     user_id: str = Field(..., description="User or system ID")
     action: str = Field(..., description="Action performed")
     resource: str = Field(..., description="Resource accessed")
@@ -59,6 +62,7 @@ class AuditLogRequest(BaseModel):
 
 class AuditQueryResponse(BaseModel):
     """Response from audit log query."""
+
     entries: List[AuditEntry]
     count: int
     has_more: bool
@@ -69,20 +73,20 @@ class AuditQueryResponse(BaseModel):
 # Persistent Audit Log with PostgreSQL
 # ============================================================================
 
+
 class PersistentAuditLog:
     """
     PostgreSQL-backed audit log with in-memory fallback.
     """
-    
+
     def __init__(self):
         self._pool = None
         self._db_available = None
         self._memory_log: List[AuditEntry] = []
         self._database_url = os.getenv(
-            "DATABASE_URL",
-            "postgresql://mycosoft:mycosoft@postgres:5432/mycosoft"
+            "DATABASE_URL", "postgresql://mycosoft:mycosoft@postgres:5432/mycosoft"
         )
-    
+
     async def _get_pool(self):
         """Get or create database connection pool."""
         if self._db_available is False:
@@ -90,11 +94,8 @@ class PersistentAuditLog:
         if self._pool is None:
             try:
                 import asyncpg
-                self._pool = await asyncpg.create_pool(
-                    self._database_url,
-                    min_size=1,
-                    max_size=5
-                )
+
+                self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=5)
                 # Ensure table exists
                 await self._ensure_table()
                 self._db_available = True
@@ -103,13 +104,13 @@ class PersistentAuditLog:
                 self._db_available = False
                 return None
         return self._pool
-    
+
     async def _ensure_table(self):
         """Ensure audit_log table exists in memory schema."""
         pool = self._pool
         if not pool:
             return
-        
+
         async with pool.acquire() as conn:
             await conn.execute("""
                 CREATE SCHEMA IF NOT EXISTS memory;
@@ -132,11 +133,11 @@ class PersistentAuditLog:
                 CREATE INDEX IF NOT EXISTS idx_audit_action ON memory.audit_log(action);
                 CREATE INDEX IF NOT EXISTS idx_audit_severity ON memory.audit_log(severity);
             """)
-    
+
     async def log(self, entry: AuditEntry) -> AuditEntry:
         """Log an audit entry to PostgreSQL with fallback to memory."""
         pool = await self._get_pool()
-        
+
         # Record in cryptographic ledger first
         if INTEGRITY_AVAILABLE and hash_and_record:
             try:
@@ -149,12 +150,14 @@ class PersistentAuditLog:
                 entry.data_hash = integrity_result.get("data_hash")
             except Exception as e:
                 logger.warning(f"Integrity recording failed: {e}")
-        
+
         if pool:
             try:
                 async with pool.acquire() as conn:
                     import json
-                    await conn.execute("""
+
+                    await conn.execute(
+                        """
                         INSERT INTO memory.audit_log 
                         (entry_id, timestamp, user_id, action, resource, details, 
                          ip_address, success, severity, data_hash)
@@ -169,7 +172,7 @@ class PersistentAuditLog:
                         entry.ip_address,
                         entry.success,
                         entry.severity,
-                        entry.data_hash
+                        entry.data_hash,
                     )
                 logger.debug(f"Audit entry persisted to PostgreSQL: {entry.entry_id}")
             except Exception as e:
@@ -177,9 +180,9 @@ class PersistentAuditLog:
                 self._memory_log.append(entry)
         else:
             self._memory_log.append(entry)
-        
+
         return entry
-    
+
     async def query(
         self,
         user_id: Optional[str] = None,
@@ -191,7 +194,7 @@ class PersistentAuditLog:
     ) -> AuditQueryResponse:
         """Query audit log from PostgreSQL with fallback to memory."""
         pool = await self._get_pool()
-        
+
         if pool:
             try:
                 async with pool.acquire() as conn:
@@ -199,7 +202,7 @@ class PersistentAuditLog:
                     conditions = []
                     params = []
                     param_idx = 1
-                    
+
                     if user_id:
                         conditions.append(f"user_id = ${param_idx}")
                         params.append(user_id)
@@ -216,15 +219,15 @@ class PersistentAuditLog:
                         conditions.append(f"severity = ${param_idx}")
                         params.append(severity)
                         param_idx += 1
-                    
+
                     where_clause = ""
                     if conditions:
                         where_clause = "WHERE " + " AND ".join(conditions)
-                    
+
                     # Get total count
                     count_query = f"SELECT COUNT(*) FROM memory.audit_log {where_clause}"
                     total = await conn.fetchval(count_query, *params)
-                    
+
                     # Get entries
                     query = f"""
                         SELECT entry_id, timestamp, user_id, action, resource, 
@@ -235,37 +238,40 @@ class PersistentAuditLog:
                         LIMIT ${param_idx} OFFSET ${param_idx + 1}
                     """
                     params.extend([limit, offset])
-                    
+
                     rows = await conn.fetch(query, *params)
-                    
+
                     entries = []
                     for row in rows:
                         import json
-                        entries.append(AuditEntry(
-                            entry_id=str(row["entry_id"]),
-                            timestamp=row["timestamp"],
-                            user_id=row["user_id"],
-                            action=row["action"],
-                            resource=row["resource"],
-                            details=json.loads(row["details"]) if row["details"] else {},
-                            ip_address=row["ip_address"] or "",
-                            success=row["success"],
-                            severity=row["severity"] or "info",
-                            data_hash=row["data_hash"]
-                        ))
-                    
+
+                        entries.append(
+                            AuditEntry(
+                                entry_id=str(row["entry_id"]),
+                                timestamp=row["timestamp"],
+                                user_id=row["user_id"],
+                                action=row["action"],
+                                resource=row["resource"],
+                                details=json.loads(row["details"]) if row["details"] else {},
+                                ip_address=row["ip_address"] or "",
+                                success=row["success"],
+                                severity=row["severity"] or "info",
+                                data_hash=row["data_hash"],
+                            )
+                        )
+
                     return AuditQueryResponse(
                         entries=entries,
                         count=len(entries),
                         has_more=total > offset + limit,
-                        source="postgres"
+                        source="postgres",
                     )
             except Exception as e:
                 logger.error(f"Failed to query PostgreSQL: {e}")
-        
+
         # Fallback to memory
         results = self._memory_log.copy()
-        
+
         if user_id:
             results = [e for e in results if e.user_id == user_id]
         if action:
@@ -274,32 +280,29 @@ class PersistentAuditLog:
             results = [e for e in results if resource in e.resource]
         if severity:
             results = [e for e in results if e.severity == severity]
-        
+
         results.sort(key=lambda x: x.timestamp, reverse=True)
         total = len(results)
-        results = results[offset:offset + limit]
-        
+        results = results[offset : offset + limit]
+
         return AuditQueryResponse(
-            entries=results,
-            count=len(results),
-            has_more=total > offset + limit,
-            source="memory"
+            entries=results, count=len(results), has_more=total > offset + limit, source="memory"
         )
-    
+
     async def get_stats(self) -> Dict[str, Any]:
         """Get audit log statistics."""
         pool = await self._get_pool()
-        
+
         if pool:
             try:
                 async with pool.acquire() as conn:
                     stats = {}
-                    
+
                     # Total entries
                     stats["total_entries"] = await conn.fetchval(
                         "SELECT COUNT(*) FROM memory.audit_log"
                     )
-                    
+
                     # By severity
                     severity_rows = await conn.fetch("""
                         SELECT severity, COUNT(*) as count 
@@ -307,7 +310,7 @@ class PersistentAuditLog:
                         GROUP BY severity
                     """)
                     stats["by_severity"] = {r["severity"]: r["count"] for r in severity_rows}
-                    
+
                     # By action
                     action_rows = await conn.fetch("""
                         SELECT action, COUNT(*) as count 
@@ -317,7 +320,7 @@ class PersistentAuditLog:
                         LIMIT 10
                     """)
                     stats["by_action"] = {r["action"]: r["count"] for r in action_rows}
-                    
+
                     # Success/failure
                     stats["success_count"] = await conn.fetchval(
                         "SELECT COUNT(*) FROM memory.audit_log WHERE success = TRUE"
@@ -325,32 +328,33 @@ class PersistentAuditLog:
                     stats["failure_count"] = stats["total_entries"] - stats["success_count"]
                     stats["success_rate"] = (
                         (stats["success_count"] / stats["total_entries"] * 100)
-                        if stats["total_entries"] > 0 else 0
+                        if stats["total_entries"] > 0
+                        else 0
                     )
-                    
+
                     # Last entry
                     last = await conn.fetchval(
                         "SELECT timestamp FROM memory.audit_log ORDER BY timestamp DESC LIMIT 1"
                     )
                     stats["last_entry_at"] = last.isoformat() if last else None
                     stats["source"] = "postgres"
-                    
+
                     return stats
             except Exception as e:
                 logger.error(f"Failed to get stats from PostgreSQL: {e}")
-        
+
         # Fallback to memory
         total = len(self._memory_log)
         severity_counts = {}
         action_counts = {}
         successes = 0
-        
+
         for entry in self._memory_log:
             severity_counts[entry.severity] = severity_counts.get(entry.severity, 0) + 1
             action_counts[entry.action] = action_counts.get(entry.action, 0) + 1
             if entry.success:
                 successes += 1
-        
+
         return {
             "total_entries": total,
             "by_severity": severity_counts,
@@ -358,8 +362,10 @@ class PersistentAuditLog:
             "success_count": successes,
             "failure_count": total - successes,
             "success_rate": (successes / total * 100) if total > 0 else 0,
-            "last_entry_at": self._memory_log[-1].timestamp.isoformat() if self._memory_log else None,
-            "source": "memory"
+            "last_entry_at": (
+                self._memory_log[-1].timestamp.isoformat() if self._memory_log else None
+            ),
+            "source": "memory",
         }
 
 
@@ -379,6 +385,7 @@ def get_audit_log() -> PersistentAuditLog:
 # Endpoints
 # ============================================================================
 
+
 @router.post("/audit/log", response_model=AuditEntry)
 async def log_audit_entry(request: AuditLogRequest):
     """Log a security audit entry with cryptographic integrity."""
@@ -391,10 +398,10 @@ async def log_audit_entry(request: AuditLogRequest):
         success=request.success,
         severity=request.severity,
     )
-    
+
     audit_log = get_audit_log()
     entry = await audit_log.log(entry)
-    
+
     # Also log to standard logging for SIEM integration
     log_msg = f"AUDIT: user={request.user_id} action={request.action} resource={request.resource} success={request.success}"
     if request.severity == "critical":
@@ -405,7 +412,7 @@ async def log_audit_entry(request: AuditLogRequest):
         logger.warning(log_msg)
     else:
         logger.info(log_msg)
-    
+
     return entry
 
 
@@ -426,7 +433,7 @@ async def query_audit_log(
         resource=resource,
         severity=severity,
         limit=limit,
-        offset=offset
+        offset=offset,
     )
 
 
@@ -442,12 +449,12 @@ async def security_health():
     """Security service health check."""
     audit_log = get_audit_log()
     stats = await audit_log.get_stats()
-    
+
     return {
         "status": "healthy",
         "service": "security-audit",
         "audit_entries": stats.get("total_entries", 0),
         "storage": stats.get("source", "unknown"),
         "integrity_available": INTEGRITY_AVAILABLE,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }

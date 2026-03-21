@@ -10,19 +10,18 @@ import asyncio
 import logging
 import uuid
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Callable, Awaitable, Set
-from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 from mycosoft_mas.agents.enums import AgentStatus
+from mycosoft_mas.agents.memory_mixin import AgentMemoryMixin
 from mycosoft_mas.agents.messaging.message import Message, MessageType
-from mycosoft_mas.services.integration_service import IntegrationService
+from mycosoft_mas.agents.websocket_mixin import AgentWebSocketMixin
+from mycosoft_mas.core.task_manager import TaskManager
 from mycosoft_mas.dependencies.dependency_manager import DependencyManager
 from mycosoft_mas.integrations.integration_manager import IntegrationManager
-from mycosoft_mas.core.task_manager import TaskManager
+from mycosoft_mas.services.integration_service import IntegrationService
 from mycosoft_mas.services.monitoring_interface import AgentMonitorable
 from mycosoft_mas.services.security_interface import AgentSecurable
-from mycosoft_mas.agents.memory_mixin import AgentMemoryMixin
-from mycosoft_mas.agents.websocket_mixin import AgentWebSocketMixin
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +31,11 @@ class MonitoringService:
     def add_health_check(self, name, check_fn):
         pass
 
+
 class SecurityService:
     def authenticate_agent(self, agent):
         return str(uuid.uuid4())
+
 
 class ErrorLoggingService:
     async def log_error(self, error_type: str, details: Dict[str, Any]) -> None:
@@ -44,11 +45,11 @@ class ErrorLoggingService:
 class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSocketMixin):
     """
     Base agent class that all other agents inherit from.
-    
+
     This class provides the core functionality for all agents in the system,
     including task processing, error handling, health monitoring, communication,
     and memory operations.
-    
+
     Memory capabilities are provided by AgentMemoryMixin:
     - remember(): Store content to memory
     - recall(): Query memories
@@ -56,11 +57,11 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
     - record_task_completion(): Log episodic events
     - get_conversation_context(): Get recent conversation turns
     """
-    
+
     def __init__(self, agent_id: str, name: str, config: Dict[str, Any]):
         """
         Initialize the base agent.
-        
+
         Args:
             agent_id: Unique identifier for the agent
             name: Display name for the agent
@@ -70,17 +71,17 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
         self.name = name
         self.config = config
         self.logger = logging.getLogger(f"agent.{agent_id}")
-        
+
         # Queues for communication
         self.notification_queue = asyncio.Queue()
         self.task_queue = asyncio.Queue()
         self.error_queue = asyncio.Queue()
-        
+
         # Configuration parameters
-        self.health_check_interval = config.get('health_check_interval', 60)
-        self.retry_interval = config.get('retry_interval', 300)
-        self.max_retries = config.get('max_retries', 3)
-        
+        self.health_check_interval = config.get("health_check_interval", 60)
+        self.retry_interval = config.get("retry_interval", 300)
+        self.max_retries = config.get("max_retries", 3)
+
         # Agent state
         # Start in INITIALIZING; `initialize()` transitions to ACTIVE/ERROR.
         self.status = AgentStatus.INITIALIZING
@@ -98,7 +99,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
             "uptime": 0,
             "start_time": None,
         }
-        
+
         # Initialize managers
         self.dependency_manager = DependencyManager()
         self.integration_manager = IntegrationManager()
@@ -106,7 +107,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
         self.monitoring_service = MonitoringService()
         self.security_service = SecurityService()
         self.error_logging_service = ErrorLoggingService()
-        
+
         # Desktop automation
         self.desktop_automation = None
 
@@ -121,27 +122,27 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
     def get_agent_id(self) -> str:
         """Get the unique identifier of the agent."""
         return self.agent_id
-        
+
     def get_name(self) -> str:
         """Get the display name of the agent."""
         return self.name
-        
+
     def get_capabilities(self) -> list[str]:
         """Get the capabilities of the agent."""
         return list(self.capabilities)
-        
+
     def get_security_token(self) -> str:
         """Get the current security token of the agent."""
         return self.security_token or ""
-        
+
     def set_security_token(self, token: str) -> None:
         """Set the security token for the agent."""
         self.security_token = token
-        
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get the current metrics of the agent."""
         return self.metrics
-        
+
     def get_status(self) -> Dict[str, Any]:
         """Get the current status of the agent."""
         return {
@@ -150,9 +151,11 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
             "status": self.status.value,
             "capabilities": list(self.capabilities),
             "last_heartbeat": datetime.now().isoformat(),
-            "memory_enabled": self._memory_initialized if hasattr(self, '_memory_initialized') else False
+            "memory_enabled": (
+                self._memory_initialized if hasattr(self, "_memory_initialized") else False
+            ),
         }
-        
+
     async def health_check(self) -> Dict[str, Any]:
         """
         Structured health check (legacy-compatible with pytest suite).
@@ -205,7 +208,9 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
             Dict with change_id, status, and message
         """
         try:
-            from mycosoft_mas.services.code_modification_service import get_code_modification_service
+            from mycosoft_mas.services.code_modification_service import (
+                get_code_modification_service,
+            )
 
             code_service = await get_code_modification_service()
             result = await code_service.request_code_change(
@@ -321,8 +326,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
         # Register dependencies
         if hasattr(self, "dependencies"):
             result = self.dependency_manager.register_agent_dependencies(
-                self.agent_id,
-                self.dependencies
+                self.agent_id, self.dependencies
             )
             if result["status"] == "conflict":
                 self.logger.warning(f"Dependency conflicts: {result['conflicts']}")
@@ -341,14 +345,15 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
         # Register health checks
         self.monitoring_service.add_health_check(
             f"{self.agent_id}_dependencies",
-            lambda: self.dependency_manager.check_dependencies(self.agent_id).get("status") == "success"
+            lambda: self.dependency_manager.check_dependencies(self.agent_id).get("status")
+            == "success",
         )
         self.monitoring_service.add_health_check(
             f"{self.agent_id}_integrations",
             lambda: all(
                 self.integration_manager.get_integration_status(i).get("is_active", False)
                 for i in self.integrations
-            )
+            ),
         )
 
         # Initialize memory (from AgentMemoryMixin)
@@ -407,7 +412,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
         """Start the agent's main processing loop."""
         if not self.integration_service:
             raise RuntimeError("Agent must be initialized with integration service before starting")
-        
+
         self.running = True
         self.status = AgentStatus.ACTIVE
         self.task = asyncio.create_task(self._process())
@@ -429,7 +434,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
         # Save agent state to memory before stopping
         if self._memory_initialized:
             await self.save_agent_state()
-        
+
         if self.task:
             self.task.cancel()
             try:
@@ -455,21 +460,21 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
             try:
                 # Update metrics
                 await self._update_metrics()
-                
+
                 # Process messages or perform agent-specific tasks
                 await self.process()
-                
+
                 # Sleep to prevent CPU overuse
                 await asyncio.sleep(self.config.get("processing_interval", 0.1))
-                
+
             except Exception as e:
                 self.logger.error(f"Error in agent {self.agent_id} processing loop: {str(e)}")
                 self.status = AgentStatus.ERROR
-                
+
                 # Record error in memory
                 if self._memory_initialized:
                     await self.record_error(str(e), {"source": "processing_loop"})
-                
+
                 await asyncio.sleep(1)
 
     async def process(self):
@@ -481,19 +486,23 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
         try:
             # Merge runtime metrics into the existing metrics dict so we don't
             # clobber legacy counters expected by the test suite.
-            self.metrics.update({
-                "timestamp": datetime.now().isoformat(),
-                "status": self.status.value,
-                "processing_time": self._get_processing_time(),
-                "message_count": self._get_message_count(),
-                "error_count": self._get_error_count(),
-                "memory_enabled": self._memory_initialized if hasattr(self, '_memory_initialized') else False,
-                "custom_metrics": self.get_custom_metrics()
-            })
-            
+            self.metrics.update(
+                {
+                    "timestamp": datetime.now().isoformat(),
+                    "status": self.status.value,
+                    "processing_time": self._get_processing_time(),
+                    "message_count": self._get_message_count(),
+                    "error_count": self._get_error_count(),
+                    "memory_enabled": (
+                        self._memory_initialized if hasattr(self, "_memory_initialized") else False
+                    ),
+                    "custom_metrics": self.get_custom_metrics(),
+                }
+            )
+
             if self.integration_service:
                 await self.integration_service.update_agent_metrics(self.agent_id, self.metrics)
-                
+
         except Exception as e:
             self.logger.error(f"Error updating metrics: {str(e)}")
 
@@ -544,7 +553,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
             MessageType.EVOLUTION_ALERT: self._handle_evolution_alert,
             MessageType.SYSTEM_UPDATE: self._handle_system_update,
         }
-        
+
         handler = handlers.get(message.type)
         if handler:
             return await handler(message)
@@ -569,7 +578,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
         """Handle notification messages."""
         await self.notification_queue.put(message.content)
         return {"status": "received", "message_id": str(message.id)}
-        
+
     async def _handle_task(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         """
         Dual-purpose handler:
@@ -586,21 +595,21 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
         """Handle task messages."""
         if message.content["action"] == "process":
             result = await self.task_manager.submit_task(message.content["task"])
-            
+
             # Record task in memory
             if self._memory_initialized and result.get("status") == "completed":
                 await self.record_task_completion(
                     task_id=message.content.get("task_id", str(message.id)),
                     result=result,
-                    success=True
+                    success=True,
                 )
-            
+
             return result
         elif message.content["action"] == "status":
             return await self.task_manager.get_task_status(message.content["task_id"])
         else:
             return {"status": "error", "message": "Unknown task action"}
-            
+
     async def _handle_health_check(self, message: Message) -> Dict[str, Any]:
         """Handle health check requests."""
         return {
@@ -611,114 +620,118 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
                 for integration_id in self.integrations
             },
             "last_heartbeat": self.last_heartbeat.isoformat(),
-            "memory_enabled": self._memory_initialized if hasattr(self, '_memory_initialized') else False
+            "memory_enabled": (
+                self._memory_initialized if hasattr(self, "_memory_initialized") else False
+            ),
         }
-        
+
     async def _handle_technology_update(self, message: Message) -> Dict[str, Any]:
         """Handle technology update messages."""
         try:
             technology = message.content["technology"]
-            
+
             if "technology_monitoring" in self.capabilities:
                 result = await self._process_technology_update(technology)
-                
+
                 # Learn from technology update
                 if self._memory_initialized:
-                    await self.learn_fact({
-                        "subject": "technology_update",
-                        "technology": technology.get("name", "unknown"),
-                        "version": technology.get("version"),
-                        "learned_at": datetime.now().isoformat()
-                    })
-                
+                    await self.learn_fact(
+                        {
+                            "subject": "technology_update",
+                            "technology": technology.get("name", "unknown"),
+                            "version": technology.get("version"),
+                            "learned_at": datetime.now().isoformat(),
+                        }
+                    )
+
                 if result.get("requires_dependency_update"):
                     await self.dependency_manager.update_dependencies(
-                        result["dependencies"],
-                        self.agent_id
+                        result["dependencies"], self.agent_id
                     )
-                
+
                 if result.get("requires_integration_update"):
                     await self.integration_manager.update_integrations(
-                        result["integrations"],
-                        self.agent_id
+                        result["integrations"], self.agent_id
                     )
-                
+
                 return {"status": "success", "result": result}
             else:
-                return {"status": "ignored", "message": "Agent does not support technology monitoring"}
-            
+                return {
+                    "status": "ignored",
+                    "message": "Agent does not support technology monitoring",
+                }
+
         except Exception as e:
             return {"status": "error", "message": str(e)}
-        
+
     async def _handle_evolution_alert(self, message: Message) -> Dict[str, Any]:
         """Handle evolution alert messages."""
         try:
             alert_type = message.content["alert_type"]
             severity = message.content["severity"]
-            
+
             result = await self._process_evolution_alert(alert_type, severity)
-            
+
             if severity == "critical":
                 await self._handle_critical_evolution_alert(result)
             elif severity == "high":
                 await self._handle_high_evolution_alert(result)
             else:
                 await self._handle_normal_evolution_alert(result)
-            
+
             return {"status": "success", "result": result}
-            
+
         except Exception as e:
             return {"status": "error", "message": str(e)}
-        
+
     async def _handle_system_update(self, message: Message) -> Dict[str, Any]:
         """Handle system update messages."""
         try:
             update_type = message.content["update_type"]
             details = message.content["details"]
-            
+
             result = await self._process_system_update(update_type, details)
-            
+
             if result.get("requires_state_update"):
                 await self._update_agent_state(result["state_updates"])
-            
+
             if result.get("requires_capability_update"):
                 await self._update_capabilities(result["capability_updates"])
-            
+
             return {"status": "success", "result": result}
-            
+
         except Exception as e:
             return {"status": "error", "message": str(e)}
-        
+
     async def _process_technology_update(self, technology: Dict[str, Any]) -> Dict[str, Any]:
         """Process technology update. Override in subclasses."""
         return {"status": "not_implemented"}
-    
+
     async def _process_evolution_alert(self, alert_type: str, severity: str) -> Dict[str, Any]:
         """Process evolution alert. Override in subclasses."""
         return {"status": "not_implemented"}
-    
-    async def _process_system_update(self, update_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
+
+    async def _process_system_update(
+        self, update_type: str, details: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Process system update. Override in subclasses."""
         return {"status": "not_implemented"}
-    
+
     async def _handle_critical_evolution_alert(self, result: Dict[str, Any]):
         """Handle critical evolution alert. Override in subclasses."""
-        pass
-    
+
     async def _handle_high_evolution_alert(self, result: Dict[str, Any]):
         """Handle high severity evolution alert. Override in subclasses."""
-        pass
-    
+
     async def _handle_normal_evolution_alert(self, result: Dict[str, Any]):
         """Handle normal evolution alert. Override in subclasses."""
-        pass
-    
+
     async def _update_agent_state(self, updates: Dict[str, Any]):
         """Update agent state based on system updates."""
         for key, value in updates.items():
             if hasattr(self, key):
                 setattr(self, key, value)
-            
+
     async def _update_capabilities(self, updates: List[str]):
         """Update agent capabilities based on system updates."""
         self.capabilities.update(updates)
@@ -726,20 +739,20 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
     async def _handle_error(self, error: Dict[str, Any]):
         """Handle errors from the error queue."""
         self.logger.error(f"Agent error: {error}")
-        
+
         # Record in memory
         if self._memory_initialized:
             await self.record_error(
                 error.get("message", str(error)),
-                {"type": error.get("type"), "source": "error_queue"}
+                {"type": error.get("type"), "source": "error_queue"},
             )
 
     async def _handle_notification_queue(self, notification: Dict[str, Any]) -> None:
         """Handle notifications from the queue (internal helper)."""
         self.logger.info(f"Agent notification: {notification}")
-    
+
     # ==================== SELF-HEALING CODE MODIFICATION ====================
-    
+
     async def request_code_change(
         self,
         description: str,
@@ -749,26 +762,28 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
     ) -> Dict[str, Any]:
         """
         Request a code change through the CodeModificationService.
-        
+
         Any agent can request code changes, which will be:
         1. Reviewed by SecurityCodeReviewer
         2. Executed by CodingAgent
         3. Monitored for vulnerabilities
-        
+
         Args:
             description: What code change to make
             reason: Why this change is needed
             target_files: Optional list of files to modify
             priority: 1-10, higher = more urgent
-            
+
         Returns:
             Dict with change_id, status, and message
         """
         self.logger.info(f"Agent {self.agent_id} requesting code change: {description[:50]}...")
-        
+
         try:
-            from mycosoft_mas.services.code_modification_service import get_code_modification_service
-            
+            from mycosoft_mas.services.code_modification_service import (
+                get_code_modification_service,
+            )
+
             code_service = await get_code_modification_service()
             result = await code_service.request_code_change(
                 requester_id=self.agent_id,
@@ -778,9 +793,9 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
                 priority=priority,
                 context={"reason": reason, "agent_name": self.name},
             )
-            
+
             # Record this request in memory
-            if hasattr(self, '_memory_initialized') and self._memory_initialized:
+            if hasattr(self, "_memory_initialized") and self._memory_initialized:
                 await self.remember(
                     content=f"Requested code change: {description}",
                     tags=["code_change", "self_healing"],
@@ -788,12 +803,12 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
                         "change_id": result.get("change_id"),
                         "reason": reason,
                         "status": result.get("status"),
-                    }
+                    },
                 )
-            
+
             self.logger.info(f"Code change request submitted: {result.get('change_id')}")
             return result
-            
+
         except Exception as e:
             self.logger.error(f"Failed to request code change: {e}")
             return {
@@ -801,7 +816,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
                 "message": str(e),
                 "change_id": None,
             }
-    
+
     async def request_self_improvement(
         self,
         improvement_description: str,
@@ -809,25 +824,27 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
     ) -> Dict[str, Any]:
         """
         Request an improvement to this agent's own code.
-        
+
         The agent can identify ways to improve itself and submit
         requests through the CodeModificationService.
-        
+
         Args:
             improvement_description: What improvement to make
             priority: 1-10, higher = more urgent (default low priority)
-            
+
         Returns:
             Dict with change_id, status, and message
         """
         self.logger.info(f"Agent {self.agent_id} requesting self-improvement...")
-        
+
         # Determine the agent's file path
         agent_file = f"mycosoft_mas/agents/{self.agent_id}.py"
-        
+
         try:
-            from mycosoft_mas.services.code_modification_service import get_code_modification_service
-            
+            from mycosoft_mas.services.code_modification_service import (
+                get_code_modification_service,
+            )
+
             code_service = await get_code_modification_service()
             result = await code_service.request_code_change(
                 requester_id=self.agent_id,
@@ -842,21 +859,21 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
                     "improvement_type": "self_requested",
                 },
             )
-            
+
             # Record this in memory
-            if hasattr(self, '_memory_initialized') and self._memory_initialized:
+            if hasattr(self, "_memory_initialized") and self._memory_initialized:
                 await self.remember(
                     content=f"Requested self-improvement: {improvement_description}",
                     tags=["self_improvement", "evolution"],
                     metadata={
                         "change_id": result.get("change_id"),
                         "status": result.get("status"),
-                    }
+                    },
                 )
-            
+
             self.logger.info(f"Self-improvement request submitted: {result.get('change_id')}")
             return result
-            
+
         except Exception as e:
             self.logger.error(f"Failed to request self-improvement: {e}")
             return {
@@ -864,7 +881,7 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
                 "message": str(e),
                 "change_id": None,
             }
-    
+
     async def report_bug_for_fix(
         self,
         error_message: str,
@@ -873,23 +890,25 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
     ) -> Dict[str, Any]:
         """
         Report a bug encountered during operation for automatic fixing.
-        
+
         When an agent encounters an error, it can report it to the
         self-healing system for automatic analysis and fixing.
-        
+
         Args:
             error_message: The error that occurred
             stack_trace: Optional stack trace
             affected_files: Optional list of files involved
-            
+
         Returns:
             Dict with change_id and status
         """
         self.logger.info(f"Agent {self.agent_id} reporting bug for fix: {error_message[:50]}...")
-        
+
         try:
-            from mycosoft_mas.services.code_modification_service import get_code_modification_service
-            
+            from mycosoft_mas.services.code_modification_service import (
+                get_code_modification_service,
+            )
+
             code_service = await get_code_modification_service()
             result = await code_service.request_code_change(
                 requester_id=self.agent_id,
@@ -905,21 +924,21 @@ class BaseAgent(AgentMonitorable, AgentSecurable, AgentMemoryMixin, AgentWebSock
                     "auto_reported": True,
                 },
             )
-            
+
             # Record the bug report in memory
-            if hasattr(self, '_memory_initialized') and self._memory_initialized:
+            if hasattr(self, "_memory_initialized") and self._memory_initialized:
                 await self.record_error(
                     error_message,
                     {
                         "stack_trace": stack_trace,
                         "change_id": result.get("change_id"),
                         "fix_requested": True,
-                    }
+                    },
                 )
-            
+
             self.logger.info(f"Bug fix request submitted: {result.get('change_id')}")
             return result
-            
+
         except Exception as e:
             self.logger.error(f"Failed to report bug for fix: {e}")
             return {

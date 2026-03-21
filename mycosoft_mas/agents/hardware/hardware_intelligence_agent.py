@@ -14,8 +14,7 @@ Sources: RSS feeds, manufacturer pages, techreport scrapers.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
-from datetime import datetime
+from typing import Any, Dict, Optional
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 
@@ -24,16 +23,51 @@ logger = logging.getLogger(__name__)
 HARDWARE_CATALOG = {
     "nvidia": {
         "datacenter": [
-            {"name": "B200", "family": "Blackwell", "vram_gb": 192, "fp16_tflops": 4500, "released": "2024-Q4"},
-            {"name": "H200", "family": "Hopper", "vram_gb": 141, "fp16_tflops": 1979, "released": "2024-Q1"},
-            {"name": "H100 SXM", "family": "Hopper", "vram_gb": 80, "fp16_tflops": 1979, "released": "2023-Q1"},
-            {"name": "A100 SXM", "family": "Ampere", "vram_gb": 80, "fp16_tflops": 312, "released": "2020-Q2"},
-            {"name": "L40S", "family": "Ada Lovelace", "vram_gb": 48, "fp16_tflops": 366, "released": "2023-Q3"},
+            {
+                "name": "B200",
+                "family": "Blackwell",
+                "vram_gb": 192,
+                "fp16_tflops": 4500,
+                "released": "2024-Q4",
+            },
+            {
+                "name": "H200",
+                "family": "Hopper",
+                "vram_gb": 141,
+                "fp16_tflops": 1979,
+                "released": "2024-Q1",
+            },
+            {
+                "name": "H100 SXM",
+                "family": "Hopper",
+                "vram_gb": 80,
+                "fp16_tflops": 1979,
+                "released": "2023-Q1",
+            },
+            {
+                "name": "A100 SXM",
+                "family": "Ampere",
+                "vram_gb": 80,
+                "fp16_tflops": 312,
+                "released": "2020-Q2",
+            },
+            {
+                "name": "L40S",
+                "family": "Ada Lovelace",
+                "vram_gb": 48,
+                "fp16_tflops": 366,
+                "released": "2023-Q3",
+            },
         ],
         "consumer": [
             {"name": "RTX 5090", "family": "Blackwell", "vram_gb": 32, "released": "2025-Q1"},
             {"name": "RTX 4090", "family": "Ada Lovelace", "vram_gb": 24, "released": "2022-Q4"},
-            {"name": "RTX 4080 SUPER", "family": "Ada Lovelace", "vram_gb": 16, "released": "2024-Q1"},
+            {
+                "name": "RTX 4080 SUPER",
+                "family": "Ada Lovelace",
+                "vram_gb": 16,
+                "released": "2024-Q1",
+            },
         ],
     },
     "amd": {
@@ -58,7 +92,14 @@ HARDWARE_CATALOG = {
     },
     "edge": {
         "mcu": [
-            {"name": "ESP32-S3", "cores": 2, "ram_kb": 512, "flash_mb": 16, "wifi": True, "ble": True},
+            {
+                "name": "ESP32-S3",
+                "cores": 2,
+                "ram_kb": 512,
+                "flash_mb": 16,
+                "wifi": True,
+                "ble": True,
+            },
             {"name": "ESP32-C6", "cores": 1, "ram_kb": 512, "wifi6": True, "thread": True},
             {"name": "RP2040", "cores": 2, "ram_kb": 264, "flash_mb": 16},
         ],
@@ -73,7 +114,12 @@ HARDWARE_CATALOG = {
 class HardwareIntelligenceAgent(BaseAgent):
     """Tracks and reports on compute hardware."""
 
-    def __init__(self, agent_id: str = "hardware-intel", name: str = "Hardware Intelligence Agent", config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        agent_id: str = "hardware-intel",
+        name: str = "Hardware Intelligence Agent",
+        config: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(agent_id=agent_id, name=name, config=config or {})
         self.capabilities = [
             "list_hardware",
@@ -144,4 +190,7 @@ class HardwareIntelligenceAgent(BaseAgent):
         return {"status": "success", "edge_hardware": HARDWARE_CATALOG.get("edge", {})}
 
     def _quantum_info(self) -> Dict[str, Any]:
-        return {"status": "success", "quantum_processors": HARDWARE_CATALOG.get("quantum", {}).get("processors", [])}
+        return {
+            "status": "success",
+            "quantum_processors": HARDWARE_CATALOG.get("quantum", {}).get("processors", []),
+        }

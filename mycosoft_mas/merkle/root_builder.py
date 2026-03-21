@@ -19,7 +19,6 @@ from typing import Optional, Sequence
 import cbor2
 from blake3 import blake3
 
-
 DOMAIN_EVENT_LEAF = b"mica:leaf:event:v1"
 DOMAIN_WORLD_SLOT = b"mica:leaf:world_slot:v1"
 DOMAIN_SNAPSHOT_OBJECT = b"mica:object:snapshot:v1"
@@ -345,7 +344,9 @@ class ThoughtRootBuilder:
         return thought_hash_from_cbor_object(thought_obj), thought_obj
 
 
-def build_inclusion_proof(ordered_hashes: Sequence[bytes], target_hash: bytes) -> list[tuple[str, bytes]]:
+def build_inclusion_proof(
+    ordered_hashes: Sequence[bytes], target_hash: bytes
+) -> list[tuple[str, bytes]]:
     """Build Merkle proof for target leaf. Returns list of ('left'|'right', sibling_hash)."""
     if not ordered_hashes:
         raise ValueError("cannot prove inclusion in empty list")

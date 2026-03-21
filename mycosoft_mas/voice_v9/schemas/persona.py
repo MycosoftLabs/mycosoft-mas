@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 class PersonaState(BaseModel):
     """MYCA persona state for voice output validation."""
+
     session_id: str
     persona_locked: bool = True
     rewrite_count: int = 0  # Times text was rewritten for persona

@@ -9,7 +9,6 @@ are configured in one place. See docs/UNIFIED_LLM_ROUTING_NEMOTRON_MAR14_2026.md
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -42,6 +41,7 @@ FALLBACK = "fallback"
 @dataclass
 class BackendSelection:
     """Resolved backend for a given role."""
+
     provider: str
     base_url: str
     model: str
@@ -128,7 +128,9 @@ def get_backend_for_role(role: ModelRole) -> BackendSelection:
         role_key = "psilo_overlay"
 
     # Role in YAML can be "provider:model" or a key under model_roles
-    role_spec = model_roles.get(role) or model_roles.get(role_key) or roles.get(role) or roles.get(role_key)
+    role_spec = (
+        model_roles.get(role) or model_roles.get(role_key) or roles.get(role) or roles.get(role_key)
+    )
 
     if isinstance(role_spec, str) and ":" in role_spec:
         prov_name, model = role_spec.split(":", 1)
@@ -143,7 +145,9 @@ def get_backend_for_role(role: ModelRole) -> BackendSelection:
         if not base_url and prov_name == "nemotron":
             base_url = os.getenv("NEMOTRON_BASE_URL", "")
         if not base_url and prov_name == "ollama":
-            base_url = os.getenv("OLLAMA_BASE_URL", os.getenv("OLLAMA_URL", "http://localhost:11434"))
+            base_url = os.getenv(
+                "OLLAMA_BASE_URL", os.getenv("OLLAMA_URL", "http://localhost:11434")
+            )
         return BackendSelection(
             provider=prov_name,
             base_url=(base_url or "http://localhost:11434").rstrip("/"),

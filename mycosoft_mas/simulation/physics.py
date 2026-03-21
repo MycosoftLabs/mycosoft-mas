@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any, Dict, List, Tuple
 from uuid import uuid4
-import os
 
 import httpx
 import numpy as np
@@ -20,7 +20,9 @@ class PhysicsSimulator:
         timeout_seconds: float = 60.0,
     ) -> None:
         self.domain_size = domain_size
-        self.service_url = (service_url or os.getenv("PHYSICSNEMO_API_URL", "http://localhost:8400")).rstrip("/")
+        self.service_url = (
+            service_url or os.getenv("PHYSICSNEMO_API_URL", "http://localhost:8400")
+        ).rstrip("/")
         self.timeout_seconds = timeout_seconds
 
     async def _post(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -95,10 +97,7 @@ class PhysicsSimulator:
         payload = {"input_vector": source_vector, "weight_matrix": weights, "activation": "tanh"}
         try:
             result = await self._post("/physics/neural-operator", payload)
-            voltages = {
-                node_id: result["output_vector"][i]
-                for i, node_id in enumerate(node_ids)
-            }
+            voltages = {node_id: result["output_vector"][i] for i, node_id in enumerate(node_ids)}
         except Exception:
             # Ohmic fallback solved as diagonal network.
             voltages = {
@@ -114,7 +113,7 @@ class PhysicsSimulator:
             if src in voltages and dst in voltages:
                 currents[f"{src}->{dst}"] = (voltages[src] - voltages[dst]) / max(resistance, 1e-6)
 
-        power = sum((amp ** 2) for amp in currents.values())
+        power = sum((amp**2) for amp in currents.values())
         return {"voltages": voltages, "currents": currents, "power_dissipated": power}
 
     async def simulate_heat_transfer(
@@ -204,7 +203,11 @@ class PhysicsSimulator:
         rate_constants: Dict[str, float],
         steps: int = 30,
     ) -> Dict[str, Any]:
-        payload = {"concentrations": concentrations, "rate_constants": rate_constants, "steps": int(max(1, min(1000, steps)))}
+        payload = {
+            "concentrations": concentrations,
+            "rate_constants": rate_constants,
+            "steps": int(max(1, min(1000, steps))),
+        }
         try:
             return await self._post("/physics/reaction", payload)
         except Exception:
@@ -217,7 +220,15 @@ class PhysicsSimulator:
                     growth = rate_constants.get(f"{key}_growth", 0.0)
                     local[key] = max(0.0, local[key] + (growth - decay) * dt)
                     history[key].append(local[key])
-            return {"status": "completed_cpu_fallback", "final_concentrations": local, "history": history}
+            return {
+                "status": "completed_cpu_fallback",
+                "final_concentrations": local,
+                "history": history,
+            }
 
-    async def simulate_growth_physics(self, nutrient_field: Dict[Tuple[int, int], float], diffusion_coefficient: float) -> Dict[str, Any]:
-        return await self.simulate_diffusion(nutrient_field, diffusion_coefficient=diffusion_coefficient, time_steps=20)
+    async def simulate_growth_physics(
+        self, nutrient_field: Dict[Tuple[int, int], float], diffusion_coefficient: float
+    ) -> Dict[str, Any]:
+        return await self.simulate_diffusion(
+            nutrient_field, diffusion_coefficient=diffusion_coefficient, time_steps=20
+        )

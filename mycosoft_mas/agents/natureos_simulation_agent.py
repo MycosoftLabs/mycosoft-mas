@@ -36,10 +36,7 @@ class NatureOSSimulationAgent(BaseAgent):
 
     async def _handle_run_simulation(self, task: Dict[str, Any]) -> Dict[str, Any]:
         simulation_type = (
-            task.get("simulation_type")
-            or task.get("function_name")
-            or task.get("simulation")
-            or ""
+            task.get("simulation_type") or task.get("function_name") or task.get("simulation") or ""
         )
         params = task.get("params") or task.get("payload") or {}
 

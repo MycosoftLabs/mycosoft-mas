@@ -68,4 +68,3 @@ class NatureReplayStore:
             "records": total,
             "verified_at": datetime.now(timezone.utc).isoformat(),
         }
-

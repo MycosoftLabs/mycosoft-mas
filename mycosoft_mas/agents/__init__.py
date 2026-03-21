@@ -24,6 +24,7 @@ def _safe_import(module_path: str, symbol: str):
 
 BaseAgent = _safe_import(".base_agent", "BaseAgent")
 if BaseAgent is None:
+
     class BaseAgent:  # type: ignore[no-redef]
         """Lightweight fallback when full BaseAgent deps are unavailable."""
 

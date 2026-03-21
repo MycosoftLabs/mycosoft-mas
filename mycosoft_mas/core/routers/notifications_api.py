@@ -3,9 +3,11 @@ Admin Notifications API
 Endpoints for sending and managing notifications to Morgan.
 """
 
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException
-from typing import Dict, Any, Optional, List
 from pydantic import BaseModel
+
 from mycosoft_mas.services.admin_notifications import get_admin_notification_service, notify_morgan
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
@@ -13,6 +15,7 @@ router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 class NotificationRequest(BaseModel):
     """Request model for sending notifications."""
+
     title: str
     message: str
     type: str = "info"  # info, success, warning, error, task_complete, insight, discovery

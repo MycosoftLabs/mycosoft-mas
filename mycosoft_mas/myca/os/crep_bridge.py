@@ -10,8 +10,8 @@ CREP_COMMAND_CONTRACT_MAR13_2026 defines the canonical command schema.
 Date: 2026-03-02 (updated 2026-03-13 for autonomy integration)
 """
 
-import os
 import logging
+import os
 from typing import Any, Dict, Optional
 
 import aiohttp

@@ -7,32 +7,36 @@ relevant information.
 """
 
 import asyncio
-import logging
+import json
 import os
 import re
-from difflib import SequenceMatcher
-from typing import Dict, List, Optional, Any
-from datetime import datetime
-import json
-from pathlib import Path
 from dataclasses import dataclass, field
+from datetime import datetime
+from difflib import SequenceMatcher
 from enum import Enum, auto
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 from mycosoft_mas.agents.base_agent import BaseAgent
-from mycosoft_mas.agents.enums import AgentStatus, TaskType, TaskStatus, TaskPriority
-import httpx
+from mycosoft_mas.agents.enums import AgentStatus
+
 
 class SearchType(Enum):
     """Types of search operations"""
+
     KEYWORD = auto()
     SEMANTIC = auto()
     FUZZY = auto()
     REGEX = auto()
     STRUCTURED = auto()
 
+
 @dataclass
 class SearchQuery:
     """Search query configuration"""
+
     query_type: SearchType
     query: str
     filters: Dict[str, Any] = field(default_factory=dict)
@@ -41,77 +45,76 @@ class SearchQuery:
     sort_by: Optional[str] = None
     sort_order: str = "desc"
 
+
 @dataclass
 class SearchResult:
     """Results of a search operation"""
+
     result_id: str
     query: SearchQuery
     matches: List[Dict[str, Any]]
     metadata: Dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
 
+
 class SearchAgent(BaseAgent):
     """Agent for performing search and discovery operations"""
-    
-    def __init__(self, agent_id: str, name: str = "SearchAgent", config: Optional[Dict[str, Any]] = None):
+
+    def __init__(
+        self, agent_id: str, name: str = "SearchAgent", config: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(agent_id=agent_id, name=name, config=config or {})
         self.search_results: Dict[str, SearchResult] = {}
         self.search_queue: asyncio.Queue = asyncio.Queue()
         self.index_queue: asyncio.Queue = asyncio.Queue()
-        
+
         # Create necessary directories
         self.data_dir = Path("data/search")
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Initialize metrics
-        self.metrics.update({
-            "searches_performed": 0,
-            "results_found": 0,
-            "index_updates": 0,
-            "search_errors": 0
-        })
+        self.metrics.update(
+            {"searches_performed": 0, "results_found": 0, "index_updates": 0, "search_errors": 0}
+        )
 
         self.mindex_api_url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000")
         self.mindex_api_key = os.getenv("MINDEX_API_KEY")
-    
+
     async def initialize(self) -> None:
         """Initialize the agent"""
         await super().initialize()
         self.status = AgentStatus.READY
         self.logger.info("Search Agent initialized")
-    
+
     async def stop(self) -> None:
         """Stop the agent"""
         self.status = AgentStatus.STOPPING
         self.logger.info("Stopping Search Agent")
         await super().stop()
-    
+
     async def search(self, query: SearchQuery) -> str:
         """Perform a search operation"""
         result_id = f"search_{len(self.search_results)}"
-        
+
         try:
             # Add to search queue
-            await self.search_queue.put({
-                "result_id": result_id,
-                "query": query
-            })
-            
+            await self.search_queue.put({"result_id": result_id, "query": query})
+
             # Wait for result
             while result_id not in self.search_results:
                 await asyncio.sleep(0.1)
-            
+
             return result_id
-            
+
         except Exception as e:
             self.logger.error(f"Error performing search: {str(e)}")
             self.metrics["search_errors"] += 1
             raise
-    
+
     async def get_search_result(self, result_id: str) -> Optional[SearchResult]:
         """Get the results of a specific search"""
         return self.search_results.get(result_id)
-    
+
     async def update_index(self, data: Dict[str, Any]) -> None:
         """Update the search index with new data"""
         try:
@@ -119,64 +122,57 @@ class SearchAgent(BaseAgent):
         except Exception as e:
             self.logger.error(f"Error updating index: {str(e)}")
             raise
-    
+
     async def _process_search_queue(self) -> None:
         """Process the search queue"""
         while self.status == AgentStatus.RUNNING:
             try:
                 # Get next search task
                 task = await self.search_queue.get()
-                
+
                 # Perform search
-                result = await self._perform_search(
-                    task["result_id"],
-                    task["query"]
-                )
-                
+                result = await self._perform_search(task["result_id"], task["query"])
+
                 # Store result
                 self.search_results[task["result_id"]] = result
-                
+
                 # Update metrics
                 self.metrics["searches_performed"] += 1
                 self.metrics["results_found"] += len(result.matches)
-                
+
                 # Mark task as complete
                 self.search_queue.task_done()
-                
+
             except Exception as e:
                 self.logger.error(f"Error processing search: {str(e)}")
                 self.metrics["search_errors"] += 1
                 continue
-    
+
     async def _process_index_queue(self) -> None:
         """Process the index queue"""
         while self.status == AgentStatus.RUNNING:
             try:
                 # Get next index update
                 data = await self.index_queue.get()
-                
+
                 # Update index
                 await self._update_search_index(data)
-                
+
                 # Update metrics
                 self.metrics["index_updates"] += 1
-                
+
                 # Mark task as complete
                 self.index_queue.task_done()
-                
+
             except Exception as e:
                 self.logger.error(f"Error processing index update: {str(e)}")
                 continue
-    
-    async def _perform_search(
-        self,
-        result_id: str,
-        query: SearchQuery
-    ) -> SearchResult:
+
+    async def _perform_search(self, result_id: str, query: SearchQuery) -> SearchResult:
         """Perform the actual search operation"""
         try:
             matches = []
-            
+
             if query.query_type == SearchType.KEYWORD:
                 matches = await self._keyword_search(query)
             elif query.query_type == SearchType.SEMANTIC:
@@ -187,17 +183,13 @@ class SearchAgent(BaseAgent):
                 matches = await self._regex_search(query)
             elif query.query_type == SearchType.STRUCTURED:
                 matches = await self._structured_search(query)
-            
-            return SearchResult(
-                result_id=result_id,
-                query=query,
-                matches=matches
-            )
-            
+
+            return SearchResult(result_id=result_id, query=query, matches=matches)
+
         except Exception as e:
             self.logger.error(f"Error performing search: {str(e)}")
             raise
-    
+
     async def _keyword_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform keyword-based search"""
         limit = query.limit or 10
@@ -220,7 +212,7 @@ class SearchAgent(BaseAgent):
             for item in items:
                 matches.append({"type": result_type, "data": item, "source": "mindex"})
         return matches
-    
+
     async def _semantic_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform semantic search"""
         limit = query.limit or 10
@@ -236,6 +228,7 @@ class SearchAgent(BaseAgent):
                 results.append({"type": result_type, "data": item, "source": "mindex"})
 
         from mycosoft_mas.integrations.exa_client import get_exa_client
+
         exa = get_exa_client()
         if exa.is_configured:
             exa_response = await exa.semantic_search(
@@ -249,7 +242,7 @@ class SearchAgent(BaseAgent):
                 results.append({"type": "web", "data": item.model_dump(), "source": "exa"})
 
         return results
-    
+
     async def _fuzzy_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform fuzzy search"""
         limit = query.limit or 20
@@ -265,15 +258,17 @@ class SearchAgent(BaseAgent):
                 score = SequenceMatcher(None, query.query.lower(), candidate.lower()).ratio()
                 best_score = max(best_score, score)
             if best_score >= 0.65:
-                matches.append({
-                    "type": "taxa",
-                    "data": item,
-                    "source": "mindex",
-                    "score": round(best_score, 3),
-                })
+                matches.append(
+                    {
+                        "type": "taxa",
+                        "data": item,
+                        "source": "mindex",
+                        "score": round(best_score, 3),
+                    }
+                )
         matches.sort(key=lambda m: m.get("score", 0), reverse=True)
         return matches[:limit]
-    
+
     async def _regex_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform regex-based search"""
         try:
@@ -286,10 +281,11 @@ class SearchAgent(BaseAgent):
         matches = [
             {"type": "taxa", "data": item, "source": "mindex"}
             for item in taxa
-            if pattern.search(item.get("canonical_name", "")) or pattern.search(item.get("common_name", ""))
+            if pattern.search(item.get("canonical_name", ""))
+            or pattern.search(item.get("common_name", ""))
         ]
         return matches[:limit]
-    
+
     async def _structured_search(self, query: SearchQuery) -> List[Dict[str, Any]]:
         """Perform structured search"""
         limit = query.limit or 10
@@ -314,7 +310,7 @@ class SearchAgent(BaseAgent):
             for item in items:
                 matches.append({"type": result_type, "data": item, "source": "mindex"})
         return matches
-    
+
     async def _update_search_index(self, data: Dict[str, Any]) -> None:
         """Update the search index with new data"""
         try:

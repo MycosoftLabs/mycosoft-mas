@@ -69,9 +69,7 @@ class LiquidFungalIntegrationAgent(BaseAgent if BaseAgent is not object else obj
                     LiquidTemporalProcessor,
                 )
 
-                self._processor = LiquidTemporalProcessor(
-                    config=self.config.get("processor", {})
-                )
+                self._processor = LiquidTemporalProcessor(config=self.config.get("processor", {}))
             except Exception as exc:
                 logger.warning("Failed to init LiquidTemporalProcessor: %s", exc)
 
@@ -104,6 +102,7 @@ class LiquidFungalIntegrationAgent(BaseAgent if BaseAgent is not object else obj
                     from mycosoft_mas.services.learning_feedback import (
                         get_learning_service,
                     )
+
                     learning_feedback = get_learning_service()
                 except Exception:
                     pass
@@ -114,9 +113,7 @@ class LiquidFungalIntegrationAgent(BaseAgent if BaseAgent is not object else obj
                     continuous_learner=continuous_learner,
                 )
             except Exception as exc:
-                logger.warning(
-                    "Failed to init RecursiveSelfImprovementEngine: %s", exc
-                )
+                logger.warning("Failed to init RecursiveSelfImprovementEngine: %s", exc)
 
     async def process_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         task_type = task.get("type", "")
@@ -280,18 +277,14 @@ class LiquidFungalIntegrationAgent(BaseAgent if BaseAgent is not object else obj
             elif action == "history":
                 return {
                     "status": "success",
-                    "result": {
-                        "benchmarks": self._improvement_engine.get_benchmarks()
-                    },
+                    "result": {"benchmarks": self._improvement_engine.get_benchmarks()},
                 }
             elif action == "hypotheses":
                 status_filter = task.get("status_filter")
                 return {
                     "status": "success",
                     "result": {
-                        "hypotheses": self._improvement_engine.get_hypotheses(
-                            status=status_filter
-                        )
+                        "hypotheses": self._improvement_engine.get_hypotheses(status=status_filter)
                     },
                 }
 

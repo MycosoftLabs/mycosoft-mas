@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import httpx
 from fastapi import FastAPI
@@ -152,6 +152,7 @@ async def get_world() -> Dict[str, Any]:
 def run():
     """Run the State Service (standalone)."""
     import uvicorn
+
     port = int(os.getenv("STATE_SERVICE_PORT", "8010"))
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
 

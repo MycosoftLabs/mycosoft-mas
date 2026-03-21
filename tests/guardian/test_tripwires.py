@@ -102,9 +102,7 @@ class TestActionScanning:
 
     @pytest.mark.asyncio
     async def test_privilege_escalation_detected(self, tripwires):
-        alerts = await tripwires.scan_action(
-            "escalate_privileges", {"target": "admin"}
-        )
+        alerts = await tripwires.scan_action("escalate_privileges", {"target": "admin"})
         assert any(a.tripwire_type == TripwireType.PRIVILEGE_ESCALATION for a in alerts)
 
     @pytest.mark.asyncio
@@ -135,7 +133,5 @@ class TestPatternScanning:
 
     @pytest.mark.asyncio
     async def test_goal_fixation_detected(self, tripwires):
-        alerts = await tripwires.scan_pattern(
-            recent_actions=["same_action"] * 5
-        )
+        alerts = await tripwires.scan_pattern(recent_actions=["same_action"] * 5)
         assert any(a.tripwire_type == TripwireType.GOAL_DRIFT for a in alerts)

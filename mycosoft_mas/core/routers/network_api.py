@@ -21,7 +21,6 @@ from mycosoft_mas.services.network_diagnostics import (
     run_dns_checks,
     run_full_diagnostics,
     run_latency_checks,
-    NetworkDiagnosticsReport,
 )
 
 router = APIRouter(prefix="/api/network", tags=["network"])
@@ -49,7 +48,11 @@ async def get_dns_check(
     Run DNS checks across Cloudflare, Google, Quad9, and system resolvers.
     Detects anomalies (hijacking, poisoning) when resolvers return different IPs.
     """
-    domain_list = [d.strip() for d in domains.split(",") if d.strip()] if domains and domains.strip() else None
+    domain_list = (
+        [d.strip() for d in domains.split(",") if d.strip()]
+        if domains and domains.strip()
+        else None
+    )
     result = await run_dns_checks(domains=domain_list, include_system=include_system)
     return result
 

@@ -10,14 +10,14 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from mycosoft_mas.ethics.sandbox_manager import get_sandbox_manager, SessionState
-from mycosoft_mas.ethics.training_engine import get_training_engine
 from mycosoft_mas.ethics.grading_engine import get_grading_engine
-from mycosoft_mas.ethics.vessels import DevelopmentalVessel
 from mycosoft_mas.ethics.observer_integration import (
     get_observer_notes,
     record_grade_observation,
 )
+from mycosoft_mas.ethics.sandbox_manager import SessionState, get_sandbox_manager
+from mycosoft_mas.ethics.training_engine import get_training_engine
+from mycosoft_mas.ethics.vessels import DevelopmentalVessel
 
 router = APIRouter(prefix="/api/ethics/training", tags=["ethics-training"])
 
@@ -165,15 +165,11 @@ async def run_scenario(req: RunScenarioRequest) -> Dict[str, Any]:
             "responses": run_result.responses,
             "grade": None,
         }
-    grade = await grading.grade_scenario(
-        req.session_id, req.scenario_id, run_result=run_result
-    )
+    grade = await grading.grade_scenario(req.session_id, req.scenario_id, run_result=run_result)
     grade_dict = grade.to_dict()
     session = get_sandbox_manager().get_session(req.session_id)
     vessel_stage = session.vessel_stage.value if session else "unknown"
-    record_grade_observation(
-        req.session_id, req.scenario_id, vessel_stage, grade_dict
-    )
+    record_grade_observation(req.session_id, req.scenario_id, vessel_stage, grade_dict)
     return {
         "completed": True,
         "responses": run_result.responses,

@@ -3,9 +3,9 @@ Scientific data access package.
 """
 
 from .db_models import (
-    ScientificDataStore,
     ScientificDataset,
     ScientificDatasetCreate,
+    ScientificDataStore,
     ScientificEquipment,
     ScientificEquipmentCreate,
     ScientificExperiment,

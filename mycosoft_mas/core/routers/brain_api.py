@@ -11,18 +11,17 @@ Endpoints:
 - GET /voice/brain/context - Get memory context for a user/conversation
 """
 
-import asyncio
 import json
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from mycosoft_mas.llm.error_sanitizer import sanitize_for_user, sanitize_for_log
+from mycosoft_mas.llm.error_sanitizer import sanitize_for_log, sanitize_for_user
 from mycosoft_mas.llm.tool_pipeline import create_tool_manager_for_skill
 from mycosoft_mas.myca.event_ledger import get_ledger
 
@@ -35,8 +34,10 @@ router = APIRouter(prefix="/voice/brain", tags=["brain"])
 # Request/Response Models
 # ============================================================================
 
+
 class BrainChatRequest(BaseModel):
     """Request to the MYCA memory-integrated brain."""
+
     message: str = Field(..., description="User message")
     session_id: Optional[str] = Field(None, description="Voice/chat session ID")
     conversation_id: Optional[str] = Field(None, description="Conversation thread ID")
@@ -48,6 +49,7 @@ class BrainChatRequest(BaseModel):
 
 class BrainChatResponse(BaseModel):
     """Response from the MYCA memory-integrated brain."""
+
     response: str = Field(..., description="Brain response text")
     provider: str = Field(..., description="LLM provider used")
     session_id: str = Field(..., description="Session ID")
@@ -59,6 +61,7 @@ class BrainChatResponse(BaseModel):
 
 class MemoryContextResponse(BaseModel):
     """Memory context for a conversation."""
+
     user_id: str
     conversation_id: Optional[str]
     memories: List[Dict[str, Any]]
@@ -80,6 +83,7 @@ async def get_brain():
     global _brain
     if _brain is None:
         from mycosoft_mas.llm.memory_brain import get_memory_brain
+
         _brain = await get_memory_brain()
     return _brain
 
@@ -93,7 +97,9 @@ def _get_voice_tool_manager():
     return _voice_tool_manager
 
 
-def _log_voice_brain_turn(session_id: str, conversation_id: str, user_id: str, source: str = "brain") -> None:
+def _log_voice_brain_turn(
+    session_id: str, conversation_id: str, user_id: str, source: str = "brain"
+) -> None:
     try:
         ledger = get_ledger()
         ledger.log_risk_event(
@@ -116,7 +122,7 @@ def _log_voice_brain_turn(session_id: str, conversation_id: str, user_id: str, s
 async def brain_chat(request: BrainChatRequest):
     """
     Get a memory-aware response from MYCA's brain.
-    
+
     This endpoint:
     1. Loads relevant memories for context
     2. Injects user profile and preferences
@@ -126,15 +132,21 @@ async def brain_chat(request: BrainChatRequest):
     """
     try:
         brain = await get_brain()
-        
+
         # Ensure IDs
         session_id = request.session_id or str(uuid4())
         conversation_id = request.conversation_id or str(uuid4())
-        _log_voice_brain_turn(session_id, conversation_id, request.user_id, source="voice_brain_chat")
+        _log_voice_brain_turn(
+            session_id, conversation_id, request.user_id, source="voice_brain_chat"
+        )
 
         tool_manager = _get_voice_tool_manager()
-        tools = tool_manager.get_tool_definitions_for_llm(filter_by_permissions=True) if tool_manager else None
-        
+        tools = (
+            tool_manager.get_tool_definitions_for_llm(filter_by_permissions=True)
+            if tool_manager
+            else None
+        )
+
         # Get response
         response = await brain.get_response(
             message=request.message,
@@ -143,21 +155,19 @@ async def brain_chat(request: BrainChatRequest):
             user_id=request.user_id,
             history=request.history,
             tools=tools,
-            provider=request.provider
+            provider=request.provider,
         )
-        
+
         # Get memory context if requested
         memory_context = None
         if request.include_memory_context:
             try:
                 memory_context = await brain.recall_context(
-                    query=request.message,
-                    user_id=request.user_id,
-                    limit=5
+                    query=request.message, user_id=request.user_id, limit=5
                 )
             except Exception as e:
                 logger.warning(f"Failed to get memory context: {e}")
-        
+
         # Determine provider used (from brain stats)
         stats = await brain.get_stats()
         provider_used = request.provider if request.provider != "auto" else "gemini"
@@ -166,7 +176,7 @@ async def brain_chat(request: BrainChatRequest):
                 if health.get("healthy", False):
                     provider_used = p
                     break
-        
+
         return BrainChatResponse(
             response=response,
             provider=provider_used,
@@ -174,11 +184,14 @@ async def brain_chat(request: BrainChatRequest):
             conversation_id=conversation_id,
             memory_context=memory_context,
             actions_taken=[
-                {"type": "memory_recalled", "count": len(memory_context.get("memories", [])) if memory_context else 0},
+                {
+                    "type": "memory_recalled",
+                    "count": len(memory_context.get("memories", [])) if memory_context else 0,
+                },
                 {"type": "turn_persisted", "session_id": session_id},
-            ]
+            ],
         )
-        
+
     except Exception as e:
         logger.error(f"Brain chat error: {sanitize_for_log(e)}")
         raise HTTPException(status_code=500, detail=sanitize_for_user(e))
@@ -188,19 +201,25 @@ async def brain_chat(request: BrainChatRequest):
 async def brain_stream(request: BrainChatRequest):
     """
     Stream a memory-aware response from MYCA's brain.
-    
+
     Returns Server-Sent Events (SSE) for real-time token streaming.
     """
     try:
         brain = await get_brain()
-        
+
         session_id = request.session_id or str(uuid4())
         conversation_id = request.conversation_id or str(uuid4())
-        _log_voice_brain_turn(session_id, conversation_id, request.user_id, source="voice_brain_stream")
+        _log_voice_brain_turn(
+            session_id, conversation_id, request.user_id, source="voice_brain_stream"
+        )
 
         tool_manager = _get_voice_tool_manager()
-        tools = tool_manager.get_tool_definitions_for_llm(filter_by_permissions=True) if tool_manager else None
-        
+        tools = (
+            tool_manager.get_tool_definitions_for_llm(filter_by_permissions=True)
+            if tool_manager
+            else None
+        )
+
         async def generate():
             try:
                 async for token in brain.stream_response(
@@ -210,27 +229,27 @@ async def brain_stream(request: BrainChatRequest):
                     user_id=request.user_id,
                     history=request.history,
                     tools=tools,
-                    provider=request.provider
+                    provider=request.provider,
                 ):
                     # Send as SSE event
                     yield f"data: {json.dumps({'token': token})}\n\n"
-                
+
                 # Send done event
                 yield f"data: {json.dumps({'done': True, 'session_id': session_id, 'conversation_id': conversation_id})}\n\n"
-                
+
             except Exception as e:
                 logger.error(f"Stream error: {sanitize_for_log(e)}")
                 yield f"data: {json.dumps({'error': sanitize_for_user(e)})}\n\n"
-        
+
         return StreamingResponse(
             generate(),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-            }
+            },
         )
-        
+
     except Exception as e:
         logger.error(f"Brain stream error: {sanitize_for_log(e)}")
         raise HTTPException(status_code=500, detail=sanitize_for_user(e))
@@ -240,7 +259,7 @@ async def brain_stream(request: BrainChatRequest):
 async def brain_status():
     """
     Get MYCA brain status and health.
-    
+
     Returns:
     - Initialization status
     - Available LLM providers and health
@@ -249,7 +268,7 @@ async def brain_status():
     try:
         brain = await get_brain()
         stats = await brain.get_stats()
-        
+
         return {
             "status": "healthy" if stats.get("initialized") else "initializing",
             "brain": {
@@ -259,27 +278,23 @@ async def brain_status():
             },
             "providers": stats.get("provider_health", {}),
             "memory": stats.get("memory", {}),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        
+
     except Exception as e:
         logger.error(f"Brain status error: {sanitize_for_log(e)}")
         return {
             "status": "error",
             "error": sanitize_for_user(e),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
 
 @router.get("/context/{user_id}")
-async def get_memory_context(
-    user_id: str,
-    query: Optional[str] = None,
-    limit: int = 10
-):
+async def get_memory_context(user_id: str, query: Optional[str] = None, limit: int = 10):
     """
     Get memory context for a user.
-    
+
     Returns:
     - Recalled memories relevant to query
     - Recent episodes
@@ -288,22 +303,20 @@ async def get_memory_context(
     """
     try:
         brain = await get_brain()
-        
+
         context = await brain.recall_context(
-            query=query or "general context",
-            user_id=user_id,
-            limit=limit
+            query=query or "general context", user_id=user_id, limit=limit
         )
-        
+
         return MemoryContextResponse(
             user_id=user_id,
             conversation_id=None,
             memories=context.get("memories", []),
             episodes=context.get("episodes", []),
             user_profile=context.get("profile"),
-            voice_context=None  # NOTE: Pending - requires VoiceContextService integration
+            voice_context=None,  # NOTE: Pending - requires VoiceContextService integration
         )
-        
+
     except Exception as e:
         logger.error(f"Memory context error: {sanitize_for_log(e)}")
         raise HTTPException(status_code=500, detail=sanitize_for_user(e))
@@ -314,11 +327,11 @@ async def record_brain_event(
     event_type: str,
     description: str,
     context: Optional[Dict[str, Any]] = None,
-    importance: float = 0.7
+    importance: float = 0.7,
 ):
     """
     Record a significant event in the brain's episodic memory.
-    
+
     Use this for important events like:
     - Tool executions
     - Agent invocations
@@ -327,20 +340,17 @@ async def record_brain_event(
     """
     try:
         brain = await get_brain()
-        
+
         await brain.record_significant_event(
-            event_type=event_type,
-            description=description,
-            context=context,
-            importance=importance
+            event_type=event_type, description=description, context=context, importance=importance
         )
-        
+
         return {
             "status": "recorded",
             "event_type": event_type,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        
+
     except Exception as e:
         logger.error(f"Event recording error: {sanitize_for_log(e)}")
         raise HTTPException(status_code=500, detail=sanitize_for_user(e))
@@ -353,5 +363,5 @@ async def brain_health():
         "status": "healthy",
         "service": "myca-brain-api",
         "version": "1.0.0-memory-integrated",
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }

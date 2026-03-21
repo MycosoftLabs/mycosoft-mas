@@ -8,8 +8,8 @@ Environment Variables:
     UNIPROT_EMAIL: Optional contact email for high-volume requests (recommended)
 """
 
-import os
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -95,7 +95,11 @@ class UniProtClient:
         if not entry:
             return None
         pd = entry.get("proteinDescription", {})
-        rec = pd.get("recommendedName") or pd.get("submittedNames", [{}])[0] if pd.get("submittedNames") else {}
+        rec = (
+            pd.get("recommendedName") or pd.get("submittedNames", [{}])[0]
+            if pd.get("submittedNames")
+            else {}
+        )
         name = ""
         if isinstance(rec, dict):
             fn = rec.get("fullName") or rec.get("shortName") or {}

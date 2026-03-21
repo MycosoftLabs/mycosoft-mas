@@ -5,9 +5,9 @@ February 4, 2026
 Provides Earth-2 weather model tools for mid-conversation tool calls.
 """
 
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def get_earth2_tool_definitions() -> List[Dict[str, Any]]:
     """
     Get Earth-2 tool definitions for registration with ToolRegistry.
-    
+
     Returns list of tool definition dicts.
     """
     return [
@@ -30,26 +30,26 @@ def get_earth2_tool_definitions() -> List[Dict[str, Any]]:
                         "description": "Location for forecast",
                         "properties": {
                             "lat": {"type": "number", "description": "Latitude"},
-                            "lon": {"type": "number", "description": "Longitude"}
+                            "lon": {"type": "number", "description": "Longitude"},
                         },
-                        "required": ["lat", "lon"]
+                        "required": ["lat", "lon"],
                     },
                     "days": {
                         "type": "integer",
                         "description": "Number of days to forecast (1-15)",
                         "default": 7,
                         "minimum": 1,
-                        "maximum": 15
+                        "maximum": 15,
                     },
                     "variables": {
                         "type": "array",
                         "items": {"type": "string"},
                         "description": "Weather variables (t2m, tp, u10, v10)",
-                        "default": ["t2m", "tp"]
-                    }
+                        "default": ["t2m", "tp"],
+                    },
                 },
-                "required": ["location"]
-            }
+                "required": ["location"],
+            },
         },
         {
             "name": "earth2_nowcast",
@@ -64,20 +64,20 @@ def get_earth2_tool_definitions() -> List[Dict[str, Any]]:
                             "min_lat": {"type": "number"},
                             "max_lat": {"type": "number"},
                             "min_lon": {"type": "number"},
-                            "max_lon": {"type": "number"}
+                            "max_lon": {"type": "number"},
                         },
-                        "required": ["min_lat", "max_lat", "min_lon", "max_lon"]
+                        "required": ["min_lat", "max_lat", "min_lon", "max_lon"],
                     },
                     "lead_time_hours": {
                         "type": "integer",
                         "description": "Forecast lead time (1-6 hours)",
                         "default": 6,
                         "minimum": 1,
-                        "maximum": 6
-                    }
+                        "maximum": 6,
+                    },
                 },
-                "required": ["region"]
-            }
+                "required": ["region"],
+            },
         },
         {
             "name": "earth2_spore_dispersal",
@@ -92,43 +92,34 @@ def get_earth2_tool_definitions() -> List[Dict[str, Any]]:
                             "min_lat": {"type": "number"},
                             "max_lat": {"type": "number"},
                             "min_lon": {"type": "number"},
-                            "max_lon": {"type": "number"}
+                            "max_lon": {"type": "number"},
                         },
-                        "required": ["min_lat", "max_lat", "min_lon", "max_lon"]
+                        "required": ["min_lat", "max_lat", "min_lon", "max_lon"],
                     },
                     "species_filter": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Filter by fungal species"
+                        "description": "Filter by fungal species",
                     },
-                    "days": {
-                        "type": "integer",
-                        "description": "Forecast days (1-7)",
-                        "default": 3
-                    }
+                    "days": {"type": "integer", "description": "Forecast days (1-7)", "default": 3},
                 },
-                "required": ["region"]
-            }
+                "required": ["region"],
+            },
         },
         {
             "name": "earth2_model_status",
             "description": "Check Earth-2 model service status and GPU availability.",
-            "parameters": {
-                "type": "object",
-                "properties": {}
-            }
-        }
+            "parameters": {"type": "object", "properties": {}},
+        },
     ]
 
 
 async def execute_earth2_forecast(args: Dict[str, Any]) -> Dict[str, Any]:
     """Execute Earth-2 forecast tool."""
-    from mycosoft_mas.earth2 import (
-        get_earth2_service, ForecastParams, TimeRange, SpatialExtent
-    )
-    
+    from mycosoft_mas.earth2 import ForecastParams, SpatialExtent, TimeRange, get_earth2_service
+
     service = get_earth2_service()
-    
+
     # Accept multiple legacy schemas (tests pass `location` as a string and
     # provide `latitude`/`longitude` + `forecast_days`).
     location = args.get("location", {})
@@ -141,7 +132,7 @@ async def execute_earth2_forecast(args: Dict[str, Any]) -> Dict[str, Any]:
     lat = float(args.get("latitude", lat if lat is not None else 47.6))
     lon = float(args.get("longitude", lon if lon is not None else -122.3))
     days = int(args.get("forecast_days", args.get("days", 7)))
-    
+
     # Create small extent around point
     extent = SpatialExtent(
         min_lat=lat - 1,
@@ -149,26 +140,28 @@ async def execute_earth2_forecast(args: Dict[str, Any]) -> Dict[str, Any]:
         min_lon=lon - 1,
         max_lon=lon + 1,
     )
-    
+
     time_range = TimeRange(
         start=datetime.utcnow(),
         end=datetime.utcnow() + timedelta(days=days),
     )
-    
+
     params = ForecastParams(spatial_extent=extent, time_range=time_range)
-    
+
     result = await service.run_forecast(params)
-    
+
     # Extract point forecast
     forecast_points = []
     for output in result.outputs[:10]:  # Limit for response size
-        forecast_points.append({
-            "time": output.timestamp.isoformat(),
-            "variable": output.variable,
-            "value": output.mean_value,
-            "units": output.units,
-        })
-    
+        forecast_points.append(
+            {
+                "time": output.timestamp.isoformat(),
+                "variable": output.variable,
+                "value": output.mean_value,
+                "units": output.units,
+            }
+        )
+
     return {
         "run_id": result.run_id,
         "location": {"lat": lat, "lon": lon},
@@ -179,10 +172,10 @@ async def execute_earth2_forecast(args: Dict[str, Any]) -> Dict[str, Any]:
 
 async def execute_earth2_nowcast(args: Dict[str, Any]) -> Dict[str, Any]:
     """Execute Earth-2 nowcast tool."""
-    from mycosoft_mas.earth2 import get_earth2_service, NowcastParams, SpatialExtent
-    
+    from mycosoft_mas.earth2 import NowcastParams, SpatialExtent, get_earth2_service
+
     service = get_earth2_service()
-    
+
     region = args.get("region", {})
     if not isinstance(region, dict):
         region = {}
@@ -198,12 +191,12 @@ async def execute_earth2_nowcast(args: Dict[str, Any]) -> Dict[str, Any]:
         min_lon=center_lon - half_lat,
         max_lon=center_lon + half_lat,
     )
-    
+
     lead_time_hours = int(args.get("forecast_hours", args.get("lead_time_hours", 6)))
     params = NowcastParams(spatial_extent=extent, lead_time_hours=lead_time_hours)
-    
+
     result = await service.run_nowcast(params)
-    
+
     return {
         "run_id": result.run_id,
         "hazard_summary": result.hazard_summary,
@@ -215,11 +208,14 @@ async def execute_earth2_nowcast(args: Dict[str, Any]) -> Dict[str, Any]:
 async def execute_earth2_spore_dispersal(args: Dict[str, Any]) -> Dict[str, Any]:
     """Execute Earth-2 spore dispersal tool."""
     from mycosoft_mas.earth2 import (
-        get_earth2_service, SporeDispersalParams, SpatialExtent, TimeRange
+        SpatialExtent,
+        SporeDispersalParams,
+        TimeRange,
+        get_earth2_service,
     )
-    
+
     service = get_earth2_service()
-    
+
     region = args.get("region", {})
     if not isinstance(region, dict):
         region = {}
@@ -238,19 +234,22 @@ async def execute_earth2_spore_dispersal(args: Dict[str, Any]) -> Dict[str, Any]
         start=datetime.utcnow(),
         end=datetime.utcnow() + timedelta(days=days),
     )
-    
+
     species = args.get("species")
     params = SporeDispersalParams(
         spatial_extent=extent,
         time_range=time_range,
-        species_filter=args.get("species_filter") or ([species] if isinstance(species, str) and species else None),
+        species_filter=args.get("species_filter")
+        or ([species] if isinstance(species, str) and species else None),
         origin_lat=origin_lat,
         origin_lon=origin_lon,
-        origin_concentration=float(args.get("origin_concentration", args.get("concentration", 0)) or 0),
+        origin_concentration=float(
+            args.get("origin_concentration", args.get("concentration", 0)) or 0
+        ),
     )
-    
+
     result = await service.run_spore_dispersal(params)
-    
+
     return {
         "run_id": result.run_id,
         "risk_zones": result.risk_zones,
@@ -262,10 +261,10 @@ async def execute_earth2_spore_dispersal(args: Dict[str, Any]) -> Dict[str, Any]
 async def execute_earth2_model_status(args: Dict[str, Any]) -> Dict[str, Any]:
     """Execute Earth-2 model status tool."""
     from mycosoft_mas.earth2 import get_earth2_service
-    
+
     service = get_earth2_service()
     status = await service.get_status()
-    
+
     return {
         "available": status["available"],
         "gpu_device": status["gpu_device"],
@@ -286,18 +285,20 @@ EARTH2_TOOL_HANDLERS = {
 def register_earth2_tools(registry) -> None:
     """
     Register Earth-2 tools with an existing ToolRegistry.
-    
+
     Args:
         registry: ToolRegistry instance to register tools with
     """
     from mycosoft_mas.llm.tool_pipeline import ToolDefinition
-    
+
     for tool_def in get_earth2_tool_definitions():
-        registry.register(ToolDefinition(
-            name=tool_def["name"],
-            description=tool_def["description"],
-            parameters=tool_def["parameters"],
-            handler=EARTH2_TOOL_HANDLERS.get(tool_def["name"]),
-        ))
-    
+        registry.register(
+            ToolDefinition(
+                name=tool_def["name"],
+                description=tool_def["description"],
+                parameters=tool_def["parameters"],
+                handler=EARTH2_TOOL_HANDLERS.get(tool_def["name"]),
+            )
+        )
+
     logger.info(f"Registered {len(EARTH2_TOOL_HANDLERS)} Earth-2 tools")

@@ -114,61 +114,94 @@ class EarthSearchDomain(str, Enum):
 # Domain groupings for batch queries
 DOMAIN_GROUPS: Dict[str, List[EarthSearchDomain]] = {
     "life": [
-        EarthSearchDomain.ALL_SPECIES, EarthSearchDomain.FUNGI,
-        EarthSearchDomain.PLANTS, EarthSearchDomain.BIRDS,
-        EarthSearchDomain.MAMMALS, EarthSearchDomain.REPTILES,
-        EarthSearchDomain.AMPHIBIANS, EarthSearchDomain.INSECTS,
-        EarthSearchDomain.MARINE_LIFE, EarthSearchDomain.FISH,
-        EarthSearchDomain.MICROORGANISMS, EarthSearchDomain.INVERTEBRATES,
+        EarthSearchDomain.ALL_SPECIES,
+        EarthSearchDomain.FUNGI,
+        EarthSearchDomain.PLANTS,
+        EarthSearchDomain.BIRDS,
+        EarthSearchDomain.MAMMALS,
+        EarthSearchDomain.REPTILES,
+        EarthSearchDomain.AMPHIBIANS,
+        EarthSearchDomain.INSECTS,
+        EarthSearchDomain.MARINE_LIFE,
+        EarthSearchDomain.FISH,
+        EarthSearchDomain.MICROORGANISMS,
+        EarthSearchDomain.INVERTEBRATES,
     ],
     "environment": [
-        EarthSearchDomain.EARTHQUAKES, EarthSearchDomain.VOLCANOES,
-        EarthSearchDomain.WILDFIRES, EarthSearchDomain.STORMS,
-        EarthSearchDomain.LIGHTNING, EarthSearchDomain.TORNADOES,
-        EarthSearchDomain.FLOODS, EarthSearchDomain.TSUNAMIS,
+        EarthSearchDomain.EARTHQUAKES,
+        EarthSearchDomain.VOLCANOES,
+        EarthSearchDomain.WILDFIRES,
+        EarthSearchDomain.STORMS,
+        EarthSearchDomain.LIGHTNING,
+        EarthSearchDomain.TORNADOES,
+        EarthSearchDomain.FLOODS,
+        EarthSearchDomain.TSUNAMIS,
     ],
     "climate": [
-        EarthSearchDomain.WEATHER, EarthSearchDomain.CO2,
-        EarthSearchDomain.METHANE, EarthSearchDomain.AIR_QUALITY,
-        EarthSearchDomain.GROUND_QUALITY, EarthSearchDomain.OCEAN_TEMPERATURE,
-        EarthSearchDomain.MODIS, EarthSearchDomain.LANDSAT, EarthSearchDomain.AIRS,
+        EarthSearchDomain.WEATHER,
+        EarthSearchDomain.CO2,
+        EarthSearchDomain.METHANE,
+        EarthSearchDomain.AIR_QUALITY,
+        EarthSearchDomain.GROUND_QUALITY,
+        EarthSearchDomain.OCEAN_TEMPERATURE,
+        EarthSearchDomain.MODIS,
+        EarthSearchDomain.LANDSAT,
+        EarthSearchDomain.AIRS,
     ],
     "transport": [
-        EarthSearchDomain.FLIGHTS, EarthSearchDomain.VESSELS,
-        EarthSearchDomain.AIRPORTS, EarthSearchDomain.SHIPPING_PORTS,
-        EarthSearchDomain.SPACEPORTS, EarthSearchDomain.RAILWAYS,
+        EarthSearchDomain.FLIGHTS,
+        EarthSearchDomain.VESSELS,
+        EarthSearchDomain.AIRPORTS,
+        EarthSearchDomain.SHIPPING_PORTS,
+        EarthSearchDomain.SPACEPORTS,
+        EarthSearchDomain.RAILWAYS,
     ],
     "infrastructure": [
-        EarthSearchDomain.FACTORIES, EarthSearchDomain.POWER_PLANTS,
-        EarthSearchDomain.MINING, EarthSearchDomain.OIL_GAS,
-        EarthSearchDomain.DAMS, EarthSearchDomain.WATER_TREATMENT,
-        EarthSearchDomain.RIVERS, EarthSearchDomain.POLLUTION_SOURCES,
+        EarthSearchDomain.FACTORIES,
+        EarthSearchDomain.POWER_PLANTS,
+        EarthSearchDomain.MINING,
+        EarthSearchDomain.OIL_GAS,
+        EarthSearchDomain.DAMS,
+        EarthSearchDomain.WATER_TREATMENT,
+        EarthSearchDomain.RIVERS,
+        EarthSearchDomain.POLLUTION_SOURCES,
     ],
     "space": [
-        EarthSearchDomain.SATELLITES, EarthSearchDomain.SPACE_WEATHER,
-        EarthSearchDomain.SOLAR_FLARES, EarthSearchDomain.SPACE_DEBRIS,
-        EarthSearchDomain.LAUNCHES, EarthSearchDomain.NASA_FEEDS,
+        EarthSearchDomain.SATELLITES,
+        EarthSearchDomain.SPACE_WEATHER,
+        EarthSearchDomain.SOLAR_FLARES,
+        EarthSearchDomain.SPACE_DEBRIS,
+        EarthSearchDomain.LAUNCHES,
+        EarthSearchDomain.NASA_FEEDS,
         EarthSearchDomain.NOAA_FEEDS,
     ],
     "telecom": [
-        EarthSearchDomain.CELL_TOWERS, EarthSearchDomain.AM_FM_ANTENNAS,
-        EarthSearchDomain.WIFI_HOTSPOTS, EarthSearchDomain.INTERNET_CABLES,
+        EarthSearchDomain.CELL_TOWERS,
+        EarthSearchDomain.AM_FM_ANTENNAS,
+        EarthSearchDomain.WIFI_HOTSPOTS,
+        EarthSearchDomain.INTERNET_CABLES,
         EarthSearchDomain.SIGNAL_MAPS,
     ],
     "sensors": [
-        EarthSearchDomain.OCEAN_BUOYS, EarthSearchDomain.WEATHER_STATIONS,
-        EarthSearchDomain.SEISMIC_STATIONS, EarthSearchDomain.MYCOBRAIN_DEVICES,
+        EarthSearchDomain.OCEAN_BUOYS,
+        EarthSearchDomain.WEATHER_STATIONS,
+        EarthSearchDomain.SEISMIC_STATIONS,
+        EarthSearchDomain.MYCOBRAIN_DEVICES,
     ],
     "science": [
-        EarthSearchDomain.COMPOUNDS, EarthSearchDomain.GENETICS,
-        EarthSearchDomain.RESEARCH, EarthSearchDomain.LLM_SYNTHESIS,
-        EarthSearchDomain.MATHEMATICS, EarthSearchDomain.PHYSICS,
+        EarthSearchDomain.COMPOUNDS,
+        EarthSearchDomain.GENETICS,
+        EarthSearchDomain.RESEARCH,
+        EarthSearchDomain.LLM_SYNTHESIS,
+        EarthSearchDomain.MATHEMATICS,
+        EarthSearchDomain.PHYSICS,
     ],
 }
 
 
 class GeoFilter(BaseModel):
     """Geographic bounding for search."""
+
     lat: float = Field(..., ge=-90, le=90)
     lng: float = Field(..., ge=-180, le=180)
     radius_km: float = Field(100, gt=0, le=20000)
@@ -179,6 +212,7 @@ class GeoFilter(BaseModel):
 
 class TemporalFilter(BaseModel):
     """Time-range filter."""
+
     start: Optional[datetime] = None
     end: Optional[datetime] = None
     realtime: bool = Field(False, description="Return only live/streaming data")
@@ -186,6 +220,7 @@ class TemporalFilter(BaseModel):
 
 class EarthSearchQuery(BaseModel):
     """Planetary-scale search request."""
+
     query: str = Field(..., min_length=1, description="Natural language or keyword query")
     domains: List[EarthSearchDomain] = Field(
         default_factory=list,
@@ -213,6 +248,7 @@ class EarthSearchQuery(BaseModel):
 
 class DataSourceInfo(BaseModel):
     """Metadata about a data source."""
+
     source_id: str
     name: str
     api_url: Optional[str] = None
@@ -224,6 +260,7 @@ class DataSourceInfo(BaseModel):
 
 class EarthSearchResult(BaseModel):
     """Single search result with geospatial provenance."""
+
     result_id: str
     domain: EarthSearchDomain
     source: str
@@ -243,6 +280,7 @@ class EarthSearchResult(BaseModel):
 
 class EarthSearchResponse(BaseModel):
     """Full response from Earth Search."""
+
     query: str
     domains_searched: List[EarthSearchDomain]
     results: List[EarthSearchResult] = Field(default_factory=list)

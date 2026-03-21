@@ -38,6 +38,7 @@ def _get_redis():
     """Get Redis client if available."""
     try:
         import redis.asyncio as redis
+
         url = os.getenv("REDIS_URL", "redis://localhost:6379")
         return redis.from_url(url, decode_responses=True)
     except Exception as e:
@@ -98,15 +99,21 @@ async def _intention_clear(session_id: str) -> int:
 
 class IntentionEvent(BaseModel):
     """A single user interaction event"""
+
     session_id: str = Field(..., description="Unique session identifier")
-    event_type: Literal["search", "click", "focus", "note", "voice", "navigate", "hover"] = Field(..., description="Type of interaction")
+    event_type: Literal["search", "click", "focus", "note", "voice", "navigate", "hover"] = Field(
+        ..., description="Type of interaction"
+    )
     data: Dict[str, Any] = Field(default_factory=dict, description="Event-specific data")
-    context: Dict[str, Any] = Field(default_factory=dict, description="Current context (query, widgets visible, etc.)")
+    context: Dict[str, Any] = Field(
+        default_factory=dict, description="Current context (query, widgets visible, etc.)"
+    )
     timestamp: Optional[datetime] = Field(default_factory=datetime.utcnow)
 
 
 class IntentionResponse(BaseModel):
     """Response after recording an intention"""
+
     success: bool
     session_id: str
     event_count: int
@@ -117,6 +124,7 @@ class IntentionResponse(BaseModel):
 
 class SessionIntentions(BaseModel):
     """All intentions for a session"""
+
     session_id: str
     events: List[IntentionEvent]
     summary: Dict[str, Any]
@@ -124,6 +132,7 @@ class SessionIntentions(BaseModel):
 
 class SuggestionResponse(BaseModel):
     """Suggestions based on user intent"""
+
     widgets: List[str]
     queries: List[str]
     actions: List[Dict[str, Any]]
@@ -134,7 +143,7 @@ class SuggestionResponse(BaseModel):
 async def track_intention(event: IntentionEvent) -> IntentionResponse:
     """
     Record a user interaction event for MYCA intention tracking.
-    
+
     Use this to track:
     - Search queries and refinements
     - Widget clicks and focuses
@@ -151,7 +160,11 @@ async def track_intention(event: IntentionEvent) -> IntentionResponse:
         events = await _intention_get_all(session_id)
         suggestions = _analyze_intentions_sync(events)
 
-        logger.info("[Intention] %s from session %s...", event.event_type, session_id[:8] if session_id else "?")
+        logger.info(
+            "[Intention] %s from session %s...",
+            event.event_type,
+            session_id[:8] if session_id else "?",
+        )
 
         return IntentionResponse(
             success=True,
@@ -213,52 +226,56 @@ def _analyze_intentions_sync(events: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Analyze session intentions and generate suggestions (sync, accepts events list)."""
     if not events:
         return {}
-    
+
     # Extract patterns
     search_queries = [e["data"].get("query", "") for e in events if e["event_type"] == "search"]
     clicked_types = [e["data"].get("widget_type", "") for e in events if e["event_type"] == "click"]
-    focused_widgets = [e["data"].get("widget_type", "") for e in events if e["event_type"] == "focus"]
-    
+    focused_widgets = [
+        e["data"].get("widget_type", "") for e in events if e["event_type"] == "focus"
+    ]
+
     # Determine user interests
     widgets = []
     queries = []
     insights = {}
-    
+
     # If user has searched, suggest related widgets
     if search_queries:
         latest_query = search_queries[-1].lower() if search_queries else ""
-        
-        if any(term in latest_query for term in ["compound", "chemistry", "psilocybin", "muscimol"]):
+
+        if any(
+            term in latest_query for term in ["compound", "chemistry", "psilocybin", "muscimol"]
+        ):
             widgets.append("chemistry")
             queries.append("psychoactive compounds")
-        
+
         if any(term in latest_query for term in ["gene", "dna", "sequence", "genome"]):
             widgets.append("genetics")
             queries.append("fungal genome sequences")
-        
+
         if any(term in latest_query for term in ["research", "paper", "study", "journal"]):
             widgets.append("research")
             queries.append("recent mycology papers")
-        
+
         if any(term in latest_query for term in ["species", "mushroom", "fungus", "fungi"]):
             widgets.append("species")
             queries.append("rare mushroom species")
-    
+
     # If user clicks on certain widgets, suggest related ones
     if "chemistry" in clicked_types or "chemistry" in focused_widgets:
         if "genetics" not in widgets:
             widgets.append("genetics")
         insights["chemistry_interest"] = True
-    
+
     if "species" in clicked_types or "species" in focused_widgets:
         if "research" not in widgets:
             widgets.append("research")
         insights["species_interest"] = True
-    
+
     # Always suggest Answers widget if not already
     if "answers" not in widgets:
         widgets.append("answers")
-    
+
     return {
         "widgets": widgets[:4],  # Max 4 suggestions
         "queries": queries[:3],  # Max 3 query suggestions
@@ -271,14 +288,14 @@ def _build_session_summary(events: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Build a summary of session activity"""
     if not events:
         return {"total_events": 0}
-    
+
     event_types = {}
     for e in events:
         t = e.get("event_type", "unknown")
         event_types[t] = event_types.get(t, 0) + 1
-    
+
     searches = [e["data"].get("query", "") for e in events if e["event_type"] == "search"]
-    
+
     return {
         "total_events": len(events),
         "event_types": event_types,

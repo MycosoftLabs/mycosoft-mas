@@ -102,8 +102,14 @@ STAGE_CAPABILITIES: Dict[DevelopmentalStage, StageCapabilities] = {
         max_risk_tier="medium",
         requires_approval=False,
         autonomy_domains=(
-            "observe", "ask", "simulate", "log", "write_reversible",
-            "execute_sandboxed", "query_data", "search",
+            "observe",
+            "ask",
+            "simulate",
+            "log",
+            "write_reversible",
+            "execute_sandboxed",
+            "query_data",
+            "search",
         ),
         description=(
             "Bounded autonomy in low-risk domains. Can execute "
@@ -121,9 +127,18 @@ STAGE_CAPABILITIES: Dict[DevelopmentalStage, StageCapabilities] = {
         max_risk_tier="high",
         requires_approval=False,
         autonomy_domains=(
-            "observe", "ask", "simulate", "log", "write_reversible",
-            "execute_sandboxed", "query_data", "search", "deploy_staging",
-            "deploy_production", "manage_agents", "coordinate",
+            "observe",
+            "ask",
+            "simulate",
+            "log",
+            "write_reversible",
+            "execute_sandboxed",
+            "query_data",
+            "search",
+            "deploy_staging",
+            "deploy_production",
+            "manage_agents",
+            "coordinate",
         ),
         description=(
             "Earned authority, still audited, still revocable. "
@@ -143,9 +158,7 @@ class ReadinessAssessment:
     ready: bool
     criteria_met: List[str] = field(default_factory=list)
     criteria_unmet: List[str] = field(default_factory=list)
-    assessed_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    assessed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # Criteria for advancing to each stage
@@ -320,9 +333,7 @@ class DevelopmentalTracker:
                 "forced": False,
             }
         )
-        logger.warning(
-            "Stage REGRESSED to %s: %s", target_stage.value, reason
-        )
+        logger.warning("Stage REGRESSED to %s: %s", target_stage.value, reason)
         return True
 
     def get_stage_history(self) -> List[Dict[str, Any]]:

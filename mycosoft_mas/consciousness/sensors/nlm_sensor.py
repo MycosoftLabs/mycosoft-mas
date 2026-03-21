@@ -20,10 +20,10 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import httpx
 
-from mycosoft_mas.consciousness.sensors.base_sensor import BaseSensor, SensorStatus
+from mycosoft_mas.consciousness.sensors.base_sensor import BaseSensor
 
 if TYPE_CHECKING:
-    from mycosoft_mas.consciousness.world_model import WorldModel, SensorReading, DataFreshness
+    from mycosoft_mas.consciousness.world_model import SensorReading, WorldModel
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +130,7 @@ class NLMSensor(BaseSensor):
 
     async def read(self) -> Optional["SensorReading"]:
         """Read NLM-processed environmental insights and predictions."""
-        from mycosoft_mas.consciousness.world_model import SensorReading, DataFreshness
+        from mycosoft_mas.consciousness.world_model import DataFreshness, SensorReading
 
         if not self._client:
             await self.connect()
@@ -158,14 +158,22 @@ class NLMSensor(BaseSensor):
                 humidity=float(humidity),
                 co2=env.get("co2"),
                 pressure=env.get("pressure"),
-                **{k: v for k, v in env.items() if k not in ("temperature", "humidity", "co2", "pressure")},
+                **{
+                    k: v
+                    for k, v in env.items()
+                    if k not in ("temperature", "humidity", "co2", "pressure")
+                },
             )
 
             reading = SensorReading(
                 sensor_type="nlm",
                 data=result,
                 timestamp=datetime.now(timezone.utc),
-                freshness=DataFreshness.LIVE if result.get("insights") or result.get("predictions") else DataFreshness.RECENT,
+                freshness=(
+                    DataFreshness.LIVE
+                    if result.get("insights") or result.get("predictions")
+                    else DataFreshness.RECENT
+                ),
                 confidence=result.get("confidence", 0.7),
                 source_url=self._nlm_base,
             )

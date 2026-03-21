@@ -12,11 +12,11 @@ This bridge provides MYCA OS with memory, knowledge, and state persistence.
 Date: 2026-03-04
 """
 
-import os
 import json
 import logging
-from typing import Optional
+import os
 from datetime import datetime, timezone
+from typing import Optional
 
 import aiohttp
 
@@ -51,6 +51,7 @@ class MINDEXBridge:
         # Try Redis
         try:
             import redis.asyncio as aioredis
+
             self._redis = aioredis.from_url(self._redis_url, decode_responses=True)
             await self._redis.ping()
             logger.info("Redis connected")
@@ -61,6 +62,7 @@ class MINDEXBridge:
         # Try PostgreSQL
         try:
             import asyncpg
+
             self._pg_pool = await asyncpg.create_pool(
                 host=self._pg_host,
                 port=self._pg_port,
@@ -159,7 +161,11 @@ class MINDEXBridge:
                        VALUES ($1, $2, $3, $4, $5)
                        ON CONFLICT (agent_id, memory_key, memory_layer)
                        DO UPDATE SET memory_value = EXCLUDED.memory_value""",
-                    "myca_os", key, value, layer, datetime.now(timezone.utc),
+                    "myca_os",
+                    key,
+                    value,
+                    layer,
+                    datetime.now(timezone.utc),
                 )
 
     async def recall(self, key: str, layer: str = None) -> Optional[str]:
@@ -181,7 +187,9 @@ class MINDEXBridge:
             async with self._pg_pool.acquire() as conn:
                 row = await conn.fetchrow(
                     "SELECT memory_value FROM agent_memory WHERE agent_id = $1 AND memory_key = $2 AND memory_layer = $3",
-                    "myca_os", key, layer,
+                    "myca_os",
+                    key,
+                    layer,
                 )
                 return row["memory_value"] if row else None
         return None
@@ -190,8 +198,14 @@ class MINDEXBridge:
         """Store a learned fact in semantic memory."""
         await self.remember(
             f"fact:{category}:{hash(fact) % 100000}",
-            json.dumps({"fact": fact, "category": category, "confidence": confidence,
-                        "learned_at": datetime.now(timezone.utc).isoformat()}),
+            json.dumps(
+                {
+                    "fact": fact,
+                    "category": category,
+                    "confidence": confidence,
+                    "learned_at": datetime.now(timezone.utc).isoformat(),
+                }
+            ),
             layer="semantic",
         )
 
@@ -210,6 +224,7 @@ class MINDEXBridge:
         Soft-fail: returns None on error, EP id on success.
         """
         import uuid
+
         if not self._session or self._session.closed:
             return None
         ep_id = str(uuid.uuid4())
@@ -226,10 +241,12 @@ class MINDEXBridge:
             },
             "observation": {
                 "modality": "log",
-                "raw_payload": json.dumps({
-                    "task": {k: v for k, v in task.items() if k not in ("raw",)},
-                    "result": result,
-                }),
+                "raw_payload": json.dumps(
+                    {
+                        "task": {k: v for k, v in task.items() if k not in ("raw",)},
+                        "result": result,
+                    }
+                ),
             },
             "self_state": {},
             "world_state": {},
@@ -325,7 +342,9 @@ class MINDEXBridge:
         """Vector/semantic search for relevant past context. Uses search_knowledge as proxy."""
         return await self.search_knowledge(query, limit=limit)
 
-    async def vector_search(self, query: str, collection: str = "knowledge", limit: int = 5) -> list:
+    async def vector_search(
+        self, query: str, collection: str = "knowledge", limit: int = 5
+    ) -> list:
         """Semantic vector search via Qdrant."""
         # This would use an embedding model — simplified for now
         try:

@@ -10,8 +10,8 @@ Environment Variables:
     ILLUMINA_CLIENT_SECRET: OAuth2 client secret (optional)
 """
 
-import os
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -26,9 +26,7 @@ class IlluminaClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.access_token = self.config.get(
-            "access_token", os.getenv("ILLUMINA_ACCESS_TOKEN", "")
-        )
+        self.access_token = self.config.get("access_token", os.getenv("ILLUMINA_ACCESS_TOKEN", ""))
         self.client_id = self.config.get("client_id", os.getenv("ILLUMINA_CLIENT_ID", ""))
         self.client_secret = self.config.get(
             "client_secret", os.getenv("ILLUMINA_CLIENT_SECRET", "")

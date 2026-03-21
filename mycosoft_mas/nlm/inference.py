@@ -8,10 +8,9 @@ Provides:
 4. Specialized nature/mycology queries
 """
 
-import os
 import logging
-from typing import Dict, List, Optional, Any
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 class NLMInference:
     """
     Nature Learning Model Inference Engine
-    
+
     Specialized for:
     - Species identification and taxonomy queries
     - Mycology research questions
@@ -27,7 +26,7 @@ class NLMInference:
     - Genetic sequence analysis
     - Ecological relationship queries
     """
-    
+
     def __init__(
         self,
         model_path: str = "/models/nlm",
@@ -40,7 +39,7 @@ class NLMInference:
         self.model = None
         self.tokenizer = None
         self._initialized = False
-        
+
         # NLM system prompt
         self.system_prompt = """You are NLM (Nature Learning Model), an AI specialized in:
 - Mycology and fungal biology
@@ -54,11 +53,11 @@ You are part of the Mycosoft Multi-Agent System (MAS), providing expert knowledg
 about the natural world with a focus on fungi and their applications.
 
 Provide accurate, scientifically-grounded responses based on the Mycosoft knowledge base."""
-    
+
     async def initialize(self) -> bool:
         """
         Initialize the NLM model for inference.
-        
+
         Returns:
             True if initialization successful
         """
@@ -79,7 +78,7 @@ Provide accurate, scientifically-grounded responses based on the Mycosoft knowle
         except Exception as e:
             logger.error(f"Failed to initialize NLM: {e}")
             return False
-    
+
     async def generate(
         self,
         prompt: str,
@@ -90,27 +89,27 @@ Provide accurate, scientifically-grounded responses based on the Mycosoft knowle
     ) -> Dict[str, Any]:
         """
         Generate text using NLM.
-        
+
         Args:
             prompt: User prompt/question
             max_tokens: Maximum tokens to generate
             temperature: Sampling temperature
             system: Optional system prompt override
             context: Additional context for generation
-            
+
         Returns:
             Generated response with metadata
         """
         if not self._initialized:
             await self.initialize()
-        
+
         system_prompt = system or self.system_prompt
-        
+
         # Add context if provided
         if context:
             context_str = "\n".join([f"{k}: {v}" for k, v in context.items()])
             prompt = f"Context:\n{context_str}\n\nQuestion: {prompt}"
-        
+
         # Generate response (API fallback or local)
         try:
             # In production, this would call the local model or API
@@ -120,7 +119,7 @@ Provide accurate, scientifically-grounded responses based on the Mycosoft knowle
                 max_tokens=max_tokens,
                 temperature=temperature,
             )
-            
+
             return {
                 "response": response,
                 "model": "nlm",
@@ -134,7 +133,7 @@ Provide accurate, scientifically-grounded responses based on the Mycosoft knowle
                 "model": "nlm",
                 "error": str(e),
             }
-    
+
     async def _generate_with_fallback(
         self,
         prompt: str,
@@ -156,17 +155,15 @@ Provide accurate, scientifically-grounded responses based on the Mycosoft knowle
 - Ecological interactions]
 
 For full NLM capabilities, ensure the model is trained and loaded."""
-    
-    async def embed(
-        self, texts: List[str], model: str = "nlm-embed"
-    ) -> List[List[float]]:
+
+    async def embed(self, texts: List[str], model: str = "nlm-embed") -> List[List[float]]:
         """
         Generate embeddings for text using NLM.
-        
+
         Args:
             texts: List of texts to embed
             model: Embedding model to use
-            
+
         Returns:
             List of embedding vectors
         """
@@ -177,17 +174,17 @@ For full NLM capabilities, ensure the model is trained and loaded."""
             embedding = [0.0] * 384
             embeddings.append(embedding)
         return embeddings
-    
+
     async def classify_species(
         self, description: str, candidates: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """
         Classify a species based on description.
-        
+
         Args:
             description: Description of the organism
             candidates: Optional list of candidate species names
-            
+
         Returns:
             Classification results with confidence scores
         """
@@ -203,9 +200,9 @@ Provide:
 
         if candidates:
             prompt += f"\n\nConsider these candidates: {', '.join(candidates)}"
-        
+
         return await self.generate(prompt)
-    
+
     async def analyze_interaction(
         self,
         species1: str,
@@ -214,12 +211,12 @@ Provide:
     ) -> Dict[str, Any]:
         """
         Analyze ecological interaction between two species.
-        
+
         Args:
             species1: First species name
             species2: Second species name
             context: Additional context about the interaction
-            
+
         Returns:
             Analysis of the ecological interaction
         """
@@ -235,6 +232,5 @@ Describe:
 
         if context:
             prompt += f"\n\nAdditional context: {context}"
-        
-        return await self.generate(prompt)
 
+        return await self.generate(prompt)

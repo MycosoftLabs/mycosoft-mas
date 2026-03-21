@@ -56,7 +56,9 @@ def _collect_roots(config: Dict[str, Any]) -> List[Path]:
     return roots
 
 
-def _scan_todos_fixmes(root: Path, extensions: tuple = (".py", ".ts", ".tsx", ".js", ".md")) -> List[Dict[str, Any]]:
+def _scan_todos_fixmes(
+    root: Path, extensions: tuple = (".py", ".ts", ".tsx", ".js", ".md")
+) -> List[Dict[str, Any]]:
     """Scan for TODO/FIXME lines. Returns list of {file, line, line_no, kind, message}."""
     out: List[Dict[str, Any]] = []
     for path in root.rglob("*"):
@@ -70,14 +72,16 @@ def _scan_todos_fixmes(root: Path, extensions: tuple = (".py", ".ts", ".tsx", ".
         for i, line in enumerate(text.splitlines(), 1):
             m = _TODO_FIXME.search(line)
             if m:
-                out.append({
-                    "file": str(rel),
-                    "line_no": i,
-                    "line": line.strip()[:120],
-                    "kind": m.group(1).upper(),
-                    "message": (m.group(2) or "").strip()[:200],
-                    "repo": root.name,
-                })
+                out.append(
+                    {
+                        "file": str(rel),
+                        "line_no": i,
+                        "line": line.strip()[:120],
+                        "kind": m.group(1).upper(),
+                        "message": (m.group(2) or "").strip()[:200],
+                        "repo": root.name,
+                    }
+                )
     return out
 
 
@@ -95,12 +99,14 @@ def _scan_stubs(root: Path, limit: int = 200) -> List[Dict[str, Any]]:
         for pat in _STUB_PATTERNS:
             for i, line in enumerate(text.splitlines(), 1):
                 if pat.search(line) and len(out) < limit:
-                    out.append({
-                        "file": str(rel),
-                        "line_no": i,
-                        "snippet": line.strip()[:100],
-                        "repo": root.name,
-                    })
+                    out.append(
+                        {
+                            "file": str(rel),
+                            "line_no": i,
+                            "snippet": line.strip()[:100],
+                            "repo": root.name,
+                        }
+                    )
                     break
     return out
 
@@ -115,12 +121,18 @@ def _scan_501_routes(root: Path) -> List[Dict[str, Any]]:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
-        if "501" not in text and "Not implemented" not in text and "not implemented" not in text.lower():
+        if (
+            "501" not in text
+            and "Not implemented" not in text
+            and "not implemented" not in text.lower()
+        ):
             continue
         rel = path.relative_to(root) if root != path else path.name
         for i, line in enumerate(text.splitlines(), 1):
             if _501_PATTERN.search(line):
-                out.append({"file": str(rel), "line_no": i, "line": line.strip()[:120], "repo": root.name})
+                out.append(
+                    {"file": str(rel), "line_no": i, "line": line.strip()[:120], "repo": root.name}
+                )
     return out
 
 
@@ -140,14 +152,20 @@ def _infer_bridge_gaps(roots: List[Path], config: Dict[str, Any]) -> List[Dict[s
             except Exception:
                 continue
             if "bridge" in text.lower() or "integration" in text.lower():
-                if "missing" in text.lower() or "not implemented" in text.lower() or "gap" in text.lower():
+                if (
+                    "missing" in text.lower()
+                    or "not implemented" in text.lower()
+                    or "gap" in text.lower()
+                ):
                     rel = path.relative_to(root) if root != path else path.name
-                    suggestions.append({
-                        "type": "bridge_gap",
-                        "file": str(rel),
-                        "repo": root.name,
-                        "hint": "Doc mentions bridge/integration and missing/gap; consider adding a bridge agent or service.",
-                    })
+                    suggestions.append(
+                        {
+                            "type": "bridge_gap",
+                            "file": str(rel),
+                            "repo": root.name,
+                            "hint": "Doc mentions bridge/integration and missing/gap; consider adding a bridge agent or service.",
+                        }
+                    )
     return suggestions[:50]
 
 
@@ -156,31 +174,39 @@ def _suggest_plans(gaps: Dict[str, Any]) -> List[Dict[str, Any]]:
     plans: List[Dict[str, Any]] = []
     if gaps.get("todos_fixmes"):
         n = len(gaps["todos_fixmes"])
-        plans.append({
-            "title": "Address TODOs/FIXMEs",
-            "description": f"Resolve or triage {n} TODO/FIXME items across repos.",
-            "priority": "medium",
-        })
+        plans.append(
+            {
+                "title": "Address TODOs/FIXMEs",
+                "description": f"Resolve or triage {n} TODO/FIXME items across repos.",
+                "priority": "medium",
+            }
+        )
     if gaps.get("stubs"):
         n = len(gaps["stubs"])
-        plans.append({
-            "title": "Replace stubs with implementations",
-            "description": f"Replace or document {n} stub/placeholder usages.",
-            "priority": "medium",
-        })
+        plans.append(
+            {
+                "title": "Replace stubs with implementations",
+                "description": f"Replace or document {n} stub/placeholder usages.",
+                "priority": "medium",
+            }
+        )
     if gaps.get("routes_501"):
         n = len(gaps["routes_501"])
-        plans.append({
-            "title": "Implement 501 routes",
-            "description": f"Implement {n} API routes currently returning 501.",
-            "priority": "high",
-        })
+        plans.append(
+            {
+                "title": "Implement 501 routes",
+                "description": f"Implement {n} API routes currently returning 501.",
+                "priority": "high",
+            }
+        )
     if gaps.get("bridge_gaps"):
-        plans.append({
-            "title": "Add missing bridges between systems",
-            "description": "Implement integration layer or agent where docs indicate a bridge is missing.",
-            "priority": "high",
-        })
+        plans.append(
+            {
+                "title": "Add missing bridges between systems",
+                "description": "Implement integration layer or agent where docs indicate a bridge is missing.",
+                "priority": "high",
+            }
+        )
     return plans
 
 
@@ -194,7 +220,14 @@ class GapAgent(BaseAgent if BaseAgent is not object else object):  # type: ignor
             self.agent_id = agent_id
             self.name = name
             self.config = config or {}
-        self.capabilities = ["gap_scan", "cross_repo", "todo_scan", "stub_scan", "bridge_suggest", "plan_suggest"]
+        self.capabilities = [
+            "gap_scan",
+            "cross_repo",
+            "todo_scan",
+            "stub_scan",
+            "bridge_suggest",
+            "plan_suggest",
+        ]
         self._last_report: Optional[Dict[str, Any]] = None
 
     def _run_scan(self, full: bool = False) -> Dict[str, Any]:
@@ -233,11 +266,23 @@ class GapAgent(BaseAgent if BaseAgent is not object else object):  # type: ignor
         if task_type == "suggest_plans":
             if not self._last_report:
                 self._last_report = self._run_scan(full=False)
-            return {"status": "success", "result": {"suggested_plans": self._last_report.get("suggested_plans", [])}}
+            return {
+                "status": "success",
+                "result": {"suggested_plans": self._last_report.get("suggested_plans", [])},
+            }
         if task_type == "continuous_cycle":
             self._last_report = self._run_scan(full=False)
-            return {"status": "success", "result": {"cycle": "scan_complete", "summary": self._last_report.get("summary", {})}}
-        return {"status": "success", "result": {"message": "Unknown task type; use scan, full_scan, or suggest_plans"}}
+            return {
+                "status": "success",
+                "result": {
+                    "cycle": "scan_complete",
+                    "summary": self._last_report.get("summary", {}),
+                },
+            }
+        return {
+            "status": "success",
+            "result": {"message": "Unknown task type; use scan, full_scan, or suggest_plans"},
+        }
 
     async def run_cycle(self) -> Dict[str, Any]:
         """Single cycle for 24/7 runner: lightweight scan and store report."""

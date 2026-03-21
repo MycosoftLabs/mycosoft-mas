@@ -13,8 +13,6 @@ import base64
 import json
 import logging
 import os
-from pathlib import Path
-from typing import Any, Optional
 
 logger = logging.getLogger("myca.os.browser_cdp")
 
@@ -34,7 +32,6 @@ class BrowserCDP:
 
     async def initialize(self):
         """Lazy init — no browser launched until first use."""
-        pass
 
     async def cleanup(self):
         """Close browser and Playwright."""
@@ -79,7 +76,9 @@ class BrowserCDP:
                 ignore_https_errors=True,
             )
             self._page = await self._context.new_page()
-            await self._page.goto(url or "about:blank", wait_until="domcontentloaded", timeout=15000)
+            await self._page.goto(
+                url or "about:blank", wait_until="domcontentloaded", timeout=15000
+            )
             return {"status": "ok", "url": url or "about:blank"}
         except Exception as e:
             logger.error("Browser launch failed: %s", e)
@@ -212,7 +211,11 @@ class BrowserCDP:
                 # Continue one more step to let LLM try alternative
             if result.get("status") == "done":
                 await self.cleanup()
-                return {"status": "completed", "summary": result.get("message", goal[:80]), "steps": len(history)}
+                return {
+                    "status": "completed",
+                    "summary": result.get("message", goal[:80]),
+                    "steps": len(history),
+                }
 
         await self.cleanup()
         return {

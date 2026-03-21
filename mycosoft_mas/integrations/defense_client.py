@@ -31,11 +31,12 @@ Environment Variables:
     SAIC_PORTAL_TOKEN: SAIC portal token
 """
 
-import os
 import logging
-from typing import Dict, Any, List, Optional
+import os
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,7 @@ logger = logging.getLogger(__name__)
 
 class SecurityLevel(Enum):
     """Classification levels for defense data."""
+
     UNCLASSIFIED = "UNCLASSIFIED"
     FOUO = "UNCLASSIFIED//FOUO"
     CONFIDENTIAL = "CONFIDENTIAL"
@@ -53,6 +55,7 @@ class SecurityLevel(Enum):
 
 class PlatformStatus(Enum):
     """Platform connection statuses."""
+
     CONNECTED = "connected"
     DISCONNECTED = "disconnected"
     ERROR = "error"
@@ -63,7 +66,7 @@ class PlatformStatus(Enum):
 class PalantirClient:
     """
     Palantir Foundry Integration Client.
-    
+
     Provides access to Palantir's enterprise data platform:
     - Ontology: Data modeling and object definitions
     - Data Fusion: Multi-source data integration
@@ -74,30 +77,30 @@ class PalantirClient:
     - Vertex: AI/ML modeling
     - Pipeline Builder: ETL workflow automation
     """
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_url = self.config.get("api_url") or os.getenv("PALANTIR_API_URL", "https://foundry.palantir.com/api")
+        self.api_url = self.config.get("api_url") or os.getenv(
+            "PALANTIR_API_URL", "https://foundry.palantir.com/api"
+        )
         self.api_token = self.config.get("api_token") or os.getenv("PALANTIR_API_TOKEN", "")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
         self.security_level = SecurityLevel.TOP_SECRET_SCI
         logger.info("Palantir Foundry client initialized")
-    
+
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
             headers = {
                 "Authorization": f"Bearer {self.api_token}",
                 "Content-Type": "application/json",
-                "Accept": "application/json"
+                "Accept": "application/json",
             }
             self._client = httpx.AsyncClient(
-                base_url=self.api_url,
-                headers=headers,
-                timeout=self.timeout
+                base_url=self.api_url, headers=headers, timeout=self.timeout
             )
         return self._client
-    
+
     async def health_check(self) -> Dict[str, Any]:
         """Check Palantir Foundry connectivity."""
         try:
@@ -107,38 +110,36 @@ class PalantirClient:
                 "status": "connected" if response.status_code == 200 else "error",
                 "platform": "Palantir Foundry",
                 "security_level": self.security_level.value,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
         except Exception as e:
             logger.error(f"Palantir health check failed: {e}")
             return {"status": "disconnected", "error": str(e)}
-    
-    async def query_ontology(self, object_type: str, filters: Optional[Dict] = None, limit: int = 100) -> Dict[str, Any]:
+
+    async def query_ontology(
+        self, object_type: str, filters: Optional[Dict] = None, limit: int = 100
+    ) -> Dict[str, Any]:
         """
         Query the Palantir Ontology for objects.
-        
+
         Args:
             object_type: Type of object to query (Person, Organization, Event, etc.)
             filters: Optional filter criteria
             limit: Maximum results to return
-            
+
         Returns:
             Query results with object data
         """
         try:
             client = await self._get_client()
-            payload = {
-                "objectType": object_type,
-                "filters": filters or {},
-                "limit": limit
-            }
+            payload = {"objectType": object_type, "filters": filters or {}, "limit": limit}
             response = await client.post("/ontology/query", json=payload)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             logger.error(f"Ontology query failed: {e}")
             return {"error": str(e), "objects": []}
-    
+
     async def list_datasets(self, folder_path: Optional[str] = None) -> List[Dict[str, Any]]:
         """List available datasets in Foundry."""
         try:
@@ -152,8 +153,10 @@ class PalantirClient:
         except Exception as e:
             logger.error(f"Dataset listing failed: {e}")
             return []
-    
-    async def run_pipeline(self, pipeline_id: str, parameters: Optional[Dict] = None) -> Dict[str, Any]:
+
+    async def run_pipeline(
+        self, pipeline_id: str, parameters: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Execute a data pipeline."""
         try:
             client = await self._get_client()
@@ -164,18 +167,20 @@ class PalantirClient:
         except Exception as e:
             logger.error(f"Pipeline execution failed: {e}")
             return {"error": str(e)}
-    
+
     async def get_object_graph(self, object_id: str, depth: int = 2) -> Dict[str, Any]:
         """Get object relationship graph."""
         try:
             client = await self._get_client()
-            response = await client.get(f"/ontology/objects/{object_id}/graph", params={"depth": depth})
+            response = await client.get(
+                f"/ontology/objects/{object_id}/graph", params={"depth": depth}
+            )
             response.raise_for_status()
             return response.json()
         except Exception as e:
             logger.error(f"Object graph fetch failed: {e}")
             return {"error": str(e)}
-    
+
     async def create_code_workbook(self, name: str, language: str = "python") -> Dict[str, Any]:
         """Create a new Code Workbook for analysis."""
         try:
@@ -187,7 +192,7 @@ class PalantirClient:
         except Exception as e:
             logger.error(f"Workbook creation failed: {e}")
             return {"error": str(e)}
-    
+
     async def close(self):
         if self._client and not self._client.is_closed:
             await self._client.aclose()
@@ -197,7 +202,7 @@ class PalantirClient:
 class AndurilClient:
     """
     Anduril Lattice Integration Client.
-    
+
     Provides access to Anduril's autonomous defense platform:
     - Sentry Towers: Ground-based sensor systems
     - Ghost UAS: Autonomous unmanned aerial systems
@@ -206,29 +211,26 @@ class AndurilClient:
     - Dive-LD: Autonomous underwater vehicle
     - Roadrunner: Reusable interceptor
     """
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_url = self.config.get("api_url") or os.getenv("ANDURIL_API_URL", "https://lattice.anduril.com/api")
+        self.api_url = self.config.get("api_url") or os.getenv(
+            "ANDURIL_API_URL", "https://lattice.anduril.com/api"
+        )
         self.api_key = self.config.get("api_key") or os.getenv("ANDURIL_API_KEY", "")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
         self.security_level = SecurityLevel.SECRET
         logger.info("Anduril Lattice client initialized")
-    
+
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
-            headers = {
-                "X-API-Key": self.api_key,
-                "Content-Type": "application/json"
-            }
+            headers = {"X-API-Key": self.api_key, "Content-Type": "application/json"}
             self._client = httpx.AsyncClient(
-                base_url=self.api_url,
-                headers=headers,
-                timeout=self.timeout
+                base_url=self.api_url, headers=headers, timeout=self.timeout
             )
         return self._client
-    
+
     async def health_check(self) -> Dict[str, Any]:
         """Check Anduril Lattice connectivity."""
         try:
@@ -238,20 +240,22 @@ class AndurilClient:
                 "status": "connected" if response.status_code == 200 else "error",
                 "platform": "Anduril Lattice",
                 "security_level": self.security_level.value,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
         except Exception as e:
             logger.error(f"Anduril health check failed: {e}")
             return {"status": "disconnected", "error": str(e)}
-    
-    async def list_assets(self, asset_type: Optional[str] = None, status: Optional[str] = None) -> List[Dict[str, Any]]:
+
+    async def list_assets(
+        self, asset_type: Optional[str] = None, status: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """
         List Lattice-connected assets.
-        
+
         Args:
             asset_type: Filter by type (sentry, ghost, anvil, menace, dive)
             status: Filter by status (online, offline, mission, charging)
-            
+
         Returns:
             List of asset objects with status and location
         """
@@ -268,7 +272,7 @@ class AndurilClient:
         except Exception as e:
             logger.error(f"Asset listing failed: {e}")
             return []
-    
+
     async def get_asset(self, asset_id: str) -> Dict[str, Any]:
         """Get detailed asset information."""
         try:
@@ -279,31 +283,30 @@ class AndurilClient:
         except Exception as e:
             logger.error(f"Asset fetch failed: {e}")
             return {"error": str(e)}
-    
-    async def get_detections(self, time_range_minutes: int = 60, confidence_threshold: float = 0.7) -> List[Dict[str, Any]]:
+
+    async def get_detections(
+        self, time_range_minutes: int = 60, confidence_threshold: float = 0.7
+    ) -> List[Dict[str, Any]]:
         """
         Get recent detections from Lattice sensors.
-        
+
         Args:
             time_range_minutes: How far back to look for detections
             confidence_threshold: Minimum confidence score (0-1)
-            
+
         Returns:
             List of detection events with classification and location
         """
         try:
             client = await self._get_client()
-            params = {
-                "timeRange": time_range_minutes,
-                "confidenceThreshold": confidence_threshold
-            }
+            params = {"timeRange": time_range_minutes, "confidenceThreshold": confidence_threshold}
             response = await client.get("/detections", params=params)
             response.raise_for_status()
             return response.json().get("detections", [])
         except Exception as e:
             logger.error(f"Detection fetch failed: {e}")
             return []
-    
+
     async def track_target(self, detection_id: str, priority: str = "normal") -> Dict[str, Any]:
         """Initiate target tracking for a detection."""
         try:
@@ -315,15 +318,17 @@ class AndurilClient:
         except Exception as e:
             logger.error(f"Tracking initiation failed: {e}")
             return {"error": str(e)}
-    
-    async def deploy_asset(self, asset_id: str, mission_type: str, waypoints: Optional[List[Dict]] = None) -> Dict[str, Any]:
+
+    async def deploy_asset(
+        self, asset_id: str, mission_type: str, waypoints: Optional[List[Dict]] = None
+    ) -> Dict[str, Any]:
         """Deploy an asset on a mission."""
         try:
             client = await self._get_client()
             payload = {
                 "assetId": asset_id,
                 "missionType": mission_type,
-                "waypoints": waypoints or []
+                "waypoints": waypoints or [],
             }
             response = await client.post("/missions/deploy", json=payload)
             response.raise_for_status()
@@ -331,7 +336,7 @@ class AndurilClient:
         except Exception as e:
             logger.error(f"Asset deployment failed: {e}")
             return {"error": str(e)}
-    
+
     async def get_threat_assessment(self, area_of_interest: Dict[str, float]) -> Dict[str, Any]:
         """Get AI-generated threat assessment for an area."""
         try:
@@ -342,7 +347,7 @@ class AndurilClient:
         except Exception as e:
             logger.error(f"Threat assessment failed: {e}")
             return {"error": str(e)}
-    
+
     async def close(self):
         if self._client and not self._client.is_closed:
             await self._client.aclose()
@@ -352,7 +357,7 @@ class AndurilClient:
 class PlatformOneClient:
     """
     Platform One Integration Client.
-    
+
     DoD Enterprise DevSecOps Platform providing:
     - Big Bang: DevSecOps platform deployment
     - Iron Bank: Hardened container registry
@@ -361,29 +366,26 @@ class PlatformOneClient:
     - SSO/SAML: CAC authentication
     - Keycloak: Identity management
     """
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_url = self.config.get("api_url") or os.getenv("PLATFORM_ONE_API_URL", "https://login.dso.mil/api")
+        self.api_url = self.config.get("api_url") or os.getenv(
+            "PLATFORM_ONE_API_URL", "https://login.dso.mil/api"
+        )
         self.token = self.config.get("token") or os.getenv("PLATFORM_ONE_TOKEN", "")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
         self.security_level = SecurityLevel.FOUO
         logger.info("Platform One client initialized")
-    
+
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
-            headers = {
-                "Authorization": f"Bearer {self.token}",
-                "Content-Type": "application/json"
-            }
+            headers = {"Authorization": f"Bearer {self.token}", "Content-Type": "application/json"}
             self._client = httpx.AsyncClient(
-                base_url=self.api_url,
-                headers=headers,
-                timeout=self.timeout
+                base_url=self.api_url, headers=headers, timeout=self.timeout
             )
         return self._client
-    
+
     async def health_check(self) -> Dict[str, Any]:
         """Check Platform One connectivity."""
         try:
@@ -394,12 +396,12 @@ class PlatformOneClient:
                 "platform": "Platform One",
                 "security_level": self.security_level.value,
                 "il_level": "IL4",
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
         except Exception as e:
             logger.error(f"Platform One health check failed: {e}")
             return {"status": "disconnected", "error": str(e)}
-    
+
     async def list_deployments(self, namespace: Optional[str] = None) -> List[Dict[str, Any]]:
         """List Kubernetes deployments."""
         try:
@@ -413,7 +415,7 @@ class PlatformOneClient:
         except Exception as e:
             logger.error(f"Deployment listing failed: {e}")
             return []
-    
+
     async def get_iron_bank_images(self, search: Optional[str] = None) -> List[Dict[str, Any]]:
         """List approved Iron Bank container images."""
         try:
@@ -427,7 +429,7 @@ class PlatformOneClient:
         except Exception as e:
             logger.error(f"Iron Bank image fetch failed: {e}")
             return []
-    
+
     async def deploy_application(self, manifest: Dict[str, Any], namespace: str) -> Dict[str, Any]:
         """Deploy an application to the cluster."""
         try:
@@ -439,7 +441,7 @@ class PlatformOneClient:
         except Exception as e:
             logger.error(f"Application deployment failed: {e}")
             return {"error": str(e)}
-    
+
     async def get_pipeline_status(self, pipeline_id: str) -> Dict[str, Any]:
         """Get CI/CD pipeline status."""
         try:
@@ -450,7 +452,7 @@ class PlatformOneClient:
         except Exception as e:
             logger.error(f"Pipeline status fetch failed: {e}")
             return {"error": str(e)}
-    
+
     async def trigger_scan(self, image: str) -> Dict[str, Any]:
         """Trigger security scan for a container image."""
         try:
@@ -462,7 +464,7 @@ class PlatformOneClient:
         except Exception as e:
             logger.error(f"Security scan trigger failed: {e}")
             return {"error": str(e)}
-    
+
     async def close(self):
         if self._client and not self._client.is_closed:
             await self._client.aclose()
@@ -472,40 +474,37 @@ class PlatformOneClient:
 class TacticalDataLinkClient:
     """
     Tactical Data Link Integration Client.
-    
+
     Military communication systems integration:
     - Link 16 (TADIL-J): NATO tactical data link
     - Link 22: Improved data link
     - SADL: Situational Awareness Data Link (USAF)
     - VMF: Variable Message Format (USMC)
     - JREAP: Joint Range Extension Application Protocol
-    
+
     SECURITY NOTICE: Access restricted to authorized personnel only.
     Requires appropriate security clearance and CAC authentication.
     """
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_url = self.config.get("api_url") or os.getenv("TACTICAL_API_URL", "https://tdl-gateway.mil/api")
+        self.api_url = self.config.get("api_url") or os.getenv(
+            "TACTICAL_API_URL", "https://tdl-gateway.mil/api"
+        )
         self.api_key = self.config.get("api_key") or os.getenv("TACTICAL_API_KEY", "")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
         self.security_level = SecurityLevel.SECRET
         logger.info("Tactical Data Link client initialized")
-    
+
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
-            headers = {
-                "X-TDL-API-Key": self.api_key,
-                "Content-Type": "application/json"
-            }
+            headers = {"X-TDL-API-Key": self.api_key, "Content-Type": "application/json"}
             self._client = httpx.AsyncClient(
-                base_url=self.api_url,
-                headers=headers,
-                timeout=self.timeout
+                base_url=self.api_url, headers=headers, timeout=self.timeout
             )
         return self._client
-    
+
     async def health_check(self) -> Dict[str, Any]:
         """Check Tactical Data Link gateway connectivity."""
         try:
@@ -516,12 +515,12 @@ class TacticalDataLinkClient:
                 "platform": "Tactical Data Link Gateway",
                 "security_level": self.security_level.value,
                 "networks": ["Link 16", "Link 22", "SADL", "VMF"],
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
         except Exception as e:
             logger.error(f"TDL health check failed: {e}")
             return {"status": "restricted", "error": "CAC authentication required"}
-    
+
     async def get_network_status(self) -> List[Dict[str, Any]]:
         """Get status of all tactical data link networks."""
         try:
@@ -532,7 +531,7 @@ class TacticalDataLinkClient:
         except Exception as e:
             logger.error(f"Network status fetch failed: {e}")
             return []
-    
+
     async def get_tracks(self, network: str = "link16") -> List[Dict[str, Any]]:
         """Get current track data from tactical network."""
         try:
@@ -543,23 +542,19 @@ class TacticalDataLinkClient:
         except Exception as e:
             logger.error(f"Track data fetch failed: {e}")
             return []
-    
+
     async def send_message(self, network: str, message_type: str, content: Dict) -> Dict[str, Any]:
         """Send a tactical message on specified network."""
         try:
             client = await self._get_client()
-            payload = {
-                "network": network,
-                "messageType": message_type,
-                "content": content
-            }
+            payload = {"network": network, "messageType": message_type, "content": content}
             response = await client.post("/messages/send", json=payload)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             logger.error(f"Message send failed: {e}")
             return {"error": str(e)}
-    
+
     async def close(self):
         if self._client and not self._client.is_closed:
             await self._client.aclose()
@@ -631,8 +626,17 @@ class ContractorPortalClient:
             r = await client.get("/rfqs", params=params)
             if r.is_success:
                 data = r.json()
-                return {"status": "success", "rfqs": data.get("rfqs", data.get("items", [])), "portal": self.portal_name}
-            return {"status": "error", "rfqs": [], "status_code": r.status_code, "portal": self.portal_name}
+                return {
+                    "status": "success",
+                    "rfqs": data.get("rfqs", data.get("items", [])),
+                    "portal": self.portal_name,
+                }
+            return {
+                "status": "error",
+                "rfqs": [],
+                "status_code": r.status_code,
+                "portal": self.portal_name,
+            }
         except Exception as e:
             return {"status": "error", "rfqs": [], "error": str(e), "portal": self.portal_name}
 
@@ -671,8 +675,17 @@ class ContractorPortalClient:
             r = await client.get("/purchase-orders", params={"limit": limit})
             if r.is_success:
                 data = r.json()
-                return {"status": "success", "pos": data.get("purchase_orders", data.get("items", [])), "portal": self.portal_name}
-            return {"status": "error", "pos": [], "status_code": r.status_code, "portal": self.portal_name}
+                return {
+                    "status": "success",
+                    "pos": data.get("purchase_orders", data.get("items", [])),
+                    "portal": self.portal_name,
+                }
+            return {
+                "status": "error",
+                "pos": [],
+                "status_code": r.status_code,
+                "portal": self.portal_name,
+            }
         except Exception as e:
             return {"status": "error", "pos": [], "error": str(e), "portal": self.portal_name}
 
@@ -696,29 +709,39 @@ class ContractorPortalClient:
 
 
 def _lockheed_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
-    return ContractorPortalClient("Lockheed Martin Supplier Portal", "LOCKHEED_PORTAL_URL", "LOCKHEED_PORTAL_TOKEN", config)
+    return ContractorPortalClient(
+        "Lockheed Martin Supplier Portal", "LOCKHEED_PORTAL_URL", "LOCKHEED_PORTAL_TOKEN", config
+    )
 
 
 def _raytheon_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
-    return ContractorPortalClient("Raytheon Procurement", "RAYTHEON_PORTAL_URL", "RAYTHEON_PORTAL_TOKEN", config)
+    return ContractorPortalClient(
+        "Raytheon Procurement", "RAYTHEON_PORTAL_URL", "RAYTHEON_PORTAL_TOKEN", config
+    )
 
 
 def _northrop_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
-    return ContractorPortalClient("Northrop Grumman Vendor Portal", "NORTHROP_PORTAL_URL", "NORTHROP_PORTAL_TOKEN", config)
+    return ContractorPortalClient(
+        "Northrop Grumman Vendor Portal", "NORTHROP_PORTAL_URL", "NORTHROP_PORTAL_TOKEN", config
+    )
 
 
 def _bae_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
-    return ContractorPortalClient("BAE Systems Vendor Portal", "BAE_PORTAL_URL", "BAE_PORTAL_TOKEN", config)
+    return ContractorPortalClient(
+        "BAE Systems Vendor Portal", "BAE_PORTAL_URL", "BAE_PORTAL_TOKEN", config
+    )
 
 
 def _saic_portal(config: Optional[Dict[str, Any]] = None) -> ContractorPortalClient:
-    return ContractorPortalClient("SAIC Vendor Portal", "SAIC_PORTAL_URL", "SAIC_PORTAL_TOKEN", config)
+    return ContractorPortalClient(
+        "SAIC Vendor Portal", "SAIC_PORTAL_URL", "SAIC_PORTAL_TOKEN", config
+    )
 
 
 class DefenseIntegrationManager:
     """
     Unified manager for all defense integrations.
-    
+
     Provides centralized access to:
     - Palantir Foundry
     - Anduril Lattice
@@ -726,7 +749,7 @@ class DefenseIntegrationManager:
     - Tactical Data Links
     - Contractor Portals (Lockheed, Raytheon, Northrop Grumman, BAE, SAIC)
     """
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self._palantir: Optional[PalantirClient] = None
@@ -739,25 +762,25 @@ class DefenseIntegrationManager:
         self._bae: Optional[ContractorPortalClient] = None
         self._saic: Optional[ContractorPortalClient] = None
         logger.info("Defense Integration Manager initialized")
-    
+
     @property
     def palantir(self) -> PalantirClient:
         if self._palantir is None:
             self._palantir = PalantirClient(self.config.get("palantir", {}))
         return self._palantir
-    
+
     @property
     def anduril(self) -> AndurilClient:
         if self._anduril is None:
             self._anduril = AndurilClient(self.config.get("anduril", {}))
         return self._anduril
-    
+
     @property
     def platform_one(self) -> PlatformOneClient:
         if self._platform_one is None:
             self._platform_one = PlatformOneClient(self.config.get("platform_one", {}))
         return self._platform_one
-    
+
     @property
     def tactical(self) -> TacticalDataLinkClient:
         if self._tactical is None:
@@ -793,11 +816,11 @@ class DefenseIntegrationManager:
         if self._saic is None:
             self._saic = _saic_portal(self.config.get("saic", {}))
         return self._saic
-    
+
     async def check_all_health(self) -> Dict[str, Any]:
         """Check health of all defense platforms."""
         results = {}
-        
+
         for name, client_prop in [
             ("palantir", self.palantir),
             ("anduril", self.anduril),
@@ -813,24 +836,33 @@ class DefenseIntegrationManager:
                 results[name] = await client_prop.health_check()
             except Exception as e:
                 results[name] = {"status": "error", "error": str(e)}
-        
+
         return {
             "platforms": results,
             "summary": {
                 "total": 9,
                 "connected": sum(1 for r in results.values() if r.get("status") == "connected"),
                 "restricted": sum(1 for r in results.values() if r.get("status") == "restricted"),
-                "not_configured": sum(1 for r in results.values() if r.get("status") == "not_configured"),
-                "error": sum(1 for r in results.values() if r.get("status") == "error")
+                "not_configured": sum(
+                    1 for r in results.values() if r.get("status") == "not_configured"
+                ),
+                "error": sum(1 for r in results.values() if r.get("status") == "error"),
             },
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
-    
+
     async def close(self):
         """Close all client connections."""
         for client in [
-            self._palantir, self._anduril, self._platform_one, self._tactical,
-            self._lockheed, self._raytheon, self._northrop, self._bae, self._saic,
+            self._palantir,
+            self._anduril,
+            self._platform_one,
+            self._tactical,
+            self._lockheed,
+            self._raytheon,
+            self._northrop,
+            self._bae,
+            self._saic,
         ]:
             if client:
                 await client.close()

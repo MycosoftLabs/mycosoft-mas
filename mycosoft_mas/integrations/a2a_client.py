@@ -75,4 +75,3 @@ class A2AClient:
             resp = await client.post(f"{base}/a2a/v1/message/send", json=payload)
             resp.raise_for_status()
             return resp.json()
-

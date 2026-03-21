@@ -55,15 +55,25 @@ class SandboxManager:
                 stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
-            return proc.returncode or 0, stdout.decode(errors="replace"), stderr.decode(errors="replace")
+            return (
+                proc.returncode or 0,
+                stdout.decode(errors="replace"),
+                stderr.decode(errors="replace"),
+            )
         else:
             proc = await asyncio.create_subprocess_exec(
-                "ssh", f"{self._ssh_user}@{self._ssh_host}", cmd,
+                "ssh",
+                f"{self._ssh_user}@{self._ssh_host}",
+                cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
-            return proc.returncode or 0, stdout.decode(errors="replace"), stderr.decode(errors="replace")
+            return (
+                proc.returncode or 0,
+                stdout.decode(errors="replace"),
+                stderr.decode(errors="replace"),
+            )
 
     async def spawn_sandbox(
         self,
@@ -143,7 +153,8 @@ class SandboxManager:
             now = time.time()
             idle_limit = self.MAX_IDLE_MINUTES * 60
             expired = [
-                sid for sid, info in self._sandboxes.items()
+                sid
+                for sid, info in self._sandboxes.items()
                 if (now - info.last_activity) > idle_limit
             ]
             for sid in expired:

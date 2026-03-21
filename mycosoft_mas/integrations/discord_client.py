@@ -24,9 +24,7 @@ class DiscordClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.token = self.config.get(
-            "token", os.getenv("MYCA_DISCORD_TOKEN", "")
-        )
+        self.token = self.config.get("token", os.getenv("MYCA_DISCORD_TOKEN", ""))
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
 
@@ -66,9 +64,7 @@ class DiscordClient:
         if embed:
             body["embeds"] = [embed]
         try:
-            r = await client.post(
-                f"/channels/{target}/messages", json=body
-            )
+            r = await client.post(f"/channels/{target}/messages", json=body)
             if r.status_code >= 400:
                 logger.warning(
                     "Discord send_message error: %s %s",
@@ -95,9 +91,7 @@ class DiscordClient:
         if before:
             params["before"] = before
         try:
-            r = await client.get(
-                f"/channels/{channel_id}/messages", params=params
-            )
+            r = await client.get(f"/channels/{channel_id}/messages", params=params)
             if r.status_code >= 400:
                 return []
             data = r.json()
@@ -121,8 +115,7 @@ class DiscordClient:
         encoded = quote(emoji) if "%" not in emoji else emoji
         try:
             r = await client.put(
-                f"/channels/{channel_id}/messages/{message_id}/"
-                f"reactions/{encoded}/@me"
+                f"/channels/{channel_id}/messages/{message_id}/" f"reactions/{encoded}/@me"
             )
             return r.status_code in (204, 200)
         except Exception as e:

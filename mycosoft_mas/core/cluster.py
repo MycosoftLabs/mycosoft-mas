@@ -2,17 +2,18 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 from ..agents.base_agent import BaseAgent
 from ..agents.enums.agent_status import AgentStatus
 
+
 class Cluster:
     """A cluster represents a group of agents working together to achieve specific goals."""
-    
+
     def __init__(self, cluster_id: str = "default_cluster", name: str = "Default Cluster"):
         """Initialize a new cluster.
-        
+
         Args:
             cluster_id (str): Unique identifier for the cluster
             name (str): Human-readable name for the cluster
@@ -29,7 +30,7 @@ class Cluster:
         # Internal map for fast lookups; keep in sync with `nodes`.
         self.agents: Dict[str, BaseAgent] = {}
         self._agent_status = AgentStatus.IDLE
-        
+
     # --- Legacy API used by tests -------------------------------------------------
     def add_node(self, agent: BaseAgent) -> None:
         if agent.agent_id in self.agents:
@@ -39,7 +40,7 @@ class Cluster:
         self.node_count = len(self.nodes)
         self.active_nodes = self.node_count
         self.status = "running" if self.node_count > 0 else "stopped"
-        
+
     def remove_node(self, agent_id: str) -> Optional[BaseAgent]:
         agent = self.agents.pop(agent_id, None)
         if agent:
@@ -48,21 +49,21 @@ class Cluster:
         self.active_nodes = self.node_count
         self.status = "running" if self.node_count > 0 else "stopped"
         return agent
-        
+
     def get_node(self, agent_id: str) -> Optional[BaseAgent]:
         return self.agents.get(agent_id)
-        
+
     def get_status(self) -> Dict[str, Any]:
         return {
             "status": self.status,
             "node_count": self.node_count,
             "active_nodes": self.active_nodes,
         }
-        
+
     def restart(self) -> None:
         self.status = "running" if self.node_count > 0 else "stopped"
         self.active_nodes = self.node_count if self.status == "running" else 0
-        
+
     def stop(self) -> None:
         self.status = "stopped"
         self.active_nodes = 0

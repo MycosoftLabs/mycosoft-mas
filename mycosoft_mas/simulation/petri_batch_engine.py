@@ -156,7 +156,10 @@ async def run_scale_batch(
                 all_metrics.append({"iteration": job.completed_iterations, "metrics": metrics})
 
         agg = {k: v / max(1, chunk_count) for k, v in agg_sum.items()} if agg_sum else {}
-        job.result_summary = {"aggregate_metrics": agg, "sample_metrics": all_metrics[-5:] if all_metrics else []}
+        job.result_summary = {
+            "aggregate_metrics": agg,
+            "sample_metrics": all_metrics[-5:] if all_metrics else [],
+        }
         job.status = JobStatus.COMPLETED
         return {"status": "ok", "job_id": jid, "result": job.result_summary}
     except Exception as e:
@@ -195,7 +198,10 @@ async def _execute_batch_job(
                 agg_sum[k] = agg_sum.get(k, 0) + v
 
         agg = {k: v / max(1, chunk_count) for k, v in agg_sum.items()} if agg_sum else {}
-        job.result_summary = {"aggregate_metrics": agg, "completed_iterations": job.completed_iterations}
+        job.result_summary = {
+            "aggregate_metrics": agg,
+            "completed_iterations": job.completed_iterations,
+        }
         job.status = JobStatus.COMPLETED
     except Exception as e:
         job.status = JobStatus.FAILED

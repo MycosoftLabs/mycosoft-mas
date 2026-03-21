@@ -12,7 +12,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
@@ -25,6 +25,7 @@ router = APIRouter(prefix="/api/events", tags=["Event Ledger"])
 def _get_ledger():
     """Get the event ledger singleton."""
     from mycosoft_mas.myca.event_ledger.ledger_writer import get_ledger
+
     return get_ledger()
 
 
@@ -99,6 +100,7 @@ async def stream_events():
     Tails the event ledger file and pushes new events as they arrive.
     Clients connect via EventSource: new EventSource('/api/events/stream')
     """
+
     async def event_generator():
         ledger = _get_ledger()
         ledger_file = ledger.current_ledger_file

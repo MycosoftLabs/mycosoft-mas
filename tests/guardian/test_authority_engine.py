@@ -48,9 +48,7 @@ class TestAuthorityPipeline:
 
     @pytest.mark.asyncio
     async def test_pipeline_stages_recorded(self, engine):
-        result = await engine.authorize(
-            AuthorityRequest(action="query_database", requester="test")
-        )
+        result = await engine.authorize(AuthorityRequest(action="query_database", requester="test"))
         assert len(result.pipeline_stages) >= 2
         stage_names = [s["stage"] for s in result.pipeline_stages]
         assert "moral_precedence" in stage_names
@@ -62,16 +60,12 @@ class TestRiskAssessment:
 
     @pytest.mark.asyncio
     async def test_read_is_low_risk(self, engine):
-        result = await engine.authorize(
-            AuthorityRequest(action="read", requester="test")
-        )
+        result = await engine.authorize(AuthorityRequest(action="read", requester="test"))
         assert result.risk_tier == RiskTier.LOW
 
     @pytest.mark.asyncio
     async def test_delete_is_high_risk(self, engine):
-        result = await engine.authorize(
-            AuthorityRequest(action="delete", requester="test")
-        )
+        result = await engine.authorize(AuthorityRequest(action="delete", requester="test"))
         assert result.risk_tier == RiskTier.HIGH
 
     @pytest.mark.asyncio
@@ -98,9 +92,7 @@ class TestDecisionLog:
 
     @pytest.mark.asyncio
     async def test_decisions_logged(self, engine):
-        await engine.authorize(
-            AuthorityRequest(action="test", requester="test")
-        )
+        await engine.authorize(AuthorityRequest(action="test", requester="test"))
         log = engine.get_decision_log()
         assert len(log) == 1
         assert log[0]["action"] == "test"

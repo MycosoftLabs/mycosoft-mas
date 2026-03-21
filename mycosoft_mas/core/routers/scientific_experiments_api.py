@@ -5,8 +5,8 @@ Scientific experiments and observations API routes.
 import os
 from typing import Optional
 
-from fastapi import APIRouter, Query
 import httpx
+from fastapi import APIRouter, Query
 
 from mycosoft_mas.scientific.db_models import (
     ScientificDataStore,
@@ -59,7 +59,9 @@ async def get_live_observations(device_id: Optional[str] = Query(default=None)):
     Proxy live observations from NatureOS telemetry endpoints.
     """
     natureos_base = os.getenv("NATUREOS_API_URL", "http://192.168.0.188:8001")
-    telemetry_path = os.getenv("NATUREOS_SCIENTIFIC_OBSERVATIONS_ENDPOINT", "/api/devices/telemetry")
+    telemetry_path = os.getenv(
+        "NATUREOS_SCIENTIFIC_OBSERVATIONS_ENDPOINT", "/api/devices/telemetry"
+    )
     query = f"?device_id={device_id}" if device_id else ""
     target_url = f"{natureos_base.rstrip('/')}{telemetry_path}{query}"
 

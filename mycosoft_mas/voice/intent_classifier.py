@@ -3,11 +3,11 @@ Intent Classification Engine for MYCA Voice System
 Created: February 4, 2026
 """
 
+import logging
 import re
-from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,16 @@ class ClassifiedIntent:
 
 INTENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
     "greeting": {
-        "keywords": ["hello", "hi", "hey", "greetings", "good morning", "good afternoon", "good evening", "howdy"],
+        "keywords": [
+            "hello",
+            "hi",
+            "hey",
+            "greetings",
+            "good morning",
+            "good afternoon",
+            "good evening",
+            "howdy",
+        ],
         "patterns": [
             r"^(?:hello|hi|hey|greetings|howdy)(?:\s+myca|\s+there)?",
             r"^good\s+(?:morning|afternoon|evening|day)",
@@ -63,7 +72,18 @@ INTENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
         "confirmation": ConfirmationLevel.NONE,
     },
     "question": {
-        "keywords": ["what", "how", "why", "when", "where", "who", "which", "can you", "could you", "would you"],
+        "keywords": [
+            "what",
+            "how",
+            "why",
+            "when",
+            "where",
+            "who",
+            "which",
+            "can you",
+            "could you",
+            "would you",
+        ],
         "patterns": [
             r"^(?:what|how|why|when|where|who|which)\s+",
             r"^(?:can|could|would)\s+you\s+",
@@ -74,7 +94,19 @@ INTENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
         "confirmation": ConfirmationLevel.NONE,
     },
     "command": {
-        "keywords": ["do", "start", "stop", "create", "make", "build", "run", "execute", "launch", "kill", "terminate"],
+        "keywords": [
+            "do",
+            "start",
+            "stop",
+            "create",
+            "make",
+            "build",
+            "run",
+            "execute",
+            "launch",
+            "kill",
+            "terminate",
+        ],
         "patterns": [
             r"(?:start|stop|restart|pause|resume)\s+",
             r"(?:create|make|build|generate)\s+(?:a|an|the)?\s*",
@@ -108,7 +140,16 @@ INTENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
         "confirmation": ConfirmationLevel.NONE,
     },
     "device_control": {
-        "keywords": ["turn on", "turn off", "set", "configure", "adjust", "control", "device", "sensor"],
+        "keywords": [
+            "turn on",
+            "turn off",
+            "set",
+            "configure",
+            "adjust",
+            "control",
+            "device",
+            "sensor",
+        ],
         "patterns": [
             r"(?:turn\s+(?:on|off)|switch\s+(?:on|off))\s+(?:the\s+)?",
             r"(?:set|configure|adjust)\s+(?:the\s+)?",
@@ -165,7 +206,15 @@ INTENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
         "confirmation": ConfirmationLevel.NONE,
     },
     "deploy": {
-        "keywords": ["deploy", "deployment", "release", "publish", "docker", "container", "server restart"],
+        "keywords": [
+            "deploy",
+            "deployment",
+            "release",
+            "publish",
+            "docker",
+            "container",
+            "server restart",
+        ],
         "patterns": [
             r"(?:deploy|push)\s+(?:to\s+)?",
             r"(?:build|rebuild)\s+(?:the\s+)?(?:docker|image|container)",
@@ -202,12 +251,36 @@ INTENT_CATEGORIES: Dict[str, Dict[str, Any]] = {
     },
     "natureos": {
         "keywords": [
-            "analyze", "zone", "soil", "forecast", "temperature", "humidity",
-            "anomaly", "anomalies", "sensor", "identify", "fungal", "biodiversity",
-            "earth2", "earth-2", "earth forecast", "simulation", "petri",
-            "mushroom", "compound", "genetic circuit", "lifecycle", "physics",
-            "growth analytics", "retrosynthesis", "alchemy", "digital twin",
-            "symbiosis", "spore", "spores", "dispersal",
+            "analyze",
+            "zone",
+            "soil",
+            "forecast",
+            "temperature",
+            "humidity",
+            "anomaly",
+            "anomalies",
+            "sensor",
+            "identify",
+            "fungal",
+            "biodiversity",
+            "earth2",
+            "earth-2",
+            "earth forecast",
+            "simulation",
+            "petri",
+            "mushroom",
+            "compound",
+            "genetic circuit",
+            "lifecycle",
+            "physics",
+            "growth analytics",
+            "retrosynthesis",
+            "alchemy",
+            "digital twin",
+            "symbiosis",
+            "spore",
+            "spores",
+            "dispersal",
         ],
         "patterns": [
             r"analyze\s+(?:soil\s+quality|zone|telemetry)",
@@ -256,23 +329,21 @@ class IntentClassifier:
             self.intents.update(custom_intents)
         self._compile_patterns()
         logger.info(f"IntentClassifier initialized with {len(self.intents)} categories")
-    
+
     def _compile_patterns(self):
         self.compiled_patterns = {}
         for category, config in self.intents.items():
             self.compiled_patterns[category] = [
-                re.compile(pattern, re.IGNORECASE)
-                for pattern in config.get("patterns", [])
+                re.compile(pattern, re.IGNORECASE) for pattern in config.get("patterns", [])
             ]
         self.compiled_entity_patterns = {
-            name: re.compile(pattern, re.IGNORECASE)
-            for name, pattern in ENTITY_PATTERNS.items()
+            name: re.compile(pattern, re.IGNORECASE) for name, pattern in ENTITY_PATTERNS.items()
         }
-    
+
     def classify(self, transcript: str) -> ClassifiedIntent:
         transcript = transcript.strip()
         transcript_lower = transcript.lower()
-        
+
         scores: Dict[str, float] = {}
         for category, config in self.intents.items():
             score = 0.0
@@ -280,15 +351,15 @@ class IntentClassifier:
             keyword_matches = sum(1 for kw in keywords if kw in transcript_lower)
             if keywords:
                 score += 0.3 * (keyword_matches / len(keywords))
-            
+
             patterns = self.compiled_patterns.get(category, [])
             for pattern in patterns:
                 if pattern.search(transcript_lower):
                     score += 0.7
                     break
-            
+
             scores[category] = score
-        
+
         # Guard against empty intents
         if not scores:
             best_category = "general"
@@ -296,20 +367,20 @@ class IntentClassifier:
         else:
             best_category = max(scores.keys(), key=lambda k: scores[k])
             best_score = scores[best_category]
-        
+
         # Fallback to general category for low confidence
         if best_score < 0.2:
             best_category = "general"
             best_score = 0.3
-        
+
         # Validate category exists before accessing
         if best_category not in self.intents:
             best_category = "general"
             best_score = 0.3
-        
+
         config = self.intents[best_category]
         entities = self._extract_entities(transcript)
-        
+
         return ClassifiedIntent(
             intent_category=best_category,
             intent_action=self._extract_action(transcript_lower),
@@ -321,7 +392,7 @@ class IntentClassifier:
             fallback_agents=config.get("agents", [])[3:],
             raw_transcript=transcript,
         )
-    
+
     def _extract_action(self, transcript: str) -> str:
         action_verbs = {
             "create": ["create", "make", "build", "generate", "new"],
@@ -334,17 +405,19 @@ class IntentClassifier:
             if any(verb in transcript for verb in verbs):
                 return action
         return "process"
-    
+
     def _extract_entities(self, transcript: str) -> List[ExtractedEntity]:
         entities = []
         for entity_type, pattern in self.compiled_entity_patterns.items():
             for match in pattern.finditer(transcript):
-                entities.append(ExtractedEntity(
-                    entity_type=entity_type,
-                    value=match.group(1) if match.lastindex else match.group(0),
-                    confidence=0.8,
-                    position=(match.start(), match.end()),
-                ))
+                entities.append(
+                    ExtractedEntity(
+                        entity_type=entity_type,
+                        value=match.group(1) if match.lastindex else match.group(0),
+                        confidence=0.8,
+                        position=(match.start(), match.end()),
+                    )
+                )
         return entities
 
 
@@ -363,7 +436,12 @@ def classify_voice_command(transcript: str) -> ClassifiedIntent:
 
 
 __all__ = [
-    "IntentClassifier", "ClassifiedIntent", "ExtractedEntity",
-    "IntentPriority", "ConfirmationLevel", "get_intent_classifier",
-    "classify_voice_command", "INTENT_CATEGORIES",
+    "IntentClassifier",
+    "ClassifiedIntent",
+    "ExtractedEntity",
+    "IntentPriority",
+    "ConfirmationLevel",
+    "get_intent_classifier",
+    "classify_voice_command",
+    "INTENT_CATEGORIES",
 ]

@@ -1,13 +1,15 @@
 """Mycelium Network Simulator v18. Created: February 3, 2026"""
+
 import logging
-from typing import Any, Dict, List, Optional, Tuple
-from uuid import uuid4
 import math
 import os
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import uuid4
 
 import httpx
 
 logger = logging.getLogger(__name__)
+
 
 class HyphalTip:
     def __init__(self, x: float, y: float, direction: float):
@@ -15,6 +17,7 @@ class HyphalTip:
         self.y = y
         self.direction = direction
         self.growth_rate = 1.0
+
 
 class NetworkNode:
     def __init__(self, node_id: str, x: float, y: float):
@@ -24,9 +27,10 @@ class NetworkNode:
         self.connections: List[str] = []
         self.signal_state: float = 0.0
 
+
 class MyceliumSimulator:
     """Simulates fungal mycelium growth and network behavior."""
-    
+
     def __init__(self, grid_size: Tuple[int, int] = (100, 100)):
         self.grid_size = grid_size
         self.nodes: Dict[str, NetworkNode] = {}
@@ -34,18 +38,17 @@ class MyceliumSimulator:
         self.tips: List[HyphalTip] = []
         self.time_step = 0
         self.physics_url = os.getenv("PHYSICSNEMO_API_URL", "http://localhost:8400").rstrip("/")
-    
+
     def initialize(self, spore_location: Tuple[float, float] = (50, 50)) -> str:
         node_id = str(uuid4())[:8]
         self.nodes[node_id] = NetworkNode(node_id, spore_location[0], spore_location[1])
         for angle in [0, 72, 144, 216, 288]:
             self.tips.append(HyphalTip(spore_location[0], spore_location[1], math.radians(angle)))
         return node_id
-    
+
     def step(self, nutrient_field: Optional[Dict[Tuple[int, int], float]] = None) -> Dict[str, Any]:
         self.time_step += 1
         new_nodes = 0
-        new_edges = 0
         nutrient_gain = 0.0
         if nutrient_field:
             nutrient_gain = self._estimate_nutrient_gain(nutrient_field)
@@ -66,13 +69,18 @@ class MyceliumSimulator:
             "new_nodes": new_nodes,
             "nutrient_gain": nutrient_gain,
         }
-    
+
     def simulate(self, steps: int = 100) -> Dict[str, Any]:
         results = []
         for _ in range(steps):
             results.append(self.step())
-        return {"total_steps": steps, "final_nodes": len(self.nodes), "final_edges": len(self.edges), "history": results[-10:]}
-    
+        return {
+            "total_steps": steps,
+            "final_nodes": len(self.nodes),
+            "final_edges": len(self.edges),
+            "history": results[-10:],
+        }
+
     def propagate_signal(self, source_node: str, signal_strength: float = 1.0) -> Dict[str, float]:
         if source_node not in self.nodes:
             return {}
@@ -92,7 +100,9 @@ class MyceliumSimulator:
             with httpx.Client(timeout=5.0) as client:
                 response = client.post(f"{self.physics_url}/physics/neural-operator", json=payload)
                 response.raise_for_status()
-                output = response.json().get("output_vector", [signal_strength, signal_strength, signal_strength])
+                output = response.json().get(
+                    "output_vector", [signal_strength, signal_strength, signal_strength]
+                )
             damped = float(max(min(output[0], 1.0), -1.0))
         except Exception:
             damped = float(signal_strength)
@@ -126,9 +136,14 @@ class MyceliumSimulator:
             flat = list(nutrient_field.values())
             mean = sum(flat) / max(len(flat), 1)
             return max(0.0, min(mean, 1.0))
-    
+
     def solve_maze(self, start: Tuple[float, float], end: Tuple[float, float]) -> Dict[str, Any]:
         return {"solved": True, "path_length": 0, "steps": 0}
-    
+
     def get_network_stats(self) -> Dict[str, Any]:
-        return {"nodes": len(self.nodes), "edges": len(self.edges), "tips": len(self.tips), "time_step": self.time_step}
+        return {
+            "nodes": len(self.nodes),
+            "edges": len(self.edges),
+            "tips": len(self.tips),
+            "time_step": self.time_step,
+        }

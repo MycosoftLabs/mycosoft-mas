@@ -50,8 +50,7 @@ class EpisodicMemory:
 
         self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=2)
         async with self._pool.acquire() as conn:
-            await conn.execute(
-                """
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.episodic_events (
                     id UUID PRIMARY KEY,
                     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -61,20 +60,15 @@ class EpisodicMemory:
                     embedding_json JSONB NULL,
                     consolidated_at TIMESTAMPTZ NULL
                 );
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_episodic_timestamp
                 ON mindex.episodic_events (timestamp DESC);
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_episodic_consolidated
                 ON mindex.episodic_events (consolidated_at);
-                """
-            )
+                """)
         logger.info("EpisodicMemory initialized")
 
     async def record_episode(
@@ -125,14 +119,12 @@ class EpisodicMemory:
         target_keys = set(context.keys())
 
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch(
-                """
+            rows = await conn.fetch("""
                 SELECT id, timestamp, context_json, actions_json, outcome, embedding_json, consolidated_at
                 FROM mindex.episodic_events
                 ORDER BY timestamp DESC
                 LIMIT 250;
-                """
-            )
+                """)
 
         scored: List[tuple[float, Episode]] = []
         for row in rows:
@@ -183,15 +175,13 @@ class EpisodicMemory:
             await self.initialize()
 
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch(
-                """
+            rows = await conn.fetch("""
                 SELECT id, context_json, actions_json, outcome, timestamp
                 FROM mindex.episodic_events
                 WHERE consolidated_at IS NULL
                 ORDER BY timestamp ASC
                 LIMIT 100;
-                """
-            )
+                """)
 
         if not rows:
             return 0
@@ -220,7 +210,11 @@ class EpisodicMemory:
                 timestamp=row["timestamp"],
             )
             await memory.remember(
-                content={"text": fact_text, "source": "episodic_consolidation", "episode_id": str(row["id"])},
+                content={
+                    "text": fact_text,
+                    "source": "episodic_consolidation",
+                    "episode_id": str(row["id"]),
+                },
                 layer=MemoryLayer.SEMANTIC,
                 importance=0.75,
                 tags=["episodic", "consolidated"],

@@ -6,7 +6,7 @@ Created: February 17, 2026
 """
 
 import logging
-from typing import Any, AsyncGenerator, Dict, Optional
+from typing import Any, AsyncGenerator, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ class FingerOrchestrator:
         if self._router is None:
             try:
                 from mycosoft_mas.llm.frontier_router import FrontierLLMRouter
+
                 self._router = FrontierLLMRouter()
             except ImportError as e:
                 logger.warning("FrontierLLMRouter not available: %s", e)
@@ -50,9 +51,14 @@ class FingerOrchestrator:
         V0: Keyword-based. Future: LLM classification.
         """
         content_lower = content.lower()
-        if any(k in content_lower for k in ["code", "implement", "function", "api", "endpoint", "bug", "fix"]):
+        if any(
+            k in content_lower
+            for k in ["code", "implement", "function", "api", "endpoint", "bug", "fix"]
+        ):
             return "code"
-        if any(k in content_lower for k in ["analyze", "reason", "logic", "explain why", "compare"]):
+        if any(
+            k in content_lower for k in ["analyze", "reason", "logic", "explain why", "compare"]
+        ):
             return "reasoning"
         if any(k in content_lower for k in ["write", "creative", "story", "brainstorm", "idea"]):
             return "creative"
@@ -76,6 +82,7 @@ class FingerOrchestrator:
         provider = TASK_PROVIDER_MAP.get(task_type, TASK_PROVIDER_MAP["default"])
 
         from mycosoft_mas.llm.frontier_router import ConversationContext
+
         conv_context = ConversationContext(
             session_id=context.get("session_id", "default"),
             conversation_id=context.get("conversation_id", "default"),

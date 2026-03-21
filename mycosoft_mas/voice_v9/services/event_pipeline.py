@@ -10,9 +10,8 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, List, Optional
 
 from mycosoft_mas.voice_v9.schemas import EventSource, GroundedSpeechDecision, SpeechworthyEvent
-
-from mycosoft_mas.voice_v9.services.event_translation_engine import get_event_translation_engine
 from mycosoft_mas.voice_v9.services.event_arbiter import get_event_arbiter
+from mycosoft_mas.voice_v9.services.event_translation_engine import get_event_translation_engine
 from mycosoft_mas.voice_v9.services.speech_grounding_gate import get_speech_grounding_gate
 from mycosoft_mas.voice_v9.services.truth_mirror_bus import get_truth_mirror_bus
 
@@ -60,7 +59,9 @@ class EventPipeline:
 
         return event
 
-    def register_on_grounded_speak(self, callback: Callable[[GroundedSpeechDecision], None]) -> None:
+    def register_on_grounded_speak(
+        self, callback: Callable[[GroundedSpeechDecision], None]
+    ) -> None:
         """Register a callback invoked when an event is approved for speech."""
         self._on_grounded_speak.append(callback)
 

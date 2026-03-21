@@ -12,11 +12,9 @@ Environment Variables:
 """
 
 import logging
-import os
-from typing import Any, Dict, List, Optional
 import urllib.parse
+from typing import Any, Dict, List, Optional
 
-import httpx
 
 from mycosoft_mas.integrations.solana_client import SolanaClient
 

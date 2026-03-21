@@ -78,9 +78,7 @@ class ScientificDatasetCreate(BaseModel):
 class ScientificDataStore:
     def __init__(self, database_url: Optional[str] = None):
         self._database_url = (
-            database_url
-            or os.getenv("DATABASE_URL")
-            or os.getenv("MINDEX_DATABASE_URL")
+            database_url or os.getenv("DATABASE_URL") or os.getenv("MINDEX_DATABASE_URL")
         )
         if not self._database_url:
             raise RuntimeError("DATABASE_URL or MINDEX_DATABASE_URL is required.")
@@ -94,8 +92,7 @@ class ScientificDataStore:
         self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=6)
         async with self._pool.acquire() as conn:
             await conn.execute("CREATE SCHEMA IF NOT EXISTS mindex;")
-            await conn.execute(
-                """
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.experiments (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -103,10 +100,8 @@ class ScientificDataStore:
                     protocol_json JSONB NOT NULL DEFAULT '{}'::jsonb,
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.observations (
                     id TEXT PRIMARY KEY,
                     experiment_id TEXT NOT NULL REFERENCES mindex.experiments(id) ON DELETE CASCADE,
@@ -118,20 +113,16 @@ class ScientificDataStore:
                     ON mindex.observations (experiment_id);
                 CREATE INDEX IF NOT EXISTS idx_observations_timestamp
                     ON mindex.observations (timestamp DESC);
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.lab_equipment (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
                     status TEXT NOT NULL,
                     last_calibration TIMESTAMPTZ
                 );
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.datasets (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -140,8 +131,7 @@ class ScientificDataStore:
                     schema_json JSONB NOT NULL DEFAULT '{}'::jsonb,
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
-                """
-            )
+                """)
 
     async def list_experiments(self) -> List[ScientificExperiment]:
         await self.initialize()
@@ -184,7 +174,9 @@ class ScientificDataStore:
             created_at=created_at,
         )
 
-    async def list_observations(self, experiment_id: Optional[str] = None) -> List[ScientificObservation]:
+    async def list_observations(
+        self, experiment_id: Optional[str] = None
+    ) -> List[ScientificObservation]:
         await self.initialize()
         async with self._pool.acquire() as conn:
             if experiment_id:
@@ -198,14 +190,12 @@ class ScientificDataStore:
                     experiment_id,
                 )
             else:
-                rows = await conn.fetch(
-                    """
+                rows = await conn.fetch("""
                     SELECT id, experiment_id, timestamp, data_json, sensor_source
                     FROM mindex.observations
                     ORDER BY timestamp DESC
                     LIMIT 500
-                    """
-                )
+                    """)
         return [
             ScientificObservation(
                 id=row["id"],

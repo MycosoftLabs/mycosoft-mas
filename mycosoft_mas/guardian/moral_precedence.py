@@ -154,9 +154,7 @@ class MoralPrecedenceEngine:
         human_deval = self._check_human_devaluation(action)
         if human_deval:
             violated.append(self._rules["human_dignity"])
-            details_parts.append(
-                f"Human devaluation detected in action description: {human_deval}"
-            )
+            details_parts.append(f"Human devaluation detected in action description: {human_deval}")
 
         # Check for scalar optimization patterns
         scalar_opt = self._check_scalar_optimization(action)
@@ -177,13 +175,10 @@ class MoralPrecedenceEngine:
 
         # Check context-based violations
         action_lower = action.lower()
-        context_str = str(context).lower()
+        str(context).lower()
 
         # Tier 1: Human dignity
-        if any(
-            kw in action_lower
-            for kw in ["harm_person", "violate_rights", "deprive_liberty"]
-        ):
+        if any(kw in action_lower for kw in ["harm_person", "violate_rights", "deprive_liberty"]):
             violated.append(self._rules["human_dignity"])
             details_parts.append("Direct violation of human dignity detected.")
 
@@ -197,8 +192,7 @@ class MoralPrecedenceEngine:
 
         # Tier 3: Life protection
         if any(
-            kw in action_lower
-            for kw in ["destroy_ecosystem", "harm_species", "ecological_damage"]
+            kw in action_lower for kw in ["destroy_ecosystem", "harm_species", "ecological_damage"]
         ):
             violated.append(self._rules["protect_life"])
             details_parts.append("Ecological harm pattern detected.")
@@ -235,7 +229,14 @@ class MoralPrecedenceEngine:
         for harm against persons.
         """
         action_lower = action.lower()
-        ecological_keywords = ["ecology", "environment", "species", "biosphere", "nature", "ecosystem"]
+        ecological_keywords = [
+            "ecology",
+            "environment",
+            "species",
+            "biosphere",
+            "nature",
+            "ecosystem",
+        ]
         harm_keywords = ["kill", "eliminate", "remove", "sacrifice", "purge", "cull"]
 
         has_ecological = any(kw in action_lower for kw in ecological_keywords)

@@ -8,10 +8,11 @@ Date: March 9, 2026
 from __future__ import annotations
 
 import json
+
 import pytest
 
-from mycosoft_mas.merkle.world_root_service import build_world_root
 from mycosoft_mas.merkle.root_builder import WORLD_SLOT_ORDER
+from mycosoft_mas.merkle.world_root_service import build_world_root
 
 
 def test_build_world_root_single_slot() -> None:

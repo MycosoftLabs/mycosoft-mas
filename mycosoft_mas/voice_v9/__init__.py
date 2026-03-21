@@ -6,12 +6,12 @@ Runs alongside the legacy Bridge/Brain system; test-voice can switch over increm
 """
 
 from mycosoft_mas.voice_v9.schemas import (
-    VoiceSession,
-    TranscriptChunk,
-    SpeechworthyEvent,
     GroundedSpeechDecision,
-    PersonaState,
     LatencyTrace,
+    PersonaState,
+    SpeechworthyEvent,
+    TranscriptChunk,
+    VoiceSession,
 )
 
 __all__ = [

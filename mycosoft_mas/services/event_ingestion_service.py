@@ -8,8 +8,8 @@ This service ingests events from external systems and stores them in the
 source entity to the event node in the knowledge graph.
 """
 
-from typing import Any, Dict
 from datetime import datetime
+from typing import Any, Dict
 
 from ..core.knowledge_graph import KnowledgeGraph
 

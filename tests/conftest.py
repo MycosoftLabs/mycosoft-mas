@@ -17,12 +17,14 @@ def pytest_configure(config):
         # Also block (defensive) in case of later auto-loading.
         pm.set_blocked(name)
 
-import pytest
+
 import asyncio
+import os
 import sys
 import types
-import os
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
+import pytest
 
 # Stub out heavy optional dependencies to keep tests lightweight
 os.environ.setdefault("MAS_LIGHT_IMPORT", "1")
@@ -45,13 +47,17 @@ for _mod in [
         sys.modules[_mod] = types.ModuleType(_mod)
 
 if "web3" in sys.modules:
+
     class _Web3:
         pass
+
     sys.modules["web3"].Web3 = _Web3
 
 if "eth_account" in sys.modules:
+
     class _Account:
         pass
+
     sys.modules["eth_account"].Account = _Account
 
 if "bitcoin" in sys.modules:
@@ -60,12 +66,15 @@ if "bitcoin" in sys.modules:
 if "docx" in sys.modules:
     docx_mod = sys.modules["docx"]
     shared_mod = types.ModuleType("docx.shared")
+
     class _Pt:
         def __init__(self, *args, **kwargs):
             pass
+
     class _Inches:
         def __init__(self, *args, **kwargs):
             pass
+
     shared_mod.Pt = _Pt
     shared_mod.Inches = _Inches
     sys.modules["docx.shared"] = shared_mod

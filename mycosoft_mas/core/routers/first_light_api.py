@@ -65,4 +65,3 @@ async def replay_read(request: ReplayReadRequest) -> Dict[str, Any]:
 async def execute_action(request: ActuationRequest) -> Dict[str, Any]:
     service = BasicActuationService()
     return await service.execute(action_type=request.action_type, payload=request.payload)
-

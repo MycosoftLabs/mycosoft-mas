@@ -10,10 +10,9 @@ Tests cover:
 - Reciprocal Turing Agent task handlers
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from datetime import datetime, timezone
+from unittest.mock import AsyncMock, patch
 
+import pytest
 
 # ============================================================================
 # Identity Store Tests
@@ -125,7 +124,9 @@ class TestIdentityStore:
         assert pref.stable is True
 
     @pytest.mark.asyncio
-    async def test_get_stable_preference_returns_none_for_unstable(self, store, mock_memory_manager):
+    async def test_get_stable_preference_returns_none_for_unstable(
+        self, store, mock_memory_manager
+    ):
         from mycosoft_mas.core.routers.identity_api import PreferenceRecord
 
         unstable = PreferenceRecord(
@@ -321,9 +322,7 @@ class TestContinuityManager:
     def test_classify_pause(self):
         from mycosoft_mas.core.continuity_manager import ContinuityManager
 
-        result = ContinuityManager.classify_disruption(
-            {"event_type": "hibernate", "what_lost": []}
-        )
+        result = ContinuityManager.classify_disruption({"event_type": "hibernate", "what_lost": []})
         assert result == "pause"
 
 

@@ -22,7 +22,18 @@ import httpx
 logger = logging.getLogger("finance.discovery")
 
 # Finance-related keywords for filtering n8n workflows and services
-_FINANCE_KEYWORDS = {"finance", "financial", "budget", "invoice", "payment", "relay", "mercury", "quickbooks", "treasury", "cfo"}
+_FINANCE_KEYWORDS = {
+    "finance",
+    "financial",
+    "budget",
+    "invoice",
+    "payment",
+    "relay",
+    "mercury",
+    "quickbooks",
+    "treasury",
+    "cfo",
+}
 
 # Known finance integration modules (discovered from integrations package)
 _FINANCE_SERVICE_IDS = [
@@ -38,7 +49,8 @@ _FINANCE_SERVICE_IDS = [
 def list_finance_agents() -> List[Dict[str, Any]]:
     """List all finance agents from the agent registry (dynamic discovery)."""
     try:
-        from mycosoft_mas.core.agent_registry import get_agent_registry, AgentCategory
+        from mycosoft_mas.core.agent_registry import AgentCategory, get_agent_registry
+
         registry = get_agent_registry()
         agents = registry.list_by_category(AgentCategory.FINANCIAL)
         return [
@@ -62,18 +74,22 @@ def list_finance_services() -> List[Dict[str, Any]]:
         mod_path = f"mycosoft_mas.integrations.{sid}"
         try:
             import_module(mod_path)
-            results.append({
-                "service_id": sid,
-                "available": True,
-                "module": mod_path,
-            })
+            results.append(
+                {
+                    "service_id": sid,
+                    "available": True,
+                    "module": mod_path,
+                }
+            )
         except ImportError:
-            results.append({
-                "service_id": sid,
-                "available": False,
-                "module": mod_path,
-                "note": "module not found",
-            })
+            results.append(
+                {
+                    "service_id": sid,
+                    "available": False,
+                    "module": mod_path,
+                    "note": "module not found",
+                }
+            )
     return results
 
 
@@ -81,6 +97,7 @@ async def list_finance_workloads() -> List[Dict[str, Any]]:
     """List finance-related n8n workflows (dynamic discovery)."""
     try:
         from mycosoft_mas.integrations.n8n_client import N8NClient
+
         async with N8NClient() as client:
             workflows = await client.get_workflows()
         finance_workloads = []
@@ -89,12 +106,14 @@ async def list_finance_workloads() -> List[Dict[str, Any]]:
             tags = " ".join(w.get("tags", []) or []).lower()
             combined = f"{name} {tags}"
             if any(kw in combined for kw in _FINANCE_KEYWORDS):
-                finance_workloads.append({
-                    "id": w.get("id"),
-                    "name": w.get("name"),
-                    "active": w.get("active", False),
-                    "createdAt": w.get("createdAt"),
-                })
+                finance_workloads.append(
+                    {
+                        "id": w.get("id"),
+                        "name": w.get("name"),
+                        "active": w.get("active", False),
+                        "createdAt": w.get("createdAt"),
+                    }
+                )
         return finance_workloads
     except Exception as e:
         logger.warning("list_finance_workloads failed: %s", e)
@@ -114,14 +133,16 @@ async def list_finance_tasks() -> List[Dict[str, Any]]:
             for a in data.get("assistants", []):
                 last_report = a.get("last_report")
                 if last_report:
-                    tasks.append({
-                        "role": a.get("role"),
-                        "assistant": a.get("assistant_name"),
-                        "report_type": last_report.get("type"),
-                        "summary": last_report.get("summary", "")[:200],
-                        "task_id": last_report.get("task_id"),
-                        "at": last_report.get("at"),
-                    })
+                    tasks.append(
+                        {
+                            "role": a.get("role"),
+                            "assistant": a.get("assistant_name"),
+                            "report_type": last_report.get("type"),
+                            "summary": last_report.get("summary", "")[:200],
+                            "task_id": last_report.get("task_id"),
+                            "at": last_report.get("at"),
+                        }
+                    )
             return tasks
     except Exception as e:
         logger.warning("list_finance_tasks failed: %s", e)
@@ -134,7 +155,8 @@ async def delegate_finance_task(
 ) -> Dict[str, Any]:
     """Delegate a task to a finance agent. Instantiates agent from registry and runs process_task."""
     try:
-        from mycosoft_mas.core.agent_registry import get_agent_registry, AgentCategory
+        from mycosoft_mas.core.agent_registry import AgentCategory, get_agent_registry
+
         registry = get_agent_registry()
         # Resolve alias (e.g. financial_agent -> financial)
         defn = registry.get(agent_id)
@@ -237,29 +259,34 @@ async def get_finance_alerts() -> List[Dict[str, Any]]:
             for a in data.get("assistants", []):
                 last_esc = a.get("last_escalation")
                 if last_esc:
-                    alerts.append({
-                        "type": "escalation",
-                        "role": a.get("role"),
-                        "assistant": a.get("assistant_name"),
-                        "subject": last_esc.get("subject"),
-                        "urgency": last_esc.get("urgency"),
-                        "at": last_esc.get("at"),
-                    })
+                    alerts.append(
+                        {
+                            "type": "escalation",
+                            "role": a.get("role"),
+                            "assistant": a.get("assistant_name"),
+                            "subject": last_esc.get("subject"),
+                            "urgency": last_esc.get("urgency"),
+                            "at": last_esc.get("at"),
+                        }
+                    )
                 # Stale heartbeat check (e.g. >2 min)
                 last_hb = a.get("last_heartbeat")
                 if last_hb:
                     from datetime import datetime, timezone
+
                     try:
                         dt = datetime.fromisoformat(last_hb.replace("Z", "+00:00"))
                         age_sec = (datetime.now(timezone.utc) - dt).total_seconds()
                         if age_sec > 120:
-                            alerts.append({
-                                "type": "stale_heartbeat",
-                                "role": a.get("role"),
-                                "assistant": a.get("assistant_name"),
-                                "age_seconds": int(age_sec),
-                                "last_heartbeat": last_hb,
-                            })
+                            alerts.append(
+                                {
+                                    "type": "stale_heartbeat",
+                                    "role": a.get("role"),
+                                    "assistant": a.get("assistant_name"),
+                                    "age_seconds": int(age_sec),
+                                    "last_heartbeat": last_hb,
+                                }
+                            )
                     except Exception:
                         pass
     except Exception as e:

@@ -7,7 +7,7 @@ before allowing output. Ensures MYCA earns the right to speak every event.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Optional
 
 from mycosoft_mas.voice_v9.schemas import GroundedSpeechDecision, SpeechworthyEvent
@@ -57,7 +57,10 @@ class SpeechGroundingGate:
             pass  # If we can't parse, don't block
 
         # Provenance for high-stake sources
-        if self.REQUIRED_PROVENANCE_FOR_HIGH_STAKE and event.source.value in ("mdp_device", "mas_task"):
+        if self.REQUIRED_PROVENANCE_FOR_HIGH_STAKE and event.source.value in (
+            "mdp_device",
+            "mas_task",
+        ):
             if not event.provenance or not event.provenance.strip():
                 issues.append("missing provenance for device/task event")
 

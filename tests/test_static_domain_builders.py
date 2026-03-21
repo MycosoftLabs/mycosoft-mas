@@ -9,16 +9,11 @@ environment, infrastructure, geospatial, observation, search).
 Created: March 3, 2026
 """
 
-import asyncio
-
-import numpy as np
 import pytest
 
-from mycosoft_mas.llm.constrained.static_index import STATICIndex
 from mycosoft_mas.llm.constrained.domain_builders import (
     DOMAIN_BUILDERS,
     DomainIndexReport,
-    MINDEXConstraintConfig,
     _build_string_index,
     _byte_tokenize,
     build_agent_index,
@@ -36,7 +31,7 @@ from mycosoft_mas.llm.constrained.domain_builders import (
     build_taxonomy_index,
     build_user_index,
 )
-
+from mycosoft_mas.llm.constrained.static_index import STATICIndex
 
 # --- Utility Tests ---
 
@@ -100,7 +95,7 @@ class TestAgentIndex:
     async def test_agent_ids_contain_known_agents(self):
         indexes = await build_agent_index()
         # Verify that "orchestrator" is a valid constrained sequence
-        tokens = _byte_tokenize("orchestrator")
+        _byte_tokenize("orchestrator")
         # We can check start_mask for 'o' = 111
         assert indexes["agent_ids"].start_mask[ord("o")]
 
@@ -222,11 +217,10 @@ class TestBiosphereIndex:
         indexes = await build_biosphere_index()
         # Verify major organism forms are constrained
         forms_idx = indexes["bio_organism_forms"]
-        for form in ["mammal", "insect", "bird", "fish", "mushroom",
-                      "bacterium", "virus", "tree"]:
-            assert forms_idx.start_mask[ord(form[0])], (
-                f"Organism form '{form}' start char not in index"
-            )
+        for form in ["mammal", "insect", "bird", "fish", "mushroom", "bacterium", "virus", "tree"]:
+            assert forms_idx.start_mask[
+                ord(form[0])
+            ], f"Organism form '{form}' start char not in index"
 
 
 class TestEnvironmentIndex:
@@ -391,10 +385,20 @@ class TestDomainBuildersRegistry:
     def test_all_domains_registered(self):
         """Verify all expected domains are in the DOMAIN_BUILDERS map."""
         expected = {
-            "mindex", "taxonomy", "crep", "nlm",
-            "agents", "devices", "signals", "users",
-            "biosphere", "environment", "infrastructure",
-            "geospatial", "observation", "search",
+            "mindex",
+            "taxonomy",
+            "crep",
+            "nlm",
+            "agents",
+            "devices",
+            "signals",
+            "users",
+            "biosphere",
+            "environment",
+            "infrastructure",
+            "geospatial",
+            "observation",
+            "search",
         }
         assert set(DOMAIN_BUILDERS.keys()) == expected
 
@@ -403,9 +407,7 @@ class TestDomainBuildersRegistry:
         import asyncio
 
         for name, builder in DOMAIN_BUILDERS.items():
-            assert asyncio.iscoroutinefunction(builder), (
-                f"Builder for '{name}' is not async"
-            )
+            assert asyncio.iscoroutinefunction(builder), f"Builder for '{name}' is not async"
 
 
 # --- Constraint Validation Integration Tests ---

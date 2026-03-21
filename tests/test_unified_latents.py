@@ -5,17 +5,17 @@ Covers the UnifiedLatentsAgent (v2 simulation agent) and the
 /api/unified-latents/* HTTP endpoints.
 """
 
-import pytest
 from datetime import datetime, timezone
 from uuid import uuid4
 
+import pytest
+
+from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
 from mycosoft_mas.agents.v2.simulation_agents import (
-    UnifiedLatentsAgent,
     SIMULATION_AGENTS,
+    UnifiedLatentsAgent,
     get_simulation_agent,
 )
-from mycosoft_mas.agents.v2.scientific_agents import ScientificTask, TaskPriority
-
 
 # ---------------------------------------------------------------------------
 # Agent tests
@@ -64,11 +64,14 @@ class TestUnifiedLatentsRegistry:
 class TestEncodeToLatent:
     @pytest.mark.asyncio
     async def test_encode(self, agent):
-        task = _make_task("encode_to_latent", {
-            "input_path": "/data/test.png",
-            "checkpoint": "v1",
-            "noise_level": 0.1,
-        })
+        task = _make_task(
+            "encode_to_latent",
+            {
+                "input_path": "/data/test.png",
+                "checkpoint": "v1",
+                "noise_level": 0.1,
+            },
+        )
         result = await agent.execute_task(task)
         assert "latent_id" in result
         assert result["input_path"] == "/data/test.png"
@@ -79,10 +82,13 @@ class TestEncodeToLatent:
 class TestDecodeFromLatent:
     @pytest.mark.asyncio
     async def test_decode(self, agent):
-        task = _make_task("decode_from_latent", {
-            "latent_id": "abc-123",
-            "num_diffusion_steps": 100,
-        })
+        task = _make_task(
+            "decode_from_latent",
+            {
+                "latent_id": "abc-123",
+                "num_diffusion_steps": 100,
+            },
+        )
         result = await agent.execute_task(task)
         assert "decode_id" in result
         assert result["latent_id"] == "abc-123"
@@ -92,14 +98,17 @@ class TestDecodeFromLatent:
 class TestGenerateImage:
     @pytest.mark.asyncio
     async def test_generate(self, agent):
-        task = _make_task("generate_image", {
-            "prompt": "a photo of a mushroom",
-            "resolution": 512,
-            "num_samples": 2,
-            "guidance_scale": 7.5,
-            "num_diffusion_steps": 50,
-            "checkpoint": "default",
-        })
+        task = _make_task(
+            "generate_image",
+            {
+                "prompt": "a photo of a mushroom",
+                "resolution": 512,
+                "num_samples": 2,
+                "guidance_scale": 7.5,
+                "num_diffusion_steps": 50,
+                "checkpoint": "default",
+            },
+        )
         result = await agent.execute_task(task)
         assert "generation_id" in result
         assert result["prompt"] == "a photo of a mushroom"
@@ -117,12 +126,15 @@ class TestGenerateImage:
 class TestGenerateVideo:
     @pytest.mark.asyncio
     async def test_generate(self, agent):
-        task = _make_task("generate_video", {
-            "prompt": "timelapse of mycelium growth",
-            "resolution": 512,
-            "num_frames": 32,
-            "fps": 16,
-        })
+        task = _make_task(
+            "generate_video",
+            {
+                "prompt": "timelapse of mycelium growth",
+                "resolution": 512,
+                "num_frames": 32,
+                "fps": 16,
+            },
+        )
         result = await agent.execute_task(task)
         assert "generation_id" in result
         assert result["num_frames"] == 32
@@ -132,13 +144,16 @@ class TestGenerateVideo:
 class TestTrainModel:
     @pytest.mark.asyncio
     async def test_train(self, agent):
-        task = _make_task("train_model", {
-            "dataset": "imagenet-512",
-            "batch_size": 32,
-            "learning_rate": 1e-4,
-            "max_steps": 1000,
-            "noise_schedule": "cosine",
-        })
+        task = _make_task(
+            "train_model",
+            {
+                "dataset": "imagenet-512",
+                "batch_size": 32,
+                "learning_rate": 1e-4,
+                "max_steps": 1000,
+                "noise_schedule": "cosine",
+            },
+        )
         result = await agent.execute_task(task)
         assert "run_id" in result
         assert result["dataset"] == "imagenet-512"
@@ -168,12 +183,15 @@ class TestTrainModel:
 class TestEvaluateModel:
     @pytest.mark.asyncio
     async def test_evaluate(self, agent):
-        task = _make_task("evaluate_model", {
-            "checkpoint": "v1-500k",
-            "dataset": "imagenet-512",
-            "num_samples": 50_000,
-            "metrics": ["fid", "psnr", "fvd"],
-        })
+        task = _make_task(
+            "evaluate_model",
+            {
+                "checkpoint": "v1-500k",
+                "dataset": "imagenet-512",
+                "num_samples": 50_000,
+                "metrics": ["fid", "psnr", "fvd"],
+            },
+        )
         result = await agent.execute_task(task)
         assert "evaluation_id" in result
         assert "fid" in result["metrics"]
@@ -241,29 +259,38 @@ class TestAPIHealth:
 
 class TestAPIGenerateImage:
     def test_generate_image(self, client):
-        resp = client.post("/api/unified-latents/generate/image", json={
-            "prompt": "a mushroom in a forest",
-            "resolution": 256,
-            "num_samples": 1,
-        })
+        resp = client.post(
+            "/api/unified-latents/generate/image",
+            json={
+                "prompt": "a mushroom in a forest",
+                "resolution": 256,
+                "num_samples": 1,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "generation_id" in data
         assert data["prompt"] == "a mushroom in a forest"
 
     def test_empty_prompt_rejected(self, client):
-        resp = client.post("/api/unified-latents/generate/image", json={
-            "prompt": "",
-        })
+        resp = client.post(
+            "/api/unified-latents/generate/image",
+            json={
+                "prompt": "",
+            },
+        )
         assert resp.status_code == 422
 
 
 class TestAPIGenerateVideo:
     def test_generate_video(self, client):
-        resp = client.post("/api/unified-latents/generate/video", json={
-            "prompt": "mycelium growth timelapse",
-            "num_frames": 16,
-        })
+        resp = client.post(
+            "/api/unified-latents/generate/video",
+            json={
+                "prompt": "mycelium growth timelapse",
+                "num_frames": 16,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "generation_id" in data
@@ -272,28 +299,37 @@ class TestAPIGenerateVideo:
 
 class TestAPIEncode:
     def test_encode(self, client):
-        resp = client.post("/api/unified-latents/encode", json={
-            "input_path": "/data/sample.png",
-        })
+        resp = client.post(
+            "/api/unified-latents/encode",
+            json={
+                "input_path": "/data/sample.png",
+            },
+        )
         assert resp.status_code == 200
         assert "latent_id" in resp.json()
 
 
 class TestAPIDecode:
     def test_decode(self, client):
-        resp = client.post("/api/unified-latents/decode", json={
-            "latent_id": "test-latent-id",
-        })
+        resp = client.post(
+            "/api/unified-latents/decode",
+            json={
+                "latent_id": "test-latent-id",
+            },
+        )
         assert resp.status_code == 200
         assert "decode_id" in resp.json()
 
 
 class TestAPITrain:
     def test_train(self, client):
-        resp = client.post("/api/unified-latents/train", json={
-            "dataset": "imagenet-512",
-            "batch_size": 16,
-        })
+        resp = client.post(
+            "/api/unified-latents/train",
+            json={
+                "dataset": "imagenet-512",
+                "batch_size": 16,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "queued"
@@ -302,10 +338,13 @@ class TestAPITrain:
 
 class TestAPIEvaluate:
     def test_evaluate(self, client):
-        resp = client.post("/api/unified-latents/evaluate", json={
-            "checkpoint": "latest",
-            "metrics": ["fid", "psnr"],
-        })
+        resp = client.post(
+            "/api/unified-latents/evaluate",
+            json={
+                "checkpoint": "latest",
+                "metrics": ["fid", "psnr"],
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "evaluation_id" in data

@@ -24,6 +24,7 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 
 class SearchExecuteRequest(BaseModel):
     """Request for unified search execution."""
+
     query: str = Field(..., min_length=1)
     search_context: Optional[Dict[str, Any]] = None
     user_id: Optional[str] = None
@@ -39,6 +40,7 @@ async def search_execute(request: SearchExecuteRequest) -> Dict[str, Any]:
     """
     try:
         from mycosoft_mas.consciousness.search_orchestrator import run_unified_search
+
         consciousness = get_consciousness()
         result = await run_unified_search(
             query=request.query,

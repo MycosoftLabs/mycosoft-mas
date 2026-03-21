@@ -16,7 +16,7 @@ import logging
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -69,8 +69,7 @@ _WALLETS: Dict[str, str] = {
 async def _ensure_invoices_table() -> None:
     pool = await _mindex._get_db_pool()
     async with pool.acquire() as conn:
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS raas_invoices (
                 invoice_id TEXT PRIMARY KEY,
                 agent_id TEXT NOT NULL,
@@ -87,11 +86,9 @@ async def _ensure_invoices_table() -> None:
                 completed_at TIMESTAMP,
                 expires_at TIMESTAMP
             );
-            """
-        )
+            """)
         await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_raas_invoices_agent "
-            "ON raas_invoices(agent_id);"
+            "CREATE INDEX IF NOT EXISTS idx_raas_invoices_agent " "ON raas_invoices(agent_id);"
         )
 
 
@@ -212,9 +209,7 @@ async def stripe_checkout(body: StripeCheckoutRequest) -> StripeCheckoutResponse
 
 def _get_webhook_secret() -> str:
     """Webhook secret from env or StripeClient. Reject placeholder for launch safety."""
-    secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "") or getattr(
-        _stripe, "webhook_secret", ""
-    )
+    secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "") or getattr(_stripe, "webhook_secret", "")
     return (secret or "").strip()
 
 
@@ -237,9 +232,7 @@ async def stripe_webhook(request: Request) -> Dict[str, Any]:
         )
 
     try:
-        event = stripe.Webhook.construct_event(
-            raw_body, signature, secret
-        )
+        event = stripe.Webhook.construct_event(raw_body, signature, secret)
     except ValueError as e:
         logger.warning("Stripe webhook invalid payload: %s", e)
         raise HTTPException(
@@ -288,10 +281,11 @@ async def stripe_webhook(request: Request) -> Dict[str, Any]:
         "status": "ok",
         "agent_id": agent_id,
         "package_id": package_id,
-        "credits_added": CREDIT_PACKAGES[package_id].credits
-        + CREDIT_PACKAGES[package_id].bonus_credits
-        if package_id in CREDIT_PACKAGES
-        else 0,
+        "credits_added": (
+            CREDIT_PACKAGES[package_id].credits + CREDIT_PACKAGES[package_id].bonus_credits
+            if package_id in CREDIT_PACKAGES
+            else 0
+        ),
         "new_balance": new_balance,
     }
 
@@ -466,9 +460,9 @@ async def verify_crypto_payment(body: CryptoVerifyRequest) -> Dict[str, Any]:
     if row["status"] == "completed":
         return {"status": "already_completed", "invoice_id": body.invoice_id}
 
-    if row["expires_at"] and row["expires_at"].replace(
-        tzinfo=timezone.utc
-    ) < datetime.now(timezone.utc):
+    if row["expires_at"] and row["expires_at"].replace(tzinfo=timezone.utc) < datetime.now(
+        timezone.utc
+    ):
         raise HTTPException(
             status_code=status.HTTP_410_GONE,
             detail="Invoice expired. Please create a new one.",

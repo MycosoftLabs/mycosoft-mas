@@ -1,8 +1,10 @@
 """
 Tests for NatureOS MATLAB voice tool handlers.
 """
-import pytest
+
 from unittest.mock import AsyncMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 pytest.importorskip("httpx")
@@ -11,6 +13,7 @@ pytest.importorskip("httpx")
 @pytest.fixture
 def client():
     from mycosoft_mas.core.myca_main import app
+
     return TestClient(app)
 
 
@@ -24,6 +27,7 @@ async def test_natureos_anomaly_scan_tool():
         mock_cls.return_value = mock_instance
 
         from mycosoft_mas.core.routers.voice_tools_api import _run_natureos_matlab_tool
+
         result = await _run_natureos_matlab_tool("natureos.anomaly_scan", "check for anomalies")
         assert result.success is True
         assert "anomaly" in result.result.lower()
@@ -39,6 +43,7 @@ async def test_natureos_forecast_tool():
         mock_cls.return_value = mock_instance
 
         from mycosoft_mas.core.routers.voice_tools_api import _run_natureos_matlab_tool
+
         result = await _run_natureos_matlab_tool(
             "natureos.forecast", "predict temperature for next 24 hours"
         )

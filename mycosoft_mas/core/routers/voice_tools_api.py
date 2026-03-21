@@ -4,14 +4,16 @@ MAS Voice Tool Call Handler - February 3, 2026
 This module provides tool execution endpoints for the PersonaPlex bridge.
 It handles device status checks, agent queries, MINDEX searches, and system status.
 """
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
-from uuid import uuid4
+
 import logging
 import os
 import re
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from mycosoft_mas.llm.tool_pipeline import ToolCall, ToolStatus, create_tool_manager_for_skill
 from mycosoft_mas.myca.event_ledger import get_ledger, hash_args
@@ -32,7 +34,9 @@ def _get_voice_tool_manager():
     return _voice_tool_manager
 
 
-def _log_voice_tool_response(tool_name: str, args: Dict[str, Any], response: "ToolCallResponse") -> None:
+def _log_voice_tool_response(
+    tool_name: str, args: Dict[str, Any], response: "ToolCallResponse"
+) -> None:
     try:
         ledger = get_ledger()
         status = "success" if response.success else "error"
@@ -82,6 +86,7 @@ async def _execute_tool_pipeline(tool_name: str, arguments: Dict[str, Any]) -> T
 
 async def _fetch_devices_payload() -> Dict[str, Any]:
     import httpx
+
     mas_base = _get_mas_base_url()
     async with httpx.AsyncClient(timeout=6.0) as client:
         response = await client.get(f"{mas_base}/api/devices", params={"include_offline": True})
@@ -103,7 +108,9 @@ def _pick_device_match(devices: List[Dict[str, Any]], query: str) -> Optional[Di
         ]
         for value in candidates:
             normalized_value = _normalize_text(str(value))
-            if normalized_value and (normalized_value in normalized_query or normalized_query in normalized_value):
+            if normalized_value and (
+                normalized_value in normalized_query or normalized_query in normalized_value
+            ):
                 return device
     return None
 
@@ -128,7 +135,7 @@ async def execute_tool(request: ToolCallRequest):
     """Execute a tool call and return the result."""
     tool_name = request.tool_name.lower()
     query = request.query.lower()
-    
+
     try:
         if tool_name == "device_status":
             response = await _get_device_status(query)
@@ -142,7 +149,12 @@ async def execute_tool(request: ToolCallRequest):
             response = await _run_myceliumseg_validation(query)
         elif tool_name == "run_workflow":
             response = await _run_workflow_voice(query)
-        elif tool_name in ("petri.monitor", "petri.adjust_env", "petri.contamination_response", "petri.multi_run"):
+        elif tool_name in (
+            "petri.monitor",
+            "petri.adjust_env",
+            "petri.contamination_response",
+            "petri.multi_run",
+        ):
             response = await _run_petri_agent_tool(tool_name, query)
         elif tool_name in (
             "natureos.analyze_zone",
@@ -170,7 +182,7 @@ async def execute_tool(request: ToolCallRequest):
                 success=False,
                 tool_name=tool_name,
                 result=f"Unknown tool: {tool_name}",
-                timestamp=datetime.utcnow().isoformat()
+                timestamp=datetime.utcnow().isoformat(),
             )
     except Exception as e:
         logger.error(f"Tool execution error: {e}")
@@ -178,7 +190,7 @@ async def execute_tool(request: ToolCallRequest):
             success=False,
             tool_name=tool_name,
             result=f"Tool execution failed: {str(e)}",
-            timestamp=datetime.utcnow().isoformat()
+            timestamp=datetime.utcnow().isoformat(),
         )
     _log_voice_tool_response(tool_name, {"tool_name": tool_name, "query": request.query}, response)
     return response
@@ -187,6 +199,7 @@ async def execute_tool(request: ToolCallRequest):
 async def _run_petri_agent_tool(tool_name: str, query: str) -> ToolCallResponse:
     """Execute Petri agent control via MAS petri API."""
     import httpx
+
     base = os.getenv("MAS_API_URL", "http://localhost:8001")
     url = f"{base.rstrip('/')}/api/simulation/petri/agent/control"
     action = tool_name.replace("petri.", "")
@@ -210,7 +223,9 @@ async def _run_petri_agent_tool(tool_name: str, query: str) -> ToolCallResponse:
         elif "ph" in query.lower() or "adjust" in query.lower():
             params["strategy"] = "adjust_ph"
     elif action == "multi_run":
-        m = re.search(r"(\d+)\s*iterations?", query, re.I) or re.search(r"batch\s+(\d+)", query, re.I)
+        m = re.search(r"(\d+)\s*iterations?", query, re.I) or re.search(
+            r"batch\s+(\d+)", query, re.I
+        )
         params["iterations"] = int(m.group(1)) if m else 10
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -220,16 +235,28 @@ async def _run_petri_agent_tool(tool_name: str, query: str) -> ToolCallResponse:
         msg = data.get("message", str(data.get("status", "ok")))
         if action == "monitor":
             msg = f"Petri status: {data.get('petridishsim_reachable', False) and 'reachable' or 'offline'}. Sessions: {data.get('sessions_count', 0)}."
-        return ToolCallResponse(success=True, tool_name=tool_name, result=msg[:500], data=data, timestamp=datetime.utcnow().isoformat())
+        return ToolCallResponse(
+            success=True,
+            tool_name=tool_name,
+            result=msg[:500],
+            data=data,
+            timestamp=datetime.utcnow().isoformat(),
+        )
     except Exception as e:
         logger.warning("Petri agent tool failed: %s", e)
-        return ToolCallResponse(success=False, tool_name=tool_name, result=f"Petri control failed: {str(e)[:200]}", timestamp=datetime.utcnow().isoformat())
+        return ToolCallResponse(
+            success=False,
+            tool_name=tool_name,
+            result=f"Petri control failed: {str(e)[:200]}",
+            timestamp=datetime.utcnow().isoformat(),
+        )
 
 
 async def _run_natureos_matlab_tool(tool_name: str, query: str) -> ToolCallResponse:
     """Execute NatureOS MATLAB-driven analyses via NATUREOSClient."""
     try:
         from mycosoft_mas.integrations.natureos_client import NATUREOSClient
+
         client = NATUREOSClient()
     except ImportError:
         return ToolCallResponse(
@@ -256,7 +283,9 @@ async def _run_natureos_matlab_tool(tool_name: str, query: str) -> ToolCallRespo
             if m:
                 hours = int(m.group(1))
             result_data = await client.forecast_environmental(metric=metric, hours=hours)
-            msg = f"Forecast for {metric} over {hours} hours: " + str(result_data.get("forecast", "available"))
+            msg = f"Forecast for {metric} over {hours} hours: " + str(
+                result_data.get("forecast", "available")
+            )
         elif tool_name == "natureos.anomaly_scan":
             result_data = await client.run_anomaly_detection(device_id="")
             msg = _format_anomaly_result(result_data)
@@ -285,7 +314,9 @@ async def _run_natureos_matlab_tool(tool_name: str, query: str) -> ToolCallRespo
             "natureos.alchemy_lab",
         ):
             simulation_type = tool_name.replace("natureos.", "")
-            result_data = await client.run_simulation(simulation_type=simulation_type, params={"query": query})
+            result_data = await client.run_simulation(
+                simulation_type=simulation_type, params={"query": query}
+            )
             msg = f"NatureOS {simulation_type.replace('_', ' ')} run started."
         elif tool_name == "natureos.sync_twin":
             m = re.search(r"device\s+([A-Za-z0-9_-]+)", query)
@@ -385,9 +416,12 @@ async def _run_workflow_voice(query: str) -> ToolCallResponse:
         )
     try:
         from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
+
         agent = N8NWorkflowAgent(agent_id="n8n-voice", name="N8N Workflow", config={})
         workflows = await agent.process_task({"type": "list_workflows"})
-        names = [w.get("name") for w in workflows.get("result", {}).get("workflows", []) if w.get("name")]
+        names = [
+            w.get("name") for w in workflows.get("result", {}).get("workflows", []) if w.get("name")
+        ]
         selected = None
         if names:
             query_lower = query.lower()
@@ -418,7 +452,11 @@ async def _run_workflow_voice(query: str) -> ToolCallResponse:
             )
         tool_result = await _execute_tool_pipeline("execute_workflow", {"workflow_name": selected})
         if tool_result.status == ToolStatus.COMPLETED:
-            result_data = tool_result.result if isinstance(tool_result.result, dict) else {"result": tool_result.result}
+            result_data = (
+                tool_result.result
+                if isinstance(tool_result.result, dict)
+                else {"result": tool_result.result}
+            )
             msg = f"Workflow {selected} executed successfully."
             if result_data.get("result"):
                 msg += " " + str(result_data.get("result"))[:200]
@@ -465,11 +503,16 @@ async def _get_device_status(query: str) -> ToolCallResponse:
             return ToolCallResponse(
                 success=False,
                 tool_name="device_status",
-                result="No matching device found. Try a device name like: " + ", ".join([a for a in available if a]),
+                result="No matching device found. Try a device name like: "
+                + ", ".join([a for a in available if a]),
                 data={"available": available},
                 timestamp=datetime.utcnow().isoformat(),
             )
-        device_id = matched.get("device_id") or matched.get("device_name") or matched.get("device_display_name")
+        device_id = (
+            matched.get("device_id")
+            or matched.get("device_name")
+            or matched.get("device_display_name")
+        )
         if not device_id:
             return ToolCallResponse(
                 success=False,
@@ -488,7 +531,11 @@ async def _get_device_status(query: str) -> ToolCallResponse:
                 timestamp=datetime.utcnow().isoformat(),
             )
         payload = tool_result.result if isinstance(tool_result.result, dict) else {}
-        name = matched.get("device_display_name") or matched.get("device_name") or matched.get("device_id", "device")
+        name = (
+            matched.get("device_display_name")
+            or matched.get("device_name")
+            or matched.get("device_id", "device")
+        )
         status = payload.get("status") or payload.get("state") or matched.get("status", "unknown")
         last_seen = payload.get("last_seen") or matched.get("last_seen")
         role = payload.get("device_role") or matched.get("device_role")
@@ -523,25 +570,28 @@ async def _get_agent_list(query: str) -> ToolCallResponse:
     # Import here to avoid circular imports
     try:
         from mycosoft_mas.core.routers.agent_registry_api import get_agent_registry
+
         registry = get_agent_registry()
-        
+
         total = len(registry.agents)
         active = len([a for a in registry.agents.values() if a.is_active])
         categories = {}
         for agent in registry.agents.values():
-            cat = agent.category.value if hasattr(agent.category, 'value') else str(agent.category)
+            cat = agent.category.value if hasattr(agent.category, "value") else str(agent.category)
             categories[cat] = categories.get(cat, 0) + 1
-        
+
         result = f"The agent registry contains {total} agents, {active} currently active. Categories include: "
-        cat_summary = ", ".join([f"{count} {cat}" for cat, count in sorted(categories.items(), key=lambda x: -x[1])[:5]])
+        cat_summary = ", ".join(
+            [f"{count} {cat}" for cat, count in sorted(categories.items(), key=lambda x: -x[1])[:5]]
+        )
         result += cat_summary + "."
-        
+
         return ToolCallResponse(
             success=True,
             tool_name="agent_list",
             result=result,
             data={"total": total, "active": active, "categories": categories},
-            timestamp=datetime.utcnow().isoformat()
+            timestamp=datetime.utcnow().isoformat(),
         )
     except Exception as e:
         logger.warning(f"Agent registry query failed: {e}")
@@ -550,13 +600,14 @@ async def _get_agent_list(query: str) -> ToolCallResponse:
             tool_name="agent_list",
             result="Agent registry unavailable. Check MAS registry health.",
             data={"error": str(e)[:200]},
-            timestamp=datetime.utcnow().isoformat()
+            timestamp=datetime.utcnow().isoformat(),
         )
 
 
 async def _query_mindex(query: str) -> ToolCallResponse:
     """Query the MINDEX fungal knowledge base."""
     import httpx
+
     # Extract search terms
     search_terms = query.lower()
     for prefix in ["search", "find", "query", "look up", "mindex", "fungal", "mushroom", "species"]:
@@ -570,12 +621,16 @@ async def _query_mindex(query: str) -> ToolCallResponse:
         )
 
     try:
-        tool_result = await _execute_tool_pipeline("mindex_query", {"query": search_terms, "limit": 5})
+        tool_result = await _execute_tool_pipeline(
+            "mindex_query", {"query": search_terms, "limit": 5}
+        )
         if tool_result.status == ToolStatus.COMPLETED and isinstance(tool_result.result, dict):
             payload = tool_result.result
             results = payload.get("results") if isinstance(payload, dict) else {}
             taxa = results.get("taxa") if isinstance(results, dict) else payload.get("taxa")
-            compounds = results.get("compounds") if isinstance(results, dict) else payload.get("compounds")
+            compounds = (
+                results.get("compounds") if isinstance(results, dict) else payload.get("compounds")
+            )
             taxa = taxa or []
             compounds = compounds or []
             if taxa:
@@ -701,6 +756,7 @@ async def _query_mindex(query: str) -> ToolCallResponse:
 async def _get_system_status(query: str) -> ToolCallResponse:
     """Get overall system status."""
     import httpx
+
     mas_base = _get_mas_base_url()
     mindex_base = _get_mindex_base_url()
     n8n_base = _get_n8n_base_url()
@@ -714,17 +770,29 @@ async def _get_system_status(query: str) -> ToolCallResponse:
     async with httpx.AsyncClient(timeout=6.0) as client:
         try:
             mas_health = await client.get(f"{mas_base}/health")
-            status_data["mas"] = "healthy" if mas_health.status_code == 200 else f"unhealthy:{mas_health.status_code}"
+            status_data["mas"] = (
+                "healthy"
+                if mas_health.status_code == 200
+                else f"unhealthy:{mas_health.status_code}"
+            )
         except Exception as e:
             status_data["mas"] = f"unavailable:{str(e)[:120]}"
         try:
             mindex_health = await client.get(f"{mindex_base}/api/mindex/health")
-            status_data["mindex"] = "healthy" if mindex_health.status_code == 200 else f"unhealthy:{mindex_health.status_code}"
+            status_data["mindex"] = (
+                "healthy"
+                if mindex_health.status_code == 200
+                else f"unhealthy:{mindex_health.status_code}"
+            )
         except Exception as e:
             status_data["mindex"] = f"unavailable:{str(e)[:120]}"
         try:
             n8n_health = await client.get(f"{n8n_base}/healthz")
-            status_data["n8n"] = "healthy" if n8n_health.status_code == 200 else f"unhealthy:{n8n_health.status_code}"
+            status_data["n8n"] = (
+                "healthy"
+                if n8n_health.status_code == 200
+                else f"unhealthy:{n8n_health.status_code}"
+            )
         except Exception as e:
             status_data["n8n"] = f"unavailable:{str(e)[:120]}"
         try:
@@ -738,7 +806,11 @@ async def _get_system_status(query: str) -> ToolCallResponse:
             status_data["devices"] = f"unavailable:{str(e)[:120]}"
         try:
             workflows_health = await client.get(f"{mas_base}/api/workflows/health")
-            status_data["workflows"] = workflows_health.json() if workflows_health.status_code == 200 else f"unhealthy:{workflows_health.status_code}"
+            status_data["workflows"] = (
+                workflows_health.json()
+                if workflows_health.status_code == 200
+                else f"unhealthy:{workflows_health.status_code}"
+            )
         except Exception as e:
             status_data["workflows"] = f"unavailable:{str(e)[:120]}"
 
@@ -766,6 +838,7 @@ async def _get_system_status(query: str) -> ToolCallResponse:
 async def get_device_status_direct(device_name: str):
     """Direct endpoint for device status lookup."""
     import httpx
+
     mas_base = _get_mas_base_url()
     normalized = device_name.lower().replace(" ", "").replace("-", "")
     try:

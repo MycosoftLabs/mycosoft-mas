@@ -6,12 +6,12 @@ FingerOrchestrator: classify task type and route to frontier LLMs.
 Created: February 17, 2026
 """
 
+from mycosoft_mas.engines.intention.finger_orchestrator import FingerOrchestrator
 from mycosoft_mas.engines.intention.intention_service import (
-    IntentionService,
     IntentGraph,
+    IntentionService,
     PlanCandidate,
 )
-from mycosoft_mas.engines.intention.finger_orchestrator import FingerOrchestrator
 
 __all__ = [
     "IntentionService",

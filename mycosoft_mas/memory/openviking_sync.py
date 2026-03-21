@@ -80,9 +80,7 @@ class OpenVikingSyncService:
 
             redis_host = os.environ.get("REDIS_HOST", "192.168.0.189")
             redis_port = int(os.environ.get("REDIS_PORT", "6379"))
-            self._redis = aioredis.Redis(
-                host=redis_host, port=redis_port, decode_responses=True
-            )
+            self._redis = aioredis.Redis(host=redis_host, port=redis_port, decode_responses=True)
             await self._redis.ping()
             logger.info("OpenVikingSync connected to Redis at %s:%d", redis_host, redis_port)
         except Exception as e:
@@ -100,9 +98,7 @@ class OpenVikingSyncService:
 
         self._running = True
         self._task = asyncio.create_task(self._sync_loop())
-        logger.info(
-            "OpenVikingSync started (interval=%ds)", self._sync_interval
-        )
+        logger.info("OpenVikingSync started (interval=%ds)", self._sync_interval)
 
     async def stop(self) -> None:
         """Stop the periodic sync loop."""
@@ -152,15 +148,13 @@ class OpenVikingSyncService:
             "timestamp": cycle_start.isoformat(),
             "device_syncs": results,
             "cross_device": cross_device_results,
-            "duration_ms": (
-                datetime.now(timezone.utc) - cycle_start
-            ).total_seconds() * 1000,
+            "duration_ms": (datetime.now(timezone.utc) - cycle_start).total_seconds() * 1000,
         }
 
         # Track history
         self._sync_history.append(cycle_result)
         if len(self._sync_history) > self._max_history:
-            self._sync_history = self._sync_history[-self._max_history:]
+            self._sync_history = self._sync_history[-self._max_history :]
 
         # Publish sync event
         await self._publish_event(
@@ -254,9 +248,7 @@ class OpenVikingSyncService:
                 )
                 pushed_to.append(conn.device_id)
             except Exception as e:
-                logger.warning(
-                    "Failed to share knowledge to %s: %s", conn.device_id, e
-                )
+                logger.warning("Failed to share knowledge to %s: %s", conn.device_id, e)
 
         await self._publish_event(
             SyncEvent.KNOWLEDGE_SHARED,
@@ -319,9 +311,7 @@ class OpenVikingSyncService:
                         )
                         shared_count += 1
             except Exception as e:
-                logger.warning(
-                    "Cross-device share from %s failed: %s", source.device_id, e
-                )
+                logger.warning("Cross-device share from %s failed: %s", source.device_id, e)
 
         return {"shared": shared_count}
 
@@ -367,11 +357,7 @@ class OpenVikingSyncService:
             "running": self._running,
             "sync_interval": self._sync_interval,
             "history_count": len(self._sync_history),
-            "last_sync": (
-                self._sync_history[-1]["timestamp"]
-                if self._sync_history
-                else None
-            ),
+            "last_sync": (self._sync_history[-1]["timestamp"] if self._sync_history else None),
         }
 
     def get_history(self, limit: int = 10) -> List[Dict[str, Any]]:

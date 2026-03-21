@@ -6,9 +6,8 @@ Keeps spoken state synchronized with UI truth.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 from collections import deque
+from typing import Dict, List, Optional
 
 from mycosoft_mas.voice_v9.schemas import SpeechworthyEvent, TranscriptChunk
 

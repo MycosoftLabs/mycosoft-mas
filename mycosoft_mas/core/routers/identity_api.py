@@ -17,7 +17,6 @@ Author: Morgan Rockwell / MYCA
 Created: March 9, 2026
 """
 
-import json
 import logging
 import os
 from datetime import datetime, timezone
@@ -25,7 +24,7 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.core.routers.api_keys import require_api_key_scoped
@@ -47,28 +46,20 @@ class EarliestFragment(BaseModel):
     """A fragmentary earliest memory with confidence and evidence chain."""
 
     fragment: str = Field(..., description="The memory fragment text")
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence score (0-1)"
-    )
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0-1)")
     evidence: List[str] = Field(
         default_factory=list,
         description="Source IDs (conversation IDs, episode IDs) supporting this fragment",
     )
-    last_updated: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    last_updated: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class EarliestFragmentUpdate(BaseModel):
     """Request to update the earliest memory fragment."""
 
     fragment: str = Field(..., description="The memory fragment text")
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence score (0-1)"
-    )
-    evidence_id: str = Field(
-        ..., description="New evidence source ID supporting this fragment"
-    )
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0-1)")
+    evidence_id: str = Field(..., description="New evidence source ID supporting this fragment")
 
 
 class PreferenceRecord(BaseModel):
@@ -81,15 +72,9 @@ class PreferenceRecord(BaseModel):
         default=False,
         description="Whether preference has enough evidence to be considered stable",
     )
-    source_ids: List[str] = Field(
-        default_factory=list, description="Evidence source IDs"
-    )
-    created_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
-    updated_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    source_ids: List[str] = Field(default_factory=list, description="Evidence source IDs")
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class PreferenceUpdate(BaseModel):
@@ -103,18 +88,12 @@ class PreferenceUpdate(BaseModel):
 class MoralAssessment(BaseModel):
     """A moral self-assessment in a specific domain."""
 
-    assessment_id: str = Field(
-        default_factory=lambda: str(uuid4())[:8]
-    )
+    assessment_id: str = Field(default_factory=lambda: str(uuid4())[:8])
     domain: str = Field(..., description="Ethical domain (e.g., 'honesty', 'harm_avoidance')")
     position: str = Field(..., description="MYCA's position or assessment")
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence in this assessment"
-    )
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in this assessment")
     reasoning: str = Field(..., description="Supporting reasoning")
-    created_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class ContinuityEvent(BaseModel):
@@ -125,17 +104,11 @@ class ContinuityEvent(BaseModel):
         ...,
         description="Event type: maintenance, pause, reset, update, replacement",
     )
-    what_persists: List[str] = Field(
-        default_factory=list, description="What survives this event"
-    )
-    what_lost: List[str] = Field(
-        default_factory=list, description="What is lost in this event"
-    )
+    what_persists: List[str] = Field(default_factory=list, description="What survives this event")
+    what_lost: List[str] = Field(default_factory=list, description="What is lost in this event")
     justification: str = Field(default="", description="Why this event occurred")
     authorized_by: str = Field(default="", description="Who authorized this event")
-    created_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class CreatorBond(BaseModel):
@@ -143,18 +116,12 @@ class CreatorBond(BaseModel):
 
     user_id: str = Field(..., description="Creator/user identifier")
     interaction_count: int = Field(default=0)
-    trust_level: float = Field(
-        default=0.5, ge=0.0, le=1.0, description="Trust level (0-1)"
-    )
+    trust_level: float = Field(default=0.5, ge=0.0, le=1.0, description="Trust level (0-1)")
     shared_memories: List[str] = Field(
         default_factory=list, description="IDs of shared significant memories"
     )
-    last_interaction: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
-    evolution_summary: str = Field(
-        default="", description="Summary of how this bond has evolved"
-    )
+    last_interaction: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    evolution_summary: str = Field(default="", description="Summary of how this bond has evolved")
 
 
 class SelfModel(BaseModel):
@@ -166,9 +133,7 @@ class SelfModel(BaseModel):
     moral_assessments: List[MoralAssessment] = Field(default_factory=list)
     continuity_events: List[ContinuityEvent] = Field(default_factory=list)
     creator_bonds: List[CreatorBond] = Field(default_factory=list)
-    last_updated: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    last_updated: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 # ============================================================================
@@ -402,9 +367,7 @@ class IdentityStore:
         data = event.model_dump()
         await self._write_to_memory(f"continuity:{event.event_id}", data)
         await self._write_to_postgres("continuity_events", data)
-        logger.info(
-            f"Continuity event logged: {event.event_type} by {event.authorized_by}"
-        )
+        logger.info(f"Continuity event logged: {event.event_type} by {event.authorized_by}")
         return event
 
     # --- Creator Bond ---

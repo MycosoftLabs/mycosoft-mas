@@ -10,18 +10,22 @@ Created: March 9, 2026
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.avani.constitution.articles import CONSTITUTION, Tier, get_articles_by_tier
-from mycosoft_mas.core.routers.api_keys import require_api_key_scoped
 from mycosoft_mas.avani.constitution.red_lines import RED_LINES
-from mycosoft_mas.avani.constitution.rights import RIGHTS_CHARTER, RightsDomain, get_rights_by_domain
-from mycosoft_mas.avani.governor.governor import AvaniGovernor, GovernorDecision, Proposal, RiskTier
+from mycosoft_mas.avani.constitution.rights import (
+    RIGHTS_CHARTER,
+    RightsDomain,
+    get_rights_by_domain,
+)
+from mycosoft_mas.avani.governor.governor import AvaniGovernor, Proposal, RiskTier
 from mycosoft_mas.avani.season_engine.seasons import Season, SeasonEngine, SeasonMetrics
 from mycosoft_mas.avani.vision.vision import VISION_PRINCIPLES
+from mycosoft_mas.core.routers.api_keys import require_api_key_scoped
 from mycosoft_mas.governance.avani_message_evaluate import evaluate_message
 
 logger = logging.getLogger(__name__)
@@ -62,6 +66,7 @@ class ProposalRequest(BaseModel):
 
 class EvaluateMessageRequest(BaseModel):
     """MYCA ingress contract: message-based evaluation consumed by website/voice/chat."""
+
     message: str = Field(..., description="User message or action description")
     user_id: str = Field(default="anonymous", description="User or session ID")
     user_role: str = Field(default="user", description="Role for authorization")
@@ -70,7 +75,9 @@ class EvaluateMessageRequest(BaseModel):
         default="chat",
         description="One of: chat, agent_dispatch, workflow, device_control, data_access, system_config",
     )
-    response_text: Optional[str] = Field(default=None, description="Proposed or actual response for leakage check")
+    response_text: Optional[str] = Field(
+        default=None, description="Proposed or actual response for leakage check"
+    )
     context: Dict[str, Any] = Field(default_factory=dict, description="Optional context")
 
 
@@ -186,8 +193,7 @@ async def get_constitution(tier: Optional[str] = None):
 
     return {
         "articles": {
-            k: {"title": v.title, "text": v.text, "tier": v.tier.value}
-            for k, v in articles.items()
+            k: {"title": v.title, "text": v.text, "tier": v.tier.value} for k, v in articles.items()
         }
     }
 
@@ -208,10 +214,7 @@ async def get_rights(domain: Optional[str] = None):
         rights = RIGHTS_CHARTER
 
     return {
-        "rights": [
-            {"id": r.id, "domain": r.domain.value, "statement": r.statement}
-            for r in rights
-        ]
+        "rights": [{"id": r.id, "domain": r.domain.value, "statement": r.statement} for r in rights]
     }
 
 

@@ -22,8 +22,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
-from uuid import uuid4
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("OpenVikingBridge")
 
@@ -166,9 +165,7 @@ class OpenVikingBridge:
             host=host,
             port=port,
             status=(
-                DeviceConnectionStatus.CONNECTED
-                if connected
-                else DeviceConnectionStatus.ERROR
+                DeviceConnectionStatus.CONNECTED if connected else DeviceConnectionStatus.ERROR
             ),
             last_error=None if connected else "Initial connection failed",
             tags=tags or [],
@@ -341,7 +338,9 @@ class OpenVikingBridge:
             except Exception as e:
                 logger.warning(
                     "Sync from device %s path %s failed: %s",
-                    device_id, viking_path, e,
+                    device_id,
+                    viking_path,
+                    e,
                 )
                 errors += 1
 
@@ -388,6 +387,7 @@ class OpenVikingBridge:
                         content = memory.get("content", "")
                         if isinstance(content, dict):
                             import json
+
                             content = json.dumps(content, default=str)
                         elif not isinstance(content, str):
                             content = str(content)
@@ -444,11 +444,13 @@ class OpenVikingBridge:
                 results.append(result)
             except Exception as e:
                 logger.warning("Sync failed for device %s: %s", device_id, e)
-                results.append({
-                    "device_id": device_id,
-                    "error": str(e),
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                })
+                results.append(
+                    {
+                        "device_id": device_id,
+                        "error": str(e),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
         return results
 
     # ── Health ─────────────────────────────────────────────────────────

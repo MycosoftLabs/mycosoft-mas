@@ -33,20 +33,19 @@ import numpy as np
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from mycosoft_mas.llm.constrained.static_index import (
-    IndexConfig,
-    STATICIndex,
-    build_index_from_strings,
-    build_static_index,
-)
 from mycosoft_mas.llm.constrained.constraint_engine import ConstraintEngine
-from mycosoft_mas.llm.constrained.token_masker import MaskingStrategy, TokenMasker
 from mycosoft_mas.llm.constrained.domain_builders import (
-    build_all_domain_indexes,
     DOMAIN_BUILDERS,
     DomainIndexReport,
     MINDEXConstraintConfig,
+    build_all_domain_indexes,
 )
+from mycosoft_mas.llm.constrained.static_index import (
+    IndexConfig,
+    build_index_from_strings,
+    build_static_index,
+)
+from mycosoft_mas.llm.constrained.token_masker import TokenMasker
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/static", tags=["static-decoding"])
@@ -62,18 +61,14 @@ _domain_report: Optional[DomainIndexReport] = None
 
 class BuildIndexRequest(BaseModel):
     name: str = Field(..., description="Unique name for this constraint index")
-    sequences: List[List[int]] = Field(
-        ..., description="Valid token sequences to index"
-    )
+    sequences: List[List[int]] = Field(..., description="Valid token sequences to index")
     vocab_size: int = Field(32000, description="Vocabulary size")
     dense_depth: int = Field(2, description="Number of dense lookup layers")
 
 
 class BuildIndexFromStringsRequest(BaseModel):
     name: str = Field(..., description="Unique name for this constraint index")
-    valid_strings: List[str] = Field(
-        ..., description="Valid output strings to constrain to"
-    )
+    valid_strings: List[str] = Field(..., description="Valid output strings to constrain to")
     vocab_size: int = Field(32000, description="Vocabulary size")
     dense_depth: int = Field(2, description="Number of dense lookup layers")
 
@@ -274,9 +269,7 @@ async def rerank_candidates(req: RerankRequest):
 
     return {
         "status": "success",
-        "ranked": [
-            {"candidate": c, "score": s, "valid": v} for c, s, v in results
-        ],
+        "ranked": [{"candidate": c, "score": s, "valid": v} for c, s, v in results],
     }
 
 
@@ -322,9 +315,7 @@ class BuildAllDomainsRequest(BaseModel):
         "Valid: mindex, taxonomy, crep, nlm, agents, devices, signals, users, "
         "biosphere, environment, infrastructure, geospatial, observation, search",
     )
-    mindex_db_path: Optional[str] = Field(
-        None, description="Path to MINDEX SQLite DB"
-    )
+    mindex_db_path: Optional[str] = Field(None, description="Path to MINDEX SQLite DB")
 
 
 class BuildDomainRequest(BaseModel):
@@ -457,8 +448,7 @@ async def build_single_domain(req: BuildDomainRequest):
     if req.domain not in DOMAIN_BUILDERS:
         raise HTTPException(
             400,
-            f"Unknown domain '{req.domain}'. "
-            f"Valid: {list(DOMAIN_BUILDERS.keys())}",
+            f"Unknown domain '{req.domain}'. " f"Valid: {list(DOMAIN_BUILDERS.keys())}",
         )
 
     mindex_config = None
@@ -516,8 +506,7 @@ async def validate_domain_entity(req: DomainValidateRequest):
         available = list(_engine.list_indexes().keys())
         raise HTTPException(
             404,
-            f"Index '{req.index_name}' not found. "
-            f"Available indexes: {available}",
+            f"Index '{req.index_name}' not found. " f"Available indexes: {available}",
         )
 
     tokens = list(req.entity.encode("utf-8"))

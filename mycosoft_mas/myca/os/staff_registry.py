@@ -21,8 +21,10 @@ ENV_PATTERN = re.compile(r"\$\{([^}]+)\}")
 
 def _expand_env_placeholders(value: Any) -> Any:
     if isinstance(value, str):
+
         def repl(match: re.Match[str]) -> str:
             return os.getenv(match.group(1), "")
+
         return ENV_PATTERN.sub(repl, value)
     if isinstance(value, dict):
         return {k: _expand_env_placeholders(v) for k, v in value.items()}

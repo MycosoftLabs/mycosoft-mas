@@ -6,9 +6,8 @@ LangGraph tools for storing and recalling facts.
 
 import json
 import logging
-import uuid
 from datetime import datetime
-from typing import Any, Dict, Optional, Type
+from typing import Optional, Type
 
 from pydantic import BaseModel, Field
 
@@ -17,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class MemoryStoreInput(BaseModel):
     """Input for memory store."""
+
     fact: str = Field(description="The fact or observation to store")
     entity_id: Optional[str] = Field(None, description="ID of related entity (if any)")
     entity_name: Optional[str] = Field(None, description="Name of related entity (if any)")
@@ -29,13 +29,13 @@ class MemoryStoreTool:
     """
     Store facts in long-term memory.
     """
-    
+
     name = "memory_store"
     description = """Store a fact or observation in long-term memory.
     Use this to remember important information that should persist across sessions.
     Can optionally link the fact to an existing entity."""
     args_schema: Type[BaseModel] = MemoryStoreInput
-    
+
     async def _arun(
         self,
         fact: str,
@@ -47,13 +47,13 @@ class MemoryStoreTool:
     ) -> str:
         """Store a fact in memory."""
         try:
+            from mycosoft_mas.memory.graph_schema import EdgeType, NodeType
             from mycosoft_mas.memory.mindex_graph import get_graph
             from mycosoft_mas.memory.vector_memory import get_vector_memory
-            from mycosoft_mas.memory.graph_schema import NodeType, EdgeType
-            
+
             graph = await get_graph()
             vector_mem = await get_vector_memory()
-            
+
             # Create a fact node
             node = await graph.create_node(
                 node_type=NodeType.FACT,
@@ -67,10 +67,10 @@ class MemoryStoreTool:
                 source=source,
                 importance=importance,
             )
-            
+
             # Generate and store embedding
             await vector_mem.embed_and_store(node.id, fact)
-            
+
             # Link to entity if provided
             if entity_id:
                 try:
@@ -82,23 +82,19 @@ class MemoryStoreTool:
                     )
                 except Exception as e:
                     logger.warning(f"Could not link to entity: {e}")
-            
-            return json.dumps({
-                "success": True,
-                "node_id": node.id,
-                "message": f"Stored fact: {fact[:50]}..."
-            })
-            
+
+            return json.dumps(
+                {"success": True, "node_id": node.id, "message": f"Stored fact: {fact[:50]}..."}
+            )
+
         except Exception as e:
             logger.error(f"Memory store error: {e}")
-            return json.dumps({
-                "success": False,
-                "error": str(e)
-            })
+            return json.dumps({"success": False, "error": str(e)})
 
 
 class MemoryRecallInput(BaseModel):
     """Input for memory recall."""
+
     query: str = Field(description="What to search for in memory")
     limit: int = Field(5, description="Maximum number of results")
     min_similarity: float = Field(0.5, description="Minimum similarity threshold")
@@ -108,13 +104,13 @@ class SemanticRecallTool:
     """
     Recall facts from long-term memory using semantic search.
     """
-    
+
     name = "memory_recall"
     description = """Recall facts from long-term memory using semantic search.
     Use this to remember information stored in previous sessions.
     Returns facts that are semantically similar to the query."""
     args_schema: Type[BaseModel] = MemoryRecallInput
-    
+
     async def _arun(
         self,
         query: str,
@@ -124,22 +120,19 @@ class SemanticRecallTool:
         """Recall facts from memory."""
         try:
             from mycosoft_mas.memory.vector_memory import get_vector_memory
-            
+
             vector_mem = await get_vector_memory()
-            
+
             results = await vector_mem.semantic_search(
                 query=query,
                 node_type="fact",
                 top_k=limit,
                 min_similarity=min_similarity,
             )
-            
+
             if not results:
-                return json.dumps({
-                    "count": 0,
-                    "message": "No matching facts found in memory."
-                })
-            
+                return json.dumps({"count": 0, "message": "No matching facts found in memory."})
+
             facts = [
                 {
                     "id": r["id"],
@@ -148,18 +141,12 @@ class SemanticRecallTool:
                 }
                 for r in results
             ]
-            
-            return json.dumps({
-                "count": len(facts),
-                "facts": facts
-            }, indent=2)
-            
+
+            return json.dumps({"count": len(facts), "facts": facts}, indent=2)
+
         except Exception as e:
             logger.error(f"Memory recall error: {e}")
-            return json.dumps({
-                "count": 0,
-                "error": str(e)
-            })
+            return json.dumps({"count": 0, "error": str(e)})
 
 
 def create_memory_store_tool():

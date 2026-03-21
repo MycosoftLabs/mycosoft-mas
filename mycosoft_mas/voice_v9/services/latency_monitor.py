@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
-from mycosoft_mas.voice_v9.schemas import LatencyTrace, VoiceSession
+from mycosoft_mas.voice_v9.schemas import LatencyTrace
 
 logger = None  # Lazy init to avoid circular imports
 
@@ -18,6 +18,7 @@ def _log():
     global logger
     if logger is None:
         import logging
+
         logger = logging.getLogger("voice_v9.latency_monitor")
     return logger
 

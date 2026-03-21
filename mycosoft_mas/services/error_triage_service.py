@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class FixFeasibility(Enum):
     """Whether an error can be auto-fixed."""
+
     AUTO_FIXABLE = "auto_fixable"
     REQUIRES_HUMAN = "requires_human"
     UNKNOWN = "unknown"
@@ -30,6 +31,7 @@ class FixFeasibility(Enum):
 
 class ErrorSource(Enum):
     """Where the error originated."""
+
     CHAT = "chat"
     CONSCIOUSNESS = "consciousness"
     API = "api"
@@ -40,6 +42,7 @@ class ErrorSource(Enum):
 @dataclass
 class TriageResult:
     """Result of error triage."""
+
     error_id: str
     feasibility: FixFeasibility
     suggested_fix: Optional[str] = None
@@ -240,13 +243,8 @@ class ErrorTriageService:
             self._triage_history = self._triage_history[-self._max_history :]
 
         # Dispatch auto-fixable errors to n8n webhook
-        if (
-            result.feasibility == FixFeasibility.AUTO_FIXABLE
-            and self._n8n_webhook_url
-        ):
-            asyncio.create_task(
-                self._dispatch_to_autonomous_fix(result, context, traceback)
-            )
+        if result.feasibility == FixFeasibility.AUTO_FIXABLE and self._n8n_webhook_url:
+            asyncio.create_task(self._dispatch_to_autonomous_fix(result, context, traceback))
 
         return result
 
@@ -284,9 +282,7 @@ class ErrorTriageService:
                         f"Autonomous fix webhook returned {resp.status_code}: {resp.text}"
                     )
                 else:
-                    logger.info(
-                        f"Dispatched auto-fix for {result.error_id} to n8n"
-                    )
+                    logger.info(f"Dispatched auto-fix for {result.error_id} to n8n")
         except Exception as e:
             logger.warning(f"Failed to dispatch to autonomous fix webhook: {e}")
 

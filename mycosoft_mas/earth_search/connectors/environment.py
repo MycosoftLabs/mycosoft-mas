@@ -24,10 +24,14 @@ from mycosoft_mas.earth_search.models import (
 logger = logging.getLogger(__name__)
 
 ENV_DOMAINS = {
-    EarthSearchDomain.EARTHQUAKES, EarthSearchDomain.VOLCANOES,
-    EarthSearchDomain.WILDFIRES, EarthSearchDomain.STORMS,
-    EarthSearchDomain.LIGHTNING, EarthSearchDomain.TORNADOES,
-    EarthSearchDomain.FLOODS, EarthSearchDomain.TSUNAMIS,
+    EarthSearchDomain.EARTHQUAKES,
+    EarthSearchDomain.VOLCANOES,
+    EarthSearchDomain.WILDFIRES,
+    EarthSearchDomain.STORMS,
+    EarthSearchDomain.LIGHTNING,
+    EarthSearchDomain.TORNADOES,
+    EarthSearchDomain.FLOODS,
+    EarthSearchDomain.TSUNAMIS,
 }
 
 
@@ -63,21 +67,31 @@ class EnvironmentConnector(BaseConnector):
 
         # NASA EONET covers volcanoes, storms, floods, etc.
         eonet_domains = relevant.copy()
-        if any(d in eonet_domains for d in [
-            EarthSearchDomain.VOLCANOES, EarthSearchDomain.STORMS,
-            EarthSearchDomain.FLOODS, EarthSearchDomain.TSUNAMIS,
-        ]):
+        if any(
+            d in eonet_domains
+            for d in [
+                EarthSearchDomain.VOLCANOES,
+                EarthSearchDomain.STORMS,
+                EarthSearchDomain.FLOODS,
+                EarthSearchDomain.TSUNAMIS,
+            ]
+        ):
             results.extend(await self._search_eonet(query, eonet_domains, limit))
 
         return results[:limit]
 
     async def _search_earthquakes(
-        self, query: str, geo: Optional[GeoFilter],
-        temporal: Optional[TemporalFilter], limit: int,
+        self,
+        query: str,
+        geo: Optional[GeoFilter],
+        temporal: Optional[TemporalFilter],
+        limit: int,
     ) -> List[EarthSearchResult]:
         """Query USGS earthquake API."""
         now = datetime.now(timezone.utc)
-        start = (temporal.start if temporal and temporal.start else now - timedelta(days=7)).strftime("%Y-%m-%d")
+        start = (
+            temporal.start if temporal and temporal.start else now - timedelta(days=7)
+        ).strftime("%Y-%m-%d")
         end = (temporal.end if temporal and temporal.end else now).strftime("%Y-%m-%d")
 
         params: Dict[str, Any] = {
@@ -100,32 +114,40 @@ class EnvironmentConnector(BaseConnector):
         for feat in data.get("features", []):
             props = feat.get("properties", {})
             coords = feat.get("geometry", {}).get("coordinates", [None, None])
-            results.append(EarthSearchResult(
-                result_id=f"usgs-{feat.get('id', uuid.uuid4().hex[:8])}",
-                domain=EarthSearchDomain.EARTHQUAKES,
-                source="usgs_earthquake",
-                title=props.get("title", f"M{props.get('mag', '?')} Earthquake"),
-                description=props.get("place", ""),
-                data={
-                    "magnitude": props.get("mag"),
-                    "depth_km": coords[2] if len(coords) > 2 else None,
-                    "tsunami": props.get("tsunami"),
-                    "alert": props.get("alert"),
-                    "felt": props.get("felt"),
-                    "cdi": props.get("cdi"),
-                    "mmi": props.get("mmi"),
-                    "type": props.get("type"),
-                },
-                lat=coords[1] if len(coords) > 1 else None,
-                lng=coords[0] if coords else None,
-                timestamp=datetime.fromtimestamp(props["time"] / 1000, tz=timezone.utc).isoformat() if props.get("time") else None,
-                confidence=0.99,
-                crep_layer="earthquakes",
-                url=props.get("url"),
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"usgs-{feat.get('id', uuid.uuid4().hex[:8])}",
+                    domain=EarthSearchDomain.EARTHQUAKES,
+                    source="usgs_earthquake",
+                    title=props.get("title", f"M{props.get('mag', '?')} Earthquake"),
+                    description=props.get("place", ""),
+                    data={
+                        "magnitude": props.get("mag"),
+                        "depth_km": coords[2] if len(coords) > 2 else None,
+                        "tsunami": props.get("tsunami"),
+                        "alert": props.get("alert"),
+                        "felt": props.get("felt"),
+                        "cdi": props.get("cdi"),
+                        "mmi": props.get("mmi"),
+                        "type": props.get("type"),
+                    },
+                    lat=coords[1] if len(coords) > 1 else None,
+                    lng=coords[0] if coords else None,
+                    timestamp=(
+                        datetime.fromtimestamp(props["time"] / 1000, tz=timezone.utc).isoformat()
+                        if props.get("time")
+                        else None
+                    ),
+                    confidence=0.99,
+                    crep_layer="earthquakes",
+                    url=props.get("url"),
+                )
+            )
         return results
 
-    async def _search_wildfires(self, geo: Optional[GeoFilter], limit: int) -> List[EarthSearchResult]:
+    async def _search_wildfires(
+        self, geo: Optional[GeoFilter], limit: int
+    ) -> List[EarthSearchResult]:
         """Query NASA FIRMS for active fire detections."""
         firms_key = self._env("NASA_FIRMS_KEY", "DEMO_KEY")
         # Default: global, last 24h, VIIRS
@@ -143,30 +165,35 @@ class EnvironmentConnector(BaseConnector):
 
         results: List[EarthSearchResult] = []
         for fire in data[:limit]:
-            results.append(EarthSearchResult(
-                result_id=f"firms-{uuid.uuid4().hex[:8]}",
-                domain=EarthSearchDomain.WILDFIRES,
-                source="firms_wildfires",
-                title=f"Active Fire — FRP {fire.get('frp', '?')} MW",
-                description=f"Confidence: {fire.get('confidence', '?')}%, Brightness: {fire.get('bright_ti4', '?')}K",
-                data={
-                    "frp": fire.get("frp"),
-                    "brightness": fire.get("bright_ti4"),
-                    "confidence": fire.get("confidence"),
-                    "satellite": fire.get("satellite"),
-                    "instrument": fire.get("instrument"),
-                    "daynight": fire.get("daynight"),
-                },
-                lat=fire.get("latitude"),
-                lng=fire.get("longitude"),
-                timestamp=f"{fire.get('acq_date', '')}T{fire.get('acq_time', '0000')[:2]}:{fire.get('acq_time', '0000')[2:]}:00Z",
-                confidence=float(fire.get("confidence", 50)) / 100,
-                crep_layer="wildfires",
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"firms-{uuid.uuid4().hex[:8]}",
+                    domain=EarthSearchDomain.WILDFIRES,
+                    source="firms_wildfires",
+                    title=f"Active Fire — FRP {fire.get('frp', '?')} MW",
+                    description=f"Confidence: {fire.get('confidence', '?')}%, Brightness: {fire.get('bright_ti4', '?')}K",
+                    data={
+                        "frp": fire.get("frp"),
+                        "brightness": fire.get("bright_ti4"),
+                        "confidence": fire.get("confidence"),
+                        "satellite": fire.get("satellite"),
+                        "instrument": fire.get("instrument"),
+                        "daynight": fire.get("daynight"),
+                    },
+                    lat=fire.get("latitude"),
+                    lng=fire.get("longitude"),
+                    timestamp=f"{fire.get('acq_date', '')}T{fire.get('acq_time', '0000')[:2]}:{fire.get('acq_time', '0000')[2:]}:00Z",
+                    confidence=float(fire.get("confidence", 50)) / 100,
+                    crep_layer="wildfires",
+                )
+            )
         return results
 
     async def _search_eonet(
-        self, query: str, domains: List[EarthSearchDomain], limit: int,
+        self,
+        query: str,
+        domains: List[EarthSearchDomain],
+        limit: int,
     ) -> List[EarthSearchResult]:
         """Search NASA EONET for natural events (volcanoes, storms, floods, etc)."""
         # Map domains to EONET categories
@@ -199,17 +226,23 @@ class EnvironmentConnector(BaseConnector):
             geom = event.get("geometry", [{}])
             coords = geom[-1].get("coordinates", [None, None]) if geom else [None, None]
 
-            results.append(EarthSearchResult(
-                result_id=f"eonet-{event.get('id', uuid.uuid4().hex[:8])}",
-                domain=domain,
-                source="nasa_eonet",
-                title=event.get("title", query),
-                description=f"Categories: {', '.join(cats)}",
-                data={"eonet_id": event.get("id"), "categories": cats, "sources": event.get("sources", [])},
-                lat=coords[1] if len(coords) > 1 else None,
-                lng=coords[0] if coords else None,
-                confidence=0.9,
-                crep_layer=domain.value,
-                url=event.get("link"),
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"eonet-{event.get('id', uuid.uuid4().hex[:8])}",
+                    domain=domain,
+                    source="nasa_eonet",
+                    title=event.get("title", query),
+                    description=f"Categories: {', '.join(cats)}",
+                    data={
+                        "eonet_id": event.get("id"),
+                        "categories": cats,
+                        "sources": event.get("sources", []),
+                    },
+                    lat=coords[1] if len(coords) > 1 else None,
+                    lng=coords[0] if coords else None,
+                    confidence=0.9,
+                    crep_layer=domain.value,
+                    url=event.get("link"),
+                )
+            )
         return results

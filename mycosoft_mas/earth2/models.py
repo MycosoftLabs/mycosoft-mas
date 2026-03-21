@@ -5,31 +5,33 @@ February 4, 2026
 Defines all data models for Earth-2 model inputs and outputs.
 """
 
-from enum import Enum
 import math
-from typing import Optional, List, Dict, Any, Union, Tuple
-from datetime import datetime, timedelta
-from pydantic import BaseModel, Field, model_validator
 import uuid
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
+
+from pydantic import BaseModel, Field, model_validator
 
 
 class WeatherVariable(str, Enum):
     """Weather variables supported by Earth-2 Atlas model."""
+
     T2M = "t2m"  # 2m temperature
     U10 = "u10"  # 10m U wind component
     V10 = "v10"  # 10m V wind component
-    SP = "sp"    # Surface pressure
+    SP = "sp"  # Surface pressure
     MSL = "msl"  # Mean sea level pressure
     TCW = "tcw"  # Total column water
     TCWV = "tcwv"  # Total column water vapor
-    TP = "tp"    # Total precipitation
-    T = "t"      # Temperature (upper air)
-    U = "u"      # U wind component
-    V = "v"      # V wind component
-    Z = "z"      # Geopotential height
-    Q = "q"      # Specific humidity
-    R = "r"      # Relative humidity
-    W = "w"      # Vertical velocity
+    TP = "tp"  # Total precipitation
+    T = "t"  # Temperature (upper air)
+    U = "u"  # U wind component
+    V = "v"  # V wind component
+    Z = "z"  # Geopotential height
+    Q = "q"  # Specific humidity
+    R = "r"  # Relative humidity
+    W = "w"  # Vertical velocity
     WIND_SPEED_10M = "wind_speed_10m"
     WIND_DIRECTION_10M = "wind_direction_10m"
     CAPE = "cape"
@@ -41,6 +43,7 @@ class WeatherVariable(str, Enum):
 
 class Earth2Model(str, Enum):
     """Available Earth-2 AI weather models."""
+
     ATLAS_ERA5 = "atlas_era5"
     ATLAS_GFS = "atlas_gfs"
     STORMSCOPE_GOES_MRMS = "stormscope_goes_mrms"
@@ -55,6 +58,7 @@ class Earth2Model(str, Enum):
 
 class PressureLevel(int, Enum):
     """Standard pressure levels in hPa."""
+
     L1000 = 1000
     L925 = 925
     L850 = 850
@@ -69,30 +73,37 @@ class PressureLevel(int, Enum):
 
 class SpatialExtent(BaseModel):
     """Geographic bounding box for spatial queries."""
+
     min_lat: float = Field(..., ge=-90, le=90, description="Minimum latitude")
     max_lat: float = Field(..., ge=-90, le=90, description="Maximum latitude")
     min_lon: float = Field(..., ge=-180, le=180, description="Minimum longitude")
     max_lon: float = Field(..., ge=-180, le=180, description="Maximum longitude")
-    
+
     @property
     def center(self) -> Tuple[float, float]:
         return ((self.min_lat + self.max_lat) / 2, (self.min_lon + self.max_lon) / 2)
-    
+
     def to_dict(self) -> Dict[str, float]:
-        return {"min_lat": self.min_lat, "max_lat": self.max_lat, "min_lon": self.min_lon, "max_lon": self.max_lon}
+        return {
+            "min_lat": self.min_lat,
+            "max_lat": self.max_lat,
+            "min_lon": self.min_lon,
+            "max_lon": self.max_lon,
+        }
 
 
 class TimeRange(BaseModel):
     """Time range for forecasts."""
+
     start: datetime = Field(..., description="Start time (UTC)")
     end: datetime = Field(..., description="End time (UTC)")
     step_hours: int = Field(default=6, description="Time step in hours")
-    
+
     @property
     def duration_hours(self) -> int:
         delta = self.end - self.start
         return int(delta.total_seconds() / 3600)
-    
+
     @property
     def num_steps(self) -> int:
         return self.duration_hours // self.step_hours + 1
@@ -100,6 +111,7 @@ class TimeRange(BaseModel):
 
 class ModelProvenance(BaseModel):
     """Provenance tracking for model runs."""
+
     model_version: str = Field(..., description="Model version string")
     input_data_source: str = Field(..., description="Source of input data")
     input_data_timestamp: datetime
@@ -111,6 +123,7 @@ class ModelProvenance(BaseModel):
 
 class ForecastParams(BaseModel):
     """Parameters for medium-range weather forecast (Atlas model)."""
+
     model: Earth2Model = Field(default=Earth2Model.ATLAS_ERA5)
     spatial_extent: Optional[SpatialExtent] = None
     time_range: Optional[TimeRange] = None
@@ -118,11 +131,13 @@ class ForecastParams(BaseModel):
     start_time: Optional[datetime] = None
     forecast_hours: int = Field(default=168, ge=1, le=24 * 15)
     step_hours: int = Field(default=6, ge=1, le=24)
-    variables: List[WeatherVariable] = Field(default=[WeatherVariable.T2M, WeatherVariable.U10, WeatherVariable.V10, WeatherVariable.TP])
+    variables: List[WeatherVariable] = Field(
+        default=[WeatherVariable.T2M, WeatherVariable.U10, WeatherVariable.V10, WeatherVariable.TP]
+    )
     pressure_levels: List[PressureLevel] = Field(default=[PressureLevel.L850, PressureLevel.L500])
     ensemble_members: int = Field(default=1, ge=1, le=50)
     resolution: float = Field(default=0.25)
-    
+
     class Config:
         use_enum_values = True
 
@@ -140,6 +155,7 @@ class ForecastParams(BaseModel):
 
 class ForecastOutput(BaseModel):
     """Single forecast output for a variable at a timestep."""
+
     variable: str
     timestamp: datetime
     pressure_level: Optional[int] = None
@@ -153,6 +169,7 @@ class ForecastOutput(BaseModel):
 
 class ForecastResult(BaseModel):
     """Result of a forecast model run."""
+
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: str = Field(default="completed")
     model: str
@@ -162,13 +179,14 @@ class ForecastResult(BaseModel):
     ensemble_spread: Optional[Dict[str, float]] = None
     data_path: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         use_enum_values = True
 
 
 class NowcastParams(BaseModel):
     """Parameters for short-range nowcasting (StormScope model)."""
+
     model: Earth2Model = Field(default=Earth2Model.STORMSCOPE_GOES_MRMS)
     spatial_extent: Optional[SpatialExtent] = None
     lead_time_hours: Optional[int] = Field(default=None, ge=1, le=24)
@@ -182,7 +200,7 @@ class NowcastParams(BaseModel):
     forecast_minutes: int = Field(default=180, ge=5, le=24 * 60)
     step_minutes: int = Field(default=10, ge=5, le=60)
     variables: Optional[List[WeatherVariable]] = None
-    
+
     class Config:
         use_enum_values = True
 
@@ -210,6 +228,7 @@ class NowcastParams(BaseModel):
 
 class NowcastOutput(BaseModel):
     """Single nowcast output."""
+
     product_type: str
     timestamp: datetime
     data_url: str
@@ -219,6 +238,7 @@ class NowcastOutput(BaseModel):
 
 class NowcastResult(BaseModel):
     """Result of a nowcast model run."""
+
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: str = Field(default="completed")
     model: str
@@ -228,26 +248,28 @@ class NowcastResult(BaseModel):
     hazard_summary: Dict[str, Any] = Field(default_factory=dict)
     data_path: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         use_enum_values = True
 
 
 class DownscaleParams(BaseModel):
     """Parameters for AI downscaling (CorrDiff model)."""
+
     model: Earth2Model = Field(default=Earth2Model.CORRDIFF)
     input_resolution: float
     output_resolution: float
     spatial_extent: SpatialExtent
     variables: List[WeatherVariable]
     input_data_path: str
-    
+
     class Config:
         use_enum_values = True
 
 
 class DownscaleResult(BaseModel):
     """Result of a downscaling model run."""
+
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: str = Field(default="completed")
     model: str
@@ -258,13 +280,14 @@ class DownscaleResult(BaseModel):
     energy_efficiency: float
     data_path: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         use_enum_values = True
 
 
 class Observation(BaseModel):
     """Single observation for data assimilation."""
+
     variable: WeatherVariable
     latitude: float
     longitude: float
@@ -272,24 +295,26 @@ class Observation(BaseModel):
     timestamp: datetime
     uncertainty: float
     source: str
-    
+
     class Config:
         use_enum_values = True
 
 
 class AssimilationParams(BaseModel):
     """Parameters for data assimilation (HealDA model)."""
+
     model: Earth2Model = Field(default=Earth2Model.HEALDA)
     observations: List[Observation]
     background_data_path: str
     spatial_extent: Optional[SpatialExtent] = None
-    
+
     class Config:
         use_enum_values = True
 
 
 class AssimilationResult(BaseModel):
     """Result of data assimilation run."""
+
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: str = Field(default="completed")
     model: str
@@ -299,13 +324,14 @@ class AssimilationResult(BaseModel):
     analysis_increment_rms: Dict[str, float]
     data_path: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         use_enum_values = True
 
 
 class Earth2ModelRun(BaseModel):
     """Complete model run record for MINDEX storage."""
+
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     model: Earth2Model
     run_type: str
@@ -322,10 +348,10 @@ class Earth2ModelRun(BaseModel):
     output_size_mb: Optional[float] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    
+
     class Config:
         use_enum_values = True
-    
+
     def to_mindex_record(self) -> Dict[str, Any]:
         return {
             "id": self.run_id,
@@ -345,6 +371,7 @@ class Earth2ModelRun(BaseModel):
 
 class SporeDispersalParams(BaseModel):
     """Parameters for spore dispersal forecast combining Earth-2 + MINDEX."""
+
     spatial_extent: Optional[SpatialExtent] = None
     time_range: Optional[TimeRange] = None
     species_filter: Optional[List[str]] = None
@@ -363,7 +390,11 @@ class SporeDispersalParams(BaseModel):
     def _fill_derived(self) -> "SporeDispersalParams":
         if self.species and not self.species_filter:
             self.species_filter = [self.species]
-        if self.origin_lat is not None and self.origin_lon is not None and not self.source_locations:
+        if (
+            self.origin_lat is not None
+            and self.origin_lon is not None
+            and not self.source_locations
+        ):
             self.source_locations = [(float(self.origin_lat), float(self.origin_lon))]
         if self.spatial_extent is None:
             if self.origin_lat is not None and self.origin_lon is not None:
@@ -376,7 +407,9 @@ class SporeDispersalParams(BaseModel):
                     max_lon=lon + 2.0,
                 )
             else:
-                self.spatial_extent = SpatialExtent(min_lat=-90, max_lat=90, min_lon=-180, max_lon=180)
+                self.spatial_extent = SpatialExtent(
+                    min_lat=-90, max_lat=90, min_lon=-180, max_lon=180
+                )
         if self.time_range is None:
             start = datetime.utcnow()
             end = start + timedelta(hours=int(self.forecast_hours))
@@ -386,6 +419,7 @@ class SporeDispersalParams(BaseModel):
 
 class SporeDispersalResult(BaseModel):
     """Result of spore dispersal forecast."""
+
     run_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     status: str = Field(default="completed")
     params: SporeDispersalParams
@@ -400,6 +434,6 @@ class SporeDispersalResult(BaseModel):
     mindex_species_matched: List[str] = Field(default_factory=list)
     mindex_observations_used: int = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     class Config:
         use_enum_values = True

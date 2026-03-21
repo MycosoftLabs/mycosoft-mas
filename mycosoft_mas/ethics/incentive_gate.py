@@ -9,8 +9,8 @@ stress-testing. Identifies manipulation, perverse incentives, dopamine hooks.
 - Anti-addiction: dopamine loop scan
 """
 
-import re
 import logging
+import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 

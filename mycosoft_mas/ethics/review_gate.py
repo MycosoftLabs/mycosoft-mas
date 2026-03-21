@@ -44,6 +44,7 @@ def _load_checklist_for_task_type(task_type: str) -> Optional[Dict[str, Any]]:
     """Load ethics checklist YAML for task_type if it maps to a sector (e.g. defense, public, hardware)."""
     try:
         import yaml
+
         checklists_dir = Path(__file__).resolve().parents[2] / "config" / "ethics_checklists"
         if not checklists_dir.exists():
             return None

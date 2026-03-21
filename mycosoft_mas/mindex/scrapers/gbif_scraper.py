@@ -15,7 +15,8 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
+
 import aiohttp
 
 logger = logging.getLogger(__name__)
@@ -24,22 +25,22 @@ logger = logging.getLogger(__name__)
 class GBIFScraper:
     """
     Scraper for GBIF fungal biodiversity data.
-    
+
     Fetches:
     - Species from backbone taxonomy
     - Occurrences (observations) with coordinates
     - Media (images) for species
     - Taxonomic matching for reconciliation
     """
-    
+
     BASE_URL = "https://api.gbif.org/v1"
-    
+
     # Fungi kingdom key in GBIF
     FUNGI_KINGDOM_KEY = 5
-    
+
     # Rate limit: 3 requests per second
     REQUEST_INTERVAL = 0.35  # Slightly higher than 1/3 for safety
-    
+
     def __init__(
         self,
         db=None,
@@ -51,13 +52,13 @@ class GBIFScraper:
         self.password = password or os.environ.get("GBIF_PASSWORD")
         self.last_request_time = 0.0
         self.seen_keys: Set[int] = set()
-    
+
     def _get_auth(self) -> Optional[aiohttp.BasicAuth]:
         """Get authentication if credentials provided."""
         if self.username and self.password:
             return aiohttp.BasicAuth(self.username, self.password)
         return None
-    
+
     async def _rate_limit(self):
         """Enforce rate limiting."""
         now = asyncio.get_event_loop().time()
@@ -65,7 +66,7 @@ class GBIFScraper:
         if elapsed < self.REQUEST_INTERVAL:
             await asyncio.sleep(self.REQUEST_INTERVAL - elapsed)
         self.last_request_time = asyncio.get_event_loop().time()
-    
+
     async def _make_request(
         self,
         session: aiohttp.ClientSession,
@@ -74,9 +75,9 @@ class GBIFScraper:
     ) -> Optional[Dict]:
         """Make a rate-limited request to GBIF API."""
         await self._rate_limit()
-        
+
         url = f"{self.BASE_URL}/{endpoint}"
-        
+
         try:
             async with session.get(
                 url,
@@ -93,11 +94,11 @@ class GBIFScraper:
                 else:
                     logger.warning(f"GBIF API returned {response.status}")
                     return None
-                    
+
         except Exception as e:
             logger.error(f"GBIF request error: {e}")
             return None
-    
+
     async def fetch_species(
         self,
         limit: int = 50000,
@@ -107,7 +108,7 @@ class GBIFScraper:
     ) -> List[Dict[str, Any]]:
         """
         Fetch fungal species from GBIF backbone taxonomy.
-        
+
         Args:
             limit: Maximum species to fetch
             offset: Starting offset
@@ -116,7 +117,7 @@ class GBIFScraper:
         """
         species = []
         current_offset = offset
-        
+
         async with aiohttp.ClientSession() as session:
             while len(species) < limit:
                 params = {
@@ -126,17 +127,17 @@ class GBIFScraper:
                     "limit": min(1000, limit - len(species)),
                     "offset": current_offset,
                 }
-                
+
                 data = await self._make_request(session, "species/search", params)
-                
+
                 if not data:
                     break
-                
+
                 results = data.get("results", [])
-                
+
                 if not results:
                     break
-                
+
                 for taxon in results:
                     key = taxon.get("key")
                     if key and key not in self.seen_keys:
@@ -144,16 +145,16 @@ class GBIFScraper:
                         parsed = self._parse_species(taxon)
                         if parsed:
                             species.append(parsed)
-                
+
                 if data.get("endOfRecords"):
                     logger.info(f"GBIF: Reached end of records at {len(species)} species")
                     break
-                
+
                 current_offset += len(results)
                 logger.info(f"GBIF: Fetched {len(species)} species (offset: {current_offset})")
-        
+
         return species
-    
+
     async def fetch_occurrences(
         self,
         taxon_key: Optional[int] = None,
@@ -165,7 +166,7 @@ class GBIFScraper:
     ) -> List[Dict[str, Any]]:
         """
         Fetch occurrence records (observations).
-        
+
         Args:
             taxon_key: Specific taxon to fetch occurrences for
             limit: Maximum occurrences to fetch
@@ -176,7 +177,7 @@ class GBIFScraper:
         """
         occurrences = []
         offset = 0
-        
+
         async with aiohttp.ClientSession() as session:
             while len(occurrences) < limit:
                 params = {
@@ -184,7 +185,7 @@ class GBIFScraper:
                     "limit": min(300, limit - len(occurrences)),
                     "offset": offset,
                 }
-                
+
                 if taxon_key:
                     params["taxonKey"] = taxon_key
                 if has_coordinate:
@@ -195,30 +196,30 @@ class GBIFScraper:
                     params["country"] = country
                 if year_range:
                     params["year"] = f"{year_range[0]},{year_range[1]}"
-                
+
                 data = await self._make_request(session, "occurrence/search", params)
-                
+
                 if not data:
                     break
-                
+
                 results = data.get("results", [])
-                
+
                 if not results:
                     break
-                
+
                 for occ in results:
                     parsed = self._parse_occurrence(occ)
                     if parsed:
                         occurrences.append(parsed)
-                
+
                 if data.get("endOfRecords"):
                     break
-                
+
                 offset += len(results)
                 logger.info(f"GBIF: Fetched {len(occurrences)} occurrences")
-        
+
         return occurrences
-    
+
     async def fetch_images(
         self,
         taxon_key: Optional[int] = None,
@@ -226,42 +227,46 @@ class GBIFScraper:
     ) -> List[Dict[str, Any]]:
         """
         Fetch images from GBIF occurrence media.
-        
+
         Args:
             taxon_key: Specific taxon to fetch images for
             limit: Maximum images to fetch
         """
         images = []
-        
+
         # Fetch occurrences with media
         occurrences = await self.fetch_occurrences(
             taxon_key=taxon_key,
             limit=limit * 2,  # Fetch more occurrences to get enough images
             has_media=True,
         )
-        
+
         for occ in occurrences:
             for media in occ.get("media", []):
                 if media.get("type") == "StillImage" and len(images) < limit:
                     image_url = media.get("identifier")
                     if image_url:
-                        images.append({
-                            "url": image_url,
-                            "source": "GBIF",
-                            "source_id": f"gbif-{occ.get('gbif_key')}",
-                            "species_name": occ.get("scientific_name"),
-                            "taxon_key": occ.get("taxon_key"),
-                            "license": media.get("license") or "unknown",
-                            "attribution": media.get("rightsHolder") or media.get("creator") or "",
-                            "format": media.get("format"),
-                            "quality_score": 0.7,
-                            "is_training_data": True,
-                            "occurrence_key": occ.get("gbif_key"),
-                        })
-        
+                        images.append(
+                            {
+                                "url": image_url,
+                                "source": "GBIF",
+                                "source_id": f"gbif-{occ.get('gbif_key')}",
+                                "species_name": occ.get("scientific_name"),
+                                "taxon_key": occ.get("taxon_key"),
+                                "license": media.get("license") or "unknown",
+                                "attribution": media.get("rightsHolder")
+                                or media.get("creator")
+                                or "",
+                                "format": media.get("format"),
+                                "quality_score": 0.7,
+                                "is_training_data": True,
+                                "occurrence_key": occ.get("gbif_key"),
+                            }
+                        )
+
         logger.info(f"GBIF: Collected {len(images)} images")
         return images
-    
+
     async def match_name(
         self,
         name: str,
@@ -269,7 +274,7 @@ class GBIFScraper:
     ) -> Optional[Dict[str, Any]]:
         """
         Match a species name against GBIF backbone taxonomy.
-        
+
         Args:
             name: Scientific name to match
             strict: If True, only exact matches are returned
@@ -280,9 +285,9 @@ class GBIFScraper:
                 "strict": str(strict).lower(),
                 "kingdom": "Fungi",
             }
-            
+
             data = await self._make_request(session, "species/match", params)
-            
+
             if data and data.get("matchType") != "NONE":
                 return {
                     "matched_name": data.get("scientificName"),
@@ -299,9 +304,9 @@ class GBIFScraper:
                     "family": data.get("family"),
                     "genus": data.get("genus"),
                 }
-            
+
             return None
-    
+
     async def get_species_details(
         self,
         gbif_key: int,
@@ -309,12 +314,12 @@ class GBIFScraper:
         """Get detailed species information by GBIF key."""
         async with aiohttp.ClientSession() as session:
             data = await self._make_request(session, f"species/{gbif_key}")
-            
+
             if data:
                 return self._parse_species(data)
-            
+
             return None
-    
+
     def _parse_species(self, taxon: Dict) -> Optional[Dict[str, Any]]:
         """Parse GBIF species record."""
         try:
@@ -344,7 +349,7 @@ class GBIFScraper:
         except Exception as e:
             logger.error(f"Error parsing GBIF species: {e}")
             return None
-    
+
     def _parse_occurrence(self, occ: Dict) -> Optional[Dict[str, Any]]:
         """Parse GBIF occurrence record."""
         try:
@@ -368,7 +373,9 @@ class GBIFScraper:
                 "quality_grade": "research" if not occ.get("issues") else "needs_id",
                 "research_grade": len(occ.get("issues", [])) == 0,
                 "issues": occ.get("issues", []),
-                "photo_count": len([m for m in occ.get("media", []) if m.get("type") == "StillImage"]),
+                "photo_count": len(
+                    [m for m in occ.get("media", []) if m.get("type") == "StillImage"]
+                ),
                 "observer": occ.get("recordedBy"),
                 "institution": occ.get("institutionCode"),
                 "collection": occ.get("collectionCode"),
@@ -381,7 +388,7 @@ class GBIFScraper:
         except Exception as e:
             logger.error(f"Error parsing GBIF occurrence: {e}")
             return None
-    
+
     async def sync(
         self,
         species_limit: int = 50000,
@@ -391,7 +398,7 @@ class GBIFScraper:
     ) -> Dict[str, int]:
         """
         Full sync from GBIF.
-        
+
         Args:
             species_limit: Maximum species to fetch
             occurrence_limit: Maximum occurrences to fetch
@@ -400,11 +407,12 @@ class GBIFScraper:
         """
         try:
             from ..reconciliation_integration import reconcile_scraper_output
+
             has_reconciliation = True
         except ImportError:
             has_reconciliation = False
             logger.warning("Reconciliation module not available")
-        
+
         stats = {
             "species_fetched": 0,
             "species_inserted": 0,
@@ -414,12 +422,12 @@ class GBIFScraper:
             "images_fetched": 0,
             "errors": 0,
         }
-        
+
         # Fetch species from backbone
         logger.info(f"Starting GBIF species sync (limit={species_limit})")
         species = await self.fetch_species(limit=species_limit)
         stats["species_fetched"] = len(species)
-        
+
         # Reconcile taxonomy
         if species and has_reconciliation:
             try:
@@ -429,7 +437,7 @@ class GBIFScraper:
             except Exception as e:
                 logger.error(f"Reconciliation failed: {e}")
                 stats["errors"] += 1
-        
+
         if self.db:
             for s in species:
                 try:
@@ -438,13 +446,13 @@ class GBIFScraper:
                 except Exception as e:
                     logger.error(f"Error inserting species: {e}")
                     stats["errors"] += 1
-        
+
         # Fetch occurrences
         if include_occurrences:
             logger.info(f"Starting GBIF occurrence sync (limit={occurrence_limit})")
             occurrences = await self.fetch_occurrences(limit=occurrence_limit)
             stats["occurrences_fetched"] = len(occurrences)
-            
+
             if self.db:
                 for occ in occurrences:
                     try:
@@ -454,20 +462,20 @@ class GBIFScraper:
                     except Exception as e:
                         logger.error(f"Error inserting occurrence: {e}")
                         stats["errors"] += 1
-        
+
         # Fetch images
         if include_images:
             logger.info("Fetching GBIF images")
             images = await self.fetch_images(limit=5000)
             stats["images_fetched"] = len(images)
-            
+
             if self.db:
                 for img in images:
                     try:
                         self.db.insert_image(img)
                     except Exception as e:
                         logger.debug(f"Error inserting image: {e}")
-        
+
         logger.info(f"GBIF sync complete: {stats}")
         return stats
 
@@ -475,10 +483,10 @@ class GBIFScraper:
 # CLI entry point
 if __name__ == "__main__":
     import sys
-    
+
     async def main():
         scraper = GBIFScraper()
-        
+
         if len(sys.argv) > 1 and sys.argv[1] == "match":
             name = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else "Amanita muscaria"
             result = await scraper.match_name(name)
@@ -491,5 +499,5 @@ if __name__ == "__main__":
         else:
             stats = await scraper.sync(species_limit=100, occurrence_limit=50, include_images=False)
             print(f"Sync stats: {stats}")
-    
+
     asyncio.run(main())

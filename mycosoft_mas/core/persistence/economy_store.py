@@ -40,10 +40,26 @@ def _parse_iso(value: Any) -> Optional[datetime]:
 
 
 _DEFAULT_TIERS = {
-    "free": {"price_per_request": 0.0, "daily_limit": 10, "features": ["basic_query", "taxonomy_lookup"]},
-    "agent": {"price_per_request": 0.001, "daily_limit": 10000, "features": ["all_queries", "data_access", "api_tools"]},
-    "premium": {"price_per_request": 0.01, "daily_limit": 100000, "features": ["all_queries", "data_access", "api_tools", "simulations", "priority"]},
-    "enterprise": {"price_per_request": 0.005, "daily_limit": 1000000, "features": ["unlimited", "custom_models", "dedicated_compute", "sla"]},
+    "free": {
+        "price_per_request": 0.0,
+        "daily_limit": 10,
+        "features": ["basic_query", "taxonomy_lookup"],
+    },
+    "agent": {
+        "price_per_request": 0.001,
+        "daily_limit": 10000,
+        "features": ["all_queries", "data_access", "api_tools"],
+    },
+    "premium": {
+        "price_per_request": 0.01,
+        "daily_limit": 100000,
+        "features": ["all_queries", "data_access", "api_tools", "simulations", "priority"],
+    },
+    "enterprise": {
+        "price_per_request": 0.005,
+        "daily_limit": 1000000,
+        "features": ["unlimited", "custom_models", "dedicated_compute", "sla"],
+    },
 }
 
 _DEFAULT_WALLETS = {
@@ -92,15 +108,17 @@ class EconomyStore:
                 amt = float(r.get("amount", 0))
                 if r.get("status") == "completed":
                     rev += amt
-                self._memory["transactions"].append({
-                    "id": r.get("transaction_id"),
-                    "client_id": r.get("client_id"),
-                    "amount": amt,
-                    "currency": r.get("currency"),
-                    "service_type": r.get("service_type"),
-                    "status": r.get("status"),
-                    "timestamp": (r.get("created_at") or ""),
-                })
+                self._memory["transactions"].append(
+                    {
+                        "id": r.get("transaction_id"),
+                        "client_id": r.get("client_id"),
+                        "amount": amt,
+                        "currency": r.get("currency"),
+                        "service_type": r.get("service_type"),
+                        "status": r.get("status"),
+                        "timestamp": (r.get("created_at") or ""),
+                    }
+                )
             self._memory["total_revenue"] = rev
             # Clients
             rows = supabase_select("economy_clients", limit=500)
@@ -251,25 +269,34 @@ class EconomyStore:
             self._memory["wallets"][wallet_key]["balance"] += amount
         if supabase_available():
             try:
-                supabase_insert("economy_transactions", {
-                    "transaction_id": transaction_id,
-                    "client_id": client_id,
-                    "amount": amount,
-                    "currency": currency,
-                    "service_type": service_type,
-                    "status": "completed",
-                    "metadata": {},
-                })
-                supabase_upsert("economy_wallets", {
-                    "wallet_type": wallet_key,
-                    "address": self._memory["wallets"][wallet_key]["address"],
-                    "balance": self._memory["wallets"][wallet_key]["balance"],
-                    "currency": self._memory["wallets"][wallet_key]["currency"],
-                }, on_conflict="wallet_type")
+                supabase_insert(
+                    "economy_transactions",
+                    {
+                        "transaction_id": transaction_id,
+                        "client_id": client_id,
+                        "amount": amount,
+                        "currency": currency,
+                        "service_type": service_type,
+                        "status": "completed",
+                        "metadata": {},
+                    },
+                )
+                supabase_upsert(
+                    "economy_wallets",
+                    {
+                        "wallet_type": wallet_key,
+                        "address": self._memory["wallets"][wallet_key]["address"],
+                        "balance": self._memory["wallets"][wallet_key]["balance"],
+                        "currency": self._memory["wallets"][wallet_key]["currency"],
+                    },
+                    on_conflict="wallet_type",
+                )
             except Exception as e:
                 logger.debug("economy_store record_charge persist failed: %s", e)
 
-    def register_client(self, client_id: str, client_type: str = "agent", tier: str = "agent") -> None:
+    def register_client(
+        self, client_id: str, client_type: str = "agent", tier: str = "agent"
+    ) -> None:
         """Register a client."""
         self._load_from_supabase()
         self._memory["active_clients"][client_id] = {
@@ -280,12 +307,16 @@ class EconomyStore:
         }
         if supabase_available():
             try:
-                supabase_upsert("economy_clients", {
-                    "client_id": client_id,
-                    "client_type": client_type,
-                    "tier": tier,
-                    "total_spent": 0,
-                }, on_conflict="client_id")
+                supabase_upsert(
+                    "economy_clients",
+                    {
+                        "client_id": client_id,
+                        "client_type": client_type,
+                        "tier": tier,
+                        "total_spent": 0,
+                    },
+                    on_conflict="client_id",
+                )
             except Exception as e:
                 logger.debug("economy_store register_client persist failed: %s", e)
 
@@ -300,23 +331,28 @@ class EconomyStore:
         """Add a resource purchase."""
         self._load_from_supabase()
         ts = datetime.now(timezone.utc).isoformat()
-        self._memory["resource_purchases"].append({
-            "resource_type": resource_type,
-            "quantity": quantity,
-            "total_cost": total_cost,
-            "vendor": vendor,
-            "status": status,
-            "timestamp": ts,
-        })
+        self._memory["resource_purchases"].append(
+            {
+                "resource_type": resource_type,
+                "quantity": quantity,
+                "total_cost": total_cost,
+                "vendor": vendor,
+                "status": status,
+                "timestamp": ts,
+            }
+        )
         if supabase_available():
             try:
-                supabase_insert("economy_resource_purchases", {
-                    "resource_type": resource_type,
-                    "quantity": quantity,
-                    "total_cost": total_cost,
-                    "vendor": vendor,
-                    "status": status,
-                })
+                supabase_insert(
+                    "economy_resource_purchases",
+                    {
+                        "resource_type": resource_type,
+                        "quantity": quantity,
+                        "total_cost": total_cost,
+                        "vendor": vendor,
+                        "status": status,
+                    },
+                )
             except Exception as e:
                 logger.debug("economy_store add_resource_purchase persist failed: %s", e)
 
@@ -331,25 +367,30 @@ class EconomyStore:
         """Add an incentive."""
         self._load_from_supabase()
         ts = datetime.now(timezone.utc).isoformat()
-        self._memory["incentives"].append({
-            "agent_id": agent_id,
-            "type": incentive_type,
-            "value": value,
-            "duration_days": duration_days,
-            "description": description,
-            "status": "active",
-            "created_at": ts,
-        })
+        self._memory["incentives"].append(
+            {
+                "agent_id": agent_id,
+                "type": incentive_type,
+                "value": value,
+                "duration_days": duration_days,
+                "description": description,
+                "status": "active",
+                "created_at": ts,
+            }
+        )
         if supabase_available():
             try:
-                supabase_insert("economy_incentives", {
-                    "agent_id": agent_id,
-                    "incentive_type": incentive_type,
-                    "value": value,
-                    "duration_days": duration_days,
-                    "description": description,
-                    "status": "active",
-                })
+                supabase_insert(
+                    "economy_incentives",
+                    {
+                        "agent_id": agent_id,
+                        "incentive_type": incentive_type,
+                        "value": value,
+                        "duration_days": duration_days,
+                        "description": description,
+                        "status": "active",
+                    },
+                )
             except Exception as e:
                 logger.debug("economy_store add_incentive persist failed: %s", e)
 
@@ -383,16 +424,19 @@ class EconomyStore:
         self._memory["meter_records"].append(rec)
         if supabase_available():
             try:
-                supabase_insert("economy_meter_records", {
-                    "usage_id": usage_id,
-                    "client_id": client_id,
-                    "service_type": service_type,
-                    "units": units,
-                    "unit_price": unit_price,
-                    "amount": amount,
-                    "currency": currency,
-                    "status": status,
-                })
+                supabase_insert(
+                    "economy_meter_records",
+                    {
+                        "usage_id": usage_id,
+                        "client_id": client_id,
+                        "service_type": service_type,
+                        "units": units,
+                        "unit_price": unit_price,
+                        "amount": amount,
+                        "currency": currency,
+                        "status": status,
+                    },
+                )
             except Exception as e:
                 logger.debug("economy_store record_meter persist failed: %s", e)
 
@@ -437,7 +481,13 @@ class EconomyStore:
         authorized = balance >= estimated_amount and daily_limit > 0
         return {
             "authorized": authorized,
-            "reason": "ok" if authorized else ("insufficient_balance" if balance < estimated_amount else "tier_limit_exceeded"),
+            "reason": (
+                "ok"
+                if authorized
+                else (
+                    "insufficient_balance" if balance < estimated_amount else "tier_limit_exceeded"
+                )
+            ),
             "tier": tier_name,
             "balance": balance,
             "daily_limit": daily_limit,

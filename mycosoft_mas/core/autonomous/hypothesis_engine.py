@@ -3,12 +3,12 @@ Hypothesis Generation Engine
 AI-powered scientific hypothesis generation and validation
 """
 
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel
-from datetime import datetime
-from enum import Enum
-import uuid
 import logging
+import uuid
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -87,45 +87,47 @@ class HypothesisGenerationEngine:
     Generates and validates scientific hypotheses using AI.
     Integrates with literature databases and experimental data.
     """
-    
+
     def __init__(self):
         self.hypotheses: Dict[str, GeneratedHypothesis] = {}
         self.validations: Dict[str, HypothesisValidation] = {}
         self.agendas: Dict[str, ResearchAgenda] = {}
-    
-    async def generate_from_context(self, context: str, count: int = 5) -> List[GeneratedHypothesis]:
+
+    async def generate_from_context(
+        self, context: str, count: int = 5
+    ) -> List[GeneratedHypothesis]:
         """Generate hypotheses based on research context"""
         hypotheses = []
-        
+
         # In production, this would use LLM to generate hypotheses
         templates = [
             {
-                "statement": f"Mycelium networks exhibit memory-like behavior when exposed to repeated stimuli",
+                "statement": "Mycelium networks exhibit memory-like behavior when exposed to repeated stimuli",
                 "reasoning": "Based on observed pattern recognition in fungal networks and analogies to neural plasticity",
                 "confidence": 0.75,
             },
             {
-                "statement": f"Bioelectric signals in fungi correlate with metabolic activity levels",
+                "statement": "Bioelectric signals in fungi correlate with metabolic activity levels",
                 "reasoning": "Electrical activity in biological systems often reflects metabolic processes",
                 "confidence": 0.82,
             },
             {
-                "statement": f"Environmental stress increases production of secondary metabolites",
+                "statement": "Environmental stress increases production of secondary metabolites",
                 "reasoning": "Stress responses often trigger defensive compound production",
                 "confidence": 0.88,
             },
             {
-                "statement": f"Mycelium network topology affects nutrient transport efficiency",
+                "statement": "Mycelium network topology affects nutrient transport efficiency",
                 "reasoning": "Network structure influences flow dynamics in biological systems",
                 "confidence": 0.79,
             },
             {
-                "statement": f"Inter-species communication occurs via volatile organic compounds",
+                "statement": "Inter-species communication occurs via volatile organic compounds",
                 "reasoning": "VOCs are known signaling molecules in fungal ecology",
                 "confidence": 0.71,
             },
         ]
-        
+
         for i, template in enumerate(templates[:count]):
             hyp_id = f"hyp-{uuid.uuid4().hex[:6]}"
             hypothesis = GeneratedHypothesis(
@@ -140,7 +142,10 @@ class HypothesisGenerationEngine:
                         year=2025,
                         doi="10.1000/example",
                         relevance=0.85,
-                        keyFindings=["Electrical signals propagate through mycelium", "Signal speed varies with substrate"]
+                        keyFindings=[
+                            "Electrical signals propagate through mycelium",
+                            "Signal speed varies with substrate",
+                        ],
                     ),
                 ],
                 suggestedExperiments=[
@@ -150,39 +155,43 @@ class HypothesisGenerationEngine:
                         methodology="Measure relevant parameters under controlled conditions",
                         expectedOutcome="Statistical significance in observed effect",
                         resources=["FCI device", "Incubator", "Bioreactor"],
-                        duration="7-14 days"
+                        duration="7-14 days",
                     )
                 ],
                 knowledgeGaps=[
                     "Mechanism of signal transduction unclear",
                     "Optimal stimulation parameters unknown",
-                ]
+                ],
             )
             hypotheses.append(hypothesis)
             self.hypotheses[hyp_id] = hypothesis
-        
+
         return hypotheses
-    
-    async def generate_from_data(self, data_id: str, analysis_type: str) -> List[GeneratedHypothesis]:
+
+    async def generate_from_data(
+        self, data_id: str, analysis_type: str
+    ) -> List[GeneratedHypothesis]:
         """Generate hypotheses from experimental data"""
         # Analyze data and generate hypotheses
         return await self.generate_from_context(f"Analysis of data {data_id} using {analysis_type}")
-    
-    async def generate_from_literature(self, query: str, sources: Optional[List[str]] = None) -> List[GeneratedHypothesis]:
+
+    async def generate_from_literature(
+        self, query: str, sources: Optional[List[str]] = None
+    ) -> List[GeneratedHypothesis]:
         """Generate hypotheses from literature search"""
         return await self.generate_from_context(f"Literature review: {query}")
-    
+
     async def refine_hypothesis(self, hypothesis_id: str, feedback: str) -> GeneratedHypothesis:
         """Refine a hypothesis based on feedback"""
         if hypothesis_id not in self.hypotheses:
             raise ValueError(f"Hypothesis {hypothesis_id} not found")
-        
+
         hyp = self.hypotheses[hypothesis_id]
         # In production, LLM would refine based on feedback
         hyp.confidence = min(1.0, hyp.confidence + 0.05)
-        
+
         return hyp
-    
+
     async def search_literature(self, query: str, limit: int = 20) -> List[LiteratureReference]:
         """Search scientific literature"""
         # In production, this would query PubMed, arXiv, etc.
@@ -193,7 +202,10 @@ class HypothesisGenerationEngine:
                 year=2025,
                 doi="10.1000/fungi-bio-001",
                 relevance=0.92,
-                keyFindings=["Mycelium conducts electrical signals", "Signals correlate with growth direction"]
+                keyFindings=[
+                    "Mycelium conducts electrical signals",
+                    "Signals correlate with growth direction",
+                ],
             ),
             LiteratureReference(
                 title="Machine learning analysis of mycelium patterns",
@@ -201,7 +213,7 @@ class HypothesisGenerationEngine:
                 year=2024,
                 doi="10.1000/ml-mycelium-001",
                 relevance=0.85,
-                keyFindings=["Pattern recognition possible", "Network topology classifiable"]
+                keyFindings=["Pattern recognition possible", "Network topology classifiable"],
             ),
             LiteratureReference(
                 title="Fungal computation: A review",
@@ -209,43 +221,43 @@ class HypothesisGenerationEngine:
                 year=2025,
                 doi="10.1000/fungal-compute-001",
                 relevance=0.88,
-                keyFindings=["Fungi solve optimization problems", "Biological computing feasible"]
+                keyFindings=["Fungi solve optimization problems", "Biological computing feasible"],
             ),
         ]
         return results[:limit]
-    
+
     async def analyze_paper(self, doi: str) -> Dict[str, Any]:
         """Analyze a scientific paper"""
         return {
             "summary": "This paper investigates bioelectric signaling in fungal networks...",
             "hypotheses": [
                 "Mycelium networks exhibit memory-like behavior",
-                "Electrical signals encode environmental information"
+                "Electrical signals encode environmental information",
             ],
             "methods": [
                 "Multi-electrode array recording",
                 "Fluorescence microscopy",
-                "Network analysis"
-            ]
+                "Network analysis",
+            ],
         }
-    
+
     async def validate_hypothesis(self, hypothesis_id: str) -> HypothesisValidation:
         """Start validation process for a hypothesis"""
         if hypothesis_id not in self.hypotheses:
             raise ValueError(f"Hypothesis {hypothesis_id} not found")
-        
+
         validation = HypothesisValidation(
             hypothesisId=hypothesis_id,
             status=HypothesisValidationStatus.TESTING,
             confidence=0.0,
             supportingEvidence=[],
             contradictingEvidence=[],
-            recommendation="Validation in progress"
+            recommendation="Validation in progress",
         )
-        
+
         self.validations[hypothesis_id] = validation
         return validation
-    
+
     async def get_validation_status(self, hypothesis_id: str) -> HypothesisValidation:
         """Get validation status for a hypothesis"""
         if hypothesis_id not in self.validations:
@@ -255,10 +267,10 @@ class HypothesisGenerationEngine:
                 confidence=0.0,
                 supportingEvidence=[],
                 contradictingEvidence=[],
-                recommendation="Validation not started"
+                recommendation="Validation not started",
             )
         return self.validations[hypothesis_id]
-    
+
     async def submit_evidence(self, hypothesis_id: str, evidence: Evidence) -> None:
         """Submit evidence for or against a hypothesis"""
         if hypothesis_id not in self.validations:
@@ -268,58 +280,58 @@ class HypothesisGenerationEngine:
                 confidence=0.0,
                 supportingEvidence=[],
                 contradictingEvidence=[],
-                recommendation=""
+                recommendation="",
             )
-        
+
         validation = self.validations[hypothesis_id]
         if evidence.strength > 0.5:
             validation.supportingEvidence.append(evidence)
         else:
             validation.contradictingEvidence.append(evidence)
-        
+
         # Update confidence based on evidence
         total_support = sum(e.strength for e in validation.supportingEvidence)
         total_contradict = sum(1 - e.strength for e in validation.contradictingEvidence)
         if total_support + total_contradict > 0:
             validation.confidence = total_support / (total_support + total_contradict + 1)
-    
+
     async def create_agenda(self, goals: List[str], priority: str) -> ResearchAgenda:
         """Create a research agenda"""
         agenda_id = f"agenda-{uuid.uuid4().hex[:6]}"
-        
+
         # Generate hypotheses for goals
         hypotheses = []
         for goal in goals[:3]:
             hyps = await self.generate_from_context(goal, count=2)
             hypotheses.extend(hyps)
-        
+
         agenda = ResearchAgenda(
             id=agenda_id,
             goals=goals,
             hypotheses=hypotheses,
             priority=priority,
             timeline="3-6 months",
-            progress=0.0
+            progress=0.0,
         )
-        
+
         self.agendas[agenda_id] = agenda
         return agenda
-    
+
     async def get_agenda(self, agenda_id: str) -> Optional[ResearchAgenda]:
         """Get a research agenda by ID"""
         return self.agendas.get(agenda_id)
-    
+
     async def discover_patterns(self, data_ids: List[str]) -> Dict[str, Any]:
         """Discover patterns in experimental data"""
         return {
             "patterns": [
                 "Circadian rhythm in electrical activity",
                 "Temperature-dependent signal amplitude",
-                "Correlation between humidity and growth rate"
+                "Correlation between humidity and growth rate",
             ],
-            "significance": [0.92, 0.85, 0.78]
+            "significance": [0.92, 0.85, 0.78],
         }
-    
+
     async def find_knowledge_gaps(self, domain: str) -> List[str]:
         """Identify knowledge gaps in a research domain"""
         return [

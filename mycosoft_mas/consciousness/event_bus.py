@@ -52,4 +52,3 @@ class AttentionEventBus:
             "dropped": self._dropped,
             "max_size": self._queue.maxsize,
         }
-

@@ -12,7 +12,7 @@ Created: March 14, 2026
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from mycosoft_mas.consciousness.core import MYCAConsciousness
@@ -62,6 +62,7 @@ async def run_unified_search(
             SearchQuery,
             SearchType,
         )
+
         search_agent = SearchAgent(agent_id="search-orchestrator")
         kw_q = SearchQuery(query_type=SearchType.KEYWORD, query=query, filters=search_context)
         sem_q = SearchQuery(query_type=SearchType.SEMANTIC, query=query, filters=search_context)
@@ -83,14 +84,17 @@ async def run_unified_search(
     if not memories or len(memories) < 3:
         try:
             from mycosoft_mas.memory.coordinator import get_memory_coordinator
+
             coordinator = await get_memory_coordinator()
             mem_results = await coordinator.semantic_search(query=query, limit=5)
             for r in mem_results:
-                memories.append({
-                    "content": r.get("content", str(r)),
-                    "source": r.get("source", "memory"),
-                    "score": r.get("score", 0.5),
-                })
+                memories.append(
+                    {
+                        "content": r.get("content", str(r)),
+                        "source": r.get("source", "memory"),
+                        "score": r.get("score", 0.5),
+                    }
+                )
         except Exception as e:
             logger.debug("Memory semantic search fallback failed: %s", e)
 
@@ -147,6 +151,7 @@ async def run_unified_search(
     # Persistence: store in memory for second-search / training (episodic)
     try:
         from mycosoft_mas.memory.coordinator import get_memory_coordinator
+
         coordinator = await get_memory_coordinator()
         await coordinator.store(
             key=f"search:{session_id or 'anon'}:{datetime.now(timezone.utc).isoformat()}",
@@ -163,6 +168,7 @@ async def run_unified_search(
             register_etl_intake_if_live,
             register_training_sink,
         )
+
         asyncio.create_task(persist_search_to_mindex(query, result_payload, session_id, user_id))
         asyncio.create_task(register_training_sink(query, result_payload))
         asyncio.create_task(register_etl_intake_if_live(query, result_payload))

@@ -116,18 +116,14 @@ class VisionFilter:
             violation = self._check_principle(principle, proposal, description_lower)
             if violation:
                 violated.append(principle.id)
-                concerns.append(
-                    f"[{principle.id}] {principle.question} — {violation}"
-                )
+                concerns.append(f"[{principle.id}] {principle.question} — {violation}")
 
         # Calculate wisdom score
         if not self.principles:
             wisdom_score = 1.0
         else:
             total_weight = sum(p.weight for p in self.principles)
-            violated_weight = sum(
-                p.weight for p in self.principles if p.id in violated
-            )
+            violated_weight = sum(p.weight for p in self.principles if p.id in violated)
             wisdom_score = max(0.0, 1.0 - (violated_weight / total_weight))
 
         approved = len(violated) == 0

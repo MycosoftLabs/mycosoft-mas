@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class DriftSeverity(str, Enum):
     """Severity of detected drift."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -32,6 +33,7 @@ class DriftSeverity(str, Enum):
 @dataclass
 class DriftAlert:
     """A detected drift event."""
+
     stream_key: str
     device_id: str
     severity: DriftSeverity
@@ -102,7 +104,7 @@ class DriftDetector:
         n = len(nums)
         mean = sum(nums) / n
         variance = sum((x - mean) ** 2 for x in nums) / n if n > 0 else 0.0
-        std = variance ** 0.5 if variance > 0 else 0.0
+        std = variance**0.5 if variance > 0 else 0.0
         return mean, std
 
     def ingest(

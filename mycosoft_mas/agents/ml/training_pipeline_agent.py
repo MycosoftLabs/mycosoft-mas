@@ -23,7 +23,12 @@ logger = logging.getLogger(__name__)
 class TrainingPipelineAgent(BaseAgent):
     """Orchestrates ML training pipelines across providers."""
 
-    def __init__(self, agent_id: str = "training-pipeline", name: str = "Training Pipeline Agent", config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        agent_id: str = "training-pipeline",
+        name: str = "Training Pipeline Agent",
+        config: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(agent_id=agent_id, name=name, config=config or {})
         self.capabilities = [
             "prepare_dataset",
@@ -40,18 +45,21 @@ class TrainingPipelineAgent(BaseAgent):
     def _get_hf(self):
         if self._hf is None:
             from mycosoft_mas.integrations.huggingface_client import HuggingFaceClient
+
             self._hf = HuggingFaceClient(self.config)
         return self._hf
 
     def _get_gpu(self):
         if self._gpu is None:
             from mycosoft_mas.integrations.gpu_compute_client import GpuComputeClient
+
             self._gpu = GpuComputeClient(self.config)
         return self._gpu
 
     def _get_wandb(self):
         if self._wandb is None:
             from mycosoft_mas.integrations.wandb_client import WandbClient
+
             self._wandb = WandbClient(self.config)
         return self._wandb
 

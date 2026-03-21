@@ -35,9 +35,7 @@ class GaoClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_key = (
-            self.config.get("api_key") or os.environ.get("GOVINFO_API_KEY", "")
-        )
+        self.api_key = self.config.get("api_key") or os.environ.get("GOVINFO_API_KEY", "")
         self.base_url = (
             self.config.get("base_url") or os.environ.get("GAO_BASE_URL", DEFAULT_BASE)
         ).rstrip("/")
@@ -155,7 +153,9 @@ class GaoClient:
                 entry["link"] = lk.text or (lk.get("href") if lk.get("href") else "")
             desc = item.find("description")
             if desc is not None and desc.text:
-                entry["description"] = desc.text[:500] + "..." if len(desc.text) > 500 else desc.text
+                entry["description"] = (
+                    desc.text[:500] + "..." if len(desc.text) > 500 else desc.text
+                )
             pub = item.find("pubDate")
             if pub is not None and pub.text:
                 entry["pubDate"] = pub.text

@@ -19,10 +19,10 @@ Endpoints:
 """
 
 import logging
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -34,8 +34,10 @@ router = APIRouter(prefix="/api/nlm", tags=["nlm"])
 # Request/Response Models
 # ============================================================================
 
+
 class QueryType(str, Enum):
     """Types of queries the NLM can handle."""
+
     GENERAL = "general"
     SPECIES_ID = "species_id"
     TAXONOMY = "taxonomy"
@@ -47,46 +49,42 @@ class QueryType(str, Enum):
 
 class PredictRequest(BaseModel):
     """Request body for NLM prediction."""
+
     text: str = Field(..., min_length=1, description="Input text/query for the model")
     query_type: QueryType = Field(
-        default=QueryType.GENERAL,
-        description="Type of query for specialized handling"
+        default=QueryType.GENERAL, description="Type of query for specialized handling"
     )
-    max_tokens: int = Field(
-        default=1024,
-        ge=1,
-        le=4096,
-        description="Maximum tokens to generate"
-    )
+    max_tokens: int = Field(default=1024, ge=1, le=4096, description="Maximum tokens to generate")
     temperature: float = Field(
         default=0.7,
         ge=0.0,
         le=2.0,
-        description="Sampling temperature (0.0 = deterministic, higher = more random)"
+        description="Sampling temperature (0.0 = deterministic, higher = more random)",
     )
     context: Optional[Dict[str, Any]] = Field(
-        default=None,
-        description="Optional context for RAG-style queries"
+        default=None, description="Optional context for RAG-style queries"
     )
     include_sources: bool = Field(
-        default=True,
-        description="Whether to include source references in response"
+        default=True, description="Whether to include source references in response"
     )
 
-    model_config = {"json_schema_extra": {
-        "examples": [
-            {
-                "text": "What are the key characteristics of Psilocybe cubensis?",
-                "query_type": "species_id",
-                "max_tokens": 512,
-                "temperature": 0.7
-            }
-        ]
-    }}
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "text": "What are the key characteristics of Psilocybe cubensis?",
+                    "query_type": "species_id",
+                    "max_tokens": 512,
+                    "temperature": 0.7,
+                }
+            ]
+        }
+    }
 
 
 class PredictResponse(BaseModel):
     """Response from NLM prediction."""
+
     text: str = Field(..., description="Generated text response")
     model: str = Field(..., description="Model used for generation")
     query_type: str = Field(..., description="Type of query processed")
@@ -99,6 +97,7 @@ class PredictResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str = Field(..., description="Service status (healthy, degraded, unhealthy)")
     model_loaded: bool = Field(..., description="Whether model is loaded")
     model_name: str = Field(..., description="Name of the model")
@@ -108,6 +107,7 @@ class HealthResponse(BaseModel):
 
 class ModelInfoResponse(BaseModel):
     """Model information response."""
+
     name: str = Field(..., description="Model name")
     version: str = Field(..., description="Model version")
     display_name: str = Field(..., description="Human-readable model name")
@@ -120,6 +120,7 @@ class ModelInfoResponse(BaseModel):
 
 class StatusResponse(BaseModel):
     """Service status response."""
+
     status: str = Field(..., description="Current status")
     model_name: str = Field(..., description="Model name")
     model_version: str = Field(..., description="Model version")
@@ -145,22 +146,23 @@ class NatureEmbeddingResponse(BaseModel):
 # Endpoints
 # ============================================================================
 
+
 @router.get("/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
     """
     Check NLM service health.
-    
+
     Returns the current health status of the NLM service,
     including whether the model is loaded and ready for inference.
     """
     try:
-        from mycosoft_mas.nlm.inference.service import get_nlm_service
         from mycosoft_mas.nlm.config import get_nlm_config
-        
+        from mycosoft_mas.nlm.inference.service import get_nlm_service
+
         service = get_nlm_service()
         config = get_nlm_config()
         status = service.get_status()
-        
+
         return HealthResponse(
             status="healthy" if service.is_ready else "degraded",
             model_loaded=service.is_ready,
@@ -183,11 +185,11 @@ async def health_check() -> HealthResponse:
 async def predict(request: PredictRequest) -> PredictResponse:
     """
     Generate a prediction/response from the NLM.
-    
+
     Accepts natural language queries about mycology, taxonomy,
     ecology, and other natural sciences. The model provides
     domain-specialized responses.
-    
+
     - **text**: The query or prompt
     - **query_type**: Type of query (general, species_id, taxonomy, etc.)
     - **max_tokens**: Maximum response length
@@ -197,13 +199,15 @@ async def predict(request: PredictRequest) -> PredictResponse:
     """
     try:
         from mycosoft_mas.nlm.inference.service import (
-            get_nlm_service,
             PredictionRequest,
-            QueryType as ServiceQueryType
         )
-        
+        from mycosoft_mas.nlm.inference.service import QueryType as ServiceQueryType
+        from mycosoft_mas.nlm.inference.service import (
+            get_nlm_service,
+        )
+
         service = get_nlm_service()
-        
+
         # Map to service query type
         query_type_map = {
             QueryType.GENERAL: ServiceQueryType.GENERAL,
@@ -214,7 +218,7 @@ async def predict(request: PredictRequest) -> PredictResponse:
             QueryType.RESEARCH: ServiceQueryType.RESEARCH,
             QueryType.GENETICS: ServiceQueryType.GENETICS,
         }
-        
+
         # Create prediction request
         pred_request = PredictionRequest(
             text=request.text,
@@ -224,10 +228,10 @@ async def predict(request: PredictRequest) -> PredictResponse:
             context=request.context,
             include_sources=request.include_sources,
         )
-        
+
         # Get prediction
         result = await service.predict(pred_request)
-        
+
         return PredictResponse(
             text=result.text,
             model=result.model,
@@ -238,7 +242,7 @@ async def predict(request: PredictRequest) -> PredictResponse:
             latency_ms=result.latency_ms,
             metadata=result.metadata,
         )
-        
+
     except Exception as e:
         logger.error(f"Prediction failed: {e}")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
@@ -268,18 +272,18 @@ async def generate_nature_embedding(request: NatureEmbeddingRequest) -> NatureEm
 async def get_model_info() -> ModelInfoResponse:
     """
     Get detailed information about the NLM model.
-    
+
     Returns model capabilities, supported domains,
     and default inference settings.
     """
     try:
         from mycosoft_mas.nlm.inference.service import get_nlm_service
-        
+
         service = get_nlm_service()
         info = service.get_model_info()
-        
+
         return ModelInfoResponse(**info)
-        
+
     except Exception as e:
         logger.error(f"Failed to get model info: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -289,18 +293,18 @@ async def get_model_info() -> ModelInfoResponse:
 async def get_model_status() -> StatusResponse:
     """
     Get current NLM service status.
-    
+
     Returns operational status including prediction counts,
     token usage, and uptime statistics.
     """
     try:
         from mycosoft_mas.nlm.inference.service import get_nlm_service
-        
+
         service = get_nlm_service()
         status = service.get_status()
-        
+
         return StatusResponse(**status)
-        
+
     except Exception as e:
         logger.error(f"Failed to get status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -310,17 +314,17 @@ async def get_model_status() -> StatusResponse:
 async def load_model() -> Dict[str, Any]:
     """
     Load the NLM model into memory.
-    
+
     This endpoint triggers model loading. The model will
     be automatically loaded on first prediction if not
     already loaded.
     """
     try:
         from mycosoft_mas.nlm.inference.service import get_nlm_service
-        
+
         service = get_nlm_service()
         success = await service.load_model()
-        
+
         if success:
             return {
                 "status": "success",
@@ -328,11 +332,8 @@ async def load_model() -> Dict[str, Any]:
                 "is_ready": service.is_ready,
             }
         else:
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to load NLM model"
-            )
-            
+            raise HTTPException(status_code=500, detail="Failed to load NLM model")
+
     except HTTPException:
         raise
     except Exception as e:
@@ -344,23 +345,23 @@ async def load_model() -> Dict[str, Any]:
 async def unload_model() -> Dict[str, Any]:
     """
     Unload the NLM model from memory.
-    
+
     Frees GPU/CPU memory by unloading the model.
     The model can be reloaded via /load or automatically
     on the next prediction.
     """
     try:
         from mycosoft_mas.nlm.inference.service import get_nlm_service
-        
+
         service = get_nlm_service()
         await service.unload_model()
-        
+
         return {
             "status": "success",
             "message": "NLM model unloaded",
             "is_ready": service.is_ready,
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to unload model: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -370,15 +371,15 @@ async def unload_model() -> Dict[str, Any]:
 async def list_categories() -> Dict[str, Any]:
     """
     List available knowledge categories.
-    
+
     Returns the categories of knowledge the NLM is trained on,
     which can be used to better formulate queries.
     """
     try:
         from mycosoft_mas.nlm.config import get_nlm_config
-        
+
         config = get_nlm_config()
-        
+
         return {
             "categories": config.data.categories,
             "query_types": [qt.value for qt in QueryType],
@@ -395,7 +396,7 @@ async def list_categories() -> Dict[str, Any]:
                 "conservation_status": "Endangered species, conservation",
             },
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to list categories: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -433,30 +434,40 @@ async def get_training_status() -> Dict[str, Any]:
 
 class TranslateRequest(BaseModel):
     """Request for translation layer (raw -> NMF)."""
+
     raw: Dict[str, Any] = Field(..., description="Raw sensor/environmental data")
-    envelopes: Optional[List[Dict[str, Any]]] = Field(default=None, description="Optional telemetry envelopes")
+    envelopes: Optional[List[Dict[str, Any]]] = Field(
+        default=None, description="Optional telemetry envelopes"
+    )
     source_id: str = Field(default="", description="Source identifier")
     context: Optional[Dict[str, Any]] = Field(default=None, description="Optional context")
 
 
 class NMFCreateRequest(BaseModel):
     """Request for creating a Nature Message Frame."""
+
     raw: Dict[str, Any] = Field(..., description="Raw sensor/environmental data")
-    envelopes: Optional[List[Dict[str, Any]]] = Field(default=None, description="Optional telemetry envelopes")
+    envelopes: Optional[List[Dict[str, Any]]] = Field(
+        default=None, description="Optional telemetry envelopes"
+    )
     source_id: str = Field(default="", description="Source identifier")
     context: Optional[Dict[str, Any]] = Field(default=None, description="Optional context")
 
 
 class FruitingPredictRequest(BaseModel):
     """Request for fruiting prediction."""
+
     entity_id: str = Field(default="generic", description="Species or entity identifier")
     time_horizon: str = Field(default="30d", description="Prediction horizon (e.g. 7d, 30d)")
-    conditions: Optional[Dict[str, Any]] = Field(default=None, description="Environmental conditions")
+    conditions: Optional[Dict[str, Any]] = Field(
+        default=None, description="Environmental conditions"
+    )
     location: Optional[Dict[str, float]] = Field(default=None, description="Lat/lon/alt")
 
 
 class KnowledgeQueryRequest(BaseModel):
     """Request for knowledge graph query."""
+
     query: str = Field(..., min_length=1, description="Query string")
     limit: int = Field(default=10, ge=1, le=100, description="Max results")
     context: Optional[Dict[str, Any]] = Field(default=None, description="Optional context")
@@ -464,6 +475,7 @@ class KnowledgeQueryRequest(BaseModel):
 
 class EnvironmentalProcessRequest(BaseModel):
     """Request for environmental data processing."""
+
     temperature: float = Field(..., description="Temperature in Celsius")
     humidity: float = Field(..., description="Humidity percentage")
     co2: Optional[float] = Field(default=None, description="CO2 ppm")
@@ -561,6 +573,7 @@ async def api_predict_fruiting(req: FruitingPredictRequest) -> Dict[str, Any]:
     """
     try:
         import os
+
         import httpx
 
         nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
@@ -613,6 +626,7 @@ async def api_query_knowledge(req: KnowledgeQueryRequest) -> Dict[str, Any]:
     """
     try:
         import os
+
         import httpx
 
         nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
@@ -655,9 +669,14 @@ async def api_query_knowledge(req: KnowledgeQueryRequest) -> Dict[str, Any]:
 
 class SensorPredictRequest(BaseModel):
     """Request for next-hour sensor prediction."""
+
     entity_id: str = Field(default="sporebase", description="Entity/device ID")
-    horizon_minutes: int = Field(default=60, ge=1, le=1440, description="Prediction horizon in minutes")
-    current_conditions: Optional[Dict[str, Any]] = Field(default=None, description="Current sensor readings")
+    horizon_minutes: int = Field(
+        default=60, ge=1, le=1440, description="Prediction horizon in minutes"
+    )
+    current_conditions: Optional[Dict[str, Any]] = Field(
+        default=None, description="Current sensor readings"
+    )
 
 
 @router.post("/predict/sensors")
@@ -670,6 +689,7 @@ async def api_predict_sensors(req: SensorPredictRequest) -> Dict[str, Any]:
     """
     try:
         import os
+
         import httpx
 
         nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
@@ -706,8 +726,9 @@ async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[st
     """
     try:
         import os
-        import httpx
         from datetime import datetime
+
+        import httpx
 
         nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
         if nlm_url:

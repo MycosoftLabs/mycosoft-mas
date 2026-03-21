@@ -16,24 +16,23 @@ import tempfile
 import numpy as np
 import pytest
 
+from mycosoft_mas.llm.constrained.constraint_engine import (
+    ConstrainedGenerationResult,
+    ConstraintEngine,
+)
+from mycosoft_mas.llm.constrained.rag_integration import (
+    ConstrainedRAGEngine,
+)
 from mycosoft_mas.llm.constrained.static_index import (
     IndexConfig,
     STATICIndex,
-    build_static_index,
     build_index_from_strings,
-)
-from mycosoft_mas.llm.constrained.constraint_engine import (
-    ConstraintEngine,
-    ConstrainedGenerationResult,
+    build_static_index,
 )
 from mycosoft_mas.llm.constrained.token_masker import (
     MaskingStrategy,
     TokenMasker,
 )
-from mycosoft_mas.llm.constrained.rag_integration import (
-    ConstrainedRAGEngine,
-)
-
 
 # --- Fixtures ---
 
@@ -301,9 +300,7 @@ class TestTokenMasker:
 
     def test_soft_masking(self):
         index = build_static_index(make_simple_sequences(), make_config())
-        masker = TokenMasker(
-            index, strategy=MaskingStrategy.SOFT, soft_penalty=-5.0
-        )
+        masker = TokenMasker(index, strategy=MaskingStrategy.SOFT, soft_penalty=-5.0)
 
         logits = np.zeros(10, dtype=np.float32)
         masked = masker.apply_mask(logits, [0], step=0)
@@ -433,9 +430,7 @@ class TestConstrainedRAGEngine:
 
         rag.build_entity_index("animals", entities, tokenizer_fn=tok, vocab_size=256)
 
-        results = rag.validate_and_resolve(
-            "animals", ["cat", "car", "fox"]
-        )
+        results = rag.validate_and_resolve("animals", ["cat", "car", "fox"])
 
         valid = [r for r in results if r["valid"]]
         invalid = [r for r in results if not r["valid"]]
@@ -506,6 +501,7 @@ class TestAgentImport:
 
     def test_agent_registered_in_init(self):
         import mycosoft_mas.agents as agents_pkg
+
         # May not be available if docker dependency is missing
         if not hasattr(agents_pkg, "STATICDecodingAgent"):
             pytest.skip("STATICDecodingAgent not loaded (missing runtime deps)")

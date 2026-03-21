@@ -9,8 +9,8 @@ Environment Variables:
     ASANA_WORKSPACE_ID: Default workspace GID (optional)
 """
 
-import os
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -34,10 +34,7 @@ class AsanaClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_key = (
-            self.config.get("api_key")
-            or _env_asana_token()
-        )
+        self.api_key = self.config.get("api_key") or _env_asana_token()
         self.workspace_id = self.config.get("workspace_id", os.getenv("ASANA_WORKSPACE_ID", ""))
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None

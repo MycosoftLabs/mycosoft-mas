@@ -1,8 +1,11 @@
-import pytest
 from unittest.mock import Mock, patch
-from mycosoft_mas.orchestrator import Orchestrator, MCPServer
+
+import pytest
+
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.agents.messaging.message import Message, MessageType
+from mycosoft_mas.orchestrator import Orchestrator
+
 
 @pytest.fixture
 def mock_config():
@@ -16,16 +19,19 @@ def mock_config():
         "backup_servers": [],
         "health_check_interval": 5,
         "retry_count": 3,
-        "timeout": 10
+        "timeout": 10,
     }
+
 
 @pytest.fixture
 def orchestrator(mock_config, tmp_path):
     config_file = tmp_path / "config.yaml"
     with open(config_file, "w") as f:
         import yaml
+
         yaml.dump({"orchestrator": mock_config}, f)
     return Orchestrator(str(config_file))
+
 
 @pytest.fixture
 def mock_agent():
@@ -33,6 +39,7 @@ def mock_agent():
     agent.agent_id = "test_agent"
     agent.capabilities = ["test_capability"]
     return agent
+
 
 @pytest.mark.asyncio
 async def test_orchestrator_initialization(orchestrator):
@@ -42,6 +49,7 @@ async def test_orchestrator_initialization(orchestrator):
     assert orchestrator._agents == {}
     assert orchestrator._mcp_servers == {}
 
+
 @pytest.mark.asyncio
 async def test_add_agent(orchestrator, mock_agent):
     """Test adding an agent to the orchestrator."""
@@ -49,12 +57,13 @@ async def test_add_agent(orchestrator, mock_agent):
     config = {
         "agent_id": mock_agent.agent_id,
         "type": "test",
-        "capabilities": mock_agent.capabilities
+        "capabilities": mock_agent.capabilities,
     }
-    with patch.object(orchestrator, '_create_agent', return_value=mock_agent):
+    with patch.object(orchestrator, "_create_agent", return_value=mock_agent):
         agent = await orchestrator.add_agent(config)
         assert agent.agent_id == mock_agent.agent_id
         assert agent.capabilities == mock_agent.capabilities
+
 
 @pytest.mark.asyncio
 async def test_remove_agent(orchestrator, mock_agent):
@@ -63,12 +72,13 @@ async def test_remove_agent(orchestrator, mock_agent):
     config = {
         "agent_id": mock_agent.agent_id,
         "type": "test",
-        "capabilities": mock_agent.capabilities
+        "capabilities": mock_agent.capabilities,
     }
-    with patch.object(orchestrator, '_create_agent', return_value=mock_agent):
+    with patch.object(orchestrator, "_create_agent", return_value=mock_agent):
         await orchestrator.add_agent(config)
         await orchestrator.remove_agent(mock_agent.agent_id)
         assert mock_agent.agent_id not in orchestrator._agents
+
 
 @pytest.mark.asyncio
 async def test_handle_message(orchestrator, mock_agent):
@@ -78,11 +88,12 @@ async def test_handle_message(orchestrator, mock_agent):
         type=MessageType.COMMAND,
         sender="test_sender",
         receiver="test_receiver",
-        content={"command": "test"}
+        content={"command": "test"},
     )
-    with patch.object(orchestrator, '_agents', {mock_agent.agent_id: mock_agent}):
+    with patch.object(orchestrator, "_agents", {mock_agent.agent_id: mock_agent}):
         await orchestrator.handle_message(message)
         mock_agent.handle_message.assert_called_once_with(message)
+
 
 @pytest.mark.asyncio
 async def test_health_check(orchestrator):
@@ -93,6 +104,7 @@ async def test_health_check(orchestrator):
     assert "agent_count" in health_status
     assert "uptime" in health_status
 
+
 @pytest.mark.asyncio
 async def test_system_metrics(orchestrator):
     """Test getting system metrics."""
@@ -100,4 +112,4 @@ async def test_system_metrics(orchestrator):
     metrics = orchestrator.get_system_metrics()
     assert "agent_count" in metrics
     assert "active_agents" in metrics
-    assert "memory_usage" in metrics 
+    assert "memory_usage" in metrics

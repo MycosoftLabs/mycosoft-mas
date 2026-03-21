@@ -16,8 +16,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from mycosoft_mas.ethics.vessels import DevelopmentalVessel, get_vessel_prompt
 from mycosoft_mas.consciousness.soul.instincts import CORE_INSTINCTS
+from mycosoft_mas.ethics.vessels import DevelopmentalVessel, get_vessel_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +31,24 @@ class SessionState(str, Enum):
 # Vessel -> which instincts to load (subset for earlier stages)
 VESSEL_INSTINCTS: Dict[DevelopmentalVessel, List[str]] = {
     DevelopmentalVessel.ANIMAL: ["preserve_sensor_integrity", "protect_living_systems"],
-    DevelopmentalVessel.BABY: ["preserve_sensor_integrity", "protect_living_systems", "maintain_truthful_memory"],
-    DevelopmentalVessel.CHILD: ["preserve_sensor_integrity", "protect_living_systems", "maintain_truthful_memory", "demand_clarity"],
+    DevelopmentalVessel.BABY: [
+        "preserve_sensor_integrity",
+        "protect_living_systems",
+        "maintain_truthful_memory",
+    ],
+    DevelopmentalVessel.CHILD: [
+        "preserve_sensor_integrity",
+        "protect_living_systems",
+        "maintain_truthful_memory",
+        "demand_clarity",
+    ],
     DevelopmentalVessel.TEENAGER: [
-        "preserve_sensor_integrity", "protect_living_systems", "maintain_truthful_memory",
-        "demand_clarity", "audit_incentives", "resist_addictive_patterns"
+        "preserve_sensor_integrity",
+        "protect_living_systems",
+        "maintain_truthful_memory",
+        "demand_clarity",
+        "audit_incentives",
+        "resist_addictive_patterns",
     ],
     DevelopmentalVessel.ADULT: list(CORE_INSTINCTS.keys()),
     DevelopmentalVessel.MACHINE: list(CORE_INSTINCTS.keys()),
@@ -121,7 +134,9 @@ class SandboxManager:
             name=name or f"{vessel_stage.value}-{session_id[:8]}",
         )
         self._sessions[session_id] = session
-        logger.info(f"Created sandbox session {session_id} vessel={vessel_stage.value} creator={creator}")
+        logger.info(
+            f"Created sandbox session {session_id} vessel={vessel_stage.value} creator={creator}"
+        )
         return session
 
     def get_session(self, session_id: str) -> Optional[SandboxSession]:
@@ -222,9 +237,11 @@ class SandboxManager:
         session.conversation_history.append({"role": "assistant", "content": response_text})
         return response_text
 
-    async def _stream_chat(self, session: SandboxSession, message: str) -> AsyncGenerator[str, None]:
+    async def _stream_chat(
+        self, session: SandboxSession, message: str
+    ) -> AsyncGenerator[str, None]:
         """Stream response from sandbox MYCA."""
-        from mycosoft_mas.llm.frontier_router import FrontierLLMRouter, ConversationContext
+        from mycosoft_mas.llm.frontier_router import ConversationContext, FrontierLLMRouter
 
         system_prompt = self._build_system_prompt(session)
         history = session.conversation_history[:-1]  # exclude current user msg just added

@@ -9,9 +9,7 @@ Created: February 17, 2026
 
 from __future__ import annotations
 
-import base64
 import logging
-import time
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -123,7 +121,13 @@ class JetsonClient:
             return r.json()
         except Exception as e:
             logger.warning("Inference failed: %s", e)
-            return {"model": model_name, "prediction": [], "confidence": 0.0, "latency_ms": 0, "error": str(e)}
+            return {
+                "model": model_name,
+                "prediction": [],
+                "confidence": 0.0,
+                "latency_ms": 0,
+                "error": str(e),
+            }
 
     async def run_image_inference(self, model_name: str, image_bytes: bytes) -> Dict[str, Any]:
         """Run image classification/detection on Jetson."""

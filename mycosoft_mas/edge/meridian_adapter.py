@@ -45,7 +45,9 @@ class MeridianAdapter:
         self._assistant_name = "Meridian"
         self._primary_tool = "Perplexity"
 
-    async def call_cfo_tool(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def call_cfo_tool(
+        self, name: str, arguments: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Call a CFO MCP tool and return the result."""
         url = f"{self.mas_api_url}/api/cfo-mcp/tools/call"
         payload = {"name": name, "arguments": arguments or {}}
@@ -139,7 +141,10 @@ class MeridianAdapter:
             "description": prompt,
             "params": {"priority": "normal", "task_id": task_id},
         }
-        return await self.call_cfo_tool("delegate_finance_task", {
-            "agent_id": agent_id,
-            "task": task,
-        })
+        return await self.call_cfo_tool(
+            "delegate_finance_task",
+            {
+                "agent_id": agent_id,
+                "task": task,
+            },
+        )

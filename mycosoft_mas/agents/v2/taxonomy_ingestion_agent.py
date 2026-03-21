@@ -17,7 +17,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -27,13 +26,12 @@ from uuid import uuid4
 import httpx
 
 from mycosoft_mas.agents.v2.base_agent_v2 import BaseAgentV2
+from mycosoft_mas.integrations.chemspider_client import ChemSpiderClient
 from mycosoft_mas.integrations.inaturalist_client import (
-    INaturalistClient,
-    INaturalistConfig,
     KINGDOM_TAXON_IDS,
+    INaturalistClient,
 )
 from mycosoft_mas.integrations.ncbi_client import NCBIClient
-from mycosoft_mas.integrations.chemspider_client import ChemSpiderClient
 from mycosoft_mas.integrations.scholar_client import ScholarClient
 from mycosoft_mas.runtime import AgentTask
 
@@ -44,14 +42,13 @@ MINDEX_API_URL = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000")
 MINDEX_API_KEY = os.getenv("MINDEX_API_KEY", "")
 
 # NAS mount point for bulk image storage
-NAS_IMAGE_PATH = os.getenv(
-    "NAS_IMAGE_PATH", "/opt/mycosoft/media/taxonomy/images"
-)
+NAS_IMAGE_PATH = os.getenv("NAS_IMAGE_PATH", "/opt/mycosoft/media/taxonomy/images")
 
 
 # -----------------------------------------------------------------------
 # Enums & Data Classes
 # -----------------------------------------------------------------------
+
 
 class IngestionTarget(str, Enum):
     """Kingdoms and meta-targets for ingestion jobs."""
@@ -124,6 +121,7 @@ class IngestionState:
 # -----------------------------------------------------------------------
 # Agent
 # -----------------------------------------------------------------------
+
 
 class TaxonomyIngestionAgent(BaseAgentV2):
     """
@@ -225,12 +223,8 @@ class TaxonomyIngestionAgent(BaseAgentV2):
         self.register_handler("ingest_genetic_data", self._handle_ingest_genetic_data)
         self.register_handler("ingest_images", self._handle_ingest_images)
         self.register_handler("ingest_chemical_data", self._handle_ingest_chemical_data)
-        self.register_handler(
-            "ingest_scientific_papers", self._handle_ingest_scientific_papers
-        )
-        self.register_handler(
-            "schedule_full_ingestion", self._handle_schedule_full_ingestion
-        )
+        self.register_handler("ingest_scientific_papers", self._handle_ingest_scientific_papers)
+        self.register_handler("schedule_full_ingestion", self._handle_schedule_full_ingestion)
         self.register_handler("ingestion_status", self._handle_ingestion_status)
 
         logger.info("TaxonomyIngestionAgent initialized with all integration clients")
@@ -327,8 +321,14 @@ class TaxonomyIngestionAgent(BaseAgentV2):
         Returns:
             Final IngestionState with progress and error details.
         """
-        target = IngestionTarget(kingdom.lower()) if kingdom.lower() != "plants" else IngestionTarget.PLANTS
-        state = IngestionState(target=target, batch_size=self._inat.config.batch_size if self._inat else 200)
+        target = (
+            IngestionTarget(kingdom.lower())
+            if kingdom.lower() != "plants"
+            else IngestionTarget.PLANTS
+        )
+        state = IngestionState(
+            target=target, batch_size=self._inat.config.batch_size if self._inat else 200
+        )
         state.status = "running"
         state.start_time = datetime.now(timezone.utc)
         self._jobs[state.job_id] = state
@@ -368,7 +368,9 @@ class TaxonomyIngestionAgent(BaseAgentV2):
             state.errors.append({"error": str(exc)})
 
         state.end_time = datetime.now(timezone.utc)
-        await self.log_to_mindex("ingest_kingdom", state.to_dict(), success=(state.status == "completed"))
+        await self.log_to_mindex(
+            "ingest_kingdom", state.to_dict(), success=(state.status == "completed")
+        )
         return state
 
     # ------------------------------------------------------------------
@@ -543,9 +545,7 @@ class TaxonomyIngestionAgent(BaseAgentV2):
         logger.info("Ingesting genetic data for %s (taxon %d)", scientific_name, taxon_id)
 
         # Search GenBank
-        genbank_ids = await self._ncbi.search_genbank(
-            f"{scientific_name}[Organism]", retmax=100
-        )
+        genbank_ids = await self._ncbi.search_genbank(f"{scientific_name}[Organism]", retmax=100)
         if not genbank_ids:
             return {
                 "status": "success",
@@ -555,9 +555,7 @@ class TaxonomyIngestionAgent(BaseAgentV2):
             }
 
         # Fetch PubMed references for context
-        pubmed_ids = await self._ncbi.search_pubmed(
-            f"{scientific_name} genome", retmax=20
-        )
+        pubmed_ids = await self._ncbi.search_pubmed(f"{scientific_name} genome", retmax=20)
         pubmed_summaries = await self._ncbi.fetch_pubmed_summary(pubmed_ids) if pubmed_ids else []
 
         records = [
@@ -607,10 +605,14 @@ class TaxonomyIngestionAgent(BaseAgentV2):
             record = {
                 "taxon_id": taxon_id,
                 "inaturalist_photo_id": photo.get("id"),
-                "url_square": photo.get("square_url") or photo.get("url", "").replace("square", "square"),
-                "url_medium": photo.get("medium_url") or photo.get("url", "").replace("square", "medium"),
-                "url_large": photo.get("large_url") or photo.get("url", "").replace("square", "large"),
-                "url_original": photo.get("original_url") or photo.get("url", "").replace("square", "original"),
+                "url_square": photo.get("square_url")
+                or photo.get("url", "").replace("square", "square"),
+                "url_medium": photo.get("medium_url")
+                or photo.get("url", "").replace("square", "medium"),
+                "url_large": photo.get("large_url")
+                or photo.get("url", "").replace("square", "large"),
+                "url_original": photo.get("original_url")
+                or photo.get("url", "").replace("square", "original"),
                 "attribution": photo.get("attribution", ""),
                 "license_code": photo.get("license_code", ""),
                 "nas_path": f"{NAS_IMAGE_PATH}/{taxon_id}/{photo.get('id', 'unknown')}.jpg",
@@ -654,13 +656,15 @@ class TaxonomyIngestionAgent(BaseAgentV2):
             record_id = compound if isinstance(compound, str) else compound.get("id", "")
             details = await self._chemspider.get_compound_details(str(record_id))
             if details:
-                records.append({
-                    "chemspider_id": str(record_id),
-                    "compound_name": compound_query,
-                    "details": details,
-                    "source": "chemspider",
-                    "ingested_at": datetime.now(timezone.utc).isoformat(),
-                })
+                records.append(
+                    {
+                        "chemspider_id": str(record_id),
+                        "compound_name": compound_query,
+                        "details": details,
+                        "source": "chemspider",
+                        "ingested_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
 
         if records:
             result = await self.store_to_mindex("chemical_compounds", records)
@@ -697,33 +701,37 @@ class TaxonomyIngestionAgent(BaseAgentV2):
         if pmids:
             summaries = await self._ncbi.fetch_pubmed_summary(pmids)
             for summary in summaries:
-                records.append({
-                    "source": "pubmed",
-                    "external_id": summary.get("uid", ""),
-                    "title": summary.get("title", ""),
-                    "authors": summary.get("authors", []),
-                    "journal": summary.get("fulljournalname", ""),
-                    "pub_date": summary.get("pubdate", ""),
-                    "doi": summary.get("elocationid", ""),
-                    "query": query,
-                    "ingested_at": datetime.now(timezone.utc).isoformat(),
-                })
+                records.append(
+                    {
+                        "source": "pubmed",
+                        "external_id": summary.get("uid", ""),
+                        "title": summary.get("title", ""),
+                        "authors": summary.get("authors", []),
+                        "journal": summary.get("fulljournalname", ""),
+                        "pub_date": summary.get("pubdate", ""),
+                        "doi": summary.get("elocationid", ""),
+                        "query": query,
+                        "ingested_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
 
         # Google Scholar (via SerpAPI)
         if self._scholar and self._scholar.is_configured():
             try:
                 scholar_results = await self._scholar.search(query, max_results=20)
                 for item in scholar_results:
-                    records.append({
-                        "source": "google_scholar",
-                        "external_id": item.get("link", ""),
-                        "title": item.get("title", ""),
-                        "snippet": item.get("snippet", ""),
-                        "publication_info": item.get("publication_info", {}),
-                        "link": item.get("link", ""),
-                        "query": query,
-                        "ingested_at": datetime.now(timezone.utc).isoformat(),
-                    })
+                    records.append(
+                        {
+                            "source": "google_scholar",
+                            "external_id": item.get("link", ""),
+                            "title": item.get("title", ""),
+                            "snippet": item.get("snippet", ""),
+                            "publication_info": item.get("publication_info", {}),
+                            "link": item.get("link", ""),
+                            "query": query,
+                            "ingested_at": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
             except Exception as exc:
                 logger.warning("Google Scholar search failed: %s", exc)
 
@@ -782,7 +790,11 @@ class TaxonomyIngestionAgent(BaseAgentV2):
 
         for kingdom in kingdoms:
             state = IngestionState(
-                target=IngestionTarget(kingdom) if kingdom in [e.value for e in IngestionTarget] else IngestionTarget.ALL_LIFE,
+                target=(
+                    IngestionTarget(kingdom)
+                    if kingdom in [e.value for e in IngestionTarget]
+                    else IngestionTarget.ALL_LIFE
+                ),
             )
             self._jobs[state.job_id] = state
             scheduled[kingdom] = state.job_id
@@ -883,7 +895,11 @@ class TaxonomyIngestionAgent(BaseAgentV2):
             "created_at": raw.get("created_at"),
             "quality_grade": raw.get("quality_grade", ""),
             "location_lat": raw.get("location", "").split(",")[0] if raw.get("location") else None,
-            "location_lng": raw.get("location", "").split(",")[1] if raw.get("location") and "," in raw.get("location", "") else None,
+            "location_lng": (
+                raw.get("location", "").split(",")[1]
+                if raw.get("location") and "," in raw.get("location", "")
+                else None
+            ),
             "geojson": geojson,
             "place_guess": raw.get("place_guess", ""),
             "positional_accuracy": raw.get("positional_accuracy"),

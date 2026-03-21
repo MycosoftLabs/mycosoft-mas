@@ -40,7 +40,12 @@ def _run_ingest(sources: Optional[List[str]] = None) -> Dict[str, Any]:
     root = _get_mas_repo_root()
     script = root / "scripts" / "ingest_external_to_supabase.py"
     if not script.exists():
-        return {"success": False, "returncode": -1, "stdout": "", "stderr": f"Script not found: {script}"}
+        return {
+            "success": False,
+            "returncode": -1,
+            "stdout": "",
+            "stderr": f"Script not found: {script}",
+        }
 
     cmd = [os.environ.get("PYTHON_EXE", "python"), str(script)]
     if sources:
@@ -49,7 +54,9 @@ def _run_ingest(sources: Optional[List[str]] = None) -> Dict[str, Any]:
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
     try:
-        result = subprocess.run(cmd, cwd=str(root), capture_output=True, text=True, timeout=180, env=env)
+        result = subprocess.run(
+            cmd, cwd=str(root), capture_output=True, text=True, timeout=180, env=env
+        )
         return {
             "success": result.returncode == 0,
             "returncode": result.returncode,
@@ -57,7 +64,12 @@ def _run_ingest(sources: Optional[List[str]] = None) -> Dict[str, Any]:
             "stderr": result.stderr,
         }
     except subprocess.TimeoutExpired:
-        return {"success": False, "returncode": -1, "stdout": "", "stderr": "Ingest timed out after 180 seconds"}
+        return {
+            "success": False,
+            "returncode": -1,
+            "stdout": "",
+            "stderr": "Ingest timed out after 180 seconds",
+        }
     except Exception as e:
         return {"success": False, "returncode": -1, "stdout": "", "stderr": str(e)}
 
@@ -85,7 +97,11 @@ async def trigger_ingest(
     Pulls Asana tasks, Notion pages, GitHub issues into commitments, customer_vendors, etc.
     Used by n8n before sheet sync.
     """
-    source_list = [s.strip() for s in sources.split(",") if s.strip()] if sources else ["asana", "notion", "github"]
+    source_list = (
+        [s.strip() for s in sources.split(",") if s.strip()]
+        if sources
+        else ["asana", "notion", "github"]
+    )
 
     loop = asyncio.get_running_loop()
     result = await loop.run_in_executor(None, lambda: _run_ingest(source_list))

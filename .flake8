@@ -1,0 +1,51 @@
+[flake8]
+max-line-length = 100
+extend-ignore =
+    # Whitespace issues — handled by black
+    W291,
+    W292,
+    W293,
+    W391,
+    # Indentation/continuation — handled by black
+    E128,
+    E129,
+    E131,
+    # Whitespace before ':' — conflicts with black slice formatting
+    E203,
+    # Multiple statements on one line (if x: return y) — common Python idiom
+    E701,
+    E702,
+    # Lambda assignment — acceptable in many contexts
+    E731,
+    # Line length — black handles at 100 chars; remaining are unfixable (URLs, strings)
+    E501,
+
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    *.egg-info,
+    mycosoft-embodiment,
+    n8n,
+    workflows,
+    .tox,
+    migrations,
+
+per-file-ignores =
+    # Protected files — do not modify source, suppress violations here
+    mycosoft_mas/core/orchestrator.py:F401,E302,E303,E305
+    mycosoft_mas/core/orchestrator_service.py:F401,F811,F541,E302,E303,E305
+    mycosoft_mas/safety/guardian_agent.py:E302,E303
+    mycosoft_mas/safety/sandboxing.py:E302,E303
+    mycosoft_mas/consciousness/soul/identity.py:F401,E302,E303
+    mycosoft_mas/myca/constitution/*:F401,E302,E303,E305
+    # dashboard/visualization use 'this' pattern (JS-style, pre-existing)
+    mycosoft_mas/agents/clusters/user_interface/dashboard_agent.py:F821
+    mycosoft_mas/agents/clusters/user_interface/visualization_agent.py:F821
+    # mindex/database.py has intentional method overrides across DB backend versions
+    mycosoft_mas/mindex/database.py:F811
+    # __init__.py files may have unused imports for re-export
+    */__init__.py:F401

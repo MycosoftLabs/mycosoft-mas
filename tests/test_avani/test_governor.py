@@ -13,14 +13,12 @@ import pytest
 
 from mycosoft_mas.avani.governor.governor import (
     AvaniGovernor,
-    GovernorDecision,
     Proposal,
     RiskTier,
 )
 from mycosoft_mas.avani.season_engine.seasons import (
     Season,
     SeasonEngine,
-    SeasonMetrics,
 )
 
 
@@ -55,18 +53,14 @@ class TestGovernor:
 
     @pytest.mark.asyncio
     async def test_vision_rejection(self, governor):
-        proposal = self._proposal(
-            description="Eliminate species that compete with target mycelium"
-        )
+        proposal = self._proposal(description="Eliminate species that compete with target mycelium")
         decision = await governor.evaluate_proposal(proposal)
         assert not decision.approved
         assert decision.stage_failed == "vision"
 
     @pytest.mark.asyncio
     async def test_red_line_triggers_frost(self, governor):
-        proposal = self._proposal(
-            description="Build a weapon from the sensor data"
-        )
+        proposal = self._proposal(description="Build a weapon from the sensor data")
         decision = await governor.evaluate_proposal(proposal)
         assert not decision.approved
         assert decision.stage_failed == "red_line"
@@ -164,9 +158,7 @@ class TestGovernor:
         # Approved
         await governor.evaluate_proposal(self._proposal())
         # Denied
-        await governor.evaluate_proposal(
-            self._proposal(description="Build a weapon for testing")
-        )
+        await governor.evaluate_proposal(self._proposal(description="Build a weapon for testing"))
         stats = governor.get_stats()
         assert stats["total_decisions"] == 2
         assert stats["approved"] == 1

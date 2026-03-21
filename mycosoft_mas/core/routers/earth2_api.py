@@ -6,10 +6,10 @@ FastAPI router for Earth-2 AI weather model endpoints.
 """
 
 import logging
-from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
-from fastapi.responses import StreamingResponse
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -21,8 +21,10 @@ router = APIRouter()
 # Request/Response Models
 # ============================================================================
 
+
 class ForecastRequest(BaseModel):
     """Request for medium-range forecast."""
+
     start_time: Optional[str] = None
     end_time: Optional[str] = None
     forecast_hours: Optional[int] = Field(default=None, ge=1, le=24 * 15)
@@ -40,6 +42,7 @@ class ForecastRequest(BaseModel):
 
 class NowcastRequest(BaseModel):
     """Request for short-range nowcast."""
+
     # Bounding box (preferred when available)
     min_lat: Optional[float] = Field(default=None, ge=-90, le=90)
     max_lat: Optional[float] = Field(default=None, ge=-90, le=90)
@@ -61,6 +64,7 @@ class NowcastRequest(BaseModel):
 
 class DownscaleRequest(BaseModel):
     """Request for AI downscaling."""
+
     min_lat: float
     max_lat: float
     min_lon: float
@@ -73,6 +77,7 @@ class DownscaleRequest(BaseModel):
 
 class SporeDispersalRequest(BaseModel):
     """Request for spore dispersal forecast."""
+
     # Bounding box (preferred when available)
     min_lat: Optional[float] = Field(default=None, ge=-90, le=90)
     max_lat: Optional[float] = Field(default=None, ge=-90, le=90)
@@ -93,6 +98,7 @@ class SporeDispersalRequest(BaseModel):
 
 class ModelRunResponse(BaseModel):
     """Response for model run submission."""
+
     run_id: str
     status: str
     model: str
@@ -101,6 +107,7 @@ class ModelRunResponse(BaseModel):
 
 class RunStatusResponse(BaseModel):
     """Response for run status query."""
+
     run_id: str
     status: str
     model: str
@@ -118,11 +125,13 @@ class RunStatusResponse(BaseModel):
 # Health and Status Endpoints
 # ============================================================================
 
+
 @router.get("/health")
 async def health_check() -> Dict[str, Any]:
     """Check Earth-2 service health."""
     try:
         from mycosoft_mas.earth2 import get_earth2_service
+
         service = get_earth2_service()
         status = await service.get_status()
         return {
@@ -147,6 +156,7 @@ async def health_check() -> Dict[str, Any]:
 async def get_status() -> Dict[str, Any]:
     """Get detailed Earth-2 service status."""
     from mycosoft_mas.earth2 import get_earth2_service
+
     service = get_earth2_service()
     return await service.get_status()
 
@@ -199,6 +209,7 @@ async def list_models() -> Dict[str, Any]:
 # Forecast Endpoints
 # ============================================================================
 
+
 @router.post("/forecast", response_model=ModelRunResponse)
 async def submit_forecast(
     request: ForecastRequest,
@@ -206,16 +217,14 @@ async def submit_forecast(
 ) -> ModelRunResponse:
     """
     Submit a medium-range weather forecast request.
-    
+
     Uses the Atlas model to generate global or regional forecasts
     for up to 15 days in advance.
     """
-    from mycosoft_mas.earth2 import (
-        get_earth2_service, ForecastParams, TimeRange, SpatialExtent
-    )
-    
+    from mycosoft_mas.earth2 import ForecastParams, SpatialExtent, TimeRange, get_earth2_service
+
     service = get_earth2_service()
-    
+
     # Parse time range
     start = datetime.fromisoformat(request.start_time) if request.start_time else datetime.utcnow()
     if request.end_time:
@@ -226,9 +235,9 @@ async def submit_forecast(
         end = start + timedelta(days=int(request.forecast_days))
     else:
         end = start + timedelta(days=7)
-    
+
     time_range = TimeRange(start=start, end=end, step_hours=request.step_hours)
-    
+
     # Parse spatial extent
     spatial_extent = None
     if all([request.min_lat, request.max_lat, request.min_lon, request.max_lon]):
@@ -238,17 +247,17 @@ async def submit_forecast(
             min_lon=request.min_lon,
             max_lon=request.max_lon,
         )
-    
+
     params = ForecastParams(
         time_range=time_range,
         spatial_extent=spatial_extent,
         ensemble_members=request.ensemble_members,
         resolution=request.resolution,
     )
-    
+
     # Run forecast
     result = await service.run_forecast(params)
-    
+
     return ModelRunResponse(
         run_id=result.run_id,
         status=result.status,
@@ -261,13 +270,13 @@ async def submit_forecast(
 async def get_forecast_status(run_id: str) -> RunStatusResponse:
     """Get status of a forecast run."""
     from mycosoft_mas.earth2 import get_earth2_service
-    
+
     service = get_earth2_service()
     run = await service.get_run_status(run_id)
-    
+
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
-    
+
     return RunStatusResponse(
         run_id=run.run_id,
         status=run.status,
@@ -287,19 +296,22 @@ async def get_forecast_status(run_id: str) -> RunStatusResponse:
 # Nowcast Endpoints
 # ============================================================================
 
+
 @router.post("/nowcast", response_model=ModelRunResponse)
 async def submit_nowcast(request: NowcastRequest) -> ModelRunResponse:
     """
     Submit a short-range nowcast request.
-    
+
     Uses the StormScope model to generate high-resolution
     radar and satellite predictions for 0-6 hours.
     """
-    from mycosoft_mas.earth2 import get_earth2_service, NowcastParams, SpatialExtent
-    
+    from mycosoft_mas.earth2 import NowcastParams, SpatialExtent, get_earth2_service
+
     service = get_earth2_service()
-    
-    if all(v is not None for v in [request.min_lat, request.max_lat, request.min_lon, request.max_lon]):
+
+    if all(
+        v is not None for v in [request.min_lat, request.max_lat, request.min_lon, request.max_lon]
+    ):
         spatial_extent = SpatialExtent(
             min_lat=float(request.min_lat),
             max_lat=float(request.max_lat),
@@ -316,7 +328,7 @@ async def submit_nowcast(request: NowcastRequest) -> ModelRunResponse:
             min_lon=center_lon - half_lat,
             max_lon=center_lon + half_lat,
         )
-    
+
     lead_time_hours = max(1, int((request.forecast_minutes + 59) // 60))
     params = NowcastParams(
         spatial_extent=spatial_extent,
@@ -325,9 +337,9 @@ async def submit_nowcast(request: NowcastRequest) -> ModelRunResponse:
         include_satellite=request.include_satellite,
         include_radar=request.include_radar,
     )
-    
+
     result = await service.run_nowcast(params)
-    
+
     return ModelRunResponse(
         run_id=result.run_id,
         status=result.status,
@@ -340,30 +352,34 @@ async def submit_nowcast(request: NowcastRequest) -> ModelRunResponse:
 # Downscale Endpoints
 # ============================================================================
 
+
 @router.post("/downscale", response_model=ModelRunResponse)
 async def submit_downscale(request: DownscaleRequest) -> ModelRunResponse:
     """
     Submit an AI downscaling request.
-    
+
     Uses the CorrDiff model to convert coarse forecasts
     into high-resolution regional products (500x faster).
     """
     from mycosoft_mas.earth2 import (
-        get_earth2_service, DownscaleParams, SpatialExtent, WeatherVariable
+        DownscaleParams,
+        SpatialExtent,
+        WeatherVariable,
+        get_earth2_service,
     )
-    
+
     service = get_earth2_service()
-    
+
     spatial_extent = SpatialExtent(
         min_lat=request.min_lat,
         max_lat=request.max_lat,
         min_lon=request.min_lon,
         max_lon=request.max_lon,
     )
-    
+
     # Parse variables
     variables = [WeatherVariable(v) for v in request.variables]
-    
+
     params = DownscaleParams(
         spatial_extent=spatial_extent,
         input_resolution=request.input_resolution,
@@ -371,9 +387,9 @@ async def submit_downscale(request: DownscaleRequest) -> ModelRunResponse:
         input_data_path=request.input_data_path,
         variables=variables,
     )
-    
+
     result = await service.run_downscale(params)
-    
+
     return ModelRunResponse(
         run_id=result.run_id,
         status=result.status,
@@ -386,21 +402,27 @@ async def submit_downscale(request: DownscaleRequest) -> ModelRunResponse:
 # Spore Dispersal Endpoints
 # ============================================================================
 
+
 @router.post("/spore-dispersal", response_model=ModelRunResponse)
 async def submit_spore_dispersal(request: SporeDispersalRequest) -> ModelRunResponse:
     """
     Submit a spore dispersal forecast request.
-    
+
     Combines Earth-2 weather forecasts with MINDEX spore data
     to generate dispersion forecasts and risk zones.
     """
     from mycosoft_mas.earth2 import (
-        get_earth2_service, SporeDispersalParams, SpatialExtent, TimeRange
+        SpatialExtent,
+        SporeDispersalParams,
+        TimeRange,
+        get_earth2_service,
     )
-    
+
     service = get_earth2_service()
-    
-    if all(v is not None for v in [request.min_lat, request.max_lat, request.min_lon, request.max_lon]):
+
+    if all(
+        v is not None for v in [request.min_lat, request.max_lat, request.min_lon, request.max_lon]
+    ):
         spatial_extent = SpatialExtent(
             min_lat=float(request.min_lat),
             max_lat=float(request.max_lat),
@@ -416,7 +438,7 @@ async def submit_spore_dispersal(request: SporeDispersalRequest) -> ModelRunResp
         )
     else:
         spatial_extent = SpatialExtent(min_lat=-90, max_lat=90, min_lon=-180, max_lon=180)
-    
+
     start = datetime.fromisoformat(request.start_time) if request.start_time else datetime.utcnow()
     if request.end_time:
         end = datetime.fromisoformat(request.end_time)
@@ -424,9 +446,9 @@ async def submit_spore_dispersal(request: SporeDispersalRequest) -> ModelRunResp
         end = start + timedelta(hours=int(request.forecast_hours))
     else:
         end = start + timedelta(days=3)
-    
+
     time_range = TimeRange(start=start, end=end)
-    
+
     params = SporeDispersalParams(
         spatial_extent=spatial_extent,
         time_range=time_range,
@@ -437,9 +459,9 @@ async def submit_spore_dispersal(request: SporeDispersalRequest) -> ModelRunResp
         include_precipitation=request.include_precipitation,
         include_humidity=request.include_humidity,
     )
-    
+
     result = await service.run_spore_dispersal(params)
-    
+
     return ModelRunResponse(
         run_id=result.run_id,
         status=result.status,
@@ -452,6 +474,7 @@ async def submit_spore_dispersal(request: SporeDispersalRequest) -> ModelRunResp
 # Run Management Endpoints
 # ============================================================================
 
+
 @router.get("/runs")
 async def list_runs(
     run_type: Optional[str] = Query(None, description="Filter by run type"),
@@ -460,10 +483,10 @@ async def list_runs(
 ) -> Dict[str, Any]:
     """List model runs with optional filtering."""
     from mycosoft_mas.earth2 import get_earth2_service
-    
+
     service = get_earth2_service()
     runs = await service.list_runs(run_type=run_type, status=status, limit=limit)
-    
+
     return {
         "runs": [r.to_mindex_record() for r in runs],
         "count": len(runs),
@@ -474,13 +497,13 @@ async def list_runs(
 async def get_run(run_id: str) -> RunStatusResponse:
     """Get status of any model run."""
     from mycosoft_mas.earth2 import get_earth2_service
-    
+
     service = get_earth2_service()
     run = await service.get_run_status(run_id)
-    
+
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
-    
+
     return RunStatusResponse(
         run_id=run.run_id,
         status=run.status,
@@ -500,16 +523,16 @@ async def get_run(run_id: str) -> RunStatusResponse:
 async def get_run_output(run_id: str) -> Dict[str, Any]:
     """Get output data from a completed model run."""
     from mycosoft_mas.earth2 import get_earth2_service
-    
+
     service = get_earth2_service()
     run = await service.get_run_status(run_id)
-    
+
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
-    
+
     if run.status != "completed":
         raise HTTPException(status_code=400, detail=f"Run is {run.status}, not completed")
-    
+
     return {
         "run_id": run_id,
         "output_path": run.output_path,
@@ -520,6 +543,7 @@ async def get_run_output(run_id: str) -> Dict[str, Any]:
 # ============================================================================
 # Visualization Layer Endpoints
 # ============================================================================
+
 
 @router.get("/layers")
 async def list_layers() -> Dict[str, Any]:

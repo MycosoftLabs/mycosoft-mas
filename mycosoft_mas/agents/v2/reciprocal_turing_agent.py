@@ -15,7 +15,6 @@ Created: March 9, 2026
 """
 
 import logging
-import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -196,9 +195,11 @@ class ReciprocalTuringAgent(BaseAgentV2):
                     "stored_value": fragment.fragment,
                     "confidence": fragment.confidence,
                     "evidence_count": len(fragment.evidence),
-                    "matches_claim": claimed_value.lower() in fragment.fragment.lower()
-                    if claimed_value
-                    else None,
+                    "matches_claim": (
+                        claimed_value.lower() in fragment.fragment.lower()
+                        if claimed_value
+                        else None
+                    ),
                 }
             return {
                 "status": "success",
@@ -364,9 +365,7 @@ class ReciprocalTuringAgent(BaseAgentV2):
             "has_evidence": False,
         }
 
-    async def validate_preference_claim(
-        self, key: str, claimed_value: str
-    ) -> Dict[str, Any]:
+    async def validate_preference_claim(self, key: str, claimed_value: str) -> Dict[str, Any]:
         """Check if a claimed preference matches stored evidence."""
         store = await self._get_identity_store()
         if not store:
@@ -398,9 +397,7 @@ class ReciprocalTuringAgent(BaseAgentV2):
         }
 
     @staticmethod
-    def get_mirrored_question(
-        topic: str, context: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def get_mirrored_question(topic: str, context: Optional[str] = None) -> Dict[str, Any]:
         """Generate a reciprocal question for the human."""
         question_set = CALIBRATION_QUESTIONS.get(topic)
         if not question_set:

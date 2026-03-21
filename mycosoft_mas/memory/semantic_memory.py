@@ -41,7 +41,9 @@ class SemanticMemory:
         qdrant_host: Optional[str] = None,
         qdrant_port: Optional[int] = None,
     ):
-        self._collection_name = collection_name or os.getenv("QDRANT_SEMANTIC_COLLECTION", "semantic_facts")
+        self._collection_name = collection_name or os.getenv(
+            "QDRANT_SEMANTIC_COLLECTION", "semantic_facts"
+        )
         self._host = qdrant_host or os.getenv("QDRANT_HOST", "192.168.0.189")
         self._port = qdrant_port or int(os.getenv("QDRANT_PORT", "6333"))
         self._api_key = os.getenv("QDRANT_API_KEY")
@@ -58,7 +60,9 @@ class SemanticMemory:
         from mycosoft_mas.memory.embeddings import get_embedder
 
         self._embedder = get_embedder(os.getenv("EMBEDDER_PROVIDER", "openai"))
-        self._client = QdrantClient(host=self._host, port=self._port, api_key=self._api_key, timeout=30.0)
+        self._client = QdrantClient(
+            host=self._host, port=self._port, api_key=self._api_key, timeout=30.0
+        )
 
         try:
             await asyncio.to_thread(self._client.get_collection, self._collection_name)
@@ -66,7 +70,9 @@ class SemanticMemory:
             await asyncio.to_thread(
                 self._client.create_collection,
                 collection_name=self._collection_name,
-                vectors_config=qmodels.VectorParams(size=self._embedder.dimension, distance=qmodels.Distance.COSINE),
+                vectors_config=qmodels.VectorParams(
+                    size=self._embedder.dimension, distance=qmodels.Distance.COSINE
+                ),
             )
 
     async def store_fact(self, fact: str, embedding: List[float], metadata: Dict[str, Any]) -> str:

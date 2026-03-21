@@ -8,7 +8,7 @@ import logging
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import aiohttp
 
@@ -62,21 +62,24 @@ class NOAACollector(BaseCollector):
                             lng, lat = first[0], first[1]
                     if lat is None:
                         lat, lng = 0.0, 0.0
-                    events.append(RawEvent(
-                        source="noaa",
-                        entity_id=props.get("id", str(uuid.uuid4())),
-                        entity_type="weather",
-                        timestamp=datetime.utcnow(),
-                        data={
-                            "lat": lat, "lng": lng,
-                            "event": props.get("event"),
-                            "severity": props.get("severity"),
-                            "headline": props.get("headline"),
-                            "description": props.get("description"),
-                            "areaDesc": props.get("areaDesc"),
-                        },
-                        raw_data=feat,
-                    ))
+                    events.append(
+                        RawEvent(
+                            source="noaa",
+                            entity_id=props.get("id", str(uuid.uuid4())),
+                            entity_type="weather",
+                            timestamp=datetime.utcnow(),
+                            data={
+                                "lat": lat,
+                                "lng": lng,
+                                "event": props.get("event"),
+                                "severity": props.get("severity"),
+                                "headline": props.get("headline"),
+                                "description": props.get("description"),
+                                "areaDesc": props.get("areaDesc"),
+                            },
+                            raw_data=feat,
+                        )
+                    )
             if events:
                 logger.info("NOAA fetched %d alerts", len(events))
         except Exception as e:
@@ -88,10 +91,17 @@ class NOAACollector(BaseCollector):
         data = raw.data
         return TimelineEvent(
             id=str(uuid.uuid5(uuid.NAMESPACE_DNS, "noaa:" + raw.entity_id)),
-            entity_type="weather", timestamp=raw.timestamp, lat=data["lat"], lng=data["lng"], altitude=None,
+            entity_type="weather",
+            timestamp=raw.timestamp,
+            lat=data["lat"],
+            lng=data["lng"],
+            altitude=None,
             properties={
-                "event": data.get("event"), "severity": data.get("severity"),
-                "headline": data.get("headline"), "areaDesc": data.get("areaDesc"),
+                "event": data.get("event"),
+                "severity": data.get("severity"),
+                "headline": data.get("headline"),
+                "areaDesc": data.get("areaDesc"),
             },
-            source="noaa", quality_score=calculate_quality_score(data, "weather", "noaa", raw.timestamp),
+            source="noaa",
+            quality_score=calculate_quality_score(data, "weather", "noaa", raw.timestamp),
         )

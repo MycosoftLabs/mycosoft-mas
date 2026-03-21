@@ -30,7 +30,9 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-def test_resource_needs_contract_empty_purchases(monkeypatch: pytest.MonkeyPatch, client: TestClient) -> None:
+def test_resource_needs_contract_empty_purchases(
+    monkeypatch: pytest.MonkeyPatch, client: TestClient
+) -> None:
     from mycosoft_mas.core.routers import economy_api
 
     def fake_get_state() -> Dict[str, Any]:
@@ -55,7 +57,9 @@ def test_resource_needs_contract_empty_purchases(monkeypatch: pytest.MonkeyPatch
     assert body["message"] == RESOURCE_NEEDS_NO_FORECAST_MESSAGE
 
 
-def test_resource_needs_tail_cap_and_order(monkeypatch: pytest.MonkeyPatch, client: TestClient) -> None:
+def test_resource_needs_tail_cap_and_order(
+    monkeypatch: pytest.MonkeyPatch, client: TestClient
+) -> None:
     from mycosoft_mas.core.routers import economy_api
 
     n = RECORDED_PURCHASES_CAP + 10
