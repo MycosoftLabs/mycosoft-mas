@@ -157,14 +157,14 @@ class GPUMemory:
     
     def __init__(self, database_url: Optional[str] = None, total_vram_mb: int = 32768):
         self._database_url = database_url or os.getenv(
+            "MINDEX_DATABASE_URL",
+            os.getenv("MINDEX_DATABASE_URL")
+        )
         if not self._database_url:
             raise ValueError(
                 "MINDEX_DATABASE_URL environment variable is required. "
                 "Please set it to your PostgreSQL connection string."
             )
-            "MINDEX_DATABASE_URL",
-            os.getenv("MINDEX_DATABASE_URL")
-        )
         self._pool = None
         self._initialized = False
         self._total_vram_mb = total_vram_mb

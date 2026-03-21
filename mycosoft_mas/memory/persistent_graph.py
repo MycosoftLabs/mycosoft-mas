@@ -97,14 +97,14 @@ class PersistentKnowledgeGraph:
     
     def __init__(self, database_url: Optional[str] = None):
         self._database_url = database_url or os.getenv(
+            "DATABASE_URL",
+            "postgresql://mycosoft:mycosoft@postgres:5432/mycosoft"
+        )
         if not self._database_url:
             raise ValueError(
                 "MINDEX_DATABASE_URL environment variable is required. "
                 "Please set it to your PostgreSQL connection string."
             )
-            "DATABASE_URL",
-            "postgresql://mycosoft:mycosoft@postgres:5432/mycosoft"
-        )
         self._pool = None
         self._initialized = False
         
