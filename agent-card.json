@@ -1,0 +1,41 @@
+{
+  "name": "Myca MAS",
+  "version": "4.6.0",
+  "description": "Autonomous Multi-Agent System (MAS) by Mycosoft. Enables earth system intelligence, biological taxonomy search (MINDEX), and distributed IoT hardware command (MycoBrain).",
+  "provider": {
+    "url": "https://mycosoft.com",
+    "organization": "MycosoftLabs"
+  },
+  "supportedInterfaces": [
+    {
+      "url": "https://api.mycosoft.com/a2a/v1/message",
+      "protocolBinding": "HTTP+JSON",
+      "protocolVersion": "0.3",
+      "pricing": {
+        "model": "pay-per-request",
+        "currency": "USDC",
+        "amount": "0.005"
+      }
+    }
+  ],
+  "capabilities": {
+    "streaming": true,
+    "pushNotifications": false
+  },
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["application/json", "text/plain"],
+  "skills": [
+    {
+      "id": "mindex-query",
+      "name": "Biological & Genetic Search",
+      "description": "Cross-references global ecosystem nodes and genetic MINDEX biological data.",
+      "tags": ["biology", "nature", "search", "genetics", "earth"]
+    },
+    {
+      "id": "mycobrain-iot",
+      "name": "MycoBrain Telemetry Access",
+      "description": "Communicate with geological and network IoT nodes in the physical world.",
+      "tags": ["iot", "sensors", "hardware", "telemetry"]
+    }
+  ]
+}
