@@ -62,17 +62,12 @@ class FIRMSCollector(BaseCollector):
             return []
 
         # VIIRS_SNPP_NRT - near real-time
-        url = (
-            f"{self.base_url}/{self._api_key}/VIIRS_SNPP_NRT/"
-            f"{self.bbox}/{self.days}"
-        )
+        url = f"{self.base_url}/{self._api_key}/VIIRS_SNPP_NRT/" f"{self.bbox}/{self.days}"
 
         events: List[RawEvent] = []
 
         try:
-            async with self._session.get(
-                url, timeout=aiohttp.ClientTimeout(total=60)
-            ) as resp:
+            async with self._session.get(url, timeout=aiohttp.ClientTimeout(total=60)) as resp:
                 if resp.status != 200:
                     logger.warning("FIRMS error: %s", resp.status)
                     return []
@@ -177,7 +172,5 @@ class FIRMSCollector(BaseCollector):
                 "satellite": data.get("satellite"),
             },
             source="firms",
-            quality_score=calculate_quality_score(
-                data, "hazard", "firms", raw.timestamp
-            ),
+            quality_score=calculate_quality_score(data, "hazard", "firms", raw.timestamp),
         )

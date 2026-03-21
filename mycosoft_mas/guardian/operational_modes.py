@@ -19,7 +19,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +50,15 @@ _MODE_POLICIES: Dict[OperationalMode, ModePolicy] = {
     OperationalMode.MORGAN: ModePolicy(
         mode=OperationalMode.MORGAN,
         scope=[
-            "personal_memory", "preferences", "private_context",
-            "voice_interaction", "lab_notes", "ideation",
-            "focus_management", "travel", "messages",
+            "personal_memory",
+            "preferences",
+            "private_context",
+            "voice_interaction",
+            "lab_notes",
+            "ideation",
+            "focus_management",
+            "travel",
+            "messages",
         ],
         memory_partition="morgan_personal",
         permission_level="personal",
@@ -69,21 +75,38 @@ _MODE_POLICIES: Dict[OperationalMode, ModePolicy] = {
             "More casual voice style with higher warmth."
         ),
         allowed_systems=[
-            "memory", "calendar", "inbox", "lab_notes",
-            "personal_devices", "voice", "ideation",
+            "memory",
+            "calendar",
+            "inbox",
+            "lab_notes",
+            "personal_devices",
+            "voice",
+            "ideation",
         ],
         restricted_systems=[
-            "hr_records", "financial_admin", "compliance",
-            "customer_data", "production_deploy",
+            "hr_records",
+            "financial_admin",
+            "compliance",
+            "customer_data",
+            "production_deploy",
         ],
     ),
     OperationalMode.MYCOSOFT: ModePolicy(
         mode=OperationalMode.MYCOSOFT,
         scope=[
-            "operations", "projects", "finance", "repositories",
-            "agents", "hr_process", "crm", "manufacturing",
-            "lab_telemetry", "deployment", "compliance",
-            "documentation", "infrastructure",
+            "operations",
+            "projects",
+            "finance",
+            "repositories",
+            "agents",
+            "hr_process",
+            "crm",
+            "manufacturing",
+            "lab_telemetry",
+            "deployment",
+            "compliance",
+            "documentation",
+            "infrastructure",
         ],
         memory_partition="mycosoft_enterprise",
         permission_level="enterprise",
@@ -100,12 +123,22 @@ _MODE_POLICIES: Dict[OperationalMode, ModePolicy] = {
             "More formal voice style with higher confidence."
         ),
         allowed_systems=[
-            "orchestrator", "agents", "memory", "infrastructure",
-            "repositories", "deployment", "monitoring", "lab",
-            "financial", "hr", "documentation", "compliance",
+            "orchestrator",
+            "agents",
+            "memory",
+            "infrastructure",
+            "repositories",
+            "deployment",
+            "monitoring",
+            "lab",
+            "financial",
+            "hr",
+            "documentation",
+            "compliance",
         ],
         restricted_systems=[
-            "morgan_personal_notes", "private_messages",
+            "morgan_personal_notes",
+            "private_messages",
         ],
     ),
 }
@@ -118,9 +151,7 @@ class ModeSwitchResult:
     success: bool
     previous_mode: OperationalMode
     new_mode: OperationalMode
-    switched_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    switched_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     reason: str = ""
 
 
@@ -183,7 +214,10 @@ class OperationalModeManager:
 
         logger.info(
             "Mode switched: %s → %s (by %s: %s)",
-            previous.value, target.value, requester, reason,
+            previous.value,
+            target.value,
+            requester,
+            reason,
         )
 
         return result

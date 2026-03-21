@@ -5,7 +5,6 @@ Connects NLM inference outputs to n8n workflows.
 Trigger conditions (e.g. confidence threshold, prediction type) map to workflow execution.
 """
 
-import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -43,7 +42,7 @@ def get_workflow_for_prediction(
     labels = labels or []
     q = (query_type or "").lower()
     for key, wf in NLM_TO_WORKFLOW_MAP.items():
-        if key in q or any(key in (l or "").lower() for l in labels):
+        if key in q or any(key in (lbl or "").lower() for lbl in labels):
             return wf
     if metadata:
         trigger = (metadata.get("trigger_workflow") or metadata.get("workflow") or "").strip()
@@ -62,12 +61,15 @@ async def trigger_workflow_from_nlm(
     """
     try:
         from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
+
         agent = N8NWorkflowAgent(agent_id="nlm-bridge", name="N8N Workflow", config={})
-        result = await agent.process_task({
-            "type": "execute_workflow",
-            "workflow_name": workflow_name,
-            "data": input_data,
-        })
+        result = await agent.process_task(
+            {
+                "type": "execute_workflow",
+                "workflow_name": workflow_name,
+                "data": input_data,
+            }
+        )
         return result
     except Exception as e:
         logger.warning("NLM workflow trigger failed for %s: %s", workflow_name, e)

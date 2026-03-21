@@ -5,29 +5,27 @@ Provides intelligent routing of LLM requests to appropriate providers and models
 based on task type, tool requirements, cost preferences, and availability.
 """
 
-import asyncio
 import logging
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Optional
 
 from mycosoft_mas.llm.backend_selection import (
-    BackendSelection,
     EMBEDDING,
     EXECUTION,
     FAST,
     PLANNING,
+    BackendSelection,
     get_backend_for_role,
 )
 from mycosoft_mas.llm.config import LLMConfig, get_llm_config
 from mycosoft_mas.llm.llm_ledger import persist_to_supabase_ledger
 from mycosoft_mas.llm.providers.base import (
     BaseLLMProvider,
-    LLMResponse,
+    EmbeddingResponse,
     LLMError,
     LLMErrorType,
-    EmbeddingResponse,
+    LLMResponse,
     Message,
 )
 from mycosoft_mas.llm.providers.openai_compatible import OpenAICompatibleProvider
@@ -39,22 +37,23 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProviderHealth:
     """Track health status of a provider."""
+
     provider: str
     is_healthy: bool = True
     last_check: datetime = field(default_factory=datetime.now)
     failure_count: int = 0
     last_failure: Optional[datetime] = None
-    
+
     def mark_failure(self) -> None:
         self.failure_count += 1
         self.last_failure = datetime.now()
         if self.failure_count >= 3:
             self.is_healthy = False
-    
+
     def mark_success(self) -> None:
         self.is_healthy = True
         self.failure_count = 0
-    
+
     def should_retry(self) -> bool:
         """Check if we should retry this provider after failures."""
         if self.is_healthy:
@@ -68,28 +67,29 @@ class ProviderHealth:
 @dataclass
 class UsageTracker:
     """Track LLM usage for cost management."""
+
     total_tokens: int = 0
     total_cost: float = 0.0
     request_count: int = 0
     daily_tokens: int = 0
     daily_cost: float = 0.0
     daily_reset: datetime = field(default_factory=datetime.now)
-    
+
     def add_usage(self, tokens: int, cost: float) -> None:
         self.total_tokens += tokens
         # Avoid float drift breaking exact-equality unit tests.
         self.total_cost = round(self.total_cost + cost, 6)
         self.request_count += 1
-        
+
         # Reset daily counters if needed
         if datetime.now().date() > self.daily_reset.date():
             self.daily_tokens = 0
             self.daily_cost = 0.0
             self.daily_reset = datetime.now()
-        
+
         self.daily_tokens += tokens
         self.daily_cost = round(self.daily_cost + cost, 6)
-    
+
     def is_over_budget(self, daily_budget: float) -> bool:
         return self.daily_cost >= daily_budget
 
@@ -97,32 +97,32 @@ class UsageTracker:
 class LLMRouter:
     """
     Intelligent LLM request router.
-    
+
     Routes requests to appropriate providers/models based on:
     - Task type (planning, execution, fast, embedding)
     - Tool calling requirements
     - Cost/latency preferences
     - Provider availability
-    
+
     Supports automatic fallback when providers are unavailable.
     """
-    
+
     def __init__(
         self,
         config: Optional[LLMConfig] = None,
     ):
         self.config = config or get_llm_config()
         self.logger = logging.getLogger("llm.router")
-        
+
         # Provider instances
         self._providers: dict[str, BaseLLMProvider] = {}
-        
+
         # Health tracking
         self._health: dict[str, ProviderHealth] = {}
-        
+
         # Usage tracking
         self._usage = UsageTracker()
-        
+
         # Initialize providers
         self._init_providers()
 
@@ -146,7 +146,7 @@ class LLMRouter:
             timeout=self.config.default_timeout,
             max_retries=self.config.default_max_retries,
         )
-    
+
     def _init_providers(self) -> None:
         """Initialize configured providers."""
         # Always initialize the OpenAI-compatible provider (for LiteLLM)
@@ -158,7 +158,7 @@ class LLMRouter:
                 max_retries=self.config.default_max_retries,
             )
             self._health["litellm"] = ProviderHealth(provider="litellm")
-        
+
         # Initialize OpenAI if configured
         openai_config = self.config.get_provider_config("openai")
         if openai_config and openai_config.api_key:
@@ -169,7 +169,7 @@ class LLMRouter:
                 max_retries=self.config.default_max_retries,
             )
             self._health["openai"] = ProviderHealth(provider="openai")
-        
+
         # Initialize Azure OpenAI if configured
         azure_config = self.config.get_provider_config("azure")
         if azure_config and azure_config.api_key:
@@ -181,20 +181,20 @@ class LLMRouter:
                 max_retries=self.config.default_max_retries,
             )
             self._health["azure"] = ProviderHealth(provider="azure")
-    
+
     def _select_provider(
         self,
         preferred: Optional[str] = None,
     ) -> tuple[str, BaseLLMProvider]:
         """
         Select the best available provider.
-        
+
         Args:
             preferred: Preferred provider name
-            
+
         Returns:
             Tuple of (provider_name, provider_instance)
-            
+
         Raises:
             LLMError: If no providers are available
         """
@@ -203,31 +203,31 @@ class LLMRouter:
             health = self._health.get(preferred)
             if health and health.should_retry():
                 return preferred, self._providers[preferred]
-        
+
         # Try default provider
         default = self.config.default_provider
         if default in self._providers:
             health = self._health.get(default)
             if health and health.should_retry():
                 return default, self._providers[default]
-        
+
         # Fall back to LiteLLM (unified proxy)
         if "litellm" in self._providers:
             return "litellm", self._providers["litellm"]
-        
+
         # Try any available provider
         for name, provider in self._providers.items():
             health = self._health.get(name)
             if health and health.should_retry():
                 return name, provider
-        
+
         raise LLMError(
             error_type=LLMErrorType.SERVICE_UNAVAILABLE,
             message="No LLM providers available",
             provider="router",
             model="",
         )
-    
+
     def _select_model(
         self,
         task_type: str = "execution",
@@ -236,31 +236,31 @@ class LLMRouter:
     ) -> str:
         """
         Select the appropriate model for a task.
-        
+
         Args:
             task_type: Type of task (planning, execution, fast, embedding)
             requires_tools: Whether the task requires tool/function calling
             requires_vision: Whether the task requires vision capabilities
-            
+
         Returns:
             Model identifier string
         """
         model = self.config.get_model_for_task(task_type)
-        
+
         # Check model capabilities if we have registry info
         if model in self.config.models:
             model_info = self.config.models[model]
-            
+
             if requires_tools and not model_info.supports_tools:
                 # Fall back to a model that supports tools
                 model = self.config.execution_model
-            
+
             if requires_vision and not model_info.supports_vision:
                 # Fall back to a vision-capable model
                 model = "gpt-4o"  # Known to support vision
-        
+
         return model
-    
+
     async def chat(
         self,
         messages: list[Message],
@@ -302,7 +302,7 @@ class LLMRouter:
                 provider="router",
                 model="",
             )
-        
+
         # Unified backend-selection path (Nemotron/Ollama from config/models.yaml)
         role = self._role_for_task_type(task_type)
         selection = get_backend_for_role(role)
@@ -331,21 +331,19 @@ class LLMRouter:
                     estimated_cost=response.estimated_cost,
                 )
                 if constrained_index_name and response.content:
-                    response = self._apply_constraint_validation(
-                        response, constrained_index_name
-                    )
+                    response = self._apply_constraint_validation(response, constrained_index_name)
                 return response
             except LLMError:
                 # Fall through to legacy provider selection
                 pass
-        
+
         # Legacy path: config-based model and provider
         selected_model = model or self._select_model(
             task_type=task_type,
             requires_tools=bool(tools),
         )
         provider_name, provider_instance = self._select_provider(provider)
-        
+
         try:
             response = await provider_instance.chat(
                 messages=messages,
@@ -356,7 +354,7 @@ class LLMRouter:
                 tool_choice=tool_choice,
                 **kwargs,
             )
-            
+
             # Update tracking
             self._health[provider_name].mark_success()
             self._usage.add_usage(
@@ -373,15 +371,13 @@ class LLMRouter:
 
             # Post-hoc constraint validation if index specified
             if constrained_index_name and response.content:
-                response = self._apply_constraint_validation(
-                    response, constrained_index_name
-                )
+                response = self._apply_constraint_validation(response, constrained_index_name)
 
             return response
-            
+
         except LLMError as e:
             self._health[provider_name].mark_failure()
-            
+
             # Try fallback if enabled
             if self.config.enable_fallback and e.retryable:
                 return await self._fallback_chat(
@@ -394,9 +390,9 @@ class LLMRouter:
                     exclude_provider=provider_name,
                     **kwargs,
                 )
-            
+
             raise
-    
+
     async def _fallback_chat(
         self,
         messages: list[Message],
@@ -406,30 +402,30 @@ class LLMRouter:
     ) -> LLMResponse:
         """Try fallback providers when primary fails."""
         errors = []
-        
+
         for fallback_name in self.config.fallback_providers:
             if fallback_name == exclude_provider:
                 continue
-            
+
             if fallback_name not in self._providers:
                 continue
-            
+
             health = self._health.get(fallback_name)
             if not health or not health.should_retry():
                 continue
-            
+
             try:
                 self.logger.info(f"Trying fallback provider: {fallback_name}")
-                
+
                 # Use fallback model if configured
                 fallback_model = self.config.fallback_model or model
-                
+
                 response = await self._providers[fallback_name].chat(
                     messages=messages,
                     model=fallback_model,
                     **kwargs,
                 )
-                
+
                 self._health[fallback_name].mark_success()
                 self._usage.add_usage(
                     tokens=response.usage.total_tokens,
@@ -443,12 +439,12 @@ class LLMRouter:
                     estimated_cost=response.estimated_cost,
                 )
                 return response
-                
+
             except LLMError as e:
                 self._health[fallback_name].mark_failure()
                 errors.append(f"{fallback_name}: {e.message}")
                 continue
-        
+
         # All fallbacks failed
         raise LLMError(
             error_type=LLMErrorType.SERVICE_UNAVAILABLE,
@@ -456,7 +452,7 @@ class LLMRouter:
             provider="router",
             model=model,
         )
-    
+
     async def complete(
         self,
         prompt: str,
@@ -478,7 +474,7 @@ class LLMRouter:
             max_tokens=max_tokens,
             **kwargs,
         )
-    
+
     async def embed(
         self,
         texts: list[str],
@@ -505,7 +501,7 @@ class LLMRouter:
         except LLMError:
             self._health[provider_name].mark_failure()
             raise
-    
+
     async def chat_stream(
         self,
         messages: list[Message],
@@ -541,11 +537,11 @@ class LLMRouter:
             **kwargs,
         ):
             yield chunk
-    
+
     async def health_check(self) -> dict[str, bool]:
         """Check health of all configured providers."""
         results = {}
-        
+
         for name, provider in self._providers.items():
             try:
                 is_healthy = await provider.health_check()
@@ -554,9 +550,9 @@ class LLMRouter:
             except Exception:
                 self._health[name].mark_failure()
                 results[name] = False
-        
+
         return results
-    
+
     def get_usage_stats(self) -> dict[str, Any]:
         """Get current usage statistics."""
         return {
@@ -568,7 +564,7 @@ class LLMRouter:
             "daily_budget": self.config.daily_budget,
             "budget_remaining": self.config.daily_budget - self._usage.daily_cost,
         }
-    
+
     def _apply_constraint_validation(
         self,
         response: LLMResponse,

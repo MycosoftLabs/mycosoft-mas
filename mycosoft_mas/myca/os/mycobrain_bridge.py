@@ -10,8 +10,8 @@ MAS device registry: /api/devices (on 188) — heartbeat is canonical write, /re
 Date: 2026-03-07
 """
 
-import os
 import logging
+import os
 from typing import Optional
 
 import aiohttp
@@ -54,7 +54,11 @@ class MycoBrainBridge:
             ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    devices = data.get("devices", data) if isinstance(data, dict) else (data if isinstance(data, list) else [])
+                    devices = (
+                        data.get("devices", data)
+                        if isinstance(data, dict)
+                        else (data if isinstance(data, list) else [])
+                    )
                     return devices if isinstance(devices, list) else []
         except Exception as e:
             logger.debug("Device status fetch failed: %s", e)

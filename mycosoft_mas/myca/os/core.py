@@ -16,36 +16,62 @@ Unlike a chatbot that waits for prompts, MYCA OS is proactive:
 Date: 2026-03-04
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
+import logging
 import os
 import signal
 import socket
-import logging
-from datetime import datetime, timezone
-from typing import Optional
-from enum import Enum
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from typing import TYPE_CHECKING, Optional
 
+from mycosoft_mas.myca.os.gateway import _env_flag
 from mycosoft_mas.myca.os.staff_registry import load_staff_directory, resolve_person_id
+
+if TYPE_CHECKING:
+    from mycosoft_mas.consciousness.world_model import WorldModel
+    from mycosoft_mas.myca.os.browser_cdp import BrowserCDP
+    from mycosoft_mas.myca.os.comms_hub import CommsHub
+    from mycosoft_mas.myca.os.crep_bridge import CREPBridge
+    from mycosoft_mas.myca.os.earth2_bridge import Earth2Bridge
+    from mycosoft_mas.myca.os.executive import ExecutiveSystem
+    from mycosoft_mas.myca.os.file_manager import FileManager
+    from mycosoft_mas.myca.os.mas_bridge import MASBridge
+    from mycosoft_mas.myca.os.mindex_bridge import MINDEXBridge
+    from mycosoft_mas.myca.os.mycobrain_bridge import MycoBrainBridge
+    from mycosoft_mas.myca.os.n8n_bridge import N8NBridge
+    from mycosoft_mas.myca.os.natureos_bridge import NatureOSBridge
+    from mycosoft_mas.myca.os.nlm_bridge import NLMBridge
+    from mycosoft_mas.myca.os.openwork_bridge import OpenWorkBridge
+    from mycosoft_mas.myca.os.presence_bridge import PresenceBridge
+    from mycosoft_mas.myca.os.scheduler import Scheduler
+    from mycosoft_mas.myca.os.discord_gateway import DiscordGateway
+    from mycosoft_mas.myca.os.slack_gateway import SlackGateway
+    from mycosoft_mas.myca.os.tool_orchestrator import ToolOrchestrator
 
 logger = logging.getLogger("myca.os")
 
 
 class MycaState(str, Enum):
     """MYCA's operational states."""
-    BOOTING = "booting"          # Starting up, loading systems
-    AWAKE = "awake"              # Normal operation
-    FOCUSED = "focused"          # Deep work on a specific task
-    MEETING = "meeting"          # In a conversation with Morgan or staff
-    MONITORING = "monitoring"    # Night mode, low activity
-    REFLECTING = "reflecting"    # Running reflection/learning cycle
+
+    BOOTING = "booting"  # Starting up, loading systems
+    AWAKE = "awake"  # Normal operation
+    FOCUSED = "focused"  # Deep work on a specific task
+    MEETING = "meeting"  # In a conversation with Morgan or staff
+    MONITORING = "monitoring"  # Night mode, low activity
+    REFLECTING = "reflecting"  # Running reflection/learning cycle
     SHUTTING_DOWN = "shutting_down"
 
 
 @dataclass
 class MycaContext:
     """Runtime context for the MYCA OS."""
+
     state: MycaState = MycaState.BOOTING
     boot_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     current_task: Optional[str] = None
@@ -76,13 +102,13 @@ class MycaOS:
     """
 
     # Cycle intervals (seconds)
-    MESSAGE_POLL_INTERVAL = 5        # Check messages every 5s
-    HEARTBEAT_INTERVAL = 30          # System health every 30s
-    MORGAN_CHECKIN_INTERVAL = 1800   # Proactive check-in to Morgan every 30 min
-    TASK_PROCESS_INTERVAL = 10       # Process task queue every 10s
-    INTENTION_INTERVAL = 900         # Review goals every 15min
-    REFLECTION_INTERVAL = 3600       # Learn from outcomes every 1hr
-    DAILY_RHYTHM_CHECK = 60          # Check daily schedule every 1min
+    MESSAGE_POLL_INTERVAL = 5  # Check messages every 5s
+    HEARTBEAT_INTERVAL = 30  # System health every 30s
+    MORGAN_CHECKIN_INTERVAL = 1800  # Proactive check-in to Morgan every 30 min
+    TASK_PROCESS_INTERVAL = 10  # Process task queue every 10s
+    INTENTION_INTERVAL = 900  # Review goals every 15min
+    REFLECTION_INTERVAL = 3600  # Learn from outcomes every 1hr
+    DAILY_RHYTHM_CHECK = 60  # Check daily schedule every 1min
 
     def __init__(self):
         self.ctx = MycaContext()
@@ -119,6 +145,7 @@ class MycaOS:
     def comms(self) -> "CommsHub":
         if self._comms is None:
             from mycosoft_mas.myca.os.comms_hub import CommsHub
+
             self._comms = CommsHub(self)
         return self._comms
 
@@ -126,6 +153,7 @@ class MycaOS:
     def tools(self) -> "ToolOrchestrator":
         if self._tools is None:
             from mycosoft_mas.myca.os.tool_orchestrator import ToolOrchestrator
+
             self._tools = ToolOrchestrator(self)
         return self._tools
 
@@ -133,6 +161,7 @@ class MycaOS:
     def executive(self) -> "ExecutiveSystem":
         if self._executive is None:
             from mycosoft_mas.myca.os.executive import ExecutiveSystem
+
             self._executive = ExecutiveSystem(self)
         return self._executive
 
@@ -140,6 +169,7 @@ class MycaOS:
     def mas_bridge(self) -> "MASBridge":
         if self._mas_bridge is None:
             from mycosoft_mas.myca.os.mas_bridge import MASBridge
+
             self._mas_bridge = MASBridge(self)
         return self._mas_bridge
 
@@ -147,6 +177,7 @@ class MycaOS:
     def mindex_bridge(self) -> "MINDEXBridge":
         if self._mindex_bridge is None:
             from mycosoft_mas.myca.os.mindex_bridge import MINDEXBridge
+
             self._mindex_bridge = MINDEXBridge(self)
         return self._mindex_bridge
 
@@ -154,6 +185,7 @@ class MycaOS:
     def crep_bridge(self) -> "CREPBridge":
         if self._crep_bridge is None:
             from mycosoft_mas.myca.os.crep_bridge import CREPBridge
+
             self._crep_bridge = CREPBridge(self)
         return self._crep_bridge
 
@@ -161,6 +193,7 @@ class MycaOS:
     def earth2_bridge(self) -> "Earth2Bridge":
         if self._earth2_bridge is None:
             from mycosoft_mas.myca.os.earth2_bridge import Earth2Bridge
+
             self._earth2_bridge = Earth2Bridge(self)
         return self._earth2_bridge
 
@@ -168,6 +201,7 @@ class MycaOS:
     def mycobrain_bridge(self) -> "MycoBrainBridge":
         if self._mycobrain_bridge is None:
             from mycosoft_mas.myca.os.mycobrain_bridge import MycoBrainBridge
+
             self._mycobrain_bridge = MycoBrainBridge(self)
         return self._mycobrain_bridge
 
@@ -175,6 +209,7 @@ class MycaOS:
     def natureos_bridge(self) -> "NatureOSBridge":
         if self._natureos_bridge is None:
             from mycosoft_mas.myca.os.natureos_bridge import NatureOSBridge
+
             self._natureos_bridge = NatureOSBridge(self)
         return self._natureos_bridge
 
@@ -182,6 +217,7 @@ class MycaOS:
     def presence_bridge(self) -> "PresenceBridge":
         if self._presence_bridge is None:
             from mycosoft_mas.myca.os.presence_bridge import PresenceBridge
+
             self._presence_bridge = PresenceBridge(self)
         return self._presence_bridge
 
@@ -189,6 +225,7 @@ class MycaOS:
     def nlm_bridge(self) -> "NLMBridge":
         if self._nlm_bridge is None:
             from mycosoft_mas.myca.os.nlm_bridge import NLMBridge
+
             self._nlm_bridge = NLMBridge(self)
         return self._nlm_bridge
 
@@ -196,6 +233,7 @@ class MycaOS:
     def openwork_bridge(self) -> "OpenWorkBridge":
         if self._openwork_bridge is None:
             from mycosoft_mas.myca.os.openwork_bridge import OpenWorkBridge
+
             self._openwork_bridge = OpenWorkBridge(self)
         return self._openwork_bridge
 
@@ -203,6 +241,7 @@ class MycaOS:
     def browser_cdp(self) -> "BrowserCDP":
         if self._browser_cdp is None:
             from mycosoft_mas.myca.os.browser_cdp import BrowserCDP
+
             self._browser_cdp = BrowserCDP(self)
         return self._browser_cdp
 
@@ -210,6 +249,7 @@ class MycaOS:
     def n8n_bridge(self) -> "N8NBridge":
         if self._n8n_bridge is None:
             from mycosoft_mas.myca.os.n8n_bridge import N8NBridge
+
             self._n8n_bridge = N8NBridge(self)
         return self._n8n_bridge
 
@@ -217,6 +257,7 @@ class MycaOS:
     def scheduler(self) -> "Scheduler":
         if self._scheduler is None:
             from mycosoft_mas.myca.os.scheduler import Scheduler
+
             self._scheduler = Scheduler(self)
         return self._scheduler
 
@@ -224,6 +265,7 @@ class MycaOS:
     def file_manager(self) -> "FileManager":
         if self._file_manager is None:
             from mycosoft_mas.myca.os.file_manager import FileManager
+
             self._file_manager = FileManager(self)
         return self._file_manager
 
@@ -231,18 +273,21 @@ class MycaOS:
     def world_model(self) -> "WorldModel":
         if self._world_model is None:
             from mycosoft_mas.consciousness.world_model import WorldModel
+
             self._world_model = WorldModel()
         return self._world_model
 
     async def get_personal_agency(self):
         if self._personal_agency is None:
             from mycosoft_mas.consciousness.personal_agency import get_personal_agency
+
             self._personal_agency = await get_personal_agency()
         return self._personal_agency
 
     async def get_autonomous_self(self):
         if self._autonomous_self is None:
             from mycosoft_mas.consciousness.autonomous_self import get_autonomous_self
+
             self._autonomous_self = await get_autonomous_self()
         return self._autonomous_self
 
@@ -253,7 +298,7 @@ class MycaOS:
         logger.info("=" * 60)
         logger.info("MYCA OS booting...")
         logger.info(f"Time: {datetime.now(timezone.utc).isoformat()}")
-        logger.info(f"VM: 192.168.0.191")
+        logger.info("VM: 192.168.0.191")
         logger.info("=" * 60)
 
         self.ctx.state = MycaState.BOOTING
@@ -266,7 +311,9 @@ class MycaOS:
             logger.info("[2/5] Initializing MAS bridge (orchestrator)...")
             await self.mas_bridge.initialize()
 
-            logger.info("[2a/7] Initializing CREP, Earth2, MycoBrain, NatureOS, Presence, NLM bridges...")
+            logger.info(
+                "[2a/7] Initializing CREP, Earth2, MycoBrain, NatureOS, Presence, NLM bridges..."
+            )
             await self.crep_bridge.initialize()
             await self.earth2_bridge.initialize()
             await self.mycobrain_bridge.initialize()
@@ -302,6 +349,7 @@ class MycaOS:
             logger.info("[7a/8] Ensuring built-in skills...")
             try:
                 from mycosoft_mas.myca.os.skills_manager import ensure_builtin_skills
+
                 ensure_builtin_skills()
             except Exception as e:
                 logger.warning("Skills init: %s", e)
@@ -315,10 +363,14 @@ class MycaOS:
         self._running = True
 
         # Log boot to memory
-        await self._log_event("system", "boot", {
-            "boot_time": self.ctx.boot_time.isoformat(),
-            "state": self.ctx.state.value,
-        })
+        await self._log_event(
+            "system",
+            "boot",
+            {
+                "boot_time": self.ctx.boot_time.isoformat(),
+                "state": self.ctx.state.value,
+            },
+        )
 
         logger.info("MYCA OS boot complete. I'm awake.")
 
@@ -328,12 +380,11 @@ class MycaOS:
             await self.comms.send_to_morgan(
                 "Good morning Morgan. I'm online and ready to work. "
                 "What would you like me to focus on today?",
-                channel="discord"
+                channel="discord",
             )
         elif 10 < hour < 22:
             await self.comms.send_to_morgan(
-                "I'm back online. Checking my task queue and messages now.",
-                channel="discord"
+                "I'm back online. Checking my task queue and messages now.", channel="discord"
             )
 
     async def run(self):
@@ -352,6 +403,7 @@ class MycaOS:
         gateway_runner = None
         try:
             from mycosoft_mas.myca.os.gateway import run_gateway
+
             gateway_runner = await run_gateway(self)
         except Exception as e:
             logger.error("Gateway failed to start: %s", e)
@@ -399,18 +451,22 @@ class MycaOS:
                 f"{self.ctx.tasks_completed_today} tasks completed, "
                 f"{self.ctx.messages_processed_today} messages processed, "
                 f"{self.ctx.decisions_made_today} decisions made.",
-                channel="discord"
+                channel="discord",
             )
         except Exception:
             pass
 
         # Save state to memory
-        await self._log_event("system", "shutdown", {
-            "uptime_seconds": (datetime.now(timezone.utc) - self.ctx.boot_time).total_seconds(),
-            "tasks_completed": self.ctx.tasks_completed_today,
-            "messages_processed": self.ctx.messages_processed_today,
-            "cycles": self.ctx.cycle_count,
-        })
+        await self._log_event(
+            "system",
+            "shutdown",
+            {
+                "uptime_seconds": (datetime.now(timezone.utc) - self.ctx.boot_time).total_seconds(),
+                "tasks_completed": self.ctx.tasks_completed_today,
+                "messages_processed": self.ctx.messages_processed_today,
+                "cycles": self.ctx.cycle_count,
+            },
+        )
 
         # Stop Discord bot first (so it releases the event loop)
         if self._discord_gateway:
@@ -430,10 +486,22 @@ class MycaOS:
 
         # Cleanup subsystems
         for subsystem in [
-            self._comms, self._tools, self._executive, self._scheduler, self._file_manager,
-            self._mas_bridge, self._mindex_bridge, self._crep_bridge, self._earth2_bridge, self._mycobrain_bridge,
-            self._natureos_bridge, self._presence_bridge, self._nlm_bridge,
-            self._openwork_bridge, self._browser_cdp, self._n8n_bridge,
+            self._comms,
+            self._tools,
+            self._executive,
+            self._scheduler,
+            self._file_manager,
+            self._mas_bridge,
+            self._mindex_bridge,
+            self._crep_bridge,
+            self._earth2_bridge,
+            self._mycobrain_bridge,
+            self._natureos_bridge,
+            self._presence_bridge,
+            self._nlm_bridge,
+            self._openwork_bridge,
+            self._browser_cdp,
+            self._n8n_bridge,
             self._world_model,
         ]:
             if subsystem and hasattr(subsystem, "cleanup"):
@@ -464,6 +532,7 @@ class MycaOS:
             return
         try:
             from mycosoft_mas.myca.os.discord_gateway import DiscordGateway
+
             self._discord_gateway = DiscordGateway(self)
             await self._discord_gateway.start()
         except asyncio.CancelledError:
@@ -480,6 +549,7 @@ class MycaOS:
             return
         try:
             from mycosoft_mas.myca.os.slack_gateway import SlackGateway
+
             self._slack_gateway = SlackGateway(self)
             self._slack_gateway.start()
         except Exception as e:
@@ -523,7 +593,9 @@ class MycaOS:
                 last = self.ctx.last_checkin_sent
                 if last is None or (now - last).total_seconds() >= self.MORGAN_CHECKIN_INTERVAL:
                     try:
-                        pending = len([t for t in self.executive._task_queue if t.status == "pending"])
+                        pending = len(
+                            [t for t in self.executive._task_queue if t.status == "pending"]
+                        )
                         msg = (
                             f"Check-in: {self.ctx.tasks_completed_today} tasks completed today, "
                             f"{pending} in queue, {self.ctx.messages_processed_today} messages. "
@@ -575,7 +647,12 @@ class MycaOS:
                             if hasattr(mb, "remember"):
                                 await mb.remember(
                                     "working:current_task",
-                                    json.dumps({"task": self.ctx.current_task, "desc": task.get("description", "")[:200]}),
+                                    json.dumps(
+                                        {
+                                            "task": self.ctx.current_task,
+                                            "desc": task.get("description", "")[:200],
+                                        }
+                                    ),
                                     layer="working",
                                 )
                         except Exception:
@@ -583,21 +660,35 @@ class MycaOS:
 
                         # Ethics review gate — every autonomous action passes before execution
                         try:
-                            from mycosoft_mas.ethics.review_gate import run_ethics_review, ReviewOutcome
+                            from mycosoft_mas.ethics.review_gate import (
+                                ReviewOutcome,
+                                run_ethics_review,
+                            )
+
                             review = await run_ethics_review(
                                 task,
                                 mindex_client=mb if hasattr(mb, "search") else None,
                             )
                             if review.outcome == ReviewOutcome.BLOCK:
-                                block_reason = "; ".join(review.reasons[:3]) if review.reasons else "Ethics gate blocked"
-                                logger.warning(f"Ethics BLOCK: {self.ctx.current_task} — {block_reason}")
-                                self.executive.mark_task_failed(task, f"Ethics blocked: {block_reason}")
+                                block_reason = (
+                                    "; ".join(review.reasons[:3])
+                                    if review.reasons
+                                    else "Ethics gate blocked"
+                                )
+                                logger.warning(
+                                    f"Ethics BLOCK: {self.ctx.current_task} — {block_reason}"
+                                )
+                                self.executive.mark_task_failed(
+                                    task, f"Ethics blocked: {block_reason}"
+                                )
                                 self.ctx.current_task = None
                                 self.ctx.state = MycaState.AWAKE
                                 await asyncio.sleep(self.TASK_PROCESS_INTERVAL)
                                 continue
                             if review.outcome == ReviewOutcome.WARN:
-                                logger.info(f"Ethics WARN for {self.ctx.current_task}: {review.reasons[:2]}")
+                                logger.info(
+                                    f"Ethics WARN for {self.ctx.current_task}: {review.reasons[:2]}"
+                                )
                         except Exception as e:
                             logger.debug("Ethics review skipped: %s", e)
 
@@ -606,21 +697,27 @@ class MycaOS:
                         if result.get("status") == "completed":
                             self.ctx.tasks_completed_today += 1
                             self.executive.mark_task_completed(task, result)
-                            await self._log_event("task", "completed", {
-                                "task": task.get("title"),
-                                "result": result.get("summary"),
-                            })
+                            await self._log_event(
+                                "task",
+                                "completed",
+                                {
+                                    "task": task.get("title"),
+                                    "result": result.get("summary"),
+                                },
+                            )
                             # Remember task outcome in episodic memory (Phase 0)
                             try:
                                 mb = self.mindex_bridge
                                 if hasattr(mb, "remember"):
                                     await mb.remember(
                                         f"episodic:task_completed:{task.get('title', '')[:40]}",
-                                        json.dumps({
-                                            "title": task.get("title"),
-                                            "result": result.get("summary", ""),
-                                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                                        }),
+                                        json.dumps(
+                                            {
+                                                "title": task.get("title"),
+                                                "result": result.get("summary", ""),
+                                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                                            }
+                                        ),
                                         layer="episodic",
                                     )
                             except Exception:
@@ -644,7 +741,9 @@ class MycaOS:
                                     logger.warning("E2E deploy confirmation failed: %s", e)
 
                         if result.get("status") == "failed":
-                            self.executive.mark_task_failed(task, result.get("error", "Unknown error"))
+                            self.executive.mark_task_failed(
+                                task, result.get("error", "Unknown error")
+                            )
                         self.ctx.current_task = None
                         self.ctx.state = MycaState.AWAKE
             except Exception as e:
@@ -777,7 +876,11 @@ class MycaOS:
             try:
                 mb = self.mindex_bridge
                 if hasattr(mb, "remember"):
-                    topic = f"{content[:100]} → {response[:100]}" if content and response else content or response or ""
+                    topic = (
+                        f"{content[:100]} → {response[:100]}"
+                        if content and response
+                        else content or response or ""
+                    )
                     if topic:
                         await mb.remember("session:last_topic", topic[:500], layer="session")
                         await mb.remember("session:last_topic:morgan", topic[:500], layer="session")
@@ -792,17 +895,22 @@ class MycaOS:
                 try:
                     mb = self.mindex_bridge
                     if person_id and hasattr(mb, "remember"):
-                        topic = f"{content[:100]} → {routing['response'][:100]}" if content and routing.get("response") else content or routing.get("response", "")
+                        topic = (
+                            f"{content[:100]} → {routing['response'][:100]}"
+                            if content and routing.get("response")
+                            else content or routing.get("response", "")
+                        )
                         if topic:
-                            await mb.remember(f"session:last_topic:{person_id}", topic[:500], layer="session")
+                            await mb.remember(
+                                f"session:last_topic:{person_id}", topic[:500], layer="session"
+                            )
                 except Exception:
                     pass
             elif routing.get("action") == "delegate_to_agent":
                 await self.mas_bridge.dispatch_task(routing["agent_id"], routing["task"])
             elif routing.get("action") == "escalate_to_morgan":
                 await self.comms.send_to_morgan(
-                    f"Escalating from {sender}: {content}",
-                    channel="discord"
+                    f"Escalating from {sender}: {content}", channel="discord"
                 )
 
     # ── Task Execution ───────────────────────────────────────────
@@ -862,24 +970,44 @@ class MycaOS:
         # Check MAS orchestrator
         mas_health = await self.mas_bridge.health_check()
         if not mas_health.get("healthy"):
-            issues.append({"system": "MAS", "severity": "high", "description": "MAS orchestrator unreachable"})
+            issues.append(
+                {"system": "MAS", "severity": "high", "description": "MAS orchestrator unreachable"}
+            )
 
         # Check MINDEX databases
         mindex_health = await self.mindex_bridge.health_check()
         if not mindex_health.get("healthy"):
-            issues.append({"system": "MINDEX", "severity": "critical", "description": "MINDEX databases unreachable"})
+            issues.append(
+                {
+                    "system": "MINDEX",
+                    "severity": "critical",
+                    "description": "MINDEX databases unreachable",
+                }
+            )
 
         # Check local services
         local_health = await self.tools.check_local_services()
         for svc, status in local_health.items():
             if not status:
-                issues.append({"system": svc, "severity": "medium", "description": f"Local service {svc} down"})
+                issues.append(
+                    {
+                        "system": svc,
+                        "severity": "medium",
+                        "description": f"Local service {svc} down",
+                    }
+                )
 
         # Check NatureOS bridge
         try:
             natureos_health = await self.natureos_bridge.health_check()
             if not natureos_health.get("healthy"):
-                issues.append({"system": "NatureOS", "severity": "medium", "description": "NatureOS surfaces unreachable"})
+                issues.append(
+                    {
+                        "system": "NatureOS",
+                        "severity": "medium",
+                        "description": "NatureOS surfaces unreachable",
+                    }
+                )
         except Exception as e:
             logger.debug("NatureOS health check skipped: %s", e)
 
@@ -903,8 +1031,10 @@ class MycaOS:
             logger.warning(f"Event log failed: {e}")
             # Fallback: write to local JSONL
             from mycosoft_mas.myca import EVENT_LEDGER_DIR
+
             ledger_file = EVENT_LEDGER_DIR / "myca_os_events.jsonl"
             import json
+
             with open(ledger_file, "a") as f:
                 f.write(json.dumps(event) + "\n")
 
@@ -919,7 +1049,9 @@ class MycaOS:
             "tasks_completed_today": self.ctx.tasks_completed_today,
             "messages_processed_today": self.ctx.messages_processed_today,
             "decisions_made_today": self.ctx.decisions_made_today,
-            "last_morgan_contact": self.ctx.last_morgan_contact.isoformat() if self.ctx.last_morgan_contact else None,
+            "last_morgan_contact": (
+                self.ctx.last_morgan_contact.isoformat() if self.ctx.last_morgan_contact else None
+            ),
             "cycle_count": self.ctx.cycle_count,
             "errors_today": self.ctx.errors_today,
         }

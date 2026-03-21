@@ -101,4 +101,3 @@ class TruthArbitrator:
             score=best_score,
             considered=len(candidates),
         )
-

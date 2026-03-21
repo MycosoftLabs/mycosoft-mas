@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 
 import psycopg2
 from psycopg2.extras import Json
+
 from mycosoft_mas.monitoring.prometheus_utils import get_counter
 
 from .models import ToolAction
@@ -64,8 +65,7 @@ class ActionAuditLogger:
         conn = psycopg2.connect(self.database_url)
         conn.autocommit = True
         cur = conn.cursor()
-        cur.execute(
-            """
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS action_audit_log (
                 id SERIAL PRIMARY KEY,
                 action_type TEXT NOT NULL,
@@ -81,8 +81,7 @@ class ActionAuditLogger:
                 error TEXT,
                 created_at TIMESTAMPTZ DEFAULT now()
             );
-            """
-        )
+            """)
         cur.close()
         conn.close()
 

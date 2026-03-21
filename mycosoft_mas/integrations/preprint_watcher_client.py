@@ -207,7 +207,9 @@ class PreprintWatcherClient:
         )
         return results
 
-    async def get_biorxiv_by_doi(self, doi: str, server: str = "biorxiv") -> Optional[Dict[str, Any]]:
+    async def get_biorxiv_by_doi(
+        self, doi: str, server: str = "biorxiv"
+    ) -> Optional[Dict[str, Any]]:
         """Get single bioRxiv/medRxiv paper by DOI."""
         client = await self._get_client()
         doi_clean = doi.replace("https://doi.org/", "").strip()
@@ -233,7 +235,7 @@ class PreprintWatcherClient:
             status["sources"]["biorxiv"] = False
             status["biorxiv_error"] = str(e)
         try:
-            arxiv = await self.get_arxiv_recent(max_results=1)
+            await self.get_arxiv_recent(max_results=1)
             status["sources"]["arxiv"] = True
         except Exception as e:
             status["sources"]["arxiv"] = False

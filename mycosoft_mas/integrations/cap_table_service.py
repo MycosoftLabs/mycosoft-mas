@@ -18,9 +18,7 @@ except Exception:  # pragma: no cover
 class CapTableService:
     def __init__(self, database_url: Optional[str] = None):
         self._database_url = (
-            database_url
-            or os.getenv("DATABASE_URL")
-            or os.getenv("MINDEX_DATABASE_URL")
+            database_url or os.getenv("DATABASE_URL") or os.getenv("MINDEX_DATABASE_URL")
         )
         self._pool: Optional["asyncpg.Pool"] = None
 
@@ -32,8 +30,7 @@ class CapTableService:
         self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=4)
         async with self._pool.acquire() as conn:
             await conn.execute("CREATE SCHEMA IF NOT EXISTS mindex;")
-            await conn.execute(
-                """
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.cap_table_entries (
                     id TEXT PRIMARY KEY,
                     stakeholder_id TEXT,
@@ -50,8 +47,7 @@ class CapTableService:
                     ON mindex.cap_table_entries (stakeholder_id);
                 CREATE INDEX IF NOT EXISTS idx_cap_table_effective_at
                     ON mindex.cap_table_entries (effective_at DESC);
-                """
-            )
+                """)
 
     async def record_safe_investment(self, agreement: Dict[str, Any]) -> str:
         await self.initialize()

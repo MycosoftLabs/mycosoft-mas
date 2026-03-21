@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 class RateLimiter:
     """Rate limiter with exponential backoff."""
-    
+
     def __init__(
         self,
         requests_per_second: float = 3.0,
@@ -38,29 +38,29 @@ class RateLimiter:
         self.max_delay = max_delay
         self.last_request_time = 0.0
         self.consecutive_errors = 0
-    
+
     async def wait(self):
         """Wait appropriate time before next request."""
         now = asyncio.get_event_loop().time()
         elapsed = now - self.last_request_time
-        
+
         # Base wait time
         wait_time = max(0, self.min_interval - elapsed)
-        
+
         # Add backoff for errors
         if self.consecutive_errors > 0:
-            backoff = min(self.max_delay, 2 ** self.consecutive_errors)
+            backoff = min(self.max_delay, 2**self.consecutive_errors)
             wait_time = max(wait_time, backoff)
-        
+
         if wait_time > 0:
             await asyncio.sleep(wait_time)
-        
+
         self.last_request_time = asyncio.get_event_loop().time()
-    
+
     def success(self):
         """Record successful request."""
         self.consecutive_errors = 0
-    
+
     def failure(self):
         """Record failed request."""
         self.consecutive_errors += 1
@@ -69,7 +69,7 @@ class RateLimiter:
 class GenBankScraper:
     """
     Enhanced scraper for NCBI GenBank fungal sequences.
-    
+
     Fetches:
     - ITS sequences (fungal barcoding - primary)
     - LSU/28S rRNA sequences
@@ -77,15 +77,15 @@ class GenBankScraper:
     - Protein-coding genes (RPB1, RPB2, TEF1)
     - Whole genome sequences
     """
-    
+
     ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
     EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
     ESUMMARY_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
     EINFO_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/einfo.fcgi"
-    
+
     # Fungi taxonomy ID
     FUNGI_TAXID = 4751
-    
+
     # Gene regions commonly used for fungal identification
     GENE_REGIONS = {
         "ITS": "internal transcribed spacer",
@@ -102,7 +102,7 @@ class GenBankScraper:
         "CO1": "cytochrome c oxidase subunit 1",
         "COI": "cytochrome c oxidase subunit I",
     }
-    
+
     def __init__(
         self,
         db=None,
@@ -112,7 +112,7 @@ class GenBankScraper:
     ):
         """
         Initialize GenBank scraper.
-        
+
         Args:
             db: Database connection
             api_key: NCBI API key (get from https://www.ncbi.nlm.nih.gov/account/settings/)
@@ -123,13 +123,13 @@ class GenBankScraper:
         self.api_key = api_key or os.environ.get("NCBI_API_KEY")
         self.blob_manager = blob_manager
         self.email = email
-        
+
         # Rate limit: 10/sec with API key, 3/sec without
         requests_per_second = 10.0 if self.api_key else 3.0
         self.rate_limiter = RateLimiter(requests_per_second=requests_per_second)
-        
+
         self.seen_accessions: Set[str] = set()
-    
+
     def _get_params(self, base_params: Dict) -> Dict:
         """Add common parameters to request."""
         params = {**base_params}
@@ -138,7 +138,7 @@ class GenBankScraper:
         params["email"] = self.email
         params["tool"] = "mycosoft-mindex"
         return params
-    
+
     async def _make_request(
         self,
         session: aiohttp.ClientSession,
@@ -148,10 +148,10 @@ class GenBankScraper:
     ) -> Optional[str]:
         """Make request with rate limiting and retries."""
         params = self._get_params(params)
-        
+
         for attempt in range(max_retries):
             await self.rate_limiter.wait()
-            
+
             try:
                 async with session.get(
                     url,
@@ -162,7 +162,7 @@ class GenBankScraper:
                         self.rate_limiter.success()
                         return await response.text()
                     elif response.status == 429:
-                        logger.warning(f"Rate limited by NCBI, backing off...")
+                        logger.warning("Rate limited by NCBI, backing off...")
                         self.rate_limiter.failure()
                         continue
                     elif response.status >= 500:
@@ -178,9 +178,9 @@ class GenBankScraper:
             except aiohttp.ClientError as e:
                 logger.error(f"Network error: {e}")
                 self.rate_limiter.failure()
-        
+
         return None
-    
+
     async def search_sequences(
         self,
         query: Optional[str] = None,
@@ -193,7 +193,7 @@ class GenBankScraper:
     ) -> Tuple[List[str], int]:
         """
         Search for fungal sequences in GenBank.
-        
+
         Returns:
             Tuple of (list of accession IDs, total count)
         """
@@ -201,19 +201,19 @@ class GenBankScraper:
         if session is None:
             session = aiohttp.ClientSession()
             close_session = True
-        
+
         try:
             # Build search query
             if not query:
                 gene_terms = self.GENE_REGIONS.get(gene, gene)
                 query = f'"{organism}"[Organism] AND ("{gene}"[Gene] OR "{gene_terms}"[Title])'
-                query += f' AND {min_length}:{max_length}[SLEN]'
-            
+                query += f" AND {min_length}:{max_length}[SLEN]"
+
             accessions = []
             total_count = 0
             retstart = 0
             batch_size = min(limit, 10000)  # NCBI max is 10000
-            
+
             while len(accessions) < limit:
                 params = {
                     "db": "nucleotide",
@@ -223,39 +223,40 @@ class GenBankScraper:
                     "retmode": "json",
                     "sort": "relevance",
                 }
-                
+
                 response = await self._make_request(session, self.ESEARCH_URL, params)
                 if not response:
                     break
-                
+
                 try:
                     import json
+
                     data = json.loads(response)
                     result = data.get("esearchresult", {})
-                    
+
                     ids = result.get("idlist", [])
                     if not ids:
                         break
-                    
+
                     accessions.extend(ids)
                     total_count = int(result.get("count", len(accessions)))
-                    
+
                     if len(ids) < batch_size:
                         break  # No more results
-                    
+
                     retstart += batch_size
-                    
+
                 except Exception as e:
                     logger.error(f"Error parsing search response: {e}")
                     break
-            
+
             logger.info(f"Found {len(accessions)} sequences (total: {total_count}) for {gene}")
             return accessions[:limit], total_count
-            
+
         finally:
             if close_session:
                 await session.close()
-    
+
     async def fetch_sequences(
         self,
         accessions: List[str],
@@ -265,7 +266,7 @@ class GenBankScraper:
     ) -> List[Dict[str, Any]]:
         """
         Fetch sequence details and FASTA by accession IDs.
-        
+
         Args:
             accessions: List of accession/GI numbers
             batch_size: Batch size for fetching
@@ -276,13 +277,13 @@ class GenBankScraper:
         if session is None:
             session = aiohttp.ClientSession()
             close_session = True
-        
+
         try:
             sequences = []
-            
+
             for i in range(0, len(accessions), batch_size):
-                batch = accessions[i:i + batch_size]
-                
+                batch = accessions[i : i + batch_size]
+
                 # Fetch GenBank format for metadata
                 gb_params = {
                     "db": "nucleotide",
@@ -290,18 +291,18 @@ class GenBankScraper:
                     "rettype": "gb",
                     "retmode": "xml",
                 }
-                
+
                 xml_data = await self._make_request(session, self.EFETCH_URL, gb_params)
                 if xml_data:
                     parsed = self._parse_genbank_xml(xml_data)
-                    
+
                     # Calculate GC content
                     for seq in parsed:
                         if seq.get("sequence"):
                             seq["gc_content"] = self._calculate_gc_content(seq["sequence"])
-                    
+
                     sequences.extend(parsed)
-                
+
                 # Also fetch FASTA format for clean sequences
                 if save_fasta and self.blob_manager:
                     fasta_params = {
@@ -310,61 +311,61 @@ class GenBankScraper:
                         "rettype": "fasta",
                         "retmode": "text",
                     }
-                    
+
                     fasta_data = await self._make_request(session, self.EFETCH_URL, fasta_params)
                     if fasta_data:
                         await self._save_fasta_sequences(fasta_data, sequences)
-                
+
                 logger.info(f"Fetched batch {i//batch_size + 1}, total: {len(sequences)} sequences")
-            
+
             return sequences
-            
+
         finally:
             if close_session:
                 await session.close()
-    
+
     def _parse_genbank_xml(self, xml_data: str) -> List[Dict[str, Any]]:
         """Parse GenBank XML response with enhanced metadata extraction."""
         sequences = []
-        
+
         try:
             root = ET.fromstring(xml_data)
-            
+
             for seq in root.findall(".//GBSeq"):
                 try:
                     accession = seq.findtext("GBSeq_primary-accession")
-                    
+
                     # Skip if already processed
                     if accession in self.seen_accessions:
                         continue
                     self.seen_accessions.add(accession)
-                    
+
                     organism = seq.findtext("GBSeq_organism")
                     definition = seq.findtext("GBSeq_definition")
                     sequence = seq.findtext("GBSeq_sequence") or ""
-                    
+
                     # Get additional metadata
                     gi_number = None
                     for other_id in seq.findall(".//GBSeqid"):
                         if other_id.text and other_id.text.startswith("gi|"):
                             gi_number = other_id.text.split("|")[1]
                             break
-                    
+
                     # Determine gene region from definition
                     gene_region = self._detect_gene_region(definition)
-                    
+
                     # Extract features
                     strain = None
                     country = None
                     collection_date = None
                     specimen_voucher = None
                     pubmed_ids = []
-                    
+
                     for feat in seq.findall(".//GBFeature"):
                         for qual in feat.findall(".//GBQualifier"):
                             name = qual.findtext("GBQualifier_name")
                             value = qual.findtext("GBQualifier_value")
-                            
+
                             if name == "strain" and not strain:
                                 strain = value
                             elif name == "isolate" and not strain:
@@ -375,17 +376,17 @@ class GenBankScraper:
                                 collection_date = value
                             elif name == "specimen_voucher":
                                 specimen_voucher = value
-                    
+
                     # Extract PubMed IDs from references
                     for ref in seq.findall(".//GBReference"):
                         pmid = ref.findtext(".//GBReference_pubmed")
                         if pmid:
                             pubmed_ids.append(pmid)
-                    
+
                     # Parse creation date
                     create_date = seq.findtext("GBSeq_create-date")
                     update_date = seq.findtext("GBSeq_update-date")
-                    
+
                     record = {
                         "accession": accession,
                         "gi_number": gi_number,
@@ -405,29 +406,29 @@ class GenBankScraper:
                         "source": "GenBank",
                         "source_url": f"https://www.ncbi.nlm.nih.gov/nuccore/{accession}",
                     }
-                    
+
                     sequences.append(record)
-                    
+
                 except Exception as e:
                     logger.debug(f"Error parsing sequence: {e}")
-                    
+
         except ET.ParseError as e:
             logger.error(f"Error parsing GenBank XML: {e}")
-        
+
         return sequences
-    
+
     def _detect_gene_region(self, definition: str) -> Optional[str]:
         """Detect gene region from sequence definition."""
         if not definition:
             return None
-        
+
         def_lower = definition.lower()
-        
+
         # Check for specific gene regions
         for gene, description in self.GENE_REGIONS.items():
             if gene.lower() in def_lower or description.lower() in def_lower:
                 return gene
-        
+
         # Additional patterns
         if "its1" in def_lower and "its2" in def_lower:
             return "ITS"
@@ -435,38 +436,38 @@ class GenBankScraper:
             return "ITS"
         elif "genome" in def_lower:
             return "genome"
-        
+
         return None
-    
+
     def _extract_species_name(self, organism: str) -> Optional[str]:
         """Extract species binomial from organism field."""
         if not organism:
             return None
-        
+
         # Remove strain/isolate info in parentheses
-        name = re.sub(r'\s*\([^)]*\)', '', organism)
-        
+        name = re.sub(r"\s*\([^)]*\)", "", organism)
+
         # Get first two words (genus + species)
         parts = name.split()
         if len(parts) >= 2:
             return f"{parts[0]} {parts[1]}"
-        
+
         return name.strip()
-    
+
     def _calculate_gc_content(self, sequence: str) -> float:
         """Calculate GC content percentage."""
         if not sequence:
             return 0.0
-        
+
         sequence = sequence.upper()
-        gc_count = sequence.count('G') + sequence.count('C')
-        total = len(sequence.replace('N', ''))  # Exclude ambiguous bases
-        
+        gc_count = sequence.count("G") + sequence.count("C")
+        total = len(sequence.replace("N", ""))  # Exclude ambiguous bases
+
         if total == 0:
             return 0.0
-        
+
         return round((gc_count / total) * 100, 2)
-    
+
     async def _save_fasta_sequences(
         self,
         fasta_data: str,
@@ -475,27 +476,27 @@ class GenBankScraper:
         """Save FASTA sequences to blob storage."""
         if not self.blob_manager:
             return
-        
+
         # Parse FASTA and match to sequence records
         current_header = None
         current_seq = []
-        
-        for line in fasta_data.split('\n'):
+
+        for line in fasta_data.split("\n"):
             line = line.strip()
-            if line.startswith('>'):
+            if line.startswith(">"):
                 # Save previous sequence
                 if current_header and current_seq:
-                    await self._save_single_fasta(current_header, ''.join(current_seq), sequences)
-                
+                    await self._save_single_fasta(current_header, "".join(current_seq), sequences)
+
                 current_header = line[1:]  # Remove >
                 current_seq = []
             elif line:
                 current_seq.append(line)
-        
+
         # Save last sequence
         if current_header and current_seq:
-            await self._save_single_fasta(current_header, ''.join(current_seq), sequences)
-    
+            await self._save_single_fasta(current_header, "".join(current_seq), sequences)
+
     async def _save_single_fasta(
         self,
         header: str,
@@ -504,20 +505,20 @@ class GenBankScraper:
     ) -> None:
         """Save a single FASTA sequence."""
         # Extract accession from header
-        accession_match = re.match(r'(\S+)', header)
+        accession_match = re.match(r"(\S+)", header)
         if not accession_match:
             return
-        
+
         accession_part = accession_match.group(1)
-        
+
         # Find matching sequence record
         for seq_record in sequences:
             if seq_record.get("accession") in accession_part:
                 fasta_content = f">{header}\n"
                 # Wrap sequence at 70 characters
                 for i in range(0, len(sequence), 70):
-                    fasta_content += sequence[i:i+70] + "\n"
-                
+                    fasta_content += sequence[i : i + 70] + "\n"
+
                 result = await self.blob_manager.download_sequence(
                     url_or_content=fasta_content,
                     accession=seq_record["accession"],
@@ -526,12 +527,12 @@ class GenBankScraper:
                     source="GenBank",
                     is_content=True,
                 )
-                
+
                 if result.get("success"):
                     seq_record["blob_path"] = result.get("file_path")
-                
+
                 break
-    
+
     async def fetch_fungal_its(
         self,
         limit: int = 1000,
@@ -550,7 +551,7 @@ class GenBankScraper:
             session=session,
         )
         return await self.fetch_sequences(accessions, session=session)
-    
+
     async def fetch_species_sequences(
         self,
         species_name: str,
@@ -560,7 +561,7 @@ class GenBankScraper:
     ) -> List[Dict[str, Any]]:
         """
         Fetch all sequences for a specific species.
-        
+
         Args:
             species_name: Scientific name (e.g., "Amanita muscaria")
             gene_regions: List of gene regions to fetch (default: ITS, LSU, SSU)
@@ -568,34 +569,34 @@ class GenBankScraper:
         """
         if gene_regions is None:
             gene_regions = ["ITS", "LSU", "SSU"]
-        
+
         close_session = False
         if session is None:
             session = aiohttp.ClientSession()
             close_session = True
-        
+
         try:
             all_sequences = []
-            
+
             for gene in gene_regions:
                 query = f'"{species_name}"[Organism] AND ({gene}[Gene] OR {self.GENE_REGIONS.get(gene, gene)}[Title])'
-                
+
                 accessions, _ = await self.search_sequences(
                     query=query,
                     limit=limit,
                     session=session,
                 )
-                
+
                 if accessions:
                     sequences = await self.fetch_sequences(accessions, session=session)
                     all_sequences.extend(sequences)
-            
+
             return all_sequences
-            
+
         finally:
             if close_session:
                 await session.close()
-    
+
     async def sync(
         self,
         gene_regions: Optional[List[str]] = None,
@@ -603,42 +604,42 @@ class GenBankScraper:
     ) -> Dict[str, int]:
         """
         Full sync of fungal sequences from GenBank.
-        
+
         Args:
             gene_regions: Gene regions to fetch (default: ITS, LSU, SSU)
             limit_per_gene: Max sequences per gene region
         """
         if gene_regions is None:
             gene_regions = ["ITS", "LSU", "SSU", "RPB2", "TEF1"]
-        
+
         stats = {
             "total_fetched": 0,
             "total_saved": 0,
             "by_gene": {},
         }
-        
+
         async with aiohttp.ClientSession() as session:
             for gene in gene_regions:
                 logger.info(f"Syncing {gene} sequences...")
-                
+
                 accessions, total = await self.search_sequences(
                     gene=gene,
                     limit=limit_per_gene,
                     session=session,
                 )
-                
+
                 sequences = await self.fetch_sequences(
                     accessions,
                     session=session,
                     save_fasta=True,
                 )
-                
+
                 stats["total_fetched"] += len(sequences)
                 stats["by_gene"][gene] = {
                     "fetched": len(sequences),
                     "total_available": total,
                 }
-                
+
                 # Save to database
                 if self.db:
                     saved = 0
@@ -648,17 +649,17 @@ class GenBankScraper:
                             saved += 1
                         except Exception as e:
                             logger.error(f"Error saving sequence {seq.get('accession')}: {e}")
-                    
+
                     stats["total_saved"] += saved
                     stats["by_gene"][gene]["saved"] = saved
-        
+
         return stats
-    
+
     async def _save_sequence(self, seq: Dict[str, Any]) -> None:
         """Save sequence to MINDEX database."""
         if not self.db:
             return
-        
+
         query = """
         INSERT INTO core.dna_sequences (
             scientific_name, accession, gi_number, gene_region,
@@ -674,7 +675,7 @@ class GenBankScraper:
             metadata = core.dna_sequences.metadata || EXCLUDED.metadata,
             updated_at = NOW()
         """
-        
+
         # Convert collection_date string to date if possible
         collection_date = None
         if seq.get("collection_date"):
@@ -688,7 +689,7 @@ class GenBankScraper:
                         continue
             except Exception:
                 pass
-        
+
         await self.db.execute(
             query,
             seq.get("scientific_name"),

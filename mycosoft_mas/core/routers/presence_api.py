@@ -18,6 +18,7 @@ from fastapi import APIRouter
 
 try:
     from sse_starlette.sse import EventSourceResponse
+
     SSE_AVAILABLE = True
 except ImportError:
     SSE_AVAILABLE = False
@@ -112,6 +113,7 @@ async def presence_stream():
     """SSE stream of presence changes (updates every 5 seconds)."""
     if not SSE_AVAILABLE:
         from fastapi import HTTPException
+
         raise HTTPException(500, "SSE not available: sse-starlette not installed")
 
     async def event_generator():

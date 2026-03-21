@@ -5,10 +5,10 @@ Scientific datasets API routes.
 import os
 from typing import Optional
 
-from fastapi import APIRouter
 import httpx
+from fastapi import APIRouter
 
-from mycosoft_mas.scientific.db_models import ScientificDataStore, ScientificDatasetCreate
+from mycosoft_mas.scientific.db_models import ScientificDatasetCreate, ScientificDataStore
 
 router = APIRouter(prefix="/api/scientific", tags=["scientific"])
 

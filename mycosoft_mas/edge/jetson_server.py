@@ -30,18 +30,21 @@ logger = logging.getLogger(__name__)
 # Optional: jetson-inference / jetson-utils (only available on Jetson)
 try:
     import cv2
+
     HAS_CV2 = True
 except ImportError:
     HAS_CV2 = False
 
 try:
-    from jetson_utils import cudaImage, videoSource
+    from jetson_utils import videoSource
+
     HAS_JETSON_UTILS = True
 except ImportError:
     HAS_JETSON_UTILS = False
 
 try:
     from faster_whisper import WhisperModel
+
     HAS_WHISPER = True
 except ImportError:
     HAS_WHISPER = False
@@ -104,7 +107,8 @@ def _capture_frame() -> Optional[bytes]:
                 return None
             # jetson-utils: need to encode to JPEG (cudaImage)
             if HAS_CV2:
-                import numpy as np
+                pass
+
                 arr = img.numpy() if hasattr(img, "numpy") else None
                 if arr is not None:
                     _, jpeg = cv2.imencode(".jpg", arr)
@@ -127,10 +131,7 @@ def _stream_frames() -> Generator[bytes, None, None]:
         if frame is None:
             time.sleep(0.033)  # ~30fps
             continue
-        yield (
-            b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
-        )
+        yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
         time.sleep(0.033)
 
 
@@ -222,6 +223,7 @@ async def inference(
     if input_type == "image" and HAS_CV2:
         try:
             import numpy as np
+
             frame_array = np.frombuffer(payload, dtype=np.uint8)
             frame = cv2.imdecode(frame_array, cv2.IMREAD_COLOR)
             if frame is not None:
@@ -271,6 +273,7 @@ async def deploy_model(body: Dict[str, Any]) -> Dict[str, Any]:
 def main() -> None:
     """Run server. Use: uvicorn mycosoft_mas.edge.jetson_server:app --host 0.0.0.0 --port 8080"""
     import uvicorn
+
     port = int(os.getenv("JETSON_SERVER_PORT", "8080"))
     uvicorn.run(app, host="0.0.0.0", port=port)
 

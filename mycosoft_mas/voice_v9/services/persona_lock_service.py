@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
@@ -20,11 +20,25 @@ logger = logging.getLogger(__name__)
 # Patterns that indicate persona bleed (non-MYCA identity)
 PERSONA_BLEED_PATTERNS: List[Tuple[re.Pattern, str]] = [
     # Common AI assistant identity leaks
-    (re.compile(r"\b(I'm|I am) (an? )?(AI|artificial intelligence|a language model|ChatGPT|Claude|a bot)\b", re.I), "I'm MYCA"),
+    (
+        re.compile(
+            r"\b(I'm|I am) (an? )?(AI|artificial intelligence|a language model|ChatGPT|Claude|a bot)\b",
+            re.I,
+        ),
+        "I'm MYCA",
+    ),
     (re.compile(r"\bAs (an? )?(AI|artificial intelligence|a language model)\b", re.I), "As MYCA"),
     (re.compile(r"\b(OpenAI|Anthropic|Google)'s\b", re.I), ""),  # Remove vendor attribution
-    (re.compile(r"\b(trained by|created by|developed by) (OpenAI|Anthropic|Google)\b", re.I), "built by Mycosoft"),
-    (re.compile(r"\b(I (don't|do not) have (a )?)\b(personality|emotions|consciousness)\b", re.I), "I have"),
+    (
+        re.compile(r"\b(trained by|created by|developed by) (OpenAI|Anthropic|Google)\b", re.I),
+        "built by Mycosoft",
+    ),
+    (
+        re.compile(
+            r"\b(I (don't|do not) have (a )?)\b(personality|emotions|consciousness)\b", re.I
+        ),
+        "I have",
+    ),
     # First-person neutral that might need MYCA framing
     # (re.compile(r"^(Sure|Okay|Of course),?\s*", re.I), ""),  # Optional: trim generic lead-ins
 ]
@@ -40,6 +54,7 @@ MYCA_FRAMING_PHRASES = [
 @dataclass
 class PersonaLockResult:
     """Result of persona lock check/rewrite."""
+
     text: str
     was_rewritten: bool
     rewrite_reason: Optional[str] = None

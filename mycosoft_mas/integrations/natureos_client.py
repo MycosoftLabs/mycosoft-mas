@@ -42,9 +42,7 @@ class NATUREOSClient:
         self.mas_base_url = os.environ.get("MAS_API_URL")
         self.timeout = timeout
 
-    async def _post(
-        self, path: str, json: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def _post(self, path: str, json: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         url = f"{self.base_url}{path}"
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             response = await client.post(url, json=json or {})
@@ -65,36 +63,28 @@ class NATUREOSClient:
             json={"deviceId": device_id},
         )
 
-    async def forecast_environmental(
-        self, metric: str, hours: int = 24
-    ) -> Dict[str, Any]:
+    async def forecast_environmental(self, metric: str, hours: int = 24) -> Dict[str, Any]:
         """Environmental forecasting via MATLAB (temperature, humidity, etc.)."""
         return await self._post(
             "/api/Matlab/forecast",
             json={"metric": metric, "horizonHours": hours},
         )
 
-    async def classify_morphology(
-        self, signal_vector: List[float]
-    ) -> Dict[str, Any]:
+    async def classify_morphology(self, signal_vector: List[float]) -> Dict[str, Any]:
         """Fungal morphology classification from signal vector via MATLAB."""
         return await self._post(
             "/api/Matlab/classification",
             json={"signalVector": signal_vector},
         )
 
-    async def anomaly_detection_timeseries(
-        self, time_series: List[float]
-    ) -> Dict[str, Any]:
+    async def anomaly_detection_timeseries(self, time_series: List[float]) -> Dict[str, Any]:
         """Run anomaly detection on raw time series data."""
         return await self._post(
             "/api/Matlab/anomaly-detection",
             json={"timeSeries": time_series},
         )
 
-    async def generate_visualization(
-        self, plot_type: str, data: Dict[str, Any]
-    ) -> bytes:
+    async def generate_visualization(self, plot_type: str, data: Dict[str, Any]) -> bytes:
         """Generate plot image from MATLAB."""
         url = f"{self.base_url}/api/Matlab/visualization"
         async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -105,9 +95,7 @@ class NATUREOSClient:
             response.raise_for_status()
             return response.content
 
-    async def execute_analysis(
-        self, function_name: str, args: List[Any]
-    ) -> Dict[str, Any]:
+    async def execute_analysis(self, function_name: str, args: List[Any]) -> Dict[str, Any]:
         """Execute named MATLAB analysis function."""
         return await self._post(
             f"/api/Matlab/analysis/{function_name}",
@@ -127,9 +115,7 @@ class NATUREOSClient:
             args = [params]
         return await self.execute_analysis(simulation_type, args)
 
-    async def get_earth2_forecast(
-        self, forecast_payload: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def get_earth2_forecast(self, forecast_payload: Dict[str, Any]) -> Dict[str, Any]:
         """Run Earth-2 forecast via MAS."""
         if not self.mas_base_url:
             raise ValueError("MAS_API_URL is not configured")

@@ -41,9 +41,12 @@ def _env_any(*names: str) -> str:
 
 class OmnichannelSendRequest(BaseModel):
     """Request to send a message to a platform."""
+
     platform: str = Field(..., description="slack|discord|whatsapp|signal|email|asana")
     channel_id: Optional[str] = Field(None, description="Channel ID for slack/discord")
-    recipient: Optional[str] = Field(None, description="Phone for whatsapp/signal, email for email, task_gid for asana")
+    recipient: Optional[str] = Field(
+        None, description="Phone for whatsapp/signal, email for email, task_gid for asana"
+    )
     thread_id: Optional[str] = Field(None, description="Thread ID for slack/discord")
     text: str = Field(..., description="Message text")
     subject: Optional[str] = Field(None, description="Email subject when platform=email")
@@ -52,6 +55,7 @@ class OmnichannelSendRequest(BaseModel):
 
 class OmnichannelReceiveRequest(BaseModel):
     """Normalized message from ingestion workflow."""
+
     platform_source: str = Field(..., description="slack|discord|whatsapp|signal|email|asana")
     channel_id: Optional[str] = None
     sender_id: str = Field(..., description="Platform-specific sender ID")
@@ -64,12 +68,14 @@ class OmnichannelReceiveRequest(BaseModel):
 
 class VerifySenderRequest(BaseModel):
     """Request to verify sender authorization."""
+
     platform: str = Field(...)
     sender_id: str = Field(...)
 
 
 class VerifySenderResponse(BaseModel):
     """Response from sender verification."""
+
     authorized: bool
     role: str = "none"
     email: str = ""
@@ -82,28 +88,33 @@ class VerifySenderResponse(BaseModel):
 
 def _get_slack_client():
     from mycosoft_mas.integrations.slack_client import SlackClient
+
     token = _env_any("MYCA_SLACK_BOT_TOKEN", "SLACK_BOT_TOKEN", "SLACK_OAUTH_TOKEN")
     return SlackClient({"token": token})
 
 
 def _get_discord_client():
     from mycosoft_mas.integrations.discord_client import DiscordClient
+
     return DiscordClient()
 
 
 def _get_whatsapp_client():
     from mycosoft_mas.integrations.whatsapp_client import WhatsAppClient
+
     return WhatsAppClient()
 
 
 def _get_signal_client():
     from mycosoft_mas.integrations.signal_client import SignalClient
+
     return SignalClient()
 
 
 def _get_google_client():
     try:
         from mycosoft_mas.integrations.google_workspace_client import GoogleWorkspaceClient
+
         return GoogleWorkspaceClient()
     except ImportError:
         return None
@@ -111,11 +122,13 @@ def _get_google_client():
 
 def _get_asana_client():
     from mycosoft_mas.integrations.asana_client import AsanaClient
+
     return AsanaClient({"api_key": _env_any("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN")})
 
 
 def _get_platform_access():
     from mycosoft_mas.security.platform_access import PlatformAccessControl
+
     return PlatformAccessControl()
 
 
@@ -186,6 +199,7 @@ async def omnichannel_send(req: OmnichannelSendRequest) -> Dict[str, Any]:
 
 class OmnichannelForwardRequest(BaseModel):
     """Forward normalized payload to n8n intent orchestrator."""
+
     platform_source: str = Field(...)
     channel_id: Optional[str] = None
     sender_id: str = Field(...)
@@ -205,6 +219,7 @@ async def omnichannel_forward(req: OmnichannelForwardRequest) -> Dict[str, Any]:
     url = f"{base.rstrip('/')}/webhook/myca/intent/orchestrator"
     try:
         import httpx
+
         async with httpx.AsyncClient(timeout=30) as client:
             r = await client.post(url, json=req.model_dump(exclude_none=True))
             r.raise_for_status()
@@ -249,7 +264,7 @@ async def omnichannel_status() -> Dict[str, Any]:
 
     # Slack
     try:
-        sc = _get_slack_client()
+        _get_slack_client()
         tok = _env_any("MYCA_SLACK_BOT_TOKEN", "SLACK_BOT_TOKEN", "SLACK_OAUTH_TOKEN")
         status["slack"] = {"configured": bool(tok), "healthy": bool(tok)}
     except Exception as e:
@@ -257,7 +272,7 @@ async def omnichannel_status() -> Dict[str, Any]:
 
     # Discord
     try:
-        dc = _get_discord_client()
+        _get_discord_client()
         tok = _env_any("MYCA_DISCORD_TOKEN", "DISCORD_BOT_TOKEN")
         status["discord"] = {"configured": bool(tok), "healthy": bool(tok)}
     except Exception as e:
@@ -288,7 +303,7 @@ async def omnichannel_status() -> Dict[str, Any]:
 
     # Asana
     try:
-        ac = _get_asana_client()
+        _get_asana_client()
         tok = _env_any("ASANA_API_KEY", "ASANA_PAT", "MYCA_ASANA_TOKEN")
         status["asana"] = {"configured": bool(tok), "healthy": bool(tok)}
     except Exception as e:

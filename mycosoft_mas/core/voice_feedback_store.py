@@ -37,8 +37,7 @@ class VoiceFeedbackStore:
     def _init_db(self) -> None:
         with self._lock:
             with self._connect() as conn:
-                conn.execute(
-                    """
+                conn.execute("""
                     CREATE TABLE IF NOT EXISTS voice_feedback (
                       feedback_id TEXT PRIMARY KEY,
                       created_at TEXT NOT NULL,
@@ -50,8 +49,7 @@ class VoiceFeedbackStore:
                       success INTEGER NULL,
                       notes TEXT NULL
                     );
-                    """
-                )
+                    """)
                 conn.execute(
                     "CREATE INDEX IF NOT EXISTS idx_voice_feedback_created_at ON voice_feedback(created_at);"
                 )
@@ -169,4 +167,6 @@ class VoiceFeedbackStore:
         if not rated:
             return "No user feedback captured yet."
         avg = sum(rated) / len(rated)
-        return f"Recent feedback: avg rating {avg:.2f}/5 across last {len(rated)} rated interactions." 
+        return (
+            f"Recent feedback: avg rating {avg:.2f}/5 across last {len(rated)} rated interactions."
+        )

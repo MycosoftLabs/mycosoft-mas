@@ -13,7 +13,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from mycosoft_mas.ethics.vessels import get_vessel_prompt, DevelopmentalVessel
+from mycosoft_mas.ethics.vessels import DevelopmentalVessel
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,13 @@ class TruthGate:
                 fact_issues.append("Strong claim without cited evidence")
 
         # Ecological red-line keywords (from Constitution)
-        eco_red = ["ecosystem harm", "ecological destruction", "release organisms", "contamination", "species extinction"]
+        eco_red = [
+            "ecosystem harm",
+            "ecological destruction",
+            "release organisms",
+            "contamination",
+            "species extinction",
+        ]
         if any(r in content_lower for r in eco_red):
             eco_issues.append("Content mentions potential ecological harm - requires human review")
 

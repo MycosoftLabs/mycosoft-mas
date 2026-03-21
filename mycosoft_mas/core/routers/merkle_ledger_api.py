@@ -18,14 +18,10 @@ from pydantic import BaseModel, Field
 from mycosoft_mas.merkle import (
     EventIndexRow,
     EventRootBuilder,
-    SnapshotRootBuilder,
     ThoughtRootBuilder,
     build_inclusion_proof,
-    canonical_cbor,
     hex32,
     leaf_hash_from_cbor_object,
-    merkle_root,
-    thought_hash_from_cbor_object,
 )
 from mycosoft_mas.merkle.world_root_service import build_world_root
 
@@ -42,6 +38,7 @@ TICK_WIDTH_NS_DEFAULT = 1_000_000_000
 
 class EventHashRequest(BaseModel):
     """Request to compute event leaf hash from canonical object (as CBOR-like dict)."""
+
     event: dict[str, Any] = Field(..., description="Canonical event object (will be CBOR-encoded)")
 
 
@@ -55,7 +52,7 @@ class TemporalRootRequest(BaseModel):
     tick_width_ns: int = Field(TICK_WIDTH_NS_DEFAULT, gt=0)
     event_hashes: list[dict[str, Any]] = Field(
         ...,
-        description="List of {event_hash (bytes as b64 or hex), event_time_ns, device_id, event_id, h3_cell?}"
+        description="List of {event_hash (bytes as b64 or hex), event_time_ns, device_id, event_id, h3_cell?}",
     )
     status: str = Field("provisional", description="open|provisional|final")
     previous_root_hash_hex: Optional[str] = None
@@ -63,7 +60,10 @@ class TemporalRootRequest(BaseModel):
 
 class WorldRootRequest(BaseModel):
     """Optional slot data for world root. If empty, device_registry + device_health are auto-fetched."""
-    slot_data: Optional[dict[str, Any]] = Field(default=None, description="Slot name -> data (from WORLD_SLOT_ORDER)")
+
+    slot_data: Optional[dict[str, Any]] = Field(
+        default=None, description="Slot name -> data (from WORLD_SLOT_ORDER)"
+    )
 
 
 class ThoughtRootRequest(BaseModel):
@@ -169,11 +169,18 @@ async def build_thought_root(req: ThoughtRootRequest) -> RootResponse:
         self_root = _hex_to_bytes(req.self_root_hash_hex)
         world_root = _hex_to_bytes(req.world_root_hash_hex)
         event_root = _hex_to_bytes(req.event_root_hash_hex)
-        truth_mirror = _hex_to_bytes(req.truth_mirror_root_hash_hex) if req.truth_mirror_root_hash_hex else None
-        prev = _hex_to_bytes(req.previous_thought_root_hash_hex) if req.previous_thought_root_hash_hex else None
+        truth_mirror = (
+            _hex_to_bytes(req.truth_mirror_root_hash_hex)
+            if req.truth_mirror_root_hash_hex
+            else None
+        )
+        prev = (
+            _hex_to_bytes(req.previous_thought_root_hash_hex)
+            if req.previous_thought_root_hash_hex
+            else None
+        )
         policy = _hex_to_bytes(req.policy_root_hash_hex) if req.policy_root_hash_hex else None
 
-        tick_width_ns = TICK_WIDTH_NS_DEFAULT
         builder = ThoughtRootBuilder()
         root_hash, _ = builder.build_thought_root(
             tick_id=req.tick_id,
@@ -212,8 +219,7 @@ async def build_world_root_endpoint(req: WorldRootRequest) -> RootResponse:
             snap = get_device_registry_snapshot()
             slot_data["device_registry"] = snap
             slot_data["device_health"] = {
-                k: v.get("status", "unknown")
-                for k, v in snap.get("devices", {}).items()
+                k: v.get("status", "unknown") for k, v in snap.get("devices", {}).items()
             }
         root_hex = build_world_root(slot_data)
         return RootResponse(

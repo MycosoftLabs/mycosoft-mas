@@ -12,10 +12,9 @@ NO MOCK DATA — Routes to real agents via the registry + runner.
 """
 
 import logging
-import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -27,8 +26,11 @@ router = APIRouter(prefix="/api/tasks", tags=["Task Intake"])
 
 class TaskSubmission(BaseModel):
     """A task to submit to the MAS."""
+
     description: str = Field(..., description="What needs to be done")
-    task_type: Optional[str] = Field(None, description="Explicit task type (query, etl, search, deploy, etc.)")
+    task_type: Optional[str] = Field(
+        None, description="Explicit task type (query, etl, search, deploy, etc.)"
+    )
     target_agent: Optional[str] = Field(None, description="Specific agent ID to route to")
     priority: str = Field("normal", description="low, normal, high, critical")
     payload: Dict[str, Any] = Field(default_factory=dict, description="Additional task data")
@@ -55,6 +57,7 @@ def _route_task_to_agent(task: TaskSubmission) -> Optional[str]:
 
     try:
         from mycosoft_mas.core.agent_registry import get_agent_registry
+
         registry = get_agent_registry()
 
         # Try type-based routing
@@ -117,7 +120,7 @@ async def submit_task(task: TaskSubmission) -> Dict[str, Any]:
 
     # Publish to Redis tasks:progress channel
     try:
-        from mycosoft_mas.realtime.redis_pubsub import get_client, Channel
+        from mycosoft_mas.realtime.redis_pubsub import Channel, get_client
 
         client = await get_client()
         if client.is_connected():
@@ -139,6 +142,7 @@ async def submit_task(task: TaskSubmission) -> Dict[str, Any]:
     # Log to event ledger
     try:
         from mycosoft_mas.myca.event_ledger.ledger_writer import get_ledger
+
         ledger = get_ledger()
         ledger.log_tool_call(
             agent=task.source,
@@ -152,6 +156,7 @@ async def submit_task(task: TaskSubmission) -> Dict[str, Any]:
     # Queue task in the runner if agent is available
     try:
         from mycosoft_mas.core.agent_runner import get_agent_runner
+
         runner = get_agent_runner()
         for agent in runner._agents:
             aid = getattr(agent, "agent_id", None)
@@ -209,6 +214,7 @@ async def get_routable_agents() -> Dict[str, Any]:
     """Get list of agents that can receive tasks, with their capabilities."""
     try:
         from mycosoft_mas.core.agent_registry import get_agent_registry
+
         registry = get_agent_registry()
         agents = registry.list_active()
 

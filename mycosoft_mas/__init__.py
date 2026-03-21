@@ -22,7 +22,7 @@ def create_app() -> FastAPI:
     @app.get("/metrics")
     async def metrics() -> Response:
         # Minimal Prometheus-compatible output for unit tests.
-        body = "python_info{implementation=\"cpython\"} 1\n"
+        body = 'python_info{implementation="cpython"} 1\n'
         return Response(content=body, media_type="text/plain; version=0.0.4")
 
     return app

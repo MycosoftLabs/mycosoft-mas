@@ -10,7 +10,7 @@ Environment Variables:
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -18,9 +18,21 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_BASE = "https://api.www.sbir.gov/public/api"
 
-VALID_AGENCIES = frozenset({
-    "DHS", "DOT", "ED", "DOC", "EPA", "USDA", "DOE", "NSF", "NASA", "HHS", "DOD",
-})
+VALID_AGENCIES = frozenset(
+    {
+        "DHS",
+        "DOT",
+        "ED",
+        "DOC",
+        "EPA",
+        "USDA",
+        "DOE",
+        "NSF",
+        "NASA",
+        "HHS",
+        "DOD",
+    }
+)
 
 
 class SbirClient:
@@ -76,9 +88,18 @@ class SbirClient:
             r = await client.get("/solicitations", params=params)
             if r.is_success:
                 data = r.json()
-                items = data if isinstance(data, list) else data.get("solicitations", data.get("data", []))
+                items = (
+                    data
+                    if isinstance(data, list)
+                    else data.get("solicitations", data.get("data", []))
+                )
                 return {"status": "success", "solicitations": items, "count": len(items)}
-            return {"status": "error", "status_code": r.status_code, "solicitations": [], "count": 0}
+            return {
+                "status": "error",
+                "status_code": r.status_code,
+                "solicitations": [],
+                "count": 0,
+            }
         except Exception as e:
             logger.warning("SBIR search_solicitations failed: %s", e)
             return {"status": "error", "error": str(e), "solicitations": [], "count": 0}
@@ -87,17 +108,13 @@ class SbirClient:
         self, agency: Optional[str] = None, rows: int = 25
     ) -> Dict[str, Any]:
         """Get all open solicitations."""
-        return await self.search_solicitations(
-            agency=agency, open_only=True, rows=rows, start=0
-        )
+        return await self.search_solicitations(agency=agency, open_only=True, rows=rows, start=0)
 
     async def get_closed_solicitations(
         self, agency: Optional[str] = None, rows: int = 25
     ) -> Dict[str, Any]:
         """Get all closed solicitations."""
-        return await self.search_solicitations(
-            agency=agency, closed_only=True, rows=rows, start=0
-        )
+        return await self.search_solicitations(agency=agency, closed_only=True, rows=rows, start=0)
 
     async def search_awards(
         self,

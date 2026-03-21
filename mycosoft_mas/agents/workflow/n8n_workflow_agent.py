@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 try:
     from mycosoft_mas.agents.base_agent import BaseAgent
@@ -56,7 +56,15 @@ class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # typ
             self.agent_id = agent_id
             self.name = name
             self.config = config or {}
-        self.capabilities = ["workflow", "execute", "trigger", "list", "activate", "deactivate", "sync"]
+        self.capabilities = [
+            "workflow",
+            "execute",
+            "trigger",
+            "list",
+            "activate",
+            "deactivate",
+            "sync",
+        ]
 
     def _engine(self):
         return _get_engine()
@@ -76,7 +84,10 @@ class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # typ
                 workflow_name = task.get("workflow_name") or task.get("workflow_id")
                 parameters = task.get("parameters") or task.get("data") or {}
                 if not workflow_name:
-                    return {"status": "error", "result": {"error": "workflow_name or workflow_id required"}}
+                    return {
+                        "status": "error",
+                        "result": {"error": "workflow_name or workflow_id required"},
+                    }
                 engine = self._engine()
                 wf = await self._run_sync(engine.get_workflow_by_name, str(workflow_name))
                 if not wf:
@@ -86,12 +97,17 @@ class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # typ
                     except Exception:
                         wf = None
                 if not wf:
-                    return {"status": "error", "result": {"error": f"Workflow not found: {workflow_name}"}}
+                    return {
+                        "status": "error",
+                        "result": {"error": f"Workflow not found: {workflow_name}"},
+                    }
                 workflow_id = wf.get("id")
                 client = _get_n8n_client()
                 webhook_path = _extract_webhook_path(wf)
                 if webhook_path:
-                    result = await client.trigger_workflow(f"webhook/{webhook_path}", data=parameters)
+                    result = await client.trigger_workflow(
+                        f"webhook/{webhook_path}", data=parameters
+                    )
                 else:
                     return {
                         "status": "error",
@@ -99,7 +115,10 @@ class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # typ
                             "error": "Workflow has no webhook trigger; execution by ID is not supported."
                         },
                     }
-                return {"status": "success", "result": {"workflow_id": workflow_id, "triggered": True, "response": result}}
+                return {
+                    "status": "success",
+                    "result": {"workflow_id": workflow_id, "triggered": True, "response": result},
+                }
 
             if task_type == "list_workflows":
                 engine = self._engine()
@@ -107,19 +126,31 @@ class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # typ
                 category = task.get("category")
                 if category:
                     from mycosoft_mas.core.n8n_workflow_engine import WorkflowCategory
-                    cat_enum = getattr(WorkflowCategory, str(category).upper(), None) or WorkflowCategory.CUSTOM
+
+                    cat_enum = (
+                        getattr(WorkflowCategory, str(category).upper(), None)
+                        or WorkflowCategory.CUSTOM
+                    )
                 else:
                     cat_enum = None
-                workflows = await self._run_sync(engine.list_workflows, active_only=active_only, category=cat_enum)
+                workflows = await self._run_sync(
+                    engine.list_workflows, active_only=active_only, category=cat_enum
+                )
                 return {
                     "status": "success",
-                    "result": {"workflows": [w.to_dict() for w in workflows], "count": len(workflows)},
+                    "result": {
+                        "workflows": [w.to_dict() for w in workflows],
+                        "count": len(workflows),
+                    },
                 }
 
             if task_type == "get_workflow":
                 workflow_id = task.get("workflow_id") or task.get("workflow_name")
                 if not workflow_id:
-                    return {"status": "error", "result": {"error": "workflow_id or workflow_name required"}}
+                    return {
+                        "status": "error",
+                        "result": {"error": "workflow_id or workflow_name required"},
+                    }
                 engine = self._engine()
                 wf = await self._run_sync(engine.get_workflow_by_name, str(workflow_id))
                 if not wf:
@@ -128,7 +159,10 @@ class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # typ
                     except Exception:
                         wf = None
                 if not wf:
-                    return {"status": "error", "result": {"error": f"Workflow not found: {workflow_id}"}}
+                    return {
+                        "status": "error",
+                        "result": {"error": f"Workflow not found: {workflow_id}"},
+                    }
                 return {"status": "success", "result": {"workflow": wf}}
 
             if task_type == "activate":
@@ -137,7 +171,10 @@ class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # typ
                     return {"status": "error", "result": {"error": "workflow_id required"}}
                 engine = self._engine()
                 out = await self._run_sync(engine.activate_workflow, workflow_id)
-                return {"status": "success", "result": {"workflow_id": workflow_id, "activated": True, "response": out}}
+                return {
+                    "status": "success",
+                    "result": {"workflow_id": workflow_id, "activated": True, "response": out},
+                }
 
             if task_type == "deactivate":
                 workflow_id = task.get("workflow_id")
@@ -145,12 +182,17 @@ class N8NWorkflowAgent(BaseAgent if BaseAgent is not object else object):  # typ
                     return {"status": "error", "result": {"error": "workflow_id required"}}
                 engine = self._engine()
                 out = await self._run_sync(engine.deactivate_workflow, workflow_id)
-                return {"status": "success", "result": {"workflow_id": workflow_id, "deactivated": True, "response": out}}
+                return {
+                    "status": "success",
+                    "result": {"workflow_id": workflow_id, "deactivated": True, "response": out},
+                }
 
             if task_type == "sync_all":
                 engine = self._engine()
                 activate_core = task.get("activate_core", True)
-                sync_result = await self._run_sync(engine.sync_all_local_workflows, activate_core=activate_core)
+                sync_result = await self._run_sync(
+                    engine.sync_all_local_workflows, activate_core=activate_core
+                )
                 return {
                     "status": "success",
                     "result": {

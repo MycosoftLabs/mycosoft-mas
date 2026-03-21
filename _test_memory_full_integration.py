@@ -302,7 +302,7 @@ def test_memory_persistence():
         r = requests.post(f"{MAS_URL}/api/memory/read", json=payload, timeout=10)
         if r.status_code == 200:
             data = r.json()
-            if data and data.get("value", {}).get("persistent") == True:
+            if data and data.get("value", {}).get("persistent") is True:
                 log_test("Memory Persistence Read", "PASS", "Value persisted correctly")
             else:
                 log_test("Memory Persistence Read", "FAIL", f"Value mismatch: {data}")

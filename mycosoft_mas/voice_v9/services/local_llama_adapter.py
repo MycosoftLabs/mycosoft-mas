@@ -16,7 +16,9 @@ class LocalLlamaAdapter:
     """Thin adapter for local/remote Ollama-compatible LLM endpoints."""
 
     def __init__(self) -> None:
-        self.base_url = os.getenv("VOICE_V9_LOCAL_LLAMA_URL", "http://192.168.0.188:11434").rstrip("/")
+        self.base_url = os.getenv("VOICE_V9_LOCAL_LLAMA_URL", "http://192.168.0.188:11434").rstrip(
+            "/"
+        )
         self.model = os.getenv("VOICE_V9_LOCAL_LLAMA_MODEL", "llama3.1:8b")
         self.timeout_sec = float(os.getenv("VOICE_V9_LOCAL_LLAMA_TIMEOUT", "12"))
 

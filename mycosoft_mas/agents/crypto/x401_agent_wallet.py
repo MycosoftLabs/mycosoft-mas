@@ -33,6 +33,7 @@ class X401AgentWalletAgent(BaseAgent):
         if self._solana is None:
             try:
                 from mycosoft_mas.integrations.solana_client import SolanaClient
+
                 self._solana = SolanaClient(self.config)
             except ImportError:
                 logger.warning("SolanaClient not available - X401 agent limited")
@@ -42,6 +43,7 @@ class X401AgentWalletAgent(BaseAgent):
         if self._phantom is None:
             try:
                 from mycosoft_mas.integrations.phantom_client import PhantomClient
+
                 self._phantom = PhantomClient(self.config)
             except ImportError:
                 logger.warning("PhantomClient not available - X401 agent limited")

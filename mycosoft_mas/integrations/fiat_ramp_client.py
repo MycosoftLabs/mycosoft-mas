@@ -11,10 +11,10 @@ Env vars:
     TRANSAK_API_KEY        -- Transak API key
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import httpx
 
@@ -30,7 +30,9 @@ class FiatRampClient:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.moonpay_key = self.config.get("moonpay_api_key") or os.getenv("MOONPAY_API_KEY", "")
-        self.moonpay_secret = self.config.get("moonpay_secret_key") or os.getenv("MOONPAY_SECRET_KEY", "")
+        self.moonpay_secret = self.config.get("moonpay_secret_key") or os.getenv(
+            "MOONPAY_SECRET_KEY", ""
+        )
         self.transak_key = self.config.get("transak_api_key") or os.getenv("TRANSAK_API_KEY", "")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None

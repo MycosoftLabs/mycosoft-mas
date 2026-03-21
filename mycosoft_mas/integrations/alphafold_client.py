@@ -9,7 +9,7 @@ Environment Variables:
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -90,7 +90,9 @@ class AlphaFoldClient:
             logger.warning("AlphaFold fetch_pdb_content failed: %s", e)
             return None
 
-    async def get_uniprot_summary(self, uniprot_id: str, start: Optional[int] = None, end: Optional[int] = None) -> Optional[Dict[str, Any]]:
+    async def get_uniprot_summary(
+        self, uniprot_id: str, start: Optional[int] = None, end: Optional[int] = None
+    ) -> Optional[Dict[str, Any]]:
         """Get UniProt summary for a residue range (qualifier format: uniprot_id or uniprot_id-start-end)."""
         client = await self._get_client()
         qualifier = uniprot_id

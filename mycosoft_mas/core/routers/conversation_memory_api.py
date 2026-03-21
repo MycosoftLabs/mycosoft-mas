@@ -28,6 +28,7 @@ _conversations: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
 
 class StoreRequest(BaseModel):
     """Body for POST /memory/store."""
+
     session_id: Optional[str] = None
     user_id: Optional[str] = "default"
     message: str = Field(..., description="Message content")
@@ -85,16 +86,22 @@ async def store_message(body: StoreRequest) -> Dict[str, Any]:
         }
         user_convos.append(convo)
 
-    convo["messages"].append({
-        "role": body.role,
-        "content": body.message,
-        "timestamp": ts,
-        "agent": body.agent,
-    })
+    convo["messages"].append(
+        {
+            "role": body.role,
+            "content": body.message,
+            "timestamp": ts,
+            "agent": body.agent,
+        }
+    )
     convo["updated_at"] = ts
     if body.context:
         for k, v in (body.context or {}).items():
-            if k in convo["context"] and isinstance(convo["context"][k], list) and isinstance(v, list):
+            if (
+                k in convo["context"]
+                and isinstance(convo["context"][k], list)
+                and isinstance(v, list)
+            ):
                 convo["context"][k] = list(set(convo["context"][k]) | set(v))
             elif isinstance(v, list):
                 convo["context"][k] = v
@@ -113,7 +120,9 @@ async def clear_memory(
     if user_id not in _conversations:
         return {"cleared": True, "source": "mas"}
     if session_id:
-        _conversations[user_id] = [c for c in _conversations[user_id] if c.get("session_id") != session_id]
+        _conversations[user_id] = [
+            c for c in _conversations[user_id] if c.get("session_id") != session_id
+        ]
     else:
         _conversations[user_id] = []
     return {"cleared": True, "source": "mas"}

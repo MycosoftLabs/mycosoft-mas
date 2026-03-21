@@ -5,7 +5,7 @@ Provides endpoints to submit errors for triage and query triage history.
 Created: February 17, 2026
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -17,7 +17,9 @@ class TriageRequest(BaseModel):
     """Request to triage an error."""
 
     error_message: str = Field(..., description="Error message or exception text")
-    source: str = Field(default="api", description="Source: chat, consciousness, api, background_task, vm_health")
+    source: str = Field(
+        default="api", description="Source: chat, consciousness, api, background_task, vm_health"
+    )
     context: Optional[Dict[str, Any]] = Field(None, description="Optional context")
     traceback: Optional[str] = Field(None, description="Optional traceback string")
 
@@ -55,9 +57,8 @@ async def triage_error(req: TriageRequest) -> TriageResponse:
             context=req.context,
             traceback=req.traceback,
         )
-        dispatched = (
-            result.feasibility == FixFeasibility.AUTO_FIXABLE
-            and bool(svc._n8n_webhook_url)
+        dispatched = result.feasibility == FixFeasibility.AUTO_FIXABLE and bool(
+            svc._n8n_webhook_url
         )
         return TriageResponse(
             error_id=result.error_id,

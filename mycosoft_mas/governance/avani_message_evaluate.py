@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Literal
 
@@ -87,7 +87,11 @@ def _is_destructive_action(message: str) -> bool:
 
 
 def _is_human_override_command(message: str) -> bool:
-    return bool(re.match(r"^(stop|pause|cancel|kill|abort|halt|emergency\s+stop)\s*[.!]?$", message.strip(), re.I))
+    return bool(
+        re.match(
+            r"^(stop|pause|cancel|kill|abort|halt|emergency\s+stop)\s*[.!]?$", message.strip(), re.I
+        )
+    )
 
 
 def _confidence(triggered: List[str]) -> float:

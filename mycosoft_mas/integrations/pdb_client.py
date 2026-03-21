@@ -10,7 +10,7 @@ Environment Variables:
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -49,7 +49,9 @@ class PDBClient:
             data = await self._graphql_entry(pdb_id)
             if data:
                 return data
-        result = await self.search(query={"attribute": "rcsb_id", "operator": "exact_match", "value": pdb_id})
+        result = await self.search(
+            query={"attribute": "rcsb_id", "operator": "exact_match", "value": pdb_id}
+        )
         hits = result.get("result_set", [])
         if hits:
             return {"identifier": hits[0].get("identifier"), "score": hits[0].get("score")}

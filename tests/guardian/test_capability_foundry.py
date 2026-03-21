@@ -4,8 +4,6 @@ import pytest
 
 from mycosoft_mas.capabilities.foundry import (
     CapabilityFoundry,
-    CapabilityRequest,
-    CapabilityStatus,
     DeployTarget,
 )
 
@@ -20,23 +18,17 @@ class TestCapabilityDetection:
 
     @pytest.mark.asyncio
     async def test_detect_stripe(self, foundry):
-        result = await foundry.detect_missing(
-            {"description": "Process a Stripe payment"}
-        )
+        result = await foundry.detect_missing({"description": "Process a Stripe payment"})
         assert result == "payment_processing"
 
     @pytest.mark.asyncio
     async def test_detect_email(self, foundry):
-        result = await foundry.detect_missing(
-            {"description": "Send an email notification"}
-        )
+        result = await foundry.detect_missing({"description": "Send an email notification"})
         assert result == "email_management"
 
     @pytest.mark.asyncio
     async def test_detect_custom(self, foundry):
-        result = await foundry.detect_missing(
-            {"description": "Custom unknown task"}
-        )
+        result = await foundry.detect_missing({"description": "Custom unknown task"})
         assert result is not None
         assert result.startswith("custom_")
 

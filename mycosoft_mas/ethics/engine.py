@@ -12,10 +12,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from mycosoft_mas.ethics.truth_gate import TruthGate, TruthGateResult
-from mycosoft_mas.ethics.incentive_gate import IncentiveGate, IncentiveGateResult
-from mycosoft_mas.ethics.horizon_gate import HorizonGate, HorizonGateResult
 from mycosoft_mas.ethics.clarity_brief import ClarityBrief
+from mycosoft_mas.ethics.horizon_gate import HorizonGate, HorizonGateResult
+from mycosoft_mas.ethics.incentive_gate import IncentiveGate, IncentiveGateResult
+from mycosoft_mas.ethics.truth_gate import TruthGate, TruthGateResult
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +109,8 @@ class EthicsEngine:
 
         # Gate 3: Horizon
         horizon_result = await self._horizon_gate.evaluate(
-            content, context,
+            content,
+            context,
             truth_result=truth_result,
             incentive_result=incentive_result,
         )
@@ -131,7 +132,9 @@ class EthicsEngine:
             )
 
         # All passed
-        risk_score = horizon_result.clarity_brief.risk_score if horizon_result.clarity_brief else 0.0
+        risk_score = (
+            horizon_result.clarity_brief.risk_score if horizon_result.clarity_brief else 0.0
+        )
         risk_level = self._score_to_level(risk_score)
 
         return EthicsResult(

@@ -18,9 +18,8 @@ import logging
 import os
 import time
 from collections import defaultdict
-from dataclasses import asdict
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import psutil
 
@@ -186,8 +185,9 @@ class AgentHeartbeatService:
         # Update metrics from runner's recent cycles
         for cycle_data in runner_status.get("recent_cycles", []):
             agent_id = cycle_data.get("agent_id", "unknown")
-            if agent_id not in self._last_cycle_snapshot or \
-               self._last_cycle_snapshot.get(agent_id) != cycle_data.get("cycle_id"):
+            if agent_id not in self._last_cycle_snapshot or self._last_cycle_snapshot.get(
+                agent_id
+            ) != cycle_data.get("cycle_id"):
                 self._agent_metrics[agent_id].record_cycle(cycle_data)
                 self._last_cycle_snapshot[agent_id] = cycle_data.get("cycle_id")
 
@@ -201,9 +201,9 @@ class AgentHeartbeatService:
         # Publish to Redis
         try:
             from mycosoft_mas.realtime.redis_pubsub import (
+                Channel,
                 get_client,
                 publish_agent_status,
-                Channel,
             )
 
             client = await get_client()

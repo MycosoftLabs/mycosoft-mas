@@ -19,7 +19,10 @@ from mycosoft_mas.integrations import plasticity_registry
 from mycosoft_mas.plasticity.fitness_policy import evaluate_fitness, passes_hard_gates
 from mycosoft_mas.plasticity.mutation_engine import apply_mutations
 from mycosoft_mas.plasticity.promotion_controller import promote_to_active, rollback
-from mycosoft_mas.plasticity.security_governance_sandbox import run_sandbox_check, sandbox_check_required
+from mycosoft_mas.plasticity.security_governance_sandbox import (
+    run_sandbox_check,
+    sandbox_check_required,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +31,7 @@ plasticity_router = APIRouter(prefix="/api/plasticity", tags=["plasticity"])
 
 class PromoteRequest(BaseModel):
     """Request to promote a shadow/canary candidate to active for an alias."""
+
     alias: str = Field(..., description="Runtime alias (e.g. myca_core, myca_edge)")
     candidate_id: str = Field(..., description="Candidate to promote")
     decided_by: Optional[str] = Field(None, description="Optional identity for audit")
@@ -35,18 +39,22 @@ class PromoteRequest(BaseModel):
 
 class RollbackRequest(BaseModel):
     """Request to rollback an alias to its candidate's rollback target."""
+
     alias: str = Field(..., description="Runtime alias to rollback")
     decided_by: Optional[str] = Field(None, description="Optional identity for audit")
 
 
 class BranchRequest(BaseModel):
     """Request to branch a candidate by applying mutation operators."""
+
     parent_candidate_id: str = Field(..., description="Existing candidate to branch from")
     operators: List[Dict[str, Any]] = Field(
         ...,
         description="Sequence of {operator, params?}; operator must be in Phase 1 allowed set",
     )
-    new_candidate_id: Optional[str] = Field(None, description="Optional ID for the new candidate; else auto-generated")
+    new_candidate_id: Optional[str] = Field(
+        None, description="Optional ID for the new candidate; else auto-generated"
+    )
 
 
 @plasticity_router.post("/branch")
@@ -58,7 +66,9 @@ def branch_candidate(body: BranchRequest) -> Dict[str, Any]:
     """
     parent = plasticity_registry.get_candidate(body.parent_candidate_id)
     if not parent:
-        raise HTTPException(status_code=404, detail=f"parent_candidate_id not found: {body.parent_candidate_id}")
+        raise HTTPException(
+            status_code=404, detail=f"parent_candidate_id not found: {body.parent_candidate_id}"
+        )
 
     try:
         genome = apply_mutations(
@@ -79,12 +89,18 @@ def branch_candidate(body: BranchRequest) -> Dict[str, Any]:
 
     result = plasticity_registry.create_candidate(payload)
     if not result:
-        raise HTTPException(status_code=502, detail="MINDEX plasticity registry create_candidate failed")
+        raise HTTPException(
+            status_code=502, detail="MINDEX plasticity registry create_candidate failed"
+        )
 
     # Return full candidate from registry
     out = plasticity_registry.get_candidate(genome["candidate_id"])
     if not out:
-        out = {"candidate_id": genome["candidate_id"], "created_at": result.get("created_at"), **genome}
+        out = {
+            "candidate_id": genome["candidate_id"],
+            "created_at": result.get("created_at"),
+            **genome,
+        }
 
     mid = f"mut_{uuid.uuid4().hex[:16]}"
     plasticity_registry.mutation_run_create(
@@ -232,10 +248,13 @@ def psilo_edge_add(session_id: str, body: PsiloEdgeBody) -> Dict[str, Any]:
 
 @plasticity_router.post("/psilo/session/{session_id}/integration-report")
 def psilo_integration_report(
-    session_id: str, body: Optional[Dict[str, Any]] = Body(default=None),
+    session_id: str,
+    body: Optional[Dict[str, Any]] = Body(default=None),
 ) -> Dict[str, Any]:
     rep = body if body is not None else {}
-    plasticity_registry.psilo_session_patch(session_id, {"integration_report": rep, "status": "completed"})
+    plasticity_registry.psilo_session_patch(
+        session_id, {"integration_report": rep, "status": "completed"}
+    )
     plasticity_registry.psilo_append_event(session_id, "psilo.integration.report", rep)
     return {"session_id": session_id, "ok": True}
 

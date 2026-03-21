@@ -26,12 +26,9 @@ class SignalClient:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.base_url = (
-            self.config.get("base_url")
-            or os.getenv("MYCA_SIGNAL_CLI_URL", DEFAULT_SIGNAL_CLI_URL)
+            self.config.get("base_url") or os.getenv("MYCA_SIGNAL_CLI_URL", DEFAULT_SIGNAL_CLI_URL)
         ).rstrip("/")
-        self.number = self.config.get("number") or os.getenv(
-            "MYCA_SIGNAL_NUMBER", ""
-        )
+        self.number = self.config.get("number") or os.getenv("MYCA_SIGNAL_NUMBER", "")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
 
@@ -110,9 +107,7 @@ class SignalClient:
             return []
         client = await self._get_client()
         try:
-            r = await client.get(
-                "/v1/groups/" + self.number.replace("+", "").replace(" ", "")
-            )
+            r = await client.get("/v1/groups/" + self.number.replace("+", "").replace(" ", ""))
             if r.status_code >= 400:
                 return []
             data = r.json()

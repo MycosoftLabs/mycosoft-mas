@@ -14,17 +14,16 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from mycosoft_mas.engines.self_state_builder import assemble_self_state, from_http_response
+from mycosoft_mas.schemas.codec import canonical_json, hash_sha256
 from mycosoft_mas.schemas.experience_packet import (
     ExperiencePacket,
     GroundTruth,
     Observation,
     ObservationModality,
-    SelfState,
+    Provenance,
     Uncertainty,
     WorldStateRef,
-    Provenance,
 )
-from mycosoft_mas.schemas.codec import canonical_json, hash_sha256
 
 if TYPE_CHECKING:
     from mycosoft_mas.consciousness.core import MYCAConsciousness
@@ -106,10 +105,12 @@ class GroundingGate:
         When STATE_SERVICE_URL is set, uses StateService /state for faster path.
         """
         import os
+
         state_url = os.getenv("STATE_SERVICE_URL", "").rstrip("/")
         if state_url:
             try:
                 import httpx
+
                 async with httpx.AsyncClient(timeout=SELF_STATE_TIMEOUT) as client:
                     r = await client.get(f"{state_url}/state")
                     if r.status_code == 200:
@@ -128,6 +129,7 @@ class GroundingGate:
             # Health checker
             try:
                 from mycosoft_mas.monitoring.health_check import get_health_checker
+
                 checker = get_health_checker()
                 health = await checker.check_all()
                 services = {
@@ -139,6 +141,7 @@ class GroundingGate:
                 }
             except Exception as e:
                 from mycosoft_mas.llm.error_sanitizer import sanitize_for_log
+
                 services = {"error": sanitize_for_log(e), "fallback": True}
 
             # Presence (online users, sessions, staff) from WorldModel
@@ -171,6 +174,7 @@ class GroundingGate:
                         agents["by_status"][s] = agents["by_status"].get(s, 0) + 1
                 except Exception as e:
                     from mycosoft_mas.llm.error_sanitizer import sanitize_for_log
+
                     agents = {"error": sanitize_for_log(e)}
 
             # Active goals from consciousness metrics
@@ -195,16 +199,20 @@ class GroundingGate:
         Otherwise uses WorldModel.get_cached_context().
         """
         import os
+
         state_url = os.getenv("STATE_SERVICE_URL", "").rstrip("/")
         if state_url:
             try:
                 import httpx
+
                 async with httpx.AsyncClient(timeout=WORLD_STATE_TIMEOUT) as client:
                     r = await client.get(f"{state_url}/world")
                     if r.status_code == 200:
                         data = r.json()
                         ep.world_state = WorldStateRef(
-                            snapshot_ts=data.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                            snapshot_ts=data.get(
+                                "timestamp", datetime.now(timezone.utc).isoformat()
+                            ),
                             sources=data.get("sources", []),
                             freshness=data.get("freshness", "unknown"),
                             summary=data.get("summary"),
@@ -251,7 +259,9 @@ class GroundingGate:
         nlm_prediction: Optional[Dict[str, Any]] = None
         try:
             import os
+
             import httpx
+
             mas_url = os.getenv("MAS_API_URL", "http://localhost:8001")
             async with httpx.AsyncClient(timeout=3.0) as client:
                 r = await client.post(
@@ -282,6 +292,7 @@ class GroundingGate:
             ep.provenance.sha256_hash = hash_sha256(canonical)
         except Exception as e:
             from mycosoft_mas.llm.error_sanitizer import sanitize_for_log
+
             logger.warning(f"Provenance hash failed: {sanitize_for_log(e)}")
             ep.uncertainty.missingness["provenance_hash"] = sanitize_for_log(e)
         return ep
@@ -298,8 +309,11 @@ class GroundingGate:
         """
         try:
             import os
+
             import httpx
+
             from mycosoft_mas.schemas.codec import _to_json_serializable
+
             url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
             path = "/api/mindex/grounding/experience-packets"
             payload = _to_json_serializable(ep)
@@ -317,7 +331,10 @@ class GroundingGate:
                         if isinstance(geo, dict):
                             gt["geo"] = geo
                         elif hasattr(geo, "__dict__"):
-                            gt["geo"] = {"lat": getattr(geo, "lat", None), "lon": getattr(geo, "lon", None)}
+                            gt["geo"] = {
+                                "lat": getattr(geo, "lat", None),
+                                "lon": getattr(geo, "lon", None),
+                            }
                 if ep.world_state and ep.world_state.sources:
                     gt["source_domains"] = list(ep.world_state.sources)
                 body = {
@@ -332,7 +349,12 @@ class GroundingGate:
                     "provenance": payload.get("provenance", {}),
                 }
             else:
-                body = {"id": ep.id, "session_id": session_id, "user_id": user_id, "ground_truth": {}}
+                body = {
+                    "id": ep.id,
+                    "session_id": session_id,
+                    "user_id": user_id,
+                    "ground_truth": {},
+                }
             headers = {}
             if os.getenv("MINDEX_API_KEY"):
                 headers["X-API-Key"] = os.getenv("MINDEX_API_KEY")
@@ -355,14 +377,17 @@ class GroundingGate:
                 lon = geo.get("lon") if isinstance(geo, dict) else getattr(geo, "lon", None)
                 if lat is not None and lon is not None:
                     from mycosoft_mas.engines.spatial.service import SpatialService
+
                     svc = SpatialService()
                     await svc.store_point(session_id, float(lat), float(lon), ep_id=ep.id)
         except Exception as e:
             logger.debug("Spatial wire failed: %s", e)
         try:
             if session_id:
-                from mycosoft_mas.engines.temporal.service import TemporalService
                 from datetime import datetime, timezone
+
+                from mycosoft_mas.engines.temporal.service import TemporalService
+
                 svc = TemporalService()
                 now = datetime.now(timezone.utc)
                 if svc.should_start_episode(session_id, None, now):

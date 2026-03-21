@@ -19,6 +19,7 @@ except ImportError:
 def _get_sanitize_extract():
     """Import sanitization helpers from A2A router (module-level, testable)."""
     from mycosoft_mas.core.routers import a2a_api
+
     return a2a_api._sanitize_text, a2a_api._extract_user_message
 
 
@@ -43,7 +44,8 @@ class TestA2ASanitization:
 
     def test_extract_user_message_joins_text_parts(self):
         _, extract = _get_sanitize_extract()
-        from mycosoft_mas.core.routers.a2a_api import PartModel, MessageModel
+        from mycosoft_mas.core.routers.a2a_api import MessageModel, PartModel
+
         msg = MessageModel(
             messageId="m1",
             role="ROLE_USER",
@@ -56,7 +58,8 @@ class TestA2ASanitization:
 
     def test_extract_user_message_sanitizes_parts(self):
         _, extract = _get_sanitize_extract()
-        from mycosoft_mas.core.routers.a2a_api import PartModel, MessageModel
+        from mycosoft_mas.core.routers.a2a_api import MessageModel, PartModel
+
         msg = MessageModel(
             messageId="m1",
             role="ROLE_USER",
@@ -67,7 +70,8 @@ class TestA2ASanitization:
 
     def test_extract_user_message_ignores_url_and_data_parts(self):
         _, extract = _get_sanitize_extract()
-        from mycosoft_mas.core.routers.a2a_api import PartModel, MessageModel
+        from mycosoft_mas.core.routers.a2a_api import MessageModel, PartModel
+
         msg = MessageModel(
             messageId="m1",
             role="ROLE_USER",

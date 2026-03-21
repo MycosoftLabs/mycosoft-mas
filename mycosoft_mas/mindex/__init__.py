@@ -15,7 +15,7 @@ except Exception:  # pragma: no cover
     MINDEXManager = None  # type: ignore[assignment]
 
 try:  # pragma: no cover
-    from .reconciliation import TaxonomicReconciler, TaxonomicMatch, LicenseInfo
+    from .reconciliation import LicenseInfo, TaxonomicMatch, TaxonomicReconciler
 except Exception:  # pragma: no cover
     TaxonomicReconciler = None  # type: ignore[assignment]
     TaxonomicMatch = None  # type: ignore[assignment]

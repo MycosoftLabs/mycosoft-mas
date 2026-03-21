@@ -34,6 +34,7 @@ class GrantAgent(BaseAgent):
         if self._sbir is None:
             try:
                 from mycosoft_mas.integrations.sbir_client import SbirClient
+
                 self._sbir = SbirClient(self.config)
             except ImportError:
                 pass
@@ -43,6 +44,7 @@ class GrantAgent(BaseAgent):
         if self._grants_gov is None:
             try:
                 from mycosoft_mas.integrations.grants_gov_client import GrantsGovClient
+
                 self._grants_gov = GrantsGovClient(self.config)
             except ImportError:
                 pass
@@ -52,6 +54,7 @@ class GrantAgent(BaseAgent):
         if self._sam_gov is None:
             try:
                 from mycosoft_mas.integrations.sam_gov_client import SamGovClient
+
                 self._sam_gov = SamGovClient(self.config)
             except ImportError:
                 pass

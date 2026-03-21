@@ -7,13 +7,13 @@ CI gate: fail-fast on policy violations.
 
 from __future__ import annotations
 
-import pytest
-
 import asyncio
 
+import pytest
+
 from mycosoft_mas.integrations.ucp_commerce_adapter import (
-    RiskTier,
     ApprovalStatus,
+    RiskTier,
     _policy_gate,
     get_ucp_commerce_adapter,
 )

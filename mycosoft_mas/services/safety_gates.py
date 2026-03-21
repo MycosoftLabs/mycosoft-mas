@@ -25,7 +25,9 @@ class SafetyGateService:
 
     def evaluate(self, action_type: str, request: Dict[str, Any]) -> GateDecision:
         if action_type in self.NON_DESTRUCTIVE_ACTIONS:
-            return GateDecision(allowed=True, reason="non_destructive_action", required_approvals=[])
+            return GateDecision(
+                allowed=True, reason="non_destructive_action", required_approvals=[]
+            )
 
         if action_type in {"gripper_close", "arm_move_precise"}:
             return GateDecision(
@@ -39,4 +41,3 @@ class SafetyGateService:
             reason="unknown_action_blocked",
             required_approvals=["human_operator", "safety_admin"],
         )
-

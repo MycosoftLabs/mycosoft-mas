@@ -4,49 +4,53 @@ MAS v2 Agent Runtime Models
 Data models for agent state, configuration, messaging, and metrics.
 """
 
+import json
+from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from datetime import datetime
-from dataclasses import dataclass, field
 from uuid import uuid4
-import json
 
 
 class AgentStatus(str, Enum):
     """Agent lifecycle states"""
-    SPAWNING = "spawning"       # Container initializing
-    ACTIVE = "active"           # Ready and processing
-    BUSY = "busy"               # Processing a task
-    IDLE = "idle"               # Waiting for work
-    PAUSED = "paused"           # Temporarily suspended
-    ERROR = "error"             # Failed state
-    SHUTDOWN = "shutdown"       # Graceful stop in progress
-    DEAD = "dead"               # Unresponsive
-    ARCHIVED = "archived"       # Preserved state (not running)
+
+    SPAWNING = "spawning"  # Container initializing
+    ACTIVE = "active"  # Ready and processing
+    BUSY = "busy"  # Processing a task
+    IDLE = "idle"  # Waiting for work
+    PAUSED = "paused"  # Temporarily suspended
+    ERROR = "error"  # Failed state
+    SHUTDOWN = "shutdown"  # Graceful stop in progress
+    DEAD = "dead"  # Unresponsive
+    ARCHIVED = "archived"  # Preserved state (not running)
 
 
 class MessageType(str, Enum):
     """Agent-to-Agent message types"""
-    REQUEST = "request"         # Task/action request
-    RESPONSE = "response"       # Response to request
-    EVENT = "event"             # Notification event
-    COMMAND = "command"         # Direct command
-    HEARTBEAT = "heartbeat"     # Liveness signal
-    BROADCAST = "broadcast"     # Message to all agents
-    ACK = "ack"                 # Acknowledgment
+
+    REQUEST = "request"  # Task/action request
+    RESPONSE = "response"  # Response to request
+    EVENT = "event"  # Notification event
+    COMMAND = "command"  # Direct command
+    HEARTBEAT = "heartbeat"  # Liveness signal
+    BROADCAST = "broadcast"  # Message to all agents
+    ACK = "ack"  # Acknowledgment
 
 
 class TaskPriority(int, Enum):
     """Task priority levels"""
-    CRITICAL = 10   # Immediate execution
-    HIGH = 8        # Next in queue
-    NORMAL = 5      # Standard priority
-    LOW = 3         # When resources available
+
+    CRITICAL = 10  # Immediate execution
+    HIGH = 8  # Next in queue
+    NORMAL = 5  # Standard priority
+    LOW = 3  # When resources available
     BACKGROUND = 1  # Lowest priority
 
 
 class AgentCategory(str, Enum):
     """Agent category classification"""
+
     CORE = "core"
     CORPORATE = "corporate"
     FINANCIAL = "financial"
@@ -66,40 +70,43 @@ class AgentCategory(str, Enum):
 @dataclass
 class AgentConfig:
     """Agent configuration parameters"""
+
     agent_id: str
     agent_type: str
     category: AgentCategory
     display_name: str
     description: str = ""
     version: str = "1.0.0"
-    
+
     # Resource limits
-    cpu_limit: float = 1.0      # CPU cores
-    memory_limit: int = 512     # MB
+    cpu_limit: float = 1.0  # CPU cores
+    memory_limit: int = 512  # MB
     max_concurrent_tasks: int = 5
-    task_timeout: int = 300     # seconds
-    
+    task_timeout: int = 300  # seconds
+
     # Health check settings
     health_check_interval: int = 30  # seconds
-    heartbeat_interval: int = 10     # seconds
+    heartbeat_interval: int = 10  # seconds
     max_retries: int = 3
-    
+
     # Communication
     capabilities: List[str] = field(default_factory=list)
     dependencies: List[str] = field(default_factory=list)
-    
+
     # Execution
     auto_start: bool = True
     auto_restart: bool = True
-    
+
     # Custom settings
     settings: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "agent_id": self.agent_id,
             "agent_type": self.agent_type,
-            "category": self.category.value if isinstance(self.category, AgentCategory) else self.category,
+            "category": (
+                self.category.value if isinstance(self.category, AgentCategory) else self.category
+            ),
             "display_name": self.display_name,
             "description": self.description,
             "version": self.version,
@@ -116,7 +123,7 @@ class AgentConfig:
             "auto_restart": self.auto_restart,
             "settings": self.settings,
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "AgentConfig":
         category = data.get("category", "custom")
@@ -150,6 +157,7 @@ class AgentConfig:
 @dataclass
 class AgentState:
     """Current state of an agent"""
+
     agent_id: str
     status: AgentStatus
     container_id: Optional[str] = None
@@ -161,7 +169,7 @@ class AgentState:
     error_message: Optional[str] = None
     cpu_usage: float = 0.0
     memory_usage: int = 0
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "agent_id": self.agent_id,
@@ -181,17 +189,18 @@ class AgentState:
 @dataclass
 class AgentMessage:
     """Agent-to-Agent message"""
+
     id: str = field(default_factory=lambda: str(uuid4()))
     from_agent: str = ""
-    to_agent: str = ""                  # "broadcast" for all agents
+    to_agent: str = ""  # "broadcast" for all agents
     message_type: MessageType = MessageType.EVENT
     payload: Dict[str, Any] = field(default_factory=dict)
     priority: TaskPriority = TaskPriority.NORMAL
     requires_ack: bool = False
     timestamp: datetime = field(default_factory=datetime.utcnow)
     correlation_id: Optional[str] = None  # For request/response matching
-    ttl: int = 300                        # Time-to-live in seconds
-    
+    ttl: int = 300  # Time-to-live in seconds
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -205,10 +214,10 @@ class AgentMessage:
             "correlation_id": self.correlation_id,
             "ttl": self.ttl,
         }
-    
+
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "AgentMessage":
         return cls(
@@ -219,11 +228,15 @@ class AgentMessage:
             payload=data.get("payload", {}),
             priority=TaskPriority(data.get("priority", 5)),
             requires_ack=data.get("requires_ack", False),
-            timestamp=datetime.fromisoformat(data["timestamp"]) if data.get("timestamp") else datetime.utcnow(),
+            timestamp=(
+                datetime.fromisoformat(data["timestamp"])
+                if data.get("timestamp")
+                else datetime.utcnow()
+            ),
             correlation_id=data.get("correlation_id"),
             ttl=data.get("ttl", 300),
         )
-    
+
     @classmethod
     def from_json(cls, json_str: str) -> "AgentMessage":
         return cls.from_dict(json.loads(json_str))
@@ -232,6 +245,7 @@ class AgentMessage:
 @dataclass
 class AgentTask:
     """Task to be executed by an agent"""
+
     id: str = field(default_factory=lambda: str(uuid4()))
     agent_id: str = ""
     task_type: str = ""
@@ -247,7 +261,7 @@ class AgentTask:
     retries: int = 0
     max_retries: int = 3
     requester_agent: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -271,6 +285,7 @@ class AgentTask:
 @dataclass
 class AgentSnapshot:
     """Snapshot of agent state for persistence/recovery"""
+
     id: str = field(default_factory=lambda: str(uuid4()))
     agent_id: str = ""
     snapshot_time: datetime = field(default_factory=datetime.utcnow)
@@ -279,7 +294,7 @@ class AgentSnapshot:
     config: Dict[str, Any] = field(default_factory=dict)
     pending_tasks: List[Dict[str, Any]] = field(default_factory=list)
     memory_state: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -296,30 +311,31 @@ class AgentSnapshot:
 @dataclass
 class AgentMetrics:
     """Performance metrics for an agent"""
+
     agent_id: str
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    
+
     # Resource usage
     cpu_percent: float = 0.0
     memory_mb: int = 0
     network_in_bytes: int = 0
     network_out_bytes: int = 0
-    
+
     # Task metrics
     tasks_completed: int = 0
     tasks_failed: int = 0
     avg_task_duration_ms: float = 0.0
-    
+
     # Communication metrics
     messages_sent: int = 0
     messages_received: int = 0
     avg_response_time_ms: float = 0.0
-    
+
     # Health
     uptime_seconds: int = 0
     error_count: int = 0
     last_error: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "agent_id": self.agent_id,

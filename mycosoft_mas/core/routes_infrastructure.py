@@ -3,10 +3,11 @@ Infrastructure Operations API Routes
 Provides REST endpoints for Proxmox, UniFi, NAS, GPU, and UART operations
 """
 
+import logging
+from typing import Any, Dict, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
-import logging
 
 from mycosoft_mas.services.infrastructure_ops import InfrastructureOpsService
 
@@ -22,8 +23,10 @@ infra_ops = InfrastructureOpsService()
 # Request Models
 # ============================================================================
 
+
 class SnapshotRequest(BaseModel):
     """Request to create VM snapshot"""
+
     node: str = Field(..., description="Proxmox node name")
     vmid: int = Field(..., description="VM ID")
     snapshot_name: str = Field(..., description="Snapshot name")
@@ -32,6 +35,7 @@ class SnapshotRequest(BaseModel):
 
 class RollbackRequest(BaseModel):
     """Request to rollback VM to snapshot"""
+
     node: str = Field(..., description="Proxmox node name")
     vmid: int = Field(..., description="VM ID")
     snapshot_name: str = Field(..., description="Snapshot name to rollback to")
@@ -40,6 +44,7 @@ class RollbackRequest(BaseModel):
 
 class CommandRequest(BaseModel):
     """Generic command request"""
+
     command: str = Field(..., description="Command to execute")
     params: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Command parameters")
     confirm: bool = Field(False, description="Confirm execution")
@@ -48,6 +53,7 @@ class CommandRequest(BaseModel):
 # ============================================================================
 # Status Endpoints
 # ============================================================================
+
 
 @router.get("/status")
 async def get_status():
@@ -64,6 +70,7 @@ async def get_status():
 # Proxmox Endpoints
 # ============================================================================
 
+
 @router.post("/proxmox/inventory")
 async def proxmox_inventory():
     """Get Proxmox inventory (nodes, VMs, containers, storage)"""
@@ -79,7 +86,7 @@ async def proxmox_inventory():
 async def proxmox_snapshot(request: SnapshotRequest):
     """
     Create VM snapshot with confirmation gate
-    
+
     Set confirm=true to execute, otherwise returns dry-run result.
     """
     try:
@@ -87,7 +94,7 @@ async def proxmox_snapshot(request: SnapshotRequest):
             node=request.node,
             vmid=request.vmid,
             snapshot_name=request.snapshot_name,
-            confirm=request.confirm
+            confirm=request.confirm,
         )
         return result
     except Exception as e:
@@ -99,7 +106,7 @@ async def proxmox_snapshot(request: SnapshotRequest):
 async def proxmox_rollback(request: RollbackRequest):
     """
     Rollback VM to snapshot with confirmation gate
-    
+
     Set confirm=true to execute, otherwise returns dry-run result.
     WARNING: This operation will revert VM state!
     """
@@ -108,7 +115,7 @@ async def proxmox_rollback(request: RollbackRequest):
             node=request.node,
             vmid=request.vmid,
             snapshot_name=request.snapshot_name,
-            confirm=request.confirm
+            confirm=request.confirm,
         )
         return result
     except Exception as e:
@@ -119,6 +126,7 @@ async def proxmox_rollback(request: RollbackRequest):
 # ============================================================================
 # UniFi Endpoints
 # ============================================================================
+
 
 @router.post("/unifi/topology")
 async def unifi_topology():
@@ -146,6 +154,7 @@ async def unifi_client_info(mac: str):
 # GPU Endpoints
 # ============================================================================
 
+
 @router.post("/gpu/run_test")
 async def gpu_run_test():
     """Run GPU validation test"""
@@ -160,6 +169,7 @@ async def gpu_run_test():
 # ============================================================================
 # UART Endpoints
 # ============================================================================
+
 
 @router.get("/uart/tail")
 async def uart_tail(lines: int = Query(100, description="Number of lines to return")):
@@ -176,6 +186,7 @@ async def uart_tail(lines: int = Query(100, description="Number of lines to retu
 # NAS Endpoints
 # ============================================================================
 
+
 @router.get("/nas/status")
 async def nas_status():
     """Check NAS mount status and disk usage"""
@@ -191,11 +202,12 @@ async def nas_status():
 # Generic Command Endpoint
 # ============================================================================
 
+
 @router.post("/command")
 async def execute_command(request: CommandRequest):
     """
     Execute infrastructure command
-    
+
     Supported commands:
     - proxmox.inventory
     - proxmox.snapshot
@@ -208,45 +220,42 @@ async def execute_command(request: CommandRequest):
     try:
         command = request.command
         params = request.params or {}
-        
+
         if command == "proxmox.inventory":
             return await infra_ops.proxmox_inventory()
-        
+
         elif command == "proxmox.snapshot":
             return await infra_ops.proxmox_snapshot(
                 node=params.get("node"),
                 vmid=params.get("vmid"),
                 snapshot_name=params.get("snapshot_name"),
-                confirm=request.confirm
+                confirm=request.confirm,
             )
-        
+
         elif command == "proxmox.rollback":
             return await infra_ops.proxmox_rollback(
                 node=params.get("node"),
                 vmid=params.get("vmid"),
                 snapshot_name=params.get("snapshot_name"),
-                confirm=request.confirm
+                confirm=request.confirm,
             )
-        
+
         elif command == "unifi.topology":
             return await infra_ops.unifi_topology()
-        
+
         elif command == "gpu.run_test":
             return await infra_ops.gpu_run_test()
-        
+
         elif command == "uart.tail":
             lines = params.get("lines", 100)
             return await infra_ops.uart_tail(lines)
-        
+
         elif command == "nas.status":
             return await infra_ops.nas_status()
-        
+
         else:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unknown command: {command}"
-            )
-    
+            raise HTTPException(status_code=400, detail=f"Unknown command: {command}")
+
     except HTTPException:
         raise
     except Exception as e:
@@ -258,15 +267,16 @@ async def execute_command(request: CommandRequest):
 # Speech Interface Endpoint
 # ============================================================================
 
+
 @router.post("/speak")
 async def speak(request: Dict[str, Any]):
     """
     Speech interface endpoint
-    
+
     Placeholder for n8n integration
     """
     text = request.get("text", "")
-    
+
     return {
         "status": "not_implemented",
         "message": "Speech interface requires n8n workflow deployment",
@@ -274,6 +284,6 @@ async def speak(request: Dict[str, Any]):
         "next_steps": [
             "Deploy n8n workflow from infra/myca-online/out/n8n/",
             "Configure TTS/STT services",
-            "Enable voice profiles in docker-compose"
-        ]
+            "Enable voice profiles in docker-compose",
+        ],
     }

@@ -10,14 +10,14 @@ MYCA Integration (Feb 17, 2026):
 - Added risk-based execution controls
 """
 
-import asyncio
+import json
 import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Union
-import json
+from typing import Any, Callable, Dict, List, Optional
+
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ def _get_skill_registry():
     if _skill_registry is None:
         try:
             from mycosoft_mas.security.skill_registry import SkillRegistry
+
             _skill_registry = SkillRegistry()
         except ImportError as e:
             logger.warning("SkillRegistry not available: %s", e)
@@ -50,6 +51,7 @@ def _get_event_ledger():
     if _event_ledger is None:
         try:
             from mycosoft_mas.myca.event_ledger import EventLedger
+
             _event_ledger = EventLedger()
         except ImportError as e:
             logger.debug("EventLedger not available: %s", e)
@@ -58,6 +60,7 @@ def _get_event_ledger():
 
 class ToolStatus(Enum):
     """Status of a tool execution."""
+
     PENDING = "pending"
     EXECUTING = "executing"
     COMPLETED = "completed"
@@ -67,6 +70,7 @@ class ToolStatus(Enum):
 @dataclass
 class ToolCall:
     """Represents a tool call during conversation."""
+
     id: str
     name: str
     arguments: Dict[str, Any]
@@ -81,7 +85,7 @@ class ToolCall:
     permission_allowed: bool = True
     permission_reason: str = ""
     risk_flags: List[str] = field(default_factory=list)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -100,6 +104,7 @@ class ToolCall:
 @dataclass
 class ToolDefinition:
     """Definition of an available tool."""
+
     name: str
     description: str
     parameters: Dict[str, Any] = field(default_factory=dict)
@@ -107,7 +112,7 @@ class ToolDefinition:
     requires_confirmation: bool = False
     max_timeout_seconds: int = 30
     requires_sandbox: bool = False
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
@@ -120,350 +125,380 @@ class ToolDefinition:
 
 class ToolRegistry:
     """Registry of available tools for MYCA."""
-    
+
     def __init__(self):
         self.tools: Dict[str, ToolDefinition] = {}
         self._init_default_tools()
-    
+
     def _init_default_tools(self):
         """Register default MYCA tools."""
-        
+
         # Device Status Tool
-        self.register(ToolDefinition(
-            name="device_status",
-            description="Get current status and readings from a NatureOS device",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "device_id": {
-                        "type": "string",
-                        "description": "Device identifier (e.g., mushroom1, sporebase)"
-                    }
+        self.register(
+            ToolDefinition(
+                name="device_status",
+                description="Get current status and readings from a NatureOS device",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "device_id": {
+                            "type": "string",
+                            "description": "Device identifier (e.g., mushroom1, sporebase)",
+                        }
+                    },
+                    "required": ["device_id"],
                 },
-                "required": ["device_id"]
-            }
-        ))
+            )
+        )
 
         # Device Telemetry Tool
-        self.register(ToolDefinition(
-            name="query_device_telemetry",
-            description="Get live telemetry from a NatureOS device",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "device_id": {
-                        "type": "string",
-                        "description": "Device identifier (e.g., mushroom1, sporebase)"
-                    }
+        self.register(
+            ToolDefinition(
+                name="query_device_telemetry",
+                description="Get live telemetry from a NatureOS device",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "device_id": {
+                            "type": "string",
+                            "description": "Device identifier (e.g., mushroom1, sporebase)",
+                        }
+                    },
+                    "required": ["device_id"],
                 },
-                "required": ["device_id"]
-            }
-        ))
-        
+            )
+        )
+
         # MINDEX Query Tool
-        self.register(ToolDefinition(
-            name="mindex_query",
-            description="Search the MINDEX fungal knowledge database",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Search query for fungal/mycology knowledge"
+        self.register(
+            ToolDefinition(
+                name="mindex_query",
+                description="Search the MINDEX fungal knowledge database",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Search query for fungal/mycology knowledge",
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of results",
+                            "default": 5,
+                        },
                     },
-                    "limit": {
-                        "type": "integer",
-                        "description": "Maximum number of results",
-                        "default": 5
-                    }
+                    "required": ["query"],
                 },
-                "required": ["query"]
-            }
-        ))
-        
+            )
+        )
+
         # Memory Recall Tool
-        self.register(ToolDefinition(
-            name="memory_recall",
-            description="Recall information from MYCA's memory system",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "scope": {
-                        "type": "string",
-                        "enum": ["conversation", "user", "agent", "system", "ephemeral", "device", "experiment", "workflow"],
-                        "description": "Memory scope to search"
+        self.register(
+            ToolDefinition(
+                name="memory_recall",
+                description="Recall information from MYCA's memory system",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "scope": {
+                            "type": "string",
+                            "enum": [
+                                "conversation",
+                                "user",
+                                "agent",
+                                "system",
+                                "ephemeral",
+                                "device",
+                                "experiment",
+                                "workflow",
+                            ],
+                            "description": "Memory scope to search",
+                        },
+                        "query": {"type": "string", "description": "What to recall"},
                     },
-                    "query": {
-                        "type": "string",
-                        "description": "What to recall"
-                    }
+                    "required": ["scope", "query"],
                 },
-                "required": ["scope", "query"]
-            }
-        ))
-        
+            )
+        )
+
         # Execute Workflow Tool
-        self.register(ToolDefinition(
-            name="execute_workflow",
-            description="Execute an n8n automation workflow",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "workflow_name": {
-                        "type": "string",
-                        "description": "Name of the workflow to execute"
+        self.register(
+            ToolDefinition(
+                name="execute_workflow",
+                description="Execute an n8n automation workflow",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "workflow_name": {
+                            "type": "string",
+                            "description": "Name of the workflow to execute",
+                        },
+                        "parameters": {
+                            "type": "object",
+                            "description": "Parameters to pass to the workflow",
+                        },
                     },
-                    "parameters": {
-                        "type": "object",
-                        "description": "Parameters to pass to the workflow"
-                    }
+                    "required": ["workflow_name"],
                 },
-                "required": ["workflow_name"]
-            },
-            requires_confirmation=True
-        ))
-        
+                requires_confirmation=True,
+            )
+        )
+
         # Generate Workflow Tool
-        self.register(ToolDefinition(
-            name="generate_workflow",
-            description="Create a new n8n workflow from a natural language description. Saves to repo and syncs to local and cloud n8n.",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "description": {
-                        "type": "string",
-                        "description": "Natural language description of what the workflow should do"
+        self.register(
+            ToolDefinition(
+                name="generate_workflow",
+                description="Create a new n8n workflow from a natural language description. Saves to repo and syncs to local and cloud n8n.",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "description": {
+                            "type": "string",
+                            "description": "Natural language description of what the workflow should do",
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "Optional workflow name (auto-generated if omitted)",
+                        },
+                        "tags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Optional tags for the workflow",
+                        },
                     },
-                    "name": {
-                        "type": "string",
-                        "description": "Optional workflow name (auto-generated if omitted)"
-                    },
-                    "tags": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Optional tags for the workflow"
-                    }
+                    "required": ["description"],
                 },
-                "required": ["description"]
-            },
-            requires_confirmation=True,
-            max_timeout_seconds=60
-        ))
-        
+                requires_confirmation=True,
+                max_timeout_seconds=60,
+            )
+        )
+
         # Agent Invoke Tool
-        self.register(ToolDefinition(
-            name="agent_invoke",
-            description="Invoke a specialized agent for a specific task",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "agent_name": {
-                        "type": "string",
-                        "description": "Name of the agent to invoke"
+        self.register(
+            ToolDefinition(
+                name="agent_invoke",
+                description="Invoke a specialized agent for a specific task",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "agent_name": {
+                            "type": "string",
+                            "description": "Name of the agent to invoke",
+                        },
+                        "task": {"type": "string", "description": "Task for the agent to perform"},
                     },
-                    "task": {
-                        "type": "string",
-                        "description": "Task for the agent to perform"
-                    }
+                    "required": ["agent_name", "task"],
                 },
-                "required": ["agent_name", "task"]
-            }
-        ))
-        
+            )
+        )
+
         # Code Execute Tool (routes through Gateway sandbox)
-        self.register(ToolDefinition(
-            name="code_execute",
-            description="Execute code in a sandboxed Docker container via Gateway",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "language": {
-                        "type": "string",
-                        "enum": ["python", "javascript"],
-                        "description": "Programming language"
+        self.register(
+            ToolDefinition(
+                name="code_execute",
+                description="Execute code in a sandboxed Docker container via Gateway",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "language": {
+                            "type": "string",
+                            "enum": ["python", "javascript"],
+                            "description": "Programming language",
+                        },
+                        "code": {"type": "string", "description": "Code to execute"},
                     },
-                    "code": {
-                        "type": "string",
-                        "description": "Code to execute"
-                    }
+                    "required": ["language", "code"],
                 },
-                "required": ["language", "code"]
-            },
-            requires_confirmation=True,
-            requires_sandbox=True,
-        ))
+                requires_confirmation=True,
+                requires_sandbox=True,
+            )
+        )
 
         # Exec Tool (shell commands in sandbox)
-        self.register(ToolDefinition(
-            name="exec",
-            description="Execute shell commands in an isolated sandbox container",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "command": {
-                        "type": "string",
-                        "description": "Shell command to execute"
+        self.register(
+            ToolDefinition(
+                name="exec",
+                description="Execute shell commands in an isolated sandbox container",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "command": {"type": "string", "description": "Shell command to execute"},
+                        "cwd": {
+                            "type": "string",
+                            "description": "Working directory (default: /workspace)",
+                            "default": "/workspace",
+                        },
                     },
-                    "cwd": {
-                        "type": "string",
-                        "description": "Working directory (default: /workspace)",
-                        "default": "/workspace"
-                    }
+                    "required": ["command"],
                 },
-                "required": ["command"]
-            },
-            requires_confirmation=True,
-            requires_sandbox=True,
-        ))
+                requires_confirmation=True,
+                requires_sandbox=True,
+            )
+        )
 
         # Browser Tool (headless browser in sandbox)
-        self.register(ToolDefinition(
-            name="browser",
-            description="Navigate and interact with web pages in a sandboxed browser",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "action": {
-                        "type": "string",
-                        "enum": ["navigate", "click", "type", "screenshot", "get_content"],
-                        "description": "Browser action"
+        self.register(
+            ToolDefinition(
+                name="browser",
+                description="Navigate and interact with web pages in a sandboxed browser",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["navigate", "click", "type", "screenshot", "get_content"],
+                            "description": "Browser action",
+                        },
+                        "url": {"type": "string", "description": "URL to navigate to"},
+                        "selector": {"type": "string", "description": "CSS selector"},
+                        "text": {"type": "string", "description": "Text to type"},
                     },
-                    "url": {"type": "string", "description": "URL to navigate to"},
-                    "selector": {"type": "string", "description": "CSS selector"},
-                    "text": {"type": "string", "description": "Text to type"}
+                    "required": ["action"],
                 },
-                "required": ["action"]
-            },
-            requires_sandbox=True,
-        ))
-        
+                requires_sandbox=True,
+            )
+        )
+
         # Search Documents Tool
-        self.register(ToolDefinition(
-            name="search_documents",
-            description="Search Mycosoft documentation and files",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Search query"
+        self.register(
+            ToolDefinition(
+                name="search_documents",
+                description="Search Mycosoft documentation and files",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "Search query"},
+                        "file_type": {
+                            "type": "string",
+                            "description": "Filter by file type (md, pdf, etc.)",
+                        },
                     },
-                    "file_type": {
-                        "type": "string",
-                        "description": "Filter by file type (md, pdf, etc.)"
-                    }
+                    "required": ["query"],
                 },
-                "required": ["query"]
-            }
-        ))
+            )
+        )
 
         # Omnichannel Send Tool (Phase 5 - MYCA autonomous omnichannel)
-        self.register(ToolDefinition(
-            name="omnichannel_send",
-            description="Send a message to Slack, Discord, WhatsApp, Signal, Email, or Asana",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "platform": {
-                        "type": "string",
-                        "enum": ["slack", "discord", "whatsapp", "signal", "email", "asana"],
-                        "description": "Target platform"
+        self.register(
+            ToolDefinition(
+                name="omnichannel_send",
+                description="Send a message to Slack, Discord, WhatsApp, Signal, Email, or Asana",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "platform": {
+                            "type": "string",
+                            "enum": ["slack", "discord", "whatsapp", "signal", "email", "asana"],
+                            "description": "Target platform",
+                        },
+                        "channel_id": {
+                            "type": "string",
+                            "description": "Channel ID for slack/discord",
+                        },
+                        "recipient": {
+                            "type": "string",
+                            "description": "Phone for whatsapp/signal, email address, or Asana task GID",
+                        },
+                        "thread_id": {
+                            "type": "string",
+                            "description": "Thread ID for slack/discord",
+                        },
+                        "text": {"type": "string", "description": "Message text"},
+                        "subject": {
+                            "type": "string",
+                            "description": "Email subject when platform=email",
+                        },
+                        "attachments": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Attachment URLs",
+                        },
                     },
-                    "channel_id": {"type": "string", "description": "Channel ID for slack/discord"},
-                    "recipient": {"type": "string", "description": "Phone for whatsapp/signal, email address, or Asana task GID"},
-                    "thread_id": {"type": "string", "description": "Thread ID for slack/discord"},
-                    "text": {"type": "string", "description": "Message text"},
-                    "subject": {"type": "string", "description": "Email subject when platform=email"},
-                    "attachments": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Attachment URLs"
-                    }
+                    "required": ["platform", "text"],
                 },
-                "required": ["platform", "text"]
-            }
-        ))
+            )
+        )
 
         # Exa Semantic Web Search Tool
-        self.register(ToolDefinition(
-            name="exa_search",
-            description="Semantic web search for research papers, news, and external sources",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "Semantic search query"
+        self.register(
+            ToolDefinition(
+                name="exa_search",
+                description="Semantic web search for research papers, news, and external sources",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string", "description": "Semantic search query"},
+                        "num_results": {
+                            "type": "integer",
+                            "description": "Maximum number of results",
+                            "default": 10,
+                        },
+                        "include_domains": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Restrict results to these domains",
+                        },
+                        "exclude_domains": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Exclude results from these domains",
+                        },
+                        "category": {
+                            "type": "string",
+                            "description": "Result category filter (e.g., research paper, news)",
+                        },
                     },
-                    "num_results": {
-                        "type": "integer",
-                        "description": "Maximum number of results",
-                        "default": 10
-                    },
-                    "include_domains": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Restrict results to these domains"
-                    },
-                    "exclude_domains": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Exclude results from these domains"
-                    },
-                    "category": {
-                        "type": "string",
-                        "description": "Result category filter (e.g., research paper, news)"
-                    }
+                    "required": ["query"],
                 },
-                "required": ["query"]
-            }
-        ))
-        
+            )
+        )
+
         # Weather Tool (example external API)
-        self.register(ToolDefinition(
-            name="weather",
-            description="Get current weather for a location",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "City or location name"
-                    }
+        self.register(
+            ToolDefinition(
+                name="weather",
+                description="Get current weather for a location",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "location": {"type": "string", "description": "City or location name"}
+                    },
+                    "required": ["location"],
                 },
-                "required": ["location"]
-            }
-        ))
-        
+            )
+        )
+
         # Calculator Tool
-        self.register(ToolDefinition(
-            name="calculator",
-            description="Perform mathematical calculations",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "expression": {
-                        "type": "string",
-                        "description": "Mathematical expression to evaluate"
-                    }
+        self.register(
+            ToolDefinition(
+                name="calculator",
+                description="Perform mathematical calculations",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "expression": {
+                            "type": "string",
+                            "description": "Mathematical expression to evaluate",
+                        }
+                    },
+                    "required": ["expression"],
                 },
-                "required": ["expression"]
-            }
-        ))
-    
+            )
+        )
+
     def register(self, tool: ToolDefinition):
         """Register a tool."""
         self.tools[tool.name] = tool
         logger.info(f"Registered tool: {tool.name}")
-    
+
     def get(self, name: str) -> Optional[ToolDefinition]:
         """Get a tool by name."""
         return self.tools.get(name)
-    
+
     def list_tools(self) -> List[str]:
         """List all registered tool names."""
         return list(self.tools.keys())
-    
+
     def get_tool_definitions(self) -> List[Dict[str, Any]]:
         """Get all tool definitions for LLM."""
         return [tool.to_dict() for tool in self.tools.values()]
@@ -472,13 +507,13 @@ class ToolRegistry:
 class ToolExecutor:
     """
     Executes tools and manages results.
-    
+
     MYCA Integration (Feb 17, 2026):
     - Enforces skill permissions before execution
     - Logs tool calls and denials to EventLedger
     - Checks sandbox requirements for high-risk skills
     """
-    
+
     def __init__(self, registry: ToolRegistry):
         self.registry = registry
         self.mas_url = "http://192.168.0.188:8001"
@@ -486,56 +521,56 @@ class ToolExecutor:
         self.mindex_api_key = os.environ.get("MINDEX_API_KEY")
         self.execution_history: List[ToolCall] = []
         self._enable_permission_checks = True  # Can be disabled for testing
-    
+
     def _check_permission(
         self,
         tool_call: ToolCall,
     ) -> tuple[bool, str, List[str]]:
         """
         Check if the tool call is allowed by MYCA permissions.
-        
+
         Returns (allowed, reason, risk_flags).
         """
         if not self._enable_permission_checks:
             return True, "Permission checks disabled", []
-        
+
         skill_registry = _get_skill_registry()
         if not skill_registry:
             # No skill registry available - allow by default (legacy mode)
             return True, "SkillRegistry not available", []
-        
+
         skill_name = tool_call.skill_name
         if not skill_name:
             # No skill context - allow for backward compatibility
             return True, "No skill context", []
-        
+
         risk_flags = []
-        
+
         # Check if tool is allowed for this skill
         allowed, reason = skill_registry.check_tool_permission(skill_name, tool_call.name)
         if not allowed:
             risk_flags.append("TOOL_DENIED")
             return False, reason, risk_flags
-        
+
         # Check sandbox requirement
         if skill_registry.requires_sandbox(skill_name):
             risk_flags.append("SANDBOX_REQUIRED")
             # For now, we allow execution but flag it
             # Full sandbox enforcement would require additional infrastructure
-        
+
         # Check risk tier
         risk_tier = skill_registry.get_risk_tier(skill_name)
         if risk_tier in ("high", "critical"):
             risk_flags.append(f"RISK_TIER_{risk_tier.upper()}")
-        
+
         return True, "Allowed by PERMISSIONS.json", risk_flags
-    
+
     def _log_to_ledger(self, tool_call: ToolCall, event_type: str = "tool_call"):
         """Log tool call to EventLedger."""
         ledger = _get_event_ledger()
         if not ledger:
             return
-        
+
         try:
             if event_type == "denial":
                 ledger.log_denial(
@@ -554,36 +589,38 @@ class ToolExecutor:
                 )
         except Exception as e:
             logger.debug("Failed to log to EventLedger: %s", e)
-    
+
     async def execute(self, tool_call: ToolCall) -> ToolCall:
         """Execute a tool call and return results."""
         tool_def = self.registry.get(tool_call.name)
-        
+
         if not tool_def:
             tool_call.status = ToolStatus.FAILED
             tool_call.error = f"Unknown tool: {tool_call.name}"
             return tool_call
-        
+
         # MYCA: Check permissions before execution
         allowed, reason, risk_flags = self._check_permission(tool_call)
         tool_call.permission_allowed = allowed
         tool_call.permission_reason = reason
         tool_call.risk_flags = risk_flags
-        
+
         if not allowed:
             tool_call.status = ToolStatus.FAILED
             tool_call.error = f"Permission denied: {reason}"
             logger.warning(
                 "Tool call denied: %s for skill %s - %s",
-                tool_call.name, tool_call.skill_name, reason
+                tool_call.name,
+                tool_call.skill_name,
+                reason,
             )
             self._log_to_ledger(tool_call, event_type="denial")
             self.execution_history.append(tool_call)
             return tool_call
-        
+
         tool_call.status = ToolStatus.EXECUTING
         tool_call.started_at = datetime.now()
-        
+
         try:
             # Execute based on tool type
             if tool_call.name == "calculator":
@@ -607,36 +644,36 @@ class ToolExecutor:
             else:
                 # Call MAS API for other tools
                 result = await self._call_mas_tool(tool_call.name, tool_call.arguments)
-            
+
             tool_call.result = result
             tool_call.status = ToolStatus.COMPLETED
-            
+
         except Exception as e:
             logger.error(f"Tool execution error: {e}")
             tool_call.status = ToolStatus.FAILED
             tool_call.error = str(e)
             tool_call.risk_flags.append("EXECUTION_ERROR")
-        
+
         tool_call.completed_at = datetime.now()
         if tool_call.started_at:
             tool_call.latency_ms = int(
                 (tool_call.completed_at - tool_call.started_at).total_seconds() * 1000
             )
-        
+
         # MYCA: Log to event ledger
         self._log_to_ledger(tool_call)
-        
+
         self.execution_history.append(tool_call)
         return tool_call
-    
+
     async def _execute_calculator(self, args: Dict[str, Any]) -> Any:
         """Execute calculator tool locally."""
         expression = args.get("expression", "")
-        
+
         # Safe evaluation of math expressions
         import ast
         import operator
-        
+
         operators = {
             ast.Add: operator.add,
             ast.Sub: operator.sub,
@@ -644,9 +681,9 @@ class ToolExecutor:
             ast.Div: operator.truediv,
             ast.Pow: operator.pow,
             ast.USub: operator.neg,
-            ast.Mod: operator.mod
+            ast.Mod: operator.mod,
         }
-        
+
         def eval_expr(node):
             if isinstance(node, ast.Num):
                 return node.n
@@ -656,22 +693,20 @@ class ToolExecutor:
                 return operators[type(node.op)](eval_expr(node.operand))
             else:
                 raise ValueError(f"Unsupported expression: {expression}")
-        
+
         try:
             tree = ast.parse(expression, mode="eval")
             result = eval_expr(tree.body)
             return {"result": result, "expression": expression}
         except Exception as e:
             raise ValueError(f"Invalid expression: {e}")
-    
+
     async def _execute_device_status(self, args: Dict[str, Any]) -> Any:
         """Get device status from MAS."""
         device_id = args.get("device_id", "")
-        
+
         async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.get(
-                f"{self.mas_url}/platform/devices/{device_id}/status"
-            )
+            response = await client.get(f"{self.mas_url}/platform/devices/{device_id}/status")
             if response.status_code == 200:
                 return response.json()
             else:
@@ -692,7 +727,7 @@ class ToolExecutor:
             if response.status_code == 200:
                 return response.json()
             return {"error": f"Telemetry not found: {device_id}"}
-    
+
     async def _execute_mindex_query(self, args: Dict[str, Any]) -> Any:
         """Query MINDEX knowledge base via canonical MINDEX unified-search API."""
         query = (args.get("query") or "").strip()
@@ -711,16 +746,15 @@ class ToolExecutor:
             if response.status_code == 200:
                 return response.json()
             return {"results": [], "message": "No results found"}
-    
+
     async def _execute_memory_recall(self, args: Dict[str, Any]) -> Any:
         """Recall from memory system."""
         scope = args.get("scope", "conversation")
         query = args.get("query", "")
-        
+
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.post(
-                f"{self.mas_url}/memory/recall",
-                json={"scope": scope, "query": query}
+                f"{self.mas_url}/memory/recall", json={"scope": scope, "query": query}
             )
             if response.status_code == 200:
                 return response.json()
@@ -738,6 +772,7 @@ class ToolExecutor:
         category = args.get("category")
 
         from mycosoft_mas.integrations.exa_client import get_exa_client
+
         client = get_exa_client()
         if not client.is_configured:
             return {"results": [], "message": "Exa API key not configured"}
@@ -761,6 +796,7 @@ class ToolExecutor:
             return {"status": "error", "message": "workflow_name is required"}
         try:
             from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
+
             agent = N8NWorkflowAgent(agent_id="n8n-llm", name="N8N Workflow", config={})
             task = {"type": "execute_workflow", "workflow_name": workflow_name}
             if parameters:
@@ -782,6 +818,7 @@ class ToolExecutor:
             return {"status": "error", "message": "description (or query) is required"}
         try:
             from mycosoft_mas.agents.workflow_generator_agent import generate_save_and_sync_workflow
+
             out = await generate_save_and_sync_workflow(
                 description,
                 name=name or None,
@@ -833,10 +870,7 @@ class ToolExecutor:
     async def _call_mas_tool(self, tool_name: str, args: Dict[str, Any]) -> Any:
         """Call a generic MAS tool endpoint."""
         async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.post(
-                f"{self.mas_url}/tools/{tool_name}",
-                json=args
-            )
+            response = await client.post(f"{self.mas_url}/tools/{tool_name}", json=args)
             if response.status_code == 200:
                 return response.json()
             else:
@@ -847,17 +881,17 @@ class ConversationToolManager:
     """
     Manages tool calls within a conversation context.
     Handles detecting when tools are needed and injecting results.
-    
+
     MYCA Integration (Feb 17, 2026):
     - Supports skill context for permission enforcement
     - Provides filtered tool lists based on skill permissions
     - Reports permission denials in results
     """
-    
+
     def __init__(self, skill_name: Optional[str] = None):
         """
         Initialize tool manager.
-        
+
         Args:
             skill_name: Optional skill context for permission enforcement.
                        If provided, tool calls will be checked against the
@@ -867,50 +901,48 @@ class ConversationToolManager:
         self.executor = ToolExecutor(self.registry)
         self.pending_calls: List[ToolCall] = []
         self.skill_name = skill_name
-    
+
     def set_skill_context(self, skill_name: str):
         """Set the skill context for permission enforcement."""
         self.skill_name = skill_name
-    
+
     def get_tool_definitions_for_llm(
         self,
         filter_by_permissions: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         Get tool definitions in a format suitable for LLM function calling.
-        
+
         Args:
             filter_by_permissions: If True and skill_name is set, only return
                                    tools allowed by the skill's permissions.
         """
         all_tools = self.registry.get_tool_definitions()
-        
+
         if not filter_by_permissions or not self.skill_name:
             return all_tools
-        
+
         # Filter by skill permissions
         skill_registry = _get_skill_registry()
         if not skill_registry:
             return all_tools
-        
+
         allowed_tools = []
         for tool in all_tools:
-            allowed, _ = skill_registry.check_tool_permission(
-                self.skill_name, tool["name"]
-            )
+            allowed, _ = skill_registry.check_tool_permission(self.skill_name, tool["name"])
             if allowed:
                 allowed_tools.append(tool)
-        
+
         return allowed_tools
-    
+
     async def process_tool_calls(
-        self, 
+        self,
         tool_calls: List[Dict[str, Any]],
         skill_name: Optional[str] = None,
     ) -> List[ToolCall]:
         """
         Process multiple tool calls and return results.
-        
+
         Args:
             tool_calls: List of tool call dicts with id, name, arguments.
             skill_name: Optional skill context override. If not provided,
@@ -918,7 +950,7 @@ class ConversationToolManager:
         """
         results = []
         effective_skill = skill_name or self.skill_name
-        
+
         for call_data in tool_calls:
             call = ToolCall(
                 id=call_data.get("id", ""),
@@ -926,32 +958,38 @@ class ConversationToolManager:
                 arguments=call_data.get("arguments", {}),
                 skill_name=effective_skill,
             )
-            
+
             result = await self.executor.execute(call)
             results.append(result)
-        
+
         return results
-    
+
     def format_tool_result_for_injection(self, tool_call: ToolCall) -> str:
         """Format a tool result for injection into the response."""
         if tool_call.status == ToolStatus.COMPLETED:
-            result_str = json.dumps(tool_call.result) if isinstance(tool_call.result, dict) else str(tool_call.result)
+            result_str = (
+                json.dumps(tool_call.result)
+                if isinstance(tool_call.result, dict)
+                else str(tool_call.result)
+            )
             return f"[TOOL] {tool_call.name}: {result_str}"
         elif not tool_call.permission_allowed:
             return f"[TOOL] {tool_call.name}: Permission denied - {tool_call.permission_reason}"
         else:
             return f"[TOOL] {tool_call.name}: Error - {tool_call.error}"
-    
+
     def get_denied_tools_summary(self) -> List[Dict[str, Any]]:
         """Get summary of denied tool calls from execution history."""
         denied = []
         for call in self.executor.execution_history:
             if not call.permission_allowed:
-                denied.append({
-                    "tool": call.name,
-                    "skill": call.skill_name,
-                    "reason": call.permission_reason,
-                })
+                denied.append(
+                    {
+                        "tool": call.name,
+                        "skill": call.skill_name,
+                        "reason": call.permission_reason,
+                    }
+                )
         return denied
 
 
@@ -971,7 +1009,7 @@ def get_tool_registry() -> ToolRegistry:
 def get_tool_manager(skill_name: Optional[str] = None) -> ConversationToolManager:
     """
     Get or create the tool manager singleton.
-    
+
     Args:
         skill_name: Optional skill context for permission enforcement.
                    If provided, updates the manager's skill context.
@@ -987,10 +1025,10 @@ def get_tool_manager(skill_name: Optional[str] = None) -> ConversationToolManage
 def create_tool_manager_for_skill(skill_name: str) -> ConversationToolManager:
     """
     Create a new tool manager for a specific skill context.
-    
+
     Unlike get_tool_manager(), this always creates a new instance,
     useful for isolated skill executions.
-    
+
     Args:
         skill_name: Skill context for permission enforcement.
     """

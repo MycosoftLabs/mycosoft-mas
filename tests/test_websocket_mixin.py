@@ -4,8 +4,9 @@ Tests for Agent WebSocket Mixin - February 9, 2026
 Unit tests for AgentWebSocketMixin and BaseAgent WS integration.
 """
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestAgentWebSocketMixin:

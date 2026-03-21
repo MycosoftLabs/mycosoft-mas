@@ -7,7 +7,7 @@ Created: February 12, 2026
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 
@@ -35,12 +35,14 @@ class SporeBaseAgent(BaseAgent):
             "alert_generation",
             "calibration_management",
         }
-        self.metrics.update({
-            "devices_managed": 0,
-            "samples_tracked": 0,
-            "alerts_generated": 0,
-            "calibrations_managed": 0,
-        })
+        self.metrics.update(
+            {
+                "devices_managed": 0,
+                "samples_tracked": 0,
+                "alerts_generated": 0,
+                "calibrations_managed": 0,
+            }
+        )
 
     async def process_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Process SporeBase fleet tasks. Data is served via sporebase_api router."""

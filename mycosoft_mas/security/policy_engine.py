@@ -11,13 +11,17 @@ import json
 import logging
 import os
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, FrozenSet, Optional, Set
 
 logger = logging.getLogger(__name__)
 
-MYCA_POLICY_ENGINE_ENABLED = os.getenv("MYCA_POLICY_ENGINE_ENABLED", "false").lower() in ("1", "true", "yes")
+MYCA_POLICY_ENGINE_ENABLED = os.getenv("MYCA_POLICY_ENGINE_ENABLED", "false").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 ALLOWED_CLASSIFICATIONS: FrozenSet[str] = frozenset({"UNCLASS", "CUI", "ITAR"})
 DEFAULT_TOOLS_ALLOWED: FrozenSet[str] = frozenset()
@@ -64,7 +68,11 @@ class PolicyEngine:
         enabled: bool = True,
     ):
         self.rate_limit_per_minute = rate_limit_per_minute
-        env_enabled = os.getenv("MYCA_POLICY_ENGINE_ENABLED", "false").lower() in ("1", "true", "yes")
+        env_enabled = os.getenv("MYCA_POLICY_ENGINE_ENABLED", "false").lower() in (
+            "1",
+            "true",
+            "yes",
+        )
         self.enabled = enabled and env_enabled
         self._event_counts: Dict[str, list] = defaultdict(list)
         self._tool_whitelists: Dict[str, Set[str]] = {}
@@ -92,6 +100,7 @@ class PolicyEngine:
             return PolicyResult(allowed=True, reason="Policy engine disabled")
 
         try:
+
             def _safe_get(obj: Any, key: str, default: Any) -> Any:
                 if isinstance(obj, dict):
                     return obj.get(key, default)

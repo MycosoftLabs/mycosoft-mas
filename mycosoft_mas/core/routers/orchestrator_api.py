@@ -7,13 +7,13 @@ All data is REAL from the agent registry, heartbeat service, and runner.
 Updated: March 19, 2026 — Wired to heartbeat service for real runtime metrics.
 """
 
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
-from datetime import datetime, timezone
-from dataclasses import asdict
 import logging
 import time
+from dataclasses import asdict
+from datetime import datetime, timezone
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +26,7 @@ _startup_time = time.time()
 def _get_registry():
     """Get the core agent registry (42+ agents)."""
     from mycosoft_mas.core.agent_registry import get_agent_registry
+
     return get_agent_registry()
 
 
@@ -33,11 +34,9 @@ def _get_heartbeat_metrics() -> Dict[str, Any]:
     """Get per-agent runtime metrics from the heartbeat service."""
     try:
         from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+
         svc = get_heartbeat_service()
-        return {
-            agent_id: m.to_dict()
-            for agent_id, m in svc.agent_metrics.items()
-        }
+        return {agent_id: m.to_dict() for agent_id, m in svc.agent_metrics.items()}
     except Exception:
         return {}
 
@@ -46,6 +45,7 @@ def _get_heartbeat_summary() -> Dict[str, Any]:
     """Get aggregate system metrics from the heartbeat service."""
     try:
         from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+
         return get_heartbeat_service().get_system_summary()
     except Exception:
         return {}
@@ -54,8 +54,10 @@ def _get_heartbeat_summary() -> Dict[str, Any]:
 def _get_runner_status() -> Dict[str, Any]:
     """Get runner status (recent cycles, insights, notifications)."""
     try:
+        pass
+
         from mycosoft_mas.core.agent_runner import get_agent_runner
-        import asyncio
+
         runner = get_agent_runner()
         # Return synchronous data (no await needed for these attributes)
         return {
@@ -64,12 +66,8 @@ def _get_runner_status() -> Dict[str, Any]:
             "total_cycles": len(runner.cycles),
             "total_insights": len(runner.insights),
             "total_notifications": len(runner.notifications),
-            "recent_notifications": [
-                asdict(n) for n in runner.notifications[-20:]
-            ],
-            "recent_insights": [
-                asdict(i) for i in runner.insights[-20:]
-            ],
+            "recent_notifications": [asdict(n) for n in runner.notifications[-20:]],
+            "recent_insights": [asdict(i) for i in runner.insights[-20:]],
         }
     except Exception:
         return {}
@@ -88,22 +86,24 @@ def _build_agent_list() -> List[Dict[str, Any]]:
         if a.is_active and runtime_status == "idle" and not metrics:
             runtime_status = "registered"
 
-        result.append({
-            "id": a.agent_id,
-            "name": a.name,
-            "displayName": a.display_name,
-            "category": a.category.value,
-            "status": runtime_status,
-            "tasksCompleted": metrics.get("tasks_completed", 0),
-            "tasksFailed": metrics.get("tasks_failed", 0),
-            "insightsGenerated": metrics.get("insights_generated", 0),
-            "cycleCount": metrics.get("cycle_count", 0),
-            "lastCycleTime": metrics.get("last_cycle_time"),
-            "consecutiveErrors": metrics.get("consecutive_errors", 0),
-            "lastError": metrics.get("last_error"),
-            "capabilities": [c.value for c in a.capabilities],
-            "keywords": a.keywords,
-        })
+        result.append(
+            {
+                "id": a.agent_id,
+                "name": a.name,
+                "displayName": a.display_name,
+                "category": a.category.value,
+                "status": runtime_status,
+                "tasksCompleted": metrics.get("tasks_completed", 0),
+                "tasksFailed": metrics.get("tasks_failed", 0),
+                "insightsGenerated": metrics.get("insights_generated", 0),
+                "cycleCount": metrics.get("cycle_count", 0),
+                "lastCycleTime": metrics.get("last_cycle_time"),
+                "consecutiveErrors": metrics.get("consecutive_errors", 0),
+                "lastError": metrics.get("last_error"),
+                "capabilities": [c.value for c in a.capabilities],
+                "keywords": a.keywords,
+            }
+        )
     return result
 
 
@@ -134,6 +134,7 @@ async def get_dashboard_data() -> Dict[str, Any]:
     # Get Redis pub/sub stats for messages/second
     try:
         from mycosoft_mas.realtime.redis_pubsub import get_client
+
         client = await get_client()
         pubsub_stats = client.get_stats()
         msgs_published = pubsub_stats.get("messages_published", 0)

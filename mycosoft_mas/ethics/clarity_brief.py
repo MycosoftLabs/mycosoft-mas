@@ -43,9 +43,9 @@ class ClarityBrief:
         """Format as human-readable markdown."""
         parts = [f"**Claim:** {self.claim}"]
         if self.assumptions:
-            parts.append(f"\n**Assumptions:**\n" + "\n".join(f"- {a}" for a in self.assumptions))
+            parts.append("\n**Assumptions:**\n" + "\n".join(f"- {a}" for a in self.assumptions))
         if self.evidence:
-            parts.append(f"\n**Evidence:**\n" + "\n".join(f"- {e}" for e in self.evidence))
+            parts.append("\n**Evidence:**\n" + "\n".join(f"- {e}" for e in self.evidence))
         if self.owner:
             parts.append(f"\n**Owner:** {self.owner}")
         if self.deadline:
@@ -54,7 +54,9 @@ class ClarityBrief:
             parts.append(f"\n**Risk score:** {self.risk_score:.2f}")
         if self.gate_summary:
             g = self.gate_summary
-            parts.append(f"\n**Gates:** Truth={g.get('truth', 'N/A')}, Incentive={g.get('incentive', 'N/A')}, Horizon={g.get('horizon', 'N/A')}")
+            parts.append(
+                f"\n**Gates:** Truth={g.get('truth', 'N/A')}, Incentive={g.get('incentive', 'N/A')}, Horizon={g.get('horizon', 'N/A')}"
+            )
         return "\n".join(parts)
 
     def validate(self) -> List[str]:

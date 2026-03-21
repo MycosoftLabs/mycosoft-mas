@@ -21,6 +21,7 @@ def _get_world_model():
     """Get canonical WorldModel from consciousness. Returns None if unavailable."""
     try:
         from mycosoft_mas.consciousness import get_consciousness
+
         consciousness = get_consciousness()
         return getattr(consciousness, "_world_model", None)
     except Exception:
@@ -232,16 +233,42 @@ async def get_world_diff() -> Dict[str, Any]:
     curr = wm.get_current_state()
     changes: list = []
     if getattr(curr, "total_flights", 0) != getattr(prev, "total_flights", 0):
-        changes.append({"field": "total_flights", "from": getattr(prev, "total_flights", 0), "to": getattr(curr, "total_flights", 0)})
+        changes.append(
+            {
+                "field": "total_flights",
+                "from": getattr(prev, "total_flights", 0),
+                "to": getattr(curr, "total_flights", 0),
+            }
+        )
     if getattr(curr, "total_vessels", 0) != getattr(prev, "total_vessels", 0):
-        changes.append({"field": "total_vessels", "from": getattr(prev, "total_vessels", 0), "to": getattr(curr, "total_vessels", 0)})
+        changes.append(
+            {
+                "field": "total_vessels",
+                "from": getattr(prev, "total_vessels", 0),
+                "to": getattr(curr, "total_vessels", 0),
+            }
+        )
     if getattr(curr, "online_users", 0) != getattr(prev, "online_users", 0):
-        changes.append({"field": "online_users", "from": getattr(prev, "online_users", 0), "to": getattr(curr, "online_users", 0)})
+        changes.append(
+            {
+                "field": "online_users",
+                "from": getattr(prev, "online_users", 0),
+                "to": getattr(curr, "online_users", 0),
+            }
+        )
     if getattr(curr, "active_devices", 0) != getattr(prev, "active_devices", 0):
-        changes.append({"field": "active_devices", "from": getattr(prev, "active_devices", 0), "to": getattr(curr, "active_devices", 0)})
+        changes.append(
+            {
+                "field": "active_devices",
+                "from": getattr(prev, "active_devices", 0),
+                "to": getattr(curr, "active_devices", 0),
+            }
+        )
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "changes": changes,
-        "previous_timestamp": prev.timestamp.isoformat() if getattr(prev, "timestamp", None) else None,
+        "previous_timestamp": (
+            prev.timestamp.isoformat() if getattr(prev, "timestamp", None) else None
+        ),
         "current_timestamp": curr.timestamp.isoformat() if curr.timestamp else None,
     }

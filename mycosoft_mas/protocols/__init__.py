@@ -17,18 +17,18 @@ Message Types:
 """
 
 from .mdp_v1 import (
+    MDPCommand,
+    MDPDecoder,
+    MDPEncoder,
+    MDPEvent,
     MDPFrame,
     MDPMessageType,
-    MDPCommand,
     MDPTelemetry,
-    MDPEvent,
-    MDPEncoder,
-    MDPDecoder,
-    encode_frame,
-    decode_frame,
     calculate_crc16,
-    cobs_encode,
     cobs_decode,
+    cobs_encode,
+    decode_frame,
+    encode_frame,
 )
 
 __all__ = [

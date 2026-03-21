@@ -8,8 +8,9 @@ Date: March 9, 2026
 from __future__ import annotations
 
 import os
-import pytest
+
 import httpx
+import pytest
 
 # VM URLs
 MAS_URL = os.environ.get("MAS_API_URL", "http://192.168.0.188:8001")

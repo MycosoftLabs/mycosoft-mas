@@ -77,6 +77,6 @@ class TestFullAwakening:
     async def test_all_stages_pass(self, protocol):
         result = await protocol.execute_awakening()
         for stage_result in result.stage_results:
-            assert stage_result.passed is True, (
-                f"Stage {stage_result.stage.value} failed: {stage_result.message}"
-            )
+            assert (
+                stage_result.passed is True
+            ), f"Stage {stage_result.stage.value} failed: {stage_result.message}"

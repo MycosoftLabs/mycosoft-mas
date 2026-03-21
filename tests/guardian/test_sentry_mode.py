@@ -98,21 +98,25 @@ class TestAlertProcessing:
     @pytest.mark.asyncio
     async def test_process_info_alert(self, sentry):
         await sentry.activate(profile_name="lab")
-        alert = await sentry.process_alert({
-            "source": "temperature_sensor",
-            "description": "Temperature slightly elevated",
-            "severity": "info",
-        })
+        alert = await sentry.process_alert(
+            {
+                "source": "temperature_sensor",
+                "description": "Temperature slightly elevated",
+                "severity": "info",
+            }
+        )
         assert alert.severity == AlertSeverity.INFO
 
     @pytest.mark.asyncio
     async def test_critical_alert_escalates(self, sentry):
         await sentry.activate(profile_name="lab")
-        alert = await sentry.process_alert({
-            "source": "biosafety",
-            "description": "Critical biological_risk_detected",
-            "severity": "critical",
-        })
+        alert = await sentry.process_alert(
+            {
+                "source": "biosafety",
+                "description": "Critical biological_risk_detected",
+                "severity": "critical",
+            }
+        )
         assert alert.escalated is True
 
     @pytest.mark.asyncio

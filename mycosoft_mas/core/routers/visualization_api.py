@@ -1,13 +1,15 @@
 """Visualization API for genomic and phylogenetic data.
 Created: February 9, 2026
 """
-from fastapi import APIRouter, HTTPException, Query, Response
-from typing import Dict, Any, Optional, List
+
 import logging
-import json
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, HTTPException, Query, Response
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/visualization", tags=["visualization"])
+
 
 @router.get("/circos")
 async def get_circos_plot(
@@ -22,19 +24,20 @@ async def get_circos_plot(
         except ImportError:
             raise HTTPException(
                 status_code=503,
-                detail="pyCirclize not installed. Install with: pip install pycirclize"
+                detail="pyCirclize not installed. Install with: pip install pycirclize",
             )
-        
+
         # Create a basic circos plot for the species
         circos = Circos(sectors={"GeneA": 100, "GeneB": 80, "GeneC": 60, "GeneD": 120})
         for sector in circos.sectors:
             track = sector.add_track((80, 100))
             track.axis()
             track.text(sector.name, fontsize=8)
-        
+
         fig = circos.plotfig()
-        
+
         import io
+
         buf = io.BytesIO()
         if format == "png":
             fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
@@ -43,16 +46,18 @@ async def get_circos_plot(
             fig.savefig(buf, format="svg", bbox_inches="tight")
             media_type = "image/svg+xml"
         buf.seek(0)
-        
+
         import matplotlib.pyplot as plt
+
         plt.close(fig)
-        
+
         return Response(content=buf.read(), media_type=media_type)
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Circos plot generation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/phylogeny")
 async def get_phylogeny_tree(
@@ -66,9 +71,9 @@ async def get_phylogeny_tree(
         except ImportError:
             raise HTTPException(
                 status_code=503,
-                detail="pyCirclize not installed. Install with: pip install pycirclize"
+                detail="pyCirclize not installed. Install with: pip install pycirclize",
             )
-        
+
         # Create a phylogenetic-style circular layout
         sectors = {}
         if taxon:
@@ -81,16 +86,17 @@ async def get_phylogeny_tree(
                 "Chytridiomycota": 40,
                 "Glomeromycota": 30,
             }
-        
+
         circos = Circos(sectors=sectors)
         for sector in circos.sectors:
             track = sector.add_track((70, 95))
             track.axis()
             track.text(sector.name, fontsize=7, r=55)
-        
+
         fig = circos.plotfig()
-        
+
         import io
+
         buf = io.BytesIO()
         if format == "png":
             fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
@@ -99,10 +105,11 @@ async def get_phylogeny_tree(
             fig.savefig(buf, format="svg", bbox_inches="tight")
             media_type = "image/svg+xml"
         buf.seek(0)
-        
+
         import matplotlib.pyplot as plt
+
         plt.close(fig)
-        
+
         return Response(content=buf.read(), media_type=media_type)
     except HTTPException:
         raise
@@ -110,22 +117,28 @@ async def get_phylogeny_tree(
         logger.error(f"Phylogeny tree generation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/health")
 async def visualization_health() -> Dict[str, Any]:
     """Check visualization service health and available backends."""
     backends = {}
     try:
         import pycirclize
-        backends["pycirclize"] = {"available": True, "version": getattr(pycirclize, "__version__", "unknown")}
+
+        backends["pycirclize"] = {
+            "available": True,
+            "version": getattr(pycirclize, "__version__", "unknown"),
+        }
     except ImportError:
         backends["pycirclize"] = {"available": False}
-    
+
     try:
         import matplotlib
+
         backends["matplotlib"] = {"available": True, "version": matplotlib.__version__}
     except ImportError:
         backends["matplotlib"] = {"available": False}
-    
+
     return {
         "status": "healthy",
         "backends": backends,

@@ -42,7 +42,9 @@ class TelemetryIntegrityService:
 
     @staticmethod
     def _canonical_json(payload: Dict[str, Any]) -> bytes:
-        return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
+        return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode(
+            "utf-8"
+        )
 
     def compute_payload_hash(self, payload: Dict[str, Any]) -> str:
         return hashlib.sha256(self._canonical_json(payload)).hexdigest()
@@ -108,4 +110,3 @@ class TelemetryIntegrityService:
                 errors.append(f"invalid_chain_hash_at_index_{idx}")
             prev = actual
         return len(errors) == 0, errors
-

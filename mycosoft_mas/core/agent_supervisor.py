@@ -17,7 +17,7 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,7 @@ class AgentSupervisor:
             return
 
         hb_service = get_heartbeat_service()
-        now = time.time()
+        time.time()
 
         for agent_id, metrics in hb_service.agent_metrics.items():
             # Check for consecutive errors
@@ -135,17 +135,18 @@ class AgentSupervisor:
             return
 
         # Attempt restart
-        await self._attempt_restart(agent_id, reason=f"consecutive_errors={metrics.consecutive_errors}")
+        await self._attempt_restart(
+            agent_id, reason=f"consecutive_errors={metrics.consecutive_errors}"
+        )
 
     async def _handle_unresponsive_agent(self, agent_id: str, elapsed_seconds: float):
         """Handle an unresponsive agent."""
-        logger.warning(
-            f"Agent {agent_id} unresponsive for {elapsed_seconds:.0f}s"
-        )
+        logger.warning(f"Agent {agent_id} unresponsive for {elapsed_seconds:.0f}s")
 
         # Update heartbeat status
         try:
             from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+
             hb = get_heartbeat_service()
             if agent_id in hb.agent_metrics:
                 hb.agent_metrics[agent_id].status = "unresponsive"
@@ -178,15 +179,17 @@ class AgentSupervisor:
         self._restart_cooldown[agent_id] = time.time()
         attempt = self._restart_attempts[agent_id]
 
-        logger.info(f"Attempting restart of {agent_id} (attempt {attempt}/{self._max_restart_attempts}): {reason}")
+        logger.info(
+            f"Attempting restart of {agent_id} (attempt {attempt}/{self._max_restart_attempts}): {reason}"
+        )
 
         try:
+            from mycosoft_mas.core.agent_registry import get_agent_registry
             from mycosoft_mas.core.agent_runner import get_agent_runner
             from mycosoft_mas.core.runner_agent_loader import (
-                _instantiate_native_agent,
                 LoadedRunnerAgent,
+                _instantiate_native_agent,
             )
-            from mycosoft_mas.core.agent_registry import get_agent_registry
 
             runner = get_agent_runner()
             registry = get_agent_registry()
@@ -224,6 +227,7 @@ class AgentSupervisor:
 
             # Reset heartbeat metrics
             from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+
             hb = get_heartbeat_service()
             if agent_id in hb.agent_metrics:
                 hb.agent_metrics[agent_id].consecutive_errors = 0
@@ -262,7 +266,7 @@ class AgentSupervisor:
 
         # Publish to Redis agents:status channel
         try:
-            from mycosoft_mas.realtime.redis_pubsub import get_client, Channel
+            from mycosoft_mas.realtime.redis_pubsub import Channel, get_client
 
             client = await get_client()
             if client.is_connected():
@@ -281,6 +285,7 @@ class AgentSupervisor:
         # Log to event ledger
         try:
             from mycosoft_mas.myca.event_ledger.ledger_writer import get_ledger
+
             ledger = get_ledger()
             ledger.log_tool_call(
                 agent="supervisor",

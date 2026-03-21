@@ -10,12 +10,13 @@ Provides API endpoints for checking health and status of external integrations:
 - MYCOBRAIN (Device Management)
 """
 
-import os
-import logging
-from typing import Dict, Any
-from fastapi import APIRouter, HTTPException
-from datetime import datetime
 import asyncio
+import logging
+import os
+from datetime import datetime
+from typing import Any, Dict
+
+from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +29,13 @@ async def _check_url_health(name: str, url: str, timeout: float = 5.0) -> Dict[s
         return {
             "name": name,
             "status": "not_configured",
-            "message": f"URL not configured",
-            "timestamp": datetime.utcnow().isoformat()
+            "message": "URL not configured",
+            "timestamp": datetime.utcnow().isoformat(),
         }
-    
+
     try:
         import httpx
+
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.get(url)
             return {
@@ -41,7 +43,7 @@ async def _check_url_health(name: str, url: str, timeout: float = 5.0) -> Dict[s
                 "status": "healthy" if response.status_code < 400 else "unhealthy",
                 "http_status": response.status_code,
                 "url": url,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
     except httpx.TimeoutException:
         # httpx raises TimeoutException, not asyncio.TimeoutError
@@ -50,7 +52,7 @@ async def _check_url_health(name: str, url: str, timeout: float = 5.0) -> Dict[s
             "status": "unhealthy",
             "error": "Timeout",
             "url": url,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         return {
@@ -58,7 +60,7 @@ async def _check_url_health(name: str, url: str, timeout: float = 5.0) -> Dict[s
             "status": "unhealthy",
             "error": str(e),
             "url": url,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
 
@@ -71,46 +73,45 @@ async def integrations_health():
         "WEBSITE": os.getenv("WEBSITE_API_URL"),
         "N8N": os.getenv("N8N_WEBHOOK_URL"),
     }
-    
+
     # Check all integrations concurrently
     tasks = []
     for name, url in integrations.items():
         health_url = f"{url}/health" if url else None
         tasks.append(_check_url_health(name, health_url))
-    
+
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     health_status = {}
     for i, (name, _) in enumerate(integrations.items()):
         if isinstance(results[i], Exception):
-            health_status[name] = {
-                "status": "error",
-                "error": str(results[i])
-            }
+            health_status[name] = {"status": "error", "error": str(results[i])}
         else:
             health_status[name] = results[i]
-    
+
     # Add Notion check (uses API key, not URL)
     notion_key = os.getenv("NOTION_API_KEY")
     health_status["NOTION"] = {
         "name": "NOTION",
         "status": "configured" if notion_key else "not_configured",
         "has_api_key": bool(notion_key),
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
-    
+
     # Add MYCOBRAIN check
     mycobrain_url = os.getenv("MYCOBRAIN_API_URL")
-    health_status["MYCOBRAIN"] = await _check_url_health("MYCOBRAIN", 
-        f"{mycobrain_url}/health" if mycobrain_url else None)
-    
+    health_status["MYCOBRAIN"] = await _check_url_health(
+        "MYCOBRAIN", f"{mycobrain_url}/health" if mycobrain_url else None
+    )
+
     return {
-        "overall_status": "healthy" if all(
-            h.get("status") in ["healthy", "configured"] 
-            for h in health_status.values()
-        ) else "partial",
+        "overall_status": (
+            "healthy"
+            if all(h.get("status") in ["healthy", "configured"] for h in health_status.values())
+            else "partial"
+        ),
         "integrations": health_status,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
 
@@ -119,7 +120,7 @@ async def mindex_health():
     """Check MINDEX integration health."""
     url = os.getenv("MINDEX_API_URL")
     db_url = os.getenv("MINDEX_DATABASE_URL")
-    
+
     health = await _check_url_health("MINDEX", f"{url}/health" if url else None)
     health["database_configured"] = bool(db_url)
     return health
@@ -144,47 +145,42 @@ async def notion_health():
     """Check Notion integration health."""
     api_key = os.getenv("NOTION_API_KEY")
     database_id = os.getenv("NOTION_DATABASE_ID")
-    
+
     if not api_key:
         return {
             "name": "NOTION",
             "status": "not_configured",
             "message": "NOTION_API_KEY not set",
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
-    
+
     # Test Notion API
     try:
         import httpx
+
         async with httpx.AsyncClient(timeout=10) as client:
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "Notion-Version": "2022-06-28"
-            }
-            response = await client.get(
-                "https://api.notion.com/v1/users/me",
-                headers=headers
-            )
+            headers = {"Authorization": f"Bearer {api_key}", "Notion-Version": "2022-06-28"}
+            response = await client.get("https://api.notion.com/v1/users/me", headers=headers)
             if response.status_code == 200:
                 return {
                     "name": "NOTION",
                     "status": "healthy",
                     "database_configured": bool(database_id),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat(),
                 }
             else:
                 return {
                     "name": "NOTION",
                     "status": "unhealthy",
                     "error": f"API returned {response.status_code}",
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.utcnow().isoformat(),
                 }
     except Exception as e:
         return {
             "name": "NOTION",
             "status": "error",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
 
@@ -251,5 +247,5 @@ async def integrations_status():
                 "client_id": bool(os.getenv("AZURE_CLIENT_ID")),
             },
         },
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }

@@ -101,17 +101,13 @@ class AvaniAgent(BaseAgent):
                 source_agent=task.get("source_agent", "unknown"),
                 action_type=task.get("action_type", "unknown"),
                 description=task.get("description", ""),
-                risk_tier=RiskTier.from_string(
-                    task.get("risk_tier", "low")
-                ),
+                risk_tier=RiskTier.from_string(task.get("risk_tier", "low")),
                 ecological_impact=task.get("ecological_impact", 0.0),
                 reversibility=task.get("reversibility", 1.0),
                 metadata=task.get("metadata", {}),
             )
 
-            decision: GovernorDecision = await self.governor.evaluate_proposal(
-                proposal
-            )
+            decision: GovernorDecision = await self.governor.evaluate_proposal(proposal)
 
             # Record to memory
             await self.remember(
@@ -133,18 +129,14 @@ class AvaniAgent(BaseAgent):
             logger.error("Avani evaluation error: %s", e)
             return {"status": "error", "error": str(e)}
 
-    async def _handle_check_season(
-        self, task: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _handle_check_season(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Return the current seasonal state."""
         return {
             "status": "success",
             "season": self.season_engine.to_dict(),
         }
 
-    async def _handle_update_season(
-        self, task: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _handle_update_season(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Update season metrics and evaluate transitions."""
         metrics = SeasonMetrics(
             eco_stability=task.get("eco_stability", 1.0),
@@ -176,9 +168,7 @@ class AvaniAgent(BaseAgent):
             "season": self.season_engine.to_dict(),
         }
 
-    async def _handle_get_constitution(
-        self, task: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _handle_get_constitution(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Return constitutional articles."""
         from mycosoft_mas.avani.constitution.articles import CONSTITUTION
 
@@ -188,9 +178,7 @@ class AvaniAgent(BaseAgent):
         }
         return {"status": "success", "articles": articles}
 
-    async def _handle_get_vision(
-        self, task: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _handle_get_vision(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Return vision principles."""
         from mycosoft_mas.avani.vision.vision import VISION_PRINCIPLES
 
@@ -205,9 +193,7 @@ class AvaniAgent(BaseAgent):
         ]
         return {"status": "success", "principles": principles}
 
-    async def _handle_get_stats(
-        self, task: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _handle_get_stats(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """Return governance statistics."""
         return {
             "status": "success",

@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Dict, Any, Optional
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, Optional
+
+from pydantic import BaseModel, Field
+
 
 class ActionStatus(str, Enum):
     PENDING = "pending"
@@ -10,12 +12,14 @@ class ActionStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
 
+
 class ActionType(str, Enum):
     TOOL_USE = "tool_use"
     API_CALL = "api_call"
     DB_WRITE = "db_write"
     FILE_WRITE = "file_write"
     SYSTEM_CMD = "system_cmd"
+
 
 class Action(BaseModel):
     id: str = Field(..., description="Unique action ID")

@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,9 @@ async def _fetch_sheet_status_from_supabase() -> Optional[Dict[str, Any]]:
     Fetch durable sync status from Supabase sheet_sync_status and sync_runs.
     Returns dict with last_run, success, tabs (per-tab status), error; or None if unavailable.
     """
-    url = os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "").rstrip("/")
+    url = os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL", "").rstrip(
+        "/"
+    )
     key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_SERVICE_KEY")
     if not url or not key:
         return None
@@ -177,7 +179,9 @@ class SyncStatusResponse(BaseModel):
 
 @router.post("/sync")
 async def trigger_sync(
-    tabs: Optional[str] = Query(None, description="Comma-separated tab names, e.g. inventory,hardware"),
+    tabs: Optional[str] = Query(
+        None, description="Comma-separated tab names, e.g. inventory,hardware"
+    ),
 ):
     """
     Trigger master spreadsheet sync (fetches data and pushes to Google Sheets).

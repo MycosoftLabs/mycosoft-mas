@@ -5,19 +5,19 @@ Created: February 4, 2026
 SOC integration, incident management, and MINDEX cryptography.
 """
 
+import hashlib
 import logging
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-import hashlib
-import json
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class SeverityLevel(Enum):
     """Incident severity levels."""
+
     CRITICAL = 1
     HIGH = 2
     MEDIUM = 3
@@ -27,6 +27,7 @@ class SeverityLevel(Enum):
 
 class IncidentStatus(Enum):
     """Incident status."""
+
     NEW = "new"
     ACKNOWLEDGED = "acknowledged"
     INVESTIGATING = "investigating"
@@ -37,6 +38,7 @@ class IncidentStatus(Enum):
 
 class ThreatCategory(Enum):
     """Threat categories."""
+
     MALWARE = "malware"
     INTRUSION = "intrusion"
     DATA_BREACH = "data_breach"
@@ -51,6 +53,7 @@ class ThreatCategory(Enum):
 @dataclass
 class SecurityIncident:
     """A security incident."""
+
     incident_id: str
     title: str
     description: str
@@ -72,6 +75,7 @@ class SecurityIncident:
 @dataclass
 class AuditLogEntry:
     """An audit log entry."""
+
     log_id: str
     timestamp: datetime
     action: str
@@ -86,21 +90,21 @@ class AuditLogEntry:
 class SOCIntegration:
     """
     Security Operations Center integration.
-    
+
     Features:
     - Incident creation and management
     - Threat detection alerts
     - Audit logging
     - Compliance reporting
     """
-    
+
     def __init__(self, voice_announcer: Optional[Any] = None):
         self.voice_announcer = voice_announcer
         self.incidents: Dict[str, SecurityIncident] = {}
         self.audit_log: List[AuditLogEntry] = []
-        
+
         logger.info("SOCIntegration initialized")
-    
+
     async def create_incident(
         self,
         title: str,
@@ -112,7 +116,7 @@ class SOCIntegration:
     ) -> SecurityIncident:
         """Create a new security incident."""
         incident_id = hashlib.md5(f"{title}{datetime.now().isoformat()}".encode()).hexdigest()[:12]
-        
+
         incident = SecurityIncident(
             incident_id=incident_id,
             title=title,
@@ -122,9 +126,9 @@ class SOCIntegration:
             source_ip=source_ip,
             affected_systems=affected_systems or [],
         )
-        
+
         self.incidents[incident_id] = incident
-        
+
         # Log the creation
         await self.log_action(
             action="incident_created",
@@ -133,14 +137,14 @@ class SOCIntegration:
             result="success",
             details={"severity": severity.name, "category": category.value},
         )
-        
+
         # Voice announcement for critical/high severity
         if severity in (SeverityLevel.CRITICAL, SeverityLevel.HIGH) and self.voice_announcer:
             self.voice_announcer(f"Security Alert: {severity.name} severity incident - {title}")
-        
+
         logger.info(f"Created incident: {incident_id} - {title}")
         return incident
-    
+
     async def update_incident(
         self,
         incident_id: str,
@@ -151,23 +155,23 @@ class SOCIntegration:
         """Update an incident."""
         if incident_id not in self.incidents:
             return None
-        
+
         incident = self.incidents[incident_id]
         incident.updated_at = datetime.now()
-        
+
         if status:
             incident.status = status
             if status == IncidentStatus.ACKNOWLEDGED:
                 incident.acknowledged_at = datetime.now()
             elif status == IncidentStatus.RESOLVED:
                 incident.resolved_at = datetime.now()
-        
+
         if assigned_to:
             incident.assigned_to = assigned_to
-        
+
         if action_taken:
             incident.actions_taken.append(action_taken)
-        
+
         await self.log_action(
             action="incident_updated",
             actor="soc-integration",
@@ -175,21 +179,24 @@ class SOCIntegration:
             result="success",
             details={"status": incident.status.value if incident.status else None},
         )
-        
+
         return incident
-    
-    async def get_active_incidents(self, severity_filter: Optional[SeverityLevel] = None) -> List[SecurityIncident]:
+
+    async def get_active_incidents(
+        self, severity_filter: Optional[SeverityLevel] = None
+    ) -> List[SecurityIncident]:
         """Get all active (non-closed) incidents."""
         active = [
-            i for i in self.incidents.values()
+            i
+            for i in self.incidents.values()
             if i.status not in (IncidentStatus.RESOLVED, IncidentStatus.CLOSED)
         ]
-        
+
         if severity_filter:
             active = [i for i in active if i.severity == severity_filter]
-        
+
         return sorted(active, key=lambda x: x.severity.value)
-    
+
     async def log_action(
         self,
         action: str,
@@ -200,8 +207,10 @@ class SOCIntegration:
         ip_address: Optional[str] = None,
     ) -> AuditLogEntry:
         """Log an auditable action."""
-        log_id = hashlib.md5(f"{action}{actor}{datetime.now().isoformat()}".encode()).hexdigest()[:16]
-        
+        log_id = hashlib.md5(f"{action}{actor}{datetime.now().isoformat()}".encode()).hexdigest()[
+            :16
+        ]
+
         entry = AuditLogEntry(
             log_id=log_id,
             timestamp=datetime.now(),
@@ -212,15 +221,15 @@ class SOCIntegration:
             details=details or {},
             ip_address=ip_address,
         )
-        
+
         self.audit_log.append(entry)
-        
+
         # Keep only last 10000 entries
         if len(self.audit_log) > 10000:
             self.audit_log = self.audit_log[-10000:]
-        
+
         return entry
-    
+
     async def get_audit_log(
         self,
         actor: Optional[str] = None,
@@ -229,33 +238,33 @@ class SOCIntegration:
     ) -> List[AuditLogEntry]:
         """Get audit log entries."""
         entries = self.audit_log
-        
+
         if actor:
             entries = [e for e in entries if e.actor == actor]
         if action:
             entries = [e for e in entries if e.action == action]
-        
+
         return sorted(entries, key=lambda x: x.timestamp, reverse=True)[:limit]
-    
+
     async def threat_assessment(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Assess threat level from provided data."""
         # Simple threat scoring
         score = 0
         indicators = []
-        
+
         # Check for known bad patterns
         if data.get("source_ip", "").startswith("10."):
             score += 1
             indicators.append("internal_ip")
-        
+
         if "malware" in str(data).lower():
             score += 5
             indicators.append("malware_keyword")
-        
+
         if "unauthorized" in str(data).lower():
             score += 3
             indicators.append("unauthorized_keyword")
-        
+
         # Determine threat level
         if score >= 5:
             level = "high"
@@ -265,7 +274,7 @@ class SOCIntegration:
             level = "low"
         else:
             level = "none"
-        
+
         return {
             "threat_level": level,
             "score": score,
@@ -277,25 +286,26 @@ class SOCIntegration:
 class MINDEXCrypto:
     """
     MINDEX cryptography engine integration.
-    
+
     Features:
     - Secure key generation
     - Data encryption/decryption
     - Hash verification
     - Secure token generation
     """
-    
+
     def __init__(self):
         self.key_store: Dict[str, bytes] = {}
         logger.info("MINDEXCrypto initialized")
-    
+
     def generate_key(self, key_id: str, length: int = 32) -> str:
         """Generate a secure key."""
         import secrets
+
         key = secrets.token_bytes(length)
         self.key_store[key_id] = key
         return key.hex()
-    
+
     def hash_data(self, data: str, algorithm: str = "sha256") -> str:
         """Hash data using specified algorithm."""
         if algorithm == "sha256":
@@ -306,23 +316,25 @@ class MINDEXCrypto:
             return hashlib.blake2b(data.encode()).hexdigest()
         else:
             raise ValueError(f"Unsupported algorithm: {algorithm}")
-    
+
     def verify_hash(self, data: str, expected_hash: str, algorithm: str = "sha256") -> bool:
         """Verify a hash."""
         computed = self.hash_data(data, algorithm)
         return computed == expected_hash
-    
+
     def generate_token(self, length: int = 32) -> str:
         """Generate a secure random token."""
         import secrets
+
         return secrets.token_urlsafe(length)
-    
+
     def encrypt_for_voice(self, data: str, key_id: str) -> Dict[str, str]:
         """Encrypt data for voice transmission using AES-GCM."""
-        import os
         import base64
+        import os
+
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-        
+
         # Get encryption key from environment or generate one
         key_env = os.environ.get("VOICE_ENCRYPTION_KEY")
         if key_env:
@@ -330,14 +342,14 @@ class MINDEXCrypto:
         else:
             # Generate a 256-bit key for AES-GCM
             key = AESGCM.generate_key(bit_length=256)
-        
+
         # Generate a random 96-bit nonce
         nonce = os.urandom(12)
-        
+
         # Encrypt using AES-GCM
         aesgcm = AESGCM(key)
         ciphertext = aesgcm.encrypt(nonce, data.encode(), None)
-        
+
         # Return base64-encoded values for transmission
         return {
             "ciphertext": base64.b64encode(ciphertext).decode(),
@@ -345,47 +357,48 @@ class MINDEXCrypto:
             "key_id": key_id,
             "algorithm": "AES-256-GCM",
         }
-    
+
     def decrypt_from_voice(self, ciphertext: str, key_id: str, nonce: Optional[str] = None) -> str:
         """Decrypt data from voice transmission using AES-GCM."""
-        import os
         import base64
+        import os
+
         from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-        
+
         # Get encryption key from environment
         key_env = os.environ.get("VOICE_ENCRYPTION_KEY")
         if not key_env:
             raise ValueError("VOICE_ENCRYPTION_KEY environment variable not set")
-        
+
         key = base64.b64decode(key_env)
         nonce_bytes = base64.b64decode(nonce) if nonce else os.urandom(12)
         ciphertext_bytes = base64.b64decode(ciphertext)
-        
+
         # Decrypt using AES-GCM
         aesgcm = AESGCM(key)
         plaintext = aesgcm.decrypt(nonce_bytes, ciphertext_bytes, None)
-        
+
         return plaintext.decode()
 
 
 class VoiceSecurityGateway:
     """
     Security gateway for voice commands.
-    
+
     Features:
     - Command validation
     - Rate limiting
     - Threat detection
     - Audit logging
     """
-    
+
     def __init__(self):
         self.soc = SOCIntegration()
         self.crypto = MINDEXCrypto()
         self.rate_limits: Dict[str, List[datetime]] = {}
-        
+
         logger.info("VoiceSecurityGateway initialized")
-    
+
     async def validate_command(
         self,
         command: str,
@@ -402,10 +415,10 @@ class VoiceSecurityGateway:
                 result="blocked",
             )
             return {"valid": False, "reason": "Rate limit exceeded"}
-        
+
         # Threat assessment
         threat = await self.soc.threat_assessment({"command": command, "user_id": user_id})
-        
+
         if threat["threat_level"] == "high":
             await self.soc.create_incident(
                 title=f"Suspicious voice command from {user_id}",
@@ -414,7 +427,7 @@ class VoiceSecurityGateway:
                 category=ThreatCategory.ANOMALY,
             )
             return {"valid": False, "reason": "Command flagged for review"}
-        
+
         # Log the validated command
         await self.soc.log_action(
             action="voice_command",
@@ -423,26 +436,25 @@ class VoiceSecurityGateway:
             result="validated",
             details={"command_hash": self.crypto.hash_data(command)[:16]},
         )
-        
+
         return {"valid": True, "threat_level": threat["threat_level"]}
-    
-    def _check_rate_limit(self, user_id: str, max_requests: int = 60, window_seconds: int = 60) -> bool:
+
+    def _check_rate_limit(
+        self, user_id: str, max_requests: int = 60, window_seconds: int = 60
+    ) -> bool:
         """Check rate limit for user."""
         now = datetime.now()
-        
+
         if user_id not in self.rate_limits:
             self.rate_limits[user_id] = []
-        
+
         # Clean old entries
         cutoff = now.timestamp() - window_seconds
-        self.rate_limits[user_id] = [
-            t for t in self.rate_limits[user_id]
-            if t.timestamp() > cutoff
-        ]
-        
+        self.rate_limits[user_id] = [t for t in self.rate_limits[user_id] if t.timestamp() > cutoff]
+
         if len(self.rate_limits[user_id]) >= max_requests:
             return False
-        
+
         self.rate_limits[user_id].append(now)
         return True
 

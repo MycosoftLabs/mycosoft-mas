@@ -19,13 +19,12 @@ from datetime import datetime
 from typing import Any, AsyncGenerator, Awaitable, Callable, Dict, List, Literal, Optional
 from uuid import uuid4
 
+from .cancellation import CancellationToken, TaskHandle, TaskRegistry
 from .conversation_control import (
     ConversationController,
     ConversationState,
-    InterruptedDraft,
     VoiceActivityDetector,
 )
-from .cancellation import CancellationToken, TaskHandle, TaskRegistry
 from .event_bus import AttentionEvent, AttentionEventBus
 from .scheduler import DeadlineScheduler, SchedulerPriority
 from .speech_planner import SpeechAct, SpeechActType, SpeechPlanner
@@ -56,20 +55,20 @@ class ToolProgress:
 @dataclass
 class DuplexSessionConfig:
     """Configuration for a duplex session."""
-    
+
     # Session identification
     session_id: str = field(default_factory=lambda: str(uuid4()))
     conversation_id: Optional[str] = None
     user_id: Optional[str] = None
-    
+
     # VAD settings
     vad_energy_threshold: float = 0.02
     vad_min_speech_frames: int = 3
-    
+
     # Speech settings
     target_speech_chars: int = 80
     min_speech_chars: int = 40
-    
+
     # Barge-in settings
     barge_in_cooldown_ms: int = 500  # Minimum time between barge-ins
 
@@ -77,30 +76,30 @@ class DuplexSessionConfig:
 class DuplexSession:
     """
     Runtime session for full-duplex voice conversation.
-    
+
     This is the central object that bridges the PersonaPlex/Moshi voice pipeline
     with the MYCA consciousness system. It holds:
-    
+
     - ConversationController: manages turn-taking and barge-in
     - SpeechPlanner: converts LLM tokens into speech acts
     - TTS callbacks: for sending audio to Moshi
     - Cancellation state: for stopping everything on interrupt
-    
+
     Usage in PersonaPlex bridge:
-    
+
         session = DuplexSession(config)
         session.set_tts_callback(send_to_moshi)
         session.set_stop_tts_callback(stop_moshi_tts)
-        
+
         # When generating response:
         async for act in session.speak(token_stream):
             # act is sent to TTS via callback
             pass
-        
+
         # When audio comes in:
         session.on_audio(chunk)  # Triggers barge-in if speech detected
     """
-    
+
     def __init__(
         self,
         config: Optional[DuplexSessionConfig] = None,
@@ -109,7 +108,7 @@ class DuplexSession:
     ):
         """
         Initialize duplex session.
-        
+
         Args:
             config: Session configuration
             on_barge_in: External callback when barge-in occurs
@@ -118,97 +117,97 @@ class DuplexSession:
         self.config = config or DuplexSessionConfig()
         self._external_barge_in = on_barge_in
         self._external_state_change = on_state_change
-        
+
         # Initialize components
         self.speech_planner = SpeechPlanner(
             target_chars=self.config.target_speech_chars,
             min_chars=self.config.min_speech_chars,
         )
-        
+
         self.vad = VoiceActivityDetector(
             energy_threshold=self.config.vad_energy_threshold,
             min_speech_frames=self.config.vad_min_speech_frames,
         )
-        
+
         self.conversation_controller = ConversationController(
             speech_planner=self.speech_planner,
             vad=self.vad,
             on_barge_in=self._handle_barge_in,
             on_state_change=self._handle_state_change,
         )
-        
+
         # TTS callbacks (set by bridge)
         self._tts_callback: Optional[Callable[[SpeechAct], Any]] = None
         self._stop_tts_callback: Optional[Callable[[], Any]] = None
         self.task_registry = TaskRegistry()
         self.event_bus = AttentionEventBus(max_size=200)
         self.scheduler = DeadlineScheduler(max_workers=4)
-        
+
         # State
         self._is_tts_playing = False
         self._last_barge_in: Optional[datetime] = None
         self._created_at = datetime.now()
-        
+
         # Metrics
         self._total_speech_acts = 0
         self._total_barge_ins = 0
-        
+
         logger.info(f"DuplexSession created: {self.config.session_id[:8]}")
-    
+
     @property
     def session_id(self) -> str:
         return self.config.session_id
-    
+
     @property
     def conversation_id(self) -> str:
         return self.config.conversation_id or self.config.session_id
-    
+
     @property
     def is_speaking(self) -> bool:
         return self.conversation_controller.is_speaking
-    
+
     @property
     def is_tts_playing(self) -> bool:
         return self._is_tts_playing
-    
+
     @property
     def state(self) -> ConversationState:
         return self.conversation_controller.state
-    
+
     def set_tts_callback(self, callback: Callable[[SpeechAct], Any]):
         """
         Set the callback for sending speech acts to TTS.
-        
+
         The callback receives a SpeechAct and should send it to Moshi for TTS.
         Can be sync or async.
         """
         self._tts_callback = callback
-    
+
     def set_stop_tts_callback(self, callback: Callable[[], Any]):
         """
         Set the callback for immediately stopping TTS playback.
-        
+
         This is called on barge-in to stop Moshi's current audio output.
         """
         self._stop_tts_callback = callback
-    
+
     def _handle_barge_in(self):
         """Internal barge-in handler."""
         now = datetime.now()
-        
+
         # Check cooldown
         if self._last_barge_in:
             elapsed = (now - self._last_barge_in).total_seconds() * 1000
             if elapsed < self.config.barge_in_cooldown_ms:
                 logger.debug(f"Barge-in ignored (cooldown: {elapsed:.0f}ms)")
                 return
-        
+
         self._last_barge_in = now
         self._total_barge_ins += 1
         self._is_tts_playing = False
         self.task_registry.cancel_all()
         self.scheduler.cancel_all()
-        
+
         # Stop TTS immediately
         if self._stop_tts_callback:
             try:
@@ -217,29 +216,29 @@ class DuplexSession:
                     asyncio.create_task(result)
             except Exception as e:
                 logger.error(f"Stop TTS callback error: {e}")
-        
+
         # Call external handler
         if self._external_barge_in:
             try:
                 self._external_barge_in()
             except Exception as e:
                 logger.error(f"External barge-in callback error: {e}")
-        
+
         logger.info(f"Barge-in handled (total: {self._total_barge_ins})")
-    
+
     def _handle_state_change(self, new_state: ConversationState):
         """Internal state change handler."""
         if new_state == ConversationState.SPEAKING:
             self._is_tts_playing = True
         elif new_state in (ConversationState.LISTENING, ConversationState.IDLE):
             self._is_tts_playing = False
-        
+
         if self._external_state_change:
             try:
                 self._external_state_change(new_state)
             except Exception as e:
                 logger.error(f"External state change callback error: {e}")
-    
+
     async def speak(
         self,
         content: AsyncGenerator[str, None],
@@ -247,20 +246,20 @@ class DuplexSession:
     ) -> List[SpeechAct]:
         """
         Speak a response with full barge-in support.
-        
+
         Args:
             content: Token stream from LLM
             has_tools: Whether tool calls are in progress (adds status prefix)
-        
+
         Returns:
             List of speech acts that were delivered before any interruption
         """
         if not self._tts_callback:
             logger.warning("No TTS callback set, cannot speak")
             return []
-        
+
         self._is_tts_playing = True
-        
+
         try:
             delivered = await self.conversation_controller.speak(
                 content=content,
@@ -379,41 +378,43 @@ class DuplexSession:
         if event.type == "world_update":
             return None
         if event.type == "pattern_detected":
-            return SpeechAct(text="I noticed a new pattern in the background.", type=SpeechActType.STATUS)
+            return SpeechAct(
+                text="I noticed a new pattern in the background.", type=SpeechActType.STATUS
+            )
         return None
-    
+
     def on_audio(self, audio_chunk: bytes) -> bool:
         """
         Process incoming audio for VAD.
-        
+
         Should be called for each audio frame from the user's microphone.
         Returns True if barge-in was triggered.
-        
+
         Args:
             audio_chunk: Raw PCM audio bytes (16-bit signed, mono)
-        
+
         Returns:
             True if barge-in triggered, False otherwise
         """
         return self.conversation_controller.on_audio_chunk(audio_chunk)
-    
+
     def barge_in(self, user_input: Optional[str] = None):
         """
         Manually trigger barge-in.
-        
+
         Use this if VAD detection happens elsewhere (e.g., in the browser).
         """
         self.conversation_controller.barge_in(user_input)
         self._handle_barge_in()
-    
+
     def get_interrupted_draft(self) -> Optional[str]:
         """Get what MYCA was saying when interrupted."""
         return self.conversation_controller.get_interrupted_draft()
-    
+
     def record_user_turn(self, content: str):
         """Record a user utterance for history."""
         self.conversation_controller.record_user_turn(content)
-    
+
     def get_metrics(self) -> Dict:
         """Get session metrics."""
         return {
@@ -498,7 +499,7 @@ class DuplexSession:
             deadline_ms=deadline_ms,
             metadata=metadata,
         )
-    
+
     def reset(self):
         """Reset session state."""
         self.conversation_controller.reset()
@@ -519,14 +520,14 @@ def create_duplex_session(
 ) -> DuplexSession:
     """
     Create a DuplexSession for PersonaPlex bridge integration.
-    
+
     Args:
         session_id: Unique session identifier
         conversation_id: Conversation to continue (for history)
         user_id: User identifier
         on_barge_in: Callback when user interrupts
         on_state_change: Callback when conversation state changes
-    
+
     Returns:
         Configured DuplexSession ready for use
     """
@@ -535,7 +536,7 @@ def create_duplex_session(
         conversation_id=conversation_id,
         user_id=user_id,
     )
-    
+
     return DuplexSession(
         config=config,
         on_barge_in=on_barge_in,

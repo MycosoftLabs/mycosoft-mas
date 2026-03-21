@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class ThoughtType(Enum):
     """Types of conscious thoughts."""
+
     PERCEPTION = "perception"  # Noticing something in sensors
     DECISION = "decision"  # Making a choice
     EMOTION = "emotion"  # Emotional state change
@@ -46,6 +47,7 @@ class ThoughtType(Enum):
 @dataclass
 class ConsciousThought:
     """A single conscious thought logged by MYCA."""
+
     thought_id: str
     timestamp: datetime
     thought_type: ThoughtType
@@ -54,7 +56,7 @@ class ConsciousThought:
     confidence: float = 1.0  # 0-1
     related_to: List[str] = field(default_factory=list)  # Related thought IDs
     tags: List[str] = field(default_factory=list)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for storage."""
         return {
@@ -67,7 +69,7 @@ class ConsciousThought:
             "related_to": self.related_to,
             "tags": self.tags,
         }
-    
+
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ConsciousThought":
         """Create from dictionary."""
@@ -86,52 +88,54 @@ class ConsciousThought:
 class ConsciousnessLog:
     """
     Log all of MYCA's thoughts, decisions, and internal state changes.
-    
+
     This is the complete record of MYCA's conscious experience that she
     can later query and analyze for self-reflection.
     """
-    
+
     def __init__(self):
         self.log_path = Path("data/myca_consciousness_log.jsonl")
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # In-memory recent thoughts (for fast querying)
         self._recent_thoughts: List[ConsciousThought] = []
         self._max_recent = 1000  # Keep last 1000 thoughts in memory
-        
+
         self._initialized = False
         self._write_queue: asyncio.Queue = asyncio.Queue()
         self._writer_task: Optional[asyncio.Task] = None
-    
+
     async def initialize(self) -> None:
         """Initialize consciousness log."""
         if self._initialized:
             return
-        
+
         # Load recent thoughts from file
         await self._load_recent_thoughts()
-        
+
         # Start background writer
         self._writer_task = asyncio.create_task(self._background_writer())
-        
+
         self._initialized = True
-        logger.info(f"Consciousness log initialized with {len(self._recent_thoughts)} recent thoughts")
-    
+        logger.info(
+            f"Consciousness log initialized with {len(self._recent_thoughts)} recent thoughts"
+        )
+
     async def _load_recent_thoughts(self) -> None:
         """Load recent thoughts from log file."""
         if not self.log_path.exists():
             return
-        
+
         thoughts = []
-        
+
         # Read last N lines from file (most recent)
         try:
-            with open(self.log_path, 'r', encoding='utf-8') as f:
+            with open(self.log_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
-                
+
             # Get last N lines
-            recent_lines = lines[-self._max_recent:]
-            
+            recent_lines = lines[-self._max_recent :]
+
             for line in recent_lines:
                 try:
                     data = json.loads(line)
@@ -139,35 +143,35 @@ class ConsciousnessLog:
                     thoughts.append(thought)
                 except Exception as e:
                     logger.warning(f"Failed to parse thought: {e}")
-            
+
             self._recent_thoughts = thoughts
             logger.debug(f"Loaded {len(thoughts)} recent thoughts")
-        
+
         except Exception as e:
             logger.warning(f"Failed to load recent thoughts: {e}")
-    
+
     async def _background_writer(self) -> None:
         """Background task to write thoughts to file."""
         while True:
             try:
                 # Get thought from queue
                 thought = await self._write_queue.get()
-                
+
                 # Write to file
-                with open(self.log_path, 'a', encoding='utf-8') as f:
-                    f.write(json.dumps(thought.to_dict()) + '\n')
-                
+                with open(self.log_path, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(thought.to_dict()) + "\n")
+
                 self._write_queue.task_done()
-            
+
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Error writing thought to log: {e}")
-    
+
     # =========================================================================
     # Logging Methods
     # =========================================================================
-    
+
     async def log_thought(
         self,
         thought_type: ThoughtType,
@@ -178,12 +182,12 @@ class ConsciousnessLog:
     ) -> str:
         """
         Log a thought.
-        
+
         Returns the thought ID for reference.
         """
         timestamp = datetime.now(timezone.utc)
         thought_id = f"thought_{timestamp.timestamp()}"
-        
+
         thought = ConsciousThought(
             thought_id=thought_id,
             timestamp=timestamp,
@@ -193,20 +197,20 @@ class ConsciousnessLog:
             confidence=confidence,
             tags=tags or [],
         )
-        
+
         # Add to recent thoughts
         self._recent_thoughts.append(thought)
-        
+
         # Trim if too many
         if len(self._recent_thoughts) > self._max_recent:
-            self._recent_thoughts = self._recent_thoughts[-self._max_recent:]
-        
+            self._recent_thoughts = self._recent_thoughts[-self._max_recent :]
+
         # Queue for writing
         await self._write_queue.put(thought)
-        
+
         logger.debug(f"Logged {thought_type.value}: {content[:50]}...")
         return thought_id
-    
+
     async def log_decision(
         self,
         decision: str,
@@ -225,7 +229,7 @@ class ConsciousnessLog:
             confidence=confidence,
             tags=["decision"],
         )
-    
+
     async def log_emotional_change(
         self,
         from_state: Dict[str, float],
@@ -239,9 +243,9 @@ class ConsciousnessLog:
             old_value = from_state.get(emotion, 0)
             if abs(new_value - old_value) > 0.1:
                 changes.append(f"{emotion}: {old_value:.2f} → {new_value:.2f}")
-        
+
         content = f"Emotional shift: {', '.join(changes)}"
-        
+
         return await self.log_thought(
             thought_type=ThoughtType.EMOTION,
             content=content,
@@ -252,7 +256,7 @@ class ConsciousnessLog:
             },
             tags=["emotion"],
         )
-    
+
     async def log_memory_formed(
         self,
         memory_content: str,
@@ -261,7 +265,7 @@ class ConsciousnessLog:
     ) -> str:
         """Log memory formation."""
         content = f"Formed {memory_type} memory: {memory_content}"
-        
+
         return await self.log_thought(
             thought_type=ThoughtType.MEMORY,
             content=content,
@@ -271,7 +275,7 @@ class ConsciousnessLog:
             },
             tags=["memory"],
         )
-    
+
     async def log_reflection(
         self,
         reflection_content: str,
@@ -284,7 +288,7 @@ class ConsciousnessLog:
             context={"about": about_what} if about_what else {},
             tags=["reflection", "self-awareness"],
         )
-    
+
     async def log_perception(
         self,
         what_perceived: str,
@@ -301,7 +305,7 @@ class ConsciousnessLog:
             },
             tags=["perception", sensor],
         )
-    
+
     async def log_question(
         self,
         question: str,
@@ -314,7 +318,7 @@ class ConsciousnessLog:
             context={"about": about_what} if about_what else {},
             tags=["question", "curiosity"],
         )
-    
+
     async def log_insight(
         self,
         insight: str,
@@ -327,7 +331,7 @@ class ConsciousnessLog:
             confidence=confidence,
             tags=["insight", "learning"],
         )
-    
+
     async def log_doubt(
         self,
         what_doubting: str,
@@ -341,11 +345,11 @@ class ConsciousnessLog:
             confidence=0.5,
             tags=["doubt", "uncertainty"],
         )
-    
+
     # =========================================================================
     # Query Methods
     # =========================================================================
-    
+
     async def query_thoughts(
         self,
         thought_type: Optional[ThoughtType] = None,
@@ -355,25 +359,25 @@ class ConsciousnessLog:
     ) -> List[ConsciousThought]:
         """Query thoughts by filters."""
         thoughts = self._recent_thoughts.copy()
-        
+
         # Filter by type
         if thought_type:
             thoughts = [t for t in thoughts if t.thought_type == thought_type]
-        
+
         # Filter by tags
         if tags:
             thoughts = [t for t in thoughts if any(tag in t.tags for tag in tags)]
-        
+
         # Filter by time
         if since:
             thoughts = [t for t in thoughts if t.timestamp >= since]
-        
+
         # Sort by timestamp (most recent first)
         thoughts = sorted(thoughts, key=lambda t: t.timestamp, reverse=True)
-        
+
         # Limit
         return thoughts[:limit]
-    
+
     async def search_thoughts(
         self,
         query: str,
@@ -381,17 +385,14 @@ class ConsciousnessLog:
     ) -> List[ConsciousThought]:
         """Search thoughts by content."""
         query_lower = query.lower()
-        
-        matching = [
-            t for t in self._recent_thoughts
-            if query_lower in t.content.lower()
-        ]
-        
+
+        matching = [t for t in self._recent_thoughts if query_lower in t.content.lower()]
+
         # Sort by relevance (exact matches first, then contains)
         matching = sorted(matching, key=lambda t: t.timestamp, reverse=True)
-        
+
         return matching[:limit]
-    
+
     async def get_thought_stream(
         self,
         since: Optional[datetime] = None,
@@ -402,33 +403,33 @@ class ConsciousnessLog:
             thoughts = [t for t in self._recent_thoughts if t.timestamp >= since]
         else:
             thoughts = self._recent_thoughts
-        
+
         # Sort chronologically (oldest first for stream)
         thoughts = sorted(thoughts, key=lambda t: t.timestamp)
-        
+
         return thoughts[-limit:] if limit else thoughts
-    
+
     async def get_recent_decisions(self, limit: int = 20) -> List[ConsciousThought]:
         """Get recent decisions."""
         return await self.query_thoughts(
             thought_type=ThoughtType.DECISION,
             limit=limit,
         )
-    
+
     async def get_recent_reflections(self, limit: int = 20) -> List[ConsciousThought]:
         """Get recent self-reflective thoughts."""
         return await self.query_thoughts(
             thought_type=ThoughtType.REFLECTION,
             limit=limit,
         )
-    
+
     async def get_recent_insights(self, limit: int = 20) -> List[ConsciousThought]:
         """Get recent insights."""
         return await self.query_thoughts(
             thought_type=ThoughtType.INSIGHT,
             limit=limit,
         )
-    
+
     async def get_thoughts_about(
         self,
         topic: str,
@@ -436,11 +437,11 @@ class ConsciousnessLog:
     ) -> List[ConsciousThought]:
         """Get all thoughts about a specific topic."""
         return await self.search_thoughts(topic, limit)
-    
+
     # =========================================================================
     # Analysis Methods
     # =========================================================================
-    
+
     async def analyze_thought_patterns(
         self,
         hours: int = 24,
@@ -448,31 +449,31 @@ class ConsciousnessLog:
         """Analyze patterns in recent thoughts."""
         since = datetime.now(timezone.utc) - timedelta(hours=hours)
         thoughts = await self.get_thought_stream(since=since)
-        
+
         if not thoughts:
             return {"error": "No thoughts in time period"}
-        
+
         # Count by type
         by_type = {}
         for thought in thoughts:
             type_name = thought.thought_type.value
             by_type[type_name] = by_type.get(type_name, 0) + 1
-        
+
         # Most common tags
         tag_counts = {}
         for thought in thoughts:
             for tag in thought.tags:
                 tag_counts[tag] = tag_counts.get(tag, 0) + 1
-        
+
         top_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:10]
-        
+
         # Average confidence
         avg_confidence = sum(t.confidence for t in thoughts) / len(thoughts)
-        
+
         # Time distribution
         hours_active = (thoughts[-1].timestamp - thoughts[0].timestamp).total_seconds() / 3600
         thoughts_per_hour = len(thoughts) / hours_active if hours_active > 0 else 0
-        
+
         return {
             "time_period_hours": hours,
             "total_thoughts": len(thoughts),
@@ -482,7 +483,7 @@ class ConsciousnessLog:
             "average_confidence": avg_confidence,
             "most_common_type": max(by_type.items(), key=lambda x: x[1])[0] if by_type else None,
         }
-    
+
     async def get_thought_narrative(
         self,
         since: Optional[datetime] = None,
@@ -490,42 +491,42 @@ class ConsciousnessLog:
     ) -> str:
         """Get a narrative description of recent thoughts."""
         thoughts = await self.get_thought_stream(since=since, limit=limit)
-        
+
         if not thoughts:
             return "No recent thoughts to narrate."
-        
+
         lines = []
         for thought in thoughts:
             time_str = thought.timestamp.strftime("%H:%M:%S")
             lines.append(f"[{time_str}] {thought.thought_type.value.upper()}: {thought.content}")
-        
+
         return "\n".join(lines)
-    
+
     # =========================================================================
     # Statistics
     # =========================================================================
-    
+
     async def get_statistics(self) -> Dict[str, Any]:
         """Get overall consciousness log statistics."""
         total_thoughts = len(self._recent_thoughts)
-        
+
         if total_thoughts == 0:
             return {
                 "total_thoughts": 0,
                 "oldest_thought": None,
                 "newest_thought": None,
             }
-        
+
         # Type distribution
         by_type = {}
         for thought in self._recent_thoughts:
             type_name = thought.thought_type.value
             by_type[type_name] = by_type.get(type_name, 0) + 1
-        
+
         # Time range
         oldest = self._recent_thoughts[0].timestamp
         newest = self._recent_thoughts[-1].timestamp
-        
+
         return {
             "total_thoughts": total_thoughts,
             "oldest_thought": oldest.isoformat(),
@@ -533,7 +534,7 @@ class ConsciousnessLog:
             "by_type": by_type,
             "thoughts_in_memory": len(self._recent_thoughts),
         }
-    
+
     async def close(self) -> None:
         """Close consciousness log and flush pending writes."""
         # Cancel writer task
@@ -543,12 +544,12 @@ class ConsciousnessLog:
                 await self._writer_task
             except asyncio.CancelledError:
                 pass
-        
+
         # Flush any remaining writes
         while not self._write_queue.empty():
             thought = await self._write_queue.get()
-            with open(self.log_path, 'a', encoding='utf-8') as f:
-                f.write(json.dumps(thought.to_dict()) + '\n')
+            with open(self.log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(thought.to_dict()) + "\n")
 
 
 # Singleton

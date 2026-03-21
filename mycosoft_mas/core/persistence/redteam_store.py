@@ -52,17 +52,31 @@ class RedTeamStore:
         }
         if supabase_available():
             # Upsert by simulation_id
-            existing = supabase_select("red_team_simulations", filters={"simulation_id": sim_id}, limit=1)
+            existing = supabase_select(
+                "red_team_simulations", filters={"simulation_id": sim_id}, limit=1
+            )
             if existing:
-                supabase_update("red_team_simulations", {"updated_at": datetime.now(timezone.utc), **row}, {"simulation_id": sim_id})
+                supabase_update(
+                    "red_team_simulations",
+                    {"updated_at": datetime.now(timezone.utc), **row},
+                    {"simulation_id": sim_id},
+                )
             else:
-                supabase_insert("red_team_simulations", {**row, "started_at": row["started_at"] or datetime.now(timezone.utc).isoformat()})
+                supabase_insert(
+                    "red_team_simulations",
+                    {
+                        **row,
+                        "started_at": row["started_at"] or datetime.now(timezone.utc).isoformat(),
+                    },
+                )
         _memory_simulations[sim_id] = simulation
 
     def get(self, simulation_id: str) -> Optional[Dict[str, Any]]:
         """Get a simulation by ID."""
         if supabase_available():
-            rows = supabase_select("red_team_simulations", filters={"simulation_id": simulation_id}, limit=1)
+            rows = supabase_select(
+                "red_team_simulations", filters={"simulation_id": simulation_id}, limit=1
+            )
             if rows:
                 r = rows[0]
                 return {

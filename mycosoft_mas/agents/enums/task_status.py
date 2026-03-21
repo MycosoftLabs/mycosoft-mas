@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class TaskStatus(Enum):
     TODO = "todo"
     IN_PROGRESS = "in_progress"
@@ -9,4 +10,4 @@ class TaskStatus(Enum):
     CANCELLED = "cancelled"
     ON_HOLD = "on_hold"
     SCHEDULED = "scheduled"
-    OVERDUE = "overdue" 
+    OVERDUE = "overdue"

@@ -11,7 +11,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from uuid import uuid4
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -61,10 +61,12 @@ async def a2a_websocket(websocket: WebSocket) -> None:
             parts = msg.get("parts", [])
             user_text = _extract_user_message(parts)
             if not user_text:
-                await websocket.send_json({
-                    "type": "error",
-                    "payload": {"message": "Message must contain at least one text part"},
-                })
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "payload": {"message": "Message must contain at least one text part"},
+                    }
+                )
                 continue
 
             context_id = msg.get("contextId") or session_context.get("context_id") or str(uuid4())
@@ -74,9 +76,10 @@ async def a2a_websocket(websocket: WebSocket) -> None:
             # Stream through voice orchestrator
             try:
                 from mycosoft_mas.core.routers.voice_orchestrator_api import (
-                    get_orchestrator,
                     VoiceOrchestratorRequest,
+                    get_orchestrator,
                 )
+
                 orch = get_orchestrator()
                 meta = data.get("metadata") or {}
                 vo_req = VoiceOrchestratorRequest(
@@ -98,25 +101,31 @@ async def a2a_websocket(websocket: WebSocket) -> None:
             chunk_size = 50
             for i in range(0, len(response_text), chunk_size):
                 chunk = response_text[i : i + chunk_size]
-                await websocket.send_json({
-                    "type": "token",
-                    "payload": {"text": chunk, "task_id": task_id},
-                })
+                await websocket.send_json(
+                    {
+                        "type": "token",
+                        "payload": {"text": chunk, "task_id": task_id},
+                    }
+                )
 
             now = datetime.now(timezone.utc).isoformat()
-            await websocket.send_json({
-                "type": "task",
-                "payload": {
-                    "id": task_id,
-                    "contextId": context_id,
-                    "status": {"state": "TASK_STATE_COMPLETED", "timestamp": now},
-                    "artifacts": [{
-                        "artifactId": str(uuid4()),
-                        "name": "response",
-                        "parts": [{"text": response_text, "mediaType": "text/plain"}],
-                    }],
-                },
-            })
+            await websocket.send_json(
+                {
+                    "type": "task",
+                    "payload": {
+                        "id": task_id,
+                        "contextId": context_id,
+                        "status": {"state": "TASK_STATE_COMPLETED", "timestamp": now},
+                        "artifacts": [
+                            {
+                                "artifactId": str(uuid4()),
+                                "name": "response",
+                                "parts": [{"text": response_text, "mediaType": "text/plain"}],
+                            }
+                        ],
+                    },
+                }
+            )
     except WebSocketDisconnect:
         logger.info("A2A WebSocket disconnected")
     except Exception as e:

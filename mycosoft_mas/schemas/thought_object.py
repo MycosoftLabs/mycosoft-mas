@@ -7,17 +7,16 @@ grounded context and ThoughtObjects with evidence links.
 Created: February 17, 2026
 """
 
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 
-import uuid
-
-
 class ThoughtObjectType(Enum):
     """Type of thought."""
+
     HYPOTHESIS = "hypothesis"
     PLAN = "plan"
     ANSWER = "answer"
@@ -29,6 +28,7 @@ class ThoughtObjectType(Enum):
 @dataclass
 class EvidenceLink:
     """Link to grounded evidence (EP, episode, URL)."""
+
     ep_id: Optional[str] = None
     episode_id: Optional[str] = None
     url: Optional[str] = None
@@ -38,6 +38,7 @@ class EvidenceLink:
 @dataclass
 class ThoughtObject:
     """Structured thought with evidence links - no ungrounded claims."""
+
     id: str = field(default_factory=lambda: f"to_{uuid.uuid4().hex[:16]}")
     claim: str = ""
     type: ThoughtObjectType = ThoughtObjectType.ANSWER

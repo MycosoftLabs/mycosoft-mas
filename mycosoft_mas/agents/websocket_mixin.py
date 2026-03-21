@@ -40,7 +40,9 @@ class AgentWebSocketMixin:
         self._ws_reconnect_attempt: int = 0
         self._ws_connected: bool = False
 
-    async def connect_to_bus(self, agent_id: str, metadata: Optional[Dict[str, Any]] = None) -> bool:
+    async def connect_to_bus(
+        self, agent_id: str, metadata: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """
         Connect to the Agent Event Bus WebSocket.
         Uses exponential backoff on reconnect.
@@ -60,11 +62,13 @@ class AgentWebSocketMixin:
                 timeout=10.0,
             )
             await self._ws_connection.send(
-                json.dumps({
-                    "agent_id": ws_agent_id,
-                    "metadata": metadata or {},
-                    "channels": ["agents:status", "agents:tasks", "agents:tool_calls"],
-                })
+                json.dumps(
+                    {
+                        "agent_id": ws_agent_id,
+                        "metadata": metadata or {},
+                        "channels": ["agents:status", "agents:tasks", "agents:tool_calls"],
+                    }
+                )
             )
             resp_raw = await self._ws_connection.recv()
             resp = json.loads(resp_raw)
@@ -114,7 +118,7 @@ class AgentWebSocketMixin:
         if not self._ws_enabled:
             return False
 
-        agent_id = getattr(self, "agent_id", "unknown")
+        getattr(self, "agent_id", "unknown")
         msg = {
             "type": event_type,
             "to_agent": to_agent,
@@ -173,7 +177,9 @@ class AgentWebSocketMixin:
                     self._ws_incoming_buffer.append(data)
                 elif data.get("type") == "heartbeat":
                     if self._ws_connection:
-                        await self._ws_connection.send(json.dumps({"type": "heartbeat", "payload": {}}))
+                        await self._ws_connection.send(
+                            json.dumps({"type": "heartbeat", "payload": {}})
+                        )
             except asyncio.CancelledError:
                 break
             except Exception as e:

@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Dict, List
 from uuid import uuid4
 
-
 EXPECTED_MAS_APIS = [
     "/api/memory/write",
     "/api/memory/read",
@@ -66,7 +65,9 @@ def test_system_registration() -> None:
 
     registry = MockRegistry()
     for sys in EXPECTED_SYSTEMS:
-        registry.register_system(sys["name"], sys["type"], f"http://example/{sys['type']}", f"{sys['name']} System")
+        registry.register_system(
+            sys["name"], sys["type"], f"http://example/{sys['type']}", f"{sys['name']} System"
+        )
 
     assert len(registry.list_systems()) == 6
     mas = registry.get_system("MAS")
@@ -88,7 +89,13 @@ def test_api_indexing() -> None:
             self.apis: List[Dict[str, str]] = []
 
         def index_api(self, system_name: str, path: str, method: str, description: str = ""):
-            api = {"id": str(uuid4()), "system": system_name, "path": path, "method": method, "description": description}
+            api = {
+                "id": str(uuid4()),
+                "system": system_name,
+                "path": path,
+                "method": method,
+                "description": description,
+            }
             self.apis.append(api)
             return api
 
@@ -168,4 +175,3 @@ def test_code_indexing() -> None:
 def test_200_apis_target() -> None:
     # Keep this a sanity-check; real endpoint counting is validated elsewhere.
     assert len(EXPECTED_MAS_APIS) >= 15
-

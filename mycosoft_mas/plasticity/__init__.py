@@ -15,8 +15,8 @@ from mycosoft_mas.plasticity.compression_lane import (
 from mycosoft_mas.plasticity.fitness_policy import (
     evaluate_fitness,
     fitness_profile_to_dict,
-    passes_hard_gates,
     pareto_rank,
+    passes_hard_gates,
 )
 from mycosoft_mas.plasticity.mutation_engine import (
     ALLOWED_OPERATORS,

@@ -13,7 +13,7 @@ Created: March 15, 2026
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 
@@ -23,8 +23,12 @@ logger = logging.getLogger(__name__)
 class EarthSearchAgent(BaseAgent):
     """Agent providing planetary-scale search to the MAS orchestrator and other agents."""
 
-    def __init__(self, agent_id: str = "earth-search-agent", name: str = "EarthSearchAgent",
-                 config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        agent_id: str = "earth-search-agent",
+        name: str = "EarthSearchAgent",
+        config: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(agent_id=agent_id, name=name, config=config or {})
         self.capabilities = [
             "earth_search",

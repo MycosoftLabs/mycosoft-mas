@@ -48,4 +48,3 @@ class TestDeadlineScheduler:
         await asyncio.sleep(0.05)
         assert cancelled is True
         await scheduler.stop()
-

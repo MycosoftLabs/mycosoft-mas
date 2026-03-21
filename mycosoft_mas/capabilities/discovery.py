@@ -38,35 +38,63 @@ _APPROVED_PACKAGES: Dict[str, List[Dict[str, str]]] = {
         {"name": "stripe", "package": "stripe", "description": "Stripe payment processing"},
     ],
     "accounting_integration": [
-        {"name": "quickbooks", "package": "python-quickbooks", "description": "QuickBooks integration"},
+        {
+            "name": "quickbooks",
+            "package": "python-quickbooks",
+            "description": "QuickBooks integration",
+        },
     ],
     "email_management": [
         {"name": "email_handler", "package": "aiosmtplib", "description": "Async email sending"},
     ],
     "data_analysis": [
-        {"name": "pandas_analyzer", "package": "pandas", "description": "Data analysis with pandas"},
+        {
+            "name": "pandas_analyzer",
+            "package": "pandas",
+            "description": "Data analysis with pandas",
+        },
     ],
     "data_visualization": [
         {"name": "plotly_viz", "package": "plotly", "description": "Interactive visualizations"},
     ],
     "web_scraping": [
-        {"name": "httpx_scraper", "package": "httpx", "description": "HTTP client for web requests"},
+        {
+            "name": "httpx_scraper",
+            "package": "httpx",
+            "description": "HTTP client for web requests",
+        },
     ],
     "language_translation": [
-        {"name": "translation", "package": "deep-translator", "description": "Language translation"},
+        {
+            "name": "translation",
+            "package": "deep-translator",
+            "description": "Language translation",
+        },
     ],
 }
 
 # Known internal agent capabilities
 _AGENT_CAPABILITIES: Dict[str, List[Dict[str, str]]] = {
     "deployment_automation": [
-        {"name": "deployment_agent", "agent": "DeploymentAgent", "description": "Infrastructure deployment"},
+        {
+            "name": "deployment_agent",
+            "agent": "DeploymentAgent",
+            "description": "Infrastructure deployment",
+        },
     ],
     "system_monitoring": [
-        {"name": "monitoring_agent", "agent": "InfrastructureAgent", "description": "System health monitoring"},
+        {
+            "name": "monitoring_agent",
+            "agent": "InfrastructureAgent",
+            "description": "System health monitoring",
+        },
     ],
     "calendar_management": [
-        {"name": "secretary_agent", "agent": "SecretaryAgent", "description": "Calendar and scheduling"},
+        {
+            "name": "secretary_agent",
+            "agent": "SecretaryAgent",
+            "description": "Calendar and scheduling",
+        },
     ],
 }
 
@@ -113,16 +141,15 @@ class CapabilityDiscovery:
 
         logger.info(
             "Discovery search for '%s': %d candidates from %d sources",
-            capability_name, len(candidates), len(sources),
+            capability_name,
+            len(candidates),
+            len(sources),
         )
 
         return candidates
 
-    async def _search_source(
-        self, source: ApprovedSource, capability_name: str
-    ) -> List:
+    async def _search_source(self, source: ApprovedSource, capability_name: str) -> List:
         """Search a specific approved source."""
-        from mycosoft_mas.capabilities.foundry import CapabilityCandidate
 
         if source == ApprovedSource.APPROVED_PACKAGES:
             return self._search_packages(capability_name)

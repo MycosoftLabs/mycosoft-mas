@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 class IntentType(Enum):
     """Types of intents MYCA can handle."""
+
     AGENT_TASK = "agent_task"
     TOOL_CALL = "tool_call"
     KNOWLEDGE_QUERY = "knowledge_query"
@@ -41,6 +42,7 @@ class IntentType(Enum):
 @dataclass
 class IntentResult:
     """Result of intent classification."""
+
     intent_type: IntentType
     confidence: float
     entities: Dict[str, Any] = field(default_factory=dict)
@@ -52,11 +54,11 @@ class IntentResult:
 class IntentEngine:
     """
     LLM-based intent classification engine for MYCA.
-    
+
     Uses fast LLM (Gemini Flash) for quick classification,
     with rule-based fallback when LLM is unavailable.
     """
-    
+
     # Keyword patterns for rule-based fallback
     AGENT_KEYWORDS = [
         r"\b(lab|laboratory|experiment)\b.*\b(agent|run|start|execute)\b",
@@ -65,13 +67,13 @@ class IntentEngine:
         r"\b(delegate|assign)\b.*\bto\b",
         r"\b(ceo|cfo|cto|coo|hr|legal|security|marketing|sales)\b.*\b(agent)\b",
     ]
-    
+
     TOOL_KEYWORDS = [
         r"\b(run|execute|call|use)\b.*\b(tool|function|command)\b",
         r"\b(tool)\b.*\b(list|available|show)\b",
         r"\b(calculate|compute|analyze)\b",
     ]
-    
+
     KNOWLEDGE_KEYWORDS = [
         r"\b(what|tell me about|explain|describe)\b.*\b(fungi|mushroom|species|taxon|mycel|amanita|psilocybe|boletus)\b",
         r"^\s*(what is|what are|explain|describe)\s+.+",
@@ -86,7 +88,7 @@ class IntentEngine:
         r"^\s*(what\s+is|what\s+are|tell\s+me\s+about|explain|describe|how\s+does)\b",
         r"\b(mycelium|hyphae|spore|fungi|fungus|mushroom|taxonomy|genetics|compound|metabolite)\b",
     ]
-    
+
     STATUS_KEYWORDS = [
         r"\b(status|state|health|running|online|offline)\b",
         r"\b(how|what)\b.*\b(agents|system|sensors|world)\b.*\b(doing|status)\b",
@@ -95,51 +97,51 @@ class IntentEngine:
         r"\bwhat.*happening\b",
         r"\bsystem.*overview\b",
     ]
-    
+
     SYSTEM_KEYWORDS = [
         r"\b(workflow|n8n|automation)\b",
         r"\b(restart|reboot|shutdown|deploy)\b.*\b(system|service|container)\b",
         r"\b(backup|sync|update)\b.*\b(database|system)\b",
         r"\b(trigger|execute)\b.*\b(workflow|pipeline)\b",
     ]
-    
+
     _agent_patterns: List[re.Pattern[str]]
     _tool_patterns: List[re.Pattern[str]]
     _knowledge_patterns: List[re.Pattern[str]]
     _conversational_knowledge_patterns: List[re.Pattern[str]]
     _status_patterns: List[re.Pattern[str]]
     _system_patterns: List[re.Pattern[str]]
-    
+
     def __init__(self):
         self.gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
         self._compile_patterns()
-    
+
     def _compile_patterns(self):
         """Pre-compile regex patterns for faster matching."""
         self._agent_patterns = [re.compile(p, re.IGNORECASE) for p in self.AGENT_KEYWORDS]
         self._tool_patterns = [re.compile(p, re.IGNORECASE) for p in self.TOOL_KEYWORDS]
         self._knowledge_patterns = [re.compile(p, re.IGNORECASE) for p in self.KNOWLEDGE_KEYWORDS]
-        self._conversational_knowledge_patterns = [re.compile(p, re.IGNORECASE) for p in self.CONVERSATIONAL_KNOWLEDGE_PATTERNS]
+        self._conversational_knowledge_patterns = [
+            re.compile(p, re.IGNORECASE) for p in self.CONVERSATIONAL_KNOWLEDGE_PATTERNS
+        ]
         self._status_patterns = [re.compile(p, re.IGNORECASE) for p in self.STATUS_KEYWORDS]
         self._system_patterns = [re.compile(p, re.IGNORECASE) for p in self.SYSTEM_KEYWORDS]
-    
+
     async def classify(
-        self,
-        message: str,
-        context: Optional[Dict[str, Any]] = None
+        self, message: str, context: Optional[Dict[str, Any]] = None
     ) -> IntentResult:
         """
         Classify user message intent.
-        
+
         Args:
             message: User's message
             context: Optional context (conversation history, user info, etc.)
-            
+
         Returns:
             IntentResult with classified intent
         """
         context = context or {}
-        
+
         # Try LLM classification first
         if self.gemini_api_key:
             try:
@@ -148,18 +150,14 @@ class IntentEngine:
                     return result
             except Exception as e:
                 logger.warning(f"LLM classification failed: {e}")
-        
+
         # Fall back to rule-based classification
         return self._classify_with_rules(message, context)
-    
-    async def _classify_with_llm(
-        self,
-        message: str,
-        context: Dict[str, Any]
-    ) -> IntentResult:
+
+    async def _classify_with_llm(self, message: str, context: Dict[str, Any]) -> IntentResult:
         """Use LLM for intent classification."""
-        from mycosoft_mas.llm.backend_selection import get_backend_for_role, NEMOTRON_SUPER
-        
+        from mycosoft_mas.llm.backend_selection import NEMOTRON_SUPER, get_backend_for_role
+
         system_prompt = """You are an intent classifier for MYCA, an AI orchestrator.
 Classify the user's message into exactly ONE of these intent types:
 
@@ -179,11 +177,11 @@ Respond with JSON only:
   "reasoning": "brief explanation"
 }"""
 
-        user_prompt = f"Classify this message: \"{message}\""
-        
+        user_prompt = f'Classify this message: "{message}"'
+
         if context.get("conversation_history"):
             user_prompt += f"\n\nRecent context: {context['conversation_history'][-3:]}"
-        
+
         backend = get_backend_for_role(NEMOTRON_SUPER)
         if not backend or not backend.base_url:
             raise Exception("Nemotron backend not configured")
@@ -197,68 +195,64 @@ Respond with JSON only:
             "model": backend.model,
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt},
             ],
             "temperature": 0.1,
-            "response_format": {"type": "json_object"}
+            "response_format": {"type": "json_object"},
         }
-        
+
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.post(url, json=payload, headers=headers)
-            
+
             if response.status_code != 200:
                 raise Exception(f"Nemotron API error: {response.status_code} - {response.text}")
-            
+
             data = response.json()
             text = data["choices"][0]["message"]["content"]
-            
+
             # Extract JSON from response - handle nested braces
             # First try to find JSON block between ```json and ``` if present
-            json_block = re.search(r'```json\s*([\s\S]*?)\s*```', text)
+            json_block = re.search(r"```json\s*([\s\S]*?)\s*```", text)
             if json_block:
                 json_str = json_block.group(1).strip()
             else:
                 # Try to find JSON object by matching balanced braces
-                start = text.find('{')
+                start = text.find("{")
                 if start == -1:
                     raise Exception("No JSON found in response")
-                
+
                 brace_count = 0
                 end = start
                 for i, char in enumerate(text[start:], start):
-                    if char == '{':
+                    if char == "{":
                         brace_count += 1
-                    elif char == '}':
+                    elif char == "}":
                         brace_count -= 1
                         if brace_count == 0:
                             end = i + 1
                             break
-                
+
                 json_str = text[start:end]
-            
+
             if not json_str:
                 raise Exception("No JSON found in response")
-            
+
             result = json.loads(json_str)
-            
+
             intent_type = IntentType(result.get("intent_type", "unknown"))
-            
+
             return IntentResult(
                 intent_type=intent_type,
                 confidence=float(result.get("confidence", 0.7)),
                 entities=result.get("entities", {}),
                 target=result.get("target"),
                 reasoning=result.get("reasoning", ""),
-                fallback_used=False
+                fallback_used=False,
             )
-    
-    def _classify_with_rules(
-        self,
-        message: str,
-        context: Dict[str, Any]
-    ) -> IntentResult:
+
+    def _classify_with_rules(self, message: str, context: Dict[str, Any]) -> IntentResult:
         """Rule-based intent classification fallback."""
-        
+
         message_lower = message.lower()
 
         # Conversational science questions should route to knowledge query (e.g., "what is mycelium?")
@@ -272,7 +266,7 @@ Respond with JSON only:
                 reasoning="Conversational scientific query detected",
                 fallback_used=True,
             )
-        
+
         # Check patterns in order of specificity
         scores = {
             IntentType.AGENT_TASK: self._match_patterns(message, self._agent_patterns),
@@ -288,7 +282,10 @@ Respond with JSON only:
             re.search(r"^\s*(what is|what are|tell me about|explain|describe)\b", message_lower)
         )
         has_science_term = bool(
-            re.search(r"\b(mycelium|fungi|mushroom|species|genetics|compound|psilocybin|amanita|spore|hypha|climate change|impact)\b", message_lower)
+            re.search(
+                r"\b(mycelium|fungi|mushroom|species|genetics|compound|psilocybin|amanita|spore|hypha|climate change|impact)\b",
+                message_lower,
+            )
         )
         if conversational_question and has_science_term:
             scores[IntentType.KNOWLEDGE_QUERY] = max(scores[IntentType.KNOWLEDGE_QUERY], 0.85)
@@ -297,47 +294,47 @@ Respond with JSON only:
         if has_science_term and scores.get(IntentType.STATUS_QUERY, 0) > 0:
             scores[IntentType.STATUS_QUERY] = 0.0
             scores[IntentType.KNOWLEDGE_QUERY] = max(scores.get(IntentType.KNOWLEDGE_QUERY, 0), 0.9)
-        
+
         # Find best match
         best_intent = IntentType.GENERAL_CHAT
         best_score = 0.0
-        
+
         for intent, score in scores.items():
             if score > best_score:
                 best_score = score
                 best_intent = intent
-        
+
         # Extract target if possible
         target = self._extract_target(message, best_intent)
-        
+
         # Extract entities
         entities = self._extract_entities(message, best_intent)
-        
+
         confidence = min(best_score, 0.85)  # Cap at 0.85 for rule-based
         if confidence == 0:
             confidence = 0.6  # Default confidence for general chat
-        
+
         return IntentResult(
             intent_type=best_intent,
             confidence=confidence,
             entities=entities,
             target=target,
             reasoning="Rule-based classification",
-            fallback_used=True
+            fallback_used=True,
         )
-    
+
     def _match_patterns(self, message: str, patterns: List[re.Pattern]) -> float:
         """Count pattern matches and return normalized score."""
         matches = sum(1 for p in patterns if p.search(message))
         if matches == 0:
             return 0.0
         return min(0.4 + (matches * 0.2), 0.9)
-    
+
     def _extract_target(self, message: str, intent: IntentType) -> Optional[str]:
         """Extract target (agent name, tool name, etc.) from message."""
-        
+
         message_lower = message.lower()
-        
+
         if intent == IntentType.AGENT_TASK:
             # Look for agent names
             agent_patterns = [
@@ -351,7 +348,7 @@ Respond with JSON only:
                 match = re.search(pattern, message_lower)
                 if match:
                     return match.group(0).replace(" ", "_")
-        
+
         elif intent == IntentType.SYSTEM_COMMAND:
             # Look for workflow names
             workflow_patterns = [
@@ -361,28 +358,28 @@ Respond with JSON only:
                 match = re.search(pattern, message_lower)
                 if match:
                     return match.group(1)
-        
+
         return None
-    
+
     def _extract_entities(self, message: str, intent: IntentType) -> Dict[str, Any]:
         """Extract relevant entities from message."""
-        
+
         entities = {}
-        
+
         if intent == IntentType.KNOWLEDGE_QUERY:
             # Extract species names
-            species_pattern = r'\b([A-Z][a-z]+\s+[a-z]+)\b'
+            species_pattern = r"\b([A-Z][a-z]+\s+[a-z]+)\b"
             species_match = re.search(species_pattern, message)
             if species_match:
                 entities["species_name"] = species_match.group(1)
-            
+
             # Extract common fungi terms
             fungi_terms = ["mushroom", "fungi", "mycelium", "spore", "hypha"]
             for term in fungi_terms:
                 if term in message.lower():
                     entities["topic"] = term
                     break
-        
+
         elif intent == IntentType.STATUS_QUERY:
             # Extract what status is being asked about
             status_targets = {
@@ -397,7 +394,7 @@ Respond with JSON only:
                 if any(kw in message.lower() for kw in keywords):
                     entities["status_target"] = target
                     break
-        
+
         return entities
 
     def _looks_like_conversational_knowledge_query(self, message: str) -> bool:
@@ -405,19 +402,32 @@ Respond with JSON only:
         if "?" in message:
             matched = sum(1 for p in self._conversational_knowledge_patterns if p.search(message))
             return matched >= 2
-        starts_with_question = bool(re.search(r"^\s*(what|how|why|which|where)\b", message, re.IGNORECASE))
-        has_bio_term = bool(re.search(
-            r"\b(mycelium|hyphae|spore|fungi|fungus|mushroom|species|compound|genetics)\b",
-            message,
-            re.IGNORECASE,
-        ))
+        starts_with_question = bool(
+            re.search(r"^\s*(what|how|why|which|where)\b", message, re.IGNORECASE)
+        )
+        has_bio_term = bool(
+            re.search(
+                r"\b(mycelium|hyphae|spore|fungi|fungus|mushroom|species|compound|genetics)\b",
+                message,
+                re.IGNORECASE,
+            )
+        )
         return starts_with_question and has_bio_term
 
     def _extract_knowledge_topic(self, message_lower: str) -> Optional[str]:
         """Extract likely topic for conversational knowledge routing."""
         topics = [
-            "mycelium", "hyphae", "spore", "fungi", "fungus", "mushroom",
-            "taxonomy", "species", "genetics", "compound", "metabolite",
+            "mycelium",
+            "hyphae",
+            "spore",
+            "fungi",
+            "fungus",
+            "mushroom",
+            "taxonomy",
+            "species",
+            "genetics",
+            "compound",
+            "metabolite",
         ]
         for topic in topics:
             if topic in message_lower:

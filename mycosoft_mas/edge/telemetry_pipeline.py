@@ -13,13 +13,12 @@ from __future__ import annotations
 
 import asyncio
 import collections
-import json
 import logging
+import uuid
 from collections.abc import AsyncIterator
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Deque, Dict, Optional
-import uuid
 
 import httpx
 
@@ -144,7 +143,9 @@ class TelemetryPipeline:
                     },
                 )
                 if ingest_res.status_code >= 400:
-                    logger.debug("NLM telemetry ingest not available or failed: %s", ingest_res.status_code)
+                    logger.debug(
+                        "NLM telemetry ingest not available or failed: %s", ingest_res.status_code
+                    )
             return True
         except Exception as exc:
             logger.debug("NLM forward skipped: %s", exc)
@@ -171,7 +172,9 @@ class TelemetryPipeline:
                     if res.status_code < 400:
                         return True
                     if res.status_code != 404:
-                        logger.debug("MINDEX %s failed %s: %s", path, res.status_code, res.text[:200])
+                        logger.debug(
+                            "MINDEX %s failed %s: %s", path, res.status_code, res.text[:200]
+                        )
             return True
         except Exception as exc:
             logger.debug("MINDEX forward skipped: %s", exc)

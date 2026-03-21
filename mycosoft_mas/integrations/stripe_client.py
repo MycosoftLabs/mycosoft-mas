@@ -25,9 +25,7 @@ class StripeClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.secret_key = self.config.get(
-            "secret_key", os.environ.get("STRIPE_SECRET_KEY", "")
-        )
+        self.secret_key = self.config.get("secret_key", os.environ.get("STRIPE_SECRET_KEY", ""))
         self.webhook_secret = self.config.get(
             "webhook_secret", os.environ.get("STRIPE_WEBHOOK_SECRET", "")
         )
@@ -172,9 +170,7 @@ class StripeClient:
             logger.warning("Stripe create_invoice failed: %s", e)
             return None
 
-    async def retrieve_checkout_session(
-        self, session_id: str
-    ) -> Optional[Dict[str, Any]]:
+    async def retrieve_checkout_session(self, session_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve a Checkout Session by ID (e.g. cs_xxx). Used to verify payment and read metadata."""
         if not self.secret_key or not session_id:
             return None

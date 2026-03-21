@@ -11,17 +11,16 @@ Created: February 12, 2026
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.services.network_diagnostics import (
+    run_connectivity_checks,
     run_dns_checks,
     run_full_diagnostics,
     run_latency_checks,
-    run_connectivity_checks,
 )
 
 logger = logging.getLogger(__name__)
@@ -129,9 +128,7 @@ class NetworkMonitorAgent(BaseAgent):
                 "errors": report.errors,
             }
             if report.dns and report.dns.get("anomalies_detected"):
-                self.metrics["anomalies_detected"] += len(
-                    report.dns["anomalies_detected"]
-                )
+                self.metrics["anomalies_detected"] += len(report.dns["anomalies_detected"])
             return {"status": "success", "result": out}
         except Exception as e:
             logger.exception("Full diagnostics failed")
@@ -166,7 +163,11 @@ class NetworkMonitorAgent(BaseAgent):
             return {
                 "tasks_processed": 1,
                 "insights_generated": len(anomalies),
-                "summary": f"Network diagnostics complete; {len(anomalies)} anomalies" if anomalies else "Network diagnostics complete; no anomalies",
+                "summary": (
+                    f"Network diagnostics complete; {len(anomalies)} anomalies"
+                    if anomalies
+                    else "Network diagnostics complete; no anomalies"
+                ),
                 "anomalies": anomalies,
             }
         except Exception as e:

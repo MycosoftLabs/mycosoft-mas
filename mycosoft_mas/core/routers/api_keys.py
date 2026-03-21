@@ -1,10 +1,10 @@
 """API key management for MYCA services."""
 
-from datetime import datetime, timezone
 import hashlib
 import secrets
 import time
 import uuid
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -12,7 +12,6 @@ from pydantic import BaseModel, Field
 
 from mycosoft_mas.core.security import get_current_user
 from mycosoft_mas.integrations.mindex_client import MINDEXClient
-
 
 router = APIRouter(prefix="/api/keys", tags=["api-keys"])
 _mindex_client = MINDEXClient()
@@ -56,8 +55,7 @@ class ApiKeyDeleteResponse(BaseModel):
 async def _ensure_api_keys_table() -> None:
     pool = await _mindex_client._get_db_pool()
     async with pool.acquire() as conn:
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS api_keys (
                 id UUID PRIMARY KEY,
                 user_id TEXT NOT NULL,
@@ -67,11 +65,8 @@ async def _ensure_api_keys_table() -> None:
                 created_at TIMESTAMP NOT NULL,
                 expires_at TIMESTAMP
             );
-            """
-        )
-        await conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);"
-        )
+            """)
+        await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);")
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);"
         )
@@ -211,9 +206,9 @@ async def list_keys(
             scopes=row["scopes"] or [],
             rate_limit=int(row["rate_limit"]),
             created_at=row["created_at"].replace(tzinfo=timezone.utc),
-            expires_at=row["expires_at"].replace(tzinfo=timezone.utc)
-            if row["expires_at"]
-            else None,
+            expires_at=(
+                row["expires_at"].replace(tzinfo=timezone.utc) if row["expires_at"] else None
+            ),
         )
         for row in rows
     ]

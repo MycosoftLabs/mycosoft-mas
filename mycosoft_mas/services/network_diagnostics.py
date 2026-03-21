@@ -14,7 +14,6 @@ Created: February 12, 2026
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import os
 import platform
@@ -120,9 +119,7 @@ async def _run_subprocess(
             stderr=asyncio.subprocess.PIPE,
             shell=shell,
         )
-        stdout, stderr = await asyncio.wait_for(
-            proc.communicate(), timeout=timeout
-        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
         return (
             stdout.decode(errors="replace").strip(),
             stderr.decode(errors="replace").strip(),
@@ -163,20 +160,14 @@ def _system_resolver() -> Optional[str]:
     return None
 
 
-async def _resolve_dns_async(
-    domain: str, resolver_ip: str, timeout: float = 5.0
-) -> DnsCheckResult:
+async def _resolve_dns_async(domain: str, resolver_ip: str, timeout: float = 5.0) -> DnsCheckResult:
     """Resolve a domain using a specific resolver."""
     start = time.perf_counter()
     try:
         if platform.system() == "Windows":
-            out, err, rc = await _run_subprocess(
-                ["nslookup", domain, resolver_ip], timeout=timeout
-            )
+            out, err, rc = await _run_subprocess(["nslookup", domain, resolver_ip], timeout=timeout)
         else:
-            out, err, rc = await _run_subprocess(
-                ["nslookup", domain, resolver_ip], timeout=timeout
-            )
+            out, err, rc = await _run_subprocess(["nslookup", domain, resolver_ip], timeout=timeout)
 
         latency_ms = (time.perf_counter() - start) * 1000
         ips: List[str] = []
@@ -244,9 +235,7 @@ async def run_dns_checks(
     anomalies_global: List[str] = []
 
     for domain in domains:
-        tasks = [
-            _resolve_dns_async(domain, ip) for ip in all_resolvers.values()
-        ]
+        tasks = [_resolve_dns_async(domain, ip) for ip in all_resolvers.values()]
         resolver_results = await asyncio.gather(*tasks)
 
         by_resolver: Dict[str, Dict[str, Any]] = {}
@@ -275,9 +264,9 @@ async def run_dns_checks(
         for res in resolver_results:
             if res.ips and consensus and res.ips != consensus:
                 res.suspicious = True
-                by_resolver[list(all_resolvers.keys())[
-                    list(all_resolvers.values()).index(res.resolver_ip)
-                ]] = asdict(res)
+                by_resolver[
+                    list(all_resolvers.keys())[list(all_resolvers.values()).index(res.resolver_ip)]
+                ] = asdict(res)
 
         results[domain] = {
             "resolver_results": by_resolver,
@@ -413,9 +402,7 @@ async def run_full_diagnostics(
     """
     from datetime import datetime
 
-    report = NetworkDiagnosticsReport(
-        timestamp=datetime.utcnow().isoformat() + "Z"
-    )
+    report = NetworkDiagnosticsReport(timestamp=datetime.utcnow().isoformat() + "Z")
     website_url = website_url or os.environ.get("WEBSITE_API_URL", "http://192.168.0.187:3000")
     unifi_host = unifi_host or os.environ.get("UNIFI_HOST", "192.168.0.1")
     unifi_api_key = unifi_api_key or os.environ.get("UNIFI_API_KEY")
@@ -468,6 +455,7 @@ async def run_full_diagnostics(
             else:
                 # Fallback: website proxy when UniFi not reachable from MAS
                 import httpx
+
                 async with httpx.AsyncClient(timeout=15.0, verify=False) as client_http:
                     r = await client_http.get(
                         f"{website_url}/api/unifi?action=topology",
@@ -481,10 +469,7 @@ async def run_full_diagnostics(
                             "source": "unifi_via_website",
                         }
                         clients = data.get("clients", [])
-                        unknown = [
-                            c for c in clients
-                            if c.get("is_guest") or not c.get("name")
-                        ]
+                        unknown = [c for c in clients if c.get("is_guest") or not c.get("name")]
                         report.unauthorized = {
                             "unknown_or_guest_clients": len(unknown),
                             "sample": unknown[:10],
@@ -499,6 +484,7 @@ async def run_full_diagnostics(
     if cloudflare_token and cloudflare_zone_id:
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=10.0) as client:
                 r = await client.get(
                     f"https://api.cloudflare.com/client/v4/zones/{cloudflare_zone_id}/dns_records",
@@ -512,7 +498,11 @@ async def run_full_diagnostics(
                     records = data.get("result", [])
                     report.dns = report.dns or {}
                     report.dns["cloudflare_records"] = [
-                        {"name": rec.get("name"), "type": rec.get("type"), "content": rec.get("content")}
+                        {
+                            "name": rec.get("name"),
+                            "type": rec.get("type"),
+                            "content": rec.get("content"),
+                        }
                         for rec in records[:20]
                     ]
         except Exception as e:

@@ -26,7 +26,7 @@ async def test_security_code_reviewer():
         "target_files": ["mycosoft_mas/core/orchestrator.py"],
         "code_content": None
     })
-    assert result["approved"] == False, "Should block protected file"
+    assert result["approved"] is False, "Should block protected file"
     print("  [OK] Protected file detection works")
     
     # Test 2: Secret detection
@@ -37,7 +37,7 @@ async def test_security_code_reviewer():
         "target_files": ["config.py"],
         "code_content": 'api_key = "sk-abc123456789"'
     })
-    assert result["approved"] == False, "Should detect hardcoded secret"
+    assert result["approved"] is False, "Should detect hardcoded secret"
     print("  [OK] Secret detection works")
     
     # Test 3: Safe code should pass
@@ -48,7 +48,7 @@ async def test_security_code_reviewer():
         "target_files": ["mycosoft_mas/utils/helpers.py"],
         "code_content": "def helper(): return True"
     })
-    assert result["approved"] == True, "Safe code should be approved"
+    assert result["approved"] is True, "Safe code should be approved"
     print("  [OK] Safe code approved")
     
     print("  SecurityCodeReviewer: ALL TESTS PASSED")

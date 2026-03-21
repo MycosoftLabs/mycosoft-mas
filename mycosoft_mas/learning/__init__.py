@@ -9,14 +9,14 @@ Continuous biospheric learning from sensor telemetry:
 Created: February 17, 2026
 """
 
-from mycosoft_mas.learning.drift_detector import (
-    DriftDetector,
-    DriftAlert,
-    DriftSeverity,
-)
 from mycosoft_mas.learning.continuous_learner import (
     ContinuousLearner,
     LearningCycleResult,
+)
+from mycosoft_mas.learning.drift_detector import (
+    DriftAlert,
+    DriftDetector,
+    DriftSeverity,
 )
 
 __all__ = [

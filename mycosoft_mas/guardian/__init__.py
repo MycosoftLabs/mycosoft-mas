@@ -18,7 +18,6 @@ Architecture: March 9, 2026
 
 from importlib import import_module
 
-
 __all__: list[str] = []
 
 

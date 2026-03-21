@@ -1,12 +1,13 @@
+import os
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 import jwt
-from passlib.context import CryptContext
+from dotenv import load_dotenv
 from fastapi import HTTPException, Security
 from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
 from pydantic import BaseModel
-import os
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -21,13 +22,16 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 class TokenData(BaseModel):
     username: Optional[str] = None
     scopes: list[str] = []
+
 
 class AuthService:
     def __init__(self):
@@ -76,10 +80,7 @@ class AuthService:
         """Create a token for API access with specific scopes"""
         if scopes is None:
             scopes = []
-        data = {
-            "sub": api_name,
-            "scopes": scopes
-        }
+        data = {"sub": api_name, "scopes": scopes}
         return self.create_access_token(data)
 
     def verify_api_token(self, token: str, required_scopes: list[str] = None) -> bool:
@@ -98,5 +99,6 @@ class AuthService:
         except Exception:
             raise HTTPException(status_code=401, detail="Invalid API token")
 
+
 # Create a singleton instance
-auth_service = AuthService() 
+auth_service = AuthService()

@@ -12,11 +12,10 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from mycosoft_mas.integrations.mindex_client import MINDEXClient
 from mycosoft_mas.raas.models import (
-    BalanceUsageResponse,
     WorldstateBalance,
     WorldstateSessionSummary,
 )
@@ -30,8 +29,7 @@ async def _ensure_tables() -> None:
     """Create worldstate tables if they don't exist (idempotent)."""
     pool = await _mindex._get_db_pool()
     async with pool.acquire() as conn:
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS raas_worldstate_minutes (
                 agent_id TEXT PRIMARY KEY,
                 balance_minutes INTEGER DEFAULT 0,
@@ -39,10 +37,8 @@ async def _ensure_tables() -> None:
                 total_used INTEGER DEFAULT 0,
                 updated_at TIMESTAMP DEFAULT NOW()
             );
-            """
-        )
-        await conn.execute(
-            """
+            """)
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS raas_worldstate_sessions (
                 session_id TEXT PRIMARY KEY,
                 agent_id TEXT NOT NULL,
@@ -51,10 +47,8 @@ async def _ensure_tables() -> None:
                 stopped_at TIMESTAMP,
                 minutes_used INTEGER DEFAULT 0
             );
-            """
-        )
-        await conn.execute(
-            """
+            """)
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS raas_worldstate_minute_transactions (
                 id TEXT PRIMARY KEY,
                 agent_id TEXT NOT NULL,
@@ -64,22 +58,19 @@ async def _ensure_tables() -> None:
                 session_id TEXT,
                 created_at TIMESTAMP DEFAULT NOW()
             );
-            """
-        )
+            """)
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_raas_ws_tx_agent "
             "ON raas_worldstate_minute_transactions(agent_id);"
         )
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS raas_worldstate_claimed_sessions (
                 stripe_session_id TEXT PRIMARY KEY,
                 agent_id TEXT NOT NULL,
                 minutes_added INTEGER NOT NULL,
                 claimed_at TIMESTAMP DEFAULT NOW()
             );
-            """
-        )
+            """)
         await conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_raas_ws_sessions_agent "
             "ON raas_worldstate_sessions(agent_id);"
@@ -170,9 +161,7 @@ async def add_minutes(
     return new_balance
 
 
-async def claim_stripe_session(
-    stripe_checkout_session_id: str, agent_id: str
-) -> Tuple[int, str]:
+async def claim_stripe_session(stripe_checkout_session_id: str, agent_id: str) -> Tuple[int, str]:
     """
     Claim prepaid minutes from a completed Stripe Checkout session.
     Idempotent: if session already claimed, returns (0, "already_claimed").
@@ -276,9 +265,7 @@ async def start_session(agent_id: str) -> Tuple[Optional[str], int, Optional[str
     return session_id, balance, None
 
 
-async def heartbeat_session(
-    session_id: str, agent_id: str
-) -> Tuple[bool, int, int, Optional[str]]:
+async def heartbeat_session(session_id: str, agent_id: str) -> Tuple[bool, int, int, Optional[str]]:
     """
     Heartbeat an active session. Deducts 1 minute per full minute elapsed
     since last_heartbeat_at. If balance would go below 0, returns 402 case.
@@ -378,9 +365,7 @@ async def heartbeat_session(
     return True, balance, used, None
 
 
-async def stop_session(
-    session_id: str, agent_id: str
-) -> Tuple[bool, int, int, Optional[str]]:
+async def stop_session(session_id: str, agent_id: str) -> Tuple[bool, int, int, Optional[str]]:
     """
     Stop an active session. Returns (success, total_minutes_used, balance_minutes, error).
     """

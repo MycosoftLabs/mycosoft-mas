@@ -15,7 +15,9 @@ class MemoryFormationPipeline:
     def __init__(self, consciousness: Any) -> None:
         self._consciousness = consciousness
 
-    async def ingest_packet(self, packet: NaturePacket, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def ingest_packet(
+        self, packet: NaturePacket, context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         result: Dict[str, Any] = {
             "episodic_memory_id": None,
             "dream_triggered": False,
@@ -41,4 +43,3 @@ class MemoryFormationPipeline:
             result["dream_triggered"] = True
 
         return result
-

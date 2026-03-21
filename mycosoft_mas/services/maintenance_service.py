@@ -4,15 +4,15 @@ Mycosoft MAS - Maintenance Service
 This module handles system maintenance operations and scheduling.
 """
 
-from typing import Dict, List, Any, Optional
-import logging
 import asyncio
-from datetime import datetime, timedelta
-import json
-from dataclasses import dataclass
+import logging
 import uuid
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class MaintenanceWindow:
@@ -25,9 +25,10 @@ class MaintenanceWindow:
     description: str = ""
     status: str = "scheduled"
 
+
 class MaintenanceService:
     """Manages system maintenance operations and scheduling."""
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.logger = logging.getLogger(__name__)
@@ -35,13 +36,15 @@ class MaintenanceService:
         self.maintenance_history: List[MaintenanceWindow] = []
         self.is_running = False
         self.maintenance_task = None
-        self.check_interval = self.config.get('maintenance_check_interval', 300)  # 5 minutes default
-        
+        self.check_interval = self.config.get(
+            "maintenance_check_interval", 300
+        )  # 5 minutes default
+
     async def start(self) -> None:
         """Start the maintenance service."""
         if self.is_running:
             return
-        
+
         self.is_running = True
         self.maintenance_task = asyncio.create_task(self._check_maintenance_schedule())
         self.logger.info("Maintenance service started")
@@ -50,7 +53,7 @@ class MaintenanceService:
         """Stop the maintenance service."""
         if not self.is_running:
             return
-        
+
         self.is_running = False
         if self.maintenance_task:
             self.maintenance_task.cancel()
@@ -65,41 +68,42 @@ class MaintenanceService:
         while self.is_running:
             try:
                 current_time = datetime.now()
-                
+
                 # Check for maintenance windows to start
                 for window in list(self.maintenance_windows.values()):
                     if window.status == "scheduled" and current_time >= window.scheduled_start:
                         await self._start_maintenance_window(window)
-                    
+
                     # Check for maintenance windows to end
                     elif window.status == "in_progress" and current_time >= window.scheduled_end:
                         await self._end_maintenance_window(window)
-                
+
                 await asyncio.sleep(self.check_interval)
-                
+
             except Exception as e:
                 self.logger.error(f"Error in maintenance schedule check: {str(e)}")
                 await asyncio.sleep(self.check_interval)
 
-    async def schedule_maintenance(self, maintenance_type: str, start_time: datetime, 
-                                 duration: int, description: str = "") -> str:
+    async def schedule_maintenance(
+        self, maintenance_type: str, start_time: datetime, duration: int, description: str = ""
+    ) -> str:
         """Schedule a maintenance window."""
         try:
             window_id = str(uuid.uuid4())
             end_time = start_time + timedelta(minutes=duration)
-            
+
             window = MaintenanceWindow(
                 id=window_id,
                 maintenance_type=maintenance_type,
                 scheduled_start=start_time,
                 scheduled_end=end_time,
-                description=description
+                description=description,
             )
-            
+
             self.maintenance_windows[window_id] = window
             self.logger.info(f"Scheduled maintenance window {window_id}: {maintenance_type}")
             return window_id
-            
+
         except Exception as e:
             self.logger.error(f"Failed to schedule maintenance: {str(e)}")
             raise
@@ -110,11 +114,11 @@ class MaintenanceService:
             window.status = "in_progress"
             window.actual_start = datetime.now()
             self.logger.info(f"Started maintenance window {window.id}: {window.maintenance_type}")
-            
+
             # Notify system components about maintenance start
             # This would be implemented based on your notification system
             # await self.notify_maintenance_start(window)
-            
+
         except Exception as e:
             self.logger.error(f"Failed to start maintenance window {window.id}: {str(e)}")
             raise
@@ -124,17 +128,17 @@ class MaintenanceService:
         try:
             window.status = "completed"
             window.actual_end = datetime.now()
-            
+
             # Move to history
             self.maintenance_history.append(window)
             del self.maintenance_windows[window.id]
-            
+
             self.logger.info(f"Completed maintenance window {window.id}: {window.maintenance_type}")
-            
+
             # Notify system components about maintenance end
             # This would be implemented based on your notification system
             # await self.notify_maintenance_end(window)
-            
+
         except Exception as e:
             self.logger.error(f"Failed to end maintenance window {window.id}: {str(e)}")
             raise
@@ -163,4 +167,4 @@ class MaintenanceService:
             return False
         except Exception as e:
             self.logger.error(f"Failed to cancel maintenance window {window_id}: {str(e)}")
-            raise 
+            raise

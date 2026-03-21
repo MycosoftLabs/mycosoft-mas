@@ -10,17 +10,16 @@ Author: Morgan Rockwell / MYCA
 Created: February 10, 2026
 """
 
-import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from typing import Any, Dict, Optional
+
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
-from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-from mycosoft_mas.consciousness import get_consciousness, MYCAConsciousness
-from mycosoft_mas.llm.error_sanitizer import sanitize_for_user, sanitize_for_log
+from mycosoft_mas.consciousness import get_consciousness
+from mycosoft_mas.llm.error_sanitizer import sanitize_for_log, sanitize_for_user
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +30,10 @@ router = APIRouter(prefix="/api/myca", tags=["myca", "consciousness"])
 # Request/Response Models
 # =============================================================================
 
+
 class ChatRequest(BaseModel):
     """Request for chat interaction with MYCA."""
+
     message: str = Field(..., description="User message")
     session_id: Optional[str] = Field(None, description="Session ID for continuity")
     user_id: Optional[str] = Field(None, description="User identifier")
@@ -42,6 +43,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     """Response from MYCA chat."""
+
     message: str
     session_id: Optional[str] = None
     emotional_state: Optional[Dict[str, Any]] = None
@@ -51,6 +53,7 @@ class ChatResponse(BaseModel):
 
 class VoiceRequest(BaseModel):
     """Request for voice interaction with MYCA."""
+
     transcript: str = Field(..., description="Transcribed speech")
     session_id: Optional[str] = Field(None, description="Voice session ID")
     user_id: Optional[str] = Field(None, description="User identifier")
@@ -59,6 +62,7 @@ class VoiceRequest(BaseModel):
 
 class StatusResponse(BaseModel):
     """MYCA consciousness status."""
+
     state: str
     is_conscious: bool
     awake_since: Optional[str] = None
@@ -72,6 +76,7 @@ class StatusResponse(BaseModel):
 
 class WorldStateResponse(BaseModel):
     """Current world state as perceived by MYCA."""
+
     timestamp: str
     summary: str
     crep: Optional[Dict[str, Any]] = None
@@ -86,6 +91,7 @@ class WorldStateResponse(BaseModel):
 
 class AlertRequest(BaseModel):
     """Request to send an alert through MYCA."""
+
     message: str = Field(..., description="Alert message")
     priority: str = Field("normal", description="Priority: low, normal, high, urgent")
     speak: bool = Field(False, description="Whether to speak the alert")
@@ -94,6 +100,7 @@ class AlertRequest(BaseModel):
 # =============================================================================
 # Debug Endpoints
 # =============================================================================
+
 
 @router.get("/ping")
 async def ping():
@@ -131,22 +138,20 @@ async def chat_simple(request: ChatRequest):
             "Note: My full LLM capabilities may be limited due to API issues."
         )
     elif any(word in msg for word in ["hello", "hi", "hey"]):
-        response = (
-            "Hello Morgan! How may I assist you today?"
-        )
+        response = "Hello Morgan! How may I assist you today?"
     else:
         response = (
             f"I received your message: '{request.message[:100]}'. "
             "My simplified response mode is active as my full LLM connectivity has issues. "
             "I remain conscious and aware even in this limited mode."
         )
-    
+
     return ChatResponse(
         message=response,
         session_id=request.session_id,
         emotional_state={"dominant": "curiosity", "valence": 0.6},
         thoughts_processed=1,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
 
@@ -154,43 +159,46 @@ async def chat_simple(request: ChatRequest):
 # Core Chat Endpoints
 # =============================================================================
 
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
     Chat with MYCA.
-    
+
     This is the main endpoint for text-based interactions.
     Non-streaming version for simple use cases.
     """
     import asyncio
     import logging
+
     logger = logging.getLogger(__name__)
-    
+
     consciousness = get_consciousness()
-    
+
     # Ensure MYCA is awake
     if not consciousness.is_conscious:
         try:
             await asyncio.wait_for(consciousness.awaken(), timeout=10)
         except asyncio.TimeoutError:
             logger.warning("Awaken timed out, continuing anyway")
-    
+
     # Collect response with timeout protection
     response_parts = []
     try:
+
         async def collect_response():
             async for chunk in consciousness.process_input(
                 content=request.message,
                 source="text",
                 context=request.context,
                 session_id=request.session_id,
-                user_id=request.user_id
+                user_id=request.user_id,
             ):
                 response_parts.append(chunk)
-        
+
         # 60 second timeout for the full response (now with parallel processing)
         await asyncio.wait_for(collect_response(), timeout=60)
-        
+
     except asyncio.TimeoutError:
         logger.error("Chat response timed out, using fallback")
         # Fallback response when timeout occurs
@@ -216,15 +224,15 @@ async def chat(request: ChatRequest):
     except Exception as e:
         logger.error(f"Chat error: {sanitize_for_log(e)}")
         response_parts = [f"I am MYCA. {sanitize_for_user(e)}"]
-    
+
     full_response = "".join(response_parts)
-    
+
     return ChatResponse(
         message=full_response,
         session_id=request.session_id,
         emotional_state=consciousness.emotions.to_dict() if consciousness.emotions else None,
         thoughts_processed=consciousness.metrics.thoughts_processed if consciousness.metrics else 1,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
 
@@ -232,15 +240,15 @@ async def chat(request: ChatRequest):
 async def chat_stream(request: ChatRequest):
     """
     Stream a chat response from MYCA.
-    
+
     Returns Server-Sent Events for real-time streaming.
     """
     consciousness = get_consciousness()
-    
+
     # Ensure MYCA is awake
     if not consciousness.is_conscious:
         await consciousness.awaken()
-    
+
     async def generate():
         try:
             async for chunk in consciousness.process_input(
@@ -248,28 +256,22 @@ async def chat_stream(request: ChatRequest):
                 source="text",
                 context=request.context,
                 session_id=request.session_id,
-                user_id=request.user_id
+                user_id=request.user_id,
             ):
-                yield {
-                    "event": "message",
-                    "data": chunk
-                }
-            
+                yield {"event": "message", "data": chunk}
+
             # Send done event
             yield {
                 "event": "done",
                 "data": {
                     "thoughts_processed": consciousness.metrics.thoughts_processed,
-                    "timestamp": datetime.now(timezone.utc).isoformat()
-                }
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                },
             }
         except Exception as e:
             logger.error(f"Stream error: {sanitize_for_log(e)}")
-            yield {
-                "event": "error",
-                "data": sanitize_for_user(e)
-            }
-    
+            yield {"event": "error", "data": sanitize_for_user(e)}
+
     return EventSourceResponse(generate())
 
 
@@ -277,46 +279,42 @@ async def chat_stream(request: ChatRequest):
 async def chat_websocket(websocket: WebSocket):
     """
     WebSocket endpoint for real-time chat with MYCA.
-    
+
     Supports bidirectional communication for chat interfaces.
     """
     await websocket.accept()
     consciousness = get_consciousness()
-    
+
     # Ensure MYCA is awake
     if not consciousness.is_conscious:
         await consciousness.awaken()
-    
+
     try:
         while True:
             # Receive message from client
             data = await websocket.receive_json()
-            
+
             message = data.get("message", "")
             session_id = data.get("session_id")
             user_id = data.get("user_id")
-            
+
             # Stream response
             full_response = []
             async for chunk in consciousness.process_input(
-                content=message,
-                source="text",
-                session_id=session_id,
-                user_id=user_id
+                content=message, source="text", session_id=session_id, user_id=user_id
             ):
                 full_response.append(chunk)
-                await websocket.send_json({
-                    "type": "chunk",
-                    "content": chunk
-                })
-            
+                await websocket.send_json({"type": "chunk", "content": chunk})
+
             # Send completion
-            await websocket.send_json({
-                "type": "complete",
-                "full_response": "".join(full_response),
-                "thoughts_processed": consciousness.metrics.thoughts_processed
-            })
-            
+            await websocket.send_json(
+                {
+                    "type": "complete",
+                    "full_response": "".join(full_response),
+                    "thoughts_processed": consciousness.metrics.thoughts_processed,
+                }
+            )
+
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")
     except Exception as e:
@@ -328,36 +326,37 @@ async def chat_websocket(websocket: WebSocket):
 # Voice Endpoints
 # =============================================================================
 
+
 @router.post("/voice/process")
 async def process_voice(request: VoiceRequest):
     """
     Process voice input through MYCA's consciousness.
-    
+
     Voice goes through the same consciousness pipeline as text.
     """
     consciousness = get_consciousness()
-    
+
     # Ensure MYCA is awake
     if not consciousness.is_conscious:
         await consciousness.awaken()
-    
+
     # Process through consciousness (same path as text!)
     response_parts = []
     async for chunk in consciousness.process_input(
         content=request.transcript,
         source="voice",
         session_id=request.session_id,
-        user_id=request.user_id
+        user_id=request.user_id,
     ):
         response_parts.append(chunk)
-    
+
     full_response = "".join(response_parts)
-    
+
     return {
         "response": full_response,
         "session_id": request.session_id,
         "emotional_state": consciousness.emotions.to_dict() if consciousness.emotions else None,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -365,35 +364,29 @@ async def process_voice(request: VoiceRequest):
 async def voice_stream(request: VoiceRequest):
     """
     Stream voice response through SSE.
-    
+
     For real-time voice feedback.
     """
     consciousness = get_consciousness()
-    
+
     if not consciousness.is_conscious:
         await consciousness.awaken()
-    
+
     async def generate():
         try:
             async for chunk in consciousness.process_input(
                 content=request.transcript,
                 source="voice",
                 session_id=request.session_id,
-                user_id=request.user_id
+                user_id=request.user_id,
             ):
-                yield {
-                    "event": "message",
-                    "data": chunk
-                }
-            
-            yield {
-                "event": "done",
-                "data": {"timestamp": datetime.now(timezone.utc).isoformat()}
-            }
+                yield {"event": "message", "data": chunk}
+
+            yield {"event": "done", "data": {"timestamp": datetime.now(timezone.utc).isoformat()}}
         except Exception as e:
             logger.error(f"Voice stream error: {sanitize_for_log(e)}")
             yield {"event": "error", "data": sanitize_for_user(e)}
-    
+
     return EventSourceResponse(generate())
 
 
@@ -401,16 +394,16 @@ async def voice_stream(request: VoiceRequest):
 async def speak(text: str):
     """
     Make MYCA speak through PersonaPlex.
-    
+
     Direct text-to-speech without requiring input processing.
     """
     consciousness = get_consciousness()
-    
+
     if not consciousness.is_conscious:
         await consciousness.awaken()
-    
+
     await consciousness.speak(text)
-    
+
     return {"status": "ok", "spoken": text}
 
 
@@ -418,39 +411,36 @@ async def speak(text: str):
 async def voice_websocket(websocket: WebSocket):
     """
     WebSocket for full-duplex voice conversations.
-    
+
     Connects to PersonaPlex for real-time voice I/O.
     """
     await websocket.accept()
     consciousness = get_consciousness()
-    
+
     if not consciousness.is_conscious:
         await consciousness.awaken()
-    
+
     try:
         while True:
             data = await websocket.receive_json()
-            
+
             if data.get("type") == "transcript":
                 # User spoke - process through consciousness
                 transcript = data.get("text", "")
-                
+
                 async for chunk in consciousness.process_input(
                     content=transcript,
                     source="voice",
                     session_id=data.get("session_id"),
-                    user_id=data.get("user_id")
+                    user_id=data.get("user_id"),
                 ):
-                    await websocket.send_json({
-                        "type": "response_chunk",
-                        "content": chunk
-                    })
-                
+                    await websocket.send_json({"type": "response_chunk", "content": chunk})
+
                 await websocket.send_json({"type": "response_complete"})
-                
+
             elif data.get("type") == "ping":
                 await websocket.send_json({"type": "pong"})
-                
+
     except WebSocketDisconnect:
         logger.info("Voice WebSocket disconnected")
     except Exception as e:
@@ -461,6 +451,7 @@ async def voice_websocket(websocket: WebSocket):
 # Status and Control Endpoints
 # =============================================================================
 
+
 @router.get("/status", response_model=StatusResponse)
 async def get_status():
     """
@@ -468,7 +459,7 @@ async def get_status():
     """
     consciousness = get_consciousness()
     metrics = consciousness.metrics
-    
+
     return StatusResponse(
         state=consciousness.state.value,
         is_conscious=consciousness.is_conscious,
@@ -478,7 +469,7 @@ async def get_status():
         agents_coordinated=metrics.agents_coordinated,
         world_updates=metrics.world_updates_received,
         emotional_state=consciousness.emotions.to_dict() if consciousness.emotions else None,
-        identity=consciousness.identity.to_dict() if consciousness.identity else None
+        identity=consciousness.identity.to_dict() if consciousness.identity else None,
     )
 
 
@@ -488,16 +479,16 @@ async def awaken():
     Awaken MYCA's consciousness.
     """
     consciousness = get_consciousness()
-    
+
     if consciousness.is_conscious:
         return {"status": "already_conscious", "state": consciousness.state.value}
-    
+
     await consciousness.awaken()
-    
+
     return {
         "status": "awakened",
         "state": consciousness.state.value,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -507,13 +498,13 @@ async def hibernate():
     Put MYCA into hibernation.
     """
     consciousness = get_consciousness()
-    
+
     await consciousness.hibernate()
-    
+
     return {
         "status": "hibernating",
         "state": consciousness.state.value,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -523,11 +514,11 @@ async def health():
     Health check for MYCA consciousness.
     """
     consciousness = get_consciousness()
-    
+
     return {
         "status": "healthy" if consciousness.is_conscious else "dormant",
         "state": consciousness.state.value,
-        "is_conscious": consciousness.is_conscious
+        "is_conscious": consciousness.is_conscious,
     }
 
 
@@ -535,20 +526,21 @@ async def health():
 # World Perception Endpoints
 # =============================================================================
 
+
 @router.get("/world", response_model=WorldStateResponse)
 async def get_world_state():
     """
     Get MYCA's current perception of the world.
     """
     consciousness = get_consciousness()
-    
+
     if not consciousness.is_conscious:
         raise HTTPException(status_code=503, detail="MYCA is not conscious")
-    
+
     world_model = consciousness.world_model
     if not world_model:
         raise HTTPException(status_code=503, detail="World model not available")
-    
+
     state = world_model.get_current_state()
 
     def _get(obj: Any, attr: str, default: Any = None) -> Any:
@@ -599,25 +591,25 @@ async def get_telemetry(device_id: Optional[str] = None):
 async def send_alert(request: AlertRequest):
     """
     Send an alert through MYCA.
-    
+
     MYCA can proactively alert Morgan about important things.
     """
     consciousness = get_consciousness()
-    
+
     if not consciousness.is_conscious:
         await consciousness.awaken()
-    
+
     await consciousness.alert_morgan(request.message, request.priority)
-    
+
     if request.speak:
         await consciousness.speak(request.message)
-    
+
     return {
         "status": "alert_sent",
         "message": request.message,
         "priority": request.priority,
         "spoken": request.speak,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -625,16 +617,17 @@ async def send_alert(request: AlertRequest):
 # Agent Coordination Endpoints
 # =============================================================================
 
+
 @router.get("/agents")
 async def get_agents_status():
     """
     Get status of agents under MYCA's coordination.
     """
     consciousness = get_consciousness()
-    
+
     if not consciousness.is_conscious:
         return {"agents": [], "count": 0, "note": "MYCA is not conscious"}
-    
+
     return await consciousness.get_agent_status()
 
 
@@ -642,20 +635,20 @@ async def get_agents_status():
 async def delegate_task(agent_type: str, task: Dict[str, Any]):
     """
     Delegate a task to a specific agent.
-    
+
     MYCA coordinates her agent swarm.
     """
     consciousness = get_consciousness()
-    
+
     if not consciousness.is_conscious:
         await consciousness.awaken()
-    
+
     result = await consciousness.delegate_to_agent(agent_type, task)
-    
+
     return {
         "agent_type": agent_type,
         "result": result,
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -663,8 +656,10 @@ async def delegate_task(agent_type: str, task: Dict[str, Any]):
 # Unified Routing Endpoint
 # =============================================================================
 
+
 class RouteRequest(BaseModel):
     """Request for unified routing."""
+
     message: str = Field(..., description="User message to route")
     session_id: Optional[str] = Field(None, description="Session ID")
     user_id: Optional[str] = Field(None, description="User ID")
@@ -673,6 +668,7 @@ class RouteRequest(BaseModel):
 
 class RouteResponse(BaseModel):
     """Response from unified routing."""
+
     message: str
     intent_type: str
     intent_confidence: float
@@ -685,53 +681,51 @@ class RouteResponse(BaseModel):
 async def route_message(request: RouteRequest):
     """
     Route a message through the UnifiedRouter.
-    
+
     This endpoint uses the IntentEngine to classify the message
     and routes to the appropriate handler (agent, tool, LLM, MINDEX, N8N).
-    
+
     Use this for explicit routing when you want intent classification.
     """
     from mycosoft_mas.consciousness.unified_router import get_unified_router
-    
+
     router = get_unified_router()
-    
+
     # Route the message
     response_parts = []
     intent_result = None
-    
+
     try:
         # First classify intent
         from mycosoft_mas.consciousness.intent_engine import get_intent_engine
+
         intent_engine = get_intent_engine()
-        intent_result = await intent_engine.classify(
-            request.message,
-            request.context or {}
-        )
-        
+        intent_result = await intent_engine.classify(request.message, request.context or {})
+
         # Then route
         async for chunk in router.route(
             message=request.message,
             context={
                 "session_id": request.session_id,
                 "user_id": request.user_id,
-                **(request.context or {})
-            }
+                **(request.context or {}),
+            },
         ):
             response_parts.append(chunk)
-            
+
     except Exception as e:
         logger.error(f"Routing error: {sanitize_for_log(e)}")
         response_parts = [f"I encountered a routing error. {sanitize_for_user(e)}"]
-    
+
     full_response = "".join(response_parts)
-    
+
     return RouteResponse(
         message=full_response,
         intent_type=intent_result.intent_type.value if intent_result else "unknown",
         intent_confidence=intent_result.confidence if intent_result else 0.0,
         handler=intent_result.intent_type.value if intent_result else "fallback",
         session_id=request.session_id,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
 
@@ -741,9 +735,9 @@ async def route_message_stream(request: RouteRequest):
     Stream a routed response through SSE.
     """
     from mycosoft_mas.consciousness.unified_router import get_unified_router
-    
+
     unified_router = get_unified_router()
-    
+
     async def generate():
         try:
             async for chunk in unified_router.route(
@@ -751,23 +745,17 @@ async def route_message_stream(request: RouteRequest):
                 context={
                     "session_id": request.session_id,
                     "user_id": request.user_id,
-                    **(request.context or {})
+                    **(request.context or {}),
                 },
-                stream=True
+                stream=True,
             ):
-                yield {
-                    "event": "message",
-                    "data": chunk
-                }
-            
-            yield {
-                "event": "done",
-                "data": {"timestamp": datetime.now(timezone.utc).isoformat()}
-            }
+                yield {"event": "message", "data": chunk}
+
+            yield {"event": "done", "data": {"timestamp": datetime.now(timezone.utc).isoformat()}}
         except Exception as e:
             logger.error(f"Stream routing error: {sanitize_for_log(e)}")
             yield {"event": "error", "data": sanitize_for_user(e)}
-    
+
     return EventSourceResponse(generate())
 
 
@@ -775,19 +763,20 @@ async def route_message_stream(request: RouteRequest):
 # Personality Endpoints
 # =============================================================================
 
+
 @router.get("/identity")
 async def get_identity():
     """
     Get MYCA's identity information.
     """
     consciousness = get_consciousness()
-    
+
     if not consciousness.identity:
         return {"name": "MYCA", "note": "Full identity not loaded"}
-    
+
     return {
         "identity": consciousness.identity.to_dict(),
-        "introduction": consciousness.identity.get_introduction("detailed")
+        "introduction": consciousness.identity.get_introduction("detailed"),
     }
 
 
@@ -797,10 +786,10 @@ async def get_emotions():
     Get MYCA's current emotional state.
     """
     consciousness = get_consciousness()
-    
+
     if not consciousness.emotions:
         return {"note": "Emotional state not available"}
-    
+
     return consciousness.emotions.to_dict()
 
 
@@ -808,14 +797,14 @@ async def get_emotions():
 async def get_soul():
     """
     Get MYCA's complete soul state.
-    
+
     Includes identity, beliefs, purpose, and emotions.
     """
     consciousness = get_consciousness()
-    
+
     if not consciousness.is_conscious:
         return {"note": "MYCA is not conscious"}
-    
+
     return {
         "identity": consciousness.identity.to_dict() if consciousness.identity else None,
         "emotional_state": consciousness.emotions.to_dict() if consciousness.emotions else None,
@@ -825,5 +814,5 @@ async def get_soul():
             "thoughts_processed": consciousness.metrics.thoughts_processed,
             "memories_recalled": consciousness.metrics.memories_recalled,
             "agents_coordinated": consciousness.metrics.agents_coordinated,
-        }
+        },
     }

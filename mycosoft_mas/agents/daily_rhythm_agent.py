@@ -19,7 +19,7 @@ Runs on: 192.168.0.191 (MYCA VM) or 192.168.0.188 (MAS, fallback)
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 
@@ -43,9 +43,7 @@ class DailyRhythmAgent(BaseAgent):
             "task_processing",
         ]
         self.mas_url = config.get("mas_url", "http://192.168.0.188:8001")
-        self.workspace_url = config.get(
-            "workspace_url", "http://192.168.0.191:8100"
-        )
+        self.workspace_url = config.get("workspace_url", "http://192.168.0.191:8100")
         self._daily_plan: List[Dict] = []
         self._completed_today: List[Dict] = []
         self._rhythm_log: List[Dict] = []
@@ -102,8 +100,7 @@ class DailyRhythmAgent(BaseAgent):
 
         briefing = (
             f"Good morning! Here's my daily briefing for "
-            f"{datetime.now(timezone.utc).strftime('%B %d, %Y')}:\n\n"
-            + "\n\n".join(sections)
+            f"{datetime.now(timezone.utc).strftime('%B %d, %Y')}:\n\n" + "\n\n".join(sections)
         )
 
         # 4. Post to Discord and log
@@ -153,7 +150,7 @@ class DailyRhythmAgent(BaseAgent):
         """Midday progress update and priority re-evaluation."""
         self._log_rhythm("midday_sync", "started")
 
-        tasks = await self._get_pending_tasks()
+        await self._get_pending_tasks()
         completed_count = len(self._completed_today)
 
         # Re-prioritize remaining tasks
@@ -195,14 +192,18 @@ class DailyRhythmAgent(BaseAgent):
         remaining = [t for t in self._daily_plan if t.get("status") != "completed"]
 
         # Build EOD summary
-        completed_list = "\n".join(
-            f"  - {t.get('title', 'Untitled')}" for t in self._completed_today[:20]
-        ) or "  (none)"
+        completed_list = (
+            "\n".join(f"  - {t.get('title', 'Untitled')}" for t in self._completed_today[:20])
+            or "  (none)"
+        )
 
-        remaining_list = "\n".join(
-            f"  - {t.get('title', 'Untitled')} [{t.get('priority', 'medium')}]"
-            for t in remaining[:10]
-        ) or "  (none)"
+        remaining_list = (
+            "\n".join(
+                f"  - {t.get('title', 'Untitled')} [{t.get('priority', 'medium')}]"
+                for t in remaining[:10]
+            )
+            or "  (none)"
+        )
 
         eod = (
             f"End of Day Summary — {datetime.now(timezone.utc).strftime('%B %d, %Y')}\n\n"
@@ -265,9 +266,7 @@ class DailyRhythmAgent(BaseAgent):
         return {
             "status": "success",
             "processing": next_task,
-            "remaining": len(
-                [t for t in self._daily_plan if t.get("status") != "completed"]
-            ) - 1,
+            "remaining": len([t for t in self._daily_plan if t.get("status") != "completed"]) - 1,
         }
 
     # ------------------------------------------------------------------
@@ -279,16 +278,28 @@ class DailyRhythmAgent(BaseAgent):
         return {
             "status": "success",
             "schedule": [
-                {"time": "08:00", "event": "morning_brief", "description": "Morning briefing and daily plan"},
+                {
+                    "time": "08:00",
+                    "event": "morning_brief",
+                    "description": "Morning briefing and daily plan",
+                },
                 {"time": "09:00", "event": "process_tasks", "description": "Start task processing"},
                 {"time": "10:00", "event": "hourly_status", "description": "Hourly status check"},
                 {"time": "11:00", "event": "hourly_status", "description": "Hourly status check"},
-                {"time": "12:00", "event": "midday_sync", "description": "Midday sync and re-prioritize"},
+                {
+                    "time": "12:00",
+                    "event": "midday_sync",
+                    "description": "Midday sync and re-prioritize",
+                },
                 {"time": "13:00", "event": "hourly_status", "description": "Hourly status check"},
                 {"time": "14:00", "event": "hourly_status", "description": "Hourly status check"},
                 {"time": "15:00", "event": "hourly_status", "description": "Hourly status check"},
                 {"time": "16:00", "event": "hourly_status", "description": "Hourly status check"},
-                {"time": "17:00", "event": "end_of_day", "description": "End-of-day summary and email"},
+                {
+                    "time": "17:00",
+                    "event": "end_of_day",
+                    "description": "End-of-day summary and email",
+                },
                 {"time": "22:00", "event": "night_mode", "description": "Monitoring mode"},
             ],
             "daily_plan": self._daily_plan,
@@ -314,7 +325,9 @@ class DailyRhythmAgent(BaseAgent):
             for name, url in vms.items():
                 try:
                     resp = await client.get(f"{url}/health")
-                    health[name] = "healthy" if resp.status_code == 200 else f"status_{resp.status_code}"
+                    health[name] = (
+                        "healthy" if resp.status_code == 200 else f"status_{resp.status_code}"
+                    )
                 except Exception:
                     health[name] = "unreachable"
         return health
@@ -353,10 +366,7 @@ class DailyRhythmAgent(BaseAgent):
             return "Pending Tasks: None"
         lines = [f"Pending Tasks ({len(tasks)}):"]
         for t in tasks[:10]:
-            lines.append(
-                f"  - {t.get('title', 'Untitled')} "
-                f"[{t.get('priority', 'medium')}]"
-            )
+            lines.append(f"  - {t.get('title', 'Untitled')} " f"[{t.get('priority', 'medium')}]")
         return "\n".join(lines)
 
     def _format_plan(self, plan: List[Dict]) -> str:
@@ -364,10 +374,7 @@ class DailyRhythmAgent(BaseAgent):
             return "Daily Plan: No tasks scheduled."
         lines = [f"Daily Plan ({len(plan)} tasks):"]
         for i, t in enumerate(plan[:10], 1):
-            lines.append(
-                f"  {i}. {t.get('title', 'Untitled')} "
-                f"[{t.get('priority', 'medium')}]"
-            )
+            lines.append(f"  {i}. {t.get('title', 'Untitled')} " f"[{t.get('priority', 'medium')}]")
         return "\n".join(lines)
 
     async def _post_to_discord(self, message: str, channel: str = "myca-ops"):
@@ -437,11 +444,13 @@ class DailyRhythmAgent(BaseAgent):
 
     def _log_rhythm(self, event: str, status: str):
         """Log a rhythm event for the schedule endpoint."""
-        self._rhythm_log.append({
-            "event": event,
-            "status": status,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        })
+        self._rhythm_log.append(
+            {
+                "event": event,
+                "status": status,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        )
         # Keep last 100 entries
         if len(self._rhythm_log) > 100:
             self._rhythm_log = self._rhythm_log[-100:]

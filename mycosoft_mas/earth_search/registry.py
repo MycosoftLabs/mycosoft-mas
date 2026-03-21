@@ -24,11 +24,16 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         name="iNaturalist",
         api_url="https://api.inaturalist.org/v1",
         domains=[
-            EarthSearchDomain.ALL_SPECIES, EarthSearchDomain.FUNGI,
-            EarthSearchDomain.PLANTS, EarthSearchDomain.BIRDS,
-            EarthSearchDomain.MAMMALS, EarthSearchDomain.REPTILES,
-            EarthSearchDomain.AMPHIBIANS, EarthSearchDomain.INSECTS,
-            EarthSearchDomain.MARINE_LIFE, EarthSearchDomain.FISH,
+            EarthSearchDomain.ALL_SPECIES,
+            EarthSearchDomain.FUNGI,
+            EarthSearchDomain.PLANTS,
+            EarthSearchDomain.BIRDS,
+            EarthSearchDomain.MAMMALS,
+            EarthSearchDomain.REPTILES,
+            EarthSearchDomain.AMPHIBIANS,
+            EarthSearchDomain.INSECTS,
+            EarthSearchDomain.MARINE_LIFE,
+            EarthSearchDomain.FISH,
             EarthSearchDomain.INVERTEBRATES,
         ],
         description="Global citizen-science biodiversity observations with photos and geolocation",
@@ -38,12 +43,18 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         name="GBIF",
         api_url="https://api.gbif.org/v1",
         domains=[
-            EarthSearchDomain.ALL_SPECIES, EarthSearchDomain.FUNGI,
-            EarthSearchDomain.PLANTS, EarthSearchDomain.BIRDS,
-            EarthSearchDomain.MAMMALS, EarthSearchDomain.REPTILES,
-            EarthSearchDomain.AMPHIBIANS, EarthSearchDomain.INSECTS,
-            EarthSearchDomain.MARINE_LIFE, EarthSearchDomain.FISH,
-            EarthSearchDomain.MICROORGANISMS, EarthSearchDomain.INVERTEBRATES,
+            EarthSearchDomain.ALL_SPECIES,
+            EarthSearchDomain.FUNGI,
+            EarthSearchDomain.PLANTS,
+            EarthSearchDomain.BIRDS,
+            EarthSearchDomain.MAMMALS,
+            EarthSearchDomain.REPTILES,
+            EarthSearchDomain.AMPHIBIANS,
+            EarthSearchDomain.INSECTS,
+            EarthSearchDomain.MARINE_LIFE,
+            EarthSearchDomain.FISH,
+            EarthSearchDomain.MICROORGANISMS,
+            EarthSearchDomain.INVERTEBRATES,
         ],
         description="Global Biodiversity Information Facility — 2B+ occurrence records",
     ),
@@ -72,7 +83,11 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         source_id="worms",
         name="WoRMS",
         api_url="https://www.marinespecies.org/rest",
-        domains=[EarthSearchDomain.MARINE_LIFE, EarthSearchDomain.FISH, EarthSearchDomain.INVERTEBRATES],
+        domains=[
+            EarthSearchDomain.MARINE_LIFE,
+            EarthSearchDomain.FISH,
+            EarthSearchDomain.INVERTEBRATES,
+        ],
         description="World Register of Marine Species — authoritative marine taxonomy",
     ),
     DataSourceInfo(
@@ -117,7 +132,6 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         domains=[EarthSearchDomain.RESEARCH],
         description="Biomedical literature — 36M+ citations and abstracts",
     ),
-
     # --- Environmental Events ---
     DataSourceInfo(
         source_id="usgs_earthquake",
@@ -147,7 +161,12 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         source_id="noaa_storms",
         name="NOAA Storm Events",
         api_url="https://www.ncdc.noaa.gov/stormevents/ftp.jsp",
-        domains=[EarthSearchDomain.STORMS, EarthSearchDomain.TORNADOES, EarthSearchDomain.FLOODS, EarthSearchDomain.LIGHTNING],
+        domains=[
+            EarthSearchDomain.STORMS,
+            EarthSearchDomain.TORNADOES,
+            EarthSearchDomain.FLOODS,
+            EarthSearchDomain.LIGHTNING,
+        ],
         realtime=True,
         description="NOAA severe weather events — storms, tornadoes, lightning, floods",
     ),
@@ -159,7 +178,6 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         realtime=True,
         description="Active tropical cyclones and hurricane tracking",
     ),
-
     # --- Atmospheric / Climate ---
     DataSourceInfo(
         source_id="openweathermap",
@@ -190,21 +208,28 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         source_id="nasa_earthdata",
         name="NASA Earthdata",
         api_url="https://cmr.earthdata.nasa.gov/search",
-        domains=[EarthSearchDomain.MODIS, EarthSearchDomain.LANDSAT, EarthSearchDomain.AIRS, EarthSearchDomain.GROUND_QUALITY],
+        domains=[
+            EarthSearchDomain.MODIS,
+            EarthSearchDomain.LANDSAT,
+            EarthSearchDomain.AIRS,
+            EarthSearchDomain.GROUND_QUALITY,
+        ],
         requires_key=True,
         description="NASA satellite data — MODIS, Landsat, AIRS imagery and measurements",
     ),
-
     # --- Ocean ---
     DataSourceInfo(
         source_id="ndbc_buoys",
         name="NOAA NDBC",
         api_url="https://www.ndbc.noaa.gov/data/realtime2",
-        domains=[EarthSearchDomain.OCEAN_BUOYS, EarthSearchDomain.OCEAN_TEMPERATURE, EarthSearchDomain.WEATHER_STATIONS],
+        domains=[
+            EarthSearchDomain.OCEAN_BUOYS,
+            EarthSearchDomain.OCEAN_TEMPERATURE,
+            EarthSearchDomain.WEATHER_STATIONS,
+        ],
         realtime=True,
         description="National Data Buoy Center — ocean buoys, sea surface temp, wave data",
     ),
-
     # --- Transportation ---
     DataSourceInfo(
         source_id="crep_flights",
@@ -244,7 +269,6 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         domains=[EarthSearchDomain.SHIPPING_PORTS],
         description="NGA World Port Index — global shipping port locations",
     ),
-
     # --- Space ---
     DataSourceInfo(
         source_id="noaa_swpc",
@@ -270,19 +294,24 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         domains=[EarthSearchDomain.LAUNCHES, EarthSearchDomain.SPACEPORTS],
         description="Rocket launches, landing pads, launch sites worldwide",
     ),
-
     # --- Industrial Infrastructure ---
     DataSourceInfo(
         source_id="osm_overpass",
         name="OpenStreetMap Overpass",
         api_url="https://overpass-api.de/api/interpreter",
         domains=[
-            EarthSearchDomain.FACTORIES, EarthSearchDomain.POWER_PLANTS,
-            EarthSearchDomain.MINING, EarthSearchDomain.OIL_GAS,
-            EarthSearchDomain.DAMS, EarthSearchDomain.WATER_TREATMENT,
-            EarthSearchDomain.RIVERS, EarthSearchDomain.CELL_TOWERS,
-            EarthSearchDomain.AM_FM_ANTENNAS, EarthSearchDomain.INTERNET_CABLES,
-            EarthSearchDomain.MILITARY_BASES, EarthSearchDomain.RAILWAYS,
+            EarthSearchDomain.FACTORIES,
+            EarthSearchDomain.POWER_PLANTS,
+            EarthSearchDomain.MINING,
+            EarthSearchDomain.OIL_GAS,
+            EarthSearchDomain.DAMS,
+            EarthSearchDomain.WATER_TREATMENT,
+            EarthSearchDomain.RIVERS,
+            EarthSearchDomain.CELL_TOWERS,
+            EarthSearchDomain.AM_FM_ANTENNAS,
+            EarthSearchDomain.INTERNET_CABLES,
+            EarthSearchDomain.MILITARY_BASES,
+            EarthSearchDomain.RAILWAYS,
         ],
         description="OpenStreetMap infrastructure queries via Overpass API",
     ),
@@ -297,10 +326,13 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         source_id="gem_powerplants",
         name="Global Energy Monitor",
         api_url="https://globalenergymonitor.org",
-        domains=[EarthSearchDomain.POWER_PLANTS, EarthSearchDomain.OIL_GAS, EarthSearchDomain.MINING],
+        domains=[
+            EarthSearchDomain.POWER_PLANTS,
+            EarthSearchDomain.OIL_GAS,
+            EarthSearchDomain.MINING,
+        ],
         description="Global power plant, coal mine, and fossil fuel tracker",
     ),
-
     # --- Telecommunications ---
     DataSourceInfo(
         source_id="opencellid",
@@ -325,7 +357,6 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         domains=[EarthSearchDomain.INTERNET_CABLES],
         description="Submarine internet cable routes and landing points",
     ),
-
     # --- Webcams ---
     DataSourceInfo(
         source_id="windy_webcams",
@@ -335,7 +366,6 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         requires_key=True,
         description="Global webcam directory — 70k+ webcams with live images",
     ),
-
     # --- Device Telemetry ---
     DataSourceInfo(
         source_id="mycobrain",
@@ -345,7 +375,6 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         realtime=True,
         description="MycoBrain BME688/690 environmental sensor telemetry",
     ),
-
     # --- Earth2 Climate Prediction ---
     DataSourceInfo(
         source_id="earth2",
@@ -355,7 +384,6 @@ EARTH_DATA_SOURCES: List[DataSourceInfo] = [
         requires_key=True,
         description="NVIDIA Earth2 climate simulation and weather prediction",
     ),
-
     # --- MINDEX Local (already ingested) ---
     DataSourceInfo(
         source_id="mindex_local",

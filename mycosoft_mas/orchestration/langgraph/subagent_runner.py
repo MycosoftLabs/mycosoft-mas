@@ -2,12 +2,13 @@
 Subagent Runner - Isolated Execution Context for Deep Agents
 Date: January 27, 2026
 """
+
 import asyncio
 import uuid
-from datetime import datetime
-from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 
 class SubagentStatus(Enum):
@@ -28,7 +29,7 @@ class SubagentResult:
     error: Optional[str] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "run_id": self.run_id,
@@ -77,11 +78,11 @@ class SubagentRunner:
             tools=["audit_log", "threat_scan", "policy_check"],
         ),
     }
-    
+
     def __init__(self, telemetry_callback: Optional[Callable] = None):
         self.active_runs: Dict[str, SubagentResult] = {}
         self.telemetry_callback = telemetry_callback
-    
+
     async def run_subagent(
         self,
         subagent_name: str,
@@ -90,7 +91,7 @@ class SubagentRunner:
     ) -> SubagentResult:
         run_id = str(uuid.uuid4())
         config = self.SUBAGENT_CONFIGS.get(subagent_name)
-        
+
         if not config:
             return SubagentResult(
                 run_id=run_id,
@@ -99,7 +100,7 @@ class SubagentRunner:
                 summary="",
                 error=f"Unknown subagent: {subagent_name}",
             )
-        
+
         result = SubagentResult(
             run_id=run_id,
             subagent_name=subagent_name,
@@ -109,13 +110,12 @@ class SubagentRunner:
             started_at=datetime.now(),
             completed_at=datetime.now(),
         )
-        
+
         self.active_runs[run_id] = result
         return result
-    
+
     async def run_parallel(self, tasks: List[Dict[str, Any]]) -> List[SubagentResult]:
         coroutines = [
-            self.run_subagent(t["subagent_name"], t["task"], t.get("context"))
-            for t in tasks
+            self.run_subagent(t["subagent_name"], t["task"], t.get("context")) for t in tasks
         ]
         return await asyncio.gather(*coroutines)

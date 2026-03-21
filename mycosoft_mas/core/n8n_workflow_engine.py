@@ -4,16 +4,17 @@ N8N Workflow Management Engine - January 25, 2026
 Core automation engine for MYCA orchestrator to manage n8n workflows 24/7/365.
 """
 
-import os
+import asyncio
+import hashlib
 import json
 import logging
-import hashlib
-import asyncio
-from pathlib import Path
+import os
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any, Callable
-from dataclasses import dataclass, field, asdict
 from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
+
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -116,19 +117,19 @@ class ExecutionStats:
 
 def clean_workflow_for_api(workflow_data: dict, for_update: bool = False) -> dict:
     """Clean workflow data to only include fields accepted by n8n API.
-    
+
     Args:
         workflow_data: Raw workflow data from file or n8n
         for_update: If True, only include fields valid for PUT request
     """
     # Fields allowed for create/update
     allowed = {"name", "nodes", "connections", "settings", "staticData"}
-    
+
     cleaned = {}
     for key in allowed:
         if key in workflow_data:
             cleaned[key] = workflow_data[key]
-    
+
     # Ensure required fields
     if "name" not in cleaned or not cleaned["name"]:
         cleaned["name"] = "Unnamed Workflow"
@@ -138,17 +139,17 @@ def clean_workflow_for_api(workflow_data: dict, for_update: bool = False) -> dic
         cleaned["connections"] = {}
     if "settings" not in cleaned:
         cleaned["settings"] = {}
-    
+
     return cleaned
 
 
 class N8NWorkflowEngine:
     """N8N Workflow Management Engine for MYCA 24/7/365 automation"""
-    
+
     def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None):
         self.base_url = (base_url or N8N_URL).rstrip("/")
         self.api_key = api_key or N8N_API_KEY
-        
+
         self.headers = {"X-N8N-API-KEY": self.api_key, "Content-Type": "application/json"}
         auth_user = N8N_BASIC_AUTH_USER or N8N_USER
         auth_password = N8N_BASIC_AUTH_PASSWORD or N8N_PASSWORD
@@ -158,7 +159,7 @@ class N8NWorkflowEngine:
         self.client = httpx.Client(timeout=60.0, auth=auth)
         self._version_registry: Dict[str, List[WorkflowVersion]] = {}
         self._load_version_registry()
-        
+
     def _load_version_registry(self):
         registry_file = REGISTRY_DIR / "versions.json"
         if registry_file.exists():
@@ -169,16 +170,19 @@ class N8NWorkflowEngine:
                         self._version_registry[wf_id] = [WorkflowVersion(**v) for v in versions]
             except Exception as e:
                 logger.error(f"Failed to load version registry: {e}")
-    
+
     def _save_version_registry(self):
         registry_file = REGISTRY_DIR / "versions.json"
         try:
-            data = {wf_id: [asdict(v) for v in versions] for wf_id, versions in self._version_registry.items()}
+            data = {
+                wf_id: [asdict(v) for v in versions]
+                for wf_id, versions in self._version_registry.items()
+            }
             with open(registry_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to save version registry: {e}")
-        
+
     def _request(self, method: str, endpoint: str, **kwargs) -> dict:
         api_base = N8N_API_BASE if N8N_API_BASE.startswith("/") else f"/{N8N_API_BASE}"
         url = f"{self.base_url}{api_base}{endpoint}"
@@ -192,11 +196,11 @@ class N8NWorkflowEngine:
         except Exception as e:
             logger.error(f"N8N request failed: {e}")
             raise
-    
+
     def _compute_checksum(self, data: dict) -> str:
         content = json.dumps(data, sort_keys=True)
         return hashlib.md5(content.encode()).hexdigest()
-    
+
     def _categorize_workflow(self, name: str, filename: str = "") -> WorkflowCategory:
         lower_name = (name + filename).lower()
         if any(x in lower_name for x in ["01_", "02_", "myca-", "command_api"]):
@@ -211,7 +215,9 @@ class N8NWorkflowEngine:
             return WorkflowCategory.TEMPLATE
         return WorkflowCategory.CUSTOM
 
-    def list_workflows(self, active_only: bool = False, category: WorkflowCategory = None) -> List[WorkflowInfo]:
+    def list_workflows(
+        self, active_only: bool = False, category: WorkflowCategory = None
+    ) -> List[WorkflowInfo]:
         data = self._request("GET", "/workflows")
         workflows = []
         for w in data.get("data", []):
@@ -220,36 +226,42 @@ class N8NWorkflowEngine:
             wf_category = self._categorize_workflow(w["name"])
             if category and wf_category != category:
                 continue
-            workflows.append(WorkflowInfo(
-                id=w["id"], name=w["name"], active=w.get("active", False),
-                created_at=w.get("createdAt", ""), updated_at=w.get("updatedAt", ""),
-                nodes_count=len(w.get("nodes", [])), tags=[t["name"] for t in w.get("tags", [])],
-                category=wf_category
-            ))
+            workflows.append(
+                WorkflowInfo(
+                    id=w["id"],
+                    name=w["name"],
+                    active=w.get("active", False),
+                    created_at=w.get("createdAt", ""),
+                    updated_at=w.get("updatedAt", ""),
+                    nodes_count=len(w.get("nodes", [])),
+                    tags=[t["name"] for t in w.get("tags", [])],
+                    category=wf_category,
+                )
+            )
         return workflows
-    
+
     def get_workflow(self, workflow_id: str) -> dict:
         return self._request("GET", f"/workflows/{workflow_id}")
-    
+
     def get_workflow_by_name(self, name: str) -> Optional[dict]:
         workflows = self._request("GET", "/workflows")
         for w in workflows.get("data", []):
             if w["name"] == name:
                 return self.get_workflow(w["id"])
         return None
-    
+
     def create_workflow(self, workflow_data: dict) -> dict:
         cleaned = clean_workflow_for_api(workflow_data)
         result = self._request("POST", "/workflows", json=cleaned)
         logger.info(f"Created workflow: {cleaned.get('name', 'unknown')}")
         return result
-    
+
     def update_workflow(self, workflow_id: str, workflow_data: dict) -> dict:
         cleaned = clean_workflow_for_api(workflow_data, for_update=True)
         result = self._request("PUT", f"/workflows/{workflow_id}", json=cleaned)
         logger.info(f"Updated workflow {workflow_id}")
         return result
-    
+
     def delete_workflow(self, workflow_id: str, archive_first: bool = True) -> bool:
         if archive_first:
             try:
@@ -260,18 +272,20 @@ class N8NWorkflowEngine:
         self._request("DELETE", f"/workflows/{workflow_id}")
         logger.info(f"Deleted workflow: {workflow_id}")
         return True
-    
+
     def activate_workflow(self, workflow_id: str) -> dict:
         result = self._request("POST", f"/workflows/{workflow_id}/activate")
         logger.info(f"Activated workflow: {workflow_id}")
         return result
-    
+
     def deactivate_workflow(self, workflow_id: str) -> dict:
         result = self._request("POST", f"/workflows/{workflow_id}/deactivate")
         logger.info(f"Deactivated workflow: {workflow_id}")
         return result
-    
-    def archive_workflow(self, workflow_id: str, workflow_data: Optional[dict] = None, reason: str = "") -> WorkflowVersion:
+
+    def archive_workflow(
+        self, workflow_id: str, workflow_data: Optional[dict] = None, reason: str = ""
+    ) -> WorkflowVersion:
         if not workflow_data:
             workflow_data = self.get_workflow(workflow_id)
         if workflow_id not in self._version_registry:
@@ -284,15 +298,19 @@ class N8NWorkflowEngine:
         with open(archive_path, "w", encoding="utf-8") as f:
             json.dump(workflow_data, f, indent=2)
         version_record = WorkflowVersion(
-            workflow_id=workflow_id, workflow_name=workflow_data["name"], version=version,
-            archived_at=datetime.utcnow().isoformat(), checksum=self._compute_checksum(workflow_data),
-            file_path=str(archive_path), reason=reason
+            workflow_id=workflow_id,
+            workflow_name=workflow_data["name"],
+            version=version,
+            archived_at=datetime.utcnow().isoformat(),
+            checksum=self._compute_checksum(workflow_data),
+            file_path=str(archive_path),
+            reason=reason,
         )
         self._version_registry[workflow_id].append(version_record)
         self._save_version_registry()
         logger.info(f"Archived workflow {workflow_data['name']} v{version}")
         return version_record
-    
+
     def restore_workflow(self, workflow_id: str, version: Optional[int] = None) -> dict:
         if workflow_id not in self._version_registry:
             raise ValueError(f"No archived versions for workflow {workflow_id}")
@@ -310,10 +328,10 @@ class N8NWorkflowEngine:
         result = self.update_workflow(workflow_id, workflow_data)
         logger.info(f"Restored workflow {target.workflow_name} from v{target.version}")
         return result
-    
+
     def list_versions(self, workflow_id: str) -> List[WorkflowVersion]:
         return self._version_registry.get(workflow_id, [])
-    
+
     def export_workflow(self, workflow_id: str, filepath: Optional[Path] = None) -> Path:
         workflow = self.get_workflow(workflow_id)
         if not filepath:
@@ -323,7 +341,7 @@ class N8NWorkflowEngine:
             json.dump(workflow, f, indent=2)
         logger.info(f"Exported workflow to {filepath}")
         return filepath
-    
+
     def export_all_workflows(self, output_dir: Optional[Path] = None) -> List[Path]:
         output_dir = output_dir or BACKUP_DIR
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -335,24 +353,24 @@ class N8NWorkflowEngine:
             except Exception as e:
                 logger.error(f"Failed to export {wf.name}: {e}")
         return exported
-    
+
     def import_workflow_from_file(self, filepath: Path, activate: bool = False) -> dict:
         with open(filepath, "r", encoding="utf-8") as f:
             workflow_data = json.load(f)
-        
+
         name = workflow_data.get("name", "")
         if not name:
             logger.warning(f"Skipping {filepath.name}: no workflow name")
             return {"skipped": True, "reason": "no name"}
-        
+
         existing = self.get_workflow_by_name(name)
-        
+
         if existing:
             # Workflow exists - skip update for now (n8n already has it)
             # The workflows are already in n8n, no need to push local changes
             logger.debug(f"Workflow exists in n8n: {name}")
             result = existing
-            
+
             if activate and result.get("id") and not result.get("active"):
                 try:
                     self.activate_workflow(result["id"])
@@ -363,46 +381,52 @@ class N8NWorkflowEngine:
             # New workflow - create it
             result = self.create_workflow(workflow_data)
             logger.info(f"Created workflow: {name}")
-            
+
             if activate and result.get("id"):
                 try:
                     self.activate_workflow(result["id"])
                     result["active"] = True
                 except Exception as e:
                     logger.warning(f"Could not activate {name}: {e}")
-        
+
         return result
-    
-    def sync_all_local_workflows(self, activate_core: bool = True, force_update: bool = False) -> SyncResult:
+
+    def sync_all_local_workflows(
+        self, activate_core: bool = True, force_update: bool = False
+    ) -> SyncResult:
         result = SyncResult()
         if not WORKFLOWS_DIR.exists():
             logger.warning(f"Workflows directory not found: {WORKFLOWS_DIR}")
             return result
-        
+
         workflow_files = list(WORKFLOWS_DIR.glob("**/*.json"))
-        
+
         for filepath in sorted(workflow_files):
             try:
                 is_core = filepath.name.startswith(("01_", "02_", "myca-"))
                 should_activate = activate_core and is_core
-                
+
                 imported = self.import_workflow_from_file(filepath, activate=should_activate)
-                
+
                 if imported.get("skipped"):
                     result.skipped.append(filepath.name)
                 elif imported.get("id"):
                     result.imported.append(filepath.name)
                     if should_activate and imported.get("active"):
                         result.activated.append(filepath.name)
-                        
+
             except Exception as e:
                 logger.error(f"Failed to import {filepath.name}: {e}")
                 result.errors.append({"file": filepath.name, "error": str(e)})
-        
-        logger.info(f"Sync complete: {len(result.imported)} imported, {len(result.skipped)} skipped, {len(result.activated)} activated, {len(result.errors)} errors")
+
+        logger.info(
+            f"Sync complete: {len(result.imported)} imported, {len(result.skipped)} skipped, {len(result.activated)} activated, {len(result.errors)} errors"
+        )
         return result
-    
-    def get_executions(self, workflow_id: Optional[str] = None, limit: int = 50, status: Optional[str] = None) -> List[dict]:
+
+    def get_executions(
+        self, workflow_id: Optional[str] = None, limit: int = 50, status: Optional[str] = None
+    ) -> List[dict]:
         params = {"limit": limit}
         if workflow_id:
             params["workflowId"] = workflow_id
@@ -410,7 +434,7 @@ class N8NWorkflowEngine:
             params["status"] = status
         data = self._request("GET", "/executions", params=params)
         return data.get("data", [])
-    
+
     def get_execution_stats(self, workflow_id: str) -> ExecutionStats:
         executions = self.get_executions(workflow_id, limit=100)
         if not executions:
@@ -420,11 +444,15 @@ class N8NWorkflowEngine:
         failure_count = sum(1 for e in executions if e.get("status") in ["error", "failed"])
         latest = executions[0] if executions else {}
         return ExecutionStats(
-            workflow_id=workflow_id, workflow_name=latest.get("workflowName", ""),
-            total_executions=len(executions), success_count=success_count, failure_count=failure_count,
-            last_execution=latest.get("startedAt"), last_status=latest.get("status")
+            workflow_id=workflow_id,
+            workflow_name=latest.get("workflowName", ""),
+            total_executions=len(executions),
+            success_count=success_count,
+            failure_count=failure_count,
+            last_execution=latest.get("startedAt"),
+            last_status=latest.get("status"),
         )
-    
+
     def get_failed_executions(self, hours: int = 24) -> List[dict]:
         all_executions = self.get_executions(limit=200)
         cutoff = datetime.utcnow() - timedelta(hours=hours)
@@ -441,12 +469,12 @@ class N8NWorkflowEngine:
                 except Exception as parse_err:
                     logger.debug(f"Non-critical error parsing execution time: {parse_err}")
         return failed
-    
+
     def clone_workflow(self, workflow_id: str, new_name: str) -> dict:
         original = self.get_workflow(workflow_id)
         original["name"] = new_name
         return self.create_workflow(original)
-    
+
     def get_workflow_stats(self) -> dict:
         workflows = self.list_workflows()
         by_category = {}
@@ -458,46 +486,62 @@ class N8NWorkflowEngine:
             if wf.active:
                 by_category[cat]["active"] += 1
         return {
-            "total": len(workflows), "active": len([w for w in workflows if w.active]),
+            "total": len(workflows),
+            "active": len([w for w in workflows if w.active]),
             "inactive": len([w for w in workflows if not w.active]),
-            "by_category": by_category, "timestamp": datetime.utcnow().isoformat()
+            "by_category": by_category,
+            "timestamp": datetime.utcnow().isoformat(),
         }
-    
+
     def health_check(self) -> dict:
         try:
             workflows = self.list_workflows()
             recent_failures = self.get_failed_executions(hours=1)
             return {
-                "status": "healthy", "connected": True, "base_url": self.base_url,
-                "workflow_count": len(workflows), "active_count": len([w for w in workflows if w.active]),
-                "recent_failures": len(recent_failures), "timestamp": datetime.utcnow().isoformat()
+                "status": "healthy",
+                "connected": True,
+                "base_url": self.base_url,
+                "workflow_count": len(workflows),
+                "active_count": len([w for w in workflows if w.active]),
+                "recent_failures": len(recent_failures),
+                "timestamp": datetime.utcnow().isoformat(),
             }
         except Exception as e:
-            return {"status": "unhealthy", "connected": False, "base_url": self.base_url, "error": str(e), "timestamp": datetime.utcnow().isoformat()}
-    
+            return {
+                "status": "unhealthy",
+                "connected": False,
+                "base_url": self.base_url,
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+
     def close(self):
         self.client.close()
-    
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
 
 class WorkflowScheduler:
     """24/7/365 Workflow Scheduler for MYCA"""
-    
+
     def __init__(self, engine: N8NWorkflowEngine = None):
         self.engine = engine or N8NWorkflowEngine()
         self._running = False
         self._tasks: List[asyncio.Task] = []
-        self._callbacks: Dict[str, List[Callable]] = {"sync_complete": [], "workflow_failed": [], "health_check": []}
-    
+        self._callbacks: Dict[str, List[Callable]] = {
+            "sync_complete": [],
+            "workflow_failed": [],
+            "health_check": [],
+        }
+
     def on(self, event: str, callback: Callable):
         if event in self._callbacks:
             self._callbacks[event].append(callback)
-    
+
     async def _emit(self, event: str, data: Any):
         for callback in self._callbacks.get(event, []):
             try:
@@ -507,7 +551,7 @@ class WorkflowScheduler:
                     callback(data)
             except Exception as e:
                 logger.error(f"Callback error for {event}: {e}")
-    
+
     async def _sync_loop(self, interval_minutes: int = 15):
         while self._running:
             try:
@@ -517,7 +561,7 @@ class WorkflowScheduler:
             except Exception as e:
                 logger.error(f"Sync loop error: {e}")
             await asyncio.sleep(interval_minutes * 60)
-    
+
     async def _health_loop(self, interval_minutes: int = 5):
         while self._running:
             try:
@@ -530,7 +574,7 @@ class WorkflowScheduler:
             except Exception as e:
                 logger.error(f"Health loop error: {e}")
             await asyncio.sleep(interval_minutes * 60)
-    
+
     async def _archive_loop(self, interval_hours: int = 24):
         while self._running:
             try:
@@ -543,22 +587,26 @@ class WorkflowScheduler:
             except Exception as e:
                 logger.error(f"Archive loop error: {e}")
             await asyncio.sleep(interval_hours * 3600)
-    
-    async def start(self, sync_interval: int = 15, health_interval: int = 5, archive_interval: int = 24):
+
+    async def start(
+        self, sync_interval: int = 15, health_interval: int = 5, archive_interval: int = 24
+    ):
         logger.info("Starting workflow scheduler...")
         self._running = True
         try:
             result = self.engine.sync_all_local_workflows(activate_core=True)
-            logger.info(f"Initial sync: {len(result.imported)} imported, {len(result.errors)} errors")
+            logger.info(
+                f"Initial sync: {len(result.imported)} imported, {len(result.errors)} errors"
+            )
         except Exception as e:
             logger.error(f"Initial sync failed: {e}")
         self._tasks = [
             asyncio.create_task(self._sync_loop(sync_interval)),
             asyncio.create_task(self._health_loop(health_interval)),
-            asyncio.create_task(self._archive_loop(archive_interval))
+            asyncio.create_task(self._archive_loop(archive_interval)),
         ]
         logger.info("Workflow scheduler started")
-    
+
     async def stop(self):
         logger.info("Stopping workflow scheduler...")
         self._running = False
@@ -595,6 +643,7 @@ async def run_initial_sync():
 
 if __name__ == "__main__":
     import logging
+
     logging.basicConfig(level=logging.INFO)
     with N8NWorkflowEngine() as engine:
         health = engine.health_check()

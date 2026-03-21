@@ -7,8 +7,8 @@ actual TONL library when available.
 Created: February 9, 2026
 """
 
-import re
 import logging
+import re
 from typing import Dict
 
 logger = logging.getLogger(__name__)
@@ -83,9 +83,7 @@ class TONLCompressor:
 
     def __init__(self) -> None:
         # Pre-compile low-info patterns
-        self._low_info_re = [
-            re.compile(pat, re.IGNORECASE) for pat in LOW_INFO_PATTERNS
-        ]
+        self._low_info_re = [re.compile(pat, re.IGNORECASE) for pat in LOW_INFO_PATTERNS]
         # Sort abbreviations longest-first so longer phrases match first
         self._abbrev_pairs = sorted(
             PHRASE_ABBREVIATIONS.items(), key=lambda x: len(x[0]), reverse=True

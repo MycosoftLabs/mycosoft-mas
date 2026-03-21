@@ -41,6 +41,7 @@ def _mindex_headers() -> Dict[str, str]:
 
 class InvestigationCreateRequest(BaseModel):
     """Create investigation request."""
+
     title: str
     description: Optional[str] = None
     query: Optional[str] = Field(None, description="Search query for research/observations")
@@ -51,6 +52,7 @@ class InvestigationCreateRequest(BaseModel):
 
 class InvestigationOut(BaseModel):
     """Investigation response with aggregated evidence."""
+
     id: str
     title: str
     description: Optional[str]
@@ -62,6 +64,7 @@ class InvestigationOut(BaseModel):
 
 class ResolveRequest(BaseModel):
     """Trigger evidence resolution."""
+
     query: Optional[str] = None
     entity_id: Optional[str] = None
     limit: int = Field(10, ge=1, le=50)

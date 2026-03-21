@@ -3,18 +3,19 @@ Autonomous Research API Router
 REST endpoints for autonomous experiments and hypothesis generation
 """
 
-from fastapi import APIRouter, HTTPException, Body
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter()
 
 # Import engines
-from mycosoft_mas.core.autonomous.experiment_engine import experiment_engine
-from mycosoft_mas.core.autonomous.hypothesis_engine import hypothesis_engine
-
+from mycosoft_mas.core.autonomous.experiment_engine import experiment_engine  # noqa: E402
+from mycosoft_mas.core.autonomous.hypothesis_engine import hypothesis_engine  # noqa: E402
 
 # --- Autonomous Experiments ---
+
 
 class CreateExperimentRequest(BaseModel):
     hypothesis: str
@@ -31,7 +32,8 @@ class AdaptationRequest(BaseModel):
 async def list_experiments(status: Optional[str] = None):
     experiments = experiment_engine.list_experiments()
     if status:
-        from mycosoft_mas.core.autonomous.experiment_engine import AutoExperimentStatus
+        pass
+
         experiments = [e for e in experiments if e.status.value == status]
     return {"experiments": [e.dict() for e in experiments]}
 
@@ -106,13 +108,15 @@ async def suggest_adaptations(experiment_id: str):
 
 @router.post("/experiments/{experiment_id}/adapt")
 async def apply_adaptation(experiment_id: str, data: AdaptationRequest):
-    from mycosoft_mas.core.autonomous.experiment_engine import Adaptation
     from datetime import datetime
+
+    from mycosoft_mas.core.autonomous.experiment_engine import Adaptation
+
     adaptation = Adaptation(
         timestamp=datetime.utcnow().timestamp(),
         reason=data.reason,
         change=data.change,
-        automated=data.automated
+        automated=data.automated,
     )
     try:
         experiment = await experiment_engine.apply_adaptation(experiment_id, adaptation)
@@ -122,6 +126,7 @@ async def apply_adaptation(experiment_id: str, data: AdaptationRequest):
 
 
 # --- Hypothesis Generation ---
+
 
 class GenerateHypothesesRequest(BaseModel):
     context: str
@@ -150,7 +155,9 @@ async def generate_from_data(data_id: str = Body(...), analysis_type: str = Body
 
 
 @router.post("/hypotheses/from-literature")
-async def generate_from_literature(query: str = Body(...), sources: Optional[List[str]] = Body(None)):
+async def generate_from_literature(
+    query: str = Body(...), sources: Optional[List[str]] = Body(None)
+):
     hypotheses = await hypothesis_engine.generate_from_literature(query, sources)
     return {"hypotheses": [h.dict() for h in hypotheses]}
 

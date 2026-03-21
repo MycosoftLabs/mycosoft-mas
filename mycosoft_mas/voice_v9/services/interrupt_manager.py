@@ -7,14 +7,15 @@ soft interjects for high-priority events, and resumption of unfinished assistant
 
 from __future__ import annotations
 
-import asyncio
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, Optional
 
-from mycosoft_mas.consciousness.duplex_session import DuplexSession, DuplexSessionConfig, create_duplex_session
 from mycosoft_mas.consciousness.conversation_control import ConversationState
+from mycosoft_mas.consciousness.duplex_session import (
+    DuplexSession,
+    create_duplex_session,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class InterruptState:
     """Current interrupt/duplex state for v9 session."""
+
     is_speaking: bool
     has_interrupted_draft: bool
     interrupted_draft_text: Optional[str] = None
@@ -58,12 +60,16 @@ class InterruptManager:
         def _inner():
             if ext:
                 ext()
+
         return _inner
 
-    def _wrap_state_change(self, ext: Optional[Callable[[str], None]]) -> Callable[[ConversationState], None]:
+    def _wrap_state_change(
+        self, ext: Optional[Callable[[str], None]]
+    ) -> Callable[[ConversationState], None]:
         def _inner(state: ConversationState):
             if ext:
                 ext(state.value)
+
         return _inner
 
     @property

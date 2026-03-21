@@ -25,7 +25,7 @@ async def emit_progress(
     Non-blocking; failures are logged but do not raise.
     """
     try:
-        from mycosoft_mas.realtime.redis_pubsub import get_client, Channel
+        from mycosoft_mas.realtime.redis_pubsub import Channel, get_client
 
         client = await get_client()
         if not client.is_connected():

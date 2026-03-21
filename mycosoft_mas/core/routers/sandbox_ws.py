@@ -7,8 +7,9 @@ routes tool requests through these connections.
 """
 
 import logging
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from typing import Optional
+
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,9 @@ async def sandbox_ws(
     sandbox_mgr = getattr(websocket.app.state, "sandbox_manager", None)
 
     if gateway is None:
-        await websocket.send_json({"type": "error", "payload": {"error": "Gateway not initialized"}})
+        await websocket.send_json(
+            {"type": "error", "payload": {"error": "Gateway not initialized"}}
+        )
         await websocket.close()
         return
 
@@ -43,7 +46,9 @@ async def sandbox_ws(
         hs_token = handshake.get("payload", {}).get("token", "")
         if not hs_token:
             logger.warning("Sandbox %s rejected: no token provided", sandbox_id)
-            await websocket.send_json({"type": "error", "payload": {"error": "Authentication token required"}})
+            await websocket.send_json(
+                {"type": "error", "payload": {"error": "Authentication token required"}}
+            )
             await websocket.close(code=4001)
             return
 
@@ -52,20 +57,28 @@ async def sandbox_ws(
             valid = any(s.sandbox_id == sandbox_id and s.token == hs_token for s in sandboxes)
             if not valid:
                 logger.warning("Sandbox %s rejected: invalid token", sandbox_id)
-                await websocket.send_json({"type": "error", "payload": {"error": "Invalid sandbox token"}})
+                await websocket.send_json(
+                    {"type": "error", "payload": {"error": "Invalid sandbox token"}}
+                )
                 await websocket.close(code=4003)
                 return
         else:
-            logger.warning("Sandbox %s rejected: SandboxManager unavailable, cannot validate", sandbox_id)
-            await websocket.send_json({"type": "error", "payload": {"error": "Cannot validate sandbox token"}})
+            logger.warning(
+                "Sandbox %s rejected: SandboxManager unavailable, cannot validate", sandbox_id
+            )
+            await websocket.send_json(
+                {"type": "error", "payload": {"error": "Cannot validate sandbox token"}}
+            )
             await websocket.close(code=4002)
             return
 
         gateway.register_sandbox_connection(sandbox_id, websocket)
-        await websocket.send_json({
-            "type": "handshake_ack",
-            "payload": {"status": "connected", "sandbox_id": sandbox_id},
-        })
+        await websocket.send_json(
+            {
+                "type": "handshake_ack",
+                "payload": {"status": "connected", "sandbox_id": sandbox_id},
+            }
+        )
 
         while True:
             msg = await websocket.receive_json()
@@ -74,6 +87,7 @@ async def sandbox_ws(
                     info = sandbox_mgr._sandboxes.get(sandbox_id)
                     if info:
                         import time
+
                         info.last_activity = time.time()
                 continue
 

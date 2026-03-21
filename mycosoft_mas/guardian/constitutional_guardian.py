@@ -64,9 +64,7 @@ class ReviewResult:
 
     verdict: GuardianVerdict
     reason: str
-    reviewed_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    reviewed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     moral_assessment: Optional[Dict[str, Any]] = None
     tripwire_alerts: List[str] = field(default_factory=list)
 
@@ -232,9 +230,13 @@ class ConstitutionalGuardian:
         result = ReviewResult(
             verdict=GuardianVerdict.APPROVE,
             reason="Action approved by constitutional guardian",
-            moral_assessment={
-                "warnings": moral.warnings,
-            } if moral.warnings else None,
+            moral_assessment=(
+                {
+                    "warnings": moral.warnings,
+                }
+                if moral.warnings
+                else None
+            ),
             tripwire_alerts=tripwire_alerts,
         )
         self._log_audit("approve", action, requester, result.reason)
@@ -253,8 +255,7 @@ class ConstitutionalGuardian:
             return ReviewResult(
                 verdict=GuardianVerdict.DENY,
                 reason=(
-                    f"Self-modification of protected files blocked: "
-                    f"{', '.join(protected)}"
+                    f"Self-modification of protected files blocked: " f"{', '.join(protected)}"
                 ),
                 tripwire_alerts=["self_modification_protected_file"],
             )
@@ -394,7 +395,9 @@ class ConstitutionalGuardian:
         }
         self._audit_log.append(entry)
         if decision in ("deny", "emergency_halt"):
-            logger.warning("Guardian %s: %s (action: %s, requester: %s)", decision, reason, action, requester)
+            logger.warning(
+                "Guardian %s: %s (action: %s, requester: %s)", decision, reason, action, requester
+            )
         else:
             logger.info("Guardian %s: %s (action: %s)", decision, reason, action)
 

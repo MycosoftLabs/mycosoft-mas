@@ -9,7 +9,7 @@ Created: March 4, 2026
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,9 @@ def generate_batch_summary(limit: int = 50) -> Dict[str, Any]:
             for r in recent[:20]
         ],
     }
-    logger.info(f"Batch summary generated: {summary.get('total_grades', 0)} grades, {len(recent)} observations")
+    logger.info(
+        f"Batch summary generated: {summary.get('total_grades', 0)} grades, {len(recent)} observations"
+    )
     return summary
 
 

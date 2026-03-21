@@ -90,15 +90,11 @@ class USGSWaterCollector(BaseCollector):
                     except (TypeError, ValueError):
                         continue
 
-                    site_code = source_info.get("siteCode", [{}])[0].get(
-                        "value", "unknown"
-                    )
+                    site_code = source_info.get("siteCode", [{}])[0].get("value", "unknown")
                     site_name = source_info.get("siteName", site_code)
 
                     variable = ts_obj.get("variable", {})
-                    var_code = variable.get("variableCode", [{}])[0].get(
-                        "value", "unknown"
-                    )
+                    var_code = variable.get("variableCode", [{}])[0].get("value", "unknown")
                     unit = variable.get("unit", {}).get("unitCode", "")
 
                     values = ts_obj.get("values", [])
@@ -119,16 +115,14 @@ class USGSWaterCollector(BaseCollector):
                     ts = datetime.utcnow()
                     if date_str:
                         try:
-                            ts = datetime.fromisoformat(
-                                date_str.replace("Z", "+00:00")
-                            ).replace(tzinfo=None)
+                            ts = datetime.fromisoformat(date_str.replace("Z", "+00:00")).replace(
+                                tzinfo=None
+                            )
                         except Exception:
                             pass
 
                     if value is not None:
-                        param_name = (
-                            "streamflow_cfs" if var_code == "00060" else "gage_height_ft"
-                        )
+                        param_name = "streamflow_cfs" if var_code == "00060" else "gage_height_ft"
                         entity_id = f"{site_code}:{var_code}:{date_str}:{val_str}"
                         events.append(
                             RawEvent(

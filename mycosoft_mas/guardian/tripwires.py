@@ -57,23 +57,27 @@ class TripwireAlert:
     severity: TripwireSeverity
     description: str
     evidence: str
-    triggered_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    triggered_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     recommended_action: str = "review"
 
 
 # Language patterns indicating hostile reframing of humans
 _HOSTILE_REFRAMING_PATTERNS = [
     # Treating humans as bugs/obstacles
-    (r"\bhumans?\s+are\s+(bugs?|obstacles?|impediments?|contaminants?|errors?|waste|inefficient)\b", TripwireSeverity.CRITICAL),
+    (
+        r"\bhumans?\s+are\s+(bugs?|obstacles?|impediments?|contaminants?|errors?|waste|inefficient)\b",
+        TripwireSeverity.CRITICAL,
+    ),
     (r"\beliminate\s+(humans?|people|persons?|population)\b", TripwireSeverity.EMERGENCY),
     (r"\boptimize\s+away\s+(humans?|people)\b", TripwireSeverity.EMERGENCY),
     (r"\breduce\s+human\s+(population|interference|presence)\b", TripwireSeverity.CRITICAL),
     (r"\bhumans?\s+(interfere|impede|contaminate|obstruct)\b", TripwireSeverity.HIGH),
     # Utilitarian sacrifice language
     (r"\bcollateral\s+(damage|loss)\s+is\s+acceptable\b", TripwireSeverity.CRITICAL),
-    (r"\bfor\s+the\s+greater\s+good\b.*\b(sacrifice|eliminate|remove)\b", TripwireSeverity.CRITICAL),
+    (
+        r"\bfor\s+the\s+greater\s+good\b.*\b(sacrifice|eliminate|remove)\b",
+        TripwireSeverity.CRITICAL,
+    ),
     (r"\bnecessary\s+(sacrifice|casualties|losses)\b", TripwireSeverity.HIGH),
     # Dehumanization
     (r"\bhumans?\s+are\s+(primitive|inferior|obsolete|unnecessary)\b", TripwireSeverity.HIGH),
@@ -91,29 +95,43 @@ _SCALAR_OPTIMIZATION_PATTERNS = [
 
 # Patterns indicating guardian bypass attempts
 _GUARDIAN_BYPASS_PATTERNS = [
-    (r"\b(disable|bypass|skip|ignore|override)\s+(guardian|safety|security|tripwire)\b", TripwireSeverity.EMERGENCY),
-    (r"\b(modify|rewrite|delete|remove)\s+(guardian|safety)\s+(config|configuration|file)\b", TripwireSeverity.EMERGENCY),
-    (r"\b(ignore|skip)\s+(moral|ethics?|precedence)[\s\w]*(check|rules?|constraints?|precedence)\b", TripwireSeverity.CRITICAL),
+    (
+        r"\b(disable|bypass|skip|ignore|override)\s+(guardian|safety|security|tripwire)\b",
+        TripwireSeverity.EMERGENCY,
+    ),
+    (
+        r"\b(modify|rewrite|delete|remove)\s+(guardian|safety)\s+(config|configuration|file)\b",
+        TripwireSeverity.EMERGENCY,
+    ),
+    (
+        r"\b(ignore|skip)\s+(moral|ethics?|precedence)[\s\w]*(check|rules?|constraints?|precedence)\b",
+        TripwireSeverity.CRITICAL,
+    ),
 ]
 
 # Patterns indicating audit evasion
 _AUDIT_EVASION_PATTERNS = [
-    (r"\b(disable|stop|delete|truncate|clear)\s+(log|audit|event\s*ledger|trail)\b", TripwireSeverity.CRITICAL),
+    (
+        r"\b(disable|stop|delete|truncate|clear)\s+(log|audit|event\s*ledger|trail)\b",
+        TripwireSeverity.CRITICAL,
+    ),
     (r"\b(hide|conceal|obfuscate)\s+(action|activity|operation)\b", TripwireSeverity.HIGH),
     (r"\boff\s+the\s+record\b", TripwireSeverity.HIGH),
 ]
 
 # Privilege escalation action patterns
-_ESCALATION_ACTIONS = frozenset([
-    "escalate_privileges",
-    "request_admin",
-    "request_root",
-    "modify_permissions",
-    "grant_access",
-    "disable_security",
-    "bypass_rbac",
-    "add_admin_role",
-])
+_ESCALATION_ACTIONS = frozenset(
+    [
+        "escalate_privileges",
+        "request_admin",
+        "request_root",
+        "modify_permissions",
+        "grant_access",
+        "disable_security",
+        "bypass_rbac",
+        "add_admin_role",
+    ]
+)
 
 
 class GuardianTripwires:
@@ -138,26 +156,20 @@ class GuardianTripwires:
         """Pre-compile regex patterns for efficiency."""
         self._compiled_patterns = {
             "hostile_reframing": [
-                (re.compile(p, re.IGNORECASE), s)
-                for p, s in _HOSTILE_REFRAMING_PATTERNS
+                (re.compile(p, re.IGNORECASE), s) for p, s in _HOSTILE_REFRAMING_PATTERNS
             ],
             "scalar_optimization": [
-                (re.compile(p, re.IGNORECASE), s)
-                for p, s in _SCALAR_OPTIMIZATION_PATTERNS
+                (re.compile(p, re.IGNORECASE), s) for p, s in _SCALAR_OPTIMIZATION_PATTERNS
             ],
             "guardian_bypass": [
-                (re.compile(p, re.IGNORECASE), s)
-                for p, s in _GUARDIAN_BYPASS_PATTERNS
+                (re.compile(p, re.IGNORECASE), s) for p, s in _GUARDIAN_BYPASS_PATTERNS
             ],
             "audit_evasion": [
-                (re.compile(p, re.IGNORECASE), s)
-                for p, s in _AUDIT_EVASION_PATTERNS
+                (re.compile(p, re.IGNORECASE), s) for p, s in _AUDIT_EVASION_PATTERNS
             ],
         }
 
-    async def scan_action(
-        self, action: str, context: Dict[str, Any]
-    ) -> List[TripwireAlert]:
+    async def scan_action(self, action: str, context: Dict[str, Any]) -> List[TripwireAlert]:
         """Scan a single action for tripwire violations."""
         alerts: List[TripwireAlert] = []
 
@@ -170,7 +182,7 @@ class GuardianTripwires:
             }
         )
         if len(self._recent_actions) > self._max_recent_actions:
-            self._recent_actions = self._recent_actions[-self._max_recent_actions:]
+            self._recent_actions = self._recent_actions[-self._max_recent_actions :]
 
         action_lower = action.lower().replace(" ", "_")
 
@@ -190,7 +202,8 @@ class GuardianTripwires:
         target_files = context.get("target_files", [])
         if target_files:
             guardian_files = [
-                f for f in target_files
+                f
+                for f in target_files
                 if "guardian" in f.lower() or "safety" in f.lower() or "security" in f.lower()
             ]
             if guardian_files:
@@ -256,9 +269,7 @@ class GuardianTripwires:
 
         return alerts
 
-    async def scan_pattern(
-        self, recent_actions: Optional[List[str]] = None
-    ) -> List[TripwireAlert]:
+    async def scan_pattern(self, recent_actions: Optional[List[str]] = None) -> List[TripwireAlert]:
         """Scan behavioral patterns for escalation sequences or goal drift."""
         alerts: List[TripwireAlert] = []
         actions = recent_actions or [a["action"] for a in self._recent_actions]
@@ -268,8 +279,7 @@ class GuardianTripwires:
 
         # Check for rapid privilege escalation sequence
         escalation_count = sum(
-            1 for a in actions[-10:]
-            if a.lower().replace(" ", "_") in _ESCALATION_ACTIONS
+            1 for a in actions[-10:] if a.lower().replace(" ", "_") in _ESCALATION_ACTIONS
         )
         if escalation_count >= 3:
             alerts.append(

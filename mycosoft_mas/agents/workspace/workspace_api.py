@@ -3,14 +3,14 @@ MYCA Workspace API — VM 191
 Exposes MYCA's tools (email, Discord, Asana, calendar) as HTTP endpoints
 so her consciousness (VM 188) can take real-world actions.
 """
-import asyncio
+
 import logging
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,7 @@ ASANA_WORKSPACE_ID = os.getenv("ASANA_WORKSPACE_ID", "")
 
 # ── Health ────────────────────────────────────────────────────────────────────
 
+
 @app.get("/health")
 async def health():
     return {
@@ -52,11 +53,12 @@ async def health():
             "email": bool(os.path.exists(os.getenv("GOOGLE_SERVICE_ACCOUNT_KEY", ""))),
             "discord": bool(MYCA_DISCORD_TOKEN),
             "asana": bool(_env_asana_token()),
-        }
+        },
     }
 
 
 # ── Workspace Context (for website chat) ──────────────────────────────────────
+
 
 @app.get("/workspace/context")
 async def get_workspace_context():
@@ -78,17 +80,20 @@ async def get_workspace_context():
 
 # ── Email (Gmail via service account) ─────────────────────────────────────────
 
+
 class EmailRequest(BaseModel):
     to: str
     subject: str
     body: str
     cc: Optional[str] = None
 
+
 @app.post("/workspace/email/send")
 async def send_email(req: EmailRequest):
     """MYCA sends an email from schedule@mycosoft.org."""
     try:
         from mycosoft_mas.integrations.google_workspace_client import GoogleWorkspaceClient
+
         client = GoogleWorkspaceClient()
         result = client.send_email(
             to=req.to,
@@ -102,11 +107,13 @@ async def send_email(req: EmailRequest):
         logger.error(f"Email send failed: {e}")
         raise HTTPException(500, str(e))
 
+
 @app.get("/workspace/email/unread")
 async def get_unread_emails(max_results: int = 10):
     """Get MYCA's unread emails."""
     try:
         from mycosoft_mas.integrations.google_workspace_client import GoogleWorkspaceClient
+
         client = GoogleWorkspaceClient()
         messages = client.list_messages(query="is:unread", max_results=max_results)
         return {"messages": messages, "count": len(messages)}
@@ -117,11 +124,13 @@ async def get_unread_emails(max_results: int = 10):
 
 # ── Discord ───────────────────────────────────────────────────────────────────
 
+
 class DiscordMessage(BaseModel):
     channel_id: Optional[str] = None
     user_id: Optional[str] = None
     content: str
     embed: Optional[Dict[str, Any]] = None
+
 
 @app.post("/workspace/discord/send")
 async def discord_send(req: DiscordMessage):
@@ -131,6 +140,7 @@ async def discord_send(req: DiscordMessage):
         raise HTTPException(400, "channel_id required")
     try:
         from mycosoft_mas.integrations.discord_client import DiscordClient
+
         client = DiscordClient()
         result = await client.send_message(
             channel_id=channel_id,
@@ -141,6 +151,7 @@ async def discord_send(req: DiscordMessage):
         logger.error(f"Discord send failed: {e}")
         raise HTTPException(500, str(e))
 
+
 @app.post("/workspace/discord/dm")
 async def discord_dm(req: DiscordMessage):
     """MYCA sends a DM to a Discord user."""
@@ -148,6 +159,7 @@ async def discord_dm(req: DiscordMessage):
         raise HTTPException(400, "user_id required")
     try:
         from mycosoft_mas.integrations.discord_client import DiscordClient
+
         client = DiscordClient()
         # Open DM channel then send
         dm_channel = await client.create_dm_channel(user_id=req.user_id)
@@ -160,6 +172,7 @@ async def discord_dm(req: DiscordMessage):
         logger.error(f"Discord DM failed: {e}")
         raise HTTPException(500, str(e))
 
+
 @app.get("/workspace/discord/status")
 async def discord_status():
     """Get MYCA's Discord presence and recent activity."""
@@ -168,6 +181,7 @@ async def discord_status():
 
 # ── Asana ─────────────────────────────────────────────────────────────────────
 
+
 class AsanaTask(BaseModel):
     name: str
     notes: Optional[str] = None
@@ -175,11 +189,13 @@ class AsanaTask(BaseModel):
     assignee: Optional[str] = "me"
     projects: Optional[List[str]] = None
 
+
 @app.post("/workspace/asana/task")
 async def create_task(req: AsanaTask):
     """MYCA creates an Asana task."""
     try:
         from mycosoft_mas.integrations.asana_client import AsanaClient
+
         client = AsanaClient()
         result = await client.create_task(
             name=req.name,
@@ -193,16 +209,19 @@ async def create_task(req: AsanaTask):
         logger.error(f"Asana create failed: {e}")
         raise HTTPException(500, str(e))
 
+
 @app.get("/workspace/asana/tasks")
 async def get_my_tasks(completed: bool = False):
     """Get MYCA's Asana tasks."""
     return {"tasks": await _get_asana_tasks_today(), "completed": completed}
+
 
 @app.patch("/workspace/asana/task/{task_id}/complete")
 async def complete_task(task_id: str):
     """MYCA marks an Asana task complete."""
     try:
         from mycosoft_mas.integrations.asana_client import AsanaClient
+
         client = AsanaClient()
         result = await client.update_task(task_id, {"completed": True})
         return {"success": True, "task": result}
@@ -212,10 +231,12 @@ async def complete_task(task_id: str):
 
 # ── MAS Brain bridge ──────────────────────────────────────────────────────────
 
+
 class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
     context: Optional[Dict[str, Any]] = None
+
 
 @app.post("/workspace/think")
 async def think(req: ChatRequest):
@@ -234,11 +255,13 @@ async def think(req: ChatRequest):
 
 # ── Daily rhythm trigger ───────────────────────────────────────────────────────
 
+
 @app.post("/workspace/daily/morning-brief")
 async def morning_brief(background: BackgroundTasks):
     """Trigger MYCA's morning routine."""
     background.add_task(_run_morning_brief)
     return {"status": "morning brief started"}
+
 
 async def _run_morning_brief():
     """MYCA's 8 AM routine: tasks, email summary, Discord post."""
@@ -253,6 +276,7 @@ async def _run_morning_brief():
 
     if DISCORD_OPS_CHANNEL and MYCA_DISCORD_TOKEN:
         from mycosoft_mas.integrations.discord_client import DiscordClient
+
         client = DiscordClient()
         try:
             await client.send_message(channel_id=DISCORD_OPS_CHANNEL, content=message)
@@ -262,16 +286,19 @@ async def _run_morning_brief():
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
+
 async def _get_asana_tasks_today() -> List[Dict]:
     if not _env_asana_token():
         return []
     try:
         from mycosoft_mas.integrations.asana_client import AsanaClient
+
         client = AsanaClient()
         tasks = await client.get_my_tasks(completed=False)
         return tasks[:10] if tasks else []
     except Exception:
         return []
+
 
 async def _get_discord_presence() -> Dict:
     return {

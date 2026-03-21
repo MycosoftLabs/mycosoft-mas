@@ -124,7 +124,11 @@ class KEGGClient:
     ) -> Optional[Dict[str, Any]]:
         """Get compound entry. compound_id like 'C00001' or 'cpd:C00001'."""
         if ":" not in compound_id:
-            compound_id = f"cpd:{compound_id}" if compound_id.upper().startswith("C") else f"cpd:C{compound_id}"
+            compound_id = (
+                f"cpd:{compound_id}"
+                if compound_id.upper().startswith("C")
+                else f"cpd:C{compound_id}"
+            )
         client = await self._get_client()
         url = f"/get/{compound_id}"
         if option:

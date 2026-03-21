@@ -9,27 +9,22 @@ bioactivity_types, graph_node_types, graph_edge_types).
 Created: March 3, 2026
 """
 
-import asyncio
-
-import numpy as np
 import pytest
 
-from mycosoft_mas.llm.constrained.static_index import STATICIndex
 from mycosoft_mas.llm.constrained.constraint_engine import ConstraintEngine
 from mycosoft_mas.llm.constrained.domain_builders import (
     _build_string_index,
     _byte_tokenize,
     build_mindex_species_index,
     build_search_index,
-    build_agent_index,
 )
+from mycosoft_mas.llm.constrained.static_index import STATICIndex
 from mycosoft_mas.llm.constrained.validator import (
     STATICValidator,
     ValidationResult,
     get_static_validator,
     set_static_validator,
 )
-
 
 # --- STATICValidator Tests ---
 
@@ -44,9 +39,7 @@ class TestSTATICValidator:
         self.validator.register_index("test_index", test_index)
 
         # Build gene regions index
-        gene_regions = _build_string_index(
-            "gene_regions", ["ITS", "LSU", "SSU", "COX1", "TEF1"]
-        )
+        gene_regions = _build_string_index("gene_regions", ["ITS", "LSU", "SSU", "COX1", "TEF1"])
         self.validator.register_index("mindex_gene_regions", gene_regions)
 
         # Build compound classes index
@@ -56,15 +49,11 @@ class TestSTATICValidator:
         self.validator.register_index("mindex_compound_classes", compound_classes)
 
         # Build graph node types
-        node_types = _build_string_index(
-            "node_types", ["species", "compound", "gene", "habitat"]
-        )
+        node_types = _build_string_index("node_types", ["species", "compound", "gene", "habitat"])
         self.validator.register_index("search_graph_node_types", node_types)
 
         # Build graph edge types
-        edge_types = _build_string_index(
-            "edge_types", ["produces", "inhibits", "found_in", "is_a"]
-        )
+        edge_types = _build_string_index("edge_types", ["produces", "inhibits", "found_in", "is_a"])
         self.validator.register_index("search_graph_edge_types", edge_types)
 
         self.validator.mark_initialized()
@@ -310,6 +299,7 @@ class TestLLMRouterConstraintParam:
     def test_chat_accepts_constrained_index_name(self):
         """LLMRouter.chat accepts constrained_index_name parameter."""
         import inspect
+
         from mycosoft_mas.llm.router import LLMRouter
 
         sig = inspect.signature(LLMRouter.chat)

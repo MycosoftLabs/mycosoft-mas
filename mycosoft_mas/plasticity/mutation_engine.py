@@ -18,7 +18,6 @@ from typing import Any, Dict, List, Optional
 
 from mycosoft_mas.schemas.plasticity_contracts import CandidateLifecycle, MutationOperator
 
-
 ALLOWED_OPERATORS = {op.value for op in MutationOperator}
 
 
@@ -61,7 +60,9 @@ def _apply_operator(
     # Operator-specific field hints (optional; trainer may override)
     if operator == MutationOperator.DISTILLATION.value and params:
         if params.get("teacher_candidate_id"):
-            genome.setdefault("eval_summary", {})["distillation_teacher"] = params["teacher_candidate_id"]
+            genome.setdefault("eval_summary", {})["distillation_teacher"] = params[
+                "teacher_candidate_id"
+            ]
     if operator == MutationOperator.QUANTIZATION.value and params:
         genome.setdefault("eval_summary", {})["quantization_bits"] = params.get("bits", 8)
     if operator == MutationOperator.LORA_ADAPTER.value and params:
@@ -96,7 +97,9 @@ def apply_mutations(
     genome["parent_candidate_ids"] = [parent_id]
     genome["mutation_operators_applied"] = list(genome.get("mutation_operators_applied") or [])
     # Normalize to list of {operator, params}
-    if genome["mutation_operators_applied"] and isinstance(genome["mutation_operators_applied"][0], str):
+    if genome["mutation_operators_applied"] and isinstance(
+        genome["mutation_operators_applied"][0], str
+    ):
         genome["mutation_operators_applied"] = [
             {"operator": op, "params": {}} for op in genome["mutation_operators_applied"]
         ]

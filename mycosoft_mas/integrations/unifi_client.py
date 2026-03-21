@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import httpx
+
     HAS_HTTPX = True
 except ImportError:
     HAS_HTTPX = False

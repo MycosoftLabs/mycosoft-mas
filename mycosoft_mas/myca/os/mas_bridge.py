@@ -11,8 +11,8 @@ Provides MYCA OS with:
 Date: 2026-03-04
 """
 
-import os
 import logging
+import os
 from typing import Optional
 
 import aiohttp
@@ -128,7 +128,9 @@ class MASBridge:
             pass
         return {"status": "unknown"}
 
-    async def recall_memory(self, query: str, agent_id: str = "myca_os", layer: str = None, limit: int = 10) -> list:
+    async def recall_memory(
+        self, query: str, agent_id: str = "myca_os", layer: str = None, limit: int = 10
+    ) -> list:
         """Recall memories via MAS 6-layer memory API (POST /api/memory/recall)."""
         try:
             payload = {"agent_id": agent_id, "query": query, "limit": limit}
@@ -146,8 +148,15 @@ class MASBridge:
             logger.debug("MAS memory recall failed: %s", e)
         return []
 
-    async def remember_memory(self, key: str, content: dict, agent_id: str = "myca_os",
-                             layer: str = "working", importance: float = 0.5, tags: list = None) -> bool:
+    async def remember_memory(
+        self,
+        key: str,
+        content: dict,
+        agent_id: str = "myca_os",
+        layer: str = "working",
+        importance: float = 0.5,
+        tags: list = None,
+    ) -> bool:
         """Store a memory via MAS 6-layer memory API (POST /api/memory/remember)."""
         try:
             payload = {

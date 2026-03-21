@@ -1,15 +1,16 @@
-from typing import Dict, Any, Optional
+import os
 import time
-import redis
 from functools import wraps
+from typing import Any, Dict, Optional
+
+import redis
 from config.api_config import api_config
+
 
 class APIService:
     def __init__(self):
         self.redis_client = redis.Redis(
-            host=os.getenv("REDIS_HOST", "localhost"),
-            port=int(os.getenv("REDIS_PORT", 6379)),
-            db=0
+            host=os.getenv("REDIS_HOST", "localhost"), port=int(os.getenv("REDIS_PORT", 6379)), db=0
         )
         self.rate_limits: Dict[str, Dict[str, int]] = {
             "stripe": {"requests": 100, "period": 60},  # 100 requests per minute
@@ -17,25 +18,28 @@ class APIService:
             "openai": {"requests": 60, "period": 60},  # 60 requests per minute
             "anthropic": {"requests": 30, "period": 60},  # 30 requests per minute
             "azure": {"requests": 100, "period": 60},  # 100 requests per minute
-            "google": {"requests": 100, "period": 60}  # 100 requests per minute
+            "google": {"requests": 100, "period": 60},  # 100 requests per minute
         }
 
     def rate_limit(self, service: str):
         """Decorator to enforce rate limiting for API calls"""
+
         def decorator(func):
             @wraps(func)
             def wrapper(*args, **kwargs):
                 key = f"rate_limit:{service}:{int(time.time() // self.rate_limits[service]['period'])}"
                 current = self.redis_client.incr(key)
-                
+
                 if current == 1:
-                    self.redis_client.expire(key, self.rate_limits[service]['period'])
-                
-                if current > self.rate_limits[service]['requests']:
+                    self.redis_client.expire(key, self.rate_limits[service]["period"])
+
+                if current > self.rate_limits[service]["requests"]:
                     raise Exception(f"Rate limit exceeded for {service}")
-                
+
                 return func(*args, **kwargs)
+
             return wrapper
+
         return decorator
 
     def cache_response(self, service: str, key: str, value: Any, ttl: int = 300):
@@ -68,5 +72,6 @@ class APIService:
         """Get endpoint URL for a specific service and endpoint"""
         return api_config.get_endpoint(service, endpoint)
 
+
 # Create a singleton instance
-api_service = APIService() 
+api_service = APIService()

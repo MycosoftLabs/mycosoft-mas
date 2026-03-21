@@ -65,12 +65,18 @@ class SpeciesConnector(BaseConnector):
     MINDEX_BASE_DEFAULT = "http://192.168.0.189:8000"
 
     LIFE_DOMAINS = {
-        EarthSearchDomain.ALL_SPECIES, EarthSearchDomain.FUNGI,
-        EarthSearchDomain.PLANTS, EarthSearchDomain.BIRDS,
-        EarthSearchDomain.MAMMALS, EarthSearchDomain.REPTILES,
-        EarthSearchDomain.AMPHIBIANS, EarthSearchDomain.INSECTS,
-        EarthSearchDomain.MARINE_LIFE, EarthSearchDomain.FISH,
-        EarthSearchDomain.MICROORGANISMS, EarthSearchDomain.INVERTEBRATES,
+        EarthSearchDomain.ALL_SPECIES,
+        EarthSearchDomain.FUNGI,
+        EarthSearchDomain.PLANTS,
+        EarthSearchDomain.BIRDS,
+        EarthSearchDomain.MAMMALS,
+        EarthSearchDomain.REPTILES,
+        EarthSearchDomain.AMPHIBIANS,
+        EarthSearchDomain.INSECTS,
+        EarthSearchDomain.MARINE_LIFE,
+        EarthSearchDomain.FISH,
+        EarthSearchDomain.MICROORGANISMS,
+        EarthSearchDomain.INVERTEBRATES,
     }
 
     async def search(
@@ -121,24 +127,29 @@ class SpeciesConnector(BaseConnector):
         for rtype, items in data.get("results", {}).items():
             for item in (items if isinstance(items, list) else []):
                 domain = self._classify_taxon_domain(item)
-                results.append(EarthSearchResult(
-                    result_id=f"mindex-{uuid.uuid4().hex[:8]}",
-                    domain=domain,
-                    source="mindex_local",
-                    title=item.get("canonical_name") or item.get("name") or query,
-                    description=item.get("common_name", ""),
-                    data=item,
-                    lat=item.get("lat") or item.get("latitude"),
-                    lng=item.get("lng") or item.get("longitude"),
-                    confidence=0.95,
-                    crep_layer="species",
-                    mindex_id=str(item.get("id", "")),
-                ))
+                results.append(
+                    EarthSearchResult(
+                        result_id=f"mindex-{uuid.uuid4().hex[:8]}",
+                        domain=domain,
+                        source="mindex_local",
+                        title=item.get("canonical_name") or item.get("name") or query,
+                        description=item.get("common_name", ""),
+                        data=item,
+                        lat=item.get("lat") or item.get("latitude"),
+                        lng=item.get("lng") or item.get("longitude"),
+                        confidence=0.95,
+                        crep_layer="species",
+                        mindex_id=str(item.get("id", "")),
+                    )
+                )
         return results
 
     async def _search_inaturalist(
-        self, query: str, domains: List[EarthSearchDomain],
-        geo: Optional[GeoFilter], limit: int,
+        self,
+        query: str,
+        domains: List[EarthSearchDomain],
+        geo: Optional[GeoFilter],
+        limit: int,
     ) -> List[EarthSearchResult]:
         """Search iNaturalist for observations."""
         params: Dict[str, Any] = {
@@ -175,26 +186,35 @@ class SpeciesConnector(BaseConnector):
             photos = obs.get("photos", [])
             image_url = photos[0]["url"].replace("square", "medium") if photos else None
 
-            results.append(EarthSearchResult(
-                result_id=f"inat-{obs.get('id', uuid.uuid4().hex[:8])}",
-                domain=self._classify_taxon_domain(taxon),
-                source="inaturalist",
-                title=taxon.get("name", query),
-                description=taxon.get("preferred_common_name", ""),
-                data={"observation_id": obs.get("id"), "taxon": taxon, "quality_grade": obs.get("quality_grade")},
-                lat=lat,
-                lng=lng,
-                timestamp=obs.get("observed_on"),
-                confidence=0.85 if obs.get("quality_grade") == "research" else 0.6,
-                crep_layer="species",
-                url=f"https://www.inaturalist.org/observations/{obs.get('id')}",
-                image_url=image_url,
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"inat-{obs.get('id', uuid.uuid4().hex[:8])}",
+                    domain=self._classify_taxon_domain(taxon),
+                    source="inaturalist",
+                    title=taxon.get("name", query),
+                    description=taxon.get("preferred_common_name", ""),
+                    data={
+                        "observation_id": obs.get("id"),
+                        "taxon": taxon,
+                        "quality_grade": obs.get("quality_grade"),
+                    },
+                    lat=lat,
+                    lng=lng,
+                    timestamp=obs.get("observed_on"),
+                    confidence=0.85 if obs.get("quality_grade") == "research" else 0.6,
+                    crep_layer="species",
+                    url=f"https://www.inaturalist.org/observations/{obs.get('id')}",
+                    image_url=image_url,
+                )
+            )
         return results
 
     async def _search_gbif(
-        self, query: str, domains: List[EarthSearchDomain],
-        geo: Optional[GeoFilter], limit: int,
+        self,
+        query: str,
+        domains: List[EarthSearchDomain],
+        geo: Optional[GeoFilter],
+        limit: int,
     ) -> List[EarthSearchResult]:
         """Search GBIF for occurrence records."""
         # Species search
@@ -207,26 +227,28 @@ class SpeciesConnector(BaseConnector):
 
         results: List[EarthSearchResult] = []
         for sp in data.get("results", []):
-            results.append(EarthSearchResult(
-                result_id=f"gbif-{sp.get('key', uuid.uuid4().hex[:8])}",
-                domain=self._classify_gbif_kingdom(sp.get("kingdom", "")),
-                source="gbif",
-                title=sp.get("canonicalName") or sp.get("scientificName", query),
-                description=f"{sp.get('kingdom', '')} > {sp.get('phylum', '')} > {sp.get('class', '')}",
-                data={
-                    "gbif_key": sp.get("key"),
-                    "rank": sp.get("rank"),
-                    "status": sp.get("taxonomicStatus"),
-                    "kingdom": sp.get("kingdom"),
-                    "phylum": sp.get("phylum"),
-                    "class": sp.get("class"),
-                    "order": sp.get("order"),
-                    "family": sp.get("family"),
-                },
-                confidence=0.9,
-                crep_layer="species",
-                url=f"https://www.gbif.org/species/{sp.get('key')}",
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"gbif-{sp.get('key', uuid.uuid4().hex[:8])}",
+                    domain=self._classify_gbif_kingdom(sp.get("kingdom", "")),
+                    source="gbif",
+                    title=sp.get("canonicalName") or sp.get("scientificName", query),
+                    description=f"{sp.get('kingdom', '')} > {sp.get('phylum', '')} > {sp.get('class', '')}",
+                    data={
+                        "gbif_key": sp.get("key"),
+                        "rank": sp.get("rank"),
+                        "status": sp.get("taxonomicStatus"),
+                        "kingdom": sp.get("kingdom"),
+                        "phylum": sp.get("phylum"),
+                        "class": sp.get("class"),
+                        "order": sp.get("order"),
+                        "family": sp.get("family"),
+                    },
+                    confidence=0.9,
+                    crep_layer="species",
+                    url=f"https://www.gbif.org/species/{sp.get('key')}",
+                )
+            )
         return results
 
     def _classify_taxon_domain(self, taxon: Dict[str, Any]) -> EarthSearchDomain:

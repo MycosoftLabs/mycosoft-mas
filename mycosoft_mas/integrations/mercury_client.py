@@ -19,7 +19,9 @@ class MercuryClient:
         timeout_seconds: int = 30,
     ):
         self.api_key = api_key or os.getenv("MERCURY_API_KEY", "")
-        self.base_url = (base_url or os.getenv("MERCURY_API_BASE_URL", "https://api.mercury.com")).rstrip("/")
+        self.base_url = (
+            base_url or os.getenv("MERCURY_API_BASE_URL", "https://api.mercury.com")
+        ).rstrip("/")
         self.timeout_seconds = timeout_seconds
         self._client: Optional[httpx.AsyncClient] = None
 

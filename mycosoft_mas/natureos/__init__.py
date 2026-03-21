@@ -1,15 +1,15 @@
 # NatureOS - Environmental Operating System for Biological Signal Processing
 
-from .platform import NatureOSPlatform
-from .signal_processor import SignalProcessor
 from .api_gateway import NatureOSGateway
 from .device_manager import DeviceManager
-from .telemetry import TelemetryService
 from .events import EventManager
+from .platform import NatureOSPlatform
+from .signal_processor import SignalProcessor
+from .telemetry import TelemetryService
 
 __all__ = [
     "NatureOSPlatform",
-    "SignalProcessor", 
+    "SignalProcessor",
     "NatureOSGateway",
     "DeviceManager",
     "TelemetryService",

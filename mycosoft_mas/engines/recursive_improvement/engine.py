@@ -33,9 +33,11 @@ logger = logging.getLogger(__name__)
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ImprovementHypothesis:
     """A testable hypothesis about how to improve system performance."""
+
     hypothesis_id: str
     category: str  # efficiency, accuracy, adaptation, robustness
     description: str
@@ -45,9 +47,7 @@ class ImprovementHypothesis:
     status: str = "proposed"  # proposed, testing, verified, rejected, integrated
     baseline_metric: Optional[float] = None
     result_metric: Optional[float] = None
-    created_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     resolved_at: Optional[datetime] = None
     source: str = ""  # where the hypothesis came from
 
@@ -71,12 +71,11 @@ class ImprovementHypothesis:
 @dataclass
 class BenchmarkRecord:
     """A benchmark measurement for tracking improvement claims."""
+
     benchmark_id: str
     metric_name: str
     value: float
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     context: Dict[str, Any] = field(default_factory=dict)
     hypothesis_id: Optional[str] = None
 
@@ -94,6 +93,7 @@ class BenchmarkRecord:
 @dataclass
 class ImprovementCycleResult:
     """Result of one complete improvement cycle."""
+
     cycle_id: str
     cycle_number: int
     observation_summary: Dict[str, Any] = field(default_factory=dict)
@@ -104,9 +104,7 @@ class ImprovementCycleResult:
     improvements_integrated: int = 0
     improvement_rate: float = 0.5
     duration_seconds: float = 0.0
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     errors: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -129,6 +127,7 @@ class ImprovementCycleResult:
 # ---------------------------------------------------------------------------
 # Recursive Self-Improvement Engine
 # ---------------------------------------------------------------------------
+
 
 class RecursiveSelfImprovementEngine:
     """
@@ -191,9 +190,7 @@ class RecursiveSelfImprovementEngine:
                 observation["improvement_suggestions"] = (
                     self._learning_feedback.get_improvement_suggestions()
                 )
-                observation["common_errors"] = (
-                    self._learning_feedback.get_common_errors(limit=10)
-                )
+                observation["common_errors"] = self._learning_feedback.get_common_errors(limit=10)
 
                 all_perf = self._learning_feedback.get_all_agent_performance()
                 observation["agent_performance"] = {
@@ -212,9 +209,7 @@ class RecursiveSelfImprovementEngine:
             try:
                 last = self._continuous_learner.get_last_result()
                 if last:
-                    observation["drift_alerts"] = [
-                        a.to_dict() for a in last.drift_alerts
-                    ]
+                    observation["drift_alerts"] = [a.to_dict() for a in last.drift_alerts]
             except Exception as exc:
                 logger.warning("Failed to observe continuous learner: %s", exc)
 
@@ -222,9 +217,7 @@ class RecursiveSelfImprovementEngine:
 
     # ===== Phase 2: Hypothesize ===========================================
 
-    def hypothesize(
-        self, observation: Dict[str, Any]
-    ) -> List[ImprovementHypothesis]:
+    def hypothesize(self, observation: Dict[str, Any]) -> List[ImprovementHypothesis]:
         """
         Generate improvement hypotheses from observations.
 
@@ -242,12 +235,8 @@ class RecursiveSelfImprovementEngine:
                 h = ImprovementHypothesis(
                     hypothesis_id=uuid4().hex[:12],
                     category="accuracy",
-                    description=(
-                        f"Agent '{aid}' has {perf['success_rate']:.0%} success rate"
-                    ),
-                    proposed_change=(
-                        f"Review and optimize task handling for agent '{aid}'"
-                    ),
+                    description=(f"Agent '{aid}' has {perf['success_rate']:.0%} success rate"),
+                    proposed_change=(f"Review and optimize task handling for agent '{aid}'"),
                     expected_improvement=0.15,
                     confidence=0.6,
                     source="agent_performance",
@@ -260,9 +249,7 @@ class RecursiveSelfImprovementEngine:
                 h = ImprovementHypothesis(
                     hypothesis_id=uuid4().hex[:12],
                     category="robustness",
-                    description=(
-                        f"Recurring error ({err['count']}x): {err['error'][:80]}"
-                    ),
+                    description=(f"Recurring error ({err['count']}x): {err['error'][:80]}"),
                     proposed_change="Create auto-fix pattern for this error class",
                     expected_improvement=0.1,
                     confidence=0.5,
@@ -278,12 +265,9 @@ class RecursiveSelfImprovementEngine:
                     hypothesis_id=uuid4().hex[:12],
                     category="adaptation",
                     description=(
-                        f"Drift detected on {alert.get('stream_key', '?')}: "
-                        f"severity={severity}"
+                        f"Drift detected on {alert.get('stream_key', '?')}: " f"severity={severity}"
                     ),
-                    proposed_change=(
-                        "Recalibrate thresholds for drifted stream"
-                    ),
+                    proposed_change=("Recalibrate thresholds for drifted stream"),
                     expected_improvement=0.1,
                     confidence=0.7,
                     source="drift_detection",
@@ -346,9 +330,7 @@ class RecursiveSelfImprovementEngine:
 
     # ===== Phase 4: Integrate =============================================
 
-    def integrate(
-        self, hypothesis: ImprovementHypothesis, benchmark: BenchmarkRecord
-    ) -> bool:
+    def integrate(self, hypothesis: ImprovementHypothesis, benchmark: BenchmarkRecord) -> bool:
         """
         Integrate verified improvements.
 
@@ -363,9 +345,8 @@ class RecursiveSelfImprovementEngine:
         # Check for actual improvement
         if hypothesis.baseline_metric > 0:
             improvement = (
-                (hypothesis.result_metric - hypothesis.baseline_metric)
-                / hypothesis.baseline_metric
-            )
+                hypothesis.result_metric - hypothesis.baseline_metric
+            ) / hypothesis.baseline_metric
         else:
             improvement = hypothesis.result_metric
 
@@ -551,9 +532,7 @@ class RecursiveSelfImprovementEngine:
         """Return all benchmark records."""
         return [b.to_dict() for b in self._benchmarks]
 
-    def get_hypotheses(
-        self, status: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    def get_hypotheses(self, status: Optional[str] = None) -> List[Dict[str, Any]]:
         """Return hypotheses, optionally filtered by status."""
         hs = self._hypotheses
         if status:
@@ -577,7 +556,5 @@ class RecursiveSelfImprovementEngine:
                 ]
             },
             "total_benchmarks": len(self._benchmarks),
-            "recent_cycles": [
-                c.to_dict() for c in self._cycle_history[-5:]
-            ],
+            "recent_cycles": [c.to_dict() for c in self._cycle_history[-5:]],
         }

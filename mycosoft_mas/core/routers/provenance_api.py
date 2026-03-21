@@ -58,4 +58,3 @@ async def audit_chain(req: AuditRequest) -> Dict[str, Any]:
         "count": len(chain),
         "events": chain,
     }
-

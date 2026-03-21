@@ -76,9 +76,7 @@ class NOAA_COOPSCollector(BaseCollector):
                     self.base_url, params=params, timeout=aiohttp.ClientTimeout(total=15)
                 ) as resp:
                     if resp.status != 200:
-                        logger.warning(
-                            "NOAA CO-OPS station %s error: %s", station_id, resp.status
-                        )
+                        logger.warning("NOAA CO-OPS station %s error: %s", station_id, resp.status)
                         continue
 
                     data = await resp.json()
@@ -107,9 +105,9 @@ class NOAA_COOPSCollector(BaseCollector):
                     ts = datetime.utcnow()
                     if t_str:
                         try:
-                            ts = datetime.fromisoformat(
-                                t_str.replace("Z", "+00:00")
-                            ).replace(tzinfo=None)
+                            ts = datetime.fromisoformat(t_str.replace("Z", "+00:00")).replace(
+                                tzinfo=None
+                            )
                         except Exception:
                             pass
 
@@ -136,9 +134,7 @@ class NOAA_COOPSCollector(BaseCollector):
                         )
 
             except Exception as e:
-                logger.warning(
-                    "NOAA CO-OPS fetch error for station %s: %s", station_id, e
-                )
+                logger.warning("NOAA CO-OPS fetch error for station %s: %s", station_id, e)
                 continue
 
         if events:

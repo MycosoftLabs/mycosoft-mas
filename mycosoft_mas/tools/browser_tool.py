@@ -7,7 +7,7 @@ for safe, isolated browser automation via Playwright.
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 if TYPE_CHECKING:
     from mycosoft_mas.gateway.control_plane import GatewayControlPlane
@@ -50,6 +50,7 @@ class BrowserTool:
             screenshot_bytes = None
             if screenshot_b64:
                 import base64
+
                 screenshot_bytes = base64.b64decode(screenshot_b64)
             return BrowserResult(
                 title=out.get("title", ""),
@@ -66,14 +67,18 @@ class BrowserTool:
     async def click(self, selector: str, session_id: Optional[str] = None) -> BrowserResult:
         return await self._browser_call("click", {"selector": selector}, session_id)
 
-    async def type(self, selector: str, text: str, session_id: Optional[str] = None) -> BrowserResult:
+    async def type(
+        self, selector: str, text: str, session_id: Optional[str] = None
+    ) -> BrowserResult:
         return await self._browser_call("type", {"selector": selector, "text": text}, session_id)
 
     async def screenshot(self, session_id: Optional[str] = None) -> bytes:
         result = await self._browser_call("screenshot", {}, session_id)
         return result.screenshot or b""
 
-    async def get_content(self, selector: Optional[str] = None, session_id: Optional[str] = None) -> str:
+    async def get_content(
+        self, selector: Optional[str] = None, session_id: Optional[str] = None
+    ) -> str:
         result = await self._browser_call(
             "get_content",
             {"selector": selector} if selector else {},

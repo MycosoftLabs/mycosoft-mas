@@ -22,6 +22,7 @@ def _get_heartbeat_summary() -> Dict[str, Any]:
     """Get real metrics from the heartbeat service."""
     try:
         from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+
         return get_heartbeat_service().get_system_summary()
     except Exception:
         return {}
@@ -31,6 +32,7 @@ def _get_registry_count() -> int:
     """Get total registered agents from the real registry."""
     try:
         from mycosoft_mas.core.agent_registry import get_agent_registry
+
         return len(get_agent_registry().list_all())
     except Exception:
         return 0
@@ -110,6 +112,7 @@ async def get_system_health(
     infra_health = {}
     try:
         from mycosoft_mas.monitoring.health_check import HealthChecker
+
         checker = HealthChecker()
         db_health = await checker.check_database()
         redis_health = await checker.check_redis()

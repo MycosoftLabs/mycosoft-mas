@@ -11,7 +11,6 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-
 EVENT_TYPES = Literal[
     "task",
     "result",
@@ -20,6 +19,7 @@ EVENT_TYPES = Literal[
     "tool_call",
     "status",
 ]
+
 
 class AgentEvent(BaseModel):
     """Agent-to-agent event for the Event Bus."""

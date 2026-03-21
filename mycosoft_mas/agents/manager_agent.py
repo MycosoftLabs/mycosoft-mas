@@ -7,7 +7,6 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.core.agent_registry import AgentCategory, AgentDefinition, get_agent_registry
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -103,7 +102,9 @@ class ManagerAgent(BaseAgent):
         scored.sort(key=lambda item: item[0], reverse=True)
         return [agent for _, agent in scored]
 
-    def _score_agent(self, agent: AgentDefinition, text: str, intent_category: Optional[AgentCategory]) -> int:
+    def _score_agent(
+        self, agent: AgentDefinition, text: str, intent_category: Optional[AgentCategory]
+    ) -> int:
         score = 0
         lowered = text.lower()
 

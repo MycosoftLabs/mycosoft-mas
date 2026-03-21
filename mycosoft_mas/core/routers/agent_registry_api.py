@@ -4,23 +4,26 @@ Agent Registry API Router
 Exposes the agent registry for MYCA voice control and n8n integration.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from ..agent_registry import get_agent_registry, AgentCategory
+from ..agent_registry import AgentCategory, get_agent_registry
 
 router = APIRouter(prefix="/agents/registry", tags=["agent-registry"])
 
 
 class AgentSearchRequest(BaseModel):
     """Request model for agent search."""
+
     query: str
     category: Optional[str] = None
 
 
 class VoiceRouteRequest(BaseModel):
     """Request model for voice routing."""
+
     transcript: str
     actor: str = "morgan"
     session_id: Optional[str] = None
@@ -28,6 +31,7 @@ class VoiceRouteRequest(BaseModel):
 
 class VoiceRouteResponse(BaseModel):
     """Response model for voice routing."""
+
     matched_agents: List[Dict[str, Any]]
     primary_agent: Optional[Dict[str, Any]]
     requires_confirmation: bool
@@ -38,7 +42,7 @@ class VoiceRouteResponse(BaseModel):
 async def list_all_agents():
     """
     List all registered agents in the MAS.
-    
+
     Returns the complete agent registry with categories and capabilities.
     """
     registry = get_agent_registry()
@@ -48,12 +52,7 @@ async def list_all_agents():
 @router.get("/categories")
 async def list_categories():
     """List all agent categories."""
-    return {
-        "categories": [
-            {"id": c.value, "name": c.name.title()}
-            for c in AgentCategory
-        ]
-    }
+    return {"categories": [{"id": c.value, "name": c.name.title()} for c in AgentCategory]}
 
 
 @router.get("/category/{category}")
@@ -64,7 +63,7 @@ async def list_agents_by_category(category: str):
         cat = AgentCategory(category)
     except ValueError:
         raise HTTPException(status_code=400, detail=f"Invalid category: {category}")
-    
+
     agents = registry.list_by_category(cat)
     return {
         "category": category,
@@ -88,10 +87,10 @@ async def get_agent_details(agent_id: str):
     """Get detailed information about a specific agent."""
     registry = get_agent_registry()
     agent = registry.get(agent_id)
-    
+
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent not found: {agent_id}")
-    
+
     return {
         "agent_id": agent.agent_id,
         "name": agent.name,
@@ -113,12 +112,12 @@ async def get_agent_details(agent_id: str):
 async def search_agents(q: str = Query(..., description="Search query")):
     """
     Search agents by keyword.
-    
+
     Searches agent names, descriptions, and keywords.
     """
     registry = get_agent_registry()
     agents = registry.find_by_keyword(q)
-    
+
     return {
         "query": q,
         "results": [
@@ -140,14 +139,14 @@ async def search_agents(q: str = Query(..., description="Search query")):
 async def route_voice_command(request: VoiceRouteRequest):
     """
     Route a voice command to the appropriate agent(s).
-    
+
     Analyzes the transcript and returns matching agents based on voice triggers.
     """
     registry = get_agent_registry()
-    
+
     # Find agents matching the voice transcript
     matches = registry.find_by_voice_trigger(request.transcript)
-    
+
     # Also search by keywords in transcript
     words = request.transcript.lower().split()
     for word in words:
@@ -156,16 +155,16 @@ async def route_voice_command(request: VoiceRouteRequest):
             for match in keyword_matches:
                 if match not in matches:
                     matches.append(match)
-    
+
     # Determine primary agent (first match, prefer active)
     primary = None
     if matches:
         active_matches = [m for m in matches if m.is_active]
         primary = active_matches[0] if active_matches else matches[0]
-    
+
     # Check if confirmation is required
     requires_confirmation = primary.requires_confirmation if primary else False
-    
+
     # Generate routing prompt
     if primary:
         routing_prompt = f"Routing to {primary.display_name}"
@@ -173,7 +172,7 @@ async def route_voice_command(request: VoiceRouteRequest):
             routing_prompt += ". This action requires confirmation."
     else:
         routing_prompt = "No specific agent matched. I'll handle this directly."
-    
+
     return VoiceRouteResponse(
         matched_agents=[
             {
@@ -185,14 +184,18 @@ async def route_voice_command(request: VoiceRouteRequest):
             }
             for a in matches[:5]  # Limit to top 5
         ],
-        primary_agent={
-            "agent_id": primary.agent_id,
-            "name": primary.name,
-            "display_name": primary.display_name,
-            "description": primary.description,
-            "category": primary.category.value,
-            "requires_confirmation": primary.requires_confirmation,
-        } if primary else None,
+        primary_agent=(
+            {
+                "agent_id": primary.agent_id,
+                "name": primary.name,
+                "display_name": primary.display_name,
+                "description": primary.description,
+                "category": primary.category.value,
+                "requires_confirmation": primary.requires_confirmation,
+            }
+            if primary
+            else None
+        ),
         requires_confirmation=requires_confirmation,
         routing_prompt=routing_prompt,
     )
@@ -202,7 +205,7 @@ async def route_voice_command(request: VoiceRouteRequest):
 async def get_voice_routing_prompt():
     """
     Get the voice routing prompt for LLM context.
-    
+
     Returns a formatted prompt listing all agents and their voice triggers,
     suitable for injection into the orchestrator's system prompt.
     """
@@ -219,10 +222,10 @@ async def activate_agent(agent_id: str):
     """Mark an agent as active in the registry."""
     registry = get_agent_registry()
     agent = registry.get(agent_id)
-    
+
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent not found: {agent_id}")
-    
+
     registry.mark_active(agent_id, True)
     return {"status": "activated", "agent_id": agent_id}
 
@@ -232,10 +235,10 @@ async def deactivate_agent(agent_id: str):
     """Mark an agent as inactive in the registry."""
     registry = get_agent_registry()
     agent = registry.get(agent_id)
-    
+
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent not found: {agent_id}")
-    
+
     registry.mark_active(agent_id, False)
     return {"status": "deactivated", "agent_id": agent_id}
 
@@ -244,11 +247,11 @@ async def deactivate_agent(agent_id: str):
 async def get_n8n_registry():
     """
     Get the agent registry in n8n-compatible format.
-    
+
     Returns a simplified registry for n8n workflow integration.
     """
     registry = get_agent_registry()
-    
+
     return {
         "agents": [
             {
@@ -263,45 +266,3 @@ async def get_n8n_registry():
         ],
         "categories": [c.value for c in AgentCategory],
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

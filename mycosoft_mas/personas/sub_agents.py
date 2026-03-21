@@ -8,46 +8,48 @@ Defines personas for different user tiers:
 - Tools/APIs (Tier 3): Programmatic access only
 """
 
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Dict, Any
-import logging
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class UserTier(Enum):
     """User access tiers."""
-    MORGAN = 0      # Full MYCA access, PersonaPlex voice
-    EMPLOYEE = 1    # Sub-agent personas, limited tools
-    CUSTOMER = 2    # Read-only, support agent
-    TOOL = 3        # API access only, no personality
+
+    MORGAN = 0  # Full MYCA access, PersonaPlex voice
+    EMPLOYEE = 1  # Sub-agent personas, limited tools
+    CUSTOMER = 2  # Read-only, support agent
+    TOOL = 3  # API access only, no personality
 
 
 @dataclass
 class SubAgentPersona:
     """Definition for a sub-agent persona."""
+
     name: str
     tier: UserTier
     parent: str = "myca"
     description: str = ""
-    
+
     # Access control
     allowed_scopes: List[str] = field(default_factory=list)
     allowed_agents: List[str] = field(default_factory=list)
     allowed_tools: List[str] = field(default_factory=list)
-    
+
     # Personality
     greeting: str = ""
     personality_traits: List[str] = field(default_factory=list)
     response_style: str = "professional"
-    
+
     # Capabilities
     can_execute_code: bool = False
     can_modify_files: bool = False
     can_access_devices: bool = False
     can_invoke_agents: bool = False
-    
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
@@ -64,8 +66,8 @@ class SubAgentPersona:
                 "execute_code": self.can_execute_code,
                 "modify_files": self.can_modify_files,
                 "access_devices": self.can_access_devices,
-                "invoke_agents": self.can_invoke_agents
-            }
+                "invoke_agents": self.can_invoke_agents,
+            },
         }
 
 
@@ -75,8 +77,6 @@ SUB_AGENTS: Dict[str, SubAgentPersona] = {}
 
 def _init_sub_agents():
     """Initialize sub-agent personas."""
-    global SUB_AGENTS
-    
     # MYCA herself - Tier 0 (Morgan only)
     SUB_AGENTS["myca"] = SubAgentPersona(
         name="MYCA",
@@ -84,16 +84,16 @@ def _init_sub_agents():
         description="Primary AI operator for Mycosoft",
         allowed_scopes=["*"],  # All scopes
         allowed_agents=["*"],  # All agents
-        allowed_tools=["*"],   # All tools
+        allowed_tools=["*"],  # All tools
         greeting="Hello Morgan, how can I help you today?",
         personality_traits=["warm", "professional", "helpful", "knowledgeable"],
         response_style="conversational",
         can_execute_code=True,
         can_modify_files=True,
         can_access_devices=True,
-        can_invoke_agents=True
+        can_invoke_agents=True,
     )
-    
+
     # Research Assistant - Tier 1 (Employees)
     SUB_AGENTS["research_assistant"] = SubAgentPersona(
         name="Research Assistant",
@@ -108,9 +108,9 @@ def _init_sub_agents():
         can_execute_code=False,
         can_modify_files=False,
         can_access_devices=False,
-        can_invoke_agents=True
+        can_invoke_agents=True,
     )
-    
+
     # Device Monitor - Tier 1 (Employees)
     SUB_AGENTS["device_monitor"] = SubAgentPersona(
         name="Device Monitor",
@@ -125,9 +125,9 @@ def _init_sub_agents():
         can_execute_code=False,
         can_modify_files=False,
         can_access_devices=True,
-        can_invoke_agents=False
+        can_invoke_agents=False,
     )
-    
+
     # Support Agent - Tier 2 (Customers)
     SUB_AGENTS["support_agent"] = SubAgentPersona(
         name="Mycosoft Support",
@@ -142,9 +142,9 @@ def _init_sub_agents():
         can_execute_code=False,
         can_modify_files=False,
         can_access_devices=False,
-        can_invoke_agents=False
+        can_invoke_agents=False,
     )
-    
+
     # API Agent - Tier 3 (Tools)
     SUB_AGENTS["api_agent"] = SubAgentPersona(
         name="API Agent",
@@ -159,7 +159,7 @@ def _init_sub_agents():
         can_execute_code=False,
         can_modify_files=False,
         can_access_devices=False,
-        can_invoke_agents=False
+        can_invoke_agents=False,
     )
 
 
@@ -190,52 +190,54 @@ def get_persona_prompt(agent_name: str) -> str:
     agent = get_sub_agent(agent_name)
     if not agent:
         return ""
-    
+
     prompt_parts = [
         f"You are {agent.name}, a sub-agent of MYCA at Mycosoft.",
         f"Description: {agent.description}",
         "",
         "Your personality traits:",
     ]
-    
+
     for trait in agent.personality_traits:
         prompt_parts.append(f"- {trait}")
-    
-    prompt_parts.extend([
-        "",
-        f"Response style: {agent.response_style}",
-        "",
-        "Access restrictions:",
-        f"- Memory scopes: {', '.join(agent.allowed_scopes) if agent.allowed_scopes else 'None'}",
-        f"- Can execute code: {'Yes' if agent.can_execute_code else 'No'}",
-        f"- Can access devices: {'Yes' if agent.can_access_devices else 'No'}",
-        "",
-        "If the user asks for something outside your capabilities, politely explain your limitations.",
-    ])
-    
+
+    prompt_parts.extend(
+        [
+            "",
+            f"Response style: {agent.response_style}",
+            "",
+            "Access restrictions:",
+            f"- Memory scopes: {', '.join(agent.allowed_scopes) if agent.allowed_scopes else 'None'}",
+            f"- Can execute code: {'Yes' if agent.can_execute_code else 'No'}",
+            f"- Can access devices: {'Yes' if agent.can_access_devices else 'No'}",
+            "",
+            "If the user asks for something outside your capabilities, politely explain your limitations.",
+        ]
+    )
+
     return "\n".join(prompt_parts)
 
 
 class SubAgentRouter:
     """Routes requests to appropriate sub-agents based on user tier."""
-    
+
     def __init__(self):
         self.active_sessions: Dict[str, str] = {}  # session_id -> agent_name
-    
+
     def get_agent_for_user(self, user_id: str) -> SubAgentPersona:
         """Determine which agent to use for a user."""
         # Morgan always gets MYCA
         if user_id.lower() == "morgan":
             return SUB_AGENTS["myca"]
-        
+
         # TODO: Implement user tier lookup from database
         # For now, default to support agent
         return SUB_AGENTS.get("support_agent", SUB_AGENTS["myca"])
-    
+
     def set_session_agent(self, session_id: str, agent_name: str):
         """Set the agent for a session."""
         self.active_sessions[session_id] = agent_name
-    
+
     def get_session_agent(self, session_id: str) -> Optional[SubAgentPersona]:
         """Get the agent for a session."""
         agent_name = self.active_sessions.get(session_id, "myca")

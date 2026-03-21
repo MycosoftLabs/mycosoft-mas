@@ -12,7 +12,6 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-
 router = APIRouter(prefix="/api/physics", tags=["physicsnemo"])
 PHYSICSNEMO_API_URL = os.getenv("PHYSICSNEMO_API_URL", "http://localhost:8400").rstrip("/")
 
@@ -62,7 +61,9 @@ async def simulate(payload: GenericSimulationRequest) -> Dict[str, Any]:
     }
     target = route_map.get(payload.simulation_type)
     if not target:
-        raise HTTPException(status_code=400, detail=f"Unsupported simulation_type: {payload.simulation_type}")
+        raise HTTPException(
+            status_code=400, detail=f"Unsupported simulation_type: {payload.simulation_type}"
+        )
     return await _proxy("POST", target, payload=payload.params)
 
 

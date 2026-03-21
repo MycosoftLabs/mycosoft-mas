@@ -14,13 +14,12 @@ NO MOCK DATA - Real Redis integration with VM 192.168.0.189:6379
 """
 
 import asyncio
-import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +28,7 @@ router = APIRouter(prefix="/ws/security", tags=["Security Stream"])
 
 class SecurityEventType(str, Enum):
     """Types of security events that can be streamed."""
+
     INCIDENT = "incident"
     ALERT = "alert"
     IDS = "ids"
@@ -41,6 +41,7 @@ class SecurityEventType(str, Enum):
 
 class SeverityLevel(str, Enum):
     """Severity levels for security events."""
+
     INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
@@ -50,7 +51,7 @@ class SeverityLevel(str, Enum):
 
 class SecurityStreamManager:
     """Manages WebSocket connections for security event streaming."""
-    
+
     def __init__(self):
         # All connected clients
         self.connections: Set[WebSocket] = set()
@@ -61,7 +62,7 @@ class SecurityStreamManager:
         self._max_queue_size = 100
         self._lock = asyncio.Lock()
         self._redis_subscription_active = False
-    
+
     async def connect(
         self,
         websocket: WebSocket,
@@ -76,21 +77,21 @@ class SecurityStreamManager:
                 "severities": severities,
                 "event_types": event_types,
             }
-        
+
         logger.info(f"Security stream: Client connected. Total: {len(self.connections)}")
-        
+
         # Start Redis subscription if this is the first client
         if not self._redis_subscription_active:
             asyncio.create_task(self._subscribe_to_redis())
-    
+
     async def disconnect(self, websocket: WebSocket):
         """Disconnect a client."""
         async with self._lock:
             self.connections.discard(websocket)
             self.client_filters.pop(websocket, None)
-        
+
         logger.info(f"Security stream: Client disconnected. Total: {len(self.connections)}")
-    
+
     def _should_send_to_client(
         self,
         websocket: WebSocket,
@@ -99,19 +100,19 @@ class SecurityStreamManager:
     ) -> bool:
         """Check if an event should be sent to a specific client based on filters."""
         filters = self.client_filters.get(websocket, {})
-        
+
         # Check severity filter
         severities = filters.get("severities")
         if severities and severity not in severities:
             return False
-        
+
         # Check event type filter
         event_types = filters.get("event_types")
         if event_types and event_type not in event_types:
             return False
-        
+
         return True
-    
+
     async def broadcast(self, event: Dict[str, Any]):
         """Broadcast a security event to all connected clients."""
         # Add to event queue
@@ -120,50 +121,50 @@ class SecurityStreamManager:
             if len(self._event_queue) > self._max_queue_size:
                 self._event_queue.pop(0)
             connections = self.connections.copy()
-        
+
         event_type = event.get("event_type", "unknown")
         severity = event.get("severity", "info")
-        
+
         logger.debug(f"Broadcasting security event: {event_type} ({severity})")
-        
+
         disconnected = []
         for websocket in connections:
             if not self._should_send_to_client(websocket, event_type, severity):
                 continue
-            
+
             try:
                 await websocket.send_json(event)
             except Exception as e:
                 logger.warning(f"Failed to send to client: {e}")
                 disconnected.append(websocket)
-        
+
         # Clean up disconnected clients
         if disconnected:
             async with self._lock:
                 for ws in disconnected:
                     self.connections.discard(ws)
                     self.client_filters.pop(ws, None)
-    
+
     def get_recent_events(self, limit: int = 20) -> List[Dict[str, Any]]:
         """Get recent events from the queue."""
         return self._event_queue[-limit:][::-1]  # Most recent first
-    
+
     async def _subscribe_to_redis(self):
         """Subscribe to Redis security channels."""
         if self._redis_subscription_active:
             return
-        
+
         self._redis_subscription_active = True
-        
+
         try:
             # Import here to avoid circular dependencies
             from mycosoft_mas.realtime.redis_pubsub import (
-                get_client,
                 PubSubMessage,
+                get_client,
             )
-            
+
             client = await get_client()
-            
+
             async def handle_security_event(message: PubSubMessage):
                 """Handle incoming security events from Redis."""
                 event = {
@@ -176,7 +177,7 @@ class SecurityStreamManager:
                     "data": message.data,
                 }
                 await self.broadcast(event)
-            
+
             # Subscribe to security channels
             security_channels = [
                 "security:incidents",
@@ -184,30 +185,30 @@ class SecurityStreamManager:
                 "security:ids",
                 "security:threats",
             ]
-            
+
             for channel in security_channels:
                 try:
                     await client.subscribe(channel, handle_security_event)
                     logger.info(f"Subscribed to Redis channel: {channel}")
                 except Exception as e:
                     logger.warning(f"Failed to subscribe to {channel}: {e}")
-            
+
             # Keep subscription alive while clients are connected
             while True:
                 async with self._lock:
                     if not self.connections:
                         break
                 await asyncio.sleep(5)
-            
+
             # Unsubscribe when no clients remain
             for channel in security_channels:
                 try:
                     await client.unsubscribe(channel, handle_security_event)
                 except Exception:
                     pass
-            
+
             logger.info("Unsubscribed from Redis security channels")
-        
+
         except ImportError:
             logger.warning("Redis pubsub not available - using internal broadcast only")
             # Keep running for internal broadcasts even without Redis
@@ -216,10 +217,10 @@ class SecurityStreamManager:
                     if not self.connections:
                         break
                 await asyncio.sleep(5)
-        
+
         except Exception as e:
             logger.error(f"Redis subscription error: {e}")
-        
+
         finally:
             self._redis_subscription_active = False
 
@@ -232,6 +233,7 @@ manager = SecurityStreamManager()
 # API FOR INTERNAL BROADCASTING
 # ═══════════════════════════════════════════════════════════════
 
+
 async def broadcast_security_event(
     event_type: str,
     title: str,
@@ -241,9 +243,9 @@ async def broadcast_security_event(
 ):
     """
     Broadcast a security event to all connected WebSocket clients.
-    
+
     Call this from anywhere in MAS to push events to the security dashboard.
-    
+
     Args:
         event_type: Type of event (incident, alert, ids, playbook, agent_activity, system, threat, scan)
         title: Short title for the event
@@ -332,6 +334,7 @@ async def broadcast_agent_activity(
 # WEBSOCKET ENDPOINTS
 # ═══════════════════════════════════════════════════════════════
 
+
 @router.websocket("/stream")
 async def security_event_stream(
     websocket: WebSocket,
@@ -340,18 +343,18 @@ async def security_event_stream(
 ):
     """
     WebSocket endpoint for live security event streaming.
-    
+
     Streams real-time security events including:
     - Incidents (created, updated, escalated, resolved)
     - IDS/IPS alerts
     - Agent activity
     - System health events
     - Threat detections
-    
+
     Query params:
     - severities: Comma-separated list (e.g., "high,critical")
     - types: Comma-separated list (e.g., "incident,ids,threat")
-    
+
     Messages sent to client:
     {
         "event_type": "incident|alert|ids|...",
@@ -362,7 +365,7 @@ async def security_event_stream(
         "message": "Event details",
         "data": {...}
     }
-    
+
     Messages from client:
     - {"type": "ping"}: Keep-alive
     - {"type": "subscribe", "severities": [...], "types": [...]}: Update filters
@@ -370,22 +373,24 @@ async def security_event_stream(
     # Parse filter params
     severity_list = severities.split(",") if severities else None
     type_list = types.split(",") if types else None
-    
+
     await manager.connect(websocket, severities=severity_list, event_types=type_list)
-    
+
     try:
         # Send connection acknowledgment
-        await websocket.send_json({
-            "type": "connected",
-            "message": "Security stream connected",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "filters": {
-                "severities": severity_list,
-                "event_types": type_list,
-            },
-            "subscribers": len(manager.connections),
-        })
-        
+        await websocket.send_json(
+            {
+                "type": "connected",
+                "message": "Security stream connected",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "filters": {
+                    "severities": severity_list,
+                    "event_types": type_list,
+                },
+                "subscribers": len(manager.connections),
+            }
+        )
+
         # Send recent events
         recent_events = manager.get_recent_events(10)
         for event in recent_events:
@@ -393,19 +398,21 @@ async def security_event_stream(
             severity = event.get("severity", "info")
             if manager._should_send_to_client(websocket, event_type, severity):
                 await websocket.send_json(event)
-        
+
         # Keep connection alive and handle client messages
         while True:
             try:
                 data = await websocket.receive_json()
-                
+
                 # Handle ping
                 if data.get("type") == "ping":
-                    await websocket.send_json({
-                        "type": "pong",
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
-                
+                    await websocket.send_json(
+                        {
+                            "type": "pong",
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
+
                 # Handle filter subscription update
                 elif data.get("type") == "subscribe":
                     new_severities = data.get("severities")
@@ -415,24 +422,26 @@ async def security_event_stream(
                             "severities": new_severities,
                             "event_types": new_types,
                         }
-                    await websocket.send_json({
-                        "type": "subscribed",
-                        "filters": {
-                            "severities": new_severities,
-                            "event_types": new_types,
-                        },
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    })
-            
+                    await websocket.send_json(
+                        {
+                            "type": "subscribed",
+                            "filters": {
+                                "severities": new_severities,
+                                "event_types": new_types,
+                            },
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
+
             except WebSocketDisconnect:
                 break
             except Exception as e:
                 logger.error(f"Error receiving message: {e}")
                 break
-    
+
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
-    
+
     finally:
         await manager.disconnect(websocket)
 

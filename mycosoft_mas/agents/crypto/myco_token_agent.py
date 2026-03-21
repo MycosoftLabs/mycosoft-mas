@@ -37,6 +37,7 @@ class MycoTokenAgent(BaseAgent):
         if self._solana is None:
             try:
                 from mycosoft_mas.integrations.solana_client import SolanaClient
+
                 self._solana = SolanaClient(self.config)
             except ImportError:
                 pass
@@ -46,6 +47,7 @@ class MycoTokenAgent(BaseAgent):
         if self._jupiter is None:
             try:
                 from mycosoft_mas.integrations.jupiter_client import JupiterClient
+
                 self._jupiter = JupiterClient(self.config)
             except ImportError:
                 pass

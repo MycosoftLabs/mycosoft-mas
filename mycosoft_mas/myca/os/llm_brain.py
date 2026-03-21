@@ -12,18 +12,20 @@ Date: 2026-03-09
 """
 
 import json
-import os
 import logging
+import os
 from pathlib import Path
-from typing import Optional, TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 import aiohttp
-from mycosoft_mas.llm.backend_selection import get_backend_for_role, MYCA_CORE
+
+from mycosoft_mas.llm.backend_selection import MYCA_CORE, get_backend_for_role
 from mycosoft_mas.myca.os.staff_registry import load_staff_directory
 
 if TYPE_CHECKING:
-    from .core import MycaOS
     from mycosoft_mas.schemas.experience_packet import ExperiencePacket
+
+    from .core import MycaOS
 
 
 def experience_packet_to_live_context(ep: "ExperiencePacket") -> str:
@@ -39,7 +41,11 @@ def experience_packet_to_live_context(ep: "ExperiencePacket") -> str:
     if ep.world_state and ep.world_state.nlm_prediction:
         insights = ep.world_state.nlm_prediction.get("insights", [])
         if insights:
-            parts.append(f"[NLM]: {insights[0]}" if len(insights) == 1 else f"[NLM]: {len(insights)} insights")
+            parts.append(
+                f"[NLM]: {insights[0]}"
+                if len(insights) == 1
+                else f"[NLM]: {len(insights)} insights"
+            )
     if ep.self_state:
         ss = ep.self_state
         ss_parts = []
@@ -54,6 +60,7 @@ def experience_packet_to_live_context(ep: "ExperiencePacket") -> str:
     if not parts:
         return ""
     return "\n\n---\n\n## Live Context (Memory, Knowledge, Worldview)\n\n" + "\n\n".join(parts)
+
 
 logger = logging.getLogger("myca.os.llm_brain")
 
@@ -119,6 +126,7 @@ class LLMBrain:
             return False
         try:
             from anthropic import AsyncAnthropic
+
             self._client = AsyncAnthropic(api_key=self._api_key)
             return True
         except ImportError as e:
@@ -160,7 +168,9 @@ class LLMBrain:
             logger.warning("Ollama request failed: %s", e)
             return None
 
-    async def _respond_openai_compatible(self, base_url: str, model: str, api_key: str, messages: list) -> Optional[str]:
+    async def _respond_openai_compatible(
+        self, base_url: str, model: str, api_key: str, messages: list
+    ) -> Optional[str]:
         """
         Call OpenAI-compatible /v1/chat/completions (e.g. Nemotron).
         Returns response text or None on failure.
@@ -218,13 +228,14 @@ class LLMBrain:
         try:
             # Device registry snapshot (sync) — for Merkle and context
             try:
-                from mycosoft_mas.core.routers.device_registry_api import get_device_registry_snapshot
+                from mycosoft_mas.core.routers.device_registry_api import (
+                    get_device_registry_snapshot,
+                )
 
                 snap = get_device_registry_snapshot()
                 slot_data["device_registry"] = snap
                 slot_data["device_health"] = {
-                    k: v.get("status", "unknown")
-                    for k, v in snap.get("devices", {}).items()
+                    k: v.get("status", "unknown") for k, v in snap.get("devices", {}).items()
                 }
             except Exception:
                 pass
@@ -235,7 +246,11 @@ class LLMBrain:
             person_id = (context or {}).get("person_id") if context else None
             staff_directory = load_staff_directory() if person_id else {}
             if mb and hasattr(mb, "recall"):
-                for key in ["session:last_topic", "working:current_task", "episodic:recent_decisions"]:
+                for key in [
+                    "session:last_topic",
+                    "working:current_task",
+                    "episodic:recent_decisions",
+                ]:
                     val = await mb.recall(key)
                     if val:
                         parts.append(f"[Memory {key}]: {val[:500]}")
@@ -245,7 +260,9 @@ class LLMBrain:
                     if personal_val:
                         parts.append(f"[Person memory {person_id}]: {personal_val[:500]}")
             if mas and hasattr(mas, "recall_memory"):
-                memories = await mas.recall_memory(user_message[:100] if user_message else "context", limit=3)
+                memories = await mas.recall_memory(
+                    user_message[:100] if user_message else "context", limit=3
+                )
                 if memories:
                     for m in memories:
                         c = m.get("content", m) if isinstance(m, dict) else str(m)
@@ -258,7 +275,18 @@ class LLMBrain:
                 )
 
             # 2. MINDEX KG if domain-specific
-            if mb and any(kw in msg_lower for kw in ["species", "fungi", "fungus", "taxonomy", "compound", "mushroom", "mycology"]):
+            if mb and any(
+                kw in msg_lower
+                for kw in [
+                    "species",
+                    "fungi",
+                    "fungus",
+                    "taxonomy",
+                    "compound",
+                    "mushroom",
+                    "mycology",
+                ]
+            ):
                 try:
                     kg_results = await mb.query_knowledge_graph(user_message[:80], limit=5)
                     if kg_results:
@@ -312,9 +340,13 @@ class LLMBrain:
                     pass
 
             # 7. Unified search when query looks like search (via MAS search orchestrator)
-            if any(kw in msg_lower for kw in ["search", "find", "lookup", "where is", "show me", "what do we know"]):
+            if any(
+                kw in msg_lower
+                for kw in ["search", "find", "lookup", "where is", "show me", "what do we know"]
+            ):
                 try:
                     from mycosoft_mas.consciousness.search_orchestrator import run_unified_search
+
                     result = await run_unified_search(query=user_message[:120], limit=5)
                     res = result.get("results") or {}
                     combined = (res.get("keyword") or []) + (res.get("semantic") or [])
@@ -397,7 +429,11 @@ class LLMBrain:
                 person_id = (context or {}).get("person_id") if context else None
                 staff_directory = load_staff_directory() if person_id else {}
                 if mb and hasattr(mb, "recall"):
-                    for key in ["session:last_topic", "working:current_task", "episodic:recent_decisions"]:
+                    for key in [
+                        "session:last_topic",
+                        "working:current_task",
+                        "episodic:recent_decisions",
+                    ]:
                         val = await mb.recall(key)
                         if val:
                             parts.append(f"[Memory {key}]: {val[:500]}")
@@ -406,7 +442,9 @@ class LLMBrain:
                         if personal_val:
                             parts.append(f"[Person memory {person_id}]: {personal_val[:500]}")
                 if mas and hasattr(mas, "recall_memory"):
-                    memories = await mas.recall_memory(user_message[:100] if user_message else "context", limit=3)
+                    memories = await mas.recall_memory(
+                        user_message[:100] if user_message else "context", limit=3
+                    )
                     if memories:
                         for m in memories:
                             c = m.get("content", m) if isinstance(m, dict) else str(m)
@@ -441,7 +479,9 @@ class LLMBrain:
         fan-out (EP-as-primary path). Memory recall is still fetched from bridges.
         """
         if experience_packet and experience_packet.world_state and experience_packet.self_state:
-            live_ctx = await self._build_live_context_with_packet(user_message, context, experience_packet)
+            live_ctx = await self._build_live_context_with_packet(
+                user_message, context, experience_packet
+            )
         else:
             live_ctx = await self._build_live_context(user_message, context)
 
@@ -472,7 +512,9 @@ class LLMBrain:
             return text.strip() or "I'm here. What would you like me to do?"
 
         # No fallback to frontier models — MYCA needs to be fixed
-        logger.error("MYCA brain backend failed — no fallback. Check config/models.yaml and backend_selection.")
+        logger.error(
+            "MYCA brain backend failed — no fallback. Check config/models.yaml and backend_selection."
+        )
         return (
             "My brain isn't responding right now — Ollama needs to be checked on the MAS server. "
             "I'm not falling back to other AI providers; this needs to be fixed."
@@ -501,7 +543,10 @@ Choose escalate_to_morgan for money, budget, legal, hiring, or urgent human deci
 """
 
         messages = [
-            {"role": "system", "content": "You are MYCA's routing classifier. Output valid JSON only."},
+            {
+                "role": "system",
+                "content": "You are MYCA's routing classifier. Output valid JSON only.",
+            },
             {"role": "user", "content": prompt},
         ]
 
@@ -520,10 +565,17 @@ Choose escalate_to_morgan for money, budget, legal, hiring, or urgent human deci
         """Simple keyword-based routing when LLM unavailable."""
         content = message.lower()
         if any(kw in content for kw in ["deploy", "restart", "server", "docker"]):
-            return {"action": "delegate_to_agent", "agent_id": "deployment_agent", "task": {"content": message, "sender": sender}}
+            return {
+                "action": "delegate_to_agent",
+                "agent_id": "deployment_agent",
+                "task": {"content": message, "sender": sender},
+            }
         if any(kw in content for kw in ["money", "budget", "invoice", "payment"]):
             return {"action": "escalate_to_morgan"}
-        return {"action": "respond_directly", "response": f"I've noted your message, {sender}. I'll look into it."}
+        return {
+            "action": "respond_directly",
+            "response": f"I've noted your message, {sender}. I'll look into it.",
+        }
 
     async def plan_browser_action(
         self,
@@ -574,14 +626,16 @@ Return ONLY valid JSON, no markdown or explanation."""
         content_parts = []
         # Base64 used for screenshot image payload to vision API only; no secrets encoded.
         if screenshot_b64:
-            content_parts.append({
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": "image/png",
-                    "data": screenshot_b64,
-                },
-            })
+            content_parts.append(
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/png",
+                        "data": screenshot_b64,
+                    },
+                }
+            )
         content_parts.append({"type": "text", "text": text_block})
 
         try:

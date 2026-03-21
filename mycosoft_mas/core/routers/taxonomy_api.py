@@ -12,9 +12,9 @@ Created: March 3, 2026
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ MINDEX_URL = "http://192.168.0.189:8000"
 
 class TaxonSearchRequest(BaseModel):
     """Search for taxa."""
+
     query: str
     rank: Optional[str] = None  # kingdom, phylum, class, order, family, genus, species
     kingdom: Optional[str] = None
@@ -41,6 +42,7 @@ class TaxonSearchRequest(BaseModel):
 
 class TaxonInfo(BaseModel):
     """Taxonomic information for a species."""
+
     taxon_id: int
     scientific_name: str
     common_name: str = ""
@@ -61,6 +63,7 @@ class TaxonInfo(BaseModel):
 
 class IngestionStatusResponse(BaseModel):
     """Status of data ingestion."""
+
     target: str
     status: str
     total_records: int
@@ -73,6 +76,7 @@ class IngestionStatusResponse(BaseModel):
 
 class DataStats(BaseModel):
     """Data statistics for MINDEX."""
+
     total_species: int = 0
     total_observations: int = 0
     total_images: int = 0
@@ -134,6 +138,7 @@ async def search_taxa(request: TaxonSearchRequest) -> Dict[str, Any]:
     # Query iNaturalist for taxa
     try:
         import httpx
+
         params = {"q": request.query, "per_page": request.limit}
         if request.rank:
             params["rank"] = request.rank
@@ -146,24 +151,32 @@ async def search_taxa(request: TaxonSearchRequest) -> Dict[str, Any]:
             if resp.status_code == 200:
                 data = resp.json()
                 for taxon in data.get("results", []):
-                    ancestors = {a.get("rank", ""): a.get("name", "") for a in taxon.get("ancestors", [])}
+                    ancestors = {
+                        a.get("rank", ""): a.get("name", "") for a in taxon.get("ancestors", [])
+                    }
                     photo = taxon.get("default_photo", {}) or {}
-                    results.append(TaxonInfo(
-                        taxon_id=taxon.get("id", 0),
-                        scientific_name=taxon.get("name", ""),
-                        common_name=taxon.get("preferred_common_name", ""),
-                        rank=taxon.get("rank", ""),
-                        kingdom=ancestors.get("kingdom", taxon.get("iconic_taxon_name", "")),
-                        phylum=ancestors.get("phylum", ""),
-                        class_name=ancestors.get("class", ""),
-                        order=ancestors.get("order", ""),
-                        family=ancestors.get("family", ""),
-                        genus=ancestors.get("genus", ""),
-                        observations_count=taxon.get("observations_count", 0),
-                        image_url=photo.get("medium_url", ""),
-                        conservation_status=taxon.get("conservation_status", {}).get("status_name", "") if taxon.get("conservation_status") else "",
-                        source="iNaturalist",
-                    ))
+                    results.append(
+                        TaxonInfo(
+                            taxon_id=taxon.get("id", 0),
+                            scientific_name=taxon.get("name", ""),
+                            common_name=taxon.get("preferred_common_name", ""),
+                            rank=taxon.get("rank", ""),
+                            kingdom=ancestors.get("kingdom", taxon.get("iconic_taxon_name", "")),
+                            phylum=ancestors.get("phylum", ""),
+                            class_name=ancestors.get("class", ""),
+                            order=ancestors.get("order", ""),
+                            family=ancestors.get("family", ""),
+                            genus=ancestors.get("genus", ""),
+                            observations_count=taxon.get("observations_count", 0),
+                            image_url=photo.get("medium_url", ""),
+                            conservation_status=(
+                                taxon.get("conservation_status", {}).get("status_name", "")
+                                if taxon.get("conservation_status")
+                                else ""
+                            ),
+                            source="iNaturalist",
+                        )
+                    )
     except Exception as e:
         logger.error("iNaturalist search failed: %s", e)
 
@@ -181,6 +194,7 @@ async def get_taxon(taxon_id: int) -> Dict[str, Any]:
     """Get detailed information about a specific taxon."""
     try:
         import httpx
+
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(f"https://api.inaturalist.org/v1/taxa/{taxon_id}")
             if resp.status_code == 200:
@@ -221,6 +235,7 @@ async def get_observations(
     """Get observations from iNaturalist."""
     try:
         import httpx
+
         params = {
             "quality_grade": quality_grade,
             "per_page": min(per_page, 200),
@@ -244,17 +259,25 @@ async def get_observations(
                 for obs in data.get("results", []):
                     taxon = obs.get("taxon", {}) or {}
                     photos = obs.get("photos", [])
-                    observations.append({
-                        "id": obs.get("id"),
-                        "species_name": taxon.get("name", "Unknown"),
-                        "common_name": taxon.get("preferred_common_name", ""),
-                        "observed_on": obs.get("observed_on", ""),
-                        "location": obs.get("location", ""),
-                        "place_guess": obs.get("place_guess", ""),
-                        "quality_grade": obs.get("quality_grade", ""),
-                        "photo_url": photos[0].get("url", "").replace("square", "medium") if photos else "",
-                        "num_identification_agreements": obs.get("num_identification_agreements", 0),
-                    })
+                    observations.append(
+                        {
+                            "id": obs.get("id"),
+                            "species_name": taxon.get("name", "Unknown"),
+                            "common_name": taxon.get("preferred_common_name", ""),
+                            "observed_on": obs.get("observed_on", ""),
+                            "location": obs.get("location", ""),
+                            "place_guess": obs.get("place_guess", ""),
+                            "quality_grade": obs.get("quality_grade", ""),
+                            "photo_url": (
+                                photos[0].get("url", "").replace("square", "medium")
+                                if photos
+                                else ""
+                            ),
+                            "num_identification_agreements": obs.get(
+                                "num_identification_agreements", 0
+                            ),
+                        }
+                    )
                 return {
                     "status": "success",
                     "observations": observations,
@@ -347,11 +370,16 @@ async def get_random_species(kingdom: Optional[str] = None) -> Dict[str, Any]:
     """Get a random species - for MYCA's continuous learning."""
     try:
         import httpx
+
         params = {"per_page": 1, "order": "desc", "order_by": "random"}
         if kingdom:
             kingdom_taxon_ids = {
-                "Fungi": 47170, "Plantae": 47126, "Animalia": 1,
-                "Bacteria": 67333, "Protista": 48222, "Chromista": 48222,
+                "Fungi": 47170,
+                "Plantae": 47126,
+                "Animalia": 1,
+                "Bacteria": 67333,
+                "Protista": 48222,
+                "Chromista": 48222,
             }
             if kingdom in kingdom_taxon_ids:
                 params["taxon_id"] = kingdom_taxon_ids[kingdom]

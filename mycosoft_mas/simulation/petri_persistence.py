@@ -7,9 +7,8 @@ Provides NLM outcome notification for learning workflows.
 
 import json
 import logging
-import os
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
@@ -69,6 +68,7 @@ def save_simulation_state(
     if mindex_url:
         try:
             import httpx
+
             r = httpx.post(
                 f"{mindex_url.rstrip('/')}/api/simulations/petri/save",
                 json=payload,
@@ -122,7 +122,10 @@ def log_petri_agent_action(
         "action": action,
         "source": source,
         "params": params,
-        "result_summary": {k: v for k, v in (result or {}).items() if k in ("status", "error", "iterations")} or None,
+        "result_summary": {
+            k: v for k, v in (result or {}).items() if k in ("status", "error", "iterations")
+        }
+        or None,
     }
     _audit_log.append(entry)
     if len(_audit_log) > MAX_AUDIT_ENTRIES:
@@ -147,12 +150,16 @@ async def notify_nlm_petri_outcome(
     """
     try:
         from mycosoft_mas.nlm.workflow_bridge import trigger_workflow_from_nlm
-        result = await trigger_workflow_from_nlm("petri_outcome_ingest", {
-            "session_id": session_id,
-            "outcome_type": outcome_type,
-            "summary": summary,
-            "metrics": metrics or {},
-        })
+
+        result = await trigger_workflow_from_nlm(
+            "petri_outcome_ingest",
+            {
+                "session_id": session_id,
+                "outcome_type": outcome_type,
+                "summary": summary,
+                "metrics": metrics or {},
+            },
+        )
         return result
     except Exception as e:
         logger.warning("NLM petri outcome notify failed: %s", e)

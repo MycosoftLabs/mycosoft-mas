@@ -47,7 +47,9 @@ class MINDEXEarthClient:
     async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Optional[Any]:
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
-                resp = await client.get(f"{self.base_url}{path}", params=params, headers=self._headers())
+                resp = await client.get(
+                    f"{self.base_url}{path}", params=params, headers=self._headers()
+                )
                 if resp.status_code == 200:
                     return resp.json()
                 logger.warning("MINDEX earth GET %s returned %d", path, resp.status_code)
@@ -58,7 +60,9 @@ class MINDEXEarthClient:
     async def _post(self, path: str, json_body: Optional[Dict[str, Any]] = None) -> Optional[Any]:
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
-                resp = await client.post(f"{self.base_url}{path}", json=json_body, headers=self._headers())
+                resp = await client.post(
+                    f"{self.base_url}{path}", json=json_body, headers=self._headers()
+                )
                 if resp.status_code in (200, 201):
                     return resp.json()
                 logger.warning("MINDEX earth POST %s returned %d", path, resp.status_code)
@@ -106,7 +110,10 @@ class MINDEXEarthClient:
     ) -> Dict[str, Any]:
         """Call MINDEX /earth/nearby — radius search around a point."""
         params: Dict[str, Any] = {
-            "lat": lat, "lng": lng, "radius_km": radius_km, "limit": limit,
+            "lat": lat,
+            "lng": lng,
+            "radius_km": radius_km,
+            "limit": limit,
         }
         if domains:
             params["domains"] = ",".join(domains)
@@ -132,7 +139,11 @@ class MINDEXEarthClient:
     ) -> Dict[str, Any]:
         """Call MINDEX /earth/map/bbox — spatial query for CREP map layers."""
         params: Dict[str, Any] = {
-            "north": north, "south": south, "east": east, "west": west, "limit": limit,
+            "north": north,
+            "south": south,
+            "east": east,
+            "west": west,
+            "limit": limit,
         }
         if layers:
             params["layers"] = ",".join(layers)

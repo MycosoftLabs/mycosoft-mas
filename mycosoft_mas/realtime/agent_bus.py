@@ -10,15 +10,15 @@ import asyncio
 import json
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from .event_schema import AgentEvent
 from .agent_session import AgentSessionManager
+from .event_schema import AgentEvent
 from .pubsub import get_hub
-from .redis_pubsub import get_client, Channel
+from .redis_pubsub import Channel, get_client
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 def _validate_event(event: AgentEvent) -> tuple[bool, str]:
     """Validate event through policy engine if enabled. Returns (allowed, reason)."""
     try:
-        from mycosoft_mas.security.policy_engine import get_policy_engine
         from mycosoft_mas.security.event_audit import audit_blocked_event
+        from mycosoft_mas.security.policy_engine import get_policy_engine
 
         engine = get_policy_engine()
         result = engine.validate_event(event)
@@ -37,6 +37,7 @@ def _validate_event(event: AgentEvent) -> tuple[bool, str]:
     except ImportError:
         pass
     return True, "ok"
+
 
 AGENT_BUS_ENABLED = os.getenv("MYCA_AGENT_BUS_ENABLED", "false").lower() == "true"
 
@@ -85,10 +86,12 @@ def create_agent_bus_router() -> APIRouter:
             init = json.loads(raw)
             agent_id = init.get("agent_id") or init.get("from_agent")
             if not agent_id:
-                await websocket.send_json({
-                    "type": "error",
-                    "payload": {"message": "agent_id or from_agent required in first message"},
-                })
+                await websocket.send_json(
+                    {
+                        "type": "error",
+                        "payload": {"message": "agent_id or from_agent required in first message"},
+                    }
+                )
                 await websocket.close(code=4000, reason="Missing agent_id")
                 return
 
@@ -96,10 +99,12 @@ def create_agent_bus_router() -> APIRouter:
             channels = init.get("channels", ["agents:status", "agents:tasks", "agents:tool_calls"])
             await hub.subscribe(connection_id, channels)
 
-            await websocket.send_json({
-                "type": "connected",
-                "payload": {"connection_id": connection_id, "agent_id": agent_id},
-            })
+            await websocket.send_json(
+                {
+                    "type": "connected",
+                    "payload": {"connection_id": connection_id, "agent_id": agent_id},
+                }
+            )
 
             # Start receiving loop
             while True:
@@ -133,19 +138,23 @@ def create_agent_bus_router() -> APIRouter:
                             payload=data.get("payload", {}),
                         )
                     except Exception as e:
-                        await websocket.send_json({
-                            "type": "error",
-                            "payload": {"message": str(e)},
-                        })
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "payload": {"message": str(e)},
+                            }
+                        )
                         continue
 
                     # Policy validation
                     allowed, reason = _validate_event(event)
                     if not allowed:
-                        await websocket.send_json({
-                            "type": "error",
-                            "payload": {"message": f"Event blocked: {reason}"},
-                        })
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "payload": {"message": f"Event blocked: {reason}"},
+                            }
+                        )
                         continue
 
                     # Determine Redis channel by event type

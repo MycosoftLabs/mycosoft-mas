@@ -9,8 +9,8 @@ Environment Variables:
                   (optional; 10 req/sec with key vs 3 without)
 """
 
-import os
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import httpx

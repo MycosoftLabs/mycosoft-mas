@@ -1,8 +1,10 @@
 """
 Tests for NATUREOSClient (NatureOS MATLAB integration).
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytest.importorskip("httpx")
 
@@ -23,6 +25,7 @@ def _make_mock_client(post_json=None, get_json=None):
 @pytest.fixture
 def client():
     from mycosoft_mas.integrations.natureos_client import NATUREOSClient
+
     return NATUREOSClient(base_url="http://test-natureos:5000", timeout=5)
 
 

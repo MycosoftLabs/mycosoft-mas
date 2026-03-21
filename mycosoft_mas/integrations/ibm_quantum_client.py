@@ -14,10 +14,10 @@ Env vars:
     IBM_QUANTUM_URL    -- (optional) custom hub URL
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import httpx
 
@@ -33,7 +33,9 @@ class IbmQuantumClient:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.token = self.config.get("ibm_quantum_token") or os.getenv("IBM_QUANTUM_TOKEN", "")
-        self.base_url = self.config.get("ibm_quantum_url") or os.getenv("IBM_QUANTUM_URL", IBM_Q_BASE)
+        self.base_url = self.config.get("ibm_quantum_url") or os.getenv(
+            "IBM_QUANTUM_URL", IBM_Q_BASE
+        )
         self.timeout = self.config.get("timeout", 60)
         self._client: Optional[httpx.AsyncClient] = None
         self._access_token: Optional[str] = None

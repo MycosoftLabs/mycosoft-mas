@@ -13,13 +13,13 @@ Created: February 25, 2026
 
 import logging
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Optional
 
-from mycosoft_mas.consciousness.sensors.base_sensor import BaseSensor, SensorStatus
+from mycosoft_mas.consciousness.sensors.base_sensor import BaseSensor
 from mycosoft_mas.earthlive.packet_assembler import assemble_from_collectors
 
 if TYPE_CHECKING:
-    from mycosoft_mas.consciousness.world_model import WorldModel, SensorReading, DataFreshness
+    from mycosoft_mas.consciousness.world_model import SensorReading, WorldModel
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class EarthLIVESensor(BaseSensor):
 
     async def read(self) -> Optional["SensorReading"]:
         """Read EarthLIVE packet from collectors."""
-        from mycosoft_mas.consciousness.world_model import SensorReading, DataFreshness
+        from mycosoft_mas.consciousness.world_model import DataFreshness, SensorReading
 
         if not self.is_connected:
             await self.connect()
@@ -69,7 +69,11 @@ class EarthLIVESensor(BaseSensor):
                 sensor_type="earthlive",
                 data=data,
                 timestamp=datetime.now(timezone.utc),
-                freshness=DataFreshness.LIVE if data.get("weather") or data.get("seismic") else DataFreshness.RECENT,
+                freshness=(
+                    DataFreshness.LIVE
+                    if data.get("weather") or data.get("seismic")
+                    else DataFreshness.RECENT
+                ),
                 confidence=1.0,
                 source_url="earthlive",
             )

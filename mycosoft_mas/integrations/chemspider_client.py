@@ -10,8 +10,8 @@ Environment Variables:
     CHEMSPIDER_API_URL: Base URL (default https://api.rsc.org/compounds/v1)
 """
 
-import os
 import logging
+import os
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -27,7 +27,9 @@ class ChemSpiderClient:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.api_key = self.config.get("api_key", os.getenv("CHEMSPIDER_API_KEY", ""))
-        self.base_url = self.config.get("base_url", os.getenv("CHEMSPIDER_API_URL", DEFAULT_CHEMSPIDER_URL)).rstrip("/")
+        self.base_url = self.config.get(
+            "base_url", os.getenv("CHEMSPIDER_API_URL", DEFAULT_CHEMSPIDER_URL)
+        ).rstrip("/")
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
 

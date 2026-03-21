@@ -11,8 +11,8 @@ import time
 from typing import Any
 
 from mycosoft_mas.merkle.root_builder import (
-    SnapshotRootBuilder,
     WORLD_SLOT_ORDER,
+    SnapshotRootBuilder,
     world_slot_hash,
 )
 

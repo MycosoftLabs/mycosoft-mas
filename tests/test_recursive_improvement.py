@@ -8,8 +8,6 @@ Validates:
   - Hypothesis management
 """
 
-import pytest
-
 from mycosoft_mas.engines.recursive_improvement.engine import (
     BenchmarkRecord,
     ImprovementCycleResult,
@@ -113,9 +111,7 @@ class TestRecursiveSelfImprovementEngine:
         obs = {
             "agent_performance": {},
             "common_errors": [],
-            "drift_alerts": [
-                {"stream_key": "sensor_temp", "severity": "high"}
-            ],
+            "drift_alerts": [{"stream_key": "sensor_temp", "severity": "high"}],
             "improvement_suggestions": [],
         }
         hypotheses = engine.hypothesize(obs)

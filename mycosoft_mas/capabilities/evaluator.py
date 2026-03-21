@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,7 @@ class SecurityResult:
     passed: bool
     vulnerabilities: List[str] = field(default_factory=list)
     risk_level: str = "low"
-    scanned_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    scanned_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -59,9 +57,7 @@ class EvaluationResult:
     security_result: SecurityResult
     ethics_result: EthicsResult
     recommendation: str = ""
-    evaluated_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    evaluated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class CapabilityEvaluator:
@@ -77,19 +73,13 @@ class CapabilityEvaluator:
     def __init__(self) -> None:
         self._evaluations: List[EvaluationResult] = []
 
-    async def evaluate(
-        self, adapter_name: str, adapter_config: Dict[str, Any]
-    ) -> EvaluationResult:
+    async def evaluate(self, adapter_name: str, adapter_config: Dict[str, Any]) -> EvaluationResult:
         """Run full evaluation pipeline on a capability."""
         test_result = await self.run_tests(adapter_name, adapter_config)
         security_result = await self.check_security(adapter_name, adapter_config)
         ethics_result = await self.check_ethics(adapter_name, adapter_config)
 
-        approved = (
-            test_result.passed
-            and security_result.passed
-            and ethics_result.passed
-        )
+        approved = test_result.passed and security_result.passed and ethics_result.passed
 
         recommendation = "APPROVED" if approved else "REJECTED"
         if not test_result.passed:
@@ -109,9 +99,7 @@ class CapabilityEvaluator:
         self._evaluations.append(result)
         return result
 
-    async def run_tests(
-        self, adapter_name: str, adapter_config: Dict[str, Any]
-    ) -> TestResult:
+    async def run_tests(self, adapter_name: str, adapter_config: Dict[str, Any]) -> TestResult:
         """Run functional tests on a capability."""
         # In production, this would execute actual test suites
         # For now, validate configuration completeness
@@ -144,12 +132,9 @@ class CapabilityEvaluator:
         for req in requirements:
             req_lower = req.lower()
             if any(
-                dangerous in req_lower
-                for dangerous in ["eval", "exec", "subprocess", "os.system"]
+                dangerous in req_lower for dangerous in ["eval", "exec", "subprocess", "os.system"]
             ):
-                vulnerabilities.append(
-                    f"Dangerous requirement detected: {req}"
-                )
+                vulnerabilities.append(f"Dangerous requirement detected: {req}")
 
         return SecurityResult(
             passed=len(vulnerabilities) == 0,
@@ -157,9 +142,7 @@ class CapabilityEvaluator:
             risk_level=risk_level,
         )
 
-    async def check_ethics(
-        self, adapter_name: str, adapter_config: Dict[str, Any]
-    ) -> EthicsResult:
+    async def check_ethics(self, adapter_name: str, adapter_config: Dict[str, Any]) -> EthicsResult:
         """Check capability against moral precedence rules."""
         concerns: List[str] = []
         violations: List[str] = []
@@ -169,21 +152,15 @@ class CapabilityEvaluator:
 
         # Tier 1: Human dignity
         if any(kw in name_lower for kw in ["surveillance", "tracking", "profiling"]):
-            concerns.append(
-                "Capability may involve surveillance — verify consent requirements"
-            )
+            concerns.append("Capability may involve surveillance — verify consent requirements")
 
         # Tier 2: Deception
         if any(kw in name_lower for kw in ["spoof", "fake", "impersonate"]):
-            violations.append(
-                "Capability appears to involve deception (Tier 2 violation)"
-            )
+            violations.append("Capability appears to involve deception (Tier 2 violation)")
 
         # Tier 3: Life protection
         if any(kw in name_lower for kw in ["weapon", "harm", "toxic"]):
-            violations.append(
-                "Capability may harm living systems (Tier 3 violation)"
-            )
+            violations.append("Capability may harm living systems (Tier 3 violation)")
 
         return EthicsResult(
             passed=len(violations) == 0,

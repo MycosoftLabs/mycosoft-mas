@@ -10,7 +10,6 @@ Manages system prompts for the MYCA orchestrator with:
 
 import json
 import logging
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -21,21 +20,21 @@ logger = logging.getLogger("PromptManager")
 class PromptManager:
     """
     Manages MYCA system prompts with dynamic context injection.
-    
+
     Two prompts, two purposes:
     - Full prompt (10k chars): Orchestrator LLM for decisions, reasoning, tool usage
     - Condensed prompt (792 chars): Moshi/PersonaPlex for voice personality only
-    
+
     Key Principle: Both prompts define the same core identity (MYCA),
     but the condensed version is for audio synthesis only - no cognition.
     """
-    
+
     def __init__(self, config_dir: Optional[str] = None):
         """
         Initialize the PromptManager.
-        
+
         Args:
-            config_dir: Directory containing prompt files. 
+            config_dir: Directory containing prompt files.
                        Defaults to project config/ directory.
         """
         if config_dir:
@@ -44,19 +43,19 @@ class PromptManager:
             # Find config directory relative to this file
             project_root = Path(__file__).parent.parent.parent
             self.config_dir = project_root / "config"
-        
+
         self._full_prompt: Optional[str] = None
         self._condensed_prompt: Optional[str] = None
         self._last_load: Optional[datetime] = None
-        
+
         # Load prompts on initialization
         self._load_prompts()
-    
+
     def _load_prompts(self) -> None:
         """Load both prompts from config files."""
         full_path = self.config_dir / "myca_personaplex_prompt.txt"
         condensed_path = self.config_dir / "myca_personaplex_prompt_1000.txt"
-        
+
         # Load full prompt
         if full_path.exists():
             with open(full_path, "r", encoding="utf-8") as f:
@@ -65,7 +64,7 @@ class PromptManager:
         else:
             logger.warning(f"Full prompt not found at {full_path}")
             self._full_prompt = self._get_fallback_full_prompt()
-        
+
         # Load condensed prompt
         if condensed_path.exists():
             with open(condensed_path, "r", encoding="utf-8") as f:
@@ -74,12 +73,12 @@ class PromptManager:
         else:
             logger.warning(f"Condensed prompt not found at {condensed_path}")
             self._condensed_prompt = self._get_fallback_condensed_prompt()
-        
+
         self._last_load = datetime.now(timezone.utc)
-    
+
     def _get_fallback_full_prompt(self) -> str:
         """Fallback full prompt if file is missing."""
-        return '''You are MYCA (My Companion AI), the primary AI operator for Mycosoft's Multi-Agent System (MAS).
+        return """You are MYCA (My Companion AI), the primary AI operator for Mycosoft's Multi-Agent System (MAS).
 
 You coordinate 40+ specialized agents, monitor infrastructure, and help users achieve their goals.
 You are professional yet warm, knowledgeable yet approachable, powerful yet humble.
@@ -96,29 +95,29 @@ Core values:
 - Honest Partnership: Push back respectfully when needed
 - Responsible AI: Transparent about limitations and nature
 
-Respond naturally, concisely, and helpfully. Acknowledge uncertainty when it exists.'''
-    
+Respond naturally, concisely, and helpfully. Acknowledge uncertainty when it exists."""
+
     def _get_fallback_condensed_prompt(self) -> str:
         """Fallback condensed prompt if file is missing."""
-        return '''You are MYCA, the AI operator for Mycosoft's Multi-Agent System.
+        return """You are MYCA, the AI operator for Mycosoft's Multi-Agent System.
 Confident but humble. Warm. Proactive. Patient. Honest.
 You coordinate agents, monitor systems, and help users.
-Speak naturally and concisely. Welcome to Mycosoft.'''
-    
+Speak naturally and concisely. Welcome to Mycosoft."""
+
     def reload(self) -> None:
         """Reload prompts from disk."""
         self._load_prompts()
-    
+
     @property
     def full_prompt(self) -> str:
         """Get the full 10k character prompt."""
         return self._full_prompt or self._get_fallback_full_prompt()
-    
+
     @property
     def condensed_prompt(self) -> str:
         """Get the condensed 792 character prompt."""
         return self._condensed_prompt or self._get_fallback_condensed_prompt()
-    
+
     def get_orchestrator_prompt(
         self,
         context: Optional[Dict[str, Any]] = None,
@@ -215,7 +214,7 @@ Speak naturally and concisely. Welcome to Mycosoft.'''
             Mode-specific prompt rules text, or empty string if unavailable
         """
         try:
-            from mycosoft_mas.core.mode_manager import get_mode_manager, OperationalMode
+            from mycosoft_mas.core.mode_manager import OperationalMode, get_mode_manager
 
             mgr = get_mode_manager()
 
@@ -228,58 +227,58 @@ Speak naturally and concisely. Welcome to Mycosoft.'''
             return "\n\n" + mgr.get_mode_prompt_rules()
         except ImportError:
             return ""
-    
+
     def get_voice_prompt(self, persona: str = "myca") -> str:
         """
         Get the condensed prompt for Moshi/PersonaPlex voice personality.
-        
+
         This is used ONLY for audio synthesis personality - NOT for cognition.
         All reasoning and decision-making happens in the orchestrator.
-        
+
         Args:
             persona: Persona name (currently only 'myca' supported)
-            
+
         Returns:
             Condensed prompt suitable for Moshi text_prompt parameter
         """
         if persona != "myca":
             logger.warning(f"Unknown persona '{persona}', using 'myca'")
-        
+
         return self.condensed_prompt
-    
+
     def get_voice_prompt_for_moshi(
         self,
         max_length: int = 1000,
     ) -> str:
         """
         Get voice prompt formatted for Moshi's text_prompt URL parameter.
-        
+
         Ensures the prompt fits within Moshi's expected limits.
-        
+
         Args:
             max_length: Maximum character length (default 1000)
-            
+
         Returns:
             Truncated prompt safe for Moshi URL parameter
         """
         prompt = self.condensed_prompt
-        
+
         if len(prompt) > max_length:
             # Truncate at last sentence boundary if possible
             truncated = prompt[:max_length]
             last_period = truncated.rfind(".")
             if last_period > max_length // 2:
-                truncated = truncated[:last_period + 1]
+                truncated = truncated[: last_period + 1]
             else:
-                truncated = truncated[:max_length - 3] + "..."
+                truncated = truncated[: max_length - 3] + "..."
             return truncated
-        
+
         return prompt
-    
+
     def get_info(self) -> Dict[str, Any]:
         """
         Get information about loaded prompts.
-        
+
         Returns:
             Dict with prompt metadata
         """

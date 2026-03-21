@@ -7,10 +7,13 @@ Created: February 3, 2026
 import logging
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
+
 from pydantic import BaseModel
+
 from .model_wrapper import LLMWrapper, Message, get_llm_wrapper
 
 logger = logging.getLogger(__name__)
+
 
 class Document(BaseModel):
     doc_id: UUID
@@ -19,14 +22,16 @@ class Document(BaseModel):
     embedding: Optional[List[float]] = None
     score: float = 0.0
 
+
 class RetrievalResult(BaseModel):
     query: str
     documents: List[Document]
     total_found: int
 
+
 class RAGEngine:
     """Retrieval Augmented Generation engine for scientific knowledge."""
-    
+
     def __init__(self, llm: Optional[LLMWrapper] = None, vector_store: Optional[Any] = None):
         self.llm = llm or get_llm_wrapper("openai", "gpt-4-turbo")
         self.vector_store = vector_store
@@ -35,7 +40,7 @@ class RAGEngine:
         self.chunk_overlap = 200
         self.top_k = 5
         logger.info("RAG Engine initialized")
-    
+
     async def add_document(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> UUID:
         doc_id = uuid4()
         embedding = await self.llm.embed(content[:8000])
@@ -43,14 +48,14 @@ class RAGEngine:
         self._document_cache[doc_id] = doc
         logger.info(f"Added document: {doc_id}")
         return doc_id
-    
+
     async def add_documents(self, documents: List[Dict[str, Any]]) -> List[UUID]:
         doc_ids = []
         for doc in documents:
             doc_id = await self.add_document(doc.get("content", ""), doc.get("metadata"))
             doc_ids.append(doc_id)
         return doc_ids
-    
+
     async def retrieve(self, query: str, top_k: Optional[int] = None) -> RetrievalResult:
         k = top_k or self.top_k
         query_embedding = await self.llm.embed(query)
@@ -63,12 +68,19 @@ class RAGEngine:
         scored_docs.sort(key=lambda x: x.score, reverse=True)
         top_docs = scored_docs[:k]
         return RetrievalResult(query=query, documents=top_docs, total_found=len(scored_docs))
-    
-    async def generate(self, query: str, context_docs: Optional[List[Document]] = None, system_prompt: Optional[str] = None) -> str:
+
+    async def generate(
+        self,
+        query: str,
+        context_docs: Optional[List[Document]] = None,
+        system_prompt: Optional[str] = None,
+    ) -> str:
         if context_docs is None:
             result = await self.retrieve(query)
             context_docs = result.documents
-        context = "\n\n---\n\n".join([f"[Source: {d.metadata.get('source', 'unknown')}]\n{d.content}" for d in context_docs])
+        context = "\n\n---\n\n".join(
+            [f"[Source: {d.metadata.get('source', 'unknown')}]\n{d.content}" for d in context_docs]
+        )
         prompt = f"""Use the following context to answer the question. If the context does not contain enough information, say so.
 
 Context:
@@ -78,29 +90,36 @@ Question: {query}
 
 Answer:"""
         messages = [
-            Message(role="system", content=system_prompt or "You are a helpful scientific assistant."),
-            Message(role="user", content=prompt)
+            Message(
+                role="system", content=system_prompt or "You are a helpful scientific assistant."
+            ),
+            Message(role="user", content=prompt),
         ]
         response = await self.llm.generate(messages)
         return response.content
-    
+
     async def query(self, query: str) -> Dict[str, Any]:
         result = await self.retrieve(query)
         answer = await self.generate(query, result.documents)
         return {
             "query": query,
             "answer": answer,
-            "sources": [{"doc_id": str(d.doc_id), "score": d.score, "metadata": d.metadata} for d in result.documents]
+            "sources": [
+                {"doc_id": str(d.doc_id), "score": d.score, "metadata": d.metadata}
+                for d in result.documents
+            ],
         }
-    
+
     def _cosine_similarity(self, a: List[float], b: List[float]) -> float:
-        if len(a) != len(b): return 0.0
+        if len(a) != len(b):
+            return 0.0
         dot_product = sum(x * y for x, y in zip(a, b))
         norm_a = sum(x * x for x in a) ** 0.5
         norm_b = sum(x * x for x in b) ** 0.5
-        if norm_a == 0 or norm_b == 0: return 0.0
+        if norm_a == 0 or norm_b == 0:
+            return 0.0
         return dot_product / (norm_a * norm_b)
-    
+
     def chunk_text(self, text: str) -> List[str]:
         chunks = []
         start = 0
@@ -110,7 +129,7 @@ Answer:"""
             chunks.append(chunk)
             start = end - self.chunk_overlap
         return chunks
-    
+
     async def index_knowledge_base(self, documents: List[Dict[str, Any]]) -> int:
         count = 0
         for doc in documents:

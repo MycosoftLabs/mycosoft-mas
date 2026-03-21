@@ -142,4 +142,3 @@ class TaskRegistry:
         if category is None:
             return dict(self._handles)
         return {task_id: h for task_id, h in self._handles.items() if h.category == category}
-

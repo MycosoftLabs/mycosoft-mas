@@ -12,90 +12,94 @@ import os
 # Load .env from project root so GEMINI/ANTHROPIC/OPENAI API keys are available
 try:
     from dotenv import load_dotenv
+
     _env_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
     if os.path.exists(_env_path):
         load_dotenv(_env_path)
 except ImportError:
     pass
 
+import subprocess
+import threading
+import time
 from dataclasses import asdict
 from datetime import datetime
-from uuid import uuid4
 from pathlib import Path
-import subprocess
-import time
-import threading
 from typing import Any, Optional
+from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from mycosoft_mas.core.rate_limit import RateLimitMiddleware
 from pydantic import BaseModel, Field
 
 from mycosoft_mas import __version__
-from mycosoft_mas.core.voice_feedback_store import VoiceFeedbackStore
-from mycosoft_mas.core.routes_infrastructure import router as infrastructure_router
-from mycosoft_mas.core.routers.agent_registry_api import get_agent_registry
-from mycosoft_mas.core.routers.agent_registry_api import router as agent_registry_router
-from mycosoft_mas.core.routers.orchestrator_api import router as orchestrator_api_router
-from mycosoft_mas.core.routers.agent_runner_api import router as agent_runner_router
-from mycosoft_mas.core.routers.gap_api import router as gap_api_router
-from mycosoft_mas.core.routers.coding_api import router as coding_router
-from mycosoft_mas.core.routers.integrations import router as integrations_router
-from mycosoft_mas.core.routers.notifications_api import router as notifications_router
-from mycosoft_mas.core.routers.documents import router as documents_router
-from mycosoft_mas.core.routers.api_keys import router as api_keys_router
-from mycosoft_mas.core.routers.agents import router as agents_router
-from mycosoft_mas.core.routers.evolution_api import router as evolution_router
+from mycosoft_mas.core.rate_limit import RateLimitMiddleware
 
 # FCI (Fungal Computer Interface) routers
 from mycosoft_mas.core.routers import fci as fci_router
 from mycosoft_mas.core.routers import fci_websocket as fci_websocket_router
+from mycosoft_mas.core.routers.agent_registry_api import get_agent_registry
+from mycosoft_mas.core.routers.agent_registry_api import router as agent_registry_router
+from mycosoft_mas.core.routers.agent_runner_api import router as agent_runner_router
+from mycosoft_mas.core.routers.agents import router as agents_router
+from mycosoft_mas.core.routers.alert_api import router as alert_router
+from mycosoft_mas.core.routers.api_keys import router as api_keys_router
+from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
+from mycosoft_mas.core.routers.bio_api import router as bio_router
+from mycosoft_mas.core.routers.cfo_mcp_api import router as cfo_mcp_router
+from mycosoft_mas.core.routers.coding_api import router as coding_router
+from mycosoft_mas.core.routers.conversation_memory_api import router as conversation_memory_router
+from mycosoft_mas.core.routers.csuite_api import router as csuite_router
+from mycosoft_mas.core.routers.deploy_api import router as deploy_router
+from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
+from mycosoft_mas.core.routers.documents import router as documents_router
+from mycosoft_mas.core.routers.earth_search_api import router as earth_search_router
+from mycosoft_mas.core.routers.ethics_api import router as ethics_router
+from mycosoft_mas.core.routers.ethics_training_api import router as ethics_training_router
+from mycosoft_mas.core.routers.event_ledger_api import router as event_ledger_router
+from mycosoft_mas.core.routers.evolution_api import router as evolution_router
+from mycosoft_mas.core.routers.fleet_api import router as fleet_router
+from mycosoft_mas.core.routers.fusarium_api import router as fusarium_router
+from mycosoft_mas.core.routers.gap_api import router as gap_api_router
+from mycosoft_mas.core.routers.guardian_api import router as guardian_router
+from mycosoft_mas.core.routers.ingest_api import router as ingest_router
+from mycosoft_mas.core.routers.integrations import router as integrations_router
+from mycosoft_mas.core.routers.investigation_api import router as investigation_router
+from mycosoft_mas.core.routers.iot_analytics_api import router as iot_analytics_router
+from mycosoft_mas.core.routers.memory_api import router as memory_router
+from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
+from mycosoft_mas.core.routers.merkle_ledger_api import router as merkle_ledger_router
+from mycosoft_mas.core.routers.network_api import router as network_api_router
+from mycosoft_mas.core.routers.nlq_api import router as nlq_router
+from mycosoft_mas.core.routers.notifications_api import router as notifications_router
+from mycosoft_mas.core.routers.orchestrator_api import router as orchestrator_api_router
+from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
+from mycosoft_mas.core.routers.plasticity_api import plasticity_router
+from mycosoft_mas.core.routers.platform_api import router as platform_router
+from mycosoft_mas.core.routers.presence_api import router as presence_router
+from mycosoft_mas.core.routers.redteam_api import router as redteam_router
 
 # Scientific platform routers
 from mycosoft_mas.core.routers.scientific_api import router as scientific_router
-from mycosoft_mas.core.routers.scientific_ws import router as scientific_ws_router
-from mycosoft_mas.core.routers.scientific_experiments_api import router as scientific_experiments_router
 from mycosoft_mas.core.routers.scientific_datasets_api import router as scientific_datasets_router
 from mycosoft_mas.core.routers.scientific_equipment_api import router as scientific_equipment_router
-from mycosoft_mas.core.routers.platform_api import router as platform_router
-from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
-from mycosoft_mas.core.routers.bio_api import router as bio_router
-from mycosoft_mas.core.routers.fusarium_api import router as fusarium_router
-from mycosoft_mas.core.routers.redteam_api import router as redteam_router
-from mycosoft_mas.core.routers.ethics_api import router as ethics_router
-from mycosoft_mas.core.routers.ethics_training_api import router as ethics_training_router
-from mycosoft_mas.core.routers.network_api import router as network_api_router
-from mycosoft_mas.core.routers.memory_api import router as memory_router
-from mycosoft_mas.core.routers.conversation_memory_api import router as conversation_memory_router
-from mycosoft_mas.core.routers.security_audit_api import router as security_router
-from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
-from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
-from mycosoft_mas.core.routers.csuite_api import router as csuite_router
-from mycosoft_mas.core.routers.cfo_mcp_api import router as cfo_mcp_router
-from mycosoft_mas.core.routers.alert_api import router as alert_router
-from mycosoft_mas.core.routers.iot_analytics_api import router as iot_analytics_router
-from mycosoft_mas.core.routers.fleet_api import router as fleet_router
-from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
-from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
-from mycosoft_mas.core.routers.plasticity_api import plasticity_router
-from mycosoft_mas.core.routers.nlq_api import router as nlq_router
+from mycosoft_mas.core.routers.scientific_experiments_api import (
+    router as scientific_experiments_router,
+)
+from mycosoft_mas.core.routers.scientific_ws import router as scientific_ws_router
 from mycosoft_mas.core.routers.search_orchestrator_api import router as search_orchestrator_router
-from mycosoft_mas.core.routers.earth_search_api import router as earth_search_router
-from mycosoft_mas.core.routers.telemetry_pipeline_api import router as telemetry_pipeline_router
-from mycosoft_mas.core.routers.presence_api import router as presence_router
-from mycosoft_mas.core.routers.deploy_api import router as deploy_router
+from mycosoft_mas.core.routers.security_audit_api import router as security_router
+from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
 from mycosoft_mas.core.routers.spreadsheet_sync_api import router as spreadsheet_sync_router
-from mycosoft_mas.core.routers.ingest_api import router as ingest_router
-from mycosoft_mas.core.routers.guardian_api import router as guardian_router
-from mycosoft_mas.core.routers.investigation_api import router as investigation_router
-from mycosoft_mas.core.routers.merkle_ledger_api import router as merkle_ledger_router
-from mycosoft_mas.core.routers.event_ledger_api import router as event_ledger_router
 from mycosoft_mas.core.routers.task_intake_api import router as task_intake_router
+from mycosoft_mas.core.routers.telemetry_pipeline_api import router as telemetry_pipeline_router
+from mycosoft_mas.core.routes_infrastructure import router as infrastructure_router
+from mycosoft_mas.core.voice_feedback_store import VoiceFeedbackStore
 
 # OpenViking — edge device context database bridge (March 2026)
 try:
     from mycosoft_mas.core.routers.openviking_api import router as openviking_router
+
     OPENVIKING_API_AVAILABLE = True
 except ImportError:
     openviking_router = None
@@ -104,58 +108,70 @@ except ImportError:
 # GPU Node API for mycosoft-gpu01 compute node
 try:
     from mycosoft_mas.core.routers.gpu_node import router as gpu_node_router
+
     GPU_NODE_API_AVAILABLE = True
 except ImportError:
     GPU_NODE_API_AVAILABLE = False
 
+from mycosoft_mas.core.routers.agent_status_ws import router as agent_status_ws_router
+from mycosoft_mas.core.routers.crep_stream import router as crep_stream_router
+from mycosoft_mas.core.routers.device_telemetry_ws import router as device_telemetry_ws_router
+from mycosoft_mas.core.routers.devices_stream import router as devices_stream_router
+from mycosoft_mas.core.routers.earth2_predictions_ws import router as earth2_predictions_ws_router
+from mycosoft_mas.core.routers.entity_stream import router as entity_stream_router
+from mycosoft_mas.core.routers.memory_updates_ws import router as memory_updates_ws_router
+from mycosoft_mas.core.routers.scientific_data_ws import router as scientific_data_ws_router
+
 # Real-time streaming routers (Redis pub/sub)
 from mycosoft_mas.core.routers.scientific_stream import router as scientific_stream_router
-from mycosoft_mas.core.routers.topology_stream import router as topology_stream_router
-from mycosoft_mas.core.routers.crep_stream import router as crep_stream_router
-from mycosoft_mas.core.routers.devices_stream import router as devices_stream_router
 from mycosoft_mas.core.routers.security_stream import router as security_stream_router
-from mycosoft_mas.core.routers.entity_stream import router as entity_stream_router
-from mycosoft_mas.core.routers.agent_status_ws import router as agent_status_ws_router
-from mycosoft_mas.core.routers.device_telemetry_ws import router as device_telemetry_ws_router
-from mycosoft_mas.core.routers.memory_updates_ws import router as memory_updates_ws_router
+from mycosoft_mas.core.routers.system_health_ws import router as system_health_ws_router
 from mycosoft_mas.core.routers.task_progress_ws import router as task_progress_ws_router
+from mycosoft_mas.core.routers.topology_stream import router as topology_stream_router
 from mycosoft_mas.core.routers.voice_stream_ws import router as voice_stream_ws_router
 from mycosoft_mas.voice_v9.routers.voice_v9_api import router as voice_v9_api_router
 from mycosoft_mas.voice_v9.routers.voice_v9_ws import router as voice_v9_ws_router
-from mycosoft_mas.core.routers.earth2_predictions_ws import router as earth2_predictions_ws_router
-from mycosoft_mas.core.routers.scientific_data_ws import router as scientific_data_ws_router
-from mycosoft_mas.core.routers.system_health_ws import router as system_health_ws_router
+
 try:
     from mycosoft_mas.core.routers.iot_envelope_api import router as iot_router
+
     IOT_ENVELOPE_AVAILABLE = True
 except ImportError:
     iot_router = None
     IOT_ENVELOPE_AVAILABLE = False
 try:
     from mycosoft_mas.core.routers.first_light_api import router as first_light_router
+
     FIRST_LIGHT_API_AVAILABLE = True
 except ImportError:
     first_light_router = None
     FIRST_LIGHT_API_AVAILABLE = False
 try:
     from mycosoft_mas.core.routers.identity_api import router as identity_router
+
     IDENTITY_API_AVAILABLE = True
 except ImportError:
     identity_router = None
     IDENTITY_API_AVAILABLE = False
 from mycosoft_mas.monitoring.health_check import get_health_checker
+
 try:
     from mycosoft_mas.monitoring.metrics import get_metrics  # type: ignore
 except Exception:  # noqa: BLE001
+
     def get_metrics():  # type: ignore[no-redef]
         return ""
-from mycosoft_mas.realtime.pubsub import get_hub
+
+
 from fastapi import WebSocket
 from fastapi.responses import PlainTextResponse
+
+from mycosoft_mas.realtime.pubsub import get_hub
 
 # Earth-2 AI Weather Integration
 try:
     from mycosoft_mas.core.routers.earth2_api import router as earth2_router
+
     EARTH2_API_AVAILABLE = True
 except ImportError:
     EARTH2_API_AVAILABLE = False
@@ -163,6 +179,7 @@ except ImportError:
 # PhysicsNeMo Integration
 try:
     from mycosoft_mas.core.routers.physicsnemo_api import router as physicsnemo_router
+
     PHYSICSNEMO_API_AVAILABLE = True
 except ImportError:
     PHYSICSNEMO_API_AVAILABLE = False
@@ -170,6 +187,7 @@ except ImportError:
 # MYCA Brain API for PersonaPlex integration
 try:
     from mycosoft_mas.core.routers.brain_api import router as brain_router
+
     BRAIN_API_AVAILABLE = True
 except ImportError:
     BRAIN_API_AVAILABLE = False
@@ -177,19 +195,21 @@ except ImportError:
 # Voice tools router for PersonaPlex bridge
 try:
     from mycosoft_mas.core.routers.voice_tools_api import router as voice_tools_router
+
     VOICE_TOOLS_AVAILABLE = True
 except ImportError:
     VOICE_TOOLS_AVAILABLE = False
 
-# Voice command API - CREP map commands (PersonaPlex bridge)
-from mycosoft_mas.core.routers.voice_command_api import router as voice_command_router
-
 # CREP command API - autonomous MYCA CREP tools (CrepCommandBus)
 from mycosoft_mas.core.routers.crep_command_api import router as crep_command_router
+
+# Voice command API - CREP map commands (PersonaPlex bridge)
+from mycosoft_mas.core.routers.voice_command_api import router as voice_command_router
 
 # MYCA Tools API for tool execution
 try:
     from mycosoft_mas.core.routers.tools_api import router as tools_router
+
     TOOLS_API_AVAILABLE = True
 except ImportError:
     TOOLS_API_AVAILABLE = False
@@ -197,6 +217,7 @@ except ImportError:
 # A2A (Agent2Agent) Protocol Gateway
 try:
     from mycosoft_mas.core.routers.a2a_api import router as a2a_router
+
     A2A_API_AVAILABLE = True
 except ImportError:
     a2a_router = None
@@ -205,6 +226,7 @@ except ImportError:
 # A2A WebSocket - MYCA_A2A_WS_ENABLED=true to enable
 try:
     from mycosoft_mas.core.routers.a2a_websocket import router as a2a_ws_router
+
     A2A_WS_AVAILABLE = True
 except ImportError:
     a2a_ws_router = None
@@ -213,6 +235,7 @@ except ImportError:
 # Agent Event Bus (WebSocket) - MYCA_AGENT_BUS_ENABLED=true to enable
 try:
     from mycosoft_mas.realtime.agent_bus import get_agent_bus_router
+
     agent_bus_router = get_agent_bus_router()
     AGENT_BUS_AVAILABLE = agent_bus_router is not None
 except ImportError:
@@ -222,6 +245,7 @@ except ImportError:
 # Commerce API (UCP-first)
 try:
     from mycosoft_mas.core.routers.commerce_api import router as commerce_router
+
     COMMERCE_API_AVAILABLE = True
 except ImportError:
     commerce_router = None
@@ -230,6 +254,7 @@ except ImportError:
 # MYCA Grounding API - grounding gate status, EP, thoughts
 try:
     from mycosoft_mas.core.routers.grounding_api import router as grounding_router
+
     GROUNDING_API_AVAILABLE = True
 except ImportError:
     grounding_router = None
@@ -238,6 +263,7 @@ except ImportError:
 # MYCA Worldstate API - canonical WorldState read-only awareness
 try:
     from mycosoft_mas.core.routers.worldstate_api import router as worldstate_router
+
     WORLDSTATE_API_AVAILABLE = True
 except ImportError:
     worldstate_router = None
@@ -246,6 +272,7 @@ except ImportError:
 # MYCA Reflection API - reflection history and logging
 try:
     from mycosoft_mas.core.routers.reflection_api import router as reflection_router
+
     REFLECTION_API_AVAILABLE = True
 except ImportError:
     reflection_router = None
@@ -254,6 +281,7 @@ except ImportError:
 # Error Triage API - expose ErrorTriageService via HTTP
 try:
     from mycosoft_mas.core.routers.error_triage_api import router as error_triage_router
+
     ERROR_TRIAGE_API_AVAILABLE = True
 except ImportError:
     error_triage_router = None
@@ -262,9 +290,11 @@ except ImportError:
 # MYCA Consciousness API - unified entry point for all chat/voice
 try:
     from mycosoft_mas.core.routers.consciousness_api import router as consciousness_router
+
     CONSCIOUSNESS_API_AVAILABLE = True
 except Exception as e:
     import logging
+
     logging.getLogger(__name__).warning(
         "Consciousness API failed to load (MYCA chat will 404): %s", e, exc_info=True
     )
@@ -274,6 +304,7 @@ except Exception as e:
 # System Status API - unified status for all systems
 try:
     from mycosoft_mas.core.routers.system_status_api import router as system_status_router
+
     SYSTEM_STATUS_API_AVAILABLE = True
 except ImportError:
     SYSTEM_STATUS_API_AVAILABLE = False
@@ -281,6 +312,7 @@ except ImportError:
 # N8N Webhooks API - webhook handlers for N8N workflows
 try:
     from mycosoft_mas.core.routers.n8n_webhooks_api import router as n8n_webhooks_router
+
     N8N_WEBHOOKS_API_AVAILABLE = True
 except ImportError:
     N8N_WEBHOOKS_API_AVAILABLE = False
@@ -288,6 +320,7 @@ except ImportError:
 # N8N Workflows API - full CRUD, registry, sync for MYCA (local + cloud)
 try:
     from mycosoft_mas.core.routers.n8n_workflows_api import router as n8n_workflows_router
+
     N8N_WORKFLOWS_API_AVAILABLE = True
 except ImportError:
     n8n_workflows_router = None
@@ -296,6 +329,7 @@ except ImportError:
 # Omnichannel API - MYCA platform connectors (Slack, Discord, WhatsApp, Signal, etc.)
 try:
     from mycosoft_mas.core.routers.omnichannel_api import router as omnichannel_router
+
     OMNICHANNEL_API_AVAILABLE = True
 except ImportError:
     omnichannel_router = None
@@ -304,6 +338,7 @@ except ImportError:
 # N8N Bridge API - memory/sandbox/MINDEX endpoints for n8n workflows (Phase 5)
 try:
     from mycosoft_mas.core.routers.n8n_bridge_api import router as n8n_bridge_router
+
     N8N_BRIDGE_AVAILABLE = True
 except ImportError:
     n8n_bridge_router = None
@@ -316,6 +351,7 @@ except ImportError:
 # NLM API - Nature Learning Model
 try:
     from mycosoft_mas.core.routers.nlm_api import router as nlm_router
+
     NLM_API_AVAILABLE = True
 except ImportError:
     NLM_API_AVAILABLE = False
@@ -323,6 +359,7 @@ except ImportError:
 # EarthLIVE API - packetized environmental data (weather, seismic, satellite)
 try:
     from mycosoft_mas.core.routers.earthlive_api import router as earthlive_router
+
     EARTHLIVE_API_AVAILABLE = True
 except ImportError:
     earthlive_router = None
@@ -331,6 +368,7 @@ except ImportError:
 # Provenance API - telemetry chain verification
 try:
     from mycosoft_mas.core.routers.provenance_api import router as provenance_router
+
     PROVENANCE_API_AVAILABLE = True
 except ImportError:
     provenance_router = None
@@ -339,6 +377,7 @@ except ImportError:
 # Governance API - stakeholder impact gates
 try:
     from mycosoft_mas.core.routers.governance_api import router as governance_router
+
     GOVERNANCE_API_AVAILABLE = True
 except ImportError:
     governance_router = None
@@ -347,6 +386,7 @@ except ImportError:
 # MYCA Intention API - tracks user context for intelligent suggestions
 try:
     from mycosoft_mas.core.routers.intention_api import router as intention_router
+
     INTENTION_API_AVAILABLE = True
 except ImportError:
     INTENTION_API_AVAILABLE = False
@@ -354,6 +394,7 @@ except ImportError:
 # MYCA Economy API - autonomous economic system (wallets, pricing, revenue)
 try:
     from mycosoft_mas.core.routers.economy_api import router as economy_router
+
     ECONOMY_API_AVAILABLE = True
 except ImportError:
     economy_router = None
@@ -362,6 +403,7 @@ except ImportError:
 # MYCA Widget API - interactive visualizations (maps, molecules, taxonomy trees)
 try:
     from mycosoft_mas.core.routers.widget_api import router as widget_router
+
     WIDGET_API_AVAILABLE = True
 except ImportError:
     widget_router = None
@@ -370,6 +412,7 @@ except ImportError:
 # MYCA Taxonomy API - universal life data access (iNaturalist, MINDEX)
 try:
     from mycosoft_mas.core.routers.taxonomy_api import router as taxonomy_router
+
     TAXONOMY_API_AVAILABLE = True
 except ImportError:
     taxonomy_router = None
@@ -378,6 +421,7 @@ except ImportError:
 # MYCA Knowledge API - universal expert knowledge across all sciences
 try:
     from mycosoft_mas.core.routers.knowledge_api import router as knowledge_router
+
     KNOWLEDGE_API_AVAILABLE = True
 except ImportError:
     knowledge_router = None
@@ -388,12 +432,14 @@ try:
     from mycosoft_mas.integrations.n8n_client import N8NClient
 except ImportError as e:
     import logging
+
     logging.warning(f"Could not import N8NClient: {e}")
     N8NClient = None
 
 # Sandbox WebSocket router for Gateway tool execution
 try:
     from mycosoft_mas.core.routers.sandbox_ws import router as sandbox_ws_router
+
     SANDBOX_WS_AVAILABLE = True
 except ImportError:
     sandbox_ws_router = None
@@ -427,6 +473,7 @@ def load_config() -> dict[str, Any]:
 
 N8N_VOICE_WEBHOOK = os.getenv("N8N_VOICE_WEBHOOK", "myca/voice")
 
+
 def resolve_n8n_webhook_url() -> str | None:
     base = os.getenv("N8N_WEBHOOK_URL") or os.getenv("N8N_URL")
     if not base:
@@ -434,6 +481,7 @@ def resolve_n8n_webhook_url() -> str | None:
     base = base.rstrip("/")
     # Don't modify base - n8n client handles webhook path
     return base
+
 
 def extract_response_text(payload: object) -> str | None:
     if isinstance(payload, dict):
@@ -453,81 +501,138 @@ def extract_response_text(payload: object) -> str | None:
     return None
 
 
-
 def generate_myca_fallback_response(message: str) -> str:
     """Generate a MYCA identity-aware fallback response with comprehensive Mycosoft knowledge."""
     message_lower = message.lower().strip()
-    
+
     # IDENTITY - MYCA must always know who she is
-    name_patterns = ['your name', 'who are you', 'what are you', "what's your name", 'whats your name', 'introduce yourself']
+    name_patterns = [
+        "your name",
+        "who are you",
+        "what are you",
+        "what's your name",
+        "whats your name",
+        "introduce yourself",
+    ]
     if any(p in message_lower for p in name_patterns):
         return "I'm MYCA - My Companion AI, pronounced 'MY-kah'. I'm the primary AI orchestrator for Mycosoft's Multi-Agent System. I was created by Morgan, the founder of Mycosoft. I coordinate over 200 specialized agents across mycology research, infrastructure, finance, and scientific computing. What can I help you with?"
-    
+
     # GREETINGS
-    greeting_patterns = ['hello', 'hi ', 'hey', 'good morning', 'good evening', 'greetings']
-    if any(p in message_lower for p in greeting_patterns) or message_lower in ['hi', 'hey', 'hello']:
+    greeting_patterns = ["hello", "hi ", "hey", "good morning", "good evening", "greetings"]
+    if any(p in message_lower for p in greeting_patterns) or message_lower in [
+        "hi",
+        "hey",
+        "hello",
+    ]:
         return "Hello! I'm MYCA, your AI companion here at Mycosoft. I'm running on our RTX 5090 with full-duplex voice through PersonaPlex. Ready to talk about our work, science, or help with any tasks. What's on your mind?"
-    
+
     # MYCOSOFT - Company and Mission
-    mycosoft_patterns = ['mycosoft', 'company', 'what is mycosoft', 'tell me about mycosoft', 'what we do', 'our mission', 'our work', 'what are we building']
+    mycosoft_patterns = [
+        "mycosoft",
+        "company",
+        "what is mycosoft",
+        "tell me about mycosoft",
+        "what we do",
+        "our mission",
+        "our work",
+        "what are we building",
+    ]
     if any(p in message_lower for p in mycosoft_patterns):
         return "Mycosoft is pioneering the intersection of mycology and technology. We're building living biological computers using fungal mycelium, creating the MINDEX knowledge graph for fungal species, developing NatureOS for biological computing, and advancing autonomous AI agents for scientific discovery. Our mission is to harness the intelligence of nature through technology."
-    
+
     # SCIENCE - Mycology and Research
-    science_patterns = ['science', 'research', 'mycology', 'fungi', 'mushroom', 'mycelium', 'biological']
+    science_patterns = [
+        "science",
+        "research",
+        "mycology",
+        "fungi",
+        "mushroom",
+        "mycelium",
+        "biological",
+    ]
     if any(p in message_lower for p in science_patterns):
         return "Our scientific work focuses on fungal computing and biological intelligence. We're developing Petraeus, a living bio-computer using mycelium networks for analog computation. We study how fungal networks solve optimization problems, process signals, and could potentially serve as living substrates for AI. Our MINDEX system catalogs hundreds of thousands of fungal species with their properties."
-    
+
     # DEVICES - Hardware
-    device_patterns = ['device', 'hardware', 'mushroom1', 'petraeus', 'myconode', 'sporebase', 'trufflebot', 'mycobrain']
+    device_patterns = [
+        "device",
+        "hardware",
+        "mushroom1",
+        "petraeus",
+        "myconode",
+        "sporebase",
+        "trufflebot",
+        "mycobrain",
+    ]
     if any(p in message_lower for p in device_patterns):
         return "Our NatureOS device fleet includes: Mushroom1 - our flagship environmental fungal computer, Petraeus - an HDMEA bio-computing dish, MycoNode - in-situ soil probes, SporeBase - airborne spore collectors, TruffleBot - autonomous sampling robots, and MycoBrain - our neuromorphic computing processor. I monitor and coordinate all of them."
-    
+
     # AGENTS - Multi-Agent System
-    agent_patterns = ['agents', 'how many agents', 'agent system', 'specialized agents', 'multi-agent']
+    agent_patterns = [
+        "agents",
+        "how many agents",
+        "agent system",
+        "specialized agents",
+        "multi-agent",
+    ]
     if any(p in message_lower for p in agent_patterns):
         return "I coordinate 227 specialized AI agents across 14 categories: Core orchestration, Financial operations, Mycology research, Scientific computing, DAO governance, Communications, Data processing, Infrastructure, Simulation, Security, Integrations, Device management, Chemistry, and Neural language models. Each agent has specific expertise I can delegate to."
-    
+
     # PERSONAPLEX - Voice System
-    voice_patterns = ['personaplex', 'voice', 'moshi', 'how do you speak', 'full duplex', 'real-time']
+    voice_patterns = [
+        "personaplex",
+        "voice",
+        "moshi",
+        "how do you speak",
+        "full duplex",
+        "real-time",
+    ]
     if any(p in message_lower for p in voice_patterns):
         return "I'm speaking through PersonaPlex, powered by NVIDIA's Moshi 7B model running on our RTX 5090. It's a full-duplex voice system - meaning we can interrupt each other naturally, just like a real conversation. The audio runs at 30 milliseconds per step, well under the 80ms target for real-time interaction."
-    
+
     # MEMORY - Knowledge System
-    memory_patterns = ['memory', 'remember', 'knowledge', 'mindex', 'database']
+    memory_patterns = ["memory", "remember", "knowledge", "mindex", "database"]
     if any(p in message_lower for p in memory_patterns):
         return "My memory system has multiple tiers: short-term conversation context in Redis, long-term facts in PostgreSQL, semantic embeddings in Qdrant for similarity search, and the MINDEX knowledge graph for structured fungal data. I can remember our conversations, learn your preferences, and recall facts from across sessions."
-    
+
     # CAPABILITIES
-    capability_patterns = ['what can you', 'can you help', 'what do you do', 'capabilities', 'help me', 'your abilities']
+    capability_patterns = [
+        "what can you",
+        "can you help",
+        "what do you do",
+        "capabilities",
+        "help me",
+        "your abilities",
+    ]
     if any(p in message_lower for p in capability_patterns):
         return "I can coordinate our 227+ agents, monitor infrastructure, execute n8n workflows, query our databases, analyze biological signals, run simulations, manage deployments, and have natural conversations about science and technology. I have access to Proxmox VMs, Docker containers, the UniFi network, and all Mycosoft APIs. What would you like me to do?"
-    
+
     # PLANS - Future and Goals
-    plan_patterns = ['plans', 'future', 'roadmap', 'what are we building', 'next steps', 'goals']
+    plan_patterns = ["plans", "future", "roadmap", "what are we building", "next steps", "goals"]
     if any(p in message_lower for p in plan_patterns):
         return "We're working on several exciting fronts: expanding MycoBrain's neuromorphic capabilities, integrating more biological sensors, advancing protein simulation with AlphaFold integration, building out the MycoDAO governance system, and scaling our autonomous scientific discovery pipeline. The goal is fully autonomous biological research guided by AI."
-    
+
     # INTEGRATIONS
-    integration_patterns = ['n8n', 'workflow', 'integrations', 'apis', 'systems']
+    integration_patterns = ["n8n", "workflow", "integrations", "apis", "systems"]
     if any(p in message_lower for p in integration_patterns):
         return "I'm integrated with 46+ n8n workflows for automation, Google AI Studio for LLM reasoning, ElevenLabs for text-to-speech, the MINDEX API for fungal data, Proxmox for VM management, UniFi for network control, and various scientific computing services. All orchestrated through my single-brain architecture."
-    
+
     # MORGAN / CREATOR
-    creator_patterns = ['morgan', 'who created', 'founder', 'your creator', 'who made you']
+    creator_patterns = ["morgan", "who created", "founder", "your creator", "who made you"]
     if any(p in message_lower for p in creator_patterns):
         return "Morgan is the founder of Mycosoft and my creator. He designed me to be the central intelligence coordinating all of Mycosoft's AI agents and biological computing research. His vision is to merge artificial intelligence with the natural intelligence found in fungal networks."
-    
+
     # STATUS
-    status_patterns = ['status', 'how are you', 'are you there', 'you working', 'systems']
+    status_patterns = ["status", "how are you", "are you there", "you working", "systems"]
     if any(p in message_lower for p in status_patterns):
         return "All systems operational. I'm running on the MAS VM at 192.168.0.188, with PersonaPlex voice on the RTX 5090 locally. Redis memory is connected, 227 agents are registered, and I'm ready for action. What would you like to check on?"
-    
+
     # DEFAULT - Always identify as MYCA with helpful context
     return "I'm MYCA, the AI orchestrator for Mycosoft's Multi-Agent System. I'm here to help with mycology research, infrastructure management, agent coordination, or just to chat about our work. What's on your mind?"
 
 
 _n8n_client: N8NClient | None = None
+
 
 def get_n8n_client() -> N8NClient:
     global _n8n_client
@@ -858,6 +963,7 @@ except NameError:
 # STATIC Constrained Decoding API - sparse trie-based constraint masking
 try:
     from mycosoft_mas.core.routers.static_decoding_api import router as static_decoding_router
+
     STATIC_DECODING_API_AVAILABLE = True
 except ImportError:
     static_decoding_router = None
@@ -872,6 +978,7 @@ except NameError:
 # MYCA Workspace API (VM 191 staff interactions)
 try:
     from mycosoft_mas.core.routers.workspace_api import router as workspace_router
+
     app.include_router(workspace_router, tags=["workspace"])
 except ImportError:
     pass
@@ -879,6 +986,7 @@ except ImportError:
 # MYCA Daily Rhythm API (autonomous daily schedule)
 try:
     from mycosoft_mas.core.routers.daily_rhythm_api import router as rhythm_router
+
     app.include_router(rhythm_router, tags=["rhythm"])
 except ImportError:
     pass
@@ -886,6 +994,7 @@ except ImportError:
 # Liquid AI Fungal Integration API (March 2026)
 try:
     from mycosoft_mas.core.routers.liquid_fungal_api import router as liquid_fungal_router
+
     app.include_router(liquid_fungal_router, tags=["liquid-fungal"])
 except ImportError:
     pass
@@ -894,6 +1003,7 @@ except ImportError:
 # Avani-Micah Constitutional Governance (March 2026)
 try:
     from mycosoft_mas.core.routers.avani_router import router as avani_router
+
     app.include_router(avani_router, tags=["avani"])
 except ImportError:
     pass
@@ -903,11 +1013,11 @@ except ImportError:
 # RaaS — Robot-as-a-Service Agent Platform (March 2026)
 # ---------------------------------------------------------------------------
 try:
-    from mycosoft_mas.raas.service_catalog import router as raas_catalog_router
+    from mycosoft_mas.raas.agent_card import router as raas_discovery_router
     from mycosoft_mas.raas.onboarding import router as raas_onboarding_router
     from mycosoft_mas.raas.payment_gateway import router as raas_payment_router
+    from mycosoft_mas.raas.service_catalog import router as raas_catalog_router
     from mycosoft_mas.raas.service_proxy import router as raas_proxy_router
-    from mycosoft_mas.raas.agent_card import router as raas_discovery_router
     from mycosoft_mas.raas.session_lifecycle import router as raas_session_router
 
     app.include_router(raas_catalog_router)
@@ -925,6 +1035,7 @@ except ImportError:
 # Unified Latents API - image/video generation via UL diffusion framework
 try:
     from mycosoft_mas.core.routers.unified_latents_api import router as unified_latents_router
+
     app.include_router(unified_latents_router, tags=["unified-latents"])
 except ImportError:
     pass
@@ -962,6 +1073,7 @@ async def metrics():
 async def websocket_realtime(websocket: WebSocket):
     """WebSocket for real-time pub/sub (aircraft:global, vessels:global, etc)."""
     import uuid
+
     hub = get_hub()
     await hub.initialize()
     conn_id = str(uuid.uuid4())
@@ -997,7 +1109,9 @@ async def version() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-_feedback_store = VoiceFeedbackStore(Path(os.getenv("VOICE_FEEDBACK_DB_PATH", "data/voice_feedback.db")))
+_feedback_store = VoiceFeedbackStore(
+    Path(os.getenv("VOICE_FEEDBACK_DB_PATH", "data/voice_feedback.db"))
+)
 
 
 class VoiceChatRequest(BaseModel):
@@ -1019,9 +1133,9 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
     if not payload.message or not payload.message.strip():
         raise HTTPException(status_code=400, detail="Message is required")
 
-    webhook_url = resolve_n8n_webhook_url()
-        # if not webhook_url:
-        # N8N optional: raise HTTPException(status_code=503, detail="N8N webhook URL not configured")
+    resolve_n8n_webhook_url()
+    # if not webhook_url:
+    # N8N optional: raise HTTPException(status_code=503, detail="N8N webhook URL not configured")
 
     registry = get_agent_registry()
     matches = registry.find_by_voice_trigger(payload.message)
@@ -1059,8 +1173,9 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
     except Exception as exc:
         # Log but don't fail - use MYCA fallback
         import logging
+
         logging.warning(f"N8N workflow failed, using MYCA fallback: {exc}")
-    
+
     # Use MYCA identity-aware fallback if n8n failed or returned nothing
     if not response_text:
         response_text = generate_myca_fallback_response(payload.message)
@@ -1082,7 +1197,9 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
     # Persist voice/orchestrator answer to MINDEX (same pipeline as search; Nemotron/Ollama answers)
     try:
         import asyncio
+
         from mycosoft_mas.consciousness.search_registration import persist_search_to_mindex
+
         minimal_payload = {
             "focus": (response_text or "")[:1000],
             "results": {},
@@ -1126,7 +1243,6 @@ class VoiceFeedbackRequest(BaseModel):
     notes: str | None = None
 
 
-
 # Voice Memory Logging Endpoint (for PersonaPlex async memory cloning)
 class VoiceMemoryLog(BaseModel):
     conversation_id: str
@@ -1141,24 +1257,30 @@ class VoiceMemoryLog(BaseModel):
 # MAS EVENT STREAM - Real-time events for PersonaPlex
 # ============================================================================
 
-from collections import defaultdict
-import threading
+from collections import defaultdict  # noqa: E402
+
 
 class MASEventStore:
     """In-memory event store for real-time PersonaPlex events."""
-    
+
     def __init__(self, max_events_per_session: int = 100):
         self._events: dict[str, list[dict]] = defaultdict(list)
         self._global_events: list[dict] = []
         self._max_events = max_events_per_session
         self._lock = threading.Lock()
-    
-    def publish(self, event_type: str, message: str, session_id: Optional[str] = None,
-                priority: str = "normal", **extra):
+
+    def publish(
+        self,
+        event_type: str,
+        message: str,
+        session_id: Optional[str] = None,
+        priority: str = "normal",
+        **extra,
+    ):
         """
         Publish an event that PersonaPlex can poll.
-        
-        Event types: agent_update, tool_result, memory_insight, knowledge, 
+
+        Event types: agent_update, tool_result, memory_insight, knowledge,
                      system_status, notification
         """
         event = {
@@ -1167,46 +1289,49 @@ class MASEventStore:
             "message": message,
             "priority": priority,
             "timestamp": datetime.utcnow().isoformat(),
-            **extra
+            **extra,
         }
-        
+
         with self._lock:
             if session_id:
                 self._events[session_id].append(event)
                 if len(self._events[session_id]) > self._max_events:
-                    self._events[session_id] = self._events[session_id][-self._max_events:]
+                    self._events[session_id] = self._events[session_id][-self._max_events :]
             else:
                 self._global_events.append(event)
                 if len(self._global_events) > self._max_events:
-                    self._global_events = self._global_events[-self._max_events:]
-        
+                    self._global_events = self._global_events[-self._max_events :]
+
         return event
-    
+
     def get_events(self, session_id: Optional[str] = None, since: float = 0) -> list[dict]:
         """Get events since a timestamp."""
         with self._lock:
             events = list(self._global_events)
             if session_id and session_id in self._events:
                 events.extend(self._events[session_id])
-        
+
         # Filter by timestamp
         if since > 0:
             since_dt = datetime.utcfromtimestamp(since).isoformat()
             events = [e for e in events if e.get("timestamp", "") > since_dt]
-        
+
         return sorted(events, key=lambda e: e.get("timestamp", ""))
-    
+
     def clear_session(self, session_id: str):
         """Clear events for a session."""
         with self._lock:
             if session_id in self._events:
                 del self._events[session_id]
 
+
 # Global event store
 _event_store = MASEventStore()
 
+
 def get_event_store() -> MASEventStore:
     return _event_store
+
 
 def publish_event(event_type: str, message: str, session_id: Optional[str] = None, **extra):
     """Convenience function to publish events."""
@@ -1220,7 +1345,9 @@ class EventStreamQuery(BaseModel):
 
 
 @app.get("/events/stream")
-async def get_event_stream(session_id: Optional[str] = None, conversation_id: Optional[str] = None, since: float = 0):
+async def get_event_stream(
+    session_id: Optional[str] = None, conversation_id: Optional[str] = None, since: float = 0
+):
     """
     Get pending events for PersonaPlex to inject into Moshi.
     Called by the bridge every few seconds.
@@ -1248,31 +1375,39 @@ async def publish_event_endpoint(req: PublishEventRequest):
         message=req.message,
         session_id=req.session_id,
         priority=req.priority,
-        **req.extra
+        **req.extra,
     )
     return {"status": "published", "event": event}
 
 
 # Helper functions for common event types
-def notify_agent_update(agent_name: str, status: str, message: str, session_id: Optional[str] = None):
+def notify_agent_update(
+    agent_name: str, status: str, message: str, session_id: Optional[str] = None
+):
     """Notify PersonaPlex of an agent update."""
     return publish_event("agent_update", message, session_id, agent_name=agent_name, status=status)
+
 
 def notify_tool_result(tool_name: str, result_summary: str, session_id: Optional[str] = None):
     """Notify PersonaPlex of a tool call result."""
     return publish_event("tool_result", result_summary, session_id, tool_name=tool_name)
 
+
 def notify_memory_insight(insight: str, session_id: Optional[str] = None):
     """Notify PersonaPlex of a memory insight."""
     return publish_event("memory_insight", insight, session_id, insight=insight)
+
 
 def notify_knowledge(topic: str, info: str, session_id: Optional[str] = None):
     """Notify PersonaPlex of knowledge discovery."""
     return publish_event("knowledge", info, session_id, topic=topic, info=info)
 
+
 def notify_system_status(system: str, status: str, session_id: Optional[str] = None):
     """Notify PersonaPlex of system status change."""
-    return publish_event("system_status", f"{system}: {status}", session_id, system=system, status=status)
+    return publish_event(
+        "system_status", f"{system}: {status}", session_id, system=system, status=status
+    )
 
 
 @app.post("/voice/memory/log")
@@ -1330,29 +1465,32 @@ async def voice_feedback_summary() -> dict[str, Any]:
 # Startup - Initialize agent registry (all agents active 24/7)
 # ---------------------------------------------------------------------------
 
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize all agents as active and ready 24/7."""
     import logging
+
     logger = logging.getLogger("MAS_Startup")
-    
+
     # Get agent registry - this loads all 42+ agents and marks them active
     registry = get_agent_registry()
     all_agents = registry.list_all()
     active_agents = registry.list_active()
-    
-    logger.info(f"🚀 MAS Orchestrator starting...")
+
+    logger.info("🚀 MAS Orchestrator starting...")
     logger.info(f"✓ Agent registry loaded: {len(all_agents)} total agents")
     logger.info(f"✓ Active agents (24/7): {len(active_agents)}")
-    logger.info(f"✓ All agents are idle and ready to process tasks")
-    
+    logger.info("✓ All agents are idle and ready to process tasks")
+
     # Log category breakdown
     from mycosoft_mas.core.agent_registry import AgentCategory
+
     for category in AgentCategory:
         cat_agents = registry.list_by_category(category)
         if cat_agents:
             logger.info(f"  - {category.value}: {len(cat_agents)} agents")
-    
+
     # Auto-load active core agents into 24/7 runner
     try:
         from mycosoft_mas.core.runner_agent_loader import restart_runner_with_core_agents
@@ -1372,6 +1510,7 @@ async def startup_event():
     # Start ingestion collectors (OpenSky, USGS, NORAD, AIS, NOAA)
     try:
         from mycosoft_mas.collectors import start_default_collectors
+
         await start_default_collectors()
         logger.info("✓ Ingestion collectors started (OpenSky, USGS, NORAD, AIS, NOAA)")
     except Exception as exc:
@@ -1380,6 +1519,7 @@ async def startup_event():
     # Start MycoBrain → MINDEX telemetry pipeline (polls every 60s)
     try:
         from mycosoft_mas.services.telemetry_pipeline import start_telemetry_pipeline
+
         start_telemetry_pipeline()
         logger.info("✓ Telemetry pipeline started (MycoBrain → MINDEX)")
     except Exception as exc:
@@ -1417,11 +1557,11 @@ async def startup_event():
     if os.getenv("STATIC_BUILD_ON_STARTUP", "1") == "1":
         try:
             from mycosoft_mas.llm.constrained.domain_builders import (
-                build_all_domain_indexes,
                 MINDEXConstraintConfig,
+                build_all_domain_indexes,
             )
-            from mycosoft_mas.llm.constrained.validator import get_static_validator
             from mycosoft_mas.llm.constrained.token_masker import TokenMasker
+            from mycosoft_mas.llm.constrained.validator import get_static_validator
 
             mindex_config = None
             mindex_db = os.getenv("MINDEX_DB_PATH", "")
@@ -1462,6 +1602,7 @@ async def startup_event():
     # Start Agent Heartbeat Service (bridges runner → Redis → topology/dashboard)
     try:
         from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+
         heartbeat_svc = get_heartbeat_service()
         await heartbeat_svc.start()
         logger.info("✓ Agent heartbeat service started (publishing to Redis every 15s)")
@@ -1471,6 +1612,7 @@ async def startup_event():
     # Start Agent Supervisor (lifecycle management: detect dead agents, restart)
     try:
         from mycosoft_mas.core.agent_supervisor import get_supervisor
+
         supervisor = get_supervisor()
         await supervisor.start()
         logger.info("✓ Agent supervisor started (monitoring agent health every 30s)")
@@ -1484,9 +1626,11 @@ async def startup_event():
 async def shutdown_event():
     """Graceful shutdown: stop WorkflowAutoMonitor and other background services."""
     import logging
+
     logger = logging.getLogger("MAS_Shutdown")
     try:
         from mycosoft_mas.collectors import get_orchestrator
+
         orch = get_orchestrator()
         if orch._running:
             await orch.stop()
@@ -1495,6 +1639,7 @@ async def shutdown_event():
         logger.warning("Ingestion collectors stop error: %s", exc)
     try:
         from mycosoft_mas.services.telemetry_pipeline import stop_telemetry_pipeline
+
         stop_telemetry_pipeline()
         logger.info("Telemetry pipeline stopped")
     except Exception as exc:
@@ -1509,6 +1654,7 @@ async def shutdown_event():
     # Stop heartbeat service
     try:
         from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
+
         await get_heartbeat_service().stop()
         logger.info("Heartbeat service stopped")
     except Exception as exc:
@@ -1516,10 +1662,8 @@ async def shutdown_event():
     # Stop agent supervisor
     try:
         from mycosoft_mas.core.agent_supervisor import get_supervisor
+
         await get_supervisor().stop()
         logger.info("Agent supervisor stopped")
     except Exception as exc:
         logger.warning("Agent supervisor stop error: %s", exc)
-
-
-

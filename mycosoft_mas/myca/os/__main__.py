@@ -21,6 +21,7 @@ if not LOG_DIR.exists():
         LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / "myca_os.log"
 
+
 def _gateway_log_handler():
     """Handler that feeds logs to the gateway buffer for /logs and WebSocket."""
     from mycosoft_mas.myca.os.gateway import log_to_buffer
@@ -35,6 +36,7 @@ def _gateway_log_handler():
     h = GatewayHandler()
     h.setFormatter(logging.Formatter("%(asctime)s [%(name)s] %(levelname)s: %(message)s"))
     return h
+
 
 logging.basicConfig(
     level=logging.INFO,

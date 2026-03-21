@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Dict, Iterable, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from mycosoft_mas.agents.base_agent import BaseAgent
-
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +144,9 @@ class GuardianAgent(BaseAgent):
             return False
         return levels.index(risk) > levels.index(threshold)
 
-    def _combine_decisions(self, safety: Dict[str, Any], tool_gate: Dict[str, Any]) -> Dict[str, Any]:
+    def _combine_decisions(
+        self, safety: Dict[str, Any], tool_gate: Dict[str, Any]
+    ) -> Dict[str, Any]:
         if safety.get("risk_level") in {"high", "critical"}:
             return {"allowed": False, "reason": "safety risk too high"}
         if not tool_gate.get("allowed", True):

@@ -15,47 +15,52 @@ Decision hierarchy:
 Date: 2026-03-04
 """
 
-import os
+from __future__ import annotations
+
 import asyncio
 import logging
-from datetime import datetime, timezone
-from typing import Optional
-from enum import Enum
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from typing import TYPE_CHECKING, Optional
 
 from mycosoft_mas.myca.os.staff_registry import load_staff_directory
 from mycosoft_mas.myca.os.turn_packet_builder import build_turn_packet
+
+if TYPE_CHECKING:
+    from mycosoft_mas.myca.os.llm_brain import LLMBrain
 
 logger = logging.getLogger("myca.os.executive")
 
 
 class DecisionLevel(str, Enum):
-    AUTONOMOUS = "autonomous"    # MYCA decides alone
-    INFORM = "inform"            # MYCA decides, tells Morgan
-    CONSULT = "consult"          # MYCA proposes, Morgan approves
-    ESCALATE = "escalate"        # Morgan must decide
+    AUTONOMOUS = "autonomous"  # MYCA decides alone
+    INFORM = "inform"  # MYCA decides, tells Morgan
+    CONSULT = "consult"  # MYCA proposes, Morgan approves
+    ESCALATE = "escalate"  # Morgan must decide
 
 
 class TaskPriority(str, Enum):
-    CRITICAL = "critical"   # Do immediately
-    HIGH = "high"           # Do today
-    MEDIUM = "medium"       # Do this week
-    LOW = "low"             # Do when time allows
-    BACKLOG = "backlog"     # Future consideration
+    CRITICAL = "critical"  # Do immediately
+    HIGH = "high"  # Do today
+    MEDIUM = "medium"  # Do this week
+    LOW = "low"  # Do when time allows
+    BACKLOG = "backlog"  # Future consideration
 
 
 @dataclass
 class ExecutiveTask:
     """A task in MYCA's executive queue."""
+
     title: str
     description: str
     priority: TaskPriority = TaskPriority.MEDIUM
     task_type: str = "general"  # coding, research, communication, deployment, decision, analysis
-    source: str = "self"        # morgan, asana, discord, self, system
+    source: str = "self"  # morgan, asana, discord, self, system
     assigned_to: Optional[str] = None  # morgan, garret, rj, beto — from org_roles.yaml
     assigned_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     due: Optional[datetime] = None
-    status: str = "pending"     # pending, in_progress, completed, blocked, cancelled
+    status: str = "pending"  # pending, in_progress, completed, blocked, cancelled
     result: Optional[dict] = None
     db_id: Optional[int] = None  # myca_task_queue.id for persistence
 
@@ -71,7 +76,6 @@ DECISION_RULES = {
     "research": DecisionLevel.AUTONOMOUS,
     "test_fix": DecisionLevel.AUTONOMOUS,
     "message_routing": DecisionLevel.AUTONOMOUS,
-
     # Inform — MYCA decides, notifies Morgan
     "bug_fix": DecisionLevel.INFORM,
     "small_feature": DecisionLevel.INFORM,
@@ -79,7 +83,6 @@ DECISION_RULES = {
     "workflow_change": DecisionLevel.INFORM,
     "dependency_update": DecisionLevel.INFORM,
     "performance_optimization": DecisionLevel.INFORM,
-
     # Consult — MYCA proposes, Morgan approves
     "architecture_change": DecisionLevel.CONSULT,
     "new_integration": DecisionLevel.CONSULT,
@@ -88,7 +91,6 @@ DECISION_RULES = {
     "deployment_production": DecisionLevel.CONSULT,
     "new_agent": DecisionLevel.CONSULT,
     "api_change": DecisionLevel.CONSULT,
-
     # Escalate — Morgan must decide
     "financial": DecisionLevel.ESCALATE,
     "external_communication": DecisionLevel.ESCALATE,
@@ -116,6 +118,7 @@ class ExecutiveSystem:
     def llm_brain(self) -> "LLMBrain":
         if self._llm_brain is None:
             from mycosoft_mas.myca.os.llm_brain import LLMBrain
+
             self._llm_brain = LLMBrain(os_ref=self._os)
         return self._llm_brain
 
@@ -133,16 +136,18 @@ class ExecutiveSystem:
                            ORDER BY assigned_at"""
                     )
                     for row in rows:
-                        self._task_queue.append(ExecutiveTask(
-                            title=row["title"],
-                            description=row.get("description") or "",
-                            priority=TaskPriority(row.get("priority", "medium")),
-                            task_type=row.get("task_type", "general"),
-                            source=row.get("source", "self"),
-                            status=row.get("status", "pending"),
-                            assigned_to=row.get("assigned_to"),
-                            db_id=row["id"],
-                        ))
+                        self._task_queue.append(
+                            ExecutiveTask(
+                                title=row["title"],
+                                description=row.get("description") or "",
+                                priority=TaskPriority(row.get("priority", "medium")),
+                                task_type=row.get("task_type", "general"),
+                                source=row.get("source", "self"),
+                                status=row.get("status", "pending"),
+                                assigned_to=row.get("assigned_to"),
+                                db_id=row["id"],
+                            )
+                        )
                     if rows:
                         logger.info("Loaded %d tasks from DB", len(rows))
         except Exception as e:
@@ -192,9 +197,15 @@ class ExecutiveSystem:
             "_task_obj": task,  # for core to call mark_task_completed
         }
 
-    def add_task(self, title: str, description: str, priority: str = "medium",
-                 task_type: str = "general", source: str = "self",
-                 assigned_to: Optional[str] = None) -> ExecutiveTask:
+    def add_task(
+        self,
+        title: str,
+        description: str,
+        priority: str = "medium",
+        task_type: str = "general",
+        source: str = "self",
+        assigned_to: Optional[str] = None,
+    ) -> ExecutiveTask:
         """Add a task to the queue. assigned_to defaults to role from task_type (org_roles)."""
         if assigned_to is None:
             assigned_to = self._suggest_role_for_task_type(task_type)
@@ -215,7 +226,9 @@ class ExecutiveSystem:
         """Suggest assigned_to role from task_type using org_roles.yaml task_type_to_role."""
         try:
             from pathlib import Path
+
             import yaml
+
             roles_path = Path(__file__).resolve().parents[4] / "config" / "org_roles.yaml"
             if roles_path.exists():
                 cfg = yaml.safe_load(roles_path.read_text())
@@ -234,7 +247,12 @@ class ExecutiveSystem:
                     task.db_id = await conn.fetchval(
                         """INSERT INTO myca_task_queue (title, description, priority, task_type, source, status, assigned_to)
                            VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id""",
-                        task.title, task.description, task.priority.value, task.task_type, task.source, task.status,
+                        task.title,
+                        task.description,
+                        task.priority.value,
+                        task.task_type,
+                        task.source,
+                        task.status,
                         task.assigned_to,
                     )
         except Exception as e:
@@ -248,18 +266,24 @@ class ExecutiveSystem:
             bridge = getattr(self._os, "mindex_bridge", None)
             if bridge and getattr(bridge, "_pg_pool", None) and bridge._pg_pool:
                 import json
+
                 async with bridge._pg_pool.acquire() as conn:
                     now = datetime.now(timezone.utc)
                     if status == "in_progress":
                         await conn.execute(
                             "UPDATE myca_task_queue SET status = $1, started_at = $2 WHERE id = $3",
-                            status, now, task.db_id,
+                            status,
+                            now,
+                            task.db_id,
                         )
                     elif status in ("completed", "blocked", "cancelled"):
                         await conn.execute(
                             """UPDATE myca_task_queue SET status = $1, completed_at = $2, result = $3
                                WHERE id = $4""",
-                            status, now, json.dumps(result or {}) if result else None, task.db_id,
+                            status,
+                            now,
+                            json.dumps(result or {}) if result else None,
+                            task.db_id,
                         )
         except Exception as e:
             logger.warning("Task DB update failed: %s", e)
@@ -305,7 +329,9 @@ class ExecutiveSystem:
         content = msg.get("content", "")
 
         # Parse Morgan's message for actionable directives
-        if any(kw in content.lower() for kw in ["do", "build", "fix", "create", "deploy", "update"]):
+        if any(
+            kw in content.lower() for kw in ["do", "build", "fix", "create", "deploy", "update"]
+        ):
             # Action directive — create task (Morgan's directives go to Morgan)
             task = self.add_task(
                 title=content[:100],
@@ -367,10 +393,10 @@ class ExecutiveSystem:
                 "role": sender_role,
             }
             ep = await build_turn_packet(self._os, content, ctx)
-            from mycosoft_mas.myca2.runtime import is_myca2_runtime_message
-            from mycosoft_mas.myca2.psilo_overlay import apply_psilo_overlay
             from mycosoft_mas.integrations import plasticity_registry
             from mycosoft_mas.llm.backend_selection import MYCA2_CORE
+            from mycosoft_mas.myca2.psilo_overlay import apply_psilo_overlay
+            from mycosoft_mas.myca2.runtime import is_myca2_runtime_message
 
             if is_myca2_runtime_message(msg):
                 psilo_state = None
@@ -390,7 +416,9 @@ class ExecutiveSystem:
                 ctx = {**ctx, "model_role": MYCA2_CORE, "myca2": True}
                 if sid:
                     plasticity_registry.psilo_append_event(
-                        sid, "psilo.session.tick", {"executive_turn": True, "overlay_metrics": _ov_metrics}
+                        sid,
+                        "psilo.session.tick",
+                        {"executive_turn": True, "overlay_metrics": _ov_metrics},
                     )
             response = await self.llm_brain.respond(content, context=ctx, experience_packet=ep)
             return {"action": "respond_directly", "response": response}
@@ -416,10 +444,12 @@ class ExecutiveSystem:
             decision["action"] = "approved"
             decision["rationale"] = "Within authority — Morgan will be informed"
             # Notify Morgan asynchronously
-            asyncio.create_task(self._os.comms.send_to_morgan(
-                f"FYI: I've decided to {task.get('description', '')}",
-                channel="discord",
-            ))
+            asyncio.create_task(
+                self._os.comms.send_to_morgan(
+                    f"FYI: I've decided to {task.get('description', '')}",
+                    channel="discord",
+                )
+            )
         elif level == DecisionLevel.CONSULT:
             decision["action"] = "pending_approval"
             decision["rationale"] = "Requires Morgan's approval"
@@ -543,12 +573,29 @@ class ExecutiveSystem:
             return "asana"
         elif any(kw in content for kw in ["natureos", "ecosystem", "matlab", "digital twin"]):
             return "natureos"
-        elif any(kw in content for kw in [
-            "crep", "map", "fly to", "show layer", "hide layer", "geocode", "filter", "timeline",
-            "viewport", "planes", "vessels", "satellites", "toggle layer", "clear filter",
-        ]):
+        elif any(
+            kw in content
+            for kw in [
+                "crep",
+                "map",
+                "fly to",
+                "show layer",
+                "hide layer",
+                "geocode",
+                "filter",
+                "timeline",
+                "viewport",
+                "planes",
+                "vessels",
+                "satellites",
+                "toggle layer",
+                "clear filter",
+            ]
+        ):
             return "crep_map"
-        elif any(kw in content for kw in ["search", "lookup", "query knowledge", "what do we know"]):
+        elif any(
+            kw in content for kw in ["search", "lookup", "query knowledge", "what do we know"]
+        ):
             return "search"
         elif any(kw in content for kw in ["deploy", "restart", "update server"]):
             return "deployment"

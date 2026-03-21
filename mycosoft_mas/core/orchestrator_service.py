@@ -20,6 +20,7 @@ from uuid import UUID
 
 # Import runtime components
 import sys
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
@@ -55,14 +56,18 @@ try:
     from mycosoft_mas.integrations.n8n_client import N8NClient
 except ImportError as e:
     import logging
+
     logging.warning(f"Could not import N8NClient: {e}")
     N8NClient = None
 
 # Agent Evolution import
 try:
-    from mycosoft_mas.agents.clusters.system_management.agent_evolution_agent import AgentEvolutionAgent
+    from mycosoft_mas.agents.clusters.system_management.agent_evolution_agent import (
+        AgentEvolutionAgent,
+    )
 except ImportError as e:
     import logging
+
     logging.warning(f"Could not import AgentEvolutionAgent: {e}")
     AgentEvolutionAgent = None
 
@@ -71,6 +76,7 @@ logger = logging.getLogger("MYCA_Orchestrator")
 
 N8N_VOICE_WEBHOOK = os.getenv("N8N_VOICE_WEBHOOK", "myca/command")
 
+
 def resolve_n8n_webhook_url() -> Optional[str]:
     base = os.getenv("N8N_WEBHOOK_URL") or os.getenv("N8N_URL")
     if not base:
@@ -78,6 +84,7 @@ def resolve_n8n_webhook_url() -> Optional[str]:
     base = base.rstrip("/")
     # Don't modify base - n8n client handles webhook path
     return base
+
 
 def extract_response_text(payload: object) -> Optional[str]:
     if isinstance(payload, dict):
@@ -96,7 +103,9 @@ def extract_response_text(payload: object) -> Optional[str]:
                     return value.strip()
     return None
 
+
 _n8n_client: Optional[N8NClient] = None
+
 
 def get_n8n_client() -> N8NClient:
     global _n8n_client
@@ -137,7 +146,7 @@ class MessageSendRequest(BaseModel):
 class OrchestratorService:
     """
     MYCA Orchestrator Service
-    
+
     Central intelligence that:
     - Manages agent lifecycle (spawn, stop, restart)
     - Distributes tasks to agents
@@ -145,7 +154,7 @@ class OrchestratorService:
     - Handles agent-to-agent communication
     - Detects gaps and auto-creates agents
     """
-    
+
     def __init__(self):
         self.agent_pool = AgentPool()
         self.message_broker: Optional[MessageBroker] = None
@@ -155,24 +164,21 @@ class OrchestratorService:
         self.evolution_agent: Optional[AgentEvolutionAgent] = None
         self._started = False
         self._monitor_task: Optional[asyncio.Task] = None
-    
+
     async def start(self):
         """Start the orchestrator service"""
         logger.info("Starting MYCA Orchestrator...")
-        
+
         # Initialize agent pool
         await self.agent_pool.initialize()
-        
+
         # Connect to message broker
         redis_url = os.environ.get("REDIS_URL", "redis://redis:6379/0")
         self.message_broker = MessageBroker(redis_url)
         await self.message_broker.connect()
-        
+
         # Subscribe to heartbeats
-        await self.message_broker.subscribe(
-            "orchestrator:heartbeats",
-            self._handle_heartbeat
-        )
+        await self.message_broker.subscribe("orchestrator:heartbeats", self._handle_heartbeat)
 
         # Start Agent Evolution background loop (if available)
         if AgentEvolutionAgent is not None:
@@ -182,20 +188,20 @@ class OrchestratorService:
                 logger.info("Agent Evolution Agent started")
             except Exception as exc:
                 logger.error(f"Failed to start Agent Evolution Agent: {exc}")
-        
+
         # Start monitoring
         self._monitor_task = asyncio.create_task(self._health_monitor())
-        
+
         self._started = True
         logger.info("MYCA Orchestrator started")
-    
+
     async def stop(self):
         """Stop the orchestrator service"""
         logger.info("Stopping MYCA Orchestrator...")
-        
+
         if self._monitor_task:
             self._monitor_task.cancel()
-        
+
         if self.message_broker:
             await self.message_broker.close()
 
@@ -204,19 +210,19 @@ class OrchestratorService:
                 await self.evolution_agent.stop()
             except Exception as exc:
                 logger.error(f"Failed to stop Agent Evolution Agent: {exc}")
-        
+
         self._started = False
         logger.info("MYCA Orchestrator stopped")
-    
+
     async def spawn_agent(self, config: AgentConfig) -> AgentState:
         """Spawn a new agent container"""
         logger.info(f"Spawning agent: {config.agent_id}")
-        
+
         state = await self.agent_pool.spawn_agent(config)
-        
+
         # Create task queue for agent
         self.task_queues[config.agent_id] = asyncio.Queue()
-        
+
         # Log event
         if self.message_broker:
             event = AgentMessage(
@@ -227,21 +233,21 @@ class OrchestratorService:
                     "event": "agent_spawned",
                     "agent_id": config.agent_id,
                     "agent_type": config.agent_type,
-                }
+                },
             )
             await self.message_broker.publish("mas:events", event.to_json())
-        
+
         return state
-    
+
     async def stop_agent(self, agent_id: str, force: bool = False) -> bool:
         """Stop an agent container"""
         logger.info(f"Stopping agent: {agent_id}")
-        
+
         result = await self.agent_pool.stop_agent(agent_id, force)
-        
+
         # Clean up task queue
         self.task_queues.pop(agent_id, None)
-        
+
         # Log event
         if result and self.message_broker:
             event = AgentMessage(
@@ -251,17 +257,17 @@ class OrchestratorService:
                 payload={
                     "event": "agent_stopped",
                     "agent_id": agent_id,
-                }
+                },
             )
             await self.message_broker.publish("mas:events", event.to_json())
-        
+
         return result
-    
+
     async def restart_agent(self, agent_id: str) -> AgentState:
         """Restart an agent container"""
         logger.info(f"Restarting agent: {agent_id}")
         return await self.agent_pool.restart_agent(agent_id)
-    
+
     def _extract_task_content(self, task: AgentTask) -> Optional[str]:
         """Extract text content from task for ethics evaluation."""
         if not task.payload:
@@ -275,11 +281,11 @@ class OrchestratorService:
     async def get_agent(self, agent_id: str) -> Optional[AgentState]:
         """Get agent state"""
         return await self.agent_pool.get_agent_state(agent_id)
-    
+
     async def list_agents(self) -> List[AgentState]:
         """List all agents"""
         return await self.agent_pool.get_all_agents()
-    
+
     async def submit_task(self, task: AgentTask) -> str:
         """Submit a task to an agent. Ethics evaluation runs when MYCA_ETHICS_ENABLED=1."""
         agent_id = task.agent_id
@@ -290,24 +296,38 @@ class OrchestratorService:
             if content:
                 try:
                     from mycosoft_mas.ethics import EthicsEngine, EthicsRiskLevel
+
                     engine = EthicsEngine()
-                    result = await engine.evaluate(content, {"task_type": task.task_type, "agent_id": agent_id})
+                    result = await engine.evaluate(
+                        content, {"task_type": task.task_type, "agent_id": agent_id}
+                    )
                     if result.risk_level == EthicsRiskLevel.CRITICAL:
-                        raise ValueError(f"Ethics CRITICAL: task blocked. {result.blocked_reason or 'High risk'}")
+                        raise ValueError(
+                            f"Ethics CRITICAL: task blocked. {result.blocked_reason or 'High risk'}"
+                        )
                     if result.risk_level == EthicsRiskLevel.HIGH:
                         try:
                             from mycosoft_mas.security.safety_gates import SafetyGates
+
                             gates = SafetyGates()
                             req_id = await gates.request_confirmation(
                                 action="ethics_high_risk_task",
-                                context={"task_id": task.id, "risk_score": result.risk_score, "blocked_reason": result.blocked_reason},
+                                context={
+                                    "task_id": task.id,
+                                    "risk_score": result.risk_score,
+                                    "blocked_reason": result.blocked_reason,
+                                },
                                 approver_id="orchestrator",
                             )
                             approved = await gates.await_confirmation(req_id, timeout=30)
                             if not approved:
-                                raise ValueError(f"Ethics HIGH: task blocked (confirmation denied or timed out). request_id={req_id}")
+                                raise ValueError(
+                                    f"Ethics HIGH: task blocked (confirmation denied or timed out). request_id={req_id}"
+                                )
                         except ImportError:
-                            raise ValueError(f"Ethics HIGH: task blocked. {result.blocked_reason or 'Confirmation required'}")
+                            raise ValueError(
+                                f"Ethics HIGH: task blocked. {result.blocked_reason or 'Confirmation required'}"
+                            )
                     # LOW/MEDIUM: attach ethics metadata to payload
                     if task.payload is None:
                         task.payload = {}
@@ -323,10 +343,10 @@ class OrchestratorService:
             raise ValueError(f"Agent {agent_id} not found")
         if state.status not in [AgentStatus.ACTIVE, AgentStatus.IDLE]:
             raise ValueError(f"Agent {agent_id} is not available (status: {state.status.value})")
-        
+
         # Store task
         self.pending_tasks[task.id] = task
-        
+
         # Send to agent via message broker
         if self.message_broker:
             message = AgentMessage(
@@ -341,17 +361,17 @@ class OrchestratorService:
                 priority=task.priority,
             )
             await self.message_broker.publish(f"agent:{agent_id}", message.to_json())
-        
+
         logger.info(f"Task {task.id} submitted to agent {agent_id}")
         return task.id
-    
+
     async def get_task_status(self, task_id: str) -> Optional[Dict[str, Any]]:
         """Get status of a task"""
         task = self.pending_tasks.get(task_id)
         if task:
             return task.to_dict()
         return None
-    
+
     async def send_message(
         self,
         from_agent: str,
@@ -368,22 +388,22 @@ class OrchestratorService:
             payload=payload,
             priority=priority,
         )
-        
+
         if self.message_broker:
             if to_agent == "broadcast":
                 await self.message_broker.publish("mas:broadcast", message.to_json())
             else:
                 await self.message_broker.publish(f"agent:{to_agent}", message.to_json())
-        
+
         return message.id
-    
+
     async def _handle_heartbeat(self, message_data: str):
         """Handle heartbeat from agent"""
         try:
             message = AgentMessage.from_json(message_data)
             agent_id = message.from_agent
             self.agent_heartbeats[agent_id] = datetime.utcnow()
-            
+
             # Update agent state if provided
             payload = message.payload
             if payload:
@@ -392,49 +412,51 @@ class OrchestratorService:
                     state.tasks_completed = payload.get("tasks_completed", state.tasks_completed)
                     state.tasks_failed = payload.get("tasks_failed", state.tasks_failed)
                     state.last_heartbeat = datetime.utcnow()
-                    
+
         except Exception as e:
             logger.error(f"Error handling heartbeat: {e}")
-    
+
     async def _health_monitor(self):
         """Monitor agent health continuously"""
         check_interval = int(os.environ.get("HEALTH_CHECK_INTERVAL", "30"))
         heartbeat_timeout = int(os.environ.get("HEARTBEAT_TIMEOUT", "60"))
-        
+
         while True:
             try:
                 await asyncio.sleep(check_interval)
-                
+
                 # Check for dead agents
                 now = datetime.utcnow()
                 agents = await self.agent_pool.get_all_agents()
-                
+
                 for agent in agents:
                     last_heartbeat = self.agent_heartbeats.get(agent.agent_id)
-                    
+
                     if last_heartbeat:
                         age = (now - last_heartbeat).total_seconds()
                         if age > heartbeat_timeout:
-                            logger.warning(f"Agent {agent.agent_id} missed heartbeat (last: {age:.0f}s ago)")
+                            logger.warning(
+                                f"Agent {agent.agent_id} missed heartbeat (last: {age:.0f}s ago)"
+                            )
                             agent.status = AgentStatus.ERROR
                             agent.error_message = "Heartbeat timeout"
-                
+
                 # Update container health
                 await self.agent_pool.update_agent_health()
-                
+
                 # Log pool stats
                 stats = await self.agent_pool.get_pool_stats()
                 logger.debug(f"Pool stats: {stats}")
-                
+
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"Health monitor error: {e}")
-    
+
     async def detect_gaps(self) -> List[Dict[str, Any]]:
         """Detect missing agents that should exist"""
         gaps = []
-        
+
         # Required agent categories and minimum counts
         required = {
             AgentCategory.CORE: 3,
@@ -442,26 +464,28 @@ class OrchestratorService:
             AgentCategory.SECURITY: 2,
             AgentCategory.DATA: 3,
         }
-        
+
         for category, min_count in required.items():
             agents = await self.agent_pool.get_agents_by_category(category)
             active = [a for a in agents if a.status in [AgentStatus.ACTIVE, AgentStatus.BUSY]]
-            
+
             if len(active) < min_count:
-                gaps.append({
-                    "category": category.value,
-                    "required": min_count,
-                    "active": len(active),
-                    "missing": min_count - len(active),
-                })
-        
+                gaps.append(
+                    {
+                        "category": category.value,
+                        "required": min_count,
+                        "active": len(active),
+                        "missing": min_count - len(active),
+                    }
+                )
+
         return gaps
-    
+
     async def get_orchestrator_status(self) -> Dict[str, Any]:
         """Get orchestrator status"""
         agents = await self.agent_pool.get_all_agents()
         stats = await self.agent_pool.get_pool_stats()
-        
+
         return {
             "status": "running" if self._started else "stopped",
             "started": self._started,
@@ -470,9 +494,9 @@ class OrchestratorService:
             "pending_tasks": len(self.pending_tasks),
             "message_broker_connected": self.message_broker is not None,
         }
-    
+
     # ==================== SELF-HEALING CODE MODIFICATION ====================
-    
+
     async def request_code_fix(
         self,
         description: str,
@@ -482,24 +506,26 @@ class OrchestratorService:
     ) -> Dict[str, Any]:
         """
         Request a code fix through the CodeModificationService.
-        
+
         This is the orchestrator's way to trigger code changes.
         All requests go through security review before execution.
-        
+
         Args:
             description: What code change to make
             target_files: Optional list of files to modify
             priority: 1-10, higher = more urgent
             context: Additional context (error messages, stack traces, etc.)
-            
+
         Returns:
             Dict with change_id, status, and message
         """
         logger.info(f"Orchestrator requesting code fix: {description[:50]}...")
-        
+
         try:
-            from mycosoft_mas.services.code_modification_service import get_code_modification_service
-            
+            from mycosoft_mas.services.code_modification_service import (
+                get_code_modification_service,
+            )
+
             code_service = await get_code_modification_service()
             result = await code_service.request_code_change(
                 requester_id="orchestrator",
@@ -509,10 +535,10 @@ class OrchestratorService:
                 priority=priority,
                 context=context,
             )
-            
+
             logger.info(f"Code fix request submitted: {result.get('change_id')}")
             return result
-            
+
         except Exception as e:
             logger.error(f"Failed to request code fix: {e}")
             return {
@@ -520,7 +546,7 @@ class OrchestratorService:
                 "message": str(e),
                 "change_id": None,
             }
-    
+
     async def tell_agent_to_code(
         self,
         agent_id: str,
@@ -530,24 +556,26 @@ class OrchestratorService:
     ) -> Dict[str, Any]:
         """
         Tell a specific agent to perform a coding task.
-        
+
         The orchestrator can direct any agent to make code changes.
         The request is routed through CodeModificationService for security.
-        
+
         Args:
             agent_id: The agent to direct
             coding_task: What the agent should code
             target_files: Optional files to target
             priority: Task priority
-            
+
         Returns:
             Dict with change_id and status
         """
         logger.info(f"Orchestrator telling {agent_id} to code: {coding_task[:50]}...")
-        
+
         try:
-            from mycosoft_mas.services.code_modification_service import get_code_modification_service
-            
+            from mycosoft_mas.services.code_modification_service import (
+                get_code_modification_service,
+            )
+
             code_service = await get_code_modification_service()
             result = await code_service.request_code_change(
                 requester_id=f"orchestrator_via_{agent_id}",
@@ -557,7 +585,7 @@ class OrchestratorService:
                 priority=priority,
                 context={"directed_agent": agent_id},
             )
-            
+
             # Also send a message to the agent about this task
             if self.message_broker:
                 message = AgentMessage(
@@ -573,10 +601,10 @@ class OrchestratorService:
                     priority=TaskPriority(priority),
                 )
                 await self.message_broker.publish(f"agent:{agent_id}", message.to_json())
-            
+
             logger.info(f"Coding task assigned to {agent_id}: {result.get('change_id')}")
             return result
-            
+
         except Exception as e:
             logger.error(f"Failed to tell agent to code: {e}")
             return {
@@ -584,23 +612,25 @@ class OrchestratorService:
                 "message": str(e),
                 "agent_id": agent_id,
             }
-    
+
     async def get_code_change_status(self, change_id: str) -> Dict[str, Any]:
         """
         Get the status of a code change request.
-        
+
         Args:
             change_id: The change ID to query
-            
+
         Returns:
             Dict with change status details
         """
         try:
-            from mycosoft_mas.services.code_modification_service import get_code_modification_service
-            
+            from mycosoft_mas.services.code_modification_service import (
+                get_code_modification_service,
+            )
+
             code_service = await get_code_modification_service()
             return await code_service.get_change_status(change_id)
-            
+
         except Exception as e:
             logger.error(f"Failed to get code change status: {e}")
             return {
@@ -608,22 +638,24 @@ class OrchestratorService:
                 "message": str(e),
                 "change_id": change_id,
             }
-    
+
     async def halt_all_code_changes(self) -> Dict[str, Any]:
         """
         Emergency halt all pending code changes.
-        
+
         Use this when something goes wrong and all automated
         code modifications need to stop immediately.
         """
         logger.warning("EMERGENCY: Halting all code changes")
-        
+
         try:
-            from mycosoft_mas.services.code_modification_service import get_code_modification_service
-            
+            from mycosoft_mas.services.code_modification_service import (
+                get_code_modification_service,
+            )
+
             code_service = await get_code_modification_service()
             result = await code_service.halt_all_changes()
-            
+
             # Notify all agents
             if self.message_broker:
                 event = AgentMessage(
@@ -636,9 +668,9 @@ class OrchestratorService:
                     },
                 )
                 await self.message_broker.publish("mas:broadcast", event.to_json())
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Failed to halt code changes: {e}")
             return {
@@ -680,6 +712,7 @@ ALLOW_UNAUTHENTICATED = os.environ.get("MAS_ALLOW_UNAUTHENTICATED", "false").low
 # RBAC Manager for permission checks
 try:
     from mycosoft_mas.security.rbac import RBACManager, Permission, Role
+
     rbac_manager = RBACManager()
     # Initialize default service accounts
     SERVICE_ACCOUNT_ADMIN = UUID("00000000-0000-0000-0000-000000000001")
@@ -701,52 +734,51 @@ async def verify_api_key(
 ) -> str:
     """Verify API key from header or query parameter."""
     api_key = api_key_header or api_key_query
-    
+
     # Allow unauthenticated in development mode
     if ALLOW_UNAUTHENTICATED and not VALID_API_KEYS:
         logger.warning("MAS_ALLOW_UNAUTHENTICATED=true - allowing request without authentication")
         return "anonymous"
-    
+
     # Require at least one valid API key configured
     if not VALID_API_KEYS:
-        logger.error("No API keys configured. Set MAS_API_KEY or MAS_API_KEYS environment variable.")
-        raise HTTPException(
-            status_code=500,
-            detail="Server misconfiguration: No API keys configured"
+        logger.error(
+            "No API keys configured. Set MAS_API_KEY or MAS_API_KEYS environment variable."
         )
-    
+        raise HTTPException(
+            status_code=500, detail="Server misconfiguration: No API keys configured"
+        )
+
     if not api_key:
         raise HTTPException(
             status_code=401,
-            detail="Missing API key. Provide X-API-Key header or api_key query parameter."
+            detail="Missing API key. Provide X-API-Key header or api_key query parameter.",
         )
-    
+
     if api_key not in VALID_API_KEYS:
         logger.warning(f"Invalid API key attempt: {api_key[:8]}...")
-        raise HTTPException(
-            status_code=403,
-            detail="Invalid API key"
-        )
-    
+        raise HTTPException(status_code=403, detail="Invalid API key")
+
     return api_key
 
 
 def require_permission(permission: "Permission"):
     """Dependency factory for permission-based access control."""
+
     async def check_permission(api_key: str = Depends(verify_api_key)):
         if not rbac_manager or permission is None:
             return api_key  # RBAC not available, allow if API key valid
-        
+
         # Map API key to user ID (in production, use a lookup table)
         user_id = SERVICE_ACCOUNT_ADMIN if api_key else None
-        
+
         if user_id and not rbac_manager.check_permission(user_id, permission):
             raise HTTPException(
-                status_code=403,
-                detail=f"Insufficient permissions. Required: {permission.value}"
+                status_code=403, detail=f"Insufficient permissions. Required: {permission.value}"
             )
-        
+
         return api_key
+
     return check_permission
 
 
@@ -765,6 +797,7 @@ async def shutdown():
 
 
 # API Routes
+
 
 @app.get("/health")
 async def health():
@@ -798,12 +831,12 @@ async def get_agent(agent_id: str):
 async def spawn_agent(request: AgentSpawnRequest, api_key: str = Depends(verify_api_key)):
     """Spawn a new agent - Requires authentication and EXECUTE permission"""
     logger.info(f"Agent spawn request from authenticated client")
-    
+
     try:
         category = AgentCategory(request.category)
     except ValueError:
         category = AgentCategory.CUSTOM
-    
+
     config = AgentConfig(
         agent_id=request.agent_id,
         agent_type=request.agent_type,
@@ -814,7 +847,7 @@ async def spawn_agent(request: AgentSpawnRequest, api_key: str = Depends(verify_
         memory_limit=request.memory_limit,
         auto_start=request.auto_start,
     )
-    
+
     try:
         state = await orchestrator.spawn_agent(config)
         return state.to_dict()
@@ -869,7 +902,7 @@ async def submit_task(request: TaskSubmitRequest, api_key: str = Depends(verify_
         priority=TaskPriority(request.priority),
         timeout=request.timeout,
     )
-    
+
     try:
         task_id = await orchestrator.submit_task(task)
         return {"task_id": task_id, "status": "submitted"}
@@ -894,7 +927,7 @@ async def send_message(request: MessageSendRequest, api_key: str = Depends(verif
         message_type = MessageType(request.message_type)
     except ValueError:
         message_type = MessageType.REQUEST
-    
+
     message_id = await orchestrator.send_message(
         request.from_agent,
         request.to_agent,
@@ -902,7 +935,7 @@ async def send_message(request: MessageSendRequest, api_key: str = Depends(verif
         request.payload,
         TaskPriority(request.priority),
     )
-    
+
     return {"message_id": message_id, "status": "sent"}
 
 
@@ -914,6 +947,7 @@ async def detect_gaps():
 
 
 # ==================== SELF-HEALING CODE MODIFICATION API ====================
+
 
 class CodeFixRequest(BaseModel):
     description: str
@@ -943,7 +977,9 @@ async def request_code_fix(request: CodeFixRequest, api_key: str = Depends(verif
 
 
 @app.post("/code/tell-agent")
-async def tell_agent_to_code(request: TellAgentToCodeRequest, api_key: str = Depends(verify_api_key)):
+async def tell_agent_to_code(
+    request: TellAgentToCodeRequest, api_key: str = Depends(verify_api_key)
+):
     """Tell a specific agent to perform a coding task - SENSITIVE: Requires authentication"""
     logger.info(f"Tell agent to code: {request.agent_id} - {request.coding_task[:50]}...")
     result = await orchestrator.tell_agent_to_code(
@@ -970,6 +1006,7 @@ async def halt_all_code_changes(api_key: str = Depends(verify_api_key)):
 
 # ==================== CONNECTION MANAGEMENT ====================
 
+
 class ConnectionCreateRequest(BaseModel):
     source: str
     target: str
@@ -993,10 +1030,7 @@ async def list_connections(api_key: str = Depends(verify_api_key)):
     all_connections = []
     for agent_id, conns in agent_connections.items():
         for conn in conns:
-            all_connections.append({
-                "source": agent_id,
-                **conn
-            })
+            all_connections.append({"source": agent_id, **conn})
     return {"connections": all_connections, "total": len(all_connections)}
 
 
@@ -1008,20 +1042,22 @@ async def get_agent_connections(agent_id: str):
 
 
 @app.post("/connections/create")
-async def create_connection(request: ConnectionCreateRequest, api_key: str = Depends(verify_api_key)):
+async def create_connection(
+    request: ConnectionCreateRequest, api_key: str = Depends(verify_api_key)
+):
     """Create a connection between two agents - Requires authentication"""
     source = request.source
     target = request.target
-    
+
     # Initialize if needed
     if source not in agent_connections:
         agent_connections[source] = []
-    
+
     # Check if connection exists
     existing = next((c for c in agent_connections[source] if c["target"] == target), None)
     if existing:
         return {"status": "exists", "connection": existing}
-    
+
     # Create connection
     connection = {
         "target": target,
@@ -1029,49 +1065,53 @@ async def create_connection(request: ConnectionCreateRequest, api_key: str = Dep
         "bidirectional": request.bidirectional,
         "priority": request.priority,
         "created_at": datetime.utcnow().isoformat(),
-        "status": "active"
+        "status": "active",
     }
     agent_connections[source].append(connection)
-    
+
     # If bidirectional, create reverse connection
     if request.bidirectional:
         if target not in agent_connections:
             agent_connections[target] = []
         reverse_exists = next((c for c in agent_connections[target] if c["target"] == source), None)
         if not reverse_exists:
-            agent_connections[target].append({
-                "target": source,
-                "type": request.type,
-                "bidirectional": True,
-                "priority": request.priority,
-                "created_at": datetime.utcnow().isoformat(),
-                "status": "active"
-            })
-    
+            agent_connections[target].append(
+                {
+                    "target": source,
+                    "type": request.type,
+                    "bidirectional": True,
+                    "priority": request.priority,
+                    "created_at": datetime.utcnow().isoformat(),
+                    "status": "active",
+                }
+            )
+
     logger.info(f"Connection created: {source} -> {target} (type: {request.type})")
     return {"status": "created", "connection": {"source": source, **connection}}
 
 
 @app.post("/connections/delete")
-async def delete_connection(request: ConnectionDeleteRequest, api_key: str = Depends(verify_api_key)):
+async def delete_connection(
+    request: ConnectionDeleteRequest, api_key: str = Depends(verify_api_key)
+):
     """Delete a connection between agents - Requires authentication"""
     source = request.source
     target = request.target
-    
+
     if source not in agent_connections:
         raise HTTPException(status_code=404, detail="Source agent has no connections")
-    
+
     # Find and remove connection
     original_len = len(agent_connections[source])
     agent_connections[source] = [c for c in agent_connections[source] if c["target"] != target]
-    
+
     if len(agent_connections[source]) == original_len:
         raise HTTPException(status_code=404, detail="Connection not found")
-    
+
     # Also remove reverse if exists
     if target in agent_connections:
         agent_connections[target] = [c for c in agent_connections[target] if c["target"] != source]
-    
+
     logger.info(f"Connection deleted: {source} -> {target}")
     return {"status": "deleted", "source": source, "target": target}
 
@@ -1079,6 +1119,7 @@ async def delete_connection(request: ConnectionDeleteRequest, api_key: str = Dep
 # ============================================================================
 # Voice/Chat Endpoints - MYCA AI Interface
 # ============================================================================
+
 
 class VoiceChatRequest(BaseModel):
     message: str
@@ -1089,7 +1130,9 @@ class VoiceChatRequest(BaseModel):
 
 
 @app.post("/voice/orchestrator/chat")
-async def voice_orchestrator_chat(request: VoiceChatRequest, api_key: str = Depends(verify_api_key)):
+async def voice_orchestrator_chat(
+    request: VoiceChatRequest, api_key: str = Depends(verify_api_key)
+):
     """
     Main MYCA voice/chat interface - Requires authentication.
     """
@@ -1131,6 +1174,5 @@ async def voice_orchestrator_chat(request: VoiceChatRequest, api_key: str = Depe
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8001)
-
-

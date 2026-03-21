@@ -5,24 +5,27 @@ Connects PersonaPlex full-duplex voice to MAS orchestrator.
 Integrates with PersonaPlexMemory to persist voice session summaries and
 conversation history for contextual recall and future sessions.
 """
-import asyncio
+
 import logging
 import os
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Optional
 from uuid import UUID, uuid4
+
 import aiohttp
 
 logger = logging.getLogger(__name__)
+
 
 class Intent(Enum):
     CHITCHAT = "chitchat"
     ACTION_NEEDED = "action_needed"
     CONFIRMATION_REQUIRED = "confirmation_required"
     UNKNOWN = "unknown"
+
 
 @dataclass
 class DuplexSession:
@@ -37,7 +40,7 @@ class DuplexSession:
     tool_invocations: list = field(default_factory=list)
     barge_in_events: list = field(default_factory=list)
     is_active: bool = True
-    
+
     def to_dict(self) -> dict:
         return {
             "session_id": self.session_id,
@@ -52,24 +55,48 @@ class DuplexSession:
             "is_active": self.is_active,
         }
 
+
 class PersonaPlexBridge:
     def __init__(self, personaplex_url=None, mas_url=None, n8n_url=None):
-        self.personaplex_url = personaplex_url or os.getenv("PERSONAPLEX_URL", "wss://localhost:8998")
+        self.personaplex_url = personaplex_url or os.getenv(
+            "PERSONAPLEX_URL", "wss://localhost:8998"
+        )
         self.mas_url = mas_url or os.getenv("MAS_ORCHESTRATOR_URL", "http://192.168.0.188:8001")
         self.n8n_url = n8n_url or os.getenv("N8N_WEBHOOK_URL", "http://192.168.0.188:5678/webhook")
         self.sessions: dict[str, DuplexSession] = {}
-        self._session_to_memory: dict[str, UUID] = {}  # bridge session_id -> PersonaPlexMemory VoiceSession id
+        self._session_to_memory: dict[str, UUID] = (
+            {}
+        )  # bridge session_id -> PersonaPlexMemory VoiceSession id
         self._http: Optional[aiohttp.ClientSession] = None
         self._personaplex_memory = None
         self._memory_initialized = False
-        self.action_keywords = ["turn on", "turn off", "set", "create", "delete", "start", "stop", "run", "check", "status"]
-        self.confirm_keywords = ["delete", "remove", "destroy", "shutdown", "restart all", "clear", "reset"]
-    
+        self.action_keywords = [
+            "turn on",
+            "turn off",
+            "set",
+            "create",
+            "delete",
+            "start",
+            "stop",
+            "run",
+            "check",
+            "status",
+        ]
+        self.confirm_keywords = [
+            "delete",
+            "remove",
+            "destroy",
+            "shutdown",
+            "restart all",
+            "clear",
+            "reset",
+        ]
+
     async def get_http(self):
         if not self._http or self._http.closed:
             self._http = aiohttp.ClientSession()
         return self._http
-    
+
     async def _ensure_memory(self):
         """Lazily initialize PersonaPlex memory if database is configured."""
         if self._memory_initialized:
@@ -79,16 +106,17 @@ class PersonaPlexBridge:
             return
         try:
             from mycosoft_mas.memory.personaplex_memory import PersonaPlexMemory
+
             self._personaplex_memory = PersonaPlexMemory()
             await self._personaplex_memory.initialize()
             logger.info("PersonaPlex memory integration enabled")
         except Exception as e:
             logger.warning(f"PersonaPlex memory integration disabled: {e}")
-    
+
     async def close(self):
         if self._http and not self._http.closed:
             await self._http.close()
-    
+
     def create_session(self, conversation_id=None, persona="myca", voice_prompt="NATF2.pt"):
         session = DuplexSession(
             session_id=str(uuid4()),
@@ -98,10 +126,10 @@ class PersonaPlexBridge:
         )
         self.sessions[session.session_id] = session
         return session
-    
+
     def get_session(self, session_id: str):
         return self.sessions.get(session_id)
-    
+
     async def end_session(self, session_id: str):
         if session_id in self.sessions:
             self.sessions[session_id].is_active = False
@@ -113,7 +141,7 @@ class PersonaPlexBridge:
                     logger.debug(f"Persisted voice session {session_id} to memory")
                 except Exception as e:
                     logger.debug(f"Could not persist session to memory: {e}")
-    
+
     def classify_intent(self, text: str) -> Intent:
         text_lower = text.lower()
         for kw in self.confirm_keywords:
@@ -123,14 +151,16 @@ class PersonaPlexBridge:
             if kw in text_lower:
                 return Intent.ACTION_NEEDED
         return Intent.CHITCHAT
-    
+
     async def handle_agent_text(self, session_id: str, agent_text: str, user_text=None):
         session = self.get_session(session_id)
         if not session:
             return None
         session.last_activity = datetime.utcnow()
-        session.turns.append({"timestamp": datetime.utcnow().isoformat(), "user": user_text, "agent": agent_text})
-        
+        session.turns.append(
+            {"timestamp": datetime.utcnow().isoformat(), "user": user_text, "agent": agent_text}
+        )
+
         await self._ensure_memory()
         if self._personaplex_memory:
             memory_session_id = self._session_to_memory.get(session_id)
@@ -138,7 +168,7 @@ class PersonaPlexBridge:
                 try:
                     memory_session = await self._personaplex_memory.start_session(
                         user_id=session.conversation_id,
-                        context={"persona": session.persona, "voice_prompt": session.voice_prompt}
+                        context={"persona": session.persona, "voice_prompt": session.voice_prompt},
                     )
                     memory_session_id = memory_session.id
                     self._session_to_memory[session_id] = memory_session_id
@@ -147,11 +177,15 @@ class PersonaPlexBridge:
             if memory_session_id is not None:
                 try:
                     if user_text:
-                        await self._personaplex_memory.add_turn(memory_session_id, "user", user_text)
-                    await self._personaplex_memory.add_turn(memory_session_id, "assistant", agent_text)
+                        await self._personaplex_memory.add_turn(
+                            memory_session_id, "user", user_text
+                        )
+                    await self._personaplex_memory.add_turn(
+                        memory_session_id, "assistant", agent_text
+                    )
                 except Exception as e:
                     logger.debug(f"Could not add turn to memory: {e}")
-        
+
         intent = self.classify_intent(agent_text)
         if intent == Intent.CHITCHAT:
             return None
@@ -160,31 +194,50 @@ class PersonaPlexBridge:
         if intent == Intent.ACTION_NEEDED:
             return await self._execute_tool(session, agent_text, user_text)
         return None
-    
+
     async def _execute_tool(self, session, agent_text, user_text):
         start = time.time()
         try:
             http = await self.get_http()
-            payload = {"message": user_text or agent_text, "conversation_id": session.conversation_id, "want_audio": False, "source": "personaplex"}
-            async with http.post(f"{self.mas_url}/voice/orchestrator/chat", json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            payload = {
+                "message": user_text or agent_text,
+                "conversation_id": session.conversation_id,
+                "want_audio": False,
+                "source": "personaplex",
+            }
+            async with http.post(
+                f"{self.mas_url}/voice/orchestrator/chat",
+                json=payload,
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
                 if resp.status == 200:
                     result = await resp.json()
                     latency = (time.time() - start) * 1000
-                    session.tool_invocations.append({"timestamp": datetime.utcnow().isoformat(), "agent": result.get("agent"), "latency_ms": latency, "status": "success"})
+                    session.tool_invocations.append(
+                        {
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "agent": result.get("agent"),
+                            "latency_ms": latency,
+                            "status": "success",
+                        }
+                    )
                     return result.get("response_text", "Action completed.")
                 return "I encountered an issue executing that action."
         except Exception as e:
             logger.error(f"Tool error: {e}")
             return "I had trouble executing that action."
-    
+
     def get_active_sessions(self):
         return [s.to_dict() for s in self.sessions.values() if s.is_active]
-    
+
     def get_stats(self):
         active = [s for s in self.sessions.values() if s.is_active]
         return {"active_sessions": len(active), "total_sessions": len(self.sessions)}
 
+
 _bridge = None
+
+
 def get_bridge():
     global _bridge
     if not _bridge:

@@ -20,12 +20,12 @@ import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from mycosoft_mas.consciousness import get_consciousness
 from mycosoft_mas.agents.clusters.search_discovery.search_agent import (
     SearchAgent,
     SearchQuery,
     SearchType,
 )
+from mycosoft_mas.consciousness import get_consciousness
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/nlq", tags=["nlq"])
@@ -101,11 +101,21 @@ JSON:"""
                 },
             )
         if res.status_code != 200:
-            return {"intent": "search", "confidence": 0.5, "search_type": "semantic", "explanation": "Fallback"}
+            return {
+                "intent": "search",
+                "confidence": 0.5,
+                "search_type": "semantic",
+                "explanation": "Fallback",
+            }
         data = res.json()
         raw = (data.get("response") or data.get("message") or data.get("content") or "").strip()
         if not raw:
-            return {"intent": "search", "confidence": 0.5, "search_type": "semantic", "explanation": "No response"}
+            return {
+                "intent": "search",
+                "confidence": 0.5,
+                "search_type": "semantic",
+                "explanation": "No response",
+            }
         # Extract JSON from response (LLM may wrap in markdown)
         if "```" in raw:
             parts = raw.split("```")
@@ -116,7 +126,12 @@ JSON:"""
         return json.loads(raw)
     except Exception as e:
         logger.warning("NLQ parse LLM failed: %s", e)
-        return {"intent": "search", "confidence": 0.5, "search_type": "semantic", "explanation": str(e)}
+        return {
+            "intent": "search",
+            "confidence": 0.5,
+            "search_type": "semantic",
+            "explanation": str(e),
+        }
 
 
 @router.post("/parse", response_model=NLQParseResponse)

@@ -30,31 +30,28 @@ Created: March 3, 2026
 import asyncio
 import logging
 import os
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from mycosoft_mas.agents.v2.base_agent_v2 import BaseAgentV2
-from mycosoft_mas.llm.constrained.static_index import (
-    STATICIndex,
-    IndexConfig,
-    build_static_index,
-    build_index_from_strings,
-)
 from mycosoft_mas.llm.constrained.constraint_engine import (
     ConstraintEngine,
-    ConstrainedGenerationResult,
-)
-from mycosoft_mas.llm.constrained.token_masker import (
-    TokenMasker,
-    MaskingStrategy,
 )
 from mycosoft_mas.llm.constrained.domain_builders import (
-    build_all_domain_indexes,
     DOMAIN_BUILDERS,
     DomainIndexReport,
     MINDEXConstraintConfig,
+    build_all_domain_indexes,
+)
+from mycosoft_mas.llm.constrained.static_index import (
+    IndexConfig,
+    STATICIndex,
+    build_index_from_strings,
+    build_static_index,
+)
+from mycosoft_mas.llm.constrained.token_masker import (
+    TokenMasker,
 )
 
 logger = logging.getLogger(__name__)
@@ -124,9 +121,7 @@ class STATICDecodingAgent(BaseAgentV2):
         super().__init__(agent_id=agent_id, config=config)
 
         self.engine = ConstraintEngine()
-        self._index_dir = os.environ.get(
-            "STATIC_INDEX_DIR", "/tmp/static_indexes"
-        )
+        self._index_dir = os.environ.get("STATIC_INDEX_DIR", "/tmp/static_indexes")
         self._maskers: Dict[str, TokenMasker] = {}
 
         # Domain index build report (populated on build_all_domains)
@@ -165,9 +160,7 @@ class STATICDecodingAgent(BaseAgentV2):
                 except Exception as e:
                     logger.warning(f"Failed to load index '{name}': {e}")
 
-        logger.info(
-            f"STATICDecodingAgent started with {len(self.engine.list_indexes())} indexes"
-        )
+        logger.info(f"STATICDecodingAgent started with {len(self.engine.list_indexes())} indexes")
 
     async def on_stop(self):
         """Persist indexes on shutdown."""
@@ -207,17 +200,13 @@ class STATICDecodingAgent(BaseAgentV2):
 
         # Convert to numpy
         max_len = max(len(s) for s in raw_sequences)
-        sequences = np.full(
-            (len(raw_sequences), max_len), -1, dtype=np.int32
-        )
+        sequences = np.full((len(raw_sequences), max_len), -1, dtype=np.int32)
         for i, seq in enumerate(raw_sequences):
             sequences[i, : len(seq)] = seq
 
         # Build index (CPU-bound, run in executor)
         loop = asyncio.get_event_loop()
-        index = await loop.run_in_executor(
-            None, build_static_index, sequences, config
-        )
+        index = await loop.run_in_executor(None, build_static_index, sequences, config)
 
         self.engine.register_index(name, index)
         self._maskers[name] = TokenMasker(index)
@@ -388,10 +377,7 @@ class STATICDecodingAgent(BaseAgentV2):
 
         return {
             "status": "success",
-            "ranked_candidates": [
-                {"candidate": c, "score": s, "valid": v}
-                for c, s, v in results
-            ],
+            "ranked_candidates": [{"candidate": c, "score": s, "valid": v} for c, s, v in results],
         }
 
     async def _handle_list_indexes(self, task) -> Dict[str, Any]:
@@ -434,8 +420,7 @@ class STATICDecodingAgent(BaseAgentV2):
                 "status": "success",
                 "all_indexes": self.engine.list_indexes(),
                 "total_memory_mb": sum(
-                    idx.memory_usage_mb()
-                    for idx in self.engine._indexes.values()
+                    idx.memory_usage_mb() for idx in self.engine._indexes.values()
                 ),
             }
 

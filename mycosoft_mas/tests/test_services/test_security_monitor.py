@@ -1,8 +1,11 @@
-import pytest
 import asyncio
 from datetime import datetime
-from mycosoft_mas.services.security_monitor import SecurityMonitor
+
+import pytest
+
 from mycosoft_mas.services.exceptions import SecurityMonitorError
+from mycosoft_mas.services.security_monitor import SecurityMonitor
+
 
 class TestSecurityMonitor:
     @pytest.fixture
@@ -24,7 +27,7 @@ class TestSecurityMonitor:
         # Simulate vulnerability detection
         issues = await monitor.check_security()
         assert isinstance(issues["vulnerabilities"], list)
-        
+
         # Verify vulnerability structure
         if issues["vulnerabilities"]:
             vuln = issues["vulnerabilities"][0]
@@ -38,7 +41,7 @@ class TestSecurityMonitor:
         # Simulate security alerts
         issues = await monitor.check_security()
         assert isinstance(issues["security_alerts"], list)
-        
+
         # Verify alert structure
         if issues["security_alerts"]:
             alert = issues["security_alerts"][0]
@@ -51,7 +54,7 @@ class TestSecurityMonitor:
         # Simulate security updates
         issues = await monitor.check_security()
         assert isinstance(issues["security_updates"], list)
-        
+
         # Verify update structure
         if issues["security_updates"]:
             update = issues["security_updates"][0]
@@ -74,10 +77,10 @@ class TestSecurityMonitor:
     async def test_clear_alerts(self, monitor):
         # First check for security issues
         await monitor.check_security()
-        
+
         # Clear alerts
         await monitor.clear_alerts()
-        
+
         # Verify alerts are cleared
         status = monitor.get_status()
         assert status["vulnerabilities_found"] == 0
@@ -94,9 +97,7 @@ class TestSecurityMonitor:
     @pytest.mark.asyncio
     async def test_concurrent_checks(self, monitor):
         # Test concurrent security checks
-        tasks = [
-            monitor.check_security() for _ in range(5)
-        ]
+        tasks = [monitor.check_security() for _ in range(5)]
         results = await asyncio.gather(*tasks)
         assert len(results) == 5
         assert all(isinstance(r, dict) for r in results)
@@ -132,7 +133,7 @@ class TestSecurityMonitor:
         start_time = datetime.now()
         await monitor.check_security()
         end_time = datetime.now()
-        
+
         status = monitor.get_status()
         assert status["processing_time"] >= 0
         assert (end_time - start_time).total_seconds() >= status["processing_time"]
@@ -141,14 +142,14 @@ class TestSecurityMonitor:
     async def test_error_counting(self, monitor):
         # Test error counting
         initial_errors = monitor.get_status()["error_count"]
-        
+
         # Simulate an error
         monitor.check_interval = -1
         try:
             await monitor.check_security()
         except SecurityMonitorError:
             pass
-            
+
         assert monitor.get_status()["error_count"] == initial_errors + 1
 
     @pytest.mark.asyncio
@@ -157,7 +158,7 @@ class TestSecurityMonitor:
         monitor.security_policies = {
             "max_severity": "critical",
             "auto_update": True,
-            "notify_on_critical": True
+            "notify_on_critical": True,
         }
         issues = await monitor.check_security()
         assert isinstance(issues, dict)
@@ -171,4 +172,4 @@ class TestSecurityMonitor:
             assert isinstance(update, dict)
             assert "package" in update
             assert "version" in update
-            assert "description" in update 
+            assert "description" in update

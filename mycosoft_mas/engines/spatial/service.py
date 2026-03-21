@@ -27,6 +27,7 @@ async def _mindex_request(
     """Call MINDEX API with optional API key."""
     try:
         import httpx
+
         url = f"{MINDEX_URL}{MINDEX_API_PREFIX}{path}"
         headers = {}
         if MINDEX_API_KEY:
@@ -99,6 +100,7 @@ class SpatialService:
         """
         try:
             import h3
+
             cells = list(h3.grid_disk(h3_cell, k))
         except ImportError:
             cells = [h3_cell]

@@ -42,7 +42,12 @@ EDGE_TARGETS = {
 class ModelCompressionAgent(BaseAgent):
     """Agent for model compression and edge deployment."""
 
-    def __init__(self, agent_id: str = "model-compression", name: str = "Model Compression Agent", config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        agent_id: str = "model-compression",
+        name: str = "Model Compression Agent",
+        config: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(agent_id=agent_id, name=name, config=config or {})
         self.capabilities = [
             "quantize",
@@ -124,7 +129,11 @@ class ModelCompressionAgent(BaseAgent):
             "spec": spec,
             "model_size_mb": model_size_mb,
             "fits": fits,
-            "recommendation": f"Use {spec.get('framework')} with {spec.get('precision')} precision" if spec else "Unknown target",
+            "recommendation": (
+                f"Use {spec.get('framework')} with {spec.get('precision')} precision"
+                if spec
+                else "Unknown target"
+            ),
         }
 
     async def _export_onnx(self, task: Dict[str, Any]) -> Dict[str, Any]:

@@ -12,7 +12,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query, Body
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -31,11 +31,11 @@ def _get_sporebase_devices() -> List[Dict[str, Any]]:
     """List devices with role sporebase from device registry."""
     try:
         from mycosoft_mas.core.routers.device_registry_api import (
-            _device_registry,
-            _device_last_seen,
-            _get_device_status,
             _cleanup_expired_devices,
+            _device_registry,
+            _get_device_status,
         )
+
         _cleanup_expired_devices()
         out = []
         for device_id, device in _device_registry.items():
@@ -54,12 +54,14 @@ def _get_sporebase_devices() -> List[Dict[str, Any]]:
 
 class CommandBody(BaseModel):
     """Command to SporeBase device (start/stop collection, advance tape)."""
+
     command: str = Field(..., description="start_collection, stop_collection, advance_tape, etc.")
     params: Dict[str, Any] = Field(default_factory=dict)
 
 
 class SampleCreate(BaseModel):
     """Create a sample record."""
+
     device_id: str
     segment_number: Optional[int] = None
     start_time: Optional[str] = None
@@ -71,6 +73,7 @@ class SampleCreate(BaseModel):
 
 class LabResultCreate(BaseModel):
     """Lab result for a sample."""
+
     analysis_type: str = Field(..., description="microscopy, qpcr, sequencing, culture")
     results: Dict[str, Any] = Field(default_factory=dict)
     analyzed_at: Optional[str] = None
@@ -78,6 +81,7 @@ class LabResultCreate(BaseModel):
 
 class CalibrationCreate(BaseModel):
     """Calibration record for a device."""
+
     device_id: str
     calibration_type: str
     data: Dict[str, Any] = Field(default_factory=dict)
@@ -98,7 +102,11 @@ async def list_sporebase_devices(
         devices = [d for d in devices if d.get("status") == status]
     if not include_offline:
         devices = [d for d in devices if d.get("status") != "offline"]
-    return {"devices": devices, "count": len(devices), "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {
+        "devices": devices,
+        "count": len(devices),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @router.get("/devices/{device_id}/telemetry")
@@ -124,12 +132,14 @@ async def get_device_telemetry(
 async def send_device_command(device_id: str, body: CommandBody):
     """Send command to a SporeBase device (forwarded to MycoBrain service)."""
     try:
+        import httpx
+
         from mycosoft_mas.core.routers.device_registry_api import (
+            _cleanup_expired_devices,
             _device_registry,
             _get_device_status,
-            _cleanup_expired_devices,
         )
-        import httpx
+
         _cleanup_expired_devices()
         if device_id not in _device_registry:
             raise HTTPException(status_code=404, detail=f"Device not found: {device_id}")
@@ -214,12 +224,14 @@ async def add_sample_result(sample_id: str, body: LabResultCreate):
     result_id = str(uuid.uuid4())
     if sample_id not in _sample_results:
         _sample_results[sample_id] = []
-    _sample_results[sample_id].append({
-        "id": result_id,
-        "analysis_type": body.analysis_type,
-        "results": body.results,
-        "analyzed_at": body.analyzed_at or datetime.now(timezone.utc).isoformat(),
-    })
+    _sample_results[sample_id].append(
+        {
+            "id": result_id,
+            "analysis_type": body.analysis_type,
+            "results": body.results,
+            "analyzed_at": body.analyzed_at or datetime.now(timezone.utc).isoformat(),
+        }
+    )
     return {"id": result_id, "status": "created"}
 
 

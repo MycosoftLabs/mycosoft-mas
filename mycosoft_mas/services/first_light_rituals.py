@@ -34,9 +34,7 @@ class FirstLightRitualService:
             fusion.stop()
 
             # Record as identity earliest fragment (once only)
-            await self._record_first_light_identity_event(
-                packet=packet, memory_id=memory_id
-            )
+            await self._record_first_light_identity_event(packet=packet, memory_id=memory_id)
 
             return {
                 "status": "completed",
@@ -50,14 +48,16 @@ class FirstLightRitualService:
         diary: List[Dict[str, Any]] = []
         for environment in environments:
             obs = await self._observe_environment(environment=environment)
-            diary.append({
-                "timestamp": obs.timestamp.isoformat(),
-                "environment": obs.environment,
-                "summary": obs.summary,
-                "questions": obs.questions,
-                "correlations": obs.correlations,
-                "anomalies": obs.anomalies,
-            })
+            diary.append(
+                {
+                    "timestamp": obs.timestamp.isoformat(),
+                    "environment": obs.environment,
+                    "summary": obs.summary,
+                    "questions": obs.questions,
+                    "correlations": obs.correlations,
+                    "anomalies": obs.anomalies,
+                }
+            )
             await self._store_episodic_memory(
                 event_type="daily_ritual_observation",
                 packet=None,
@@ -186,4 +186,3 @@ class FirstLightRitualService:
             return str(entry.get("memory_id")) if isinstance(entry, dict) else None
         except Exception:
             return None
-

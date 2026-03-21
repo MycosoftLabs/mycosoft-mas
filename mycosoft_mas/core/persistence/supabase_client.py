@@ -8,7 +8,6 @@ Created: March 10, 2026
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 from typing import Any, Dict, List, Optional
@@ -39,6 +38,7 @@ def supabase_insert(table: str, row: Dict[str, Any]) -> bool:
         return False
     try:
         import requests
+
         rest_url = f"{url.rstrip('/')}/rest/v1/{table}"
         headers = {
             "apikey": key,
@@ -72,6 +72,7 @@ def supabase_upsert(table: str, row: Dict[str, Any], on_conflict: str = "id") ->
         return False
     try:
         import requests
+
         rest_url = f"{url.rstrip('/')}/rest/v1/{table}"
         headers = {
             "apikey": key,
@@ -110,6 +111,7 @@ def supabase_select(
         return []
     try:
         import requests
+
         rest_url = f"{url.rstrip('/')}/rest/v1/{table}"
         params = {"select": columns}
         if order:
@@ -150,6 +152,7 @@ def supabase_update(
         return False
     try:
         import requests
+
         rest_url = f"{url.rstrip('/')}/rest/v1/{table}"
         headers = {
             "apikey": key,

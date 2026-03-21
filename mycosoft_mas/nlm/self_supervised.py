@@ -40,4 +40,3 @@ class SelfSupervisedTasks:
             "segmentation_loss": result.segmentation_loss,
             "total_loss": result.total_loss,
         }
-

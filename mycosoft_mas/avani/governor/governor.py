@@ -28,11 +28,8 @@ from datetime import datetime, timezone
 from enum import IntEnum
 from typing import Any, Dict, List, Optional
 
-from mycosoft_mas.avani.constitution.red_lines import RED_LINES, check_red_line_violation
+from mycosoft_mas.avani.constitution.red_lines import check_red_line_violation
 from mycosoft_mas.avani.season_engine.seasons import (
-    SEASON_RISK_CEILING,
-    SEASON_THROTTLE,
-    Season,
     SeasonEngine,
     SeasonMetrics,
 )
@@ -76,9 +73,7 @@ class Proposal:
     ecological_impact: float = 0.0  # 0.0 = none, 1.0 = maximum
     reversibility: float = 1.0  # 1.0 = fully reversible, 0.0 = irreversible
     metadata: Dict[str, Any] = field(default_factory=dict)
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -92,9 +87,7 @@ class GovernorDecision:
     throttle_pct: int = 100  # Compute/resource allocation percentage
     vision_result: Optional[VisionDecision] = None
     red_line_violations: List[str] = field(default_factory=list)
-    timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -103,9 +96,7 @@ class GovernorDecision:
             "stage_failed": self.stage_failed,
             "conditions": self.conditions,
             "throttle_pct": self.throttle_pct,
-            "vision_score": (
-                self.vision_result.wisdom_score if self.vision_result else None
-            ),
+            "vision_score": (self.vision_result.wisdom_score if self.vision_result else None),
             "red_line_violations": self.red_line_violations,
             "timestamp": self.timestamp.isoformat(),
         }
@@ -141,10 +132,7 @@ class AvaniGovernor:
         if not vision_result.approved:
             decision = GovernorDecision(
                 approved=False,
-                reason=(
-                    f"Vision Filter rejected: "
-                    f"{'; '.join(vision_result.concerns)}"
-                ),
+                reason=(f"Vision Filter rejected: " f"{'; '.join(vision_result.concerns)}"),
                 stage_failed="vision",
                 vision_result=vision_result,
             )
@@ -155,9 +143,7 @@ class AvaniGovernor:
         violations = check_red_line_violation(proposal.description)
         if violations:
             # Trigger Frost state
-            self.season_engine.update(
-                SeasonMetrics(red_line_violated=True), is_root=False
-            )
+            self.season_engine.update(SeasonMetrics(red_line_violated=True), is_root=False)
             decision = GovernorDecision(
                 approved=False,
                 reason=(
@@ -206,9 +192,7 @@ class AvaniGovernor:
             return decision
 
         # Stage 5: Risk Tier Authorization
-        ceiling = _CEILING_MAP.get(
-            self.season_engine.risk_ceiling, RiskTier.NONE
-        )
+        ceiling = _CEILING_MAP.get(self.season_engine.risk_ceiling, RiskTier.NONE)
         if proposal.risk_tier > ceiling:
             decision = GovernorDecision(
                 approved=False,

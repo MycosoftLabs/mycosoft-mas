@@ -6,7 +6,8 @@ Created: February 3, 2026
 
 import logging
 from typing import Any, Dict, List, Optional
-from .model_wrapper import LLMWrapper, Message, LLMResponse, get_llm_wrapper
+
+from .model_wrapper import LLMWrapper, Message, get_llm_wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +32,13 @@ Always provide scientifically grounded responses with appropriate uncertainty wh
 
 class MycoSpeak:
     """Fungal domain specialized language model."""
-    
-    def __init__(self, base_model: Optional[LLMWrapper] = None, provider: str = "openai", model_name: str = "gpt-4-turbo"):
+
+    def __init__(
+        self,
+        base_model: Optional[LLMWrapper] = None,
+        provider: str = "openai",
+        model_name: str = "gpt-4-turbo",
+    ):
         self.base_model = base_model or get_llm_wrapper(provider, model_name)
         self.system_prompt = MYCOSPEAK_SYSTEM_PROMPT
         self.signal_patterns: Dict[str, str] = {
@@ -40,11 +46,13 @@ class MycoSpeak:
             "oscillation": "rhythmic fluctuation, may indicate metabolic activity or communication",
             "burst": "cluster of spikes, often associated with nutrient detection or stress",
             "plateau": "sustained elevated signal, indicates ongoing response",
-            "decay": "gradual decrease, return to baseline after stimulus"
+            "decay": "gradual decrease, return to baseline after stimulus",
         }
         logger.info("MycoSpeak initialized")
-    
-    async def interpret_signal(self, signal_data: Dict[str, Any], context: Optional[str] = None) -> str:
+
+    async def interpret_signal(
+        self, signal_data: Dict[str, Any], context: Optional[str] = None
+    ) -> str:
         pattern_class = signal_data.get("pattern_class", "unknown")
         confidence = signal_data.get("confidence", 0.0)
         features = signal_data.get("features", {})
@@ -66,11 +74,11 @@ Provide:
 
         messages = [
             Message(role="system", content=self.system_prompt),
-            Message(role="user", content=prompt)
+            Message(role="user", content=prompt),
         ]
         response = await self.base_model.generate(messages)
         return response.content
-    
+
     async def identify_species(self, characteristics: Dict[str, Any]) -> str:
         prompt = f"""Based on these fungal characteristics, suggest possible species:
 
@@ -84,12 +92,14 @@ Provide top 3 candidate species with reasoning and confidence levels."""
 
         messages = [
             Message(role="system", content=self.system_prompt),
-            Message(role="user", content=prompt)
+            Message(role="user", content=prompt),
         ]
         response = await self.base_model.generate(messages)
         return response.content
-    
-    async def design_experiment(self, hypothesis: str, constraints: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+
+    async def design_experiment(
+        self, hypothesis: str, constraints: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         prompt = f"""Design an experiment to test this hypothesis about fungal systems:
 
 Hypothesis: {hypothesis}
@@ -105,11 +115,11 @@ Provide:
 
         messages = [
             Message(role="system", content=self.system_prompt),
-            Message(role="user", content=prompt)
+            Message(role="user", content=prompt),
         ]
         response = await self.base_model.generate(messages)
         return {"hypothesis": hypothesis, "experimental_design": response.content}
-    
+
     async def analyze_pathway(self, target_compound: str, organism: str = "fungi") -> str:
         prompt = f"""Analyze potential biosynthetic pathways for producing {target_compound} in {organism}.
 
@@ -124,12 +134,14 @@ Provide a detailed pathway analysis with enzyme recommendations."""
 
         messages = [
             Message(role="system", content=self.system_prompt),
-            Message(role="user", content=prompt)
+            Message(role="user", content=prompt),
         ]
         response = await self.base_model.generate(messages)
         return response.content
-    
-    async def chat(self, user_message: str, conversation_history: Optional[List[Message]] = None) -> str:
+
+    async def chat(
+        self, user_message: str, conversation_history: Optional[List[Message]] = None
+    ) -> str:
         messages = [Message(role="system", content=self.system_prompt)]
         if conversation_history:
             messages.extend(conversation_history)

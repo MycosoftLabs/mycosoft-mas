@@ -13,9 +13,9 @@ import logging
 import os
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from mycosoft_mas.sandbox.container_manager import SandboxManager
@@ -50,31 +50,59 @@ class RegisteredTool:
     description: str = ""
 
 
-BUILTIN_TOOLS = frozenset({
-    "calculator", "device_status", "query_device_telemetry",
-    "mindex_query", "memory_recall", "exa_search",
-    "timeline_search", "memory_store", "graph_lookup",
-})
+BUILTIN_TOOLS = frozenset(
+    {
+        "calculator",
+        "device_status",
+        "query_device_telemetry",
+        "mindex_query",
+        "memory_recall",
+        "exa_search",
+        "timeline_search",
+        "memory_store",
+        "graph_lookup",
+    }
+)
 
-SANDBOX_TOOLS = frozenset({
-    "code_execute", "exec", "browser",
-})
+SANDBOX_TOOLS = frozenset(
+    {
+        "code_execute",
+        "exec",
+        "browser",
+    }
+)
 
-WORKFLOW_TOOLS = frozenset({
-    "execute_workflow", "generate_workflow",
-})
+WORKFLOW_TOOLS = frozenset(
+    {
+        "execute_workflow",
+        "generate_workflow",
+    }
+)
 
-AGENT_TOOLS = frozenset({
-    "agent_invoke",
-})
+AGENT_TOOLS = frozenset(
+    {
+        "agent_invoke",
+    }
+)
 
 # CREP safe tools — MAS-native map control for autonomous MYCA
-CREP_TOOLS = frozenset({
-    "crep_fly_to", "crep_geocode_and_fly_to", "crep_set_layer_visibility",
-    "crep_toggle_layer", "crep_apply_filter", "crep_clear_filters",
-    "crep_get_view_context", "crep_get_entity_details", "crep_set_time_cursor",
-    "crep_timeline_search", "crep_set_zoom", "crep_zoom_by", "crep_pan_by",
-})
+CREP_TOOLS = frozenset(
+    {
+        "crep_fly_to",
+        "crep_geocode_and_fly_to",
+        "crep_set_layer_visibility",
+        "crep_toggle_layer",
+        "crep_apply_filter",
+        "crep_clear_filters",
+        "crep_get_view_context",
+        "crep_get_entity_details",
+        "crep_set_time_cursor",
+        "crep_timeline_search",
+        "crep_set_zoom",
+        "crep_zoom_by",
+        "crep_pan_by",
+    }
+)
 
 # CREP tools requiring user confirmation before execution
 CREP_REQUIRES_CONFIRMATION = frozenset({"crep_clear_filters"})
@@ -82,12 +110,15 @@ CREP_REQUIRES_CONFIRMATION = frozenset({"crep_clear_filters"})
 
 def _make_crep_handler(tool_name: str):
     """Create a sync handler that delegates to CrepCommandBus."""
+
     def handler(**kwargs):
         from mycosoft_mas.crep import get_crep_command_bus
+
         bus = get_crep_command_bus()
         confirmed = kwargs.pop("_confirmed", False) or kwargs.pop("confirmed", False)
         result = bus.execute(tool_name, kwargs, confirmed=confirmed)
         return result
+
     return handler
 
 
@@ -110,20 +141,24 @@ class GatewayControlPlane:
     def _init_builtin_routes(self):
         for name in BUILTIN_TOOLS:
             self._registered[name] = RegisteredTool(
-                name=name, route_type=ToolRouteType.BUILTIN,
+                name=name,
+                route_type=ToolRouteType.BUILTIN,
             )
         for name in SANDBOX_TOOLS:
             self._registered[name] = RegisteredTool(
-                name=name, route_type=ToolRouteType.SANDBOX,
+                name=name,
+                route_type=ToolRouteType.SANDBOX,
                 requires_sandbox=True,
             )
         for name in WORKFLOW_TOOLS:
             self._registered[name] = RegisteredTool(
-                name=name, route_type=ToolRouteType.WORKFLOW,
+                name=name,
+                route_type=ToolRouteType.WORKFLOW,
             )
         for name in AGENT_TOOLS:
             self._registered[name] = RegisteredTool(
-                name=name, route_type=ToolRouteType.AGENT,
+                name=name,
+                route_type=ToolRouteType.AGENT,
             )
         self._init_crep_tools()
 
@@ -232,7 +267,10 @@ class GatewayControlPlane:
         return ToolResult(success=False, error=f"No handler for builtin tool '{tool_name}'")
 
     async def _execute_in_sandbox(
-        self, tool_name: str, args: Dict[str, Any], session_id: Optional[str] = None,
+        self,
+        tool_name: str,
+        args: Dict[str, Any],
+        session_id: Optional[str] = None,
     ) -> ToolResult:
         if not self._sandbox_manager:
             return ToolResult(success=False, error="SandboxManager not available")
@@ -258,12 +296,14 @@ class GatewayControlPlane:
             response = await asyncio.wait_for(ws.receive_json(), timeout=60)
         except asyncio.TimeoutError:
             return ToolResult(
-                success=False, error="Sandbox tool timed out",
+                success=False,
+                error="Sandbox tool timed out",
                 sandbox_id=sandbox.sandbox_id,
             )
         except Exception as exc:
             return ToolResult(
-                success=False, error=f"Sandbox comms error: {exc}",
+                success=False,
+                error=f"Sandbox comms error: {exc}",
                 sandbox_id=sandbox.sandbox_id,
             )
 
@@ -282,6 +322,7 @@ class GatewayControlPlane:
 
     async def _execute_workflow(self, tool_name: str, args: Dict[str, Any]) -> ToolResult:
         import httpx
+
         n8n_base = os.getenv("N8N_URL", "http://192.168.0.188:5678")
         n8n_url = f"{n8n_base}/api/v1/workflows"
         try:
@@ -297,6 +338,7 @@ class GatewayControlPlane:
 
     async def _execute_agent(self, tool_name: str, args: Dict[str, Any]) -> ToolResult:
         import httpx
+
         mas_base = os.getenv("MAS_API_URL", "http://192.168.0.188:8001")
         mas_url = f"{mas_base}/api/agents/invoke"
         try:

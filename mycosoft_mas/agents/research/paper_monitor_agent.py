@@ -19,14 +19,28 @@ from mycosoft_mas.agents.base_agent import BaseAgent
 logger = logging.getLogger(__name__)
 
 WATCH_DOMAINS = [
-    "mycology", "fungi", "mushroom", "mycelium",
-    "synthetic biology", "protein folding", "AlphaFold",
-    "large language model", "transformer", "diffusion model",
-    "quantum computing", "qubit",
-    "CRISPR", "gene editing", "metagenomics",
-    "earth observation", "remote sensing",
-    "bioreactor", "fermentation",
-    "LoRa", "ESP32", "edge computing",
+    "mycology",
+    "fungi",
+    "mushroom",
+    "mycelium",
+    "synthetic biology",
+    "protein folding",
+    "AlphaFold",
+    "large language model",
+    "transformer",
+    "diffusion model",
+    "quantum computing",
+    "qubit",
+    "CRISPR",
+    "gene editing",
+    "metagenomics",
+    "earth observation",
+    "remote sensing",
+    "bioreactor",
+    "fermentation",
+    "LoRa",
+    "ESP32",
+    "edge computing",
     "nature learning model",
 ]
 
@@ -34,7 +48,12 @@ WATCH_DOMAINS = [
 class PaperMonitorAgent(BaseAgent):
     """Monitors preprint servers and classifies new papers."""
 
-    def __init__(self, agent_id: str = "paper-monitor", name: str = "Paper Monitor Agent", config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        agent_id: str = "paper-monitor",
+        name: str = "Paper Monitor Agent",
+        config: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(agent_id=agent_id, name=name, config=config or {})
         self.capabilities = [
             "watch_preprints",
@@ -47,6 +66,7 @@ class PaperMonitorAgent(BaseAgent):
     def _get_watcher(self):
         if self._watcher is None:
             from mycosoft_mas.integrations.preprint_watcher_client import PreprintWatcherClient
+
             self._watcher = PreprintWatcherClient(self.config)
         return self._watcher
 
@@ -126,11 +146,13 @@ class PaperMonitorAgent(BaseAgent):
             text = f"{title} {abstract}".lower()
             matches = [d for d in WATCH_DOMAINS if d.lower() in text]
             if matches:
-                relevant.append({
-                    "title": title,
-                    "matched_domains": matches,
-                    "score": min(len(matches) / 3.0, 1.0),
-                    "source": p if isinstance(p, dict) else str(p),
-                })
+                relevant.append(
+                    {
+                        "title": title,
+                        "matched_domains": matches,
+                        "score": min(len(matches) / 3.0, 1.0),
+                        "source": p if isinstance(p, dict) else str(p),
+                    }
+                )
         relevant.sort(key=lambda x: x["score"], reverse=True)
         return relevant

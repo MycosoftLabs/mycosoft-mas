@@ -8,7 +8,7 @@ falls back to in-memory for local dev without Supabase.
 Created: March 10, 2026
 """
 
-from mycosoft_mas.core.persistence.redteam_store import redteam_store
 from mycosoft_mas.core.persistence.economy_store import economy_store
+from mycosoft_mas.core.persistence.redteam_store import redteam_store
 
 __all__ = ["redteam_store", "economy_store"]

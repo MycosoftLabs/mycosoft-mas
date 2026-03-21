@@ -7,23 +7,23 @@ and provenance/hashing utilities.
 Created: February 17, 2026
 """
 
+from mycosoft_mas.schemas.codec import canonical_json, hash_sha256
 from mycosoft_mas.schemas.experience_packet import (
     ExperiencePacket,
-    GroundTruth,
     Geo,
-    SelfState,
-    WorldStateRef,
+    GroundTruth,
     Observation,
     ObservationModality,
-    Uncertainty,
     Provenance,
+    SelfState,
+    Uncertainty,
+    WorldStateRef,
 )
 from mycosoft_mas.schemas.thought_object import (
+    EvidenceLink,
     ThoughtObject,
     ThoughtObjectType,
-    EvidenceLink,
 )
-from mycosoft_mas.schemas.codec import canonical_json, hash_sha256
 
 __all__ = [
     "ExperiencePacket",

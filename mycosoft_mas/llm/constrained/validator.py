@@ -35,6 +35,7 @@ from mycosoft_mas.llm.constrained.static_index import STATICIndex
 
 logger = logging.getLogger(__name__)
 
+
 # Byte-level tokenizer matching the one in domain_builders.py
 def _byte_tokenize(s: str) -> List[int]:
     return list(s.encode("utf-8"))
@@ -43,6 +44,7 @@ def _byte_tokenize(s: str) -> List[int]:
 @dataclass
 class ValidationResult:
     """Result of validating an entity against a STATIC index."""
+
     valid: bool
     entity: str
     index_name: str
@@ -105,9 +107,7 @@ class STATICValidator:
         index = self._engine.get_index(index_name)
         if index is None:
             # Fail-open: if the index isn't loaded, allow the entity
-            logger.debug(
-                f"Index '{index_name}' not loaded, allowing entity '{entity}'"
-            )
+            logger.debug(f"Index '{index_name}' not loaded, allowing entity '{entity}'")
             return True
 
         tokens = _byte_tokenize(entity)

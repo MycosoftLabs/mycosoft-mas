@@ -12,10 +12,10 @@ Env vars:
     WANDB_ENTITY    -- W&B entity (user or team)
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import httpx
 
@@ -103,10 +103,14 @@ class WandbClient:
             }
         }
         """
-        data = await self._gql(query, {"entity": self.entity, "project": project, "runName": run_id})
+        data = await self._gql(
+            query, {"entity": self.entity, "project": project, "runName": run_id}
+        )
         return data.get("data", {}).get("project", {}).get("run", {})
 
-    async def list_artifacts(self, project: str, artifact_type: str = "model") -> List[Dict[str, Any]]:
+    async def list_artifacts(
+        self, project: str, artifact_type: str = "model"
+    ) -> List[Dict[str, Any]]:
         query = """
         query($entity: String!, $project: String!, $type: String!) {
             project(name: $project, entityName: $entity) {
@@ -118,7 +122,9 @@ class WandbClient:
             }
         }
         """
-        data = await self._gql(query, {"entity": self.entity, "project": project, "type": artifact_type})
+        data = await self._gql(
+            query, {"entity": self.entity, "project": project, "type": artifact_type}
+        )
         at = data.get("data", {}).get("project", {}).get("artifactType", {})
         edges = at.get("artifactCollections", {}).get("edges", []) if at else []
         return [e["node"] for e in edges]

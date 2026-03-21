@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Union
+from typing import Any, Dict, List, Union
+
 
 class LLMProvider(ABC):
     @abstractmethod
@@ -7,11 +8,9 @@ class LLMProvider(ABC):
         """
         Send a chat completion request.
         """
-        pass
 
     @abstractmethod
     async def embed(self, text: Union[str, List[str]], model: str) -> List[List[float]]:
         """
         Generate embeddings for text.
         """
-        pass

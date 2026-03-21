@@ -66,7 +66,10 @@ def install_skill_from_git(url: str, branch: Optional[str] = None) -> dict[str, 
     repo_name = url.rstrip("/").split("/")[-1].replace(".git", "")
     skill_dir = SKILLS_DIR / repo_name
     if skill_dir.exists():
-        return {"status": "failed", "error": f"Skill '{repo_name}' already exists. Remove first to reinstall."}
+        return {
+            "status": "failed",
+            "error": f"Skill '{repo_name}' already exists. Remove first to reinstall.",
+        }
     try:
         cmd = ["git", "clone", "--depth", "1"]
         if branch:
@@ -74,7 +77,11 @@ def install_skill_from_git(url: str, branch: Optional[str] = None) -> dict[str, 
         cmd.extend([url, str(skill_dir)])
         subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=120)
         if not (skill_dir / "SKILL.md").exists():
-            return {"status": "warning", "skill_id": repo_name, "message": "Cloned but no SKILL.md found"}
+            return {
+                "status": "warning",
+                "skill_id": repo_name,
+                "message": "Cloned but no SKILL.md found",
+            }
         return {"status": "ok", "skill_id": repo_name, "path": str(skill_dir)}
     except subprocess.TimeoutExpired:
         if skill_dir.exists():
@@ -103,12 +110,21 @@ def list_skills() -> list[dict]:
                 md = d / "SKILL.md"
                 if md.exists():
                     meta["description"] = md.read_text(encoding="utf-8", errors="replace")[:500]
-            skills.append({k: v for k, v in meta.items() if k in ("id", "path", "description", "inputs", "outputs", "approval_required")})
+            skills.append(
+                {
+                    k: v
+                    for k, v in meta.items()
+                    if k in ("id", "path", "description", "inputs", "outputs", "approval_required")
+                }
+            )
     return skills
 
 
 async def run_skill(
-    skill_id: str, args: dict, os_ref=None, progress_callback: Optional[Callable[[str, str, int], None]] = None
+    skill_id: str,
+    args: dict,
+    os_ref=None,
+    progress_callback: Optional[Callable[[str, str, int], None]] = None,
 ) -> dict:
     """Run a skill by ID. Looks for run.py or run.sh. Respects approval_required from SKILL.md."""
     _ensure_skills_dir()
@@ -130,6 +146,7 @@ async def run_skill(
         else:
             try:
                 from mycosoft_mas.myca.os.gateway import broadcast_skill_progress
+
                 broadcast_skill_progress(skill_id, msg, float(pct) if pct is not None else None)
             except Exception:
                 pass
@@ -160,7 +177,8 @@ async def run_skill(
     if run_sh.exists():
         _progress("Running script", 50)
         proc = await asyncio.create_subprocess_exec(
-            "bash", str(run_sh),
+            "bash",
+            str(run_sh),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             cwd=str(skill_dir),
@@ -199,7 +217,7 @@ approval_required: true
 inputs: []
 outputs: [status, stdout, stderr]
 """,
-            '''import asyncio
+            """import asyncio
 
 async def run(args, os_ref):
     prog = args.get("_progress")
@@ -213,7 +231,7 @@ async def run(args, os_ref):
     if prog:
         prog("Completed" if proc.returncode == 0 else "Failed", 100)
     return {"status": "completed" if proc.returncode == 0 else "failed", "stdout": out.decode(), "stderr": err.decode()}
-''',
+""",
         )
 
     # check-vm-health skill
@@ -225,7 +243,7 @@ async def run(args, os_ref):
 inputs: []
 outputs: [status, results]
 """,
-            '''import asyncio
+            """import asyncio
 import aiohttp
 
 async def run(args, os_ref):
@@ -243,7 +261,7 @@ async def run(args, os_ref):
     if prog:
         prog("Done", 100)
     return {"status": "completed", "results": results}
-''',
+""",
         )
 
     # asana-sync skill
@@ -255,7 +273,7 @@ async def run(args, os_ref):
 inputs: [project_id (optional)]
 outputs: [status, tasks_synced, message]
 """,
-            '''import asyncio
+            """import asyncio
 import os
 import aiohttp
 
@@ -286,7 +304,7 @@ async def run(args, os_ref):
         return {"status": "completed", "tasks_synced": len(tasks), "message": f"Synced {len(tasks)} Asana tasks"}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
-''',
+""",
         )
 
     # calendar-check skill
@@ -298,7 +316,7 @@ async def run(args, os_ref):
 inputs: [max_results (optional, default 10)]
 outputs: [status, events, message]
 """,
-            '''import asyncio
+            """import asyncio
 import os
 from datetime import datetime
 
@@ -330,7 +348,7 @@ async def run(args, os_ref):
         return {"status": "completed", "events": [{"summary": e.get("summary"), "start": e.get("start")} for e in events], "message": f"Found {len(events)} events today"}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
-''',
+""",
         )
 
     # code-review skill
@@ -342,7 +360,7 @@ async def run(args, os_ref):
 inputs: [pr_url, repo, branch]
 outputs: [status, review_summary]
 """,
-            '''import asyncio
+            """import asyncio
 
 async def run(args, os_ref):
     prog = args.get("_progress")
@@ -362,7 +380,7 @@ async def run(args, os_ref):
         return {"status": "completed", "review_summary": result.get("output", result)}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
-''',
+""",
         )
 
     # daily-report skill
@@ -374,7 +392,7 @@ async def run(args, os_ref):
 inputs: [recipient (optional), channel (optional: email, discord, slack)]
 outputs: [status, report_summary]
 """,
-            '''import asyncio
+            """import asyncio
 
 async def run(args, os_ref):
     prog = args.get("_progress")
@@ -395,7 +413,7 @@ async def run(args, os_ref):
         return {"status": "completed", "report_summary": report}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
-''',
+""",
         )
 
     # git-commit skill
@@ -408,7 +426,7 @@ approval_required: true
 inputs: [repo_path, message (optional), branch (optional)]
 outputs: [status, commit_hash, stdout, stderr]
 """,
-            '''import asyncio
+            """import asyncio
 import os
 from pathlib import Path
 
@@ -464,5 +482,5 @@ async def run(args, os_ref):
         return {"status": "completed" if proc.returncode == 0 else "failed", "stdout": po.decode(), "stderr": pe.decode()}
     except Exception as e:
         return {"status": "failed", "error": str(e)}
-''',
+""",
         )

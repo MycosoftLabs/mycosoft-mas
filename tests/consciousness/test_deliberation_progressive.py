@@ -57,4 +57,3 @@ class TestDeliberationProgressive:
         output = "".join(tokens)
         assert "Fast answer." in output
         assert output.count("One more thing:") <= 1
-

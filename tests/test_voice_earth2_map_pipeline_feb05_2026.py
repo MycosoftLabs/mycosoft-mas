@@ -15,11 +15,11 @@ Or standalone: python tests/test_voice_earth2_map_pipeline_feb05_2026.py
 
 import asyncio
 import sys
-import os
-import pytest
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any, List
+from pathlib import Path
+from typing import Any, Dict, List
+
+import pytest
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -35,12 +35,14 @@ def log_test(name: str, passed: bool, details: str = ""):
     print(f"  {status} {name}")
     if details and not passed:
         print(f"         {details}")
-    test_results.append({
-        "name": name,
-        "passed": passed,
-        "details": details,
-        "timestamp": datetime.utcnow().isoformat()
-    })
+    test_results.append(
+        {
+            "name": name,
+            "passed": passed,
+            "details": details,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    )
 
 
 def section(title: str):
@@ -55,23 +57,25 @@ def section(title: str):
 # Test: Earth2 Voice Handler
 # =============================================================================
 
+
 def test_earth2_voice_handler():
     """Test Earth2 voice command parsing and handling."""
     section("Earth2 Voice Handler Tests")
-    
+
     try:
         from scripts.earth2_voice_handler import (
-            Earth2VoiceHandler,
             Earth2Intent,
+            Earth2VoiceHandler,
             is_earth2_command,
         )
+
         log_test("Import earth2_voice_handler", True)
     except ImportError as e:
         log_test("Import earth2_voice_handler", False, str(e))
         return
-    
+
     handler = Earth2VoiceHandler()
-    
+
     # Test forecast detection
     test_cases = [
         ("show me a 24 hour forecast", Earth2Intent.FORECAST),
@@ -84,32 +88,26 @@ def test_earth2_voice_handler():
         ("what's the GPU status", Earth2Intent.GPU_STATUS),
         ("random unrelated text", Earth2Intent.UNKNOWN),
     ]
-    
+
     for text, expected_intent in test_cases:
         cmd = handler.parse_command(text)
         passed = cmd.intent == expected_intent
         log_test(
             f"Parse: '{text[:30]}...' -> {expected_intent.value}",
             passed,
-            f"Got {cmd.intent.value}" if not passed else ""
+            f"Got {cmd.intent.value}" if not passed else "",
         )
-    
+
     # Test is_earth2_command function
-    log_test(
-        "is_earth2_command('show forecast')",
-        is_earth2_command("show forecast") == True
-    )
-    log_test(
-        "is_earth2_command('hello world')",
-        is_earth2_command("hello world") == False
-    )
-    
+    log_test("is_earth2_command('show forecast')", is_earth2_command("show forecast") is True)
+    log_test("is_earth2_command('hello world')", is_earth2_command("hello world") is False)
+
     # Test command execution (without actual API calls)
     async def run_execute():
         cmd = handler.parse_command("show me a 6 hour forecast")
         result = await handler.execute_command(cmd)
         return result
-    
+
     try:
         # Create new event loop for this test since asyncio.run() was used earlier
         loop = asyncio.new_event_loop()
@@ -118,19 +116,16 @@ def test_earth2_voice_handler():
             result = loop.run_until_complete(run_execute())
         finally:
             loop.close()
-        
+
         passed = isinstance(result, dict) and "action" in result
         log_test(
-            "Execute forecast command returns dict",
-            passed,
-            "" if passed else f"Got: {result}"
+            "Execute forecast command returns dict", passed, "" if passed else f"Got: {result}"
         )
     except Exception as e:
-        import traceback
+        pass
+
         log_test(
-            "Execute forecast command returns dict",
-            False,
-            f"Exception: {type(e).__name__}: {e}"
+            "Execute forecast command returns dict", False, f"Exception: {type(e).__name__}: {e}"
         )
 
 
@@ -138,24 +133,25 @@ def test_earth2_voice_handler():
 # Test: Map Voice Handler
 # =============================================================================
 
+
 def test_map_voice_handler():
     """Test map voice command parsing and handling."""
     section("Map Voice Handler Tests")
-    
+
     try:
         from scripts.map_voice_handler import (
-            MapVoiceHandler,
             MapIntent,
-            is_map_command,
+            MapVoiceHandler,
             process_map_voice,
         )
+
         log_test("Import map_voice_handler", True)
     except ImportError as e:
         log_test("Import map_voice_handler", False, str(e))
         return
-    
+
     handler = MapVoiceHandler()
-    
+
     # Test navigation commands
     test_cases = [
         ("go to tokyo", MapIntent.NAVIGATE),
@@ -173,34 +169,33 @@ def test_map_voice_handler():
         ("tell me about this volcano", MapIntent.CREP_ENTITY),
         ("what's happening here", MapIntent.WHAT_HERE),
     ]
-    
+
     for text, expected_intent in test_cases:
         cmd = handler.parse_command(text)
         passed = cmd.intent == expected_intent
         log_test(
             f"Parse: '{text[:30]}...' -> {expected_intent.value}",
             passed,
-            f"Got {cmd.intent.value}" if not passed else ""
+            f"Got {cmd.intent.value}" if not passed else "",
         )
-    
+
     # Test known location resolution
     cmd = handler.parse_command("go to tokyo")
     log_test(
         "Known location 'tokyo' has coordinates",
-        cmd.coordinates is not None and abs(cmd.coordinates[0] - 35.6762) < 0.1
+        cmd.coordinates is not None and abs(cmd.coordinates[0] - 35.6762) < 0.1,
     )
-    
+
     # Test frontend command generation
     result = process_map_voice("zoom in")
     log_test(
         "process_map_voice returns frontend_command",
-        "frontend_command" in result and result["frontend_command"]["type"] == "zoomBy"
+        "frontend_command" in result and result["frontend_command"]["type"] == "zoomBy",
     )
-    
+
     result = process_map_voice("go to london")
     log_test(
-        "Navigate command has flyTo type",
-        result.get("frontend_command", {}).get("type") == "flyTo"
+        "Navigate command has flyTo type", result.get("frontend_command", {}).get("type") == "flyTo"
     )
 
 
@@ -208,23 +203,25 @@ def test_map_voice_handler():
 # Test: Voice Command Router
 # =============================================================================
 
+
 def test_voice_command_router():
     """Test unified voice command routing."""
     section("Voice Command Router Tests")
-    
+
     try:
         from scripts.voice_command_router import (
             VoiceCommandRouter,
             VoiceDomain,
             classify_intent_quick,
         )
+
         log_test("Import voice_command_router", True)
     except ImportError as e:
         log_test("Import voice_command_router", False, str(e))
         return
-    
+
     router = VoiceCommandRouter()
-    
+
     # Test domain detection
     test_cases = [
         ("show me a weather forecast", VoiceDomain.EARTH2),
@@ -234,21 +231,22 @@ def test_voice_command_router():
         ("show seismic events", VoiceDomain.CREP),
         ("what's the status", VoiceDomain.SYSTEM),
     ]
-    
+
     for text, expected_domain in test_cases:
         domain = router.detect_domain(text)
         passed = domain == expected_domain
         log_test(
             f"Domain: '{text[:30]}...' -> {expected_domain.value}",
             passed,
-            f"Got {domain.value}" if not passed else ""
+            f"Got {domain.value}" if not passed else "",
         )
-    
+
     # Test quick classification
     intent = classify_intent_quick("show me the weather forecast")
     log_test(
         "classify_intent_quick returns string",
-        isinstance(intent, str) and intent in ["earth2", "map", "crep", "system", "general", "unknown"]
+        isinstance(intent, str)
+        and intent in ["earth2", "map", "crep", "system", "general", "unknown"],
     )
 
 
@@ -256,23 +254,23 @@ def test_voice_command_router():
 # Test: Context Injector
 # =============================================================================
 
+
 def test_context_injector():
     """Test context injection system."""
     section("Context Injector Tests")
-    
+
     try:
         from scripts.context_injector import (
             ContextInjector,
-            get_context_injector,
-            get_llm_context,
         )
+
         log_test("Import context_injector", True)
     except ImportError as e:
         log_test("Import context_injector", False, str(e))
         return
-    
+
     injector = ContextInjector()
-    
+
     # Test map context update
     injector.update_map_context(
         center=(-74.0060, 40.7128),
@@ -281,51 +279,41 @@ def test_context_injector():
     )
     log_test(
         "Update map context",
-        injector.map_viewport is not None and injector.map_viewport.zoom == 10.0
+        injector.map_viewport is not None and injector.map_viewport.zoom == 10.0,
     )
-    
+
     # Test CREP context
     injector.update_crep_layers(["satellites", "vessels", "seismic"])
-    log_test(
-        "Update CREP layers",
-        len(injector.crep_context.active_layers) == 3
-    )
-    
+    log_test("Update CREP layers", len(injector.crep_context.active_layers) == 3)
+
     # Test Earth2 context
     injector.update_earth2_context(
         active_model="fcn",
         loaded_models=["fcn", "pangu"],
         gpu_memory_used_gb=5.5,
     )
-    log_test(
-        "Update Earth2 context",
-        injector.earth2_context.active_model == "fcn"
-    )
-    
+    log_test("Update Earth2 context", injector.earth2_context.active_model == "fcn")
+
     # Test context dictionary
     ctx = injector.get_context_dict()
     log_test(
-        "get_context_dict returns dict",
-        isinstance(ctx, dict) and "map" in ctx and "earth2" in ctx
+        "get_context_dict returns dict", isinstance(ctx, dict) and "map" in ctx and "earth2" in ctx
     )
-    
+
     # Test LLM context generation
     llm_ctx = injector.build_context_for_llm()
     log_test(
         "build_context_for_llm returns string",
-        isinstance(llm_ctx, str) and "zoom" in llm_ctx.lower()
+        isinstance(llm_ctx, str) and "zoom" in llm_ctx.lower(),
     )
-    
+
     # Test command recording
     injector.record_command(
-        domain="earth2",
-        action="forecast",
-        success=True,
-        raw_text="show me a 24 hour forecast"
+        domain="earth2", action="forecast", success=True, raw_text="show me a 24 hour forecast"
     )
     log_test(
         "record_command updates conversation context",
-        injector.conversation_context.last_command_domain == "earth2"
+        injector.conversation_context.last_command_domain == "earth2",
     )
 
 
@@ -333,23 +321,23 @@ def test_context_injector():
 # Test: VRAM Manager
 # =============================================================================
 
+
 def test_vram_manager():
     """Test VRAM management system."""
     section("VRAM Manager Tests")
-    
+
     try:
         from scripts.vram_manager import (
-            VRAMManager,
-            VRAMBudget,
-            ModelPriority,
-            get_vram_manager,
             EARTH2_MODEL_VRAM,
+            VRAMBudget,
+            VRAMManager,
         )
+
         log_test("Import vram_manager", True)
     except ImportError as e:
         log_test("Import vram_manager", False, str(e))
         return
-    
+
     # Test with custom budget for testing
     budget = VRAMBudget(
         total_gb=32.0,
@@ -357,39 +345,32 @@ def test_vram_manager():
         max_earth2_gb=6.0,
     )
     manager = VRAMManager(budget=budget)
-    
+
     # Test memory status
     status = manager.get_memory_status()
-    log_test(
-        "get_memory_status returns dict",
-        isinstance(status, dict) and "total_gb" in status
-    )
-    
+    log_test("get_memory_status returns dict", isinstance(status, dict) and "total_gb" in status)
+
     # Test model VRAM estimates
     log_test(
-        "EARTH2_MODEL_VRAM has fcn",
-        "fcn" in EARTH2_MODEL_VRAM and EARTH2_MODEL_VRAM["fcn"] > 0
+        "EARTH2_MODEL_VRAM has fcn", "fcn" in EARTH2_MODEL_VRAM and EARTH2_MODEL_VRAM["fcn"] > 0
     )
-    
+
     # Test can_load_model check
     result = manager.can_load_model("fcn")
     log_test(
         "can_load_model returns dict with can_load key",
-        isinstance(result, dict) and "can_load" in result
+        isinstance(result, dict) and "can_load" in result,
     )
-    
+
     # Test loaded models list
     models = manager.get_loaded_models()
-    log_test(
-        "get_loaded_models returns list",
-        isinstance(models, list)
-    )
-    
+    log_test("get_loaded_models returns list", isinstance(models, list))
+
     # Test status summary
     summary = manager.get_status_summary()
     log_test(
         "get_status_summary returns complete dict",
-        isinstance(summary, dict) and "memory" in summary and "loaded_models" in summary
+        isinstance(summary, dict) and "memory" in summary and "loaded_models" in summary,
     )
 
 
@@ -397,43 +378,39 @@ def test_vram_manager():
 # Test: Async Voice Routing
 # =============================================================================
 
+
 @pytest.mark.asyncio
 async def test_async_voice_routing():
     """Test async voice command routing."""
     section("Async Voice Routing Tests")
-    
+
     try:
         from scripts.voice_command_router import route_voice_command
+
         log_test("Import async route_voice_command", True)
     except ImportError as e:
         log_test("Import async route_voice_command", False, str(e))
         return
-    
+
     # Test routing a forecast command
     result = await route_voice_command("show me a 24 hour weather forecast")
     log_test(
-        "Route forecast command",
-        result.get("domain") == "earth2" and result.get("success") == True
+        "Route forecast command", result.get("domain") == "earth2" and result.get("success") is True
     )
-    
+
     # Test routing a map command
     result = await route_voice_command("zoom in on the map")
-    log_test(
-        "Route map command",
-        result.get("domain") == "map" and "frontend_command" in result
-    )
-    
+    log_test("Route map command", result.get("domain") == "map" and "frontend_command" in result)
+
     # Test routing unknown command (should need LLM)
     result = await route_voice_command("tell me a joke about weather")
-    log_test(
-        "Unknown command needs LLM response",
-        result.get("needs_llm_response") == True
-    )
+    log_test("Unknown command needs LLM response", result.get("needs_llm_response") is True)
 
 
 # =============================================================================
 # Main
 # =============================================================================
+
 
 def run_all_tests():
     """Run all tests and generate report."""
@@ -442,28 +419,28 @@ def run_all_tests():
     print("  VOICE-EARTH2-MAP PIPELINE E2E TESTS")
     print(f"  February 5, 2026 - {datetime.now().strftime('%H:%M:%S')}")
     print("=" * 70)
-    
+
     # Run sync tests
     test_earth2_voice_handler()
     test_map_voice_handler()
     test_voice_command_router()
     test_context_injector()
     test_vram_manager()
-    
+
     # Run async tests
     asyncio.run(test_async_voice_routing())
-    
+
     # Summary
     section("Test Summary")
     passed = sum(1 for t in test_results if t["passed"])
     failed = sum(1 for t in test_results if not t["passed"])
     total = len(test_results)
-    
+
     print(f"  Passed: {passed}/{total}")
     print(f"  Failed: {failed}/{total}")
     print(f"  Success Rate: {(passed/total*100):.1f}%")
     print()
-    
+
     if failed > 0:
         print("  Failed Tests:")
         for t in test_results:
@@ -472,27 +449,36 @@ def run_all_tests():
                 if t["details"]:
                     print(f"      {t['details']}")
         print()
-    
+
     # Write results to file
-    report_path = PROJECT_ROOT / "tests" / f"voice_pipeline_test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_path = (
+        PROJECT_ROOT
+        / "tests"
+        / f"voice_pipeline_test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     try:
         import json
+
         with open(report_path, "w") as f:
-            json.dump({
-                "timestamp": datetime.utcnow().isoformat(),
-                "total": total,
-                "passed": passed,
-                "failed": failed,
-                "success_rate": passed / total if total > 0 else 0,
-                "tests": test_results,
-            }, f, indent=2)
+            json.dump(
+                {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "total": total,
+                    "passed": passed,
+                    "failed": failed,
+                    "success_rate": passed / total if total > 0 else 0,
+                    "tests": test_results,
+                },
+                f,
+                indent=2,
+            )
         print(f"  Results saved to: {report_path.name}")
     except Exception as e:
         print(f"  Could not save results: {e}")
-    
+
     print()
     print("=" * 70)
-    
+
     return failed == 0
 
 

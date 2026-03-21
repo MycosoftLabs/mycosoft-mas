@@ -73,9 +73,9 @@ class EONETCollector(BaseCollector):
                     ts = datetime.utcnow()
                     if date_str:
                         try:
-                            ts = datetime.fromisoformat(
-                                date_str.replace("Z", "+00:00")
-                            ).replace(tzinfo=None)
+                            ts = datetime.fromisoformat(date_str.replace("Z", "+00:00")).replace(
+                                tzinfo=None
+                            )
                         except Exception:
                             pass
                     cats = ev.get("categories", [])
@@ -138,7 +138,5 @@ class EONETCollector(BaseCollector):
                 "source_url": data.get("source_url"),
             },
             source="eonet",
-            quality_score=calculate_quality_score(
-                data, "hazard", "eonet", raw.timestamp
-            ),
+            quality_score=calculate_quality_score(data, "hazard", "eonet", raw.timestamp),
         )

@@ -16,15 +16,17 @@ from typing import Any, Dict, List, Optional
 
 class CandidateLifecycle(Enum):
     """Lifecycle state of a model candidate."""
-    SHADOW = "shadow"       # Serving shadow traffic only
-    CANARY = "canary"       # Serving canary fraction
-    ACTIVE = "active"       # Promoted; primary alias
-    ROLLBACK = "rollback"   # Reverted; kept for lineage
-    ARCHIVED = "archived"   # No longer serving
+
+    SHADOW = "shadow"  # Serving shadow traffic only
+    CANARY = "canary"  # Serving canary fraction
+    ACTIVE = "active"  # Promoted; primary alias
+    ROLLBACK = "rollback"  # Reverted; kept for lineage
+    ARCHIVED = "archived"  # No longer serving
 
 
 class MutationOperator(Enum):
     """Phase 1–allowed mutation operators (narrow set)."""
+
     ROUTING_POLICY = "routing_policy"
     RETRIEVAL_POLICY = "retrieval_policy"
     PROMPT_PROGRAM_POLICY = "prompt_program_policy"
@@ -41,6 +43,7 @@ class CandidateGenome:
     First-class record for a model evolution candidate.
     Every branch in the forge has a genome; lineage and rollback are derived from this.
     """
+
     candidate_id: str
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -80,6 +83,7 @@ class FitnessProfile:
     A candidate is rejected if any hard gate fails; otherwise selection
     optimizes over the soft objectives.
     """
+
     candidate_id: str
     evaluated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -114,6 +118,7 @@ class PromotionPolicy:
     Policy governing promotion from shadow/canary to active.
     Used by the promotion controller; stored with promotion_decision in registry.
     """
+
     policy_id: str
     name: str
     description: Optional[str] = None

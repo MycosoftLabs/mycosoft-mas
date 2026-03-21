@@ -8,19 +8,19 @@ When the package is run with python -m mycosoft_mas, this module will be execute
 import asyncio
 import logging
 from pathlib import Path
+
 import yaml
+
 from mycosoft_mas.core.myca_main import MycosoftMAS
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('logs/mas.log')
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(), logging.FileHandler("logs/mas.log")],
 )
 logger = logging.getLogger(__name__)
+
 
 async def main():
     """Main entry point for the MAS application."""
@@ -29,25 +29,26 @@ async def main():
         config_path = Path("config.yaml")
         if not config_path.exists():
             raise FileNotFoundError(f"Configuration file not found at {config_path}")
-        
+
         with open(config_path) as f:
             config = yaml.safe_load(f)
-        
+
         # Initialize MAS
         mas = MycosoftMAS(config)
         await mas.initialize()
-        
+
         # Start the application
         logger.info("Mycosoft MAS is running")
         await mas.start()
-        
+
     except Exception as e:
         logger.error(f"Error starting Mycosoft MAS: {str(e)}")
         raise
 
+
 if __name__ == "__main__":
     # Create logs directory if it doesn't exist
     Path("logs").mkdir(exist_ok=True)
-    
+
     # Run the application
-    asyncio.run(main()) 
+    asyncio.run(main())

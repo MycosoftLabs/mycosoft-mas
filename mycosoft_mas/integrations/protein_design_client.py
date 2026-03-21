@@ -29,7 +29,9 @@ class ProteinDesignClient:
         self.config = config or {}
         self.hf_token = self.config.get("hf_token", os.environ.get("HUGGINGFACE_TOKEN", ""))
         self.nim_url = self.config.get("nim_url", os.environ.get("NVIDIA_NIM_URL", ""))
-        self.ngc_key = self.config.get("ngc_key", os.environ.get("NGC_API_KEY", os.environ.get("NVIDIA_API_KEY", "")))
+        self.ngc_key = self.config.get(
+            "ngc_key", os.environ.get("NGC_API_KEY", os.environ.get("NVIDIA_API_KEY", ""))
+        )
         self.timeout = self.config.get("timeout", 300)
         self._client: Optional[httpx.AsyncClient] = None
 

@@ -21,17 +21,17 @@ Usage:
     )
 """
 
-import os
-import time
 import asyncio
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+import os
+import time
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 import httpx
 
-from .provider import LLMProvider, LLMResponse, LLMError, Message, MessageRole
+from .provider import LLMError, LLMProvider, LLMResponse, Message
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ OLLAMA_DEFAULT_TIMEOUT = 180  # Local models can be slow on first load
 
 class OllamaModel(str, Enum):
     """Canonical model names available on the MAS Ollama instance."""
+
     LLAMA3_2 = "llama3.2"
     MISTRAL = "mistral"
     CODELLAMA = "codellama"
@@ -65,6 +66,7 @@ class OllamaConfig:
         max_retries: Number of retries on transient failures.
         retry_delay: Base delay in seconds between retries (exponential backoff).
     """
+
     host: str = OLLAMA_DEFAULT_HOST
     port: int = OLLAMA_DEFAULT_PORT
     timeout: int = OLLAMA_DEFAULT_TIMEOUT
@@ -86,9 +88,7 @@ class OllamaConfig:
             port=int(os.getenv("OLLAMA_PORT", str(OLLAMA_DEFAULT_PORT))),
             timeout=int(os.getenv("OLLAMA_TIMEOUT", str(OLLAMA_DEFAULT_TIMEOUT))),
             default_model=os.getenv("OLLAMA_DEFAULT_MODEL", OllamaModel.LLAMA3_2.value),
-            default_embedding_model=os.getenv(
-                "OLLAMA_EMBEDDING_MODEL", OllamaModel.LLAMA3_2.value
-            ),
+            default_embedding_model=os.getenv("OLLAMA_EMBEDDING_MODEL", OllamaModel.LLAMA3_2.value),
             max_retries=int(os.getenv("OLLAMA_MAX_RETRIES", "2")),
             retry_delay=float(os.getenv("OLLAMA_RETRY_DELAY", "2.0")),
         )
@@ -97,6 +97,7 @@ class OllamaConfig:
 # ---------------------------------------------------------------------------
 # Ollama Local Provider
 # ---------------------------------------------------------------------------
+
 
 class OllamaLocalProvider(LLMProvider):
     """Async provider for the Ollama REST API (native endpoints, not OpenAI shim).
@@ -121,7 +122,11 @@ class OllamaLocalProvider(LLMProvider):
         self.ollama_config = OllamaConfig(
             host=config.get("ollama_host", os.getenv("OLLAMA_HOST", OLLAMA_DEFAULT_HOST)),
             port=int(config.get("ollama_port", os.getenv("OLLAMA_PORT", str(OLLAMA_DEFAULT_PORT)))),
-            timeout=int(config.get("ollama_timeout", os.getenv("OLLAMA_TIMEOUT", str(OLLAMA_DEFAULT_TIMEOUT)))),
+            timeout=int(
+                config.get(
+                    "ollama_timeout", os.getenv("OLLAMA_TIMEOUT", str(OLLAMA_DEFAULT_TIMEOUT))
+                )
+            ),
             default_model=config.get(
                 "ollama_default_model",
                 os.getenv("OLLAMA_DEFAULT_MODEL", OllamaModel.LLAMA3_2.value),
@@ -184,11 +189,15 @@ class OllamaLocalProvider(LLMProvider):
 
             except (httpx.HTTPStatusError, httpx.ReadTimeout) as exc:
                 if attempt < self.ollama_config.max_retries:
-                    delay = self.ollama_config.retry_delay * (2 ** attempt)
+                    delay = self.ollama_config.retry_delay * (2**attempt)
                     logger.warning(
                         "Ollama request %s %s failed (attempt %d/%d): %s -- retrying in %.1fs",
-                        method, path, attempt + 1, self.ollama_config.max_retries + 1,
-                        exc, delay,
+                        method,
+                        path,
+                        attempt + 1,
+                        self.ollama_config.max_retries + 1,
+                        exc,
+                        delay,
                     )
                     await asyncio.sleep(delay)
                     continue
@@ -249,10 +258,7 @@ class OllamaLocalProvider(LLMProvider):
         start_time = time.time()
 
         # Build Ollama message list
-        ollama_messages = [
-            {"role": msg.role.value, "content": msg.content}
-            for msg in messages
-        ]
+        ollama_messages = [{"role": msg.role.value, "content": msg.content} for msg in messages]
 
         # Ollama options block
         options: Dict[str, Any] = {"temperature": temperature}
@@ -427,9 +433,7 @@ class OllamaLocalProvider(LLMProvider):
             logger.error("Failed to pull model %s: %s", model_name, exc)
             return {"status": "error", "model": model_name, "message": str(exc)}
 
-    async def create_model(
-        self, name: str, modelfile_content: str
-    ) -> Dict[str, Any]:
+    async def create_model(self, name: str, modelfile_content: str) -> Dict[str, Any]:
         """Create a custom model from a Modelfile definition.
 
         This is the core mechanism for building MYCA-personalised models:
@@ -468,9 +472,7 @@ class OllamaLocalProvider(LLMProvider):
             Returns an empty dict on failure.
         """
         try:
-            data = await self._request(
-                "POST", "/api/show", json_body={"name": model_name}
-            )
+            data = await self._request("POST", "/api/show", json_body={"name": model_name})
             return data
         except LLMError as exc:
             logger.warning("Could not get info for model %s: %s", model_name, exc)
@@ -515,6 +517,7 @@ _MYCA_SYSTEM_PROMPT = (
 
 class TaskType(str, Enum):
     """High-level task categories used for model routing."""
+
     GENERAL = "general"
     CODE = "code"
     ANALYSIS = "analysis"
@@ -587,7 +590,7 @@ class MycaModelManager:
         modelfile = (
             f"FROM {base_model}\n"
             f"\n"
-            f"SYSTEM \"\"\"{prompt}\"\"\"\n"
+            f'SYSTEM """{prompt}"""\n'
             f"\n"
             f"PARAMETER temperature {temperature}\n"
             f"PARAMETER top_p {top_p}\n"
@@ -686,6 +689,7 @@ class MycaModelManager:
         # Nothing from the preference list matched -- return the first available
         logger.info(
             "No preferred model found for task '%s'. Using first available: %s",
-            task_type, available[0],
+            task_type,
+            available[0],
         )
         return available[0]

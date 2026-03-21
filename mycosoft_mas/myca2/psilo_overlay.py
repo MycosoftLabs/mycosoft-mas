@@ -63,7 +63,9 @@ def apply_psilo_overlay(
             f"[PSILO overlay edges]: {len(ov['active_edges'])} active — {ov['active_edges'][:5]}"
         )
     if ov["synesthesia_notes"]:
-        extra_parts.append("[PSILO synesthesia]: " + "; ".join(str(x) for x in ov["synesthesia_notes"][:4]))
+        extra_parts.append(
+            "[PSILO synesthesia]: " + "; ".join(str(x) for x in ov["synesthesia_notes"][:4])
+        )
     if ov["observer_summary"]:
         extra_parts.append(f"[PSILO observer/integrator]: {ov['observer_summary'][:600]}")
 

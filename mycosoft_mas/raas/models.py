@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Agent registration & account
 # ---------------------------------------------------------------------------
@@ -289,9 +288,7 @@ class MemoryInvokeRequest(BaseModel):
     """Request body for memory/search query via RaaS."""
 
     query: str
-    search_type: str = Field(
-        default="semantic", pattern="^(semantic|fulltext|graph)$"
-    )
+    search_type: str = Field(default="semantic", pattern="^(semantic|fulltext|graph)$")
     limit: int = Field(default=10, ge=1, le=100)
 
 
@@ -303,9 +300,7 @@ class MemoryInvokeRequest(BaseModel):
 class SimulationInvokeRequest(BaseModel):
     """Request body for simulation run via RaaS."""
 
-    sim_type: str = Field(
-        default="petri", pattern="^(petri|mycelium|physics)$"
-    )
+    sim_type: str = Field(default="petri", pattern="^(petri|mycelium|physics)$")
     parameters: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -339,7 +334,9 @@ class SessionStartResponse(BaseModel):
 
     session_id: str
     balance_minutes: int
-    message: str = "Session started. Send heartbeat at least every 60s to keep session active and meter minutes."
+    message: str = (
+        "Session started. Send heartbeat at least every 60s to keep session active and meter minutes."
+    )
 
 
 class SessionHeartbeatRequest(BaseModel):

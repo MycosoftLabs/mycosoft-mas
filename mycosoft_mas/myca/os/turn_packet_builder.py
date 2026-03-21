@@ -18,10 +18,10 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from mycosoft_mas.engines.self_state_builder import assemble_self_state, from_http_response
 from mycosoft_mas.schemas.experience_packet import (
     ExperiencePacket,
-    WorldStateRef,
     GroundTruth,
     Observation,
     ObservationModality,
+    WorldStateRef,
 )
 
 if TYPE_CHECKING:
@@ -60,10 +60,13 @@ async def build_turn_packet(
             await world_model.update()
             summary = await world_model.get_summary()
             focus = type("Focus", (), {"content": user_message or "", "related_entities": []})()
-            relevant = await world_model.get_relevant_context(focus)
-            relevant_str = str(relevant)[:1200] if relevant else None
+            await world_model.get_relevant_context(focus)
             sources = []
-            cached = world_model.get_cached_context() if hasattr(world_model, "get_cached_context") else {}
+            cached = (
+                world_model.get_cached_context()
+                if hasattr(world_model, "get_cached_context")
+                else {}
+            )
             if cached.get("data"):
                 for k in ("crep", "devices", "presence", "nlm"):
                     if cached["data"].get(k):
@@ -86,6 +89,7 @@ async def build_turn_packet(
     if STATE_SERVICE_URL:
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=SELF_STATE_TIMEOUT) as client:
                 r = await client.get(f"{STATE_SERVICE_URL}/state")
                 if r.status_code == 200:
@@ -98,6 +102,7 @@ async def build_turn_packet(
         agents: Dict[str, Any] = {}
         try:
             from mycosoft_mas.core.routers.device_registry_api import get_device_registry_snapshot
+
             snap = get_device_registry_snapshot()
             devices = snap.get("devices", {})
             services["devices"] = {"count": len(devices), "status": "ok" if devices else "empty"}

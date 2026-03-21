@@ -17,4 +17,3 @@ class DeviceFingerAdapter:
         if not self.base_url:
             raise RuntimeError("A2A_DEVICE_URL is not configured")
         return await self.client.send_message(self.base_url, prompt, metadata=metadata or {})
-

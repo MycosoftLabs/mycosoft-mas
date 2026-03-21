@@ -16,10 +16,10 @@ Env vars:
     MARINETRAFFIC_API_KEY  -- MarineTraffic API key
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -36,7 +36,9 @@ class OsintDefenseClient:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.adsbx_key = self.config.get("adsbx_api_key") or os.getenv("ADSBX_API_KEY", "")
-        self.marine_key = self.config.get("marinetraffic_api_key") or os.getenv("MARINETRAFFIC_API_KEY", "")
+        self.marine_key = self.config.get("marinetraffic_api_key") or os.getenv(
+            "MARINETRAFFIC_API_KEY", ""
+        )
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
 
@@ -70,13 +72,29 @@ class OsintDefenseClient:
         )
         r.raise_for_status()
         data = r.json()
-        mil_types = {"MIL", "MLAT", "C17", "C130", "KC135", "B52", "F16", "F35", "F22", "E3", "P8", "V22"}
+        mil_types = {
+            "MIL",
+            "MLAT",
+            "C17",
+            "C130",
+            "KC135",
+            "B52",
+            "F16",
+            "F35",
+            "F22",
+            "E3",
+            "P8",
+            "V22",
+        }
         aircraft = data.get("ac", []) or []
         military = [
-            ac for ac in aircraft
+            ac
+            for ac in aircraft
             if (ac.get("mil", "") == "1")
             or (ac.get("t", "") in mil_types)
-            or (ac.get("ownOp", "") or "").upper().startswith(("USAF", "USN", "ARMY", "RAF", "NATO"))
+            or (ac.get("ownOp", "") or "")
+            .upper()
+            .startswith(("USAF", "USN", "ARMY", "RAF", "NATO"))
         ]
         return {"total": len(aircraft), "military": military, "military_count": len(military)}
 

@@ -15,59 +15,59 @@ Created: February 10, 2026
 Updated: February 12, 2026 - Added full-duplex voice support (Phase 1)
 """
 
-from mycosoft_mas.consciousness.core import MYCAConsciousness, get_consciousness
 from mycosoft_mas.consciousness.attention import AttentionController, AttentionFocus
-from mycosoft_mas.consciousness.working_memory import WorkingMemory, WorkingMemoryItem
-from mycosoft_mas.consciousness.deliberation import DeliberateReasoning, ThoughtProcess
-from mycosoft_mas.consciousness.intuition import IntuitionEngine, Heuristic
-from mycosoft_mas.consciousness.dream_state import DreamState
-from mycosoft_mas.consciousness.world_model import WorldModel, WorldState
-from mycosoft_mas.consciousness.voice_interface import VoiceInterface
-from mycosoft_mas.consciousness.speech_planner import (
-    SpeechPlanner,
-    SpeechAct,
-    SpeechActType,
-    get_speech_planner,
+from mycosoft_mas.consciousness.cancellation import (
+    CancellationToken,
+    TaskHandle,
+    TaskRegistry,
 )
 from mycosoft_mas.consciousness.conversation_control import (
     ConversationController,
     ConversationState,
-    VoiceActivityDetector,
     InterruptedDraft,
+    VoiceActivityDetector,
     create_conversation_controller,
 )
+from mycosoft_mas.consciousness.core import MYCAConsciousness, get_consciousness
+from mycosoft_mas.consciousness.deliberation import DeliberateReasoning, ThoughtProcess
+from mycosoft_mas.consciousness.dream_state import DreamState
 from mycosoft_mas.consciousness.duplex_session import (
     DuplexSession,
     DuplexSessionConfig,
     ToolProgress,
     create_duplex_session,
 )
-from mycosoft_mas.consciousness.cancellation import (
-    CancellationToken,
-    TaskHandle,
-    TaskRegistry,
-)
 from mycosoft_mas.consciousness.event_bus import AttentionEvent, AttentionEventBus
+from mycosoft_mas.consciousness.intuition import Heuristic, IntuitionEngine
 from mycosoft_mas.consciousness.scheduler import DeadlineScheduler, SchedulerPriority
 
 # Soul Layer
 from mycosoft_mas.consciousness.soul import (
-    Identity,
     Beliefs,
-    Purpose,
     CreativityEngine,
     EmotionalState,
+    Identity,
+    Purpose,
+)
+from mycosoft_mas.consciousness.speech_planner import (
+    SpeechAct,
+    SpeechActType,
+    SpeechPlanner,
+    get_speech_planner,
 )
 
 # Substrate
 from mycosoft_mas.consciousness.substrate import (
     BaseSubstrate,
     DigitalSubstrate,
-    WetwareSubstrate,
     HybridSubstrate,
     SubstrateType,
+    WetwareSubstrate,
     create_substrate,
 )
+from mycosoft_mas.consciousness.voice_interface import VoiceInterface
+from mycosoft_mas.consciousness.working_memory import WorkingMemory, WorkingMemoryItem
+from mycosoft_mas.consciousness.world_model import WorldModel, WorldState
 
 __all__ = [
     # Core

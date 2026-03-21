@@ -7,9 +7,9 @@ Cross-session user preferences and history.
 import json
 import logging
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ except ImportError:
 @dataclass
 class UserContext:
     """User preferences and cross-session context."""
+
     user_id: str
     display_name: Optional[str] = None
     language: str = "en"
@@ -44,42 +45,41 @@ class UserContext:
 
 class UserContextManager:
     """Manages user context persistence."""
-    
+
     MAX_RECENT_ENTITIES = 50
     MAX_RECENT_QUERIES = 100
     MAX_SAVED_VIEWS = 20
     MAX_SUMMARIES = 50
-    
+
     def __init__(self, connection_string: Optional[str] = None):
         self.connection_string = connection_string or os.getenv(
             "DATABASE_URL",
-            os.getenv("MINDEX_DATABASE_URL", "postgresql://mindex:mindex@localhost:5432/mindex")
+            os.getenv("MINDEX_DATABASE_URL", "postgresql://mindex:mindex@localhost:5432/mindex"),
         )
         self.pool: Optional[asyncpg.Pool] = None
-    
+
     async def initialize(self) -> None:
         if asyncpg is None:
             raise ImportError("asyncpg required")
         self.pool = await asyncpg.create_pool(self.connection_string, min_size=1, max_size=2)
-    
+
     async def close(self) -> None:
         if self.pool:
             await self.pool.close()
-    
+
     async def get_context(self, user_id: str) -> Optional[UserContext]:
         """Get user context."""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
-                "SELECT * FROM mindex.user_contexts WHERE user_id = $1",
-                user_id
+                "SELECT * FROM mindex.user_contexts WHERE user_id = $1", user_id
             )
-            
+
             if not row:
                 return None
-            
+
             preferences = row["preferences"] or {}
             recent = row["recent_activity"] or {}
-            
+
             return UserContext(
                 user_id=row["user_id"],
                 display_name=row["display_name"],
@@ -100,7 +100,7 @@ class UserContextManager:
                 updated_at=row["updated_at"].isoformat() if row["updated_at"] else None,
                 last_active_at=row["last_active_at"].isoformat() if row["last_active_at"] else None,
             )
-    
+
     async def create_context(
         self,
         user_id: str,
@@ -117,9 +117,9 @@ class UserContextManager:
                 user_id,
                 display_name,
             )
-        
+
         return await self.get_context(user_id) or UserContext(user_id=user_id)
-    
+
     async def update_context(self, context: UserContext) -> UserContext:
         """Update user context."""
         preferences = {
@@ -129,14 +129,14 @@ class UserContextManager:
             "species": context.preferred_species,
             "entity_types": context.preferred_entity_types,
         }
-        
+
         recent = {
-            "entities": context.recent_entities[:self.MAX_RECENT_ENTITIES],
+            "entities": context.recent_entities[: self.MAX_RECENT_ENTITIES],
             "regions": context.recent_regions[:20],
             "time_ranges": context.recent_time_ranges[:20],
-            "queries": context.recent_queries[:self.MAX_RECENT_QUERIES],
+            "queries": context.recent_queries[: self.MAX_RECENT_QUERIES],
         }
-        
+
         async with self.pool.acquire() as conn:
             await conn.execute(
                 """
@@ -157,12 +157,12 @@ class UserContextManager:
                 context.timezone,
                 json.dumps(preferences),
                 json.dumps(recent),
-                json.dumps(context.saved_views[:self.MAX_SAVED_VIEWS]),
-                json.dumps(context.conversation_summaries[:self.MAX_SUMMARIES]),
+                json.dumps(context.saved_views[: self.MAX_SAVED_VIEWS]),
+                json.dumps(context.conversation_summaries[: self.MAX_SUMMARIES]),
             )
-        
+
         return await self.get_context(context.user_id)
-    
+
     async def track_entity_view(
         self,
         user_id: str,
@@ -174,54 +174,53 @@ class UserContextManager:
         context = await self.get_context(user_id)
         if not context:
             context = await self.create_context(user_id)
-        
+
         entry = {
             "entity_id": entity_id,
             "entity_type": entity_type,
             "entity_name": entity_name,
             "viewed_at": datetime.utcnow().isoformat(),
         }
-        
+
         # Remove duplicate if exists
         context.recent_entities = [
-            e for e in context.recent_entities
-            if e.get("entity_id") != entity_id
+            e for e in context.recent_entities if e.get("entity_id") != entity_id
         ]
-        
+
         # Add to front
         context.recent_entities.insert(0, entry)
-        
+
         await self.update_context(context)
-    
+
     async def add_query(self, user_id: str, query: str) -> None:
         """Add a query to history."""
         context = await self.get_context(user_id)
         if not context:
             context = await self.create_context(user_id)
-        
+
         if query not in context.recent_queries:
             context.recent_queries.insert(0, query)
-        
+
         await self.update_context(context)
-    
+
     async def get_context_for_llm(self, user_id: str) -> str:
         """Get context formatted for LLM prompts."""
         context = await self.get_context(user_id)
         if not context:
             return "No user context available."
-        
+
         parts = []
-        
+
         if context.recent_entities:
             entities = context.recent_entities[:5]
             parts.append(f"Recently viewed: {', '.join(e['entity_name'] for e in entities)}")
-        
+
         if context.preferred_layers:
             parts.append(f"Preferred layers: {', '.join(context.preferred_layers[:5])}")
-        
+
         if context.recent_queries:
             parts.append(f"Recent queries: {', '.join(context.recent_queries[:3])}")
-        
+
         return " | ".join(parts) if parts else "No specific preferences."
 
 

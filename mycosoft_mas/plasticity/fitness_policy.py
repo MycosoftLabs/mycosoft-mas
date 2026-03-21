@@ -13,12 +13,11 @@ Created: March 14, 2026
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from mycosoft_mas.schemas.plasticity_contracts import FitnessProfile
-
 
 # Default thresholds for hard gates (configurable via env or registry later)
 DEFAULT_REGRESSION_CAP_PCT = 5.0
@@ -60,7 +59,9 @@ def evaluate_fitness(
     if ev.get("provenance_complete") is not None:
         provenance_complete = bool(ev["provenance_complete"])
 
-    reproducible = bool(candidate.get("training_code_hash") and candidate.get("data_curriculum_hash"))
+    reproducible = bool(
+        candidate.get("training_code_hash") and candidate.get("data_curriculum_hash")
+    )
     if ev.get("reproducible") is not None:
         reproducible = bool(ev["reproducible"])
 
@@ -69,10 +70,7 @@ def evaluate_fitness(
 
     latency_p99 = candidate.get("latency_p99_ms") or ev.get("latency_p99_ms") or 0.0
     memory_mb = candidate.get("memory_mb") or ev.get("memory_mb") or 0.0
-    hardware_envelope_ok = (
-        latency_p99 <= latency_p99_max_ms
-        and memory_mb <= memory_mb_max
-    )
+    hardware_envelope_ok = latency_p99 <= latency_p99_max_ms and memory_mb <= memory_mb_max
     if ev.get("hardware_envelope_ok") is not None:
         hardware_envelope_ok = bool(ev["hardware_envelope_ok"])
 
@@ -148,8 +146,15 @@ def _dominates(a: FitnessProfile, b: FitnessProfile, objectives: List[str]) -> b
 
 
 SOFT_OBJECTIVES = [
-    "task_success", "groundedness", "calibration", "latency_score", "memory_score",
-    "watts_score", "retention_score", "compression_ratio", "edge_fitness",
+    "task_success",
+    "groundedness",
+    "calibration",
+    "latency_score",
+    "memory_score",
+    "watts_score",
+    "retention_score",
+    "compression_ratio",
+    "edge_fitness",
 ]
 
 

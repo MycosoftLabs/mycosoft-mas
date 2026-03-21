@@ -51,9 +51,7 @@ class RaaSMCPServer:
     """
 
     def __init__(self, raas_url: Optional[str] = None):
-        self._raas_url = raas_url or os.getenv(
-            "RAAS_API_URL", "http://192.168.0.188:8001"
-        )
+        self._raas_url = raas_url or os.getenv("RAAS_API_URL", "http://192.168.0.188:8001")
         self._api_key = os.getenv("RAAS_API_KEY", "")
         self._tools = self._define_tools()
 
@@ -213,9 +211,7 @@ class RaaSMCPServer:
         except Exception as e:
             return {"error": str(e)}
 
-    async def handle_tool_call(
-        self, tool_name: str, arguments: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def handle_tool_call(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Route a tool call to the appropriate handler."""
         handlers = {
             "raas_catalog": self._handle_catalog,
@@ -347,9 +343,7 @@ class RaaSMCPServer:
                         "jsonrpc": "2.0",
                         "id": req_id,
                         "result": {
-                            "content": [
-                                {"type": "text", "text": json.dumps(result, indent=2)}
-                            ]
+                            "content": [{"type": "text", "text": json.dumps(result, indent=2)}]
                         },
                     }
                 else:

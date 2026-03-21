@@ -1,3 +1,4 @@
 """Autonomous experiment and hypothesis modules"""
-from .experiment_engine import experiment_engine, AutonomousExperimentEngine
-from .hypothesis_engine import hypothesis_engine, HypothesisGenerationEngine
+
+from .experiment_engine import AutonomousExperimentEngine, experiment_engine
+from .hypothesis_engine import HypothesisGenerationEngine, hypothesis_engine

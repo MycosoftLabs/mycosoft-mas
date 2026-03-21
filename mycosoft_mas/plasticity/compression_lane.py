@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional
 
 class CompressionRecipeType(str, Enum):
     """Supported compression recipe types."""
+
     DISTILLATION = "distillation"
     QUANTIZATION = "quantization"
     PRUNING = "pruning"
@@ -28,6 +29,7 @@ class CompressionRecipeType(str, Enum):
 @dataclass
 class CompressionRecipe:
     """A single compression recipe (e.g. 8-bit quantization, 2x pruning)."""
+
     recipe_id: str
     recipe_type: str  # CompressionRecipeType value
     target_alias: str  # myca_edge or avani_edge
@@ -38,6 +40,7 @@ class CompressionRecipe:
 @dataclass
 class EdgeAcceptanceGate:
     """Acceptance criteria for edge deployment (Jetson benchmark)."""
+
     max_latency_p99_ms: float = 500.0
     max_memory_mb: float = 2048.0
     max_accuracy_delta_pct: float = 5.0

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from mycosoft_mas.earth_search.connectors.base import BaseConnector
 from mycosoft_mas.earth_search.models import (
@@ -23,9 +23,12 @@ from mycosoft_mas.earth_search.models import (
 logger = logging.getLogger(__name__)
 
 SCIENCE_DOMAINS = {
-    EarthSearchDomain.COMPOUNDS, EarthSearchDomain.GENETICS,
-    EarthSearchDomain.RESEARCH, EarthSearchDomain.LLM_SYNTHESIS,
-    EarthSearchDomain.MATHEMATICS, EarthSearchDomain.PHYSICS,
+    EarthSearchDomain.COMPOUNDS,
+    EarthSearchDomain.GENETICS,
+    EarthSearchDomain.RESEARCH,
+    EarthSearchDomain.LLM_SYNTHESIS,
+    EarthSearchDomain.MATHEMATICS,
+    EarthSearchDomain.PHYSICS,
 }
 
 
@@ -84,23 +87,25 @@ class ScienceConnector(BaseConnector):
 
         for comp in compounds[:limit]:
             cid = comp.get("CID") or comp.get("id", {}).get("id", {}).get("cid")
-            results.append(EarthSearchResult(
-                result_id=f"pubchem-{cid or uuid.uuid4().hex[:8]}",
-                domain=EarthSearchDomain.COMPOUNDS,
-                source="pubchem",
-                title=comp.get("IUPACName", query),
-                description=f"Formula: {comp.get('MolecularFormula', '?')}, MW: {comp.get('MolecularWeight', '?')}",
-                data={
-                    "cid": cid,
-                    "molecular_formula": comp.get("MolecularFormula"),
-                    "molecular_weight": comp.get("MolecularWeight"),
-                    "iupac_name": comp.get("IUPACName"),
-                    "inchi": comp.get("InChI"),
-                },
-                confidence=0.9,
-                crep_layer="compounds",
-                url=f"https://pubchem.ncbi.nlm.nih.gov/compound/{cid}" if cid else None,
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"pubchem-{cid or uuid.uuid4().hex[:8]}",
+                    domain=EarthSearchDomain.COMPOUNDS,
+                    source="pubchem",
+                    title=comp.get("IUPACName", query),
+                    description=f"Formula: {comp.get('MolecularFormula', '?')}, MW: {comp.get('MolecularWeight', '?')}",
+                    data={
+                        "cid": cid,
+                        "molecular_formula": comp.get("MolecularFormula"),
+                        "molecular_weight": comp.get("MolecularWeight"),
+                        "iupac_name": comp.get("IUPACName"),
+                        "inchi": comp.get("InChI"),
+                    },
+                    confidence=0.9,
+                    crep_layer="compounds",
+                    url=f"https://pubchem.ncbi.nlm.nih.gov/compound/{cid}" if cid else None,
+                )
+            )
         return results
 
     async def _search_genbank(self, query: str, limit: int) -> List[EarthSearchResult]:
@@ -131,25 +136,27 @@ class ScienceConnector(BaseConnector):
             rec = result_map.get(gid, {})
             if not isinstance(rec, dict):
                 continue
-            results.append(EarthSearchResult(
-                result_id=f"genbank-{gid}",
-                domain=EarthSearchDomain.GENETICS,
-                source="genbank",
-                title=rec.get("title", query),
-                description=f"Accession: {rec.get('caption', '?')}, Length: {rec.get('slen', '?')}bp",
-                data={
-                    "gi": gid,
-                    "accession": rec.get("caption"),
-                    "title": rec.get("title"),
-                    "organism": rec.get("organism"),
-                    "length_bp": rec.get("slen"),
-                    "mol_type": rec.get("moltype"),
-                    "create_date": rec.get("createdate"),
-                },
-                confidence=0.9,
-                crep_layer="genetics",
-                url=f"https://www.ncbi.nlm.nih.gov/nuccore/{rec.get('caption', gid)}",
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"genbank-{gid}",
+                    domain=EarthSearchDomain.GENETICS,
+                    source="genbank",
+                    title=rec.get("title", query),
+                    description=f"Accession: {rec.get('caption', '?')}, Length: {rec.get('slen', '?')}bp",
+                    data={
+                        "gi": gid,
+                        "accession": rec.get("caption"),
+                        "title": rec.get("title"),
+                        "organism": rec.get("organism"),
+                        "length_bp": rec.get("slen"),
+                        "mol_type": rec.get("moltype"),
+                        "create_date": rec.get("createdate"),
+                    },
+                    confidence=0.9,
+                    crep_layer="genetics",
+                    url=f"https://www.ncbi.nlm.nih.gov/nuccore/{rec.get('caption', gid)}",
+                )
+            )
         return results
 
     async def _search_pubmed(self, query: str, limit: int) -> List[EarthSearchResult]:
@@ -180,22 +187,24 @@ class ScienceConnector(BaseConnector):
                 continue
             authors = rec.get("authors", [])
             first_author = authors[0].get("name", "") if authors else ""
-            results.append(EarthSearchResult(
-                result_id=f"pubmed-{pmid}",
-                domain=EarthSearchDomain.RESEARCH,
-                source="pubmed",
-                title=rec.get("title", query),
-                description=f"{first_author} et al. ({rec.get('pubdate', '?')}) — {rec.get('source', '')}",
-                data={
-                    "pmid": pmid,
-                    "authors": [a.get("name", "") for a in authors[:5]],
-                    "journal": rec.get("source"),
-                    "pub_date": rec.get("pubdate"),
-                    "doi": rec.get("elocationid"),
-                    "pub_type": rec.get("pubtype"),
-                },
-                confidence=0.9,
-                crep_layer="research",
-                url=f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"pubmed-{pmid}",
+                    domain=EarthSearchDomain.RESEARCH,
+                    source="pubmed",
+                    title=rec.get("title", query),
+                    description=f"{first_author} et al. ({rec.get('pubdate', '?')}) — {rec.get('source', '')}",
+                    data={
+                        "pmid": pmid,
+                        "authors": [a.get("name", "") for a in authors[:5]],
+                        "journal": rec.get("source"),
+                        "pub_date": rec.get("pubdate"),
+                        "doi": rec.get("elocationid"),
+                        "pub_type": rec.get("pubtype"),
+                    },
+                    confidence=0.9,
+                    crep_layer="research",
+                    url=f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+                )
+            )
         return results

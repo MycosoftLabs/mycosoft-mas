@@ -9,10 +9,8 @@ Created: March 3, 2026
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 

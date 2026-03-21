@@ -37,9 +37,11 @@ logger = logging.getLogger(__name__)
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ProcessedStream:
     """Result of processing a continuous biosignal stream."""
+
     channel_id: str
     sample_count: int
     adaptive_tau: float
@@ -66,6 +68,7 @@ class ProcessedStream:
 @dataclass
 class StateTransition:
     """Detected transition between fungal network states."""
+
     transition_id: str
     channel_id: str
     from_state: str
@@ -91,6 +94,7 @@ class StateTransition:
 # ---------------------------------------------------------------------------
 # Adaptive Time Constant
 # ---------------------------------------------------------------------------
+
 
 class AdaptiveTimeConstant:
     """
@@ -153,6 +157,7 @@ class AdaptiveTimeConstant:
 # Channel State Tracker
 # ---------------------------------------------------------------------------
 
+
 class _ChannelState:
     """Internal state tracker for a single channel."""
 
@@ -169,6 +174,7 @@ class _ChannelState:
 # ---------------------------------------------------------------------------
 # Liquid Temporal Processor
 # ---------------------------------------------------------------------------
+
 
 class LiquidTemporalProcessor:
     """
@@ -193,9 +199,7 @@ class LiquidTemporalProcessor:
         self._channels: Dict[str, _ChannelState] = {}
         self._buffer_size = config.get("buffer_size", 2000)
         self._min_samples_for_analysis = config.get("min_samples", 32)
-        self._transition_confidence_threshold = config.get(
-            "transition_confidence_threshold", 0.6
-        )
+        self._transition_confidence_threshold = config.get("transition_confidence_threshold", 0.6)
         self._sdr_pipeline = None
         self._initialized = False
         logger.info("LiquidTemporalProcessor created")
@@ -205,6 +209,7 @@ class LiquidTemporalProcessor:
         if self._sdr_pipeline is None:
             try:
                 from mycosoft_mas.bio.sdr_pipeline import SDRPipeline
+
                 self._sdr_pipeline = SDRPipeline(sample_rate=1000.0)
             except ImportError:
                 logger.warning("SDRPipeline unavailable; pattern matching disabled")
@@ -212,9 +217,7 @@ class LiquidTemporalProcessor:
 
     def _get_channel(self, channel_id: str) -> _ChannelState:
         if channel_id not in self._channels:
-            self._channels[channel_id] = _ChannelState(
-                channel_id, self._buffer_size
-            )
+            self._channels[channel_id] = _ChannelState(channel_id, self._buffer_size)
         return self._channels[channel_id]
 
     # ----- core processing ------------------------------------------------
@@ -240,16 +243,14 @@ class LiquidTemporalProcessor:
         ch = self._get_channel(channel_id)
 
         now = datetime.now(timezone.utc)
-        ts_list = timestamps or [
-            now.timestamp() + i / 1000.0 for i in range(len(samples))
-        ]
+        ts_list = timestamps or [now.timestamp() + i / 1000.0 for i in range(len(samples))]
 
         # 1. Append to buffer
         ch.buffer.extend(samples)
         ch.timestamps.extend(ts_list)
 
         # 2. Compute signal dynamics from recent buffer
-        recent = list(ch.buffer)[-min(len(ch.buffer), 256):]
+        recent = list(ch.buffer)[-min(len(ch.buffer), 256) :]
         dynamics = self._compute_dynamics(recent)
 
         # 3. Adapt time constant
@@ -281,13 +282,15 @@ class LiquidTemporalProcessor:
             rms = math.sqrt(sum(v * v for v in filtered_values) / max(len(filtered_values), 1))
             match = self._sdr_pipeline.classify_pattern(spectrum, rms)
             if match:
-                pattern_matches.append({
-                    "pattern": match.pattern_name,
-                    "category": match.category,
-                    "confidence": match.confidence,
-                    "frequency": match.frequency,
-                    "amplitude": match.amplitude,
-                })
+                pattern_matches.append(
+                    {
+                        "pattern": match.pattern_name,
+                        "category": match.category,
+                        "confidence": match.confidence,
+                        "frequency": match.frequency,
+                        "amplitude": match.amplitude,
+                    }
+                )
 
         # 5. Detect state transitions
         best_conf = pattern_matches[0]["confidence"] if pattern_matches else 0.0
@@ -320,18 +323,14 @@ class LiquidTemporalProcessor:
 
     # ----- state transitions ----------------------------------------------
 
-    def detect_state_transition(
-        self, channel_id: str
-    ) -> Optional[StateTransition]:
+    def detect_state_transition(self, channel_id: str) -> Optional[StateTransition]:
         """Return the most recent state transition for a channel, if any."""
         ch = self._channels.get(channel_id)
         if ch and ch.transition_history:
             return ch.transition_history[-1]
         return None
 
-    def get_transition_history(
-        self, channel_id: str
-    ) -> List[StateTransition]:
+    def get_transition_history(self, channel_id: str) -> List[StateTransition]:
         """Return full transition history for a channel."""
         ch = self._channels.get(channel_id)
         return list(ch.transition_history) if ch else []

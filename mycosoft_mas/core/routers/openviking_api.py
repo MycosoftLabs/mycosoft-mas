@@ -54,7 +54,9 @@ class PushRequest(BaseModel):
         "viking://resources/mas-agent-context/",
         description="Target path on the device's viking:// filesystem",
     )
-    reason: Optional[str] = Field(None, description="Reason for the push (triggers L0/L1 generation)")
+    reason: Optional[str] = Field(
+        None, description="Reason for the push (triggers L0/L1 generation)"
+    )
     metadata: Optional[Dict[str, Any]] = Field(None, description="Extra metadata")
 
 

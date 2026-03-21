@@ -80,9 +80,7 @@ class SeasonState:
     """Current seasonal state with metadata."""
 
     current: Season
-    entered_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    entered_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     trigger_reason: str = "system_init"
     metrics: SeasonMetrics = field(default_factory=SeasonMetrics)
     history: List[Dict] = field(default_factory=list)
@@ -215,9 +213,7 @@ class SeasonEngine:
 
         return self.state
 
-    def update(
-        self, metrics: SeasonMetrics, is_root: bool = False
-    ) -> Optional[SeasonState]:
+    def update(self, metrics: SeasonMetrics, is_root: bool = False) -> Optional[SeasonState]:
         """
         Evaluate metrics and perform transition if warranted.
 

@@ -7,7 +7,6 @@ MINDEX is a knowledge graph and data indexing service.
 
 import logging
 import os
-from dataclasses import dataclass
 from typing import Any, Optional
 from uuid import UUID
 
@@ -22,8 +21,10 @@ logger = logging.getLogger(__name__)
 # RESPONSE MODELS
 # =============================================================================
 
+
 class MINDEXEntity(BaseModel):
     """An entity in the MINDEX knowledge graph."""
+
     id: str
     type: str
     name: str
@@ -33,6 +34,7 @@ class MINDEXEntity(BaseModel):
 
 class MINDEXRelation(BaseModel):
     """A relation between entities."""
+
     id: str
     source_id: str
     target_id: str
@@ -42,6 +44,7 @@ class MINDEXRelation(BaseModel):
 
 class MINDEXSearchResult(BaseModel):
     """Search result from MINDEX."""
+
     entities: list[MINDEXEntity] = Field(default_factory=list)
     relations: list[MINDEXRelation] = Field(default_factory=list)
     total_count: int = 0
@@ -50,6 +53,7 @@ class MINDEXSearchResult(BaseModel):
 
 class MINDEXIndexResult(BaseModel):
     """Result of indexing operation."""
+
     indexed_count: int = 0
     failed_count: int = 0
     errors: list[str] = Field(default_factory=list)
@@ -59,22 +63,23 @@ class MINDEXIndexResult(BaseModel):
 # CLIENT
 # =============================================================================
 
+
 class MINDEXClient(BaseClient):
     """
     Client for MINDEX API.
-    
+
     Provides methods for:
     - Searching the knowledge graph
     - Adding/updating entities
     - Managing relations
     - Semantic search
-    
+
     Usage:
         client = MINDEXClient.from_env()
-        
+
         # Search
         results = await client.search("fungal species", entity_type="Species")
-        
+
         # Add entity
         entity = await client.add_entity(
             type="Species",
@@ -82,7 +87,7 @@ class MINDEXClient(BaseClient):
             properties={"common_name": "Oyster mushroom"},
         )
     """
-    
+
     @classmethod
     def from_env(cls) -> "MINDEXClient":
         """Create client from environment variables."""
@@ -93,7 +98,7 @@ class MINDEXClient(BaseClient):
             max_retries=3,
         )
         return cls(config)
-    
+
     async def search(
         self,
         query: str,
@@ -104,14 +109,14 @@ class MINDEXClient(BaseClient):
     ) -> MINDEXSearchResult:
         """
         Search the MINDEX knowledge graph.
-        
+
         Args:
             query: Search query string
             entity_type: Optional entity type filter
             limit: Maximum results to return
             offset: Pagination offset
             correlation_id: Correlation ID for tracing
-            
+
         Returns:
             MINDEXSearchResult with matching entities and relations
         """
@@ -120,10 +125,10 @@ class MINDEXClient(BaseClient):
             "limit": limit,
             "offset": offset,
         }
-        
+
         if entity_type:
             params["type"] = entity_type
-        
+
         try:
             response = await self.get(
                 "/v1/search",
@@ -134,7 +139,7 @@ class MINDEXClient(BaseClient):
         except ClientError as e:
             logger.error(f"MINDEX search failed: {e}")
             raise
-    
+
     async def semantic_search(
         self,
         query: str,
@@ -144,13 +149,13 @@ class MINDEXClient(BaseClient):
     ) -> MINDEXSearchResult:
         """
         Perform semantic search using embeddings.
-        
+
         Args:
             query: Search query string
             embedding: Optional pre-computed embedding
             limit: Maximum results
             correlation_id: Correlation ID for tracing
-            
+
         Returns:
             MINDEXSearchResult with semantically similar entities
         """
@@ -158,10 +163,10 @@ class MINDEXClient(BaseClient):
             "query": query,
             "limit": limit,
         }
-        
+
         if embedding:
             data["embedding"] = embedding
-        
+
         try:
             response = await self.post(
                 "/v1/search/semantic",
@@ -172,7 +177,7 @@ class MINDEXClient(BaseClient):
         except ClientError as e:
             logger.error(f"MINDEX semantic search failed: {e}")
             raise
-    
+
     async def get_entity(
         self,
         entity_id: str,
@@ -181,17 +186,17 @@ class MINDEXClient(BaseClient):
     ) -> Optional[MINDEXEntity]:
         """
         Get an entity by ID.
-        
+
         Args:
             entity_id: Entity ID
             include_relations: Whether to include relations
             correlation_id: Correlation ID for tracing
-            
+
         Returns:
             MINDEXEntity or None if not found
         """
         params = {"include_relations": include_relations}
-        
+
         try:
             response = await self.get(
                 f"/v1/entities/{entity_id}",
@@ -203,7 +208,7 @@ class MINDEXClient(BaseClient):
             if e.status_code == 404:
                 return None
             raise
-    
+
     async def add_entity(
         self,
         type: str,
@@ -214,14 +219,14 @@ class MINDEXClient(BaseClient):
     ) -> MINDEXEntity:
         """
         Add a new entity to the knowledge graph.
-        
+
         Args:
             type: Entity type
             name: Entity name
             properties: Entity properties
             metadata: Additional metadata
             correlation_id: Correlation ID for tracing
-            
+
         Returns:
             Created MINDEXEntity
         """
@@ -231,14 +236,14 @@ class MINDEXClient(BaseClient):
             "properties": properties or {},
             "metadata": metadata or {},
         }
-        
+
         response = await self.post(
             "/v1/entities",
             data=data,
             correlation_id=correlation_id,
         )
         return MINDEXEntity(**response)
-    
+
     async def update_entity(
         self,
         entity_id: str,
@@ -248,30 +253,30 @@ class MINDEXClient(BaseClient):
     ) -> MINDEXEntity:
         """
         Update an existing entity.
-        
+
         Args:
             entity_id: Entity ID to update
             properties: Updated properties
             metadata: Updated metadata
             correlation_id: Correlation ID for tracing
-            
+
         Returns:
             Updated MINDEXEntity
         """
         data = {}
-        
+
         if properties is not None:
             data["properties"] = properties
         if metadata is not None:
             data["metadata"] = metadata
-        
+
         response = await self.put(
             f"/v1/entities/{entity_id}",
             data=data,
             correlation_id=correlation_id,
         )
         return MINDEXEntity(**response)
-    
+
     async def add_relation(
         self,
         source_id: str,
@@ -282,14 +287,14 @@ class MINDEXClient(BaseClient):
     ) -> MINDEXRelation:
         """
         Add a relation between entities.
-        
+
         Args:
             source_id: Source entity ID
             target_id: Target entity ID
             relation_type: Type of relation
             properties: Relation properties
             correlation_id: Correlation ID for tracing
-            
+
         Returns:
             Created MINDEXRelation
         """
@@ -299,14 +304,14 @@ class MINDEXClient(BaseClient):
             "relation_type": relation_type,
             "properties": properties or {},
         }
-        
+
         response = await self.post(
             "/v1/relations",
             data=data,
             correlation_id=correlation_id,
         )
         return MINDEXRelation(**response)
-    
+
     async def bulk_index(
         self,
         entities: list[dict[str, Any]],
@@ -315,12 +320,12 @@ class MINDEXClient(BaseClient):
     ) -> MINDEXIndexResult:
         """
         Bulk index entities and relations.
-        
+
         Args:
             entities: List of entity dicts
             relations: Optional list of relation dicts
             correlation_id: Correlation ID for tracing
-            
+
         Returns:
             MINDEXIndexResult with indexing statistics
         """
@@ -328,7 +333,7 @@ class MINDEXClient(BaseClient):
             "entities": entities,
             "relations": relations or [],
         }
-        
+
         response = await self.post(
             "/v1/bulk",
             data=data,

@@ -21,7 +21,6 @@ Created: March 9, 2026
 from __future__ import annotations
 
 import logging
-import math
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -35,6 +34,7 @@ logger = logging.getLogger(__name__)
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class MemristiveState:
     """
@@ -45,14 +45,13 @@ class MemristiveState:
     relationship and computes a hysteresis score indicating how much
     the current response depends on stimulation history.
     """
+
     channel_id: str
     stimulation_history: deque = field(default_factory=lambda: deque(maxlen=200))
     response_history: deque = field(default_factory=lambda: deque(maxlen=200))
     resistance_estimate: float = 1.0
     hysteresis_score: float = 0.0
-    _last_updated: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    _last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def update(self, stimulus: float, response: float) -> None:
         """Record a stimulus-response pair and update resistance estimate."""
@@ -126,6 +125,7 @@ class BiologicalBookmark:
       - A reference to the digital memory entry it was stored as
       - A significance score for memory consolidation decisions
     """
+
     bookmark_id: str
     timestamp: datetime
     channel_id: str
@@ -153,6 +153,7 @@ class BiologicalBookmark:
 # ---------------------------------------------------------------------------
 # Fungal Memory Bridge
 # ---------------------------------------------------------------------------
+
 
 class FungalMemoryBridge:
     """
@@ -202,9 +203,7 @@ class FungalMemoryBridge:
             Updated MemristiveState with hysteresis score.
         """
         if channel_id not in self._memristive_states:
-            self._memristive_states[channel_id] = MemristiveState(
-                channel_id=channel_id
-            )
+            self._memristive_states[channel_id] = MemristiveState(channel_id=channel_id)
 
         state = self._memristive_states[channel_id]
         state.update(stimulus, response)
@@ -402,8 +401,6 @@ class FungalMemoryBridge:
             "pattern_counts": dict(self._pattern_counts),
             "consolidation_threshold": self._consolidation_threshold,
             "patterns_ready_for_consolidation": sum(
-                1
-                for c in self._pattern_counts.values()
-                if c >= self._consolidation_threshold
+                1 for c in self._pattern_counts.values() if c >= self._consolidation_threshold
             ),
         }

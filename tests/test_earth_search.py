@@ -6,8 +6,8 @@ Tests models, registry, orchestrator, connectors, MINDEX client, and API router.
 Created: March 15, 2026
 """
 
-import pytest
 from datetime import datetime
+
 
 from mycosoft_mas.earth_search.models import (
     DOMAIN_GROUPS,
@@ -17,17 +17,16 @@ from mycosoft_mas.earth_search.models import (
     EarthSearchResult,
     GeoFilter,
     TemporalFilter,
-    DataSourceInfo,
 )
 from mycosoft_mas.earth_search.registry import (
     EARTH_DATA_SOURCES,
+    get_all_realtime_sources,
     get_source_info,
     get_sources_for_domain,
-    get_all_realtime_sources,
 )
 
-
 # ── Model Tests ──────────────────────────────────────────────────────────────
+
 
 class TestEarthSearchDomain:
     def test_all_domains_exist(self):
@@ -43,11 +42,30 @@ class TestEarthSearchDomain:
     def test_key_domains_present(self):
         """Critical domains are present."""
         critical = [
-            "fungi", "plants", "birds", "mammals", "reptiles", "insects",
-            "marine_life", "earthquakes", "volcanoes", "wildfires", "storms",
-            "flights", "vessels", "satellites", "solar_flares",
-            "power_plants", "cell_towers", "internet_cables",
-            "weather", "co2", "air_quality", "compounds", "genetics", "research",
+            "fungi",
+            "plants",
+            "birds",
+            "mammals",
+            "reptiles",
+            "insects",
+            "marine_life",
+            "earthquakes",
+            "volcanoes",
+            "wildfires",
+            "storms",
+            "flights",
+            "vessels",
+            "satellites",
+            "solar_flares",
+            "power_plants",
+            "cell_towers",
+            "internet_cables",
+            "weather",
+            "co2",
+            "air_quality",
+            "compounds",
+            "genetics",
+            "research",
         ]
         domain_values = {d.value for d in EarthSearchDomain}
         for c in critical:
@@ -129,6 +147,7 @@ class TestEarthSearchResponse:
 
 # ── Registry Tests ───────────────────────────────────────────────────────────
 
+
 class TestRegistry:
     def test_sources_exist(self):
         """At least 20 data sources are registered."""
@@ -159,9 +178,19 @@ class TestRegistry:
 
     def test_critical_sources_present(self):
         critical = [
-            "inaturalist", "gbif", "usgs_earthquake", "firms_wildfires",
-            "crep_flights", "crep_marine", "crep_satellites", "noaa_swpc",
-            "pubchem", "genbank", "pubmed", "osm_overpass", "mindex_local",
+            "inaturalist",
+            "gbif",
+            "usgs_earthquake",
+            "firms_wildfires",
+            "crep_flights",
+            "crep_marine",
+            "crep_satellites",
+            "noaa_swpc",
+            "pubchem",
+            "genbank",
+            "pubmed",
+            "osm_overpass",
+            "mindex_local",
         ]
         for sid in critical:
             assert get_source_info(sid) is not None, f"Missing source: {sid}"
@@ -169,19 +198,15 @@ class TestRegistry:
 
 # ── Connector Tests (unit, no network) ───────────────────────────────────────
 
+
 class TestConnectorImports:
     def test_all_connectors_import(self):
         from mycosoft_mas.earth_search.connectors import (
-            SpeciesConnector,
             EnvironmentConnector,
-            ClimateConnector,
-            TransportConnector,
             SpaceConnector,
-            InfrastructureConnector,
-            TelecomConnector,
-            SensorConnector,
-            ScienceConnector,
+            SpeciesConnector,
         )
+
         assert SpeciesConnector.source_id == "species"
         assert EnvironmentConnector.source_id == "environment"
         assert SpaceConnector.source_id == "space"
@@ -189,26 +214,32 @@ class TestConnectorImports:
 
 # ── MINDEX Earth Client Tests ───────────────────────────────────────────────
 
+
 class TestMINDEXEarthClient:
     def test_client_import(self):
         from mycosoft_mas.earth_search.mindex_earth_client import get_mindex_earth_client
+
         client = get_mindex_earth_client()
         assert client.base_url == "http://192.168.0.189:8000"
 
 
 # ── Orchestrator Tests ───────────────────────────────────────────────────────
 
+
 class TestOrchestratorImport:
     def test_run_earth_search_importable(self):
         from mycosoft_mas.earth_search.orchestrator import run_earth_search
+
         assert callable(run_earth_search)
 
 
 # ── Agent Tests ──────────────────────────────────────────────────────────────
 
+
 class TestEarthSearchAgent:
     def test_agent_creation(self):
         from mycosoft_mas.agents.earth_search_agent import EarthSearchAgent
+
         agent = EarthSearchAgent()
         assert agent.name == "EarthSearchAgent"
         assert "earth_search" in agent.capabilities
@@ -218,13 +249,16 @@ class TestEarthSearchAgent:
 
 # ── API Router Tests ─────────────────────────────────────────────────────────
 
+
 class TestEarthSearchAPI:
     def test_router_import(self):
         from mycosoft_mas.core.routers.earth_search_api import router
+
         assert router.prefix == "/api/earth-search"
 
     def test_router_routes(self):
         from mycosoft_mas.core.routers.earth_search_api import router
+
         paths = {r.path for r in router.routes}
         assert "/query" in paths
         assert "/domains" in paths
@@ -236,8 +270,10 @@ class TestEarthSearchAPI:
 
 # ── Ingestion Pipeline Tests ─────────────────────────────────────────────────
 
+
 class TestIngestionPipeline:
     def test_pipeline_import(self):
         from mycosoft_mas.earth_search.ingestion.pipeline import IngestionPipeline
+
         pipeline = IngestionPipeline()
         assert pipeline.SUPABASE_TABLE == "earth_search_results"

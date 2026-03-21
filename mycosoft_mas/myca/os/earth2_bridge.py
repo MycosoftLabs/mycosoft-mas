@@ -10,8 +10,8 @@ MAS scientific_equipment_api uses EARTH2_API_URL default http://192.168.0.188:82
 Date: 2026-03-02
 """
 
-import os
 import logging
+import os
 from typing import Optional
 
 import aiohttp

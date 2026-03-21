@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from uuid import uuid4
 
 
@@ -41,4 +41,3 @@ class ActionLoggingService:
         with self.path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(record.__dict__, ensure_ascii=False) + "\n")
         return record
-

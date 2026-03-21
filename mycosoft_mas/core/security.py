@@ -1,11 +1,12 @@
+import json
+import os
+import time
+
+import httpx
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
 from jose import JWTError, jwk, jwt
 from jose.utils import base64url_decode
-import httpx
-import json
-import os
-import time
 
 auth_scheme = HTTPBearer()
 AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
@@ -37,6 +38,7 @@ async def _get_jwks() -> dict:
     _jwks_cache["keys"] = jwks
     _jwks_cache["expires_at"] = now + JWKS_TTL_SECONDS
     return jwks
+
 
 async def get_current_user(token=Depends(auth_scheme)):
     if not API_AUDIENCE:

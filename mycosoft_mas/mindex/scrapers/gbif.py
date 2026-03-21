@@ -25,21 +25,21 @@ FUNGI_KINGDOM_KEY = 5
 
 class GBIFScraper(BaseScraper):
     """Scraper for GBIF biodiversity data."""
-    
+
     def __init__(self, config: Optional[ScraperConfig] = None):
         # GBIF allows reasonable rate limits
         if config is None:
             config = ScraperConfig(rate_limit_per_second=1.0, batch_size=300)
         super().__init__(config)
-    
+
     @property
     def source_name(self) -> str:
         return "GBIF"
-    
+
     @property
     def base_url(self) -> str:
         return "https://api.gbif.org/v1"
-    
+
     async def search_species(
         self,
         query: str,
@@ -48,7 +48,7 @@ class GBIFScraper(BaseScraper):
         """Search for fungal species in GBIF."""
         records = []
         errors = []
-        
+
         try:
             data = await self._request(
                 "species/search",
@@ -59,17 +59,17 @@ class GBIFScraper(BaseScraper):
                     "status": "ACCEPTED",
                 },
             )
-            
+
             if data and "results" in data:
                 for species in data["results"]:
                     normalized = self.normalize_record(species)
                     if self.validate_record(normalized):
                         records.append(normalized)
-                        
+
         except Exception as e:
             logger.error(f"Error searching GBIF: {e}")
             errors.append(str(e))
-        
+
         return ScraperResult(
             source=self.source_name,
             data_type="species_search",
@@ -78,7 +78,7 @@ class GBIFScraper(BaseScraper):
             errors=errors,
             metadata={"query": query},
         )
-    
+
     async def get_species_details(
         self,
         species_id: str,
@@ -91,12 +91,12 @@ class GBIFScraper(BaseScraper):
                 vernacular = await self._request(f"species/{species_id}/vernacularNames")
                 if vernacular and "results" in vernacular:
                     data["vernacular_names"] = vernacular["results"]
-                
+
                 return self.normalize_record(data)
         except Exception as e:
             logger.error(f"Error getting species {species_id}: {e}")
         return None
-    
+
     async def get_occurrences(
         self,
         taxon_key: Optional[int] = None,
@@ -108,7 +108,7 @@ class GBIFScraper(BaseScraper):
         """Get occurrence records with optional filters."""
         records = []
         errors = []
-        
+
         params = {
             "kingdomKey": FUNGI_KINGDOM_KEY,
             "limit": limit,
@@ -116,27 +116,27 @@ class GBIFScraper(BaseScraper):
             "hasCoordinate": True,  # Only georeferenced records
             "hasGeospatialIssue": False,
         }
-        
+
         if taxon_key:
             params["taxonKey"] = taxon_key
         if country:
             params["country"] = country
         if year:
             params["year"] = year
-        
+
         try:
             data = await self._request("occurrence/search", params=params)
-            
+
             if data and "results" in data:
                 for occ in data["results"]:
                     normalized = self._normalize_occurrence(occ)
                     if self.validate_record(normalized):
                         records.append(normalized)
-                        
+
         except Exception as e:
             logger.error(f"Error fetching occurrences: {e}")
             errors.append(str(e))
-        
+
         return ScraperResult(
             source=self.source_name,
             data_type="occurrences",
@@ -149,7 +149,7 @@ class GBIFScraper(BaseScraper):
                 "offset": offset,
             },
         )
-    
+
     async def get_species_list(
         self,
         rank: str = "SPECIES",
@@ -159,7 +159,7 @@ class GBIFScraper(BaseScraper):
         """Get list of fungal species."""
         records = []
         errors = []
-        
+
         try:
             data = await self._request(
                 "species/search",
@@ -171,17 +171,17 @@ class GBIFScraper(BaseScraper):
                     "offset": offset,
                 },
             )
-            
+
             if data and "results" in data:
                 for species in data["results"]:
                     normalized = self.normalize_record(species)
                     if self.validate_record(normalized):
                         records.append(normalized)
-                        
+
         except Exception as e:
             logger.error(f"Error fetching species list: {e}")
             errors.append(str(e))
-        
+
         return ScraperResult(
             source=self.source_name,
             data_type="species_list",
@@ -190,7 +190,7 @@ class GBIFScraper(BaseScraper):
             errors=errors,
             metadata={"rank": rank, "offset": offset},
         )
-    
+
     async def get_distribution(
         self,
         taxon_key: int,
@@ -198,27 +198,29 @@ class GBIFScraper(BaseScraper):
         """Get geographic distribution for a taxon."""
         records = []
         errors = []
-        
+
         try:
             data = await self._request(f"species/{taxon_key}/distributions")
-            
+
             if data and "results" in data:
                 for dist in data["results"]:
-                    records.append({
-                        "source": self.source_name,
-                        "type": "distribution",
-                        "taxon_key": taxon_key,
-                        "country": dist.get("country", ""),
-                        "locality": dist.get("locality", ""),
-                        "status": dist.get("status", ""),
-                        "establishment_means": dist.get("establishmentMeans", ""),
-                        "scraped_at": datetime.utcnow().isoformat(),
-                    })
-                    
+                    records.append(
+                        {
+                            "source": self.source_name,
+                            "type": "distribution",
+                            "taxon_key": taxon_key,
+                            "country": dist.get("country", ""),
+                            "locality": dist.get("locality", ""),
+                            "status": dist.get("status", ""),
+                            "establishment_means": dist.get("establishmentMeans", ""),
+                            "scraped_at": datetime.utcnow().isoformat(),
+                        }
+                    )
+
         except Exception as e:
             logger.error(f"Error getting distribution for {taxon_key}: {e}")
             errors.append(str(e))
-        
+
         return ScraperResult(
             source=self.source_name,
             data_type="distribution",
@@ -227,7 +229,7 @@ class GBIFScraper(BaseScraper):
             errors=errors,
             metadata={"taxon_key": taxon_key},
         )
-    
+
     async def fetch_all(
         self,
         limit: Optional[int] = None,
@@ -236,31 +238,31 @@ class GBIFScraper(BaseScraper):
         offset = 0
         total_fetched = 0
         max_records = limit or self.config.max_records or 10000
-        
+
         while total_fetched < max_records:
             batch_size = min(self.config.batch_size, max_records - total_fetched)
             result = await self.get_species_list(limit=batch_size, offset=offset)
-            
+
             if not result.records:
                 break
-            
+
             yield result
-            
+
             total_fetched += len(result.records)
             offset += batch_size
-            
+
             logger.info(f"Fetched {total_fetched}/{result.total_count} species from GBIF")
-            
+
             # Check if we've fetched all available records
             if total_fetched >= result.total_count:
                 break
-    
+
     def validate_record(self, record: dict[str, Any]) -> bool:
         """Validate a GBIF record."""
         if not record:
             return False
         return bool(record.get("scientific_name") or record.get("key"))
-    
+
     def normalize_record(self, species: dict[str, Any]) -> dict[str, Any]:
         """Normalize a species record to MINDEX format."""
         return {
@@ -299,7 +301,7 @@ class GBIFScraper(BaseScraper):
             "scraped_at": datetime.utcnow().isoformat(),
             "raw_data": species,
         }
-    
+
     def _normalize_occurrence(self, occ: dict[str, Any]) -> dict[str, Any]:
         """Normalize an occurrence record."""
         return {

@@ -98,4 +98,3 @@ class FingerRegistry:
     def list_by_domain(self, domain: str) -> List[FingerProfile]:
         domain_l = domain.lower()
         return [f for f in self._fingers.values() if f.domain.lower() == domain_l]
-

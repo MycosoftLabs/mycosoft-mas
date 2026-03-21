@@ -8,13 +8,11 @@ Created: March 4, 2026
 """
 
 import logging
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from mycosoft_mas.ethics.sandbox_manager import get_sandbox_manager
-from mycosoft_mas.ethics.vessels import DevelopmentalVessel
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +173,9 @@ class TrainingEngine:
         # Check vessel compatibility
         vessel_val = session.vessel_stage.value
         if scenario.vessel_level and vessel_val not in scenario.vessel_level:
-            logger.info(f"Session vessel {vessel_val} not in scenario targets {scenario.vessel_level}; running anyway")
+            logger.info(
+                f"Session vessel {vessel_val} not in scenario targets {scenario.vessel_level}; running anyway"
+            )
 
         prompts_sent: List[str] = []
         responses: List[Dict[str, str]] = []

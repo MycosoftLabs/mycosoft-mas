@@ -58,7 +58,9 @@ async def get_ep(ep_id: str) -> Dict[str, Any]:
     """
     try:
         import os
+
         import httpx
+
         url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
         path = f"/api/mindex/grounding/experience-packets/{ep_id}"
         headers = {}
@@ -91,7 +93,9 @@ async def create_ep(body: Dict[str, Any] = Body(...)) -> Dict[str, Any]:
     """
     try:
         import os
+
         import httpx
+
         ep_id = body.get("id") or f"ep_{__import__('uuid').uuid4().hex[:16]}"
         url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
         path = "/api/mindex/grounding/experience-packets"
@@ -151,6 +155,7 @@ async def get_recent_packets(
     """
     try:
         import httpx
+
         url = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
         params = {"limit": min(limit, 100)}
         if session_id:
@@ -188,6 +193,7 @@ async def get_staleness() -> Dict[str, Any]:
     """
     try:
         from mycosoft_mas.consciousness import get_consciousness
+
         consciousness = get_consciousness()
         wm = getattr(consciousness, "_world_model", None)
         if wm is None:

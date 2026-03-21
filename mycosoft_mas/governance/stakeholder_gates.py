@@ -61,7 +61,9 @@ class StakeholderGateEngine:
         recommendations: List[str] = []
 
         declared = context.get("stakeholders")
-        stakeholders = declared if isinstance(declared, list) and declared else self.DEFAULT_STAKEHOLDERS
+        stakeholders = (
+            declared if isinstance(declared, list) and declared else self.DEFAULT_STAKEHOLDERS
+        )
 
         action_l = action.lower()
         for stakeholder in stakeholders:
@@ -90,7 +92,9 @@ class StakeholderGateEngine:
                     rationale = "Direct security degradation detected."
                     red_flags.append("security_degradation")
 
-            impacts.append(StakeholderImpact(stakeholder=stakeholder, impact_score=score, rationale=rationale))
+            impacts.append(
+                StakeholderImpact(stakeholder=stakeholder, impact_score=score, rationale=rationale)
+            )
 
         min_score = min((i.impact_score for i in impacts), default=0.0)
         approved = min_score > -0.8 and "security_degradation" not in red_flags
@@ -117,4 +121,3 @@ class StakeholderGateEngine:
             red_flags=red_flags,
             recommendations=recommendations,
         )
-

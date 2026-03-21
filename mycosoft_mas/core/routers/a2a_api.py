@@ -20,6 +20,7 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+
 from mycosoft_mas.integrations.a2a_adapters import (
     CommerceFingerAdapter,
     DeviceFingerAdapter,
@@ -42,6 +43,7 @@ MYCA_A2A_ENABLED = os.getenv("MYCA_A2A_ENABLED", "true").lower() in ("1", "true"
 
 class PartModel(BaseModel):
     """A2A Part - text, url, or data content."""
+
     text: Optional[str] = None
     url: Optional[str] = None
     data: Optional[Any] = None
@@ -52,6 +54,7 @@ class PartModel(BaseModel):
 
 class MessageModel(BaseModel):
     """A2A Message."""
+
     messageId: str = Field(..., description="Unique message ID")
     contextId: Optional[str] = None
     taskId: Optional[str] = None
@@ -62,6 +65,7 @@ class MessageModel(BaseModel):
 
 class SendMessageConfiguration(BaseModel):
     """A2A SendMessageConfiguration."""
+
     acceptedOutputModes: Optional[List[str]] = None
     historyLength: Optional[int] = None
     blocking: Optional[bool] = False
@@ -69,6 +73,7 @@ class SendMessageConfiguration(BaseModel):
 
 class SendMessageRequest(BaseModel):
     """A2A SendMessageRequest."""
+
     message: MessageModel
     configuration: Optional[SendMessageConfiguration] = None
     metadata: Optional[Dict[str, Any]] = None
@@ -76,6 +81,7 @@ class SendMessageRequest(BaseModel):
 
 class TaskStatusModel(BaseModel):
     """A2A TaskStatus."""
+
     state: str = Field(..., description="TASK_STATE_*")
     message: Optional[MessageModel] = None
     timestamp: Optional[str] = None
@@ -83,6 +89,7 @@ class TaskStatusModel(BaseModel):
 
 class ArtifactModel(BaseModel):
     """A2A Artifact."""
+
     artifactId: str
     name: Optional[str] = None
     description: Optional[str] = None
@@ -92,6 +99,7 @@ class ArtifactModel(BaseModel):
 
 class TaskModel(BaseModel):
     """A2A Task."""
+
     id: str
     contextId: str
     status: TaskStatusModel
@@ -102,6 +110,7 @@ class TaskModel(BaseModel):
 
 class FederatedSendRequest(BaseModel):
     """Outbound federation request to a finger adapter."""
+
     finger: str = Field(..., description="commerce|web|mobility|device")
     message: str = Field(..., description="Text payload to external A2A agent")
     context_id: Optional[str] = None
@@ -255,14 +264,15 @@ async def send_message(request: Request, body: SendMessageRequest) -> JSONRespon
 
     context_id = body.message.contextId or str(uuid4())
     task_id = str(uuid4())
-    blocking = body.configuration.blocking if body.configuration else True
+    body.configuration.blocking if body.configuration else True
 
     # Route through MYCA voice orchestrator (existing permissioned path)
     try:
         from mycosoft_mas.core.routers.voice_orchestrator_api import (
-            get_orchestrator,
             VoiceOrchestratorRequest,
+            get_orchestrator,
         )
+
         orch = get_orchestrator()
         meta = body.metadata or {}
         vo_req = VoiceOrchestratorRequest(

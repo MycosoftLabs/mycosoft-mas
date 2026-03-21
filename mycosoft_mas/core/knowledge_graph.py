@@ -98,7 +98,9 @@ class KnowledgeGraph:
         return self.agent_metadata.get(agent_id)
 
     def to_json(self) -> Dict[str, Any]:
-        nodes = [{"id": node, "metadata": self.agent_metadata.get(node, {})} for node in self.graph.nodes]
+        nodes = [
+            {"id": node, "metadata": self.agent_metadata.get(node, {})} for node in self.graph.nodes
+        ]
         edges = [
             {"source": source, "target": target, "type": data.get("type", "unknown")}
             for source, target, data in self.graph.edges(data=True)
@@ -131,7 +133,9 @@ class KnowledgeGraph:
                 continue
             self.graph.add_edge(src, tgt, type=edge.get("type", "unknown"))
 
-        self.last_update = (data.get("metadata") or {}).get("last_update") or datetime.now().isoformat()
+        self.last_update = (data.get("metadata") or {}).get(
+            "last_update"
+        ) or datetime.now().isoformat()
 
     # --- Optional websocket helpers -------------------------------------------
     async def _broadcast_update(self) -> None:

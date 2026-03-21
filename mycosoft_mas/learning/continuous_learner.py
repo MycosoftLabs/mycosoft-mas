@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
-from mycosoft_mas.learning.drift_detector import DriftDetector, DriftAlert
+from mycosoft_mas.learning.drift_detector import DriftAlert, DriftDetector
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LearningCycleResult:
     """Result of a single learning cycle."""
+
     samples_processed: int = 0
     drift_alerts: List[DriftAlert] = field(default_factory=list)
     nlm_processed: bool = False
@@ -85,7 +86,9 @@ class ContinuousLearner:
                         if metric == "type":
                             continue
                         if isinstance(val, (int, float)):
-                            stream_key = f"{device_id}_{sensor_key}_{metric}".replace(" ", "-").lower()
+                            stream_key = f"{device_id}_{sensor_key}_{metric}".replace(
+                                " ", "-"
+                            ).lower()
                             alert = self._drift.ingest(
                                 stream_key=stream_key,
                                 value=val,

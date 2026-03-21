@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional
 @dataclass
 class SandboxCheckResult:
     """Result of a sandbox pre-promotion check."""
+
     passed: bool
     checks: List[str] = field(default_factory=list)
     failures: List[str] = field(default_factory=list)
@@ -28,8 +29,16 @@ class SandboxCheckResult:
 
 # Keys/phrases that must not appear in candidate config or eval payloads (prod secrets).
 _SECRET_INDICATORS = [
-    "password", "secret", "api_key", "apikey", "token", "credential",
-    "private_key", "aws_secret", "openai_key", "anthropic_key",
+    "password",
+    "secret",
+    "api_key",
+    "apikey",
+    "token",
+    "credential",
+    "private_key",
+    "aws_secret",
+    "openai_key",
+    "anthropic_key",
 ]
 
 
@@ -105,8 +114,10 @@ def run_sandbox_check(
     if not ok:
         failures.extend(msgs)
 
-    require_signed = require_signed if require_signed is not None else (
-        os.getenv("PLASTICITY_REQUIRE_SIGNED_ARTIFACT", "").strip() in ("1", "true", "yes")
+    require_signed = (
+        require_signed
+        if require_signed is not None
+        else (os.getenv("PLASTICITY_REQUIRE_SIGNED_ARTIFACT", "").strip() in ("1", "true", "yes"))
     )
     if require_signed:
         ok, msgs = check_signed_artifact(candidate)

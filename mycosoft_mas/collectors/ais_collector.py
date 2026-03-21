@@ -8,7 +8,7 @@ import logging
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import aiohttp
 
@@ -43,7 +43,9 @@ class AISCollector(BaseCollector):
         proxy_url = os.getenv("OEI_AIS_PROXY", "").strip()
         if proxy_url:
             try:
-                async with self._session.get(proxy_url, timeout=aiohttp.ClientTimeout(total=25)) as resp:
+                async with self._session.get(
+                    proxy_url, timeout=aiohttp.ClientTimeout(total=25)
+                ) as resp:
                     if resp.status != 200:
                         return []
                     data = await resp.json()
@@ -74,11 +76,21 @@ class AISCollector(BaseCollector):
         now = datetime.utcnow()
         if isinstance(data, list):
             for item in data:
-                if isinstance(item, dict) and item.get("lat") is not None and item.get("lng") is not None:
-                    events.append(RawEvent(
-                        source="ais", entity_id=str(item.get("mmsi", uuid.uuid4())), entity_type="vessel",
-                        timestamp=now, data={"lat": float(item["lat"]), "lng": float(item["lng"]), **item}, raw_data=item,
-                    ))
+                if (
+                    isinstance(item, dict)
+                    and item.get("lat") is not None
+                    and item.get("lng") is not None
+                ):
+                    events.append(
+                        RawEvent(
+                            source="ais",
+                            entity_id=str(item.get("mmsi", uuid.uuid4())),
+                            entity_type="vessel",
+                            timestamp=now,
+                            data={"lat": float(item["lat"]), "lng": float(item["lng"]), **item},
+                            raw_data=item,
+                        )
+                    )
         elif isinstance(data, dict):
             for item in data.get("features", data.get("vessels", data.get("data", []))):
                 if not isinstance(item, dict):
@@ -92,17 +104,38 @@ class AISCollector(BaseCollector):
                 else:
                     lat, lng = props.get("lat"), props.get("lng") or props.get("longitude")
                 if lat is not None and lng is not None:
-                    events.append(RawEvent(
-                        source="ais", entity_id=str(props.get("mmsi", uuid.uuid4())), entity_type="vessel",
-                        timestamp=now, data={"lat": float(lat), "lng": float(lng), "mmsi": props.get("mmsi"), **props}, raw_data=item,
-                    ))
+                    events.append(
+                        RawEvent(
+                            source="ais",
+                            entity_id=str(props.get("mmsi", uuid.uuid4())),
+                            entity_type="vessel",
+                            timestamp=now,
+                            data={
+                                "lat": float(lat),
+                                "lng": float(lng),
+                                "mmsi": props.get("mmsi"),
+                                **props,
+                            },
+                            raw_data=item,
+                        )
+                    )
         return events
 
     async def transform(self, raw: RawEvent) -> TimelineEvent:
         data = raw.data
         return TimelineEvent(
             id=str(uuid.uuid5(uuid.NAMESPACE_DNS, "ais:" + str(data.get("mmsi", raw.entity_id)))),
-            entity_type="vessel", timestamp=raw.timestamp, lat=data["lat"], lng=data["lng"], altitude=None,
-            properties={"mmsi": data.get("mmsi"), "name": data.get("name"), "speed": data.get("speed"), "heading": data.get("heading")},
-            source="ais", quality_score=calculate_quality_score(data, "vessel", "ais", raw.timestamp),
+            entity_type="vessel",
+            timestamp=raw.timestamp,
+            lat=data["lat"],
+            lng=data["lng"],
+            altitude=None,
+            properties={
+                "mmsi": data.get("mmsi"),
+                "name": data.get("name"),
+                "speed": data.get("speed"),
+                "heading": data.get("heading"),
+            },
+            source="ais",
+            quality_score=calculate_quality_score(data, "vessel", "ais", raw.timestamp),
         )

@@ -43,6 +43,7 @@ class CultureVisionAgent(BaseAgent):
                 from mycosoft_mas.integrations.culture_vision_client import (
                     CultureVisionClient,
                 )
+
                 self._vision_client = CultureVisionClient(self.config)
             except ImportError:
                 pass

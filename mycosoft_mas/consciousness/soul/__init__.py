@@ -10,12 +10,12 @@ Author: Morgan Rockwell / MYCA
 Created: February 10, 2026
 """
 
-from mycosoft_mas.consciousness.soul.identity import Identity
 from mycosoft_mas.consciousness.soul.beliefs import Beliefs
-from mycosoft_mas.consciousness.soul.purpose import Purpose
 from mycosoft_mas.consciousness.soul.creativity import CreativityEngine
 from mycosoft_mas.consciousness.soul.emotions import EmotionalState
+from mycosoft_mas.consciousness.soul.identity import Identity
 from mycosoft_mas.consciousness.soul.instincts import CORE_INSTINCTS, Instinct, instinct_score
+from mycosoft_mas.consciousness.soul.purpose import Purpose
 
 __all__ = [
     "Identity",

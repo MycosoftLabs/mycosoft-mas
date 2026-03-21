@@ -4,28 +4,30 @@ Memory Module - February 6, 2026
 CREP Memory System Components.
 """
 
+from .coordinator import MemoryCoordinator, get_memory_coordinator
+from .embeddings import BaseEmbedder, get_embedder
+from .episodic_memory import Episode
+from .episodic_memory import EpisodicMemory as PostgresEpisodicMemory
+from .graph_memory import GraphMemory
 from .graph_schema import (
-    NodeType,
     EdgeType,
-    KnowledgeNode,
-    KnowledgeEdge,
     GraphSearchResult,
     GraphTraversalResult,
+    KnowledgeEdge,
+    KnowledgeNode,
+    NodeType,
     SemanticSearchResult,
 )
+from .long_term import Fact, LongTermMemory
 from .mindex_graph import MindexGraph, get_graph
-from .embeddings import BaseEmbedder, get_embedder
-from .vector_memory import VectorMemory, get_vector_memory
-from .short_term import ShortTermMemory
-from .long_term import LongTermMemory, Fact
-from .graph_memory import GraphMemory
-from .coordinator import MemoryCoordinator, get_memory_coordinator
-from .user_context import UserContext, UserContextManager, get_context_manager
-from .session_memory import SessionMemory, SessionMemoryManager, get_session_manager
-from .temporal_patterns import TemporalPattern, TemporalPatternStore
 from .procedural_memory import ProceduralMemory
-from .episodic_memory import EpisodicMemory as PostgresEpisodicMemory, Episode
-from .semantic_memory import SemanticMemory, Fact as SemanticFact
+from .semantic_memory import Fact as SemanticFact
+from .semantic_memory import SemanticMemory
+from .session_memory import SessionMemory, SessionMemoryManager, get_session_manager
+from .short_term import ShortTermMemory
+from .temporal_patterns import TemporalPattern, TemporalPatternStore
+from .user_context import UserContext, UserContextManager, get_context_manager
+from .vector_memory import VectorMemory, get_vector_memory
 
 __all__ = [
     # Schema

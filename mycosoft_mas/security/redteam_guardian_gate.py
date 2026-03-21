@@ -10,7 +10,6 @@ Date: March 10, 2026
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple
 
 from mycosoft_mas.guardian.authority_engine import (
@@ -47,6 +46,7 @@ def _get_authority() -> AuthorityEngine:
     global _authority_engine
     if _authority_engine is None:
         from mycosoft_mas.guardian.constitutional_guardian import ConstitutionalGuardian
+
         guardian = ConstitutionalGuardian()
         _authority_engine = AuthorityEngine(guardian=guardian)
     return _authority_engine

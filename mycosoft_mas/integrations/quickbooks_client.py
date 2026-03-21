@@ -82,7 +82,9 @@ class QuickBooksClient:
     async def _query(self, sql: str) -> List[Dict[str, Any]]:
         """Execute a QuickBooks SQL-like query. Returns list of entities."""
         if not self.access_token or not self.realm_id:
-            logger.warning("QuickBooks client: missing QUICKBOOKS_ACCESS_TOKEN or QUICKBOOKS_REALM_ID")
+            logger.warning(
+                "QuickBooks client: missing QUICKBOOKS_ACCESS_TOKEN or QUICKBOOKS_REALM_ID"
+            )
             return []
         await self._ensure_token()
         client = await self._get_client()
@@ -102,7 +104,9 @@ class QuickBooksClient:
             return []
 
     async def list_invoices(
-        self, limit: int = 20, offset: int = 0,
+        self,
+        limit: int = 20,
+        offset: int = 0,
     ) -> List[Dict[str, Any]]:
         """List invoices."""
         if not self.access_token or not self.realm_id:
@@ -148,7 +152,9 @@ class QuickBooksClient:
             return None
 
     async def list_expenses(
-        self, limit: int = 50, start_date: Optional[str] = None,
+        self,
+        limit: int = 50,
+        start_date: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """List purchase/expense transactions."""
         sql = "SELECT * FROM Purchase"
@@ -158,7 +164,9 @@ class QuickBooksClient:
         return await self._query(sql)
 
     async def get_profit_and_loss(
-        self, start_date: str, end_date: str,
+        self,
+        start_date: str,
+        end_date: str,
     ) -> Optional[Dict[str, Any]]:
         """Get P&L report for date range."""
         if not self.access_token or not self.realm_id:

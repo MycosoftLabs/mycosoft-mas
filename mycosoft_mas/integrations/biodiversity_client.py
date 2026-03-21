@@ -11,10 +11,9 @@ Access to global biodiversity databases:
 All public APIs, no keys required.
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import httpx
 

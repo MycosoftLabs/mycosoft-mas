@@ -9,8 +9,7 @@ Created: February 17, 2026
 
 import hashlib
 import json
-import re
-from typing import Any, Dict, List, Set
+from typing import Any, List
 
 # Key patterns to redact from canonicalization (case-insensitive)
 SECRET_PATTERNS: List[str] = [

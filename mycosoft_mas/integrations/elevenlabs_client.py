@@ -16,7 +16,6 @@ Environment Variables:
 import asyncio
 import logging
 import os
-import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -40,6 +39,7 @@ PERSONAPLEX_FALLBACK_VOICE = "NATF2.pt"
 
 class EmotionalState(Enum):
     """Emotional states that map to voice setting adjustments."""
+
     NEUTRAL = "neutral"
     WARM = "warm"
     URGENT = "urgent"
@@ -52,6 +52,7 @@ class EmotionalState(Enum):
 
 class DuplexSessionState(Enum):
     """State of a full-duplex voice session."""
+
     INITIALIZING = "initializing"
     ACTIVE = "active"
     LISTENING = "listening"
@@ -63,6 +64,7 @@ class DuplexSessionState(Enum):
 @dataclass
 class VoiceSettings:
     """ElevenLabs voice generation settings."""
+
     stability: float = 0.5
     similarity_boost: float = 0.75
     style: float = 0.0
@@ -80,6 +82,7 @@ class VoiceSettings:
 @dataclass
 class ElevenLabsConfig:
     """Configuration for the ElevenLabs integration."""
+
     api_key: str = ""
     base_url: str = ELEVENLABS_BASE_URL
     voice_id: str = DEFAULT_VOICE_ID
@@ -102,6 +105,7 @@ class ElevenLabsConfig:
 @dataclass
 class DuplexSession:
     """Tracks a full-duplex voice conversation session."""
+
     session_id: str
     state: DuplexSessionState = DuplexSessionState.INITIALIZING
     created_at: datetime = field(default_factory=datetime.utcnow)
@@ -324,13 +328,11 @@ class ElevenLabsClient:
             raise ValueError("At least one audio file is required for voice cloning")
 
         client = await self._get_client()
-        files = [
-            ("files", (fname, fdata, "audio/mpeg"))
-            for fname, fdata in audio_files
-        ]
+        files = [("files", (fname, fdata, "audio/mpeg")) for fname, fdata in audio_files]
         data = {"name": name, "description": description}
         if labels:
             import json
+
             data["labels"] = json.dumps(labels)
 
         resp = await client.post(
@@ -405,10 +407,7 @@ class FullDuplexVoiceManager:
 
     @property
     def active_session_count(self) -> int:
-        return sum(
-            1 for s in self._sessions.values()
-            if s.state not in (DuplexSessionState.ENDED,)
-        )
+        return sum(1 for s in self._sessions.values() if s.state not in (DuplexSessionState.ENDED,))
 
     async def start_session(self) -> str:
         """
@@ -499,13 +498,15 @@ class FullDuplexVoiceManager:
                 text=text,
                 voice_settings=voice_settings,
             )
-            session.turns.append({
-                "role": "assistant",
-                "text": text,
-                "emotion": (emotion or session.current_emotion).value,
-                "timestamp": datetime.utcnow().isoformat(),
-                "audio_bytes": len(audio),
-            })
+            session.turns.append(
+                {
+                    "role": "assistant",
+                    "text": text,
+                    "emotion": (emotion or session.current_emotion).value,
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "audio_bytes": len(audio),
+                }
+            )
             return audio
         except Exception as exc:
             logger.error("TTS failed in session %s: %s", session_id, exc)
@@ -550,7 +551,9 @@ class FullDuplexVoiceManager:
         if task and not task.done():
             task.cancel()
 
-        logger.info("Barge-in detected in session %s (count: %d)", session_id, session.barge_in_count)
+        logger.info(
+            "Barge-in detected in session %s (count: %d)", session_id, session.barge_in_count
+        )
 
         # Transition back to listening so the user's input is captured
         session.state = DuplexSessionState.LISTENING
@@ -579,7 +582,7 @@ class FullDuplexVoiceManager:
         if sample_count == 0:
             return False
         for i in range(0, len(audio_data) - 1, 2):
-            sample = int.from_bytes(audio_data[i:i + 2], byteorder="little", signed=True)
+            sample = int.from_bytes(audio_data[i : i + 2], byteorder="little", signed=True)
             total += abs(sample)
         avg_energy = total / sample_count
         return avg_energy > threshold
@@ -605,28 +608,44 @@ class FullDuplexVoiceManager:
 
 EMOTION_VOICE_MAP: Dict[EmotionalState, VoiceSettings] = {
     EmotionalState.NEUTRAL: VoiceSettings(
-        stability=0.50, similarity_boost=0.75, style=0.0,
+        stability=0.50,
+        similarity_boost=0.75,
+        style=0.0,
     ),
     EmotionalState.WARM: VoiceSettings(
-        stability=0.45, similarity_boost=0.80, style=0.15,
+        stability=0.45,
+        similarity_boost=0.80,
+        style=0.15,
     ),
     EmotionalState.URGENT: VoiceSettings(
-        stability=0.65, similarity_boost=0.70, style=0.30,
+        stability=0.65,
+        similarity_boost=0.70,
+        style=0.30,
     ),
     EmotionalState.CALM: VoiceSettings(
-        stability=0.70, similarity_boost=0.75, style=0.0,
+        stability=0.70,
+        similarity_boost=0.75,
+        style=0.0,
     ),
     EmotionalState.EXCITED: VoiceSettings(
-        stability=0.35, similarity_boost=0.80, style=0.40,
+        stability=0.35,
+        similarity_boost=0.80,
+        style=0.40,
     ),
     EmotionalState.EMPATHETIC: VoiceSettings(
-        stability=0.50, similarity_boost=0.85, style=0.10,
+        stability=0.50,
+        similarity_boost=0.85,
+        style=0.10,
     ),
     EmotionalState.AUTHORITATIVE: VoiceSettings(
-        stability=0.70, similarity_boost=0.70, style=0.20,
+        stability=0.70,
+        similarity_boost=0.70,
+        style=0.20,
     ),
     EmotionalState.PLAYFUL: VoiceSettings(
-        stability=0.30, similarity_boost=0.80, style=0.45,
+        stability=0.30,
+        similarity_boost=0.80,
+        style=0.45,
     ),
 }
 
@@ -772,7 +791,9 @@ class MycaVoicePersona:
 
         pp_healthy = False
         try:
-            http_url = self._personaplex_url.replace("ws://", "http://").replace("wss://", "https://")
+            http_url = self._personaplex_url.replace("ws://", "http://").replace(
+                "wss://", "https://"
+            )
             async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.get(f"{http_url}/health")
                 pp_healthy = resp.status_code == 200
@@ -790,7 +811,9 @@ class MycaVoicePersona:
                 "voice": "nat2f",
                 "voice_prompt": PERSONAPLEX_FALLBACK_VOICE,
             },
-            "active_provider": "elevenlabs" if el_healthy else ("personaplex" if pp_healthy else "none"),
+            "active_provider": (
+                "elevenlabs" if el_healthy else ("personaplex" if pp_healthy else "none")
+            ),
             "current_emotion": self._current_emotion.value,
         }
 

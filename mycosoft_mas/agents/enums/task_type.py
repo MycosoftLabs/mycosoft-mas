@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class TaskType(Enum):
     RESEARCH = "research"
     DEVELOPMENT = "development"
@@ -10,4 +11,4 @@ class TaskType(Enum):
     TRAINING = "training"
     ADMINISTRATIVE = "administrative"
     MAINTENANCE = "maintenance"
-    SUPPORT = "support" 
+    SUPPORT = "support"

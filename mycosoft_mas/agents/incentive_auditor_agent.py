@@ -11,7 +11,7 @@ Created: March 3, 2026
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 try:
     from mycosoft_mas.agents.base_agent import BaseAgent
@@ -31,6 +31,7 @@ def _get_event_ledger():
     if _event_ledger is None:
         try:
             from mycosoft_mas.myca.event_ledger import EventLedger
+
             _event_ledger = EventLedger()
         except ImportError:
             logger.debug("EventLedger not available - using in-memory audit store")
@@ -43,7 +44,12 @@ class IncentiveAuditorAgent(BaseAgent if BaseAgent is not object else object):  
     Logs all audits to Event Ledger for immutable audit trail.
     """
 
-    def __init__(self, agent_id: str = "incentive-auditor", name: str = "Incentive Auditor", config: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        agent_id: str = "incentive-auditor",
+        name: str = "Incentive Auditor",
+        config: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(agent_id, name, config or {})
         self.capabilities.add("ethics_audit")
         self.capabilities.add("manipulation_detection")
@@ -55,7 +61,10 @@ class IncentiveAuditorAgent(BaseAgent if BaseAgent is not object else object):  
         """Process audit task. Task type 'audit' runs ethics evaluation."""
         task_type = task.get("type", "audit")
         if task_type != "audit":
-            return {"status": "success", "result": {"message": "Use type=audit for ethics evaluation"}}
+            return {
+                "status": "success",
+                "result": {"message": "Use type=audit for ethics evaluation"},
+            }
 
         content = task.get("content", "") or task.get("text", "") or str(task.get("payload", ""))
         task_id = task.get("task_id") or str(uuid.uuid4())
@@ -113,7 +122,11 @@ class IncentiveAuditorAgent(BaseAgent if BaseAgent is not object else object):  
                     event_type="ethics_audit",
                     description=f"Task {task_id}: manipulation_score={gate_result.manipulation_score:.0f}, passed={gate_result.passed}",
                     risk_flags=risk_flags,
-                    context={"task_id": task_id, "manipulation_score": gate_result.manipulation_score, "passed": gate_result.passed},
+                    context={
+                        "task_id": task_id,
+                        "manipulation_score": gate_result.manipulation_score,
+                        "passed": gate_result.passed,
+                    },
                 )
             except Exception as e:
                 logger.warning("Failed to log to EventLedger: %s", e)
@@ -121,13 +134,17 @@ class IncentiveAuditorAgent(BaseAgent if BaseAgent is not object else object):  
         # Escalate to GuardianAgent if score is high (optional integration)
         if gate_result.manipulation_score >= 80:
             try:
-                from mycosoft_mas.safety.guardian_agent import GuardianAgent, RiskLevel
+                from mycosoft_mas.safety.guardian_agent import GuardianAgent
+
                 guardian = GuardianAgent()
-                await guardian.evaluate_action("ethics_audit", {
-                    "manipulation_score": gate_result.manipulation_score,
-                    "task_id": task_id,
-                    "content_preview": content[:200],
-                })
+                await guardian.evaluate_action(
+                    "ethics_audit",
+                    {
+                        "manipulation_score": gate_result.manipulation_score,
+                        "task_id": task_id,
+                        "content_preview": content[:200],
+                    },
+                )
             except Exception as e:
                 logger.debug("GuardianAgent escalation skipped: %s", e)
 

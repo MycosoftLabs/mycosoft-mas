@@ -25,6 +25,7 @@ async def _mindex_request(
     """Call MINDEX API with optional API key."""
     try:
         import httpx
+
         url = f"{MINDEX_URL}{MINDEX_API_PREFIX}{path}"
         headers = {}
         if MINDEX_API_KEY:

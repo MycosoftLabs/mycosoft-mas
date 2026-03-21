@@ -15,10 +15,10 @@ Env vars:
     OPENALEX_EMAIL        -- polite-pool email for OpenAlex (faster rate limit)
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
+import os
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -36,8 +36,12 @@ class AcademicClient:
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
         self.openalex_email = self.config.get("openalex_email") or os.getenv("OPENALEX_EMAIL", "")
-        self.orcid_client_id = self.config.get("orcid_client_id") or os.getenv("ORCID_CLIENT_ID", "")
-        self.orcid_client_secret = self.config.get("orcid_client_secret") or os.getenv("ORCID_CLIENT_SECRET", "")
+        self.orcid_client_id = self.config.get("orcid_client_id") or os.getenv(
+            "ORCID_CLIENT_ID", ""
+        )
+        self.orcid_client_secret = self.config.get("orcid_client_secret") or os.getenv(
+            "ORCID_CLIENT_SECRET", ""
+        )
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
 
@@ -78,7 +82,9 @@ class AcademicClient:
         c = await self._http()
         r = await c.get(
             f"{OPENALEX_BASE}/works",
-            params=self._oa_params({"search": query, "per_page": per_page, "page": page, "sort": sort}),
+            params=self._oa_params(
+                {"search": query, "per_page": per_page, "page": page, "sort": sort}
+            ),
         )
         r.raise_for_status()
         return r.json()
@@ -121,11 +127,13 @@ class AcademicClient:
         c = await self._http()
         r = await c.get(
             f"{OPENALEX_BASE}/works",
-            params=self._oa_params({
-                "filter": f"concepts.display_name.search:{concept}",
-                "sort": "cited_by_count:desc",
-                "per_page": per_page,
-            }),
+            params=self._oa_params(
+                {
+                    "filter": f"concepts.display_name.search:{concept}",
+                    "sort": "cited_by_count:desc",
+                    "per_page": per_page,
+                }
+            ),
         )
         r.raise_for_status()
         return r.json()

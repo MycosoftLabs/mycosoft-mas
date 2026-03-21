@@ -150,7 +150,12 @@ async def test_dual_write_simulation() -> None:
         signature = hmac.new(secret, data_hash.encode(), hashlib.sha256).hexdigest()
         pg_ok = await pg.add_entry(entry_id, data_hash, signature)
         file_ok = await file.append_entry(entry_id, data_hash, {"source": "test"})
-        return {"entry_id": str(entry_id), "data_hash": data_hash, "postgres_recorded": pg_ok, "file_recorded": file_ok}
+        return {
+            "entry_id": str(entry_id),
+            "data_hash": data_hash,
+            "postgres_recorded": pg_ok,
+            "file_recorded": file_ok,
+        }
 
     result1 = await dual_write({"test": 1})
     assert result1["postgres_recorded"] is True

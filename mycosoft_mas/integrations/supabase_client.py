@@ -6,8 +6,8 @@ Thin async wrapper around Supabase REST, Auth, and Storage APIs.
 
 from __future__ import annotations
 
-import os
 import logging
+import os
 from typing import Any, Dict, Optional
 
 import httpx
@@ -68,7 +68,9 @@ class SupabaseClient:
         url = f"{self.auth_base}/token"
         params = {"grant_type": "password"}
         payload = {"email": email, "password": password}
-        return await self._request("POST", url, headers=self._headers(use_service_key=False), params=params, json=payload)
+        return await self._request(
+            "POST", url, headers=self._headers(use_service_key=False), params=params, json=payload
+        )
 
     async def select(
         self,

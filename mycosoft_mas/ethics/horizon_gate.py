@@ -13,7 +13,7 @@ evaluation, formats output as Clarity Brief.
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from mycosoft_mas.ethics.clarity_brief import ClarityBrief
 from mycosoft_mas.ethics.vessels import DevelopmentalVessel
@@ -85,13 +85,19 @@ class HorizonGate:
 
         gate_summary = {
             "truth": getattr(truth_result, "score", None) if truth_result else None,
-            "incentive": getattr(incentive_result, "manipulation_score", None) if incentive_result else None,
+            "incentive": (
+                getattr(incentive_result, "manipulation_score", None) if incentive_result else None
+            ),
             "horizon": horizon_score,
         }
 
         clarity_brief = ClarityBrief(
             claim=claim,
-            assumptions=assumptions if isinstance(assumptions, list) else [assumptions] if assumptions else [],
+            assumptions=(
+                assumptions
+                if isinstance(assumptions, list)
+                else [assumptions] if assumptions else []
+            ),
             evidence=evidence if isinstance(evidence, list) else [evidence] if evidence else [],
             owner=owner,
             deadline=deadline,

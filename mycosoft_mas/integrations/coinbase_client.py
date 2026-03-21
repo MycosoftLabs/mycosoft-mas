@@ -9,12 +9,12 @@ Environment Variables:
     COINBASE_API_SECRET: API secret
 """
 
+import base64
+import hashlib
+import hmac
 import logging
 import os
 import time
-import hmac
-import hashlib
-import base64
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -29,12 +29,8 @@ class CoinbaseClient:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
-        self.api_key = self.config.get(
-            "api_key", os.environ.get("COINBASE_API_KEY", "")
-        )
-        self.api_secret = self.config.get(
-            "api_secret", os.environ.get("COINBASE_API_SECRET", "")
-        )
+        self.api_key = self.config.get("api_key", os.environ.get("COINBASE_API_KEY", ""))
+        self.api_secret = self.config.get("api_secret", os.environ.get("COINBASE_API_SECRET", ""))
         self.timeout = self.config.get("timeout", 30)
         self._client: Optional[httpx.AsyncClient] = None
 
@@ -102,9 +98,7 @@ class CoinbaseClient:
         """Get 24h ticker for a product (e.g. BTC-USD)."""
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as c:
-                r = await c.get(
-                    f"https://api.exchange.coinbase.com/products/{product_id}/ticker"
-                )
+                r = await c.get(f"https://api.exchange.coinbase.com/products/{product_id}/ticker")
                 if r.is_success:
                     return r.json()
             return None
@@ -117,7 +111,7 @@ class CoinbaseClient:
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as c:
                 r = await c.get(
-                    f"https://api.coinbase.com/v2/exchange-rates",
+                    "https://api.coinbase.com/v2/exchange-rates",
                     params={"currency": currency},
                 )
                 if r.is_success:

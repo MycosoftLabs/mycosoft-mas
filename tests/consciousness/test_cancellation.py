@@ -84,4 +84,3 @@ class TestTaskRegistry:
         finally:
             TaskRegistry.MAX_PER_CATEGORY = original
             registry.cancel_all()
-

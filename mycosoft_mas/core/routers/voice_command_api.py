@@ -33,29 +33,41 @@ router = APIRouter(prefix="/voice", tags=["voice"])
 # Request/Response Models
 # ============================================================================
 
+
 class VoiceCommandRequest(BaseModel):
     """Request to route a voice command."""
+
     text: str = Field(..., description="Transcribed voice command text")
     session_id: Optional[str] = Field(None, description="Voice session ID")
     user_id: Optional[str] = Field(None, description="User ID for memory")
     source: str = Field("personaplex", description="Command source")
-    context: Optional[Dict[str, Any]] = Field(None, description="Additional context (map viewport, etc.)")
+    context: Optional[Dict[str, Any]] = Field(
+        None, description="Additional context (map viewport, etc.)"
+    )
 
 
 class FrontendCommand(BaseModel):
     """Command to be executed by the frontend."""
+
     type: str = Field(..., description="Command type: flyTo, setZoom, showLayer, etc.")
     params: Dict[str, Any] = Field(default_factory=dict, description="Command parameters")
 
 
 class VoiceCommandResponse(BaseModel):
     """Response from voice command routing."""
+
     success: bool = Field(..., description="Whether command was processed")
-    domain: str = Field(..., description="Domain that handled command: earth2, map, crep, system, general")
+    domain: str = Field(
+        ..., description="Domain that handled command: earth2, map, crep, system, general"
+    )
     action: Optional[str] = Field(None, description="Action taken")
     speak: Optional[str] = Field(None, description="Text for MYCA to speak")
-    frontend_command: Optional[Dict[str, Any]] = Field(None, description="Command for frontend to execute")
-    needs_llm_response: bool = Field(False, description="Whether LLM should generate additional response")
+    frontend_command: Optional[Dict[str, Any]] = Field(
+        None, description="Command for frontend to execute"
+    )
+    needs_llm_response: bool = Field(
+        False, description="Whether LLM should generate additional response"
+    )
     error: Optional[str] = Field(None, description="Error message if failed")
     raw_text: str = Field(..., description="Original command text")
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -74,6 +86,7 @@ async def get_voice_command_router():
     if _router_instance is None:
         try:
             from scripts.voice_command_router import VoiceCommandRouter
+
             _router_instance = VoiceCommandRouter()
             logger.info("VoiceCommandRouter initialized")
         except ImportError as e:
@@ -86,17 +99,18 @@ async def get_voice_command_router():
 # API Endpoints
 # ============================================================================
 
+
 @router.post("/command", response_model=VoiceCommandResponse)
 async def route_voice_command(request: VoiceCommandRequest):
     """
     Route a voice command and return frontend_command.
-    
+
     This is the main endpoint for CREP voice control.
     """
     try:
         voice_router = await get_voice_command_router()
         result = await voice_router.route(request.text)
-        
+
         response = VoiceCommandResponse(
             success=result.success,
             domain=result.domain.value,
@@ -107,11 +121,13 @@ async def route_voice_command(request: VoiceCommandRequest):
             error=result.error,
             raw_text=result.raw_text,
         )
-        
-        logger.info(f"Voice command routed: '{request.text}' -> {result.domain.value}/{result.action}")
-        
+
+        logger.info(
+            f"Voice command routed: '{request.text}' -> {result.domain.value}/{result.action}"
+        )
+
         return response
-        
+
     except ImportError:
         return VoiceCommandResponse(
             success=False,
@@ -130,24 +146,28 @@ async def route_voice_commands_batch(commands: List[VoiceCommandRequest]):
     """Route multiple voice commands in batch."""
     results = []
     voice_router = await get_voice_command_router()
-    
+
     for cmd in commands:
         try:
             result = await voice_router.route(cmd.text)
-            results.append({
-                "success": result.success,
-                "domain": result.domain.value,
-                "action": result.action,
-                "frontend_command": result.frontend_command,
-                "raw_text": result.raw_text,
-            })
+            results.append(
+                {
+                    "success": result.success,
+                    "domain": result.domain.value,
+                    "action": result.action,
+                    "frontend_command": result.frontend_command,
+                    "raw_text": result.raw_text,
+                }
+            )
         except Exception as e:
-            results.append({
-                "success": False,
-                "error": str(e),
-                "raw_text": cmd.text,
-            })
-    
+            results.append(
+                {
+                    "success": False,
+                    "error": str(e),
+                    "raw_text": cmd.text,
+                }
+            )
+
     return {"results": results, "count": len(results)}
 
 
@@ -230,7 +250,7 @@ async def voice_command_health():
         router_available = voice_router is not None
     except Exception:
         router_available = False
-    
+
     return {
         "status": "healthy" if router_available else "degraded",
         "service": "voice-command-api",

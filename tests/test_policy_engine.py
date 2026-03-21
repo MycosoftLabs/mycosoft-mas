@@ -8,13 +8,11 @@ import pytest
 
 pytest.importorskip("jsonschema", reason="jsonschema required for security module")
 
-from unittest.mock import patch
+from unittest.mock import patch  # noqa: E402
 
-from mycosoft_mas.realtime.event_schema import AgentEvent
-from mycosoft_mas.security.policy_engine import (
+from mycosoft_mas.realtime.event_schema import AgentEvent  # noqa: E402
+from mycosoft_mas.security.policy_engine import (  # noqa: E402
     PolicyEngine,
-    PolicyResult,
-    ALLOWED_CLASSIFICATIONS,
 )
 
 

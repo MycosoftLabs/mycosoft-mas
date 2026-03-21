@@ -84,9 +84,7 @@ async def register_agent(body: AgentRegistration) -> AgentRegistrationResponse:
     else:
         signup_url = f"/api/raas/payments/crypto/invoice?agent_id={agent_id}&package_id=signup"
 
-    logger.info(
-        "Registered agent %s (%s) via %s", agent_id, body.agent_name, body.payment_method
-    )
+    logger.info("Registered agent %s (%s) via %s", agent_id, body.agent_name, body.payment_method)
 
     return AgentRegistrationResponse(
         agent_id=agent_id,

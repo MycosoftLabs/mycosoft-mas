@@ -7,10 +7,9 @@ Used by device APIs and agents for real-time device telemetry and commands.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 

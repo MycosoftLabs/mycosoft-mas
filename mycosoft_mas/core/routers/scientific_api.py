@@ -3,16 +3,17 @@ Scientific API Router
 REST endpoints for all scientific operations
 """
 
-from fastapi import APIRouter, HTTPException, Query, Body
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
-from datetime import datetime, timezone
-from enum import Enum
-import uuid
+import json
 import logging
 import os
-import json
+import uuid
+from datetime import datetime, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 import httpx
+from fastapi import APIRouter, Body, HTTPException
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ except ImportError:
 
 
 # --- Models ---
+
 
 class InstrumentType(str, Enum):
     INCUBATOR = "incubator"
@@ -81,6 +83,7 @@ class FCISessionStatus(str, Enum):
 
 
 # --- Pydantic Models ---
+
 
 class Instrument(BaseModel):
     id: str
@@ -163,9 +166,7 @@ class FCISessionCreate(BaseModel):
 class ScientificStore:
     def __init__(self, database_url: Optional[str] = None):
         self._database_url = (
-            database_url
-            or os.getenv("DATABASE_URL")
-            or os.getenv("MINDEX_DATABASE_URL")
+            database_url or os.getenv("DATABASE_URL") or os.getenv("MINDEX_DATABASE_URL")
         )
         if not self._database_url:
             raise RuntimeError("DATABASE_URL or MINDEX_DATABASE_URL is required.")
@@ -179,8 +180,7 @@ class ScientificStore:
         self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=6)
         async with self._pool.acquire() as conn:
             await conn.execute("CREATE SCHEMA IF NOT EXISTS mindex;")
-            await conn.execute(
-                """
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.scientific_instruments (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -192,10 +192,8 @@ class ScientificStore:
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.scientific_simulations (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -208,10 +206,8 @@ class ScientificStore:
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.scientific_experiments (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
@@ -223,10 +219,8 @@ class ScientificStore:
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.scientific_hypotheses (
                     id TEXT PRIMARY KEY,
                     statement TEXT NOT NULL,
@@ -236,10 +230,8 @@ class ScientificStore:
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
-                """
-            )
-            await conn.execute(
-                """
+                """)
+            await conn.execute("""
                 CREATE TABLE IF NOT EXISTS mindex.scientific_fci_sessions (
                     id TEXT PRIMARY KEY,
                     species TEXT NOT NULL,
@@ -252,13 +244,14 @@ class ScientificStore:
                     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
-                """
-            )
+                """)
 
     async def list_instruments(self) -> List[Instrument]:
         await self.initialize()
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch("SELECT * FROM mindex.scientific_instruments ORDER BY updated_at DESC")
+            rows = await conn.fetch(
+                "SELECT * FROM mindex.scientific_instruments ORDER BY updated_at DESC"
+            )
         return [
             Instrument(
                 id=row["id"],
@@ -306,7 +299,9 @@ class ScientificStore:
                 data.type.value,
                 InstrumentStatus.ONLINE.value,
             )
-        return Instrument(id=inst_id, name=data.name, type=data.type, status=InstrumentStatus.ONLINE)
+        return Instrument(
+            id=inst_id, name=data.name, type=data.type, status=InstrumentStatus.ONLINE
+        )
 
     async def set_instrument_status(self, instrument_id: str, status: InstrumentStatus) -> bool:
         await self.initialize()
@@ -325,7 +320,9 @@ class ScientificStore:
     async def list_simulations(self) -> List[Simulation]:
         await self.initialize()
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch("SELECT * FROM mindex.scientific_simulations ORDER BY updated_at DESC")
+            rows = await conn.fetch(
+                "SELECT * FROM mindex.scientific_simulations ORDER BY updated_at DESC"
+            )
         return [
             Simulation(
                 id=row["id"],
@@ -403,7 +400,9 @@ class ScientificStore:
     async def list_experiments(self) -> List[Experiment]:
         await self.initialize()
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch("SELECT * FROM mindex.scientific_experiments ORDER BY updated_at DESC")
+            rows = await conn.fetch(
+                "SELECT * FROM mindex.scientific_experiments ORDER BY updated_at DESC"
+            )
         return [
             Experiment(
                 id=row["id"],
@@ -484,7 +483,9 @@ class ScientificStore:
     async def list_hypotheses(self) -> List[Hypothesis]:
         await self.initialize()
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch("SELECT * FROM mindex.scientific_hypotheses ORDER BY updated_at DESC")
+            rows = await conn.fetch(
+                "SELECT * FROM mindex.scientific_hypotheses ORDER BY updated_at DESC"
+            )
         return [
             Hypothesis(
                 id=row["id"],
@@ -546,7 +547,9 @@ class ScientificStore:
     async def list_fci_sessions(self) -> List[FCISession]:
         await self.initialize()
         async with self._pool.acquire() as conn:
-            rows = await conn.fetch("SELECT * FROM mindex.scientific_fci_sessions ORDER BY updated_at DESC")
+            rows = await conn.fetch(
+                "SELECT * FROM mindex.scientific_fci_sessions ORDER BY updated_at DESC"
+            )
         return [
             FCISession(
                 id=row["id"],
@@ -639,14 +642,12 @@ async def get_scientific_store() -> ScientificStore:
 
 # --- Lab Instruments API ---
 
+
 @router.get("/lab/instruments")
 async def list_instruments():
     store = await get_scientific_store()
     instruments = await store.list_instruments()
-    return {
-        "instruments": instruments,
-        "source": "live"
-    }
+    return {"instruments": instruments, "source": "live"}
 
 
 @router.post("/lab/instruments")
@@ -675,16 +676,16 @@ async def calibrate_instrument(instrument_id: str):
 
 # --- Simulations API ---
 
+
 @router.get("/simulation/jobs")
 async def list_simulations():
     store = await get_scientific_store()
     simulations = await store.list_simulations()
-    running = [s for s in simulations if s.status == SimulationStatus.RUNNING]
     return {
         "simulations": simulations,
         "gpuUtilization": None,
         "queueLength": len([s for s in simulations if s.status == SimulationStatus.QUEUED]),
-        "source": "live"
+        "source": "live",
     }
 
 
@@ -722,6 +723,7 @@ async def control_simulation(simulation_id: str, action: str):
 
 # --- Experiments API ---
 
+
 @router.get("/experiments")
 async def list_experiments():
     store = await get_scientific_store()
@@ -732,11 +734,7 @@ async def list_experiments():
         "completed": len([e for e in experiments if e.status == ExperimentStatus.COMPLETED]),
         "failed": len([e for e in experiments if e.status == ExperimentStatus.FAILED]),
     }
-    return {
-        "experiments": experiments,
-        "stats": stats,
-        "source": "live"
-    }
+    return {"experiments": experiments, "stats": stats, "source": "live"}
 
 
 @router.post("/experiments")
@@ -776,6 +774,7 @@ async def control_experiment(experiment_id: str, action: str):
 
 # --- Hypotheses API ---
 
+
 @router.get("/hypotheses")
 async def list_hypotheses():
     store = await get_scientific_store()
@@ -786,11 +785,7 @@ async def list_hypotheses():
         "validated": len([h for h in hypotheses if h.status == HypothesisStatus.VALIDATED]),
         "rejected": len([h for h in hypotheses if h.status == HypothesisStatus.REJECTED]),
     }
-    return {
-        "hypotheses": hypotheses,
-        "stats": stats,
-        "source": "live"
-    }
+    return {"hypotheses": hypotheses, "stats": stats, "source": "live"}
 
 
 @router.post("/hypotheses")
@@ -810,16 +805,12 @@ async def test_hypothesis(hypothesis_id: str):
 
 # --- Bio/FCI API ---
 
+
 @router.get("/bio/fci/sessions")
 async def list_fci_sessions():
     store = await get_scientific_store()
     sessions = await store.list_fci_sessions()
-    return {
-        "sessions": sessions,
-        "electrodeStatus": [],
-        "signalQuality": None,
-        "source": "live"
-    }
+    return {"sessions": sessions, "electrodeStatus": [], "signalQuality": None, "source": "live"}
 
 
 @router.post("/bio/fci/sessions")
@@ -860,6 +851,7 @@ async def get_fci_signals(session_id: str):
 
 # --- Bio/MycoBrain API ---
 
+
 @router.get("/bio/mycobrain/status")
 async def get_mycobrain_status():
     service_url = os.getenv("MYCOBRAIN_SERVICE_URL") or os.getenv("MYCOBRAIN_API_URL")
@@ -882,6 +874,7 @@ async def submit_mycobrain_compute(mode: str = Body(...), input: dict = Body(...
 
 
 # --- Safety API ---
+
 
 @router.get("/safety/status")
 async def get_safety_status():

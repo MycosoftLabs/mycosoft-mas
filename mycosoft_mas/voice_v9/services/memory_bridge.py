@@ -6,7 +6,7 @@ Bridges voice to memory/context. Stub for Phase 1.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 
 class MemoryBridge:

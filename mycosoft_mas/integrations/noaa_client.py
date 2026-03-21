@@ -14,10 +14,10 @@ Env vars:
     NOAA_API_KEY     -- alias (falls back to CDO token)
 """
 
-import os
 import logging
-from typing import Any, Dict, List, Optional
+import os
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 
 import httpx
 
@@ -333,18 +333,14 @@ class NoaaClient:
     async def coral_bleaching_alert(self, region: str = "global") -> str:
         """Get coral bleaching heat-stress alert area (CSV)."""
         c = await self._http()
-        r = await c.get(
-            f"https://coralreefwatch.noaa.gov/product/vs/data/vs_main_{region}.txt"
-        )
+        r = await c.get(f"https://coralreefwatch.noaa.gov/product/vs/data/vs_main_{region}.txt")
         r.raise_for_status()
         return r.text
 
     async def coral_sst_anomaly(self) -> str:
         """Get global SST anomaly product (text)."""
         c = await self._http()
-        r = await c.get(
-            "https://coralreefwatch.noaa.gov/product/vs/data/vs_main_global.txt"
-        )
+        r = await c.get("https://coralreefwatch.noaa.gov/product/vs/data/vs_main_global.txt")
         r.raise_for_status()
         return r.text
 

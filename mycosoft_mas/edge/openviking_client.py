@@ -14,7 +14,7 @@ Created: March 19, 2026
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -77,9 +77,7 @@ class OpenVikingClient:
                     base_url=self._base_url,
                     headers=self._headers(),
                 )
-                logger.info(
-                    "Connected to OpenViking at %s:%d", self.host, self.port
-                )
+                logger.info("Connected to OpenViking at %s:%d", self.host, self.port)
                 return True
         except (httpx.ConnectError, httpx.TimeoutException) as e:
             logger.warning("OpenViking connection failed (%s:%d): %s", self.host, self.port, e)

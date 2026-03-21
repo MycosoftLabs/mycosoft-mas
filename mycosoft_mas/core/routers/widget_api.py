@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -33,19 +33,20 @@ router = APIRouter(prefix="/api/widgets", tags=["widgets"])
 
 class WidgetType(str, Enum):
     """Types of interactive widgets MYCA can serve."""
-    MAP = "map"                          # Geographic/location map
-    TAXONOMY_TREE = "taxonomy_tree"      # Taxonomic classification tree
-    MOLECULE_3D = "molecule_3d"          # 3D molecular structure
-    GENETIC_VIEWER = "genetic_viewer"    # DNA/RNA sequence viewer
+
+    MAP = "map"  # Geographic/location map
+    TAXONOMY_TREE = "taxonomy_tree"  # Taxonomic classification tree
+    MOLECULE_3D = "molecule_3d"  # 3D molecular structure
+    GENETIC_VIEWER = "genetic_viewer"  # DNA/RNA sequence viewer
     PHYLOGENETIC_TREE = "phylogenetic_tree"  # Evolutionary tree
-    WEATHER_MAP = "weather_map"          # Weather/climate visualization
-    SIMULATION = "simulation"            # Physics/chemistry simulation
-    SPECIES_CARD = "species_card"        # Species information card
-    CHART = "chart"                      # Data chart (line, bar, pie, scatter)
-    IMAGE_GALLERY = "image_gallery"      # Image gallery with metadata
-    TIMELINE = "timeline"                # Historical/event timeline
-    NETWORK_GRAPH = "network_graph"      # Network/relationship graph
-    HEATMAP = "heatmap"                  # Heatmap visualization
+    WEATHER_MAP = "weather_map"  # Weather/climate visualization
+    SIMULATION = "simulation"  # Physics/chemistry simulation
+    SPECIES_CARD = "species_card"  # Species information card
+    CHART = "chart"  # Data chart (line, bar, pie, scatter)
+    IMAGE_GALLERY = "image_gallery"  # Image gallery with metadata
+    TIMELINE = "timeline"  # Historical/event timeline
+    NETWORK_GRAPH = "network_graph"  # Network/relationship graph
+    HEATMAP = "heatmap"  # Heatmap visualization
     ECOSYSTEM_MODEL = "ecosystem_model"  # Ecosystem interaction model
     CHEMICAL_REACTION = "chemical_reaction"  # Chemical reaction diagram
     PROTEIN_STRUCTURE = "protein_structure"  # Protein 3D structure
@@ -58,6 +59,7 @@ class WidgetType(str, Enum):
 
 class WidgetRequest(BaseModel):
     """Request for a widget."""
+
     query: str
     widget_type: Optional[WidgetType] = None
     parameters: Dict[str, Any] = Field(default_factory=dict)
@@ -66,6 +68,7 @@ class WidgetRequest(BaseModel):
 
 class WidgetData(BaseModel):
     """Widget data to render in the client."""
+
     widget_id: str
     widget_type: WidgetType
     title: str
@@ -79,6 +82,7 @@ class WidgetData(BaseModel):
 
 class WidgetSuggestion(BaseModel):
     """A suggested widget for a query."""
+
     widget_type: WidgetType
     relevance: float
     title: str
@@ -96,109 +100,154 @@ def _suggest_widgets_for_query(query: str) -> List[WidgetSuggestion]:
     suggestions = []
 
     # Map-related
-    if any(kw in query_lower for kw in ["where", "location", "found", "habitat", "distribution", "map", "region"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.MAP,
-            relevance=0.9,
-            title="Location Map",
-            description="Geographic distribution map",
-        ))
+    if any(
+        kw in query_lower
+        for kw in ["where", "location", "found", "habitat", "distribution", "map", "region"]
+    ):
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.MAP,
+                relevance=0.9,
+                title="Location Map",
+                description="Geographic distribution map",
+            )
+        )
 
     # Taxonomy-related
-    if any(kw in query_lower for kw in ["species", "classification", "taxonomy", "kingdom", "phylum", "genus", "family"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.TAXONOMY_TREE,
-            relevance=0.95,
-            title="Taxonomic Tree",
-            description="Interactive taxonomic classification",
-        ))
+    if any(
+        kw in query_lower
+        for kw in ["species", "classification", "taxonomy", "kingdom", "phylum", "genus", "family"]
+    ):
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.TAXONOMY_TREE,
+                relevance=0.95,
+                title="Taxonomic Tree",
+                description="Interactive taxonomic classification",
+            )
+        )
 
     # Chemistry-related
-    if any(kw in query_lower for kw in ["molecule", "compound", "chemical", "structure", "formula", "bond"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.MOLECULE_3D,
-            relevance=0.9,
-            title="3D Molecule",
-            description="Interactive 3D molecular structure",
-        ))
+    if any(
+        kw in query_lower
+        for kw in ["molecule", "compound", "chemical", "structure", "formula", "bond"]
+    ):
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.MOLECULE_3D,
+                relevance=0.9,
+                title="3D Molecule",
+                description="Interactive 3D molecular structure",
+            )
+        )
 
     # Genetics-related
-    if any(kw in query_lower for kw in ["gene", "dna", "rna", "sequence", "genome", "genetic", "mutation"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.GENETIC_VIEWER,
-            relevance=0.9,
-            title="Genetic Sequence",
-            description="DNA/RNA sequence viewer",
-        ))
+    if any(
+        kw in query_lower
+        for kw in ["gene", "dna", "rna", "sequence", "genome", "genetic", "mutation"]
+    ):
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.GENETIC_VIEWER,
+                relevance=0.9,
+                title="Genetic Sequence",
+                description="DNA/RNA sequence viewer",
+            )
+        )
 
     # Evolution/phylogeny
     if any(kw in query_lower for kw in ["evolution", "phylogeny", "ancestor", "diverge", "clade"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.PHYLOGENETIC_TREE,
-            relevance=0.9,
-            title="Phylogenetic Tree",
-            description="Evolutionary relationship tree",
-        ))
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.PHYLOGENETIC_TREE,
+                relevance=0.9,
+                title="Phylogenetic Tree",
+                description="Evolutionary relationship tree",
+            )
+        )
 
     # Weather/climate
-    if any(kw in query_lower for kw in ["weather", "climate", "temperature", "forecast", "storm", "precipitation"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.WEATHER_MAP,
-            relevance=0.9,
-            title="Weather Map",
-            description="Weather/climate visualization",
-        ))
+    if any(
+        kw in query_lower
+        for kw in ["weather", "climate", "temperature", "forecast", "storm", "precipitation"]
+    ):
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.WEATHER_MAP,
+                relevance=0.9,
+                title="Weather Map",
+                description="Weather/climate visualization",
+            )
+        )
 
     # Simulation
     if any(kw in query_lower for kw in ["simulate", "simulation", "model", "predict", "physics"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.SIMULATION,
-            relevance=0.85,
-            title="Simulation",
-            description="Interactive simulation",
-        ))
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.SIMULATION,
+                relevance=0.85,
+                title="Simulation",
+                description="Interactive simulation",
+            )
+        )
 
     # Species information
-    if any(kw in query_lower for kw in ["mushroom", "fungus", "plant", "animal", "bird", "insect", "fish"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.SPECIES_CARD,
-            relevance=0.85,
-            title="Species Card",
-            description="Detailed species information card",
-        ))
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.IMAGE_GALLERY,
-            relevance=0.8,
-            title="Species Images",
-            description="Photo gallery of the species",
-        ))
+    if any(
+        kw in query_lower
+        for kw in ["mushroom", "fungus", "plant", "animal", "bird", "insect", "fish"]
+    ):
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.SPECIES_CARD,
+                relevance=0.85,
+                title="Species Card",
+                description="Detailed species information card",
+            )
+        )
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.IMAGE_GALLERY,
+                relevance=0.8,
+                title="Species Images",
+                description="Photo gallery of the species",
+            )
+        )
 
     # Protein/structure
     if any(kw in query_lower for kw in ["protein", "enzyme", "folding", "alphafold", "structure"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.PROTEIN_STRUCTURE,
-            relevance=0.9,
-            title="Protein Structure",
-            description="3D protein structure viewer",
-        ))
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.PROTEIN_STRUCTURE,
+                relevance=0.9,
+                title="Protein Structure",
+                description="3D protein structure viewer",
+            )
+        )
 
     # Ecosystem
-    if any(kw in query_lower for kw in ["ecosystem", "food web", "symbiosis", "mycelium network", "interaction"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.ECOSYSTEM_MODEL,
-            relevance=0.85,
-            title="Ecosystem Model",
-            description="Interactive ecosystem interaction model",
-        ))
+    if any(
+        kw in query_lower
+        for kw in ["ecosystem", "food web", "symbiosis", "mycelium network", "interaction"]
+    ):
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.ECOSYSTEM_MODEL,
+                relevance=0.85,
+                title="Ecosystem Model",
+                description="Interactive ecosystem interaction model",
+            )
+        )
 
     # Chemical reaction
     if any(kw in query_lower for kw in ["reaction", "synthesis", "catalyst", "reagent", "yield"]):
-        suggestions.append(WidgetSuggestion(
-            widget_type=WidgetType.CHEMICAL_REACTION,
-            relevance=0.9,
-            title="Chemical Reaction",
-            description="Reaction pathway diagram",
-        ))
+        suggestions.append(
+            WidgetSuggestion(
+                widget_type=WidgetType.CHEMICAL_REACTION,
+                relevance=0.9,
+                title="Chemical Reaction",
+                description="Reaction pathway diagram",
+            )
+        )
 
     # Sort by relevance
     suggestions.sort(key=lambda s: s.relevance, reverse=True)
@@ -400,7 +449,9 @@ async def generate_batch_widgets(queries: List[WidgetRequest]) -> Dict[str, Any]
     widgets = []
     for req in queries[:10]:  # Max 10 widgets per batch
         suggestions = _suggest_widgets_for_query(req.query)
-        widget_type = req.widget_type or (suggestions[0].widget_type if suggestions else WidgetType.CHART)
+        widget_type = req.widget_type or (
+            suggestions[0].widget_type if suggestions else WidgetType.CHART
+        )
 
         generator = WIDGET_GENERATORS.get(widget_type)
         if generator:

@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import math
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from mycosoft_mas.earth_search.connectors.base import BaseConnector
 from mycosoft_mas.earth_search.models import (
@@ -24,10 +24,14 @@ from mycosoft_mas.earth_search.models import (
 logger = logging.getLogger(__name__)
 
 INFRA_DOMAINS = {
-    EarthSearchDomain.FACTORIES, EarthSearchDomain.POWER_PLANTS,
-    EarthSearchDomain.MINING, EarthSearchDomain.OIL_GAS,
-    EarthSearchDomain.DAMS, EarthSearchDomain.WATER_TREATMENT,
-    EarthSearchDomain.RIVERS, EarthSearchDomain.POLLUTION_SOURCES,
+    EarthSearchDomain.FACTORIES,
+    EarthSearchDomain.POWER_PLANTS,
+    EarthSearchDomain.MINING,
+    EarthSearchDomain.OIL_GAS,
+    EarthSearchDomain.DAMS,
+    EarthSearchDomain.WATER_TREATMENT,
+    EarthSearchDomain.RIVERS,
+    EarthSearchDomain.POLLUTION_SOURCES,
 }
 
 # OSM tag mapping per domain
@@ -78,7 +82,10 @@ class InfrastructureConnector(BaseConnector):
         return results[:limit]
 
     async def _search_overpass(
-        self, domain: EarthSearchDomain, geo: GeoFilter, limit: int,
+        self,
+        domain: EarthSearchDomain,
+        geo: GeoFilter,
+        limit: int,
     ) -> List[EarthSearchResult]:
         """Query OpenStreetMap Overpass for infrastructure features."""
         tag = OSM_TAGS.get(domain, "")
@@ -89,7 +96,7 @@ class InfrastructureConnector(BaseConnector):
         dlng = geo.radius_km / (111 * max(0.01, abs(math.cos(math.radians(geo.lat)))))
         bbox = f"{geo.lat - dlat},{geo.lng - dlng},{geo.lat + dlat},{geo.lng + dlng}"
 
-        overpass_q = f'[out:json][timeout:15];(node{tag}({bbox});way{tag}({bbox}););out center {min(limit, 50)};'
+        overpass_q = f"[out:json][timeout:15];(node{tag}({bbox});way{tag}({bbox}););out center {min(limit, 50)};"
         data = await self._post(
             self.OVERPASS_URL,
             data=f"data={overpass_q}",
@@ -105,25 +112,27 @@ class InfrastructureConnector(BaseConnector):
             lng = elem.get("lon") or elem.get("center", {}).get("lon")
             name = tags.get("name", f"{domain.value.replace('_', ' ').title()}")
 
-            results.append(EarthSearchResult(
-                result_id=f"osm-{elem.get('id', uuid.uuid4().hex[:8])}",
-                domain=domain,
-                source="osm_overpass",
-                title=name,
-                description=f"Type: {domain.value}, Operator: {tags.get('operator', 'N/A')}",
-                data={
-                    "osm_id": elem.get("id"),
-                    "osm_type": elem.get("type"),
-                    "tags": tags,
-                    "operator": tags.get("operator"),
-                    "capacity": tags.get("plant:output:electricity") or tags.get("capacity"),
-                    "fuel": tags.get("generator:source") or tags.get("plant:source"),
-                },
-                lat=lat,
-                lng=lng,
-                confidence=0.85,
-                crep_layer=domain.value,
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"osm-{elem.get('id', uuid.uuid4().hex[:8])}",
+                    domain=domain,
+                    source="osm_overpass",
+                    title=name,
+                    description=f"Type: {domain.value}, Operator: {tags.get('operator', 'N/A')}",
+                    data={
+                        "osm_id": elem.get("id"),
+                        "osm_type": elem.get("type"),
+                        "tags": tags,
+                        "operator": tags.get("operator"),
+                        "capacity": tags.get("plant:output:electricity") or tags.get("capacity"),
+                        "fuel": tags.get("generator:source") or tags.get("plant:source"),
+                    },
+                    lat=lat,
+                    lng=lng,
+                    confidence=0.85,
+                    crep_layer=domain.value,
+                )
+            )
         return results
 
     async def _search_epa_facilities(self, geo: GeoFilter, limit: int) -> List[EarthSearchResult]:
@@ -149,25 +158,27 @@ class InfrastructureConnector(BaseConnector):
 
         results: List[EarthSearchResult] = []
         for fac in facilities[:limit]:
-            results.append(EarthSearchResult(
-                result_id=f"epa-{fac.get('RegistryId', uuid.uuid4().hex[:8])}",
-                domain=EarthSearchDomain.POLLUTION_SOURCES,
-                source="epa_frs",
-                title=fac.get("PrimaryName", "Unknown Facility"),
-                description=f"City: {fac.get('CityName', '')}, State: {fac.get('StateCode', '')}",
-                data={
-                    "registry_id": fac.get("RegistryId"),
-                    "programs": fac.get("EnvironmentalInterestCount"),
-                    "naics": fac.get("NaicsCode"),
-                    "sic": fac.get("SicCode"),
-                    "address": fac.get("LocationAddress"),
-                    "city": fac.get("CityName"),
-                    "state": fac.get("StateCode"),
-                    "zip": fac.get("PostalCode"),
-                },
-                lat=float(fac["Latitude83"]) if fac.get("Latitude83") else None,
-                lng=float(fac["Longitude83"]) if fac.get("Longitude83") else None,
-                confidence=0.9,
-                crep_layer="pollution_sources",
-            ))
+            results.append(
+                EarthSearchResult(
+                    result_id=f"epa-{fac.get('RegistryId', uuid.uuid4().hex[:8])}",
+                    domain=EarthSearchDomain.POLLUTION_SOURCES,
+                    source="epa_frs",
+                    title=fac.get("PrimaryName", "Unknown Facility"),
+                    description=f"City: {fac.get('CityName', '')}, State: {fac.get('StateCode', '')}",
+                    data={
+                        "registry_id": fac.get("RegistryId"),
+                        "programs": fac.get("EnvironmentalInterestCount"),
+                        "naics": fac.get("NaicsCode"),
+                        "sic": fac.get("SicCode"),
+                        "address": fac.get("LocationAddress"),
+                        "city": fac.get("CityName"),
+                        "state": fac.get("StateCode"),
+                        "zip": fac.get("PostalCode"),
+                    },
+                    lat=float(fac["Latitude83"]) if fac.get("Latitude83") else None,
+                    lng=float(fac["Longitude83"]) if fac.get("Longitude83") else None,
+                    confidence=0.9,
+                    crep_layer="pollution_sources",
+                )
+            )
         return results

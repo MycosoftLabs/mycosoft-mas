@@ -14,8 +14,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.integrations.ucp_commerce_adapter import (
-    get_ucp_commerce_adapter,
     RiskTier,
+    get_ucp_commerce_adapter,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,9 @@ def _parse_risk_tier(s: str) -> RiskTier:
         return RiskTier.LOW
 
 
-def _log_protocol_event(protocol: str, tool_name: str, risk_tier: str, extra: Optional[Dict[str, Any]] = None):
+def _log_protocol_event(
+    protocol: str, tool_name: str, risk_tier: str, extra: Optional[Dict[str, Any]] = None
+):
     """Protocol telemetry - unified event logging for rollout observability."""
     risk_flags = [risk_tier] if risk_tier and risk_tier != "low" else []
     logger.info(

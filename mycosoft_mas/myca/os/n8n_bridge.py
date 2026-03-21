@@ -150,7 +150,10 @@ class N8NBridge:
                         headers=self._headers(),
                     ) as wf_resp:
                         if wf_resp.status != 200:
-                            return {"status": "failed", "error": f"Failed to fetch workflow: {wf_resp.status}"}
+                            return {
+                                "status": "failed",
+                                "error": f"Failed to fetch workflow: {wf_resp.status}",
+                            }
                         wf_detail = await wf_resp.json()
                         nodes = wf_detail.get("data", {}).get("nodes", [])
                     path = self._get_webhook_path_from_nodes(nodes)
@@ -160,7 +163,7 @@ class N8NBridge:
                         async with self._session.post(
                             f"{self._base_url}/api/v1/workflows/{wf_id}/activate",
                             headers=self._headers(),
-                        ) as act_resp:
+                        ):
                             pass
                     return {
                         "status": "completed",
@@ -172,7 +175,7 @@ class N8NBridge:
                     async with self._session.post(
                         f"{self._base_url}/api/v1/workflows/{wf_id}/activate",
                         headers=self._headers(),
-                    ) as act_resp:
+                    ):
                         pass
 
             webhook_url = f"{self._base_url}/webhook/{path.lstrip('/')}"
@@ -242,7 +245,11 @@ class N8NBridge:
                 json=definition,
                 timeout=aiohttp.ClientTimeout(total=30),
             ) as r:
-                body = await r.json() if r.headers.get("content-type", "").startswith("application/json") else {}
+                body = (
+                    await r.json()
+                    if r.headers.get("content-type", "").startswith("application/json")
+                    else {}
+                )
                 if r.status not in (200, 201):
                     return {
                         "status": "failed",

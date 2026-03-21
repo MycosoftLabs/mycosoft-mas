@@ -11,21 +11,21 @@ Responsibilities:
 from __future__ import annotations
 
 import asyncio
-from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
 import hashlib
 import json
 import logging
 import os
+import uuid
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, AsyncIterator, Dict, Literal, Optional
-import uuid
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from .mdp_serial_bridge import build_side_a_bridge, build_side_b_bridge, MdpResponse
+from .mdp_serial_bridge import MdpResponse, build_side_a_bridge, build_side_b_bridge
 from .opclaw_client import OpenClawClient
 from .telemetry_pipeline import TelemetryPipeline
 
@@ -119,10 +119,17 @@ class OnDeviceOperator:
     async def request_side_a(self, req: CommandRequest) -> Dict[str, Any]:
         if self.estop_active and req.command not in {"health", "clear_estop", "hello"}:
             raise HTTPException(status_code=409, detail="estop_active")
-        response = await asyncio.to_thread(self.side_a.request, req.command, req.params, ack_requested=req.ack_requested)
+        response = await asyncio.to_thread(
+            self.side_a.request, req.command, req.params, ack_requested=req.ack_requested
+        )
         await self.audit.write(
             "side_a_command",
-            {"source": req.source, "command": req.command, "params": req.params, "response": _response_dict(response)},
+            {
+                "source": req.source,
+                "command": req.command,
+                "params": req.params,
+                "response": _response_dict(response),
+            },
         )
         if req.command == "estop":
             self.estop_active = True
@@ -133,10 +140,17 @@ class OnDeviceOperator:
     async def request_side_b(self, req: CommandRequest) -> Dict[str, Any]:
         if self.estop_active and req.command not in {"transport_status", "hello"}:
             raise HTTPException(status_code=409, detail="estop_active")
-        response = await asyncio.to_thread(self.side_b.request, req.command, req.params, ack_requested=req.ack_requested)
+        response = await asyncio.to_thread(
+            self.side_b.request, req.command, req.params, ack_requested=req.ack_requested
+        )
         await self.audit.write(
             "side_b_command",
-            {"source": req.source, "command": req.command, "params": req.params, "response": _response_dict(response)},
+            {
+                "source": req.source,
+                "command": req.command,
+                "params": req.params,
+                "response": _response_dict(response),
+            },
         )
         return _response_dict(response)
 
@@ -160,7 +174,15 @@ class OnDeviceOperator:
         proposal.status = "approved" if req.decision == "approve" else "rejected"
         proposal.approved_by = req.approver
         proposal.decision_at = _utc_now()
-        await self.audit.write("mutation_decision", {"proposal_id": proposal_id, "decision": req.decision, "approver": req.approver, "reason": req.reason})
+        await self.audit.write(
+            "mutation_decision",
+            {
+                "proposal_id": proposal_id,
+                "decision": req.decision,
+                "approver": req.approver,
+                "reason": req.reason,
+            },
+        )
         return proposal
 
     async def apply_proposal(self, proposal_id: str, source: str) -> MutationProposal:
@@ -177,7 +199,9 @@ class OnDeviceOperator:
         if not self.opclaw:
             raise HTTPException(status_code=400, detail="openclaw_not_configured")
         result = await self.opclaw.run_task(req.task, api_key=self.opclaw_api_key)
-        await self.audit.write("openclaw_task", {"source": req.source, "task": req.task, "result": result})
+        await self.audit.write(
+            "openclaw_task", {"source": req.source, "task": req.task, "result": result}
+        )
         return result
 
 

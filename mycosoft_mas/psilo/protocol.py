@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 
 class PsiloEventType(str, Enum):
@@ -29,6 +29,7 @@ class PsiloEnvelope:
     """
     Application envelope for PSILO events (Mycorrhizae-compatible metadata).
     """
+
     event_type: str
     session_id: str
     ts: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

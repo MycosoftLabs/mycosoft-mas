@@ -4,8 +4,9 @@ Gap Agent API - Scan and report cross-repo gaps.
 Exposes GapAgent scan results and suggested plans via REST.
 """
 
-from fastapi import APIRouter, Query
 from typing import Any, Dict
+
+from fastapi import APIRouter, Query
 
 router = APIRouter(prefix="/agents/gap", tags=["gap-agent"])
 
@@ -17,6 +18,7 @@ def _get_gap_agent():
     if _gap_agent_instance is None:
         try:
             from mycosoft_mas.agents.gap_agent import GapAgent
+
             _gap_agent_instance = GapAgent(
                 agent_id="gap_agent",
                 name="GapAgent",
@@ -28,7 +30,9 @@ def _get_gap_agent():
 
 
 @router.get("/scan", response_model=Dict[str, Any])
-async def gap_scan(full: bool = Query(False, description="Full scan (more TODOs/stubs)")) -> Dict[str, Any]:
+async def gap_scan(
+    full: bool = Query(False, description="Full scan (more TODOs/stubs)")
+) -> Dict[str, Any]:
     """Run gap scan: TODOs, FIXMEs, stubs, 501 routes, bridge gaps. Returns full report."""
     agent = _get_gap_agent()
     if agent is None:
@@ -56,4 +60,8 @@ async def gap_summary() -> Dict[str, Any]:
         return {"status": "error", "message": "GapAgent not available", "summary": {}}
     result = await agent.process_task({"type": "scan"})
     report = result.get("result") or {}
-    return {"status": "success", "summary": report.get("summary", {}), "workspace_roots": report.get("workspace_roots", [])}
+    return {
+        "status": "success",
+        "summary": report.get("summary", {}),
+        "workspace_roots": report.get("workspace_roots", []),
+    }

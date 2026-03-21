@@ -44,7 +44,11 @@ class NatureOSBridge:
         checks = {"healthy": False, "surface": None}
 
         try:
-            status_url = f"{client.mas_base_url.rstrip('/')}/api/natureos/status" if client.mas_base_url else ""
+            status_url = (
+                f"{client.mas_base_url.rstrip('/')}/api/natureos/status"
+                if client.mas_base_url
+                else ""
+            )
             if status_url:
                 async with self._session.get(
                     status_url,
@@ -86,7 +90,9 @@ class NatureOSBridge:
                     if resp.status == 200:
                         data = await resp.json()
                         if isinstance(data, dict):
-                            summary = data.get("summary") or data.get("status") or data.get("message")
+                            summary = (
+                                data.get("summary") or data.get("status") or data.get("message")
+                            )
                             if summary:
                                 parts.append(f"NatureOS status: {summary}")
         except Exception as e:
@@ -103,7 +109,9 @@ class NatureOSBridge:
         try:
             devices = await client._get("/api/Devices")
             if isinstance(devices, dict):
-                device_items = devices.get("devices") or devices.get("data") or devices.get("items") or []
+                device_items = (
+                    devices.get("devices") or devices.get("data") or devices.get("items") or []
+                )
                 if isinstance(device_items, list):
                     parts.append(f"NatureOS devices: {len(device_items)} visible")
         except Exception as e:

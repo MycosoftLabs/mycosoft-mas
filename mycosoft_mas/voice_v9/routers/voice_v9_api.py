@@ -12,14 +12,14 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from mycosoft_mas.voice_v9.schemas import EventSource, LatencyTrace, TranscriptChunk, VoiceSession
+from mycosoft_mas.voice_v9.schemas import EventSource, LatencyTrace, VoiceSession
 from mycosoft_mas.voice_v9.services import (
     get_event_pipeline,
-    get_voice_gateway,
     get_interrupt_manager,
     get_latency_monitor,
     get_persona_lock_service,
     get_truth_mirror_bus,
+    get_voice_gateway,
 )
 
 logger = logging.getLogger("voice_v9.api")
@@ -28,6 +28,7 @@ router = APIRouter(prefix="/api/voice/v9", tags=["voice-v9"])
 
 
 # --- Request/Response models ---
+
 
 class CreateSessionRequest(BaseModel):
     user_id: str = Field("morgan", description="User identifier")
@@ -43,12 +44,17 @@ class AddTranscriptRequest(BaseModel):
 
 
 class IngestEventRequest(BaseModel):
-    source: str = Field(..., description="Event source: mdp_device, mas_task, tool_completion, crep, nlm, mycorrhizae, system")
+    source: str = Field(
+        ...,
+        description="Event source: mdp_device, mas_task, tool_completion, crep, nlm, mycorrhizae, system",
+    )
     raw: dict = Field(default_factory=dict, description="Raw event payload")
 
 
 class BargeInRequest(BaseModel):
-    user_input: Optional[str] = Field(None, description="Optional user transcript when barge-in is triggered")
+    user_input: Optional[str] = Field(
+        None, description="Optional user transcript when barge-in is triggered"
+    )
 
 
 class PersonaApplyRequest(BaseModel):
@@ -56,6 +62,7 @@ class PersonaApplyRequest(BaseModel):
 
 
 # --- Endpoints ---
+
 
 @router.post("/sessions", response_model=VoiceSession)
 async def create_session(req: CreateSessionRequest) -> VoiceSession:

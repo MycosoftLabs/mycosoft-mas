@@ -9,9 +9,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from mycosoft_mas.llm.providers.base import BaseLLMProvider, LLMResponse, LLMError
-from mycosoft_mas.llm.providers.openai_provider import OpenAIProvider
+from mycosoft_mas.llm.providers.base import BaseLLMProvider, LLMError, LLMResponse
 from mycosoft_mas.llm.providers.openai_compatible import OpenAICompatibleProvider
+from mycosoft_mas.llm.providers.openai_provider import OpenAIProvider
 
 # ---------------------------------------------------------------------------
 # Compatibility exports
@@ -58,9 +58,13 @@ class LLMRouter:
             if isinstance(result, LLMResult):
                 return result
             if isinstance(result, LLMResponse):
-                return LLMResult(content=result.content, provider=provider_key, model=model_name, raw=result.raw)
+                return LLMResult(
+                    content=result.content, provider=provider_key, model=model_name, raw=result.raw
+                )
             # Last resort: stringify
-            return LLMResult(content=str(result), provider=provider_key, model=model_name, raw={"result": result})
+            return LLMResult(
+                content=str(result), provider=provider_key, model=model_name, raw={"result": result}
+            )
         except Exception as exc:
             # Try an explicit fallback role if present
             fallback_target = self.settings.model_registry.get_model_target("fallback_model")
@@ -74,13 +78,19 @@ class LLMRouter:
             if isinstance(fb_result, LLMResult):
                 return fb_result
             if isinstance(fb_result, LLMResponse):
-                return LLMResult(content=fb_result.content, provider=fb_provider_key, model=fb_model, raw=fb_result.raw)
+                return LLMResult(
+                    content=fb_result.content,
+                    provider=fb_provider_key,
+                    model=fb_model,
+                    raw=fb_result.raw,
+                )
             return LLMResult(
                 content=str(fb_result),
                 provider=fb_provider_key,
                 model=fb_model,
                 raw={"result": fb_result, "fallback_from": provider_key, "error": str(exc)},
             )
+
 
 __all__ = [
     "BaseLLMProvider",

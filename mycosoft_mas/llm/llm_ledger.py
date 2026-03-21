@@ -35,9 +35,11 @@ def persist_to_supabase_ledger(
 ) -> None:
     """Insert a row into Supabase llm_usage_ledger. Best-effort; never raises."""
     url = os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get(
-        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY"
-    ) or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    key = (
+        os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        or os.environ.get("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY")
+        or os.environ.get("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    )
     if not url or not key:
         return
     row: dict[str, Any] = {
@@ -63,6 +65,7 @@ def persist_to_supabase_ledger(
         row["related_run_id"] = related_run_id
     try:
         import requests
+
         rest_url = f"{url.rstrip('/')}/rest/v1/llm_usage_ledger"
         headers = {
             "apikey": key,

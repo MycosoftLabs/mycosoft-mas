@@ -12,14 +12,12 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
-from fastapi import Request
+from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
+from mycosoft_mas.raas.middleware import require_raas_auth
 from mycosoft_mas.raas.models import AgentAccount, WorldstateBalance, WorldstateSessionSummary
 from mycosoft_mas.raas.session_lifecycle import router as raas_session_router
-from mycosoft_mas.raas.middleware import require_raas_auth
-from fastapi import FastAPI
 
 # Build minimal app with only the RaaS worldstate session router
 app = FastAPI()
@@ -30,6 +28,7 @@ async def fake_raas_auth(request: Request) -> AgentAccount:
     """Fake auth: 401 if no X-API-Key, else return test agent (no DB)."""
     if not request.headers.get("X-API-Key"):
         from fastapi import HTTPException
+
         raise HTTPException(status_code=401, detail="X-API-Key header missing")
     return AgentAccount(agent_id="test-agent", agent_name="Test Agent")
 

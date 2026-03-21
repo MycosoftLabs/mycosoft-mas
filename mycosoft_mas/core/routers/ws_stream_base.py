@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, Set
 
 from fastapi import WebSocket
 
-from mycosoft_mas.realtime.redis_pubsub import get_client, PubSubMessage
+from mycosoft_mas.realtime.redis_pubsub import PubSubMessage, get_client
 
 logger = logging.getLogger(__name__)
 

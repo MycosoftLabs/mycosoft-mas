@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 class TranscriptRole(str, Enum):
     """Role of the speaker in a transcript chunk."""
+
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
@@ -23,6 +24,7 @@ class TranscriptRole(str, Enum):
 
 class TranscriptChunk(BaseModel):
     """Incremental transcript chunk (STT partial or full)."""
+
     chunk_id: str = Field(default_factory=lambda: str(uuid4()))
     session_id: str
     role: TranscriptRole = TranscriptRole.USER
@@ -35,6 +37,7 @@ class TranscriptChunk(BaseModel):
 
 class LatencyTrace(BaseModel):
     """Latency measurement for a voice turn or operation."""
+
     trace_id: str = Field(default_factory=lambda: str(uuid4()))
     session_id: str
     operation: str  # e.g. stt, brain_chat, tts, mas_clone
@@ -46,6 +49,7 @@ class LatencyTrace(BaseModel):
 
 class VoiceSession(BaseModel):
     """Voice v9 session state."""
+
     session_id: str = Field(default_factory=lambda: str(uuid4()))
     conversation_id: Optional[str] = None
     user_id: str = "morgan"

@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class KnowledgeDomain(str, Enum):
     """All knowledge domains MYCA masters."""
+
     MYCOLOGY = "mycology"
     BIOLOGY = "biology"
     CHEMISTRY = "chemistry"
@@ -57,25 +58,27 @@ class KnowledgeDomain(str, Enum):
 
 class DataSourceType(str, Enum):
     """Types of data sources for knowledge queries."""
-    MINDEX = "mindex"           # Our knowledge graph (192.168.0.189)
+
+    MINDEX = "mindex"  # Our knowledge graph (192.168.0.189)
     INATURALIST = "inaturalist"  # Taxonomy and observations
-    NCBI = "ncbi"               # Genomics, PubMed
-    CHEMSPIDER = "chemspider"   # Chemical compounds
-    EARTH2 = "earth2"           # Climate/weather (NVIDIA)
+    NCBI = "ncbi"  # Genomics, PubMed
+    CHEMSPIDER = "chemspider"  # Chemical compounds
+    EARTH2 = "earth2"  # Climate/weather (NVIDIA)
     PHYSICSNEMO = "physicsnemo"  # Physics simulations (NVIDIA)
-    LOCAL_LLM = "local_llm"     # Ollama local models
+    LOCAL_LLM = "local_llm"  # Ollama local models
     FRONTIER_LLM = "frontier_llm"  # Cloud LLMs (Anthropic, OpenAI)
-    PUBMED = "pubmed"           # Medical papers
-    GBIF = "gbif"               # Global Biodiversity
-    GENBANK = "genbank"         # Genetic sequences
-    ARXIV = "arxiv"             # Scientific papers
-    NASA = "nasa"               # Space/Earth observation
-    NOAA = "noaa"               # Weather/ocean data
+    PUBMED = "pubmed"  # Medical papers
+    GBIF = "gbif"  # Global Biodiversity
+    GENBANK = "genbank"  # Genetic sequences
+    ARXIV = "arxiv"  # Scientific papers
+    NASA = "nasa"  # Space/Earth observation
+    NOAA = "noaa"  # Weather/ocean data
 
 
 @dataclass
 class KnowledgeQuery:
     """A knowledge query to be processed."""
+
     query: str
     domain: KnowledgeDomain = KnowledgeDomain.GENERAL
     subdomain: Optional[str] = None
@@ -90,6 +93,7 @@ class KnowledgeQuery:
 @dataclass
 class KnowledgeResponse:
     """A comprehensive knowledge response."""
+
     query: str
     domain: KnowledgeDomain
     answer: str
@@ -106,44 +110,193 @@ class KnowledgeResponse:
 
 # Domain -> Data source routing map
 DOMAIN_SOURCE_MAP: Dict[KnowledgeDomain, List[DataSourceType]] = {
-    KnowledgeDomain.MYCOLOGY: [DataSourceType.MINDEX, DataSourceType.INATURALIST, DataSourceType.NCBI, DataSourceType.PUBMED],
-    KnowledgeDomain.BIOLOGY: [DataSourceType.NCBI, DataSourceType.MINDEX, DataSourceType.INATURALIST, DataSourceType.PUBMED],
-    KnowledgeDomain.CHEMISTRY: [DataSourceType.CHEMSPIDER, DataSourceType.PUBMED, DataSourceType.ARXIV],
-    KnowledgeDomain.PHYSICS: [DataSourceType.PHYSICSNEMO, DataSourceType.ARXIV, DataSourceType.FRONTIER_LLM],
+    KnowledgeDomain.MYCOLOGY: [
+        DataSourceType.MINDEX,
+        DataSourceType.INATURALIST,
+        DataSourceType.NCBI,
+        DataSourceType.PUBMED,
+    ],
+    KnowledgeDomain.BIOLOGY: [
+        DataSourceType.NCBI,
+        DataSourceType.MINDEX,
+        DataSourceType.INATURALIST,
+        DataSourceType.PUBMED,
+    ],
+    KnowledgeDomain.CHEMISTRY: [
+        DataSourceType.CHEMSPIDER,
+        DataSourceType.PUBMED,
+        DataSourceType.ARXIV,
+    ],
+    KnowledgeDomain.PHYSICS: [
+        DataSourceType.PHYSICSNEMO,
+        DataSourceType.ARXIV,
+        DataSourceType.FRONTIER_LLM,
+    ],
     KnowledgeDomain.MATHEMATICS: [DataSourceType.ARXIV, DataSourceType.FRONTIER_LLM],
-    KnowledgeDomain.ENVIRONMENTAL: [DataSourceType.EARTH2, DataSourceType.NOAA, DataSourceType.NASA],
-    KnowledgeDomain.MEDICINE: [DataSourceType.PUBMED, DataSourceType.NCBI, DataSourceType.FRONTIER_LLM],
+    KnowledgeDomain.ENVIRONMENTAL: [
+        DataSourceType.EARTH2,
+        DataSourceType.NOAA,
+        DataSourceType.NASA,
+    ],
+    KnowledgeDomain.MEDICINE: [
+        DataSourceType.PUBMED,
+        DataSourceType.NCBI,
+        DataSourceType.FRONTIER_LLM,
+    ],
     KnowledgeDomain.PATHOLOGY: [DataSourceType.PUBMED, DataSourceType.NCBI],
     KnowledgeDomain.VIROLOGY: [DataSourceType.NCBI, DataSourceType.PUBMED, DataSourceType.GENBANK],
-    KnowledgeDomain.BACTERIOLOGY: [DataSourceType.NCBI, DataSourceType.PUBMED, DataSourceType.GENBANK],
+    KnowledgeDomain.BACTERIOLOGY: [
+        DataSourceType.NCBI,
+        DataSourceType.PUBMED,
+        DataSourceType.GENBANK,
+    ],
     KnowledgeDomain.GENETICS: [DataSourceType.GENBANK, DataSourceType.NCBI, DataSourceType.PUBMED],
-    KnowledgeDomain.HERBOLOGY: [DataSourceType.MINDEX, DataSourceType.INATURALIST, DataSourceType.PUBMED],
-    KnowledgeDomain.BOTANY: [DataSourceType.INATURALIST, DataSourceType.MINDEX, DataSourceType.GBIF],
+    KnowledgeDomain.HERBOLOGY: [
+        DataSourceType.MINDEX,
+        DataSourceType.INATURALIST,
+        DataSourceType.PUBMED,
+    ],
+    KnowledgeDomain.BOTANY: [
+        DataSourceType.INATURALIST,
+        DataSourceType.MINDEX,
+        DataSourceType.GBIF,
+    ],
     KnowledgeDomain.ZOOLOGY: [DataSourceType.INATURALIST, DataSourceType.GBIF, DataSourceType.NCBI],
-    KnowledgeDomain.ECOLOGY: [DataSourceType.INATURALIST, DataSourceType.EARTH2, DataSourceType.GBIF],
-    KnowledgeDomain.TAXONOMY: [DataSourceType.MINDEX, DataSourceType.INATURALIST, DataSourceType.GBIF],
+    KnowledgeDomain.ECOLOGY: [
+        DataSourceType.INATURALIST,
+        DataSourceType.EARTH2,
+        DataSourceType.GBIF,
+    ],
+    KnowledgeDomain.TAXONOMY: [
+        DataSourceType.MINDEX,
+        DataSourceType.INATURALIST,
+        DataSourceType.GBIF,
+    ],
     KnowledgeDomain.GEOSPATIAL: [DataSourceType.NASA, DataSourceType.EARTH2, DataSourceType.NOAA],
     KnowledgeDomain.CLIMATE: [DataSourceType.EARTH2, DataSourceType.NOAA, DataSourceType.NASA],
     KnowledgeDomain.OCEANOGRAPHY: [DataSourceType.NOAA, DataSourceType.NASA, DataSourceType.EARTH2],
     KnowledgeDomain.ASTRONOMY: [DataSourceType.NASA, DataSourceType.ARXIV],
-    KnowledgeDomain.PHARMACOLOGY: [DataSourceType.PUBMED, DataSourceType.CHEMSPIDER, DataSourceType.NCBI],
-    KnowledgeDomain.AGRICULTURE: [DataSourceType.INATURALIST, DataSourceType.MINDEX, DataSourceType.PUBMED],
-    KnowledgeDomain.GENERAL: [DataSourceType.FRONTIER_LLM, DataSourceType.LOCAL_LLM, DataSourceType.MINDEX],
+    KnowledgeDomain.PHARMACOLOGY: [
+        DataSourceType.PUBMED,
+        DataSourceType.CHEMSPIDER,
+        DataSourceType.NCBI,
+    ],
+    KnowledgeDomain.AGRICULTURE: [
+        DataSourceType.INATURALIST,
+        DataSourceType.MINDEX,
+        DataSourceType.PUBMED,
+    ],
+    KnowledgeDomain.GENERAL: [
+        DataSourceType.FRONTIER_LLM,
+        DataSourceType.LOCAL_LLM,
+        DataSourceType.MINDEX,
+    ],
 }
 
 # Keywords that map to domains for auto-classification
 DOMAIN_KEYWORDS: Dict[KnowledgeDomain, List[str]] = {
-    KnowledgeDomain.MYCOLOGY: ["fungus", "fungi", "mushroom", "mycelium", "spore", "mold", "yeast", "lichen", "mycorrhiz"],
-    KnowledgeDomain.BIOLOGY: ["cell", "organism", "evolution", "dna", "rna", "protein", "mitosis", "photosynthesis"],
-    KnowledgeDomain.CHEMISTRY: ["molecule", "reaction", "compound", "element", "atom", "bond", "synthesis", "catalyst"],
-    KnowledgeDomain.PHYSICS: ["force", "energy", "quantum", "gravity", "relativity", "particle", "wave", "momentum"],
-    KnowledgeDomain.VIROLOGY: ["virus", "viral", "infection", "pathogen", "vaccine", "mrna", "capsid", "pandemic"],
-    KnowledgeDomain.BACTERIOLOGY: ["bacteria", "bacterial", "microbe", "antibiotic", "biofilm", "gram-positive"],
-    KnowledgeDomain.GENETICS: ["gene", "genome", "genetic", "mutation", "allele", "chromosome", "crispr", "sequencing"],
-    KnowledgeDomain.CLIMATE: ["climate", "global warming", "carbon", "greenhouse", "temperature anomaly"],
-    KnowledgeDomain.TAXONOMY: ["species", "taxon", "classification", "kingdom", "phylum", "genus", "binomial"],
-    KnowledgeDomain.MEDICINE: ["disease", "treatment", "diagnosis", "symptom", "therapy", "patient", "clinical"],
-    KnowledgeDomain.HERBOLOGY: ["herb", "herbal", "medicinal plant", "tincture", "botanical medicine", "phytochemical"],
+    KnowledgeDomain.MYCOLOGY: [
+        "fungus",
+        "fungi",
+        "mushroom",
+        "mycelium",
+        "spore",
+        "mold",
+        "yeast",
+        "lichen",
+        "mycorrhiz",
+    ],
+    KnowledgeDomain.BIOLOGY: [
+        "cell",
+        "organism",
+        "evolution",
+        "dna",
+        "rna",
+        "protein",
+        "mitosis",
+        "photosynthesis",
+    ],
+    KnowledgeDomain.CHEMISTRY: [
+        "molecule",
+        "reaction",
+        "compound",
+        "element",
+        "atom",
+        "bond",
+        "synthesis",
+        "catalyst",
+    ],
+    KnowledgeDomain.PHYSICS: [
+        "force",
+        "energy",
+        "quantum",
+        "gravity",
+        "relativity",
+        "particle",
+        "wave",
+        "momentum",
+    ],
+    KnowledgeDomain.VIROLOGY: [
+        "virus",
+        "viral",
+        "infection",
+        "pathogen",
+        "vaccine",
+        "mrna",
+        "capsid",
+        "pandemic",
+    ],
+    KnowledgeDomain.BACTERIOLOGY: [
+        "bacteria",
+        "bacterial",
+        "microbe",
+        "antibiotic",
+        "biofilm",
+        "gram-positive",
+    ],
+    KnowledgeDomain.GENETICS: [
+        "gene",
+        "genome",
+        "genetic",
+        "mutation",
+        "allele",
+        "chromosome",
+        "crispr",
+        "sequencing",
+    ],
+    KnowledgeDomain.CLIMATE: [
+        "climate",
+        "global warming",
+        "carbon",
+        "greenhouse",
+        "temperature anomaly",
+    ],
+    KnowledgeDomain.TAXONOMY: [
+        "species",
+        "taxon",
+        "classification",
+        "kingdom",
+        "phylum",
+        "genus",
+        "binomial",
+    ],
+    KnowledgeDomain.MEDICINE: [
+        "disease",
+        "treatment",
+        "diagnosis",
+        "symptom",
+        "therapy",
+        "patient",
+        "clinical",
+    ],
+    KnowledgeDomain.HERBOLOGY: [
+        "herb",
+        "herbal",
+        "medicinal plant",
+        "tincture",
+        "botanical medicine",
+        "phytochemical",
+    ],
 }
 
 
@@ -199,8 +352,9 @@ class KnowledgeDomainAgent:
             return max(scores, key=scores.get)
         return KnowledgeDomain.GENERAL
 
-    async def query_knowledge(self, query: str, domain: Optional[KnowledgeDomain] = None,
-                              depth: str = "comprehensive") -> KnowledgeResponse:
+    async def query_knowledge(
+        self, query: str, domain: Optional[KnowledgeDomain] = None, depth: str = "comprehensive"
+    ) -> KnowledgeResponse:
         """
         Query MYCA's knowledge across all domains.
 
@@ -235,12 +389,17 @@ class KnowledgeDomainAgent:
 
         logger.info(
             "Knowledge query [%s] domain=%s sources=%d confidence=%.2f time=%.0fms",
-            query[:50], domain.value, len(sources), response.confidence, elapsed
+            query[:50],
+            domain.value,
+            len(sources),
+            response.confidence,
+            elapsed,
         )
         return response
 
-    async def _gather_from_sources(self, query: str, domain: KnowledgeDomain,
-                                   sources: List[DataSourceType], depth: str) -> List[Dict[str, Any]]:
+    async def _gather_from_sources(
+        self, query: str, domain: KnowledgeDomain, sources: List[DataSourceType], depth: str
+    ) -> List[Dict[str, Any]]:
         """Gather knowledge from multiple sources in parallel."""
         tasks = []
         for source in sources:
@@ -258,8 +417,9 @@ class KnowledgeDomainAgent:
 
         return knowledge_parts
 
-    async def _query_source(self, query: str, domain: KnowledgeDomain,
-                            source: DataSourceType) -> Optional[Dict[str, Any]]:
+    async def _query_source(
+        self, query: str, domain: KnowledgeDomain, source: DataSourceType
+    ) -> Optional[Dict[str, Any]]:
         """Query a single knowledge source."""
         try:
             if source == DataSourceType.MINDEX:
@@ -288,10 +448,11 @@ class KnowledgeDomainAgent:
         """Query MINDEX knowledge graph."""
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
                     f"{self._mindex_url}/api/search",
-                    json={"query": query, "domain": domain.value, "limit": 10}
+                    json={"query": query, "domain": domain.value, "limit": 10},
                 )
                 if resp.status_code == 200:
                     data = resp.json()
@@ -309,10 +470,10 @@ class KnowledgeDomainAgent:
         """Query iNaturalist for taxonomy and observations."""
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(
-                    "https://api.inaturalist.org/v1/taxa",
-                    params={"q": query, "per_page": 5}
+                    "https://api.inaturalist.org/v1/taxa", params={"q": query, "per_page": 5}
                 )
                 if resp.status_code == 200:
                     data = resp.json()
@@ -323,7 +484,9 @@ class KnowledgeDomainAgent:
                         common = taxon.get("preferred_common_name", "")
                         rank = taxon.get("rank", "")
                         obs_count = taxon.get("observations_count", 0)
-                        content_parts.append(f"{name} ({common}) - {rank}, {obs_count} observations")
+                        content_parts.append(
+                            f"{name} ({common}) - {rank}, {obs_count} observations"
+                        )
                     return {
                         "source": "inaturalist",
                         "content": "; ".join(content_parts),
@@ -338,6 +501,7 @@ class KnowledgeDomainAgent:
         """Query local Ollama LLM for MYCA's native reasoning."""
         try:
             import httpx
+
             system_prompt = (
                 f"You are MYCA, the world's foremost expert in {domain.value}. "
                 "Provide a precise, comprehensive, scientifically accurate answer. "
@@ -353,7 +517,7 @@ class KnowledgeDomainAgent:
                             {"role": "user", "content": query},
                         ],
                         "stream": False,
-                    }
+                    },
                 )
                 if resp.status_code == 200:
                     data = resp.json()
@@ -378,15 +542,17 @@ class KnowledgeDomainAgent:
             "note": "Frontier LLM integration via existing LLM router",
         }
 
-    async def _query_biomedical(self, query: str, domain: KnowledgeDomain,
-                                source: DataSourceType) -> Dict[str, Any]:
+    async def _query_biomedical(
+        self, query: str, domain: KnowledgeDomain, source: DataSourceType
+    ) -> Dict[str, Any]:
         """Query biomedical databases (NCBI, PubMed, GenBank)."""
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=15.0) as client:
                 resp = await client.get(
                     "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
-                    params={"db": "pubmed", "term": query, "retmax": 5, "retmode": "json"}
+                    params={"db": "pubmed", "term": query, "retmax": 5, "retmode": "json"},
                 )
                 if resp.status_code == 200:
                     data = resp.json()
@@ -403,33 +569,50 @@ class KnowledgeDomainAgent:
 
     async def _query_earth2(self, query: str, domain: KnowledgeDomain) -> Dict[str, Any]:
         """Query NVIDIA Earth2 for climate/weather data."""
-        return {"source": "earth2", "content": "", "confidence": 0.0,
-                "note": "Earth2 integration via existing earth2_api router"}
+        return {
+            "source": "earth2",
+            "content": "",
+            "confidence": 0.0,
+            "note": "Earth2 integration via existing earth2_api router",
+        }
 
     async def _query_physicsnemo(self, query: str, domain: KnowledgeDomain) -> Dict[str, Any]:
         """Query NVIDIA PhysicsNeMo for physics simulations."""
-        return {"source": "physicsnemo", "content": "", "confidence": 0.0,
-                "note": "PhysicsNeMo integration via existing physicsnemo_api router"}
+        return {
+            "source": "physicsnemo",
+            "content": "",
+            "confidence": 0.0,
+            "note": "PhysicsNeMo integration via existing physicsnemo_api router",
+        }
 
     async def _query_chemspider(self, query: str, domain: KnowledgeDomain) -> Dict[str, Any]:
         """Query ChemSpider for chemical data."""
-        return {"source": "chemspider", "content": "", "confidence": 0.0,
-                "note": "ChemSpider integration via existing chemspider_client"}
+        return {
+            "source": "chemspider",
+            "content": "",
+            "confidence": 0.0,
+            "note": "ChemSpider integration via existing chemspider_client",
+        }
 
-    async def _synthesize_response(self, query: str, domain: KnowledgeDomain,
-                                   knowledge_parts: List[Dict[str, Any]]) -> KnowledgeResponse:
+    async def _synthesize_response(
+        self, query: str, domain: KnowledgeDomain, knowledge_parts: List[Dict[str, Any]]
+    ) -> KnowledgeResponse:
         """Synthesize a comprehensive response from multiple knowledge sources."""
         # Combine all content
-        contents = [p.get("content", "") for p in knowledge_parts if p.get("content")]
-        sources = [{"name": p.get("source", "unknown"), "confidence": p.get("confidence", 0.0)}
-                   for p in knowledge_parts]
+        [p.get("content", "") for p in knowledge_parts if p.get("content")]
+        sources = [
+            {"name": p.get("source", "unknown"), "confidence": p.get("confidence", 0.0)}
+            for p in knowledge_parts
+        ]
 
         # Calculate overall confidence
         confidences = [p.get("confidence", 0.0) for p in knowledge_parts]
         avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
 
         # Build answer from best sources
-        best_content = max(knowledge_parts, key=lambda p: p.get("confidence", 0.0)) if knowledge_parts else {}
+        best_content = (
+            max(knowledge_parts, key=lambda p: p.get("confidence", 0.0)) if knowledge_parts else {}
+        )
         answer = best_content.get("content", f"Processing query about {domain.value}: {query}")
 
         # Extract images if available
@@ -454,12 +637,37 @@ class KnowledgeDomainAgent:
     def _extract_related_topics(self, query: str, domain: KnowledgeDomain) -> List[str]:
         """Extract related topics for further exploration."""
         related_map = {
-            KnowledgeDomain.MYCOLOGY: ["fungal ecology", "mycelium networks", "medicinal mushrooms", "spore dispersal"],
+            KnowledgeDomain.MYCOLOGY: [
+                "fungal ecology",
+                "mycelium networks",
+                "medicinal mushrooms",
+                "spore dispersal",
+            ],
             KnowledgeDomain.BIOLOGY: ["molecular biology", "ecology", "evolution", "genetics"],
-            KnowledgeDomain.CHEMISTRY: ["organic chemistry", "biochemistry", "pharmacology", "materials science"],
-            KnowledgeDomain.PHYSICS: ["quantum mechanics", "thermodynamics", "relativity", "particle physics"],
-            KnowledgeDomain.GENETICS: ["gene expression", "epigenetics", "genomics", "bioinformatics"],
-            KnowledgeDomain.CLIMATE: ["climate modeling", "carbon cycle", "ocean acidification", "renewable energy"],
+            KnowledgeDomain.CHEMISTRY: [
+                "organic chemistry",
+                "biochemistry",
+                "pharmacology",
+                "materials science",
+            ],
+            KnowledgeDomain.PHYSICS: [
+                "quantum mechanics",
+                "thermodynamics",
+                "relativity",
+                "particle physics",
+            ],
+            KnowledgeDomain.GENETICS: [
+                "gene expression",
+                "epigenetics",
+                "genomics",
+                "bioinformatics",
+            ],
+            KnowledgeDomain.CLIMATE: [
+                "climate modeling",
+                "carbon cycle",
+                "ocean acidification",
+                "renewable energy",
+            ],
         }
         return related_map.get(domain, ["interdisciplinary science", "data analysis"])
 
@@ -508,12 +716,14 @@ class KnowledgeDomainAgent:
         for domain_str in domains:
             domain = KnowledgeDomain(domain_str)
             response = await self.query_knowledge(query, domain, "exhaustive")
-            results.append({
-                "domain": domain.value,
-                "answer": response.answer,
-                "confidence": response.confidence,
-                "sources": response.sources,
-            })
+            results.append(
+                {
+                    "domain": domain.value,
+                    "answer": response.answer,
+                    "confidence": response.confidence,
+                    "sources": response.sources,
+                }
+            )
 
         return {"status": "success", "query": query, "research_results": results}
 
