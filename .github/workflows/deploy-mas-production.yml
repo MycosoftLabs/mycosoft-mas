@@ -73,7 +73,7 @@ jobs:
       - name: Deploy to MAS VM
         uses: appleboy/ssh-action@v1.0.3
         env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           IMAGE_FULL: ${{ env.IMAGE_FULL }}
           GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
         with:
