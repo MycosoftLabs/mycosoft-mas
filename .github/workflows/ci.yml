@@ -49,9 +49,10 @@ jobs:
       - name: Run tests
         run: poetry run pytest tests/ -o "addopts=-v --tb=short --import-mode=importlib"
 
-      - name: Build Docker image
+      - name: Build MAS image in CI
         run: |
-          docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+          IMAGE_TAG="ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):mas-${{ github.sha }}"
+          docker build -t "$IMAGE_TAG" .
 
   test:
     runs-on: ubuntu-latest
