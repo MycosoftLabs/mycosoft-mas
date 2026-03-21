@@ -165,10 +165,11 @@ services:
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/readyz"]
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/0.0.0.0/6333' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 15s
     networks:
       - mas-network
     restart: unless-stopped
