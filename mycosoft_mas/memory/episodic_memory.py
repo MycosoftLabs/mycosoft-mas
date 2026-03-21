@@ -48,7 +48,7 @@ class EpisodicMemory:
         except Exception as e:
             raise RuntimeError("asyncpg is required for EpisodicMemory") from e
 
-        self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=5)
+        self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=2)
         async with self._pool.acquire() as conn:
             await conn.execute(
                 """

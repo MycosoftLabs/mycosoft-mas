@@ -191,7 +191,7 @@ class GPUMemory:
             self._pool = await asyncpg.create_pool(
                 self._database_url,
                 min_size=1,
-                max_size=3
+                max_size=2
             )
             logger.info("GPU memory connected to database")
         except Exception as e:

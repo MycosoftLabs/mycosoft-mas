@@ -1,4 +1,4 @@
-﻿"""
+"""
 Search Memory System - February 5, 2026
 
 Provides specialized memory management for search sessions:
@@ -44,6 +44,8 @@ class SearchQuery:
     clicked_results: List[str]
     duration_ms: Optional[int] = None
     source: str = "text"
+    myca_insight: Optional[str] = None
+    associations: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -54,7 +56,9 @@ class SearchQuery:
             "result_types": self.result_types,
             "clicked_results": self.clicked_results,
             "duration_ms": self.duration_ms,
-            "source": self.source
+            "source": self.source,
+            "myca_insight": self.myca_insight,
+            "associations": self.associations
         }
     
     @classmethod
@@ -67,7 +71,9 @@ class SearchQuery:
             result_types=data.get("result_types", {}),
             clicked_results=data.get("clicked_results", []),
             duration_ms=data.get("duration_ms"),
-            source=data.get("source", "text")
+            source=data.get("source", "text"),
+            myca_insight=data.get("myca_insight"),
+            associations=data.get("associations", [])
         )
 
 
@@ -176,6 +182,14 @@ class SearchSession:
         self.queries.append(sq)
         self.last_activity = datetime.now(timezone.utc)
         return sq
+    
+    def update_query_insight(self, query_id: UUID, insight: str, associations: List[str]) -> None:
+        for q in self.queries:
+            if q.id == query_id:
+                q.myca_insight = insight
+                q.associations = associations
+                self.last_activity = datetime.now(timezone.utc)
+                break
     
     def record_click(self, result_id: str) -> None:
         if self.queries:
@@ -307,7 +321,7 @@ class SearchMemoryManager:
             return
         try:
             import asyncpg
-            self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=5)
+            self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=2)
             logger.info("Search memory connected to database")
         except Exception as e:
             logger.warning(f"Database connection failed: {e}")
@@ -339,6 +353,13 @@ class SearchMemoryManager:
         sq = session.add_query(query, result_count, result_types, source)
         await self._record_search_analytics(session, sq)
         return sq
+    
+    async def update_query_insight(self, session_id: UUID, query_id: UUID, insight: str, associations: List[str]) -> bool:
+        session = self._active_sessions.get(session_id)
+        if not session:
+            return False
+        session.update_query_insight(query_id, insight, associations)
+        return True
     
     async def record_focus(self, session_id: UUID, species_id: str, topic: Optional[str] = None) -> bool:
         session = self._active_sessions.get(session_id)

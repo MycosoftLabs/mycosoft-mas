@@ -140,7 +140,7 @@ class MASCheckpointer:
                 "MINDEX_DATABASE_URL",
                 os.getenv("MINDEX_DATABASE_URL")
             )
-            self._pool = await asyncpg.create_pool(db_url, min_size=1, max_size=3)
+            self._pool = await asyncpg.create_pool(db_url, min_size=1, max_size=2)
             
             self._initialized = True
             logger.info("MASCheckpointer initialized with memory system")

@@ -224,7 +224,7 @@ class PostgresBackend(MemoryBackend):
     async def connect(self) -> bool:
         try:
             import asyncpg
-            self._pool = await asyncpg.create_pool(self._url, min_size=2, max_size=10)
+            self._pool = await asyncpg.create_pool(self._url, min_size=1, max_size=2)
             logger.info("PostgreSQL backend connected")
             return True
         except Exception as e:

@@ -49,8 +49,8 @@ class MindexGraph:
         
         self.pool = await asyncpg.create_pool(
             self.connection_string,
-            min_size=2,
-            max_size=10
+            min_size=1,
+            max_size=2
         )
         logger.info("MindexGraph initialized")
     

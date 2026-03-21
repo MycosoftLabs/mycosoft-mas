@@ -85,7 +85,7 @@ class SessionMemoryManager:
     async def initialize(self) -> None:
         if asyncpg is None:
             raise ImportError("asyncpg required")
-        self.pool = await asyncpg.create_pool(self.connection_string, min_size=2, max_size=10)
+        self.pool = await asyncpg.create_pool(self.connection_string, min_size=1, max_size=2)
     
     async def close(self) -> None:
         if self.pool:
