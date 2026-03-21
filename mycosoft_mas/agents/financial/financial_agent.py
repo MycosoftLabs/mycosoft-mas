@@ -229,7 +229,7 @@ class FinancialAgent(BaseAgent):
             transaction_data = message.data.get("transaction_data", {})
 
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute(
+                conn.execute(
                     """
                     INSERT INTO transactions (id, type, amount, currency, description, metadata)
                     VALUES (?, ?, ?, ?, ?, ?)

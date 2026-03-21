@@ -20,10 +20,10 @@ class MonitoringDashboard:
         return {}
 
 
-from pathlib import Path
+from pathlib import Path  # noqa: E402
 
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+from fastapi.templating import Jinja2Templates  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

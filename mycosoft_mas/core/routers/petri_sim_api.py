@@ -252,7 +252,7 @@ async def batch_run(payload: BatchRunRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail="No initial fields; call /chemical/init first")
 
     first = next(iter(fields.values()))
-    h, w = len(first), len(first[0]) if first else 0
+    _, _ = len(first), len(first[0]) if first else 0
     diffusion_rates = {k: 0.1 for k in fields}
     reaction_params = {k: {} for k in fields}
 

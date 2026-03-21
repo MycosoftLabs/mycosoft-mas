@@ -40,7 +40,7 @@ except Exception:  # pragma: no cover - optional dependency
     QdrantClient = None
     qmodels = None
 
-from .embeddings import BaseEmbedder, get_embedder
+from .embeddings import BaseEmbedder, get_embedder  # noqa: E402
 
 
 class MemoryLayer(str, Enum):

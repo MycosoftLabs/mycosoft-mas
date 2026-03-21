@@ -34,6 +34,8 @@ Run standalone:
   python -m mycosoft_mas.mcp.ssh_server
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -44,7 +46,10 @@ import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    import paramiko
 
 logger = logging.getLogger("SSHMCPServer")
 

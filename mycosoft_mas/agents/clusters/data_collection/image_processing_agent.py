@@ -682,10 +682,10 @@ class ImageProcessingAgent(BaseAgent):
             # Apply contrast enhancement
             if parameters.get("enhance_contrast", False):
                 lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-                l, a, b = cv2.split(lab)
+                lum, a, b = cv2.split(lab)
                 clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-                l = clahe.apply(l)
-                lab = cv2.merge((l, a, b))
+                lum = clahe.apply(lum)
+                lab = cv2.merge((lum, a, b))
                 img = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
 
             # Apply denoising

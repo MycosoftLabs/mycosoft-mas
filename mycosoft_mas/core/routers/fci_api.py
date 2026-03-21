@@ -338,7 +338,6 @@ async def list_fci_devices(
 ):
     """List all connected FCI devices."""
     # If in-memory cache is empty, try loading from MINDEX
-    global _connected_devices
     if not _connected_devices:
         persisted = await load_devices_from_mindex()
         for dev in persisted:

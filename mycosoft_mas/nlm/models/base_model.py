@@ -183,20 +183,6 @@ class NLMBaseModel(BaseNLM):
         if not self._is_loaded:
             await self.load()
 
-        system_prompt = system or self.system_prompt
-
-        # Build full prompt
-        full_prompt = f"""<|system|>
-{system_prompt}
-</|system|>
-
-<|user|>
-{prompt}
-</|user|>
-
-<|assistant|>
-"""
-
         # If model is loaded, use it
         if self._model is not None:
             # In production:

@@ -76,12 +76,12 @@ class TestAttentionController:
         controller = AttentionController()
 
         # Set low priority focus
-        low = await controller.focus_on(
+        await controller.focus_on(
             content="Low priority", source="text", context={"urgency": "low"}
         )
 
         # High priority should interrupt
-        high = await controller.focus_on(
+        await controller.focus_on(
             content="High priority", source="voice", context={"urgency": "high"}
         )
 

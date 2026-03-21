@@ -253,8 +253,8 @@ class ClimateConnector(BaseConnector):
         self, geo: Optional[GeoFilter], limit: int
     ) -> List[EarthSearchResult]:
         """Search NOAA NDBC active buoy stations."""
-        data = await self._get("https://www.ndbc.noaa.gov/data/stations/station_table.txt")
+        await self._get("https://www.ndbc.noaa.gov/data/stations/station_table.txt")
         # This returns text — simplified: we query the active stations JSON feed instead
-        data = await self._get("https://www.ndbc.noaa.gov/data/latest_obs/latest_obs.txt")
+        await self._get("https://www.ndbc.noaa.gov/data/latest_obs/latest_obs.txt")
         # Fallback: list known major buoys as reference. Real implementation parses text feeds.
         return []

@@ -598,13 +598,6 @@ class ImmuneSystemAgent(BaseAgent):
             self.logger.error(f"Could not initialize VulnerabilityScanner: {e}")
             return threat_ids
 
-        # Attempt to find the agent's source file
-        agent_file_patterns = [
-            f"mycosoft_mas/agents/{agent_id}.py",
-            f"mycosoft_mas/agents/v2/{agent_id}.py",
-            f"mycosoft_mas/agents/clusters/**/{agent_id}.py",
-        ]
-
         # Scan the agents directory for real vulnerabilities
         agents_dir = Path(__file__).parent.parent.parent / "agents"
         if agents_dir.exists():
@@ -676,15 +669,6 @@ class ImmuneSystemAgent(BaseAgent):
         except Exception as e:
             self.logger.error(f"Could not initialize VulnerabilityScanner: {e}")
             return threat_ids
-
-        # Scan network-related configuration files
-        config_patterns = [
-            "docker-compose*.yml",
-            "docker-compose*.yaml",
-            ".env*",
-            "*.conf",
-            "Caddyfile",
-        ]
 
         # Scan the MAS repo root for network configs
         repo_root = Path(__file__).parent.parent.parent.parent.parent

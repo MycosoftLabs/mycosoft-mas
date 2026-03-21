@@ -16,6 +16,8 @@ Unlike a chatbot that waits for prompts, MYCA OS is proactive:
 Date: 2026-03-04
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
@@ -25,9 +27,31 @@ import socket
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
+from mycosoft_mas.myca.os.gateway import _env_flag
 from mycosoft_mas.myca.os.staff_registry import load_staff_directory, resolve_person_id
+
+if TYPE_CHECKING:
+    from mycosoft_mas.consciousness.world_model import WorldModel
+    from mycosoft_mas.myca.os.browser_cdp import BrowserCDP
+    from mycosoft_mas.myca.os.comms_hub import CommsHub
+    from mycosoft_mas.myca.os.crep_bridge import CREPBridge
+    from mycosoft_mas.myca.os.earth2_bridge import Earth2Bridge
+    from mycosoft_mas.myca.os.executive import ExecutiveSystem
+    from mycosoft_mas.myca.os.file_manager import FileManager
+    from mycosoft_mas.myca.os.mas_bridge import MASBridge
+    from mycosoft_mas.myca.os.mindex_bridge import MINDEXBridge
+    from mycosoft_mas.myca.os.mycobrain_bridge import MycoBrainBridge
+    from mycosoft_mas.myca.os.n8n_bridge import N8NBridge
+    from mycosoft_mas.myca.os.natureos_bridge import NatureOSBridge
+    from mycosoft_mas.myca.os.nlm_bridge import NLMBridge
+    from mycosoft_mas.myca.os.openwork_bridge import OpenWorkBridge
+    from mycosoft_mas.myca.os.presence_bridge import PresenceBridge
+    from mycosoft_mas.myca.os.scheduler import Scheduler
+    from mycosoft_mas.myca.os.discord_gateway import DiscordGateway
+    from mycosoft_mas.myca.os.slack_gateway import SlackGateway
+    from mycosoft_mas.myca.os.tool_orchestrator import ToolOrchestrator
 
 logger = logging.getLogger("myca.os")
 

@@ -163,7 +163,7 @@ class N8NBridge:
                         async with self._session.post(
                             f"{self._base_url}/api/v1/workflows/{wf_id}/activate",
                             headers=self._headers(),
-                        ) as act_resp:
+                        ):
                             pass
                     return {
                         "status": "completed",
@@ -175,7 +175,7 @@ class N8NBridge:
                     async with self._session.post(
                         f"{self._base_url}/api/v1/workflows/{wf_id}/activate",
                         headers=self._headers(),
-                    ) as act_resp:
+                    ):
                         pass
 
             webhook_url = f"{self._base_url}/webhook/{path.lstrip('/')}"

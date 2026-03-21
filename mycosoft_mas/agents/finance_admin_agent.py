@@ -28,6 +28,7 @@ class ReportStatus(Enum):
     COMPLETED = "completed"
     ERROR = "error"
 
+
 try:
     import pandas as pd  # type: ignore
 except ImportError:  # pragma: no cover

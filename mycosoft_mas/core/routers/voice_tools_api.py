@@ -196,6 +196,34 @@ async def execute_tool(request: ToolCallRequest):
     return response
 
 
+async def _run_myceliumseg_validation(query: str) -> ToolCallResponse:
+    """Run MyceliumSeg validation via MAS API."""
+    import httpx
+
+    base = _get_mas_base_url()
+    url = f"{base}/api/simulation/myceliumseg/validate"
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(url, json={"query": query})
+            resp.raise_for_status()
+            data = resp.json()
+            return ToolCallResponse(
+                success=True,
+                tool_name="run_myceliumseg_validation",
+                result=data.get("summary", "MyceliumSeg validation completed."),
+                data=data,
+                timestamp=datetime.now().isoformat(),
+            )
+    except Exception as exc:
+        return ToolCallResponse(
+            success=False,
+            tool_name="run_myceliumseg_validation",
+            result=f"MyceliumSeg validation failed: {exc}",
+            data=None,
+            timestamp=datetime.now().isoformat(),
+        )
+
+
 async def _run_petri_agent_tool(tool_name: str, query: str) -> ToolCallResponse:
     """Execute Petri agent control via MAS petri API."""
     import httpx

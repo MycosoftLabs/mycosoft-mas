@@ -17,7 +17,7 @@ except ImportError:
     asyncpg = None
     logger.warning("asyncpg not installed, graph operations will fail")
 
-from .graph_schema import (
+from .graph_schema import (  # noqa: E402
     EdgeType,
     GraphTraversalResult,
     KnowledgeEdge,

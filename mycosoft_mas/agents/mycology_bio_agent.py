@@ -225,7 +225,7 @@ class MycologyBioAgent(BaseAgent):
                     "type": "bio_data_import_started",
                     "import_id": import_id,
                     "source": import_data.get("source", ""),
-                    "type": import_data.get("type", ""),
+                    "data_type": import_data.get("type", ""),
                     "timestamp": datetime.now().isoformat(),
                 }
             )
@@ -591,7 +591,7 @@ class MycologyBioAgent(BaseAgent):
                             {
                                 "type": "bio_data_analysis_suggested",
                                 "data_id": record.id,
-                                "type": record.type.value,
+                                "data_type": record.type.value,
                                 "updated_at": record.updated_at.isoformat(),
                                 "timestamp": datetime.now().isoformat(),
                             }

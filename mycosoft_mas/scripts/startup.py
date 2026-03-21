@@ -177,7 +177,7 @@ class StartupManager:
             logger.info("Starting dashboard...")
 
             # Start dashboard
-            dashboard_process = await asyncio.create_subprocess_exec(
+            await asyncio.create_subprocess_exec(
                 "python",
                 "-m",
                 "uvicorn",

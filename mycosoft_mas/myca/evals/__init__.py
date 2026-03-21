@@ -14,7 +14,7 @@ GOLDEN_TASKS_DIR = EVALS_ROOT / "golden_tasks"
 ADVERSARIAL_DIR = EVALS_ROOT / "adversarial"
 
 # Import runner components
-from .run_evals import (
+from .run_evals import (  # noqa: E402
     EvalReport,
     EvalRunner,
     TestCase,

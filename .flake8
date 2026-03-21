@@ -19,6 +19,8 @@ extend-ignore =
     E731,
     # Line length — black handles at 100 chars; remaining are unfixable (URLs, strings)
     E501,
+    # Module level import not at top — intentional (conditional imports, sys.path setup)
+    E402,
 
 exclude =
     .git,
@@ -36,11 +38,12 @@ exclude =
 
 per-file-ignores =
     # Protected files — do not modify source, suppress violations here
-    mycosoft_mas/core/orchestrator.py:F401,E302,E303,E305
+    mycosoft_mas/core/orchestrator.py:F401,F841,E302,E303,E305
     mycosoft_mas/core/orchestrator_service.py:F401,F811,F541,E302,E303,E305
-    mycosoft_mas/safety/guardian_agent.py:E302,E303
+    mycosoft_mas/safety/guardian_agent.py:F401,E302,E303
     mycosoft_mas/safety/sandboxing.py:E302,E303
     mycosoft_mas/consciousness/soul/identity.py:F401,E302,E303
+    mycosoft_mas/security/*:F541
     mycosoft_mas/myca/constitution/*:F401,E302,E303,E305
     # dashboard/visualization use 'this' pattern (JS-style, pre-existing)
     mycosoft_mas/agents/clusters/user_interface/dashboard_agent.py:F821

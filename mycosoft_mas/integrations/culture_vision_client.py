@@ -124,7 +124,7 @@ class CultureVisionClient:
             text = text.strip()
             if text.startswith("```"):
                 lines = text.split("\n")
-                text = "\n".join(l for l in lines if not l.startswith("```") and l != "json")
+                text = "\n".join(line for line in lines if not line.startswith("```") and line != "json")
             return json.loads(text)
         except json.JSONDecodeError as e:
             logger.warning("Culture Vision: failed to parse OpenAI response: %s", e)

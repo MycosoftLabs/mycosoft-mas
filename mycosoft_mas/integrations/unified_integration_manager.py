@@ -341,7 +341,7 @@ class UnifiedIntegrationManager:
 
         # Initialize clients (lazy initialization happens on first access)
         # Pre-warm connections by accessing clients
-        clients = {
+        _ = {
             "MINDEX": self.mindex,
             "NATUREOS": self.natureos,
             "Website": self.website,

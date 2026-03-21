@@ -124,9 +124,9 @@ _safe_import(".earth_search_agent", "EarthSearchAgent")
 _safe_import(".openviking_agent", "OpenVikingAgent")
 
 # Dynamically create runtime-safe agent modules/classes for compatibility.
-import sys
-import types
-from typing import Dict
+import sys  # noqa: E402
+import types  # noqa: E402
+from typing import Dict  # noqa: E402
 
 
 def _build_stub_class(class_name: str):

@@ -440,7 +440,7 @@ class ApprovalGate:
         Returns:
             Current ApprovalStatus or None if not found
         """
-        entries = await ActionAuditLog.get_recent(limit=1)
+        await ActionAuditLog.get_recent(limit=1)
         # This is a simplified implementation
         # In production, you'd query by ID
         return None

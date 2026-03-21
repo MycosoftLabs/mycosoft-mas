@@ -371,10 +371,6 @@ class WorldModel:
                     self._current_state.staff_online = data.get("staff_count", 0)
                     self._current_state.superuser_online = data.get("superuser_online", False)
 
-    def get_current_state(self) -> WorldState:
-        """Legacy getter for tests."""
-        return self._current_state
-
     @property
     def sensor_status(self) -> Dict[str, Any]:
         """Legacy sensor status map used by tests."""

@@ -312,7 +312,6 @@ class ScheduleManager:
         """
         now = datetime.now()
         day_of_week = now.strftime("%a").lower()
-        time_str = now.strftime("%H:%M:%S")
 
         # Check special dates first
         date_str = now.strftime("%Y-%m-%d")

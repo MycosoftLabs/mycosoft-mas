@@ -77,8 +77,6 @@ SUB_AGENTS: Dict[str, SubAgentPersona] = {}
 
 def _init_sub_agents():
     """Initialize sub-agent personas."""
-    global SUB_AGENTS
-
     # MYCA herself - Tier 0 (Morgan only)
     SUB_AGENTS["myca"] = SubAgentPersona(
         name="MYCA",

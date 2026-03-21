@@ -62,7 +62,7 @@ async def test_base_agent_initialization(mock_config, mock_integration_service):
     assert agent.agent_id == mock_config["agent_id"]
     assert agent.name == mock_config["name"]
     assert agent.status == AgentStatus.ACTIVE
-    assert agent.is_running == True
+    assert agent.is_running is True
     await agent.shutdown()
 
 

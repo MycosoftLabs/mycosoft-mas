@@ -201,7 +201,7 @@ class TestConversationControllerBargeIn:
         await task
 
         # Should have an interrupted draft
-        draft = controller.get_interrupted_draft()
+        controller.get_interrupted_draft()
         # Draft might be None if we interrupted very early
         # But the mechanism should exist
         last_draft = controller.last_interrupted_draft
@@ -259,7 +259,6 @@ class TestConversationControllerAudioVAD:
         vad = VoiceActivityDetector(energy_threshold=0.02, min_speech_frames=1)
         controller = ConversationController(vad=vad)
 
-        barge_in_triggered = False
         controller._on_barge_in = lambda: setattr(controller, "_barge_in_triggered", True)
 
         # State is IDLE

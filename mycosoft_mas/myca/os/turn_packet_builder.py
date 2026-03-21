@@ -60,8 +60,7 @@ async def build_turn_packet(
             await world_model.update()
             summary = await world_model.get_summary()
             focus = type("Focus", (), {"content": user_message or "", "related_entities": []})()
-            relevant = await world_model.get_relevant_context(focus)
-            relevant_str = str(relevant)[:1200] if relevant else None
+            await world_model.get_relevant_context(focus)
             sources = []
             cached = (
                 world_model.get_cached_context()

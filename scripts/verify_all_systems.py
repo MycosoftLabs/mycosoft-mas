@@ -132,7 +132,7 @@ def main():
         try:
             health = json.loads(out) if out else {}
             results["mindex_api"]["health"] = health
-            is_healthy = health.get("status") == "healthy" or health.get("database") == True
+            is_healthy = health.get("status") == "healthy" or health.get("database") is True
             log(f"  Health: {out}", "OK" if is_healthy else "WARN")
         except Exception:
             results["mindex_api"]["health"] = {"error": out}

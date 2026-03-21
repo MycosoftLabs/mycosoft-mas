@@ -117,22 +117,6 @@ class NLMTrainer:
         """
         examples = []
 
-        templates = {
-            "species_taxonomy": (
-                "Describe the taxonomy and classification of {species_name}.",
-                "Provide detailed taxonomic information about {species_name}.",
-            ),
-            "mycology_research": (
-                "Summarize the research findings on {topic}.",
-                "What are the key discoveries regarding {topic}?",
-            ),
-            "genetic_sequences": (
-                "Analyze the genetic characteristics of {organism}.",
-                "Describe the genotype and phenotype of {organism}.",
-            ),
-            # Add more templates per category
-        }
-
         for item in data:
             # Create instruction-response pairs
             example = {

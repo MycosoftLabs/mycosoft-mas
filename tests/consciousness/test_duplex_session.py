@@ -163,7 +163,7 @@ class TestDuplexSessionBargeIn:
 
     def test_manual_barge_in(self):
         """Manual barge-in should work."""
-        session = DuplexSession()
+        DuplexSession()
 
         barge_in_called = False
 

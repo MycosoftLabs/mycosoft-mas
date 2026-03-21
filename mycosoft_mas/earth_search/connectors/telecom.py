@@ -72,7 +72,6 @@ class TelecomConnector(BaseConnector):
         dlng = geo.radius_km / (111 * max(0.01, abs(math.cos(math.radians(geo.lat)))))
         bbox = f"{geo.lat - dlat},{geo.lng - dlng},{geo.lat + dlat},{geo.lng + dlng}"
 
-        overpass_q = f'[out:json][timeout:15];node["communication:mobile_phone"="yes"]({bbox});out body {min(limit, 50)};'
         # Also try tower tag
         overpass_q2 = f'[out:json][timeout:15];(node["man_made"="mast"]["tower:type"="communication"]({bbox});node["man_made"="tower"]["tower:type"="communication"]({bbox}););out body {min(limit, 50)};'
 

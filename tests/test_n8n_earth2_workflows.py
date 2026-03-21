@@ -196,12 +196,6 @@ class TestWeatherAutomationWorkflow:
 
         try:
             # Simulate the HTTP request that would trigger the workflow
-            payload = {
-                "trigger": "scheduled",
-                "time": datetime.now().isoformat(),
-                "region": "north_america",
-            }
-
             response = requests.post(
                 f"{MAS_API_URL}/api/earth2/forecast",
                 json={

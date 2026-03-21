@@ -12,6 +12,25 @@ import aiofiles
 from .base_agent import BaseAgent
 
 
+class TokenStatus(Enum):
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    REVOKED = "revoked"
+
+
+class TransactionStatus(Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class MarketStatus(Enum):
+    OPEN = "open"
+    CLOSED = "closed"
+    HALTED = "halted"
+
+
 class TokenType(Enum):
     GOVERNANCE = "governance"
     UTILITY = "utility"

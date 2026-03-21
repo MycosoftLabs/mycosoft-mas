@@ -42,7 +42,7 @@ def get_workflow_for_prediction(
     labels = labels or []
     q = (query_type or "").lower()
     for key, wf in NLM_TO_WORKFLOW_MAP.items():
-        if key in q or any(key in (l or "").lower() for l in labels):
+        if key in q or any(key in (lbl or "").lower() for lbl in labels):
             return wf
     if metadata:
         trigger = (metadata.get("trigger_workflow") or metadata.get("workflow") or "").strip()

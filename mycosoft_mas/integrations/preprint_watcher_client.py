@@ -235,7 +235,7 @@ class PreprintWatcherClient:
             status["sources"]["biorxiv"] = False
             status["biorxiv_error"] = str(e)
         try:
-            arxiv = await self.get_arxiv_recent(max_results=1)
+            await self.get_arxiv_recent(max_results=1)
             status["sources"]["arxiv"] = True
         except Exception as e:
             status["sources"]["arxiv"] = False

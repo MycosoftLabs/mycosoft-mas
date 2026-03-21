@@ -94,12 +94,12 @@ async def test_agent_initialization(base_agent):
     assert base_agent.agent_id == "test_agent"
     assert base_agent.name == "Test Agent"
     assert base_agent.status == AgentStatus.INITIALIZING
-    assert base_agent.is_running == False
+    assert base_agent.is_running is False
     assert base_agent.metrics["tasks_processed"] == 0
     assert base_agent.metrics["errors_handled"] == 0
-    assert base_agent.metrics["last_health_check"] == None
+    assert base_agent.metrics["last_health_check"] is None
     assert base_agent.metrics["uptime"] == 0
-    assert base_agent.metrics["start_time"] == None
+    assert base_agent.metrics["start_time"] is None
 
 
 @pytest.mark.asyncio
@@ -119,7 +119,7 @@ async def test_health_check(base_agent):
             assert health_status["agent_id"] == "test_agent"
             assert health_status["name"] == "Test Agent"
             assert health_status["status"] == AgentStatus.INITIALIZING.value
-            assert health_status["is_running"] == False
+            assert health_status["is_running"] is False
             assert "metrics" in health_status
             assert "queue_sizes" in health_status
             assert health_status["service_health"] == {"service": "healthy"}
@@ -137,7 +137,7 @@ async def test_process_task(base_agent):
 
         result = await base_agent.process_task(task)
 
-        assert result["success"] == True
+        assert result["success"] is True
         assert result["task_id"] == "task_123"
         assert result["result"] == {"result": "success"}
         assert base_agent.metrics["tasks_processed"] == 1
@@ -153,7 +153,7 @@ async def test_handle_error(base_agent):
 
         result = await base_agent.handle_error(error)
 
-        assert result["success"] == True
+        assert result["success"] is True
         assert result["error_id"] == "error_123"
         assert result["result"] == {"resolution": "fixed"}
         assert base_agent.metrics["errors_handled"] == 1
@@ -162,12 +162,12 @@ async def test_handle_error(base_agent):
 @pytest.mark.asyncio
 async def test_background_tasks(base_agent):
     """Test background task management."""
-    with patch.object(base_agent, "_monitor_health", new_callable=AsyncMock) as mock_health:
-        with patch.object(base_agent, "_process_tasks", new_callable=AsyncMock) as mock_tasks:
-            with patch.object(base_agent, "_handle_errors", new_callable=AsyncMock) as mock_errors:
+    with patch.object(base_agent, "_monitor_health", new_callable=AsyncMock):
+        with patch.object(base_agent, "_process_tasks", new_callable=AsyncMock):
+            with patch.object(base_agent, "_handle_errors", new_callable=AsyncMock):
                 with patch.object(
                     base_agent, "_process_notifications", new_callable=AsyncMock
-                ) as mock_notifications:
+                ):
                     await base_agent._start_background_tasks()
 
                     assert len(base_agent.background_tasks) == 4
@@ -201,22 +201,22 @@ async def test_not_implemented_methods(base_agent):
 @pytest.mark.asyncio
 async def test_base_agent_start_stop(base_agent):
     """Test agent start and stop functionality."""
-    with patch.object(base_agent, "_initialize_services", new_callable=AsyncMock) as mock_init:
+    with patch.object(base_agent, "_initialize_services", new_callable=AsyncMock):
         with patch.object(
             base_agent, "_start_background_tasks", new_callable=AsyncMock
-        ) as mock_start:
+        ):
             # Test initialization
             result = await base_agent.initialize()
-            assert result == True
+            assert result is True
             assert base_agent.status == AgentStatus.ACTIVE
-            assert base_agent.is_running == True
+            assert base_agent.is_running is True
             assert base_agent.metrics["start_time"] is not None
 
             # Test stop
             result = await base_agent.stop()
-            assert result == True
+            assert result is True
             assert base_agent.status == AgentStatus.SHUTDOWN
-            assert base_agent.is_running == False
+            assert base_agent.is_running is False
             assert len(base_agent.background_tasks) == 0
 
 
@@ -234,7 +234,7 @@ async def test_finance_admin_agent_initialization(finance_admin_agent):
     assert finance_admin_agent.agent_id == "finance_admin"
     assert finance_admin_agent.name == "Finance Admin Agent"
     assert finance_admin_agent.status == AgentStatus.INITIALIZING
-    assert finance_admin_agent.is_running == False
+    assert finance_admin_agent.is_running is False
 
 
 @pytest.mark.asyncio
@@ -259,4 +259,4 @@ async def test_myco_dao_agent_initialization(myco_dao_agent):
     assert myco_dao_agent.agent_id == "myco_dao"
     assert myco_dao_agent.name == "MycoDAO Agent"
     assert myco_dao_agent.status == AgentStatus.INITIALIZING
-    assert myco_dao_agent.is_running == False
+    assert myco_dao_agent.is_running is False

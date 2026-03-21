@@ -267,7 +267,7 @@ class BaseAgentV2(ABC):
         """Request something from another agent and wait for response"""
         # This is a simplified implementation
         # A full implementation would use correlation IDs and response waiting
-        message_id = await self.send_message(
+        await self.send_message(
             agent_id,
             MessageType.REQUEST,
             {"task_type": task_type, **payload},

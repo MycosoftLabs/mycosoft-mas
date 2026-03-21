@@ -10,10 +10,10 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
-from mycosoft_mas.bio.dna_storage import dna_storage_system
+from mycosoft_mas.bio.dna_storage import dna_storage_system  # noqa: E402
 
 # Import systems
-from mycosoft_mas.bio.mycobrain_production import mycobrain_system
+from mycosoft_mas.bio.mycobrain_production import mycobrain_system  # noqa: E402
 
 # --- MycoBrain API ---
 

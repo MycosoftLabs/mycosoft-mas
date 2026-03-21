@@ -681,7 +681,6 @@ async def calibrate_instrument(instrument_id: str):
 async def list_simulations():
     store = await get_scientific_store()
     simulations = await store.list_simulations()
-    running = [s for s in simulations if s.status == SimulationStatus.RUNNING]
     return {
         "simulations": simulations,
         "gpuUtilization": None,

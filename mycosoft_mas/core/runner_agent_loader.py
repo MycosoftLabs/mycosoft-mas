@@ -104,11 +104,10 @@ def _instantiate_native_agent(definition: AgentDefinition) -> Any:
         lambda: cls(definition.agent_id, definition.display_name, config),
         lambda: cls(),
     )
-    last_error: Optional[Exception] = None
     for attempt in attempts:
         try:
             return attempt()
-        except Exception as exc:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
             pass
 
     # Last try: construct with whatever optional params exist

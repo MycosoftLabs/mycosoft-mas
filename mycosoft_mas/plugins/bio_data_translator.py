@@ -980,7 +980,7 @@ class BioDataTranslator:
                 for field_name, field_type in schema.schema_definition.items():
                     # Create a property for the field
                     property_name = f"has_{field_name}"
-                    property_class = type(
+                    type(
                         property_name,
                         (ObjectProperty,),
                         {"domain": [schema_class], "range": [Thing]},
@@ -1021,7 +1021,7 @@ class BioDataTranslator:
             # Create a property for the rule
             with self.ontology:
                 # Create a new property for the rule
-                rule_property = type(
+                type(
                     f"transforms_to_{target_schema.name}",
                     (ObjectProperty,),
                     {

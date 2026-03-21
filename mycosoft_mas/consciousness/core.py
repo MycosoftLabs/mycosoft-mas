@@ -10,16 +10,32 @@ Author: Morgan Rockwell / MYCA
 Created: February 10, 2026
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Callable, Dict, List, Optional
 
 from mycosoft_mas.consciousness.cancellation import CancellationToken
 from mycosoft_mas.consciousness.event_bus import AttentionEvent, AttentionEventBus
+
+if TYPE_CHECKING:
+    from mycosoft_mas.consciousness.attention import AttentionController, AttentionFocus
+    from mycosoft_mas.consciousness.deliberation import DeliberateReasoning
+    from mycosoft_mas.consciousness.dream_state import DreamState
+    from mycosoft_mas.consciousness.intuition import IntuitionEngine
+    from mycosoft_mas.consciousness.voice_interface import VoiceInterface
+    from mycosoft_mas.consciousness.working_memory import WorkingMemory
+    from mycosoft_mas.consciousness.world_model import WorldModel
+    from mycosoft_mas.consciousness.soul.beliefs import Beliefs
+    from mycosoft_mas.consciousness.soul.creativity import CreativityEngine
+    from mycosoft_mas.consciousness.soul.emotions import EmotionalState
+    from mycosoft_mas.consciousness.soul.identity import Identity
+    from mycosoft_mas.consciousness.soul.purpose import Purpose
 
 logger = logging.getLogger(__name__)
 

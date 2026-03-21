@@ -11,8 +11,8 @@ from pydantic import BaseModel
 router = APIRouter()
 
 # Import engines
-from mycosoft_mas.core.autonomous.experiment_engine import experiment_engine
-from mycosoft_mas.core.autonomous.hypothesis_engine import hypothesis_engine
+from mycosoft_mas.core.autonomous.experiment_engine import experiment_engine  # noqa: E402
+from mycosoft_mas.core.autonomous.hypothesis_engine import hypothesis_engine  # noqa: E402
 
 # --- Autonomous Experiments ---
 

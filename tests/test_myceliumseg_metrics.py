@@ -13,7 +13,7 @@ _root = Path(__file__).resolve().parents[1]
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-from scripts.myceliumseg.metrics import (
+from scripts.myceliumseg.metrics import (  # noqa: E402
     assd,
     boundary_iou,
     compute_all_metrics,

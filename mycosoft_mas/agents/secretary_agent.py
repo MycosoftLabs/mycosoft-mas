@@ -33,11 +33,6 @@ class SecretaryAgent(BaseAgent):
 
     async def _init_google_services(self):
         """Initialize Google Workspace services with proper authentication."""
-        SCOPES = [
-            "https://www.googleapis.com/auth/calendar",
-            "https://www.googleapis.com/auth/gmail.modify",
-            "https://www.googleapis.com/auth/drive",
-        ]
         try:
             creds = None
             # Load credentials from token file or initiate OAuth2 flow

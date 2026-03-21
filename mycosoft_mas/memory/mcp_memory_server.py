@@ -359,7 +359,7 @@ class MCPMemoryServer:
         if self._pool:
             try:
                 async with self._pool.acquire() as conn:
-                    result = await conn.execute("DELETE FROM mcp.memories WHERE id = $1", memory_id)
+                    await conn.execute("DELETE FROM mcp.memories WHERE id = $1", memory_id)
             except Exception as e:
                 logger.error(f"Failed to delete memory: {e}")
 

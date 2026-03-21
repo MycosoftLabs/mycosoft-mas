@@ -99,8 +99,8 @@ def test_earth2_voice_handler():
         )
 
     # Test is_earth2_command function
-    log_test("is_earth2_command('show forecast')", is_earth2_command("show forecast") == True)
-    log_test("is_earth2_command('hello world')", is_earth2_command("hello world") == False)
+    log_test("is_earth2_command('show forecast')", is_earth2_command("show forecast") is True)
+    log_test("is_earth2_command('hello world')", is_earth2_command("hello world") is False)
 
     # Test command execution (without actual API calls)
     async def run_execute():
@@ -395,7 +395,7 @@ async def test_async_voice_routing():
     # Test routing a forecast command
     result = await route_voice_command("show me a 24 hour weather forecast")
     log_test(
-        "Route forecast command", result.get("domain") == "earth2" and result.get("success") == True
+        "Route forecast command", result.get("domain") == "earth2" and result.get("success") is True
     )
 
     # Test routing a map command
@@ -404,7 +404,7 @@ async def test_async_voice_routing():
 
     # Test routing unknown command (should need LLM)
     result = await route_voice_command("tell me a joke about weather")
-    log_test("Unknown command needs LLM response", result.get("needs_llm_response") == True)
+    log_test("Unknown command needs LLM response", result.get("needs_llm_response") is True)
 
 
 # =============================================================================

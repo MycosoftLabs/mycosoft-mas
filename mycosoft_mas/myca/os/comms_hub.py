@@ -366,12 +366,11 @@ class CommsHub:
             "Authorization": f"Bearer {self._slack_token}",
             "Content-Type": "application/json",
         }
-        async with self._session.post(
+        await self._session.post(
             "https://slack.com/api/chat.postMessage",
             headers=headers,
             json={"channel": channel, "text": message},
-        ) as resp:
-            pass
+        )
 
     async def _send_email(self, to: str, subject: str, body: str):
         """Send email via workspace API (which uses Google service account)."""

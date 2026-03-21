@@ -158,7 +158,7 @@ async def test_end_voice_session_stores_summary():
     # Verify session removed from active sessions
     assert session_id not in bridge._session_map
 
-    print(f"✓ Ended voice session with summary:")
+    print("✓ Ended voice session with summary:")
     print(f"  - Turns: {summary['turn_count']}")
     print(f"  - Summary: {summary['summary'][:100]}...")
 
@@ -306,7 +306,7 @@ async def test_full_voice_session_flow():
     # 5. End session
     print("\n5. Ending voice session...")
     summary = await bridge.end_voice_session(session_id)
-    print(f"   Session ended:")
+    print("   Session ended:")
     print(f"   - Total turns: {summary['turn_count']}")
     print(f"   - Duration: {summary['duration_seconds']:.1f}s")
     print(f"   - Topics: {', '.join(summary['topics'])}")

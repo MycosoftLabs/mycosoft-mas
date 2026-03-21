@@ -6,6 +6,7 @@ all running components of the MAS system with autonomous capabilities.
 """
 
 import asyncio
+import os
 import platform
 from datetime import datetime
 from typing import Any, Dict, List, Optional

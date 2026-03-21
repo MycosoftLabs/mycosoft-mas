@@ -15,15 +15,20 @@ Decision hierarchy:
 Date: 2026-03-04
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from mycosoft_mas.myca.os.staff_registry import load_staff_directory
 from mycosoft_mas.myca.os.turn_packet_builder import build_turn_packet
+
+if TYPE_CHECKING:
+    from mycosoft_mas.myca.os.llm_brain import LLMBrain
 
 logger = logging.getLogger("myca.os.executive")
 

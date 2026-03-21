@@ -174,8 +174,8 @@ class MINDEXBridge:
             return await self._recall_from_layer(key, layer)
 
         # Search all layers, most recent first
-        for l in ["ephemeral", "session", "working", "semantic", "episodic", "system"]:
-            result = await self._recall_from_layer(key, l)
+        for mem_layer in ["ephemeral", "session", "working", "semantic", "episodic", "system"]:
+            result = await self._recall_from_layer(key, mem_layer)
             if result:
                 return result
         return None

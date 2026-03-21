@@ -18,13 +18,13 @@ def pytest_configure(config):
         pm.set_blocked(name)
 
 
-import asyncio
-import os
-import sys
-import types
-from unittest.mock import Mock
+import asyncio  # noqa: E402
+import os  # noqa: E402
+import sys  # noqa: E402
+import types  # noqa: E402
+from unittest.mock import Mock  # noqa: E402
 
-import pytest
+import pytest  # noqa: E402
 
 # Stub out heavy optional dependencies to keep tests lightweight
 os.environ.setdefault("MAS_LIGHT_IMPORT", "1")

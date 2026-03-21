@@ -157,8 +157,6 @@ _audit_logs: Dict[str, List[AuditLog]] = {}
 
 
 def _init_sample_data():
-    global _organizations, _members, _peers, _audit_logs
-
     org = Organization(
         id="org-001",
         name="Mycosoft Research Lab",
@@ -602,7 +600,7 @@ async def get_audit_logs(org_id: str, filters: Optional[Dict[str, Any]] = Body(N
     if filters:
         action_filter = filters.get("action")
         if action_filter:
-            logs = [l for l in logs if action_filter.replace("*", "") in l.action]
+            logs = [log for log in logs if action_filter.replace("*", "") in log.action]
 
     return {"logs": logs}
 

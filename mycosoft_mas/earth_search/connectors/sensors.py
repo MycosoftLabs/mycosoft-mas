@@ -112,7 +112,7 @@ class SensorConnector(BaseConnector):
             "level": "station",
         }
         # FDSN station service returns text by default
-        data = await self._get(
+        await self._get(
             f"{self.USGS_SEISMIC_BASE}/query", params={**params, "format": "text"}
         )
         # Text parsing is complex; for JSON we'd need a different approach

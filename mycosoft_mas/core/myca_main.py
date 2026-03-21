@@ -1257,8 +1257,7 @@ class VoiceMemoryLog(BaseModel):
 # MAS EVENT STREAM - Real-time events for PersonaPlex
 # ============================================================================
 
-import threading
-from collections import defaultdict
+from collections import defaultdict  # noqa: E402
 
 
 class MASEventStore:

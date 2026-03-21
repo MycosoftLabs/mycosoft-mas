@@ -43,8 +43,8 @@ try:
 except ImportError:  # pragma: no cover - optional dependency
     spacy = None  # type: ignore
 
-from rdflib import RDF, Graph, Literal, Namespace, URIRef
-from rdflib.namespace import DCTERMS, RDFS
+from rdflib import RDF, Graph, Literal, Namespace, URIRef  # noqa: E402
+from rdflib.namespace import DCTERMS, RDFS  # noqa: E402
 
 try:
     from sentence_transformers import SentenceTransformer, util
@@ -1249,33 +1249,6 @@ class MycologyKnowledgeAgent(BaseAgent):
         except Exception as e:
             self.logger.error(f"Error retrieving RDF graph namespaces: {str(e)}")
             return {}
-
-    async def _node_to_dict(self, node: KnowledgeNode) -> Dict:
-        """Convert KnowledgeNode object to dictionary for JSON serialization."""
-        return {
-            "id": node.id,
-            "name": node.name,
-            "type": node.type.value,
-            "description": node.description,
-            "properties": node.metadata,
-            "references": node.sources,
-            "created_at": node.created_at.isoformat(),
-            "updated_at": node.updated_at.isoformat(),
-        }
-
-    async def _relation_to_dict(self, relation: KnowledgeRelation) -> Dict:
-        """Convert KnowledgeRelation object to dictionary for JSON serialization."""
-        return {
-            "id": relation.id,
-            "source_id": relation.source_id,
-            "target_id": relation.target_id,
-            "type": relation.type.value,
-            "properties": relation.metadata,
-            "references": relation.sources,
-            "confidence": relation.confidence,
-            "created_at": relation.created_at.isoformat(),
-            "updated_at": relation.updated_at.isoformat(),
-        }
 
     async def scrape_data_sources(self, sources: Optional[List[str]] = None) -> Dict:
         """Scrape data from specified fungal data sources."""
@@ -2534,20 +2507,6 @@ class MycologyKnowledgeAgent(BaseAgent):
         """Check if a source contains research data."""
         # This is a placeholder - implement with actual checking logic
         return False
-
-    async def _start_background_tasks(self):
-        """Start background tasks for the agent."""
-        try:
-            # Start existing background tasks
-            await super()._start_background_tasks()
-
-            # Start source discovery task
-            asyncio.create_task(self._periodic_source_discovery())
-
-            self.logger.info("Started background tasks for Mycology Knowledge Agent")
-
-        except Exception as e:
-            self.logger.error(f"Error starting background tasks: {str(e)}")
 
     async def _periodic_source_discovery(self):
         """Periodically discover new data sources."""

@@ -866,7 +866,7 @@ print(asyncio.run(click()))
                 status = await get_finance_status()
                 return {
                     "status": "completed",
-                    "status": status,
+                    "finance_status": status,
                     "summary": "Finance status retrieved",
                 }
             elif operation == "alerts":

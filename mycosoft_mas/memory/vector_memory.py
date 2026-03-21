@@ -17,7 +17,7 @@ try:
 except ImportError:
     asyncpg = None
 
-from .embeddings import BaseEmbedder, get_embedder
+from .embeddings import BaseEmbedder, get_embedder  # noqa: E402
 
 
 class VectorMemory:

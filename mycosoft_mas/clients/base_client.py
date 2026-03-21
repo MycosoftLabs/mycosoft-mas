@@ -231,7 +231,7 @@ class BaseClient:
                         response_time_ms=response_time_ms,
                     )
 
-            except httpx.TimeoutException as e:
+            except httpx.TimeoutException:
                 if attempt < self.max_retries - 1:
                     delay = self.retry_delay * (2**attempt)
                     self.logger.warning(

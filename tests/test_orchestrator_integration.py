@@ -196,7 +196,7 @@ class IntegrationTestSuite:
                 key="test_key",
             )
             assert value_after is None
-            self.log(f"  Verify deletion: OK")
+            self.log("  Verify deletion: OK")
 
             # Test 2.6: Audit log
             audit = mm.get_audit_log(limit=10)
@@ -214,7 +214,7 @@ class IntegrationTestSuite:
                 self.results.append(
                     TestResult("Memory API", False, f"Redis not available: {e}", duration)
                 )
-                self.log(f"  SKIPPED (Redis not available)")
+                self.log("  SKIPPED (Redis not available)")
             else:
                 self.results.append(TestResult("Memory API", False, error_msg, duration))
                 self.log(f"  FAILED: {e}")
@@ -267,7 +267,7 @@ class IntegrationTestSuite:
             session_dict = session.to_dict()
             assert session_dict["session_id"] == "test_session_123"
             assert "rtf" in session_dict
-            self.log(f"  Session dict: OK")
+            self.log("  Session dict: OK")
 
             # Test 3.5: to_topology_node
             node = session.to_topology_node()
@@ -279,7 +279,7 @@ class IntegrationTestSuite:
             # Test 3.6: VoiceSessionManager
             manager = get_session_manager()
             assert manager is not None
-            self.log(f"  Manager initialized")
+            self.log("  Manager initialized")
 
             # Test 3.7: RTF status escalation
             for i in range(30):
@@ -377,18 +377,18 @@ class IntegrationTestSuite:
             # Test 5.2: Intent analysis
             intent = orchestrator._analyze_intent("Check the status of all agents")
             assert intent["type"] == "query"
-            assert intent["requires_tool"] == True
+            assert intent["requires_tool"] is True
             self.log(f"  Intent analysis: {intent}")
 
             # Test 5.3: Dangerous action detection
             intent2 = orchestrator._analyze_intent("Delete all old logs")
-            assert intent2["requires_confirmation"] == True
-            self.log(f"  Dangerous action: confirmation required")
+            assert intent2["requires_confirmation"] is True
+            self.log("  Dangerous action: confirmation required")
 
             # Test 5.4: Chitchat detection
             intent3 = orchestrator._analyze_intent("Hello, how are you?")
             assert intent3["type"] == "chitchat"
-            self.log(f"  Chitchat detection: OK")
+            self.log("  Chitchat detection: OK")
 
             # Test 5.5: Local response generation
             response = orchestrator._generate_local_response(

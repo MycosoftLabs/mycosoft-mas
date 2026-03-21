@@ -19,7 +19,6 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from mycosoft_mas.earth_search.models import (
-    DOMAIN_GROUPS,
     EarthSearchDomain,
     EarthSearchQuery,
     EarthSearchResponse,

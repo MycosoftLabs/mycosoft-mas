@@ -334,10 +334,6 @@ async def fci_stream_websocket(
     if hasattr(signal_source, "sample_rate"):
         signal_source.sample_rate = sample_rate
 
-    sample_buffer: List[float] = []
-    spectrum_interval = int(sample_rate * 0.5)  # Spectrum every 0.5 seconds
-    pattern_interval = int(sample_rate * 1.0)  # Pattern check every 1 second
-
     try:
         # Create receive and send tasks
         send_task = asyncio.create_task(

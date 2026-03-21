@@ -372,7 +372,7 @@ class LoggingMiddleware:
 
         try:
             await self.app(scope, receive, send_wrapper)
-        except Exception as e:
+        except Exception:
             self.logger.exception(f"Request failed: {method} {path}")
             raise
         finally:

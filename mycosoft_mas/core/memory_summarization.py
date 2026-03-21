@@ -201,7 +201,6 @@ class MemorySummarizationService:
 
         # Fallback: Simple summary
         user_messages = [t["content"] for t in turns if t.get("role") == "user"]
-        assistant_messages = [t["content"] for t in turns if t.get("role") == "assistant"]
 
         topics = self._extract_topics(user_messages)
 
