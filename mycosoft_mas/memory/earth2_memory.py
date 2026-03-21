@@ -161,7 +161,7 @@ class Earth2Memory:
     def __init__(self, database_url: Optional[str] = None):
         self._database_url = database_url or os.getenv(
             "MINDEX_DATABASE_URL",
-            os.getenv("MINDEX_DATABASE_URL"),
+            os.getenv("MINDEX_DATABASE_URL")
         )
         if not self._database_url:
             raise ValueError(

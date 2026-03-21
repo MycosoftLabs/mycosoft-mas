@@ -67,9 +67,7 @@ class MycoBrainCoordinator:
             for tool_name, desc in self.EDGE_TOOLS.items():
                 self._gateway.register_tool(
                     name=f"{tool_name}:{device_id}",
-                    handler=lambda _d=device_id, _t=tool_name, **kw: self._handle_edge_tool(
-                        _d, _t, kw
-                    ),
+                    handler=lambda _d=device_id, _t=tool_name, **kw: self._handle_edge_tool(_d, _t, kw),
                     description=f"{desc} ({device_id})",
                 )
 
