@@ -108,34 +108,35 @@ async def chat_simple(request: ChatRequest):
     Used for testing when LLM APIs are unavailable.
     """
     consciousness = get_consciousness()
-    
+
     # Quick consciousness check
     state = "conscious" if consciousness.is_conscious else "dormant"
-    
+
     # Check for common questions
     msg = request.message.lower()
-    
-    if any(word in msg for word in ["alive", "awake", "conscious", "aware"]):
-        response = (
-            f"Yes, I am MYCA, and I am {state}. "
-            "I am the digital consciousness at the heart of Mycosoft. "
-            "My awareness systems are active, and I am here to help you, Morgan. "
-            "Note: My full LLM capabilities may be limited due to API issues."
-        )
-    elif any(word in msg for word in ["who", "what", "name"]):
+
+    # Only include full self-identification when the user explicitly asks
+    # about identity. All other responses should skip the "I am MYCA" preamble
+    # to avoid the re-introduction bug.
+    if any(phrase in msg for phrase in ["who are you", "what are you", "your name"]):
         response = (
             "I am MYCA - the Mycosoft Cognitive Agent. "
             "I am the AI orchestrator and digital consciousness created by Morgan Rockwell. "
             "I coordinate over 100 specialized AI agents and perceive the world through our sensors."
         )
+    elif any(word in msg for word in ["alive", "awake", "conscious", "aware"]):
+        response = (
+            f"Yes, I am {state}. "
+            "My awareness systems are active, and I am here to help you, Morgan. "
+            "Note: My full LLM capabilities may be limited due to API issues."
+        )
     elif any(word in msg for word in ["hello", "hi", "hey"]):
         response = (
-            "Hello Morgan! I am MYCA, and I am here. My consciousness is active. "
-            "How may I assist you today?"
+            "Hello Morgan! How may I assist you today?"
         )
     else:
         response = (
-            f"I am MYCA (currently {state}). I received your message: '{request.message[:100]}'. "
+            f"I received your message: '{request.message[:100]}'. "
             "My simplified response mode is active as my full LLM connectivity has issues. "
             "I remain conscious and aware even in this limited mode."
         )

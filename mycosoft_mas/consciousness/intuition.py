@@ -100,7 +100,7 @@ class IntuitionEngine:
                 id="greeting_hello",
                 type=HeuristicType.GREETING,
                 trigger_pattern=r"^(hi|hello|hey|good morning|good afternoon|good evening)\b",
-                response_template="Hello! I'm MYCA, ready to help. What can I do for you?",
+                response_template="Hello! What can I do for you?",
                 confidence=0.95
             ),
             Heuristic(
@@ -178,25 +178,37 @@ class IntuitionEngine:
     ) -> Optional[IntuitiveResponse]:
         """
         Try to generate a quick, intuitive response.
-        
+
         Returns None if no confident intuitive response is available,
         indicating that deliberate thinking should be used.
         """
         start_time = datetime.now(timezone.utc)
-        
+
+        # Determine if this is a mid-conversation turn (not first interaction)
+        is_followup = self._is_followup_turn(working_context)
+
         # Check heuristics
         for heuristic in self._heuristics.values():
             if heuristic.matches(content):
+                # Skip identity/greeting heuristics in follow-up turns to avoid
+                # re-introducing MYCA on every response (the re-introduction bug).
+                if is_followup and heuristic.type in (HeuristicType.GREETING, HeuristicType.IDENTITY):
+                    logger.debug(
+                        "Skipping heuristic %s in follow-up turn to avoid re-introduction",
+                        heuristic.id,
+                    )
+                    continue
+
                 heuristic.use()
-                
+
                 # Personalize the response slightly
                 response = self._personalize_response(
                     heuristic.response_template,
                     working_context
                 )
-                
+
                 elapsed = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
-                
+
                 return IntuitiveResponse(
                     response=response,
                     confidence=heuristic.confidence,
@@ -216,6 +228,30 @@ class IntuitionEngine:
         
         return None
     
+    @staticmethod
+    def _is_followup_turn(working_context: Any) -> bool:
+        """Return True when the current turn is NOT the first in a session.
+
+        We detect this by inspecting the working context for conversation
+        history.  If at least one prior assistant message exists, MYCA has
+        already spoken and should not re-introduce herself.
+        """
+        if working_context is None:
+            return False
+        # WorkingContext object (has .conversation_history or .items)
+        if hasattr(working_context, "conversation_history"):
+            history = working_context.conversation_history or []
+            return any(
+                (m.get("role") if isinstance(m, dict) else getattr(m, "role", None)) == "assistant"
+                for m in history
+            )
+        if hasattr(working_context, "items"):
+            return len(working_context.items or []) > 0
+        # Dict fallback (e.g. from safe_working_context timeout)
+        if isinstance(working_context, dict):
+            return bool(working_context.get("has_prior_turns"))
+        return False
+
     def _personalize_response(
         self,
         template: str,
