@@ -122,8 +122,8 @@ class PersistentKnowledgeGraph:
             import asyncpg
             self._pool = await asyncpg.create_pool(
                 self._database_url,
-                min_size=2,
-                max_size=10
+                min_size=1,
+                max_size=2
             )
             
             # Load cache
@@ -790,7 +790,7 @@ class RegistryAutoPopulator:
             self._pool = await asyncpg.create_pool(
                 self._database_url,
                 min_size=1,
-                max_size=3
+                max_size=2
             )
         except Exception as e:
             logger.warning(f"Failed to connect to MINDEX: {e}")

@@ -212,8 +212,8 @@ class PostgresBackend(MemoryBackend):
             import asyncpg
             self._pool = await asyncpg.create_pool(
                 self._database_url,
-                min_size=2,
-                max_size=10
+                min_size=1,
+                max_size=2
             )
             logger.info("PostgreSQL memory backend initialized")
         except Exception as e:

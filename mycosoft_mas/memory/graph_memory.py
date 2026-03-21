@@ -47,7 +47,7 @@ class GraphMemory:
             import asyncpg
         except Exception:
             return
-        self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=3)
+        self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=2)
         async with self._pool.acquire() as conn:
             await conn.execute(
                 """

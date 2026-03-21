@@ -1,4 +1,4 @@
-﻿"""
+"""
 Agent Memory Mixin - Standardized Memory Operations for Agents.
 Created: February 5, 2026
 
@@ -59,7 +59,8 @@ class AgentMemoryMixin:
             from mycosoft_mas.memory.memory_modules import ConversationMemory
             
             self._memory = await get_memory_coordinator()
-            self._conversation = ConversationMemory(max_turns=50)
+            max_turns = getattr(self, 'memory_max_turns', getattr(self, 'max_turns', 50))
+            self._conversation = ConversationMemory(max_turns=max_turns)
             self._agent_namespace = getattr(self, 'agent_id', 'unknown_agent')
             self._memory_initialized = True
             
@@ -363,8 +364,11 @@ class AgentMemoryMixin:
             }
             
             for layer in ["ephemeral", "session", "working", "semantic", "episodic", "system"]:
-                memories = await self.recall(layer=layer, limit=1000)
-                stats["layers"][layer] = len(memories)
+                if hasattr(self._memory, "count_memories"):
+                    stats["layers"][layer] = await self._memory.count_memories(agent_id=self._agent_namespace, layer=layer)
+                else:
+                    memories = await self.recall(layer=layer, limit=1000)
+                    stats["layers"][layer] = len(memories)
             
             stats["total_memories"] = sum(stats["layers"].values())
             stats["conversation_turns"] = len(self._conversation._turns) if self._conversation else 0

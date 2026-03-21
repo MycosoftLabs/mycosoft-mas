@@ -98,7 +98,7 @@ memories = await self.recall(
 )
 
 # Learn a permanent fact
-await self.learn_fact("Amanita muscaria contains ibotenic acid")
+await self.learn_fact({"subject": "Amanita muscaria", "predicate": "contains", "object": "ibotenic acid"})
 
 # Record a task completion (episodic)
 await self.record_task_completion(task_id, result, success=True)
@@ -255,3 +255,31 @@ Vector embeddings for semantic search (`mycosoft_mas/memory/embeddings.py`):
 | `memory/mcp_memory_server.py` | MCP tool interface |
 | `agents/memory_mixin.py` | Agent memory methods |
 | `myca/event_ledger/ledger_writer.py` | Audit trail |
+
+| `memory/persistent_graph.py` | Persistent knowledge graph |
+| `memory/analytics.py` | Memory analytics |
+| `memory/user_context.py` | User context memory |
+| `memory/autobiographical.py` | Autobiographical memory |
+| `memory/cleanup.py` | Memory cleanup tasks |
+| `memory/earth2_memory.py` | Earth2 specific memory |
+| `memory/export.py` | Memory export tools |
+| `memory/fungal_memory_bridge.py` | Fungal network memory bridge |
+| `memory/gpu_memory.py` | GPU memory integration |
+| `memory/graph_indexer.py` | Graph memory indexer |
+| `memory/graph_schema.py` | Graph memory schema |
+| `memory/langgraph_checkpointer.py` | LangGraph checkpointer |
+| `memory/long_term.py` | Long term memory |
+| `memory/mem0_adapter.py` | Mem0 adapter |
+| `memory/openviking_bridge.py` | OpenViking bridge |
+| `memory/openviking_sync.py` | OpenViking sync |
+| `memory/short_term.py` | Short term memory |
+| `memory/temporal_patterns.py` | Temporal memory patterns |
+| `memory/voice_search_memory.py` | Voice search memory |
+
+### Memory API Routers
+| `core/routers/memory_api.py` | Memory API routing |
+| `core/routers/memory_integration_api.py` | Integration API |
+| `core/routers/conversation_memory_api.py` | Conversation Memory API |
+| `core/routers/earth2_memory_api.py` | Earth2 Memory API |
+| `core/routers/search_memory_api.py` | Search Memory API |
+| `core/routers/memory_updates_ws.py` | Memory Updates WebSocket |

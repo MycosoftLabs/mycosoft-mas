@@ -1,4 +1,4 @@
-﻿"""
+"""
 Search Memory API - February 5, 2026
 
 API endpoints for managing search sessions with memory integration:
@@ -63,6 +63,14 @@ class QueryResponse(BaseModel):
     result_count: int
 
 
+class QueryInsightRequest(BaseModel):
+    """Request to update query insights for path tracking."""
+    session_id: str = Field(..., description="Active session ID")
+    query_id: str = Field(..., description="Target query ID")
+    insight: str = Field(..., description="Myca insight on the query")
+    associations: List[str] = Field(..., description="Related conceptual associations")
+
+
 class FocusRequest(BaseModel):
     """Request to record focusing on a species/topic."""
     session_id: str = Field(..., description="Active session ID")
@@ -96,7 +104,7 @@ class SessionContextResponse(BaseModel):
     session_id: str
     user_id: str
     duration_seconds: float
-    queries: List[str]
+    queries: List[Dict[str, Any]]
     current_species: Optional[str]
     focused_species: List[str]
     explored_topics: List[str]
@@ -216,6 +224,40 @@ async def add_query(request: AddQueryRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/query-insight")
+async def update_query_insight(request: QueryInsightRequest):
+    """Record insights and associations for an existing query in the search path."""
+    try:
+        from mycosoft_mas.memory.search_memory import get_search_memory
+        
+        search_memory = await get_search_memory()
+        
+        session_uuid = UUID(request.session_id)
+        query_uuid = UUID(request.query_id)
+        
+        success = await search_memory.update_query_insight(
+            session_id=session_uuid,
+            query_id=query_uuid,
+            insight=request.insight,
+            associations=request.associations
+        )
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Session or Query not found")
+        
+        return {
+            "success": True,
+            "session_id": request.session_id,
+            "query_id": request.query_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update insight: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/focus")
 async def record_focus(request: FocusRequest):
     """Record focusing on a species/topic."""
@@ -326,6 +368,18 @@ async def get_session_context(session_id: str):
         
         if "error" in context:
             raise HTTPException(status_code=404, detail=context["error"])
+            
+        # Reformat context queries back to full dicts for the frontend
+        session = search_memory._active_sessions.get(session_uuid)
+        if session:
+            context["queries"] = [
+                {
+                    "query": q.query,
+                    "myca_insight": q.myca_insight,
+                    "associations": q.associations,
+                    "timestamp": q.timestamp.isoformat()
+                } for q in session.queries[-10:]
+            ]
         
         return SessionContextResponse(**context)
         

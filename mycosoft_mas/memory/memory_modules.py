@@ -601,7 +601,7 @@ class CrossSessionMemory:
             self._pool = await asyncpg.create_pool(
                 self._database_url,
                 min_size=1,
-                max_size=3
+                max_size=2
             )
         except Exception as e:
             logger.warning(f"Database connection failed: {e}")

@@ -260,7 +260,7 @@ class N8NMemory:
             self._pool = await asyncpg.create_pool(
                 self._database_url,
                 min_size=1,
-                max_size=5
+                max_size=2
             )
             logger.info("N8N memory connected to database")
         except Exception as e:

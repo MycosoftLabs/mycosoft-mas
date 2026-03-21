@@ -158,6 +158,7 @@ class IntentEngine:
         context: Dict[str, Any]
     ) -> IntentResult:
         """Use LLM for intent classification."""
+        from mycosoft_mas.llm.backend_selection import get_backend_for_role, NEMOTRON_SUPER
         
         system_prompt = """You are an intent classifier for MYCA, an AI orchestrator.
 Classify the user's message into exactly ONE of these intent types:
@@ -183,26 +184,33 @@ Respond with JSON only:
         if context.get("conversation_history"):
             user_prompt += f"\n\nRecent context: {context['conversation_history'][-3:]}"
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_api_key}"
-        
+        backend = get_backend_for_role(NEMOTRON_SUPER)
+        if not backend or not backend.base_url:
+            raise Exception("Nemotron backend not configured")
+
+        url = f"{backend.base_url}/v1/chat/completions"
+        headers = {"Content-Type": "application/json"}
+        if backend.api_key:
+            headers["Authorization"] = f"Bearer {backend.api_key}"
+
         payload = {
-            "contents": [
-                {"role": "user", "parts": [{"text": system_prompt + "\n\n" + user_prompt}]}
+            "model": backend.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ],
-            "generationConfig": {
-                "temperature": 0.1,
-                "maxOutputTokens": 256,
-            }
+            "temperature": 0.1,
+            "response_format": {"type": "json_object"}
         }
         
         async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.post(url, json=payload)
+            response = await client.post(url, json=payload, headers=headers)
             
             if response.status_code != 200:
-                raise Exception(f"Gemini API error: {response.status_code}")
+                raise Exception(f"Nemotron API error: {response.status_code} - {response.text}")
             
             data = response.json()
-            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            text = data["choices"][0]["message"]["content"]
             
             # Extract JSON from response - handle nested braces
             # First try to find JSON block between ```json and ``` if present

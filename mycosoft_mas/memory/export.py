@@ -23,7 +23,7 @@ class MemoryExporter:
     async def connect(self) -> bool:
         try:
             import asyncpg
-            self._pool = await asyncpg.create_pool(self._url, min_size=1, max_size=3)
+            self._pool = await asyncpg.create_pool(self._url, min_size=1, max_size=2)
             return True
         except Exception as e:
             logger.error(f"Connection failed: {e}")

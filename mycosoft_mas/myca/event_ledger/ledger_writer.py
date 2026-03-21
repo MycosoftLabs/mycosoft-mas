@@ -11,7 +11,7 @@ import hashlib
 import json
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -54,7 +54,8 @@ class EventLedger:
     @property
     def current_ledger_file(self) -> Path:
         """Get the current day's ledger file."""
-        return self.ledger_dir / "events.jsonl"
+        date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        return self.ledger_dir / f"events_{date_str}.jsonl"
     
     def log_tool_call(
         self,
@@ -87,7 +88,7 @@ class EventLedger:
         """
         event = {
             "ts": int(time.time()),
-            "ts_iso": datetime.utcnow().isoformat() + "Z",
+            "ts_iso": datetime.now(timezone.utc).isoformat(),
             "session_id": session_id or self._session_id,
             "agent": agent,
             "tool": tool_name,
@@ -225,10 +226,19 @@ class EventLedger:
         events = []
         
         if not self.current_ledger_file.exists():
-            return events
+            # If the current file doesn't exist, we could return empty 
+            # or try reading from the directory. For simplicity in this fix, 
+            # we iterate through all events files sorted newest to oldest.
+            pass
         
-        with self.current_ledger_file.open("r", encoding="utf-8") as f:
-            for line in f:
+        # Read from all jsonl files, sorted newest first
+        files = sorted(self.ledger_dir.glob("events*.jsonl"), reverse=True)
+        for current_file in files:
+            if len(events) >= limit:
+                break
+            with current_file.open("r", encoding="utf-8") as f:
+                file_events = []
+                for line in f:
                 line = line.strip()
                 if not line:
                     continue
@@ -247,10 +257,11 @@ class EventLedger:
                 if status and event.get("result_status") != status:
                     continue
                 
-                events.append(event)
-                
-                if len(events) >= limit:
-                    break
+                file_events.append(event)
+
+            events.extend(reversed(file_events))
+            if len(events) > limit:
+                events = events[:limit]
         
         return events
     
