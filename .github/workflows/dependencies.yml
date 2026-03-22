@@ -3,13 +3,11 @@ name: Dependencies
 on:
   push:
     paths:
-      - 'requirements.in'
-      - 'pyproject.toml'
+            - 'pyproject.toml'
       - '.github/workflows/dependencies.yml'
   pull_request:
     paths:
-      - 'requirements.in'
-      - 'pyproject.toml'
+            - 'pyproject.toml'
       - '.github/workflows/dependencies.yml'
   schedule:
     - cron: '0 0 * * *'  # Daily at midnight
@@ -36,7 +34,7 @@ jobs:
 
     - name: Generate requirements.txt
       run: |
-        pip-compile --upgrade --output-file=requirements.txt requirements.in
+        poetry export --without-hashes --format=requirements.txt > requirements.txt
 
     - name: Update Poetry lock file
       run: |
