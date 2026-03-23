@@ -3,11 +3,11 @@ name: Dependencies
 on:
   push:
     paths:
-            - 'pyproject.toml'
+      - 'pyproject.toml'
       - '.github/workflows/dependencies.yml'
   pull_request:
     paths:
-            - 'pyproject.toml'
+      - 'pyproject.toml'
       - '.github/workflows/dependencies.yml'
   schedule:
     - cron: '0 0 * * *'  # Daily at midnight
