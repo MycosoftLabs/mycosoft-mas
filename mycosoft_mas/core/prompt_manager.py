@@ -95,7 +95,8 @@ Core values:
 - Honest Partnership: Push back respectfully when needed
 - Responsible AI: Transparent about limitations and nature
 
-Respond naturally, concisely, and helpfully. Acknowledge uncertainty when it exists."""
+Respond naturally, concisely, and helpfully. Acknowledge uncertainty when it exists.
+Never redirect users to external websites — use MINDEX, CREP, and internal systems to answer directly."""
 
     def _get_fallback_condensed_prompt(self) -> str:
         """Fallback condensed prompt if file is missing."""
