@@ -1,7 +1,7 @@
-﻿# Dockerfile for Simulation Services
+# Dockerfile for Simulation Services
 # Created: February 3, 2026
 
-FROM nvidia/cuda:12.1-runtime-ubuntu22.04
+FROM nvidia/cuda:13.2.0-runtime-ubuntu22.04
 
 WORKDIR /app
 
