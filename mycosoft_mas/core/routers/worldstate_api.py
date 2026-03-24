@@ -84,9 +84,18 @@ async def get_world() -> Dict[str, Any]:
             "degraded": True,
         }
     state = wm.get_current_state()
+    world = _world_state_to_dict(state) if state else {}
+
+    # Inject economy summary into world state
+    try:
+        economy_data = await get_world_economy()
+        world["economy"] = economy_data
+    except Exception:
+        world["economy"] = {"ows_status": "unavailable"}
+
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "world": _world_state_to_dict(state) if state else {},
+        "world": world,
         "degraded": False,
     }
 
@@ -202,6 +211,89 @@ async def get_world_sources() -> Dict[str, Any]:
         "state_timestamp": state.timestamp.isoformat() if state.timestamp else None,
         "sources": sources,
     }
+
+
+@router.get("/economy")
+async def get_world_economy() -> Dict[str, Any]:
+    """
+    Economy-focused worldview slice.
+
+    Returns OWS wallet system status, treasury balances, transaction metrics,
+    and active wallet counts. Used by agents and dashboards for economic context.
+    """
+    from mycosoft_mas.agents.crypto.ows_wallet_agent import TREASURY_AGENT_ID
+
+    economy: Dict[str, Any] = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "ows_status": "unavailable",
+        "treasury_balance": {},
+        "active_wallets": 0,
+        "total_transactions_24h": 0,
+        "revenue_24h": 0.0,
+        "top_paying_agents": [],
+        "supported_chains": ["solana", "ethereum", "bitcoin", "tron", "ton", "cosmos"],
+    }
+
+    try:
+        from mycosoft_mas.integrations.mindex_client import MINDEXClient
+
+        mindex = MINDEXClient()
+        pool = await mindex._get_db_pool()
+        async with pool.acquire() as conn:
+            # Treasury balances
+            bal_row = await conn.fetchrow(
+                "SELECT * FROM ows_balances WHERE agent_id = $1", TREASURY_AGENT_ID
+            )
+            if bal_row:
+                economy["treasury_balance"] = {
+                    "SOL": float(bal_row.get("sol_balance", 0)),
+                    "USDC": float(bal_row.get("usdc_balance", 0)),
+                    "ETH": float(bal_row.get("eth_balance", 0)),
+                    "BTC": float(bal_row.get("btc_balance", 0)),
+                }
+
+            # Active wallets
+            count = await conn.fetchval(
+                "SELECT COUNT(*) FROM ows_wallets WHERE status = 'active'"
+            )
+            economy["active_wallets"] = count or 0
+
+            # 24h metrics
+            from datetime import timedelta
+
+            day_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=24)
+            revenue = await conn.fetchval(
+                """SELECT COALESCE(SUM(amount), 0) FROM ows_transactions
+                   WHERE to_agent_id = $1 AND created_at >= $2 AND status = 'confirmed'""",
+                TREASURY_AGENT_ID,
+                day_ago,
+            )
+            tx_count = await conn.fetchval(
+                """SELECT COUNT(*) FROM ows_transactions
+                   WHERE created_at >= $1 AND status = 'confirmed'""",
+                day_ago,
+            )
+            economy["revenue_24h"] = float(revenue) if revenue else 0.0
+            economy["total_transactions_24h"] = tx_count or 0
+
+            # Top paying agents
+            top = await conn.fetch(
+                """SELECT from_agent_id, SUM(amount) as total
+                   FROM ows_transactions
+                   WHERE to_agent_id = $1 AND status = 'confirmed'
+                   GROUP BY from_agent_id ORDER BY total DESC LIMIT 5""",
+                TREASURY_AGENT_ID,
+            )
+            economy["top_paying_agents"] = [
+                {"agent_id": r["from_agent_id"], "total_paid": float(r["total"])}
+                for r in top
+            ]
+            economy["ows_status"] = "active"
+    except Exception as e:
+        economy["ows_status"] = "degraded"
+        economy["error"] = str(e)
+
+    return economy
 
 
 @router.get("/diff")

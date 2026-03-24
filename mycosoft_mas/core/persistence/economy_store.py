@@ -496,3 +496,110 @@ class EconomyStore:
 
 
 economy_store = EconomyStore()
+
+
+# ---------------------------------------------------------------------------
+# OWS-backed balance and transaction functions (Phase 9)
+# ---------------------------------------------------------------------------
+
+
+async def get_ows_wallet_balance(agent_id: str) -> Dict[str, Any]:
+    """Get OWS wallet balances for an agent from MINDEX."""
+    try:
+        from mycosoft_mas.integrations.mindex_client import MINDEXClient
+
+        mindex = MINDEXClient()
+        pool = await mindex._get_db_pool()
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT * FROM ows_balances WHERE agent_id = $1", agent_id
+            )
+            if row:
+                return {
+                    "agent_id": agent_id,
+                    "SOL": float(row.get("sol_balance", 0)),
+                    "USDC": float(row.get("usdc_balance", 0)),
+                    "ETH": float(row.get("eth_balance", 0)),
+                    "BTC": float(row.get("btc_balance", 0)),
+                    "source": "ows",
+                }
+        return {"agent_id": agent_id, "source": "ows", "note": "No OWS wallet found"}
+    except Exception as e:
+        logger.debug("get_ows_wallet_balance failed: %s", e)
+        return {"agent_id": agent_id, "source": "ows", "error": str(e)}
+
+
+async def record_ows_transaction(
+    from_id: str, to_id: str, amount: float, currency: str, tx_type: str = "api_payment"
+) -> Optional[str]:
+    """Record an OWS transaction in the ows_transactions ledger."""
+    import uuid as _uuid
+
+    try:
+        from mycosoft_mas.integrations.mindex_client import MINDEXClient
+
+        mindex = MINDEXClient()
+        pool = await mindex._get_db_pool()
+        tx_id = str(_uuid.uuid4())
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                INSERT INTO ows_transactions
+                    (tx_id, from_agent_id, to_agent_id, amount, currency,
+                     chain, tx_type, status, created_at)
+                VALUES ($1, $2, $3, $4, $5, 'internal', $6, 'confirmed', $7)
+                """,
+                _uuid.UUID(tx_id),
+                from_id,
+                to_id,
+                amount,
+                currency,
+                tx_type,
+                now,
+            )
+        return tx_id
+    except Exception as e:
+        logger.debug("record_ows_transaction failed: %s", e)
+        return None
+
+
+async def get_ows_treasury_metrics() -> Dict[str, Any]:
+    """Get MYCA treasury metrics from OWS tables."""
+    try:
+        from mycosoft_mas.integrations.mindex_client import MINDEXClient
+
+        mindex = MINDEXClient()
+        pool = await mindex._get_db_pool()
+        treasury_id = "myca-treasury"
+        async with pool.acquire() as conn:
+            bal_row = await conn.fetchrow(
+                "SELECT * FROM ows_balances WHERE agent_id = $1", treasury_id
+            )
+            total_revenue = await conn.fetchval(
+                """SELECT COALESCE(SUM(amount), 0) FROM ows_transactions
+                   WHERE to_agent_id = $1 AND status = 'confirmed'""",
+                treasury_id,
+            )
+            wallet_count = await conn.fetchval(
+                "SELECT COUNT(*) FROM ows_wallets WHERE status = 'active'"
+            )
+
+        balances = {}
+        if bal_row:
+            balances = {
+                "SOL": float(bal_row.get("sol_balance", 0)),
+                "USDC": float(bal_row.get("usdc_balance", 0)),
+                "ETH": float(bal_row.get("eth_balance", 0)),
+                "BTC": float(bal_row.get("btc_balance", 0)),
+            }
+
+        return {
+            "treasury_balances": balances,
+            "total_revenue": float(total_revenue) if total_revenue else 0.0,
+            "active_wallets": wallet_count or 0,
+            "source": "ows",
+        }
+    except Exception as e:
+        logger.debug("get_ows_treasury_metrics failed: %s", e)
+        return {"source": "ows", "error": str(e)}

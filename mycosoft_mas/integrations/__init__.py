@@ -240,6 +240,11 @@ try:
 except ImportError:
     CryptoTaxClient = None
 
+try:
+    from mycosoft_mas.integrations.ows_client import OWSClient
+except ImportError:
+    OWSClient = None
+
 __all__ = [
     "NotionClient",
     "NCBIClient",
@@ -299,4 +304,5 @@ __all__ = [
     "WandbClient",
     "FiatRampClient",
     "CryptoTaxClient",
+    "OWSClient",
 ]
