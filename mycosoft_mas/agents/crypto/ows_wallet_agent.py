@@ -224,6 +224,10 @@ class OWSWalletAgent(BaseAgent):
         if not from_agent or not to_agent or amount <= 0:
             return {"status": "error", "error": "from_agent_id, to_agent_id, amount required"}
 
+        # Minimum transfer: 0.00000001 (1 sat equivalent) — prevent dust/rounding exploits
+        if amount < Decimal("0.00000001"):
+            return {"status": "error", "error": "Amount below minimum (0.00000001)"}
+
         col = CURRENCY_COLUMN_MAP.get(currency)
         if not col:
             return {"status": "error", "error": f"Unsupported currency: {currency}"}
@@ -343,15 +347,27 @@ class OWSWalletAgent(BaseAgent):
             return {"status": "error", "error": str(e)}
 
     async def _handle_fund_wallet(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        """Record external funding of an agent wallet."""
+        """Record external funding of an agent wallet.
+
+        SECURITY: This should ONLY be called by verified payment webhooks
+        (Stripe webhook, on-chain tx verifier) — never by an agent directly.
+        The tx_hash must be verified against the actual blockchain before calling this.
+        The caller must set verified=True to confirm the funding is real.
+        """
         agent_id = task.get("agent_id", "")
         amount = Decimal(str(task.get("amount", 0)))
         currency = task.get("currency", "SOL").upper()
         tx_hash = task.get("tx_hash")
+        verified = task.get("verified", False)
+
+        if not verified:
+            return {"status": "error", "error": "Funding must be verified (verified=True). Only payment webhooks may credit balances."}
 
         col = CURRENCY_COLUMN_MAP.get(currency)
         if not agent_id or amount <= 0 or not col:
             return {"status": "error", "error": "agent_id, amount, valid currency required"}
+        if not tx_hash:
+            return {"status": "error", "error": "tx_hash required for verified funding"}
 
         mindex = self._get_mindex()
         if not mindex:

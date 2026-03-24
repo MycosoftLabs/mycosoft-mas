@@ -44,6 +44,11 @@ logger = logging.getLogger(__name__)
 # Replay window: signatures older than this are rejected
 SIGNATURE_MAX_AGE_SECONDS = 300  # 5 minutes
 
+# Brute force protection: max failed attempts per IP before lockout
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_SECONDS = 900  # 15 minutes
+_failed_attempts: Dict[str, list] = {}  # ip -> [timestamps of failures]
+
 # Config keys in ows_treasury_config
 CEO_KEY_HASH_CONFIG = "ceo_master_key_hash"
 ADDRESS_COOLDOWN_HOURS_CONFIG = "address_change_cooldown_hours"
@@ -153,6 +158,18 @@ async def require_ceo_auth(request: Request) -> str:
     """
     ip = _get_client_ip(request)
 
+    # Brute force protection — check if this IP is locked out
+    now_ts = time.time()
+    if ip in _failed_attempts:
+        # Prune old entries
+        _failed_attempts[ip] = [t for t in _failed_attempts[ip] if now_ts - t < LOCKOUT_SECONDS]
+        if len(_failed_attempts[ip]) >= MAX_FAILED_ATTEMPTS:
+            await _record_audit("auth_locked_out", False, ip, {"attempts": len(_failed_attempts[ip])})
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Too many failed attempts. Locked out for {LOCKOUT_SECONDS // 60} minutes.",
+            )
+
     # Check if CEO key is configured at all
     stored_hash = await _get_ceo_key_hash()
     if not stored_hash:
@@ -169,10 +186,12 @@ async def require_ceo_auth(request: Request) -> str:
             await _record_audit("auth_success", True, ip, {"method": "direct_key"})
             return "ceo"
         else:
-            await _record_audit("auth_failure", False, ip, {"method": "direct_key"})
+            _failed_attempts.setdefault(ip, []).append(time.time())
+            remaining = MAX_FAILED_ATTEMPTS - len(_failed_attempts.get(ip, []))
+            await _record_audit("auth_failure", False, ip, {"method": "direct_key", "attempts_remaining": remaining})
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid treasury key",
+                detail=f"Invalid treasury key. {max(remaining, 0)} attempts remaining before lockout.",
             )
 
     # Method 2: HMAC signature (replay-resistant)
