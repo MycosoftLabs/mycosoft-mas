@@ -41,7 +41,7 @@ router = APIRouter(prefix="/api/wallet/ows", tags=["ows-wallet", "crypto", "paym
 
 
 # ---------------------------------------------------------------------------
-# CEO auth dependency (lazy import to avoid circular deps at module load)
+# Auth dependencies
 # ---------------------------------------------------------------------------
 
 
@@ -50,6 +50,14 @@ async def _require_ceo_auth_dep(request: Request) -> str:
     from mycosoft_mas.security.treasury_auth import require_ceo_auth
 
     return await require_ceo_auth(request)
+
+
+async def _require_agent_auth(request: Request) -> str:
+    """Require a valid RaaS API key. Returns the authenticated agent_id."""
+    from mycosoft_mas.raas.middleware import require_raas_auth
+
+    agent = await require_raas_auth(request)
+    return agent.agent_id
 
 
 # Lazy singletons
@@ -87,8 +95,8 @@ def _get_mindex():
 
 
 class CreateWalletRequest(BaseModel):
-    agent_id: str = Field(..., min_length=1)
-    wallet_name: Optional[str] = None
+    agent_id: str = Field(..., min_length=1, max_length=64)
+    wallet_name: Optional[str] = Field(None, max_length=128)
     wallet_type: str = Field(default="internal", pattern="^(internal|external|treasury)$")
 
 
@@ -101,9 +109,9 @@ class CreateWalletResponse(BaseModel):
 
 
 class TransferRequest(BaseModel):
-    from_agent_id: str = Field(..., min_length=1)
-    to_agent_id: str = Field(..., min_length=1)
-    amount: float = Field(..., gt=0)
+    from_agent_id: str = Field(..., min_length=1, max_length=64)
+    to_agent_id: str = Field(..., min_length=1, max_length=64)
+    amount: float = Field(..., gt=0.00000001, le=1000000)  # Min dust threshold, max sanity cap
     currency: str = Field(default="SOL", pattern="^(SOL|USDC|ETH|BTC)$")
 
 
@@ -130,10 +138,10 @@ class FundResponse(BaseModel):
 
 
 class PayRequest(BaseModel):
-    agent_id: str = Field(..., min_length=1)
-    service_id: str = Field(..., min_length=1)
-    amount: float = Field(..., gt=0)
-    currency: str = Field(default="SOL")
+    agent_id: str = Field(..., min_length=1, max_length=64)
+    service_id: str = Field(..., min_length=1, max_length=128)
+    amount: float = Field(..., gt=0.00000001, le=1000000)
+    currency: str = Field(default="SOL", pattern="^(SOL|USDC|ETH|BTC)$")
 
 
 class SignRequest(BaseModel):
@@ -174,7 +182,7 @@ class TreasurySettingsUpdate(BaseModel):
     withdrawal_address_solana: Optional[str] = None
     withdrawal_address_ethereum: Optional[str] = None
     withdrawal_address_bitcoin: Optional[str] = None
-    treasury_fee_percent: Optional[float] = Field(None, ge=0, le=50)
+    treasury_fee_percent: Optional[float] = Field(None, ge=1, le=50)  # Min 1% — cannot disable treasury fee
     auto_sweep_enabled: Optional[bool] = None
     auto_sweep_threshold_sol: Optional[float] = Field(None, ge=0)
     auto_sweep_threshold_eth: Optional[float] = Field(None, ge=0)
@@ -202,8 +210,11 @@ async def ows_wallet_health() -> Dict[str, Any]:
 
 
 @router.post("/create", response_model=CreateWalletResponse)
-async def create_wallet(body: CreateWalletRequest) -> CreateWalletResponse:
-    """Create a new OWS wallet for an agent."""
+async def create_wallet(
+    body: CreateWalletRequest,
+    ceo: str = Depends(_require_ceo_auth_dep),
+) -> CreateWalletResponse:
+    """Create a new OWS wallet for an agent. CEO only — internal agents are provisioned by the system."""
     agent = _get_ows_agent()
     if not agent:
         raise HTTPException(status_code=503, detail="OWS wallet system unavailable")
@@ -234,8 +245,10 @@ async def create_wallet(body: CreateWalletRequest) -> CreateWalletResponse:
 
 
 @router.get("/{agent_id}")
-async def get_wallet_info(agent_id: str) -> Dict[str, Any]:
-    """Get full wallet info for an agent."""
+async def get_wallet_info(agent_id: str, caller: str = Depends(_require_agent_auth)) -> Dict[str, Any]:
+    """Get full wallet info. Agents can only view their own wallet."""
+    if caller != agent_id:
+        raise HTTPException(status_code=403, detail="You can only view your own wallet")
     agent = _get_ows_agent()
     if not agent:
         raise HTTPException(status_code=503, detail="OWS wallet system unavailable")
@@ -247,8 +260,10 @@ async def get_wallet_info(agent_id: str) -> Dict[str, Any]:
 
 
 @router.get("/{agent_id}/balance", response_model=BalanceResponse)
-async def get_balance(agent_id: str) -> BalanceResponse:
-    """Get balance for an agent (on-chain + internal ledger)."""
+async def get_balance(agent_id: str, caller: str = Depends(_require_agent_auth)) -> BalanceResponse:
+    """Get balance. Agents can only check their own balance."""
+    if caller != agent_id:
+        raise HTTPException(status_code=403, detail="You can only view your own balance")
     agent = _get_ows_agent()
     if not agent:
         raise HTTPException(status_code=503, detail="OWS wallet system unavailable")
@@ -261,8 +276,12 @@ async def get_balance(agent_id: str) -> BalanceResponse:
 
 
 @router.post("/transfer", response_model=TransferResponse)
-async def transfer(body: TransferRequest) -> TransferResponse:
-    """Internal agent-to-agent transfer with 5% treasury fee."""
+async def transfer(body: TransferRequest, caller: str = Depends(_require_agent_auth)) -> TransferResponse:
+    """Internal agent-to-agent transfer with 5% treasury fee. You can only send FROM your own wallet."""
+    if caller != body.from_agent_id:
+        raise HTTPException(status_code=403, detail="You can only transfer from your own wallet")
+    if body.from_agent_id == body.to_agent_id:
+        raise HTTPException(status_code=400, detail="Cannot transfer to yourself")
     agent = _get_ows_agent()
     if not agent:
         raise HTTPException(status_code=503, detail="OWS wallet system unavailable")
@@ -293,9 +312,13 @@ async def transfer(body: TransferRequest) -> TransferResponse:
 
 @router.get("/{agent_id}/history")
 async def get_transaction_history(
-    agent_id: str, limit: int = 50, offset: int = 0
+    agent_id: str, limit: int = 50, offset: int = 0, caller: str = Depends(_require_agent_auth)
 ) -> Dict[str, Any]:
-    """Get transaction history for an agent."""
+    """Get transaction history. Agents can only view their own."""
+    if caller != agent_id:
+        raise HTTPException(status_code=403, detail="You can only view your own history")
+    limit = min(limit, 200)  # Cap to prevent DB abuse
+    offset = max(offset, 0)
     mindex = _get_mindex()
     if not mindex:
         raise HTTPException(status_code=503, detail="Database unavailable")
@@ -349,8 +372,8 @@ async def get_transaction_history(
 
 
 @router.post("/sign")
-async def sign_transaction(body: SignRequest) -> Dict[str, Any]:
-    """Sign a transaction for an agent."""
+async def sign_transaction(body: SignRequest, ceo: str = Depends(_require_ceo_auth_dep)) -> Dict[str, Any]:
+    """Sign a transaction for an agent. CEO only — signing is never exposed to external agents."""
     agent = _get_ows_agent()
     if not agent:
         raise HTTPException(status_code=503, detail="OWS wallet system unavailable")
@@ -469,7 +492,7 @@ async def get_treasury_status() -> TreasuryResponse:
             by_agent_breakdown=by_agent,
             by_chain_breakdown=by_chain,
             supported_chains=[CHAIN_DISPLAY_NAMES.get(c, c) for c in SUPPORTED_CHAINS],
-            withdrawal_addresses=withdrawal_addrs,
+            withdrawal_addresses={},  # REDACTED from public endpoint — visible only in /treasury/settings (CEO auth)
             treasury_fee_percent=fee_pct,
         )
     except Exception as e:
@@ -510,8 +533,17 @@ async def init_treasury_auth(body: InitAuthRequest, request: Request) -> Dict[st
 
     ip = _get_client_ip(request)
 
-    # If key already exists, require the current key to rotate
+    # SECURITY: First-time init must come from internal network to prevent race condition
     existing_hash = await _get_ceo_key_hash()
+    if not existing_hash:
+        internal_prefixes = ("127.0.0.1", "::1", "192.168.0.", "10.", "172.16.")
+        if not any(ip.startswith(p) for p in internal_prefixes):
+            await _record_audit("init_auth_blocked_external", False, ip)
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="First-time key setup must be done from the internal network",
+            )
+
     if existing_hash:
         old_key = request.headers.get("x-treasury-key", "").strip()
         if not old_key or _hash_key(old_key) != existing_hash:
@@ -1043,8 +1075,10 @@ async def onboard_agent_wallet(body: OnboardWalletRequest) -> Dict[str, Any]:
 
 
 @router.post("/fund", response_model=FundResponse)
-async def get_fund_address(body: FundRequest) -> FundResponse:
-    """Get deposit address for funding a wallet."""
+async def get_fund_address(body: FundRequest, caller: str = Depends(_require_agent_auth)) -> FundResponse:
+    """Get deposit address for funding a wallet. You can only get your own."""
+    if caller != body.agent_id:
+        raise HTTPException(status_code=403, detail="You can only get your own deposit address")
     from mycosoft_mas.integrations.ows_client import CHAIN_ALIASES, CHAIN_DISPLAY_NAMES
 
     mindex = _get_mindex()
@@ -1117,8 +1151,10 @@ async def get_funding_status(tx_id: str) -> Dict[str, Any]:
 
 
 @router.post("/pay")
-async def pay_for_service(body: PayRequest) -> Dict[str, Any]:
-    """Pay for an API service from wallet (debits agent, credits treasury)."""
+async def pay_for_service(body: PayRequest, caller: str = Depends(_require_agent_auth)) -> Dict[str, Any]:
+    """Pay for an API service from wallet. You can only pay from your own wallet."""
+    if caller != body.agent_id:
+        raise HTTPException(status_code=403, detail="You can only pay from your own wallet")
     from mycosoft_mas.agents.crypto.ows_wallet_agent import TREASURY_AGENT_ID
 
     agent = _get_ows_agent()

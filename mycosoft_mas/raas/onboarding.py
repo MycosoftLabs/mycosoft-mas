@@ -15,7 +15,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from mycosoft_mas.integrations.mindex_client import MINDEXClient
 from mycosoft_mas.raas import credits as credit_system
@@ -132,12 +132,24 @@ async def register_agent(body: AgentRegistration) -> AgentRegistrationResponse:
 
 
 @router.post("/activate")
-async def activate_agent(agent_id: str) -> Dict[str, Any]:
+async def activate_agent(agent_id: str, request: Request = None) -> Dict[str, Any]:
     """Activate an agent after signup payment is confirmed.
 
-    Called internally by payment webhook / crypto verification.
+    INTERNAL ONLY — called by payment webhook / crypto verification.
     Adds 100 bonus credits on activation.
+    Rejects calls that don't originate from localhost or internal IPs.
     """
+    # SECURITY: Only internal callers (webhooks from our own servers) may activate
+    if request and request.client:
+        client_ip = request.client.host
+        forwarded = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+        caller_ip = forwarded or client_ip
+        internal_prefixes = ("127.0.0.1", "::1", "192.168.0.", "10.", "172.16.")
+        if not any(caller_ip.startswith(p) for p in internal_prefixes):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Activation is internal only — called by payment webhooks",
+            )
     await _ensure_agents_table()
     now = datetime.now(timezone.utc).replace(tzinfo=None)
 
