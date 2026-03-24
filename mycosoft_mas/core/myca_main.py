@@ -955,6 +955,14 @@ try:
 except NameError:
     pass
 
+# OWS Wallet API — Open Wallet Standard multi-chain wallet system (March 2026)
+try:
+    from mycosoft_mas.core.routers.ows_wallet_api import router as ows_wallet_router
+
+    app.include_router(ows_wallet_router, tags=["ows-wallet", "crypto"])
+except ImportError:
+    pass
+
 # MYCA Widget API - interactive visualizations (maps, molecules, taxonomy trees)
 try:
     if WIDGET_API_AVAILABLE and widget_router:

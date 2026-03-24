@@ -86,11 +86,48 @@ async def register_agent(body: AgentRegistration) -> AgentRegistrationResponse:
 
     logger.info("Registered agent %s (%s) via %s", agent_id, body.agent_name, body.payment_method)
 
+    # Create OWS wallet for the agent
+    wallet_name = None
+    deposit_addresses: Dict[str, str] = {}
+    next_steps = [
+        f"Complete signup payment: {signup_url}",
+    ]
+    try:
+        from mycosoft_mas.agents.crypto.ows_wallet_agent import OWSWalletAgent
+
+        ows_agent = OWSWalletAgent()
+        wallet_result = await ows_agent.process_task(
+            {
+                "type": "create_wallet",
+                "agent_id": agent_id,
+                "wallet_name": f"ext-{agent_id}",
+                "passphrase": secrets.token_urlsafe(32),
+                "wallet_type": "external",
+            }
+        )
+        if wallet_result.get("status") == "success":
+            wallet_name = wallet_result.get("wallet_name")
+            chains = wallet_result.get("chains", {})
+            from mycosoft_mas.integrations.ows_client import CHAIN_DISPLAY_NAMES
+
+            for chain_id, addr in chains.items():
+                display = CHAIN_DISPLAY_NAMES.get(chain_id, chain_id)
+                deposit_addresses[display.lower()] = addr
+            next_steps.append("Fund your wallet by sending crypto to any deposit address")
+            next_steps.append("Check balance: GET /api/wallet/ows/{agent_id}/balance")
+            logger.info("Created OWS wallet for agent %s", agent_id)
+    except Exception as e:
+        logger.warning("OWS wallet creation skipped for %s: %s", agent_id, e)
+        next_steps.append("Wallet creation pending — contact support if needed")
+
     return AgentRegistrationResponse(
         agent_id=agent_id,
         api_key=raw_key,
         status="pending_payment",
         signup_payment_url=signup_url,
+        wallet_name=wallet_name,
+        deposit_addresses=deposit_addresses,
+        next_steps=next_steps,
     )
 
 
@@ -135,6 +172,23 @@ async def activate_agent(agent_id: str) -> Dict[str, Any]:
         "credit_balance": new_balance,
         "message": "Welcome! Your agent account is now active with 100 bonus credits.",
     }
+
+
+@router.get("/{agent_id}/wallet")
+async def get_agent_wallet(agent_id: str) -> Dict[str, Any]:
+    """Get OWS wallet details for a registered agent."""
+    try:
+        from mycosoft_mas.agents.crypto.ows_wallet_agent import OWSWalletAgent
+
+        ows_agent = OWSWalletAgent()
+        result = await ows_agent.process_task(
+            {"type": "get_wallet_info", "agent_id": agent_id}
+        )
+        if result.get("status") == "success":
+            return result
+        raise HTTPException(status_code=404, detail="Wallet not found for this agent")
+    except ImportError:
+        raise HTTPException(status_code=503, detail="OWS wallet system not available")
 
 
 @router.get("/me")

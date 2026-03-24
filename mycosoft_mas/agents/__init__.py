@@ -78,6 +78,7 @@ _safe_import(".business.grant_agent", "GrantAgent")
 _safe_import(".crypto.x401_agent_wallet", "X401AgentWalletAgent")
 _safe_import(".crypto.myco_token_agent", "MycoTokenAgent")
 _safe_import(".crypto.dao_treasury_agent", "DAOTreasuryAgent")
+_safe_import(".crypto.ows_wallet_agent", "OWSWalletAgent")
 
 # Security Agents
 _safe_import(".crep_security_agent", "CREPSecurityAgent")

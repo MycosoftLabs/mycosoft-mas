@@ -50,6 +50,9 @@ class AgentRegistrationResponse(BaseModel):
     api_key: str
     status: str
     signup_payment_url: Optional[str] = None
+    wallet_name: Optional[str] = None
+    deposit_addresses: Dict[str, str] = Field(default_factory=dict)
+    next_steps: List[str] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
