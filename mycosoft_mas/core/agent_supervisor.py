@@ -67,10 +67,14 @@ class AgentSupervisor:
         self._task = asyncio.create_task(self._supervisor_loop())
         logger.info(f"Agent supervisor started (interval={SUPERVISOR_INTERVAL}s)")
 
-        await self._publish_lifecycle_event(
-            "supervisor_started",
-            agent_id="supervisor",
-            details={"interval": SUPERVISOR_INTERVAL},
+        # Do not await: Redis get_client() can contend on the global lock or slow-connect;
+        # blocking here delays FastAPI startup and prevents binding :8001.
+        asyncio.create_task(
+            self._publish_lifecycle_event(
+                "supervisor_started",
+                agent_id="supervisor",
+                details={"interval": SUPERVISOR_INTERVAL},
+            )
         )
 
     async def stop(self):
