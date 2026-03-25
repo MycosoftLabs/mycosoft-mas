@@ -365,6 +365,14 @@ try:
 except ImportError:
     NLM_API_AVAILABLE = False
 
+# NLM Training Control API
+try:
+    from mycosoft_mas.core.routers.nlm_training_api import router as nlm_training_router
+
+    NLM_TRAINING_API_AVAILABLE = True
+except ImportError:
+    NLM_TRAINING_API_AVAILABLE = False
+
 # EarthLIVE API - packetized environmental data (weather, seismic, satellite)
 try:
     from mycosoft_mas.core.routers.earthlive_api import router as earthlive_router
@@ -910,6 +918,13 @@ except NameError:
 try:
     if NLM_API_AVAILABLE:
         app.include_router(nlm_router, tags=["nlm"])
+except NameError:
+    pass
+
+# NLM Training Control API - start/stop/pause/checkpoint/mutate
+try:
+    if NLM_TRAINING_API_AVAILABLE:
+        app.include_router(nlm_training_router, tags=["nlm-training"])
 except NameError:
     pass
 
