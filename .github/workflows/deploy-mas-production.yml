@@ -90,8 +90,9 @@ jobs:
             echo "=== Pulling image ==="
             docker pull "$IMAGE_FULL"
             echo "=== Replacing container ==="
-            docker stop myca-orchestrator-new 2>/dev/null || true
-            docker rm myca-orchestrator-new 2>/dev/null || true
+            docker rm -f myca-orchestrator myca-orchestrator-old myca-orchestrator-new 2>/dev/null || true
+            CONFLICTING=$(docker ps -q --filter "publish=8001")
+            if [ -n "$CONFLICTING" ]; then docker rm -f $CONFLICTING; fi
             MAS_DIR="/home/mycosoft/mycosoft/mas"
             [ -d "/opt/mycosoft/mas" ] && MAS_DIR="/opt/mycosoft/mas"
             ENV_FILE_OPT=""
