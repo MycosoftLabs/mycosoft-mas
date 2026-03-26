@@ -79,8 +79,15 @@ class HealthChecker:
             import redis.asyncio as redis
 
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-            r = redis.from_url(redis_url)
-            await r.ping()
+            connect_timeout = float(os.getenv("REDIS_HEALTH_CONNECT_TIMEOUT_SEC", "5"))
+            sock_timeout = float(os.getenv("REDIS_HEALTH_SOCKET_TIMEOUT_SEC", "5"))
+            ping_timeout = float(os.getenv("REDIS_HEALTH_PING_TIMEOUT_SEC", "5"))
+            r = redis.from_url(
+                redis_url,
+                socket_connect_timeout=connect_timeout,
+                socket_timeout=sock_timeout,
+            )
+            await asyncio.wait_for(r.ping(), timeout=ping_timeout)
             await r.close()
 
             latency = (time.time() - start) * 1000

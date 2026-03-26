@@ -7,6 +7,7 @@ includes the core routers, and provides minimal voice endpoints used by the UI.
 
 from __future__ import annotations
 
+import asyncio
 import os
 
 # Load .env from project root so GEMINI/ANTHROPIC/OPENAI API keys are available
@@ -678,6 +679,20 @@ def _get_git_sha() -> str | None:
         return None
 
 
+_git_sha_fetched: bool = False
+_git_sha_memo: str | None = None
+
+
+async def _resolve_git_sha() -> str | None:
+    """Return git SHA without blocking the event loop; memoize after first read."""
+    global _git_sha_fetched, _git_sha_memo
+    if _git_sha_fetched:
+        return _git_sha_memo
+    _git_sha_memo = await asyncio.to_thread(_get_git_sha)
+    _git_sha_fetched = True
+    return _git_sha_memo
+
+
 app = FastAPI(
     title="Mycosoft MAS (MYCA)",
     version=__version__,
@@ -1089,7 +1104,7 @@ async def health() -> dict[str, Any]:
     result = await checker.check_all()
     result["service"] = "mas"
     result["version"] = __version__
-    result["git_sha"] = _get_git_sha()
+    result["git_sha"] = await _resolve_git_sha()
     result.setdefault("services", {})["api"] = "ok"
     result.setdefault("agents", [])
     return result
@@ -1139,7 +1154,7 @@ async def version() -> dict[str, Any]:
     return {
         "service": "mas",
         "version": __version__,
-        "git_sha": _get_git_sha(),
+        "git_sha": await _resolve_git_sha(),
     }
 
 
