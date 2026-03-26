@@ -146,7 +146,7 @@ docker compose up -d --build mas-orchestrator
 pip install -r requirements.txt
 
 # Run orchestrator directly
-python -m uvicorn mycosoft_mas.core.main:app --reload --port 8001
+python -m uvicorn mycosoft_mas.core.myca_main:app --reload --port 8001
 ```
 
 ### Frontend Development
