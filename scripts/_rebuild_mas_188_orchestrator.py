@@ -72,7 +72,22 @@ def main() -> None:
 
     print("=== 3) systemctl restart mas-orchestrator ===")
     sudo_restart(c, pw)
-    time.sleep(8)
+
+    print("=== 3b) wait for /live on 127.0.0.1 (up to 120s) ===")
+    live_ok = False
+    for attempt in range(48):
+        time.sleep(2.5)
+        _, live_try, _ = exec_plain(
+            c,
+            "curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8001/live",
+            timeout=15,
+        )
+        if live_try.strip() == "200":
+            live_ok = True
+            print(f"live_ok after ~{(attempt + 1) * 2.5:.0f}s")
+            break
+    if not live_ok:
+        print("WARN: /live did not return 200 within 120s; continuing checks")
 
     print("=== 4) ss :8001 + unit state ===")
     _, ss, _ = exec_plain(c, "ss -tlnp 2>/dev/null | grep 8001 || true", timeout=30)
@@ -95,8 +110,8 @@ def main() -> None:
     c.close()
     if code1 != 0:
         raise SystemExit(f"git/pip step failed with exit {code1}")
-    if "active" not in act.strip().lower():
-        raise SystemExit("mas-orchestrator not active")
+    if act.strip() != "active":
+        raise SystemExit(f"mas-orchestrator not active (got {act.strip()!r})")
 
 
 if __name__ == "__main__":

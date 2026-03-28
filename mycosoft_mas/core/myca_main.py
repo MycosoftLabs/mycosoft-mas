@@ -1533,12 +1533,12 @@ async def voice_feedback_summary() -> dict[str, Any]:
 
 # ---------------------------------------------------------------------------
 # Startup - Initialize agent registry (all agents active 24/7)
+# Heavy work runs in a background task so /live and /health respond immediately.
 # ---------------------------------------------------------------------------
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize all agents as active and ready 24/7."""
+async def _mas_background_startup() -> None:
+    """Initialize registry, runner, collectors, and long-running services."""
     import logging
 
     logger = logging.getLogger("MAS_Startup")
@@ -1548,7 +1548,7 @@ async def startup_event():
     all_agents = registry.list_all()
     active_agents = registry.list_active()
 
-    logger.info("🚀 MAS Orchestrator starting...")
+    logger.info("🚀 MAS Orchestrator starting (background)...")
     logger.info(f"✓ Agent registry loaded: {len(all_agents)} total agents")
     logger.info(f"✓ Active agents (24/7): {len(active_agents)}")
     logger.info("✓ All agents are idle and ready to process tasks")
@@ -1692,12 +1692,30 @@ async def startup_event():
     logger.info("✓ MAS ready - all agents operational 24/7")
 
 
+@app.on_event("startup")
+async def startup_event():
+    """Return immediately; full init runs in _mas_background_startup."""
+    import logging
+
+    logger = logging.getLogger("MAS_Startup")
+    logger.info("MAS Orchestrator HTTP stack ready — scheduling background initialization")
+    app.state.mas_startup_task = asyncio.create_task(_mas_background_startup())
+
+
 @app.on_event("shutdown")
 async def shutdown_event():
     """Graceful shutdown: stop WorkflowAutoMonitor and other background services."""
     import logging
 
     logger = logging.getLogger("MAS_Shutdown")
+    startup_task = getattr(app.state, "mas_startup_task", None)
+    if startup_task is not None and not startup_task.done():
+        startup_task.cancel()
+        try:
+            await startup_task
+        except asyncio.CancelledError:
+            pass
+        logger.info("Background startup task cancelled")
     try:
         from mycosoft_mas.collectors import get_orchestrator
 

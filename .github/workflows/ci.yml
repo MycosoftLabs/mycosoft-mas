@@ -44,7 +44,7 @@ jobs:
         run: pip install poetry
 
       - name: Install dependencies (prod + dev)
-        run: poetry install --with dev
+        run: poetry lock --no-update && poetry install --with dev
 
       - name: Run tests
         run: poetry run pytest tests/ -o "addopts=-v --tb=short --import-mode=importlib"
@@ -84,6 +84,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        poetry lock --no-update
         poetry install --with dev
 
     - name: Run tests
@@ -104,7 +105,7 @@ jobs:
       run: pip install poetry
 
     - name: Install dependencies
-      run: poetry install --with dev
+      run: poetry lock --no-update && poetry install --with dev
 
     - name: Run flake8 (syntax errors only)
       run: |
@@ -128,7 +129,7 @@ jobs:
       run: pip install poetry
 
     - name: Install dependencies
-      run: poetry install --with dev
+      run: poetry lock --no-update && poetry install --with dev
 
     - name: Run bandit (high severity only)
       run: |

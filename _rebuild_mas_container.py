@@ -45,9 +45,11 @@ print(f'OUT: {stdout.read().decode()}')
 print(f'ERR: {stderr.read().decode()}')
 
 print('\n=== Step 4: Build new image ===')
-cmd = 'cd /home/mycosoft/mycosoft/mas && docker build -t mycosoft/mas-agent:latest --no-cache . 2>&1'
+_no_cache = os.environ.get("MAS_DOCKER_NO_CACHE", "1").strip().lower() in ("1", "true", "yes")
+_nc_flag = " --no-cache" if _no_cache else ""
+cmd = f'cd /home/mycosoft/mycosoft/mas && docker build -t mycosoft/mas-agent:latest{_nc_flag} . 2>&1'
 print(f'Running: {cmd}')
-stdin, stdout, stderr = ssh.exec_command(cmd, timeout=600)  # 10 min timeout for build
+stdin, stdout, stderr = ssh.exec_command(cmd, timeout=1800)  # 30 min timeout for no-cache build
 output = stdout.read().decode()
 print(output[-3000:] if len(output) > 3000 else output)  # Last 3000 chars
 
