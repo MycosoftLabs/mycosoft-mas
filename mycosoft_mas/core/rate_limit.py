@@ -69,7 +69,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """FastAPI middleware for rate limiting."""
 
     # Endpoints exempt from rate limiting
-    EXEMPT_PATHS = {"/health", "/metrics", "/docs", "/openapi.json", "/redoc"}
+    EXEMPT_PATHS = {
+        "/health",
+        "/live",
+        "/ready",
+        "/metrics",
+        "/docs",
+        "/openapi.json",
+        "/redoc",
+    }
     EXEMPT_PREFIXES = (
         "/api/voice/v9/",
         "/ws/voice/v9",
