@@ -1110,9 +1110,25 @@ async def health() -> dict[str, Any]:
     return result
 
 
+@app.get("/live")
+async def live() -> dict[str, Any]:
+    """Fast liveness: process is up. Prefer this for load balancers / quick LAN checks.
+
+    Use ``GET /health`` for full dependency checks (can be slow if backends time out).
+    """
+    checker = get_health_checker()
+    result = await checker.liveness()
+    result["service"] = "mas"
+    result["version"] = __version__
+    return result
+
+
 @app.get("/ready")
 async def ready() -> dict[str, Any]:
-    """Kubernetes liveness/readiness."""
+    """Kubernetes readiness: database and dependencies needed to serve traffic.
+
+    For a trivial "is the process responding" probe, use ``GET /live``.
+    """
     checker = get_health_checker()
     return await checker.readiness()
 

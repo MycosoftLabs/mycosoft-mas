@@ -138,7 +138,9 @@ Metered live worldstate connection for external agents. All endpoints require `X
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | System health check |
+| `/health` | GET | Full system health (dependency checks; can be slow) |
+| `/live` | GET | Fast liveness (`alive` + version); for probes and quick connectivity |
+| `/ready` | GET | Readiness (e.g. database); not a substitute for `/live` |
 | `/metrics` | GET | Prometheus metrics |
 
 ### Memory API (`/api/memory/*`)
@@ -409,6 +411,27 @@ Liquid AI-inspired adaptive temporal processing, fungal memory bridging, and rec
 |----------|--------|-------------|
 | `/api/iot/envelope/ingest` | POST | Forward unified envelope into Mycorrhizae |
 | `/api/iot/replay/ack` | POST | Proxy replay ACK to Mycorrhizae |
+
+### Network Diagnostics and UniFi Site Manager API (`/api/network/*`) (Mar 25, 2026)
+
+Local diagnostics (DNS, latency, connectivity, full report with optional local UniFi controller) plus **Ubiquiti UniFi Site Manager** cloud proxy (`https://api.ui.com`). Site Manager requires `UNIFI_SITE_MANAGER_API_KEY` or `UI_COM_API_KEY` on the orchestrator; optional `UNIFI_SITE_MANAGER_BASE_URL` (default `https://api.ui.com`). Reference: [Site Manager API](https://developer.ui.com/site-manager-api/).
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/network/health` | GET | Network router health |
+| `/api/network/dns` | GET | Multi-resolver DNS checks (`domains`, `include_system` query params) |
+| `/api/network/dns` | POST | DNS checks with JSON body (`domains`, `include_system`) |
+| `/api/network/latency` | GET | Ping/latency to Mycosoft VMs |
+| `/api/network/connectivity` | GET | HTTP connectivity to MAS, MINDEX, Sandbox |
+| `/api/network/diagnostics` | GET | Full report: DNS, latency, connectivity, UniFi topology (if `UNIFI_HOST` + `UNIFI_API_KEY`), Cloudflare hints (`CLOUDFLARE_*`); optional query overrides `website_url`, `unifi_host`, `unifi_api_key` |
+| `/api/network/unifi-site-manager/health` | GET | Site Manager config probe + `list_sites`; no API key in response |
+| `/api/network/unifi-site-manager/sites` | GET | Proxy `GET /v1/sites` |
+| `/api/network/unifi-site-manager/hosts` | GET | Proxy `GET /v1/hosts` (`page_size`, `next_token`) |
+| `/api/network/unifi-site-manager/hosts/{host_id}` | GET | Proxy `GET /v1/hosts/{id}` |
+| `/api/network/unifi-site-manager/devices` | GET | Proxy `GET /v1/devices` (`host_ids` comma-separated, `time`, `page_size`, `next_token`) |
+
+**Router**: `mycosoft_mas/core/routers/network_api.py`  
+**Client**: `mycosoft_mas/integrations/unifi_site_manager_client.py`
 
 ### Network Device Registry API (`/api/devices/*`) (FEB09 2026)
 

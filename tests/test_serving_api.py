@@ -49,10 +49,10 @@ class TestServingAPIImports:
     def test_router_has_routes(self):
         router = self._import_serving_router()
         route_paths = [r.path for r in router.routes]
-        assert "/health" in route_paths
-        assert "/profiles" in route_paths
-        assert "/bundles" in route_paths
-        assert "/calibrate" in route_paths
+        assert "/api/serving/health" in route_paths
+        assert "/api/serving/profiles" in route_paths
+        assert "/api/serving/bundles" in route_paths
+        assert "/api/serving/calibrate" in route_paths
 
     def test_router_tags(self):
         router = self._import_serving_router()

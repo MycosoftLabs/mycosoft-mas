@@ -14,3 +14,12 @@ def test_health_endpoint(client: TestClient) -> None:
     resp = client.get("/health")
     assert resp.status_code == 200
     assert resp.json().get("status") == "healthy"
+
+
+def test_live_endpoint(client: TestClient) -> None:
+    resp = client.get("/live")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body.get("status") == "alive"
+    assert body.get("service") == "mas"
+    assert "version" in body

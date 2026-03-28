@@ -203,6 +203,12 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - Device Ed25519 public keys are expected to be stored as base64 in a registry-accessible location.
 - Current contract key: `publicKeyB64` (32-byte Ed25519 public key, base64) in `telemetry.device.metadata` (MINDEX) and/or `registry.devices.metadata`.
 
+### Network diagnostics and UniFi Site Manager (Mar 25, 2026)
+
+- **MAS surface**: `/api/network/*` — DNS, latency, connectivity, full diagnostics (local UniFi controller via `UNIFI_HOST` / `UNIFI_API_KEY` when set), and **UniFi Site Manager** cloud proxy under `/api/network/unifi-site-manager/*`.
+- **Site Manager**: Ubiquiti cloud API at `https://api.ui.com` (override with `UNIFI_SITE_MANAGER_BASE_URL`). Orchestrator env: `UNIFI_SITE_MANAGER_API_KEY` or `UI_COM_API_KEY` (required for cloud routes).
+- **Code**: `mycosoft_mas/core/routers/network_api.py`, `mycosoft_mas/integrations/unifi_site_manager_client.py`. See `docs/API_CATALOG_FEB04_2026.md` (Network Diagnostics and UniFi Site Manager section).
+
 ### Network Device Registry (Feb 9, 2026)
 
 This new API provides heartbeat-based registration for remote MycoBrain devices.
