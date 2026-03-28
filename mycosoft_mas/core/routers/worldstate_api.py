@@ -17,6 +17,11 @@ from fastapi import APIRouter, Query
 router = APIRouter(prefix="/api/myca/world", tags=["worldstate", "myca"])
 
 
+def _freshness_val(f: Any) -> str:
+    """Extract freshness string from a DataFreshness enum (or return 'unavailable')."""
+    return getattr(f, "value", "unavailable") if f else "unavailable"
+
+
 def _get_world_model():
     """Get canonical WorldModel from consciousness. Returns None if unavailable."""
     try:
@@ -29,20 +34,30 @@ def _get_world_model():
 
 
 def _world_state_to_dict(state: Any) -> Dict[str, Any]:
-    """Serialize WorldState to API-safe dict."""
+    """Serialize WorldState to API-safe dict.
+
+    Wraps predictions, ecosystem, nlm, earthlive, and presence with
+    {data: ..., freshness: ...} for consistent per-sensor freshness.
+    """
     if state is None:
         return {}
     out: Dict[str, Any] = {
         "timestamp": getattr(state, "timestamp", None),
         "crep": {
             "data": getattr(state, "crep_data", {}) or {},
-            "freshness": getattr(getattr(state, "crep_freshness", None), "value", "unavailable"),
+            "freshness": _freshness_val(getattr(state, "crep_freshness", None)),
             "flights": getattr(state, "total_flights", 0),
             "vessels": getattr(state, "total_vessels", 0),
             "satellites": getattr(state, "total_satellites", 0),
         },
-        "predictions": getattr(state, "predictions", {}) or {},
-        "ecosystem": getattr(state, "ecosystem_status", {}) or {},
+        "predictions": {
+            "data": getattr(state, "predictions", {}) or {},
+            "freshness": _freshness_val(getattr(state, "predictions_freshness", None)),
+        },
+        "ecosystem": {
+            "data": getattr(state, "ecosystem_status", {}) or {},
+            "freshness": _freshness_val(getattr(state, "ecosystem_freshness", None)),
+        },
         "mindex": {
             "available": getattr(state, "knowledge_available", False),
             "stats": getattr(state, "knowledge_stats", {}) or {},
@@ -50,15 +65,22 @@ def _world_state_to_dict(state: Any) -> Dict[str, Any]:
         "devices": {
             "telemetry": getattr(state, "device_telemetry", {}) or {},
             "active_count": getattr(state, "active_devices", 0),
-            "freshness": getattr(getattr(state, "device_freshness", None), "value", "unavailable"),
+            "freshness": _freshness_val(getattr(state, "device_freshness", None)),
         },
-        "nlm": getattr(state, "nlm_insights", {}) or {},
-        "earthlive": getattr(state, "earthlive_packet", {}) or {},
+        "nlm": {
+            "data": getattr(state, "nlm_insights", {}) or {},
+            "freshness": _freshness_val(getattr(state, "nlm_freshness", None)),
+        },
+        "earthlive": {
+            "data": getattr(state, "earthlive_packet", {}) or {},
+            "freshness": _freshness_val(getattr(state, "earthlive_freshness", None)),
+        },
         "presence": {
             "online_users": getattr(state, "online_users", 0),
             "active_sessions": getattr(state, "active_sessions", 0),
             "staff_online": getattr(state, "staff_online", 0),
             "data": getattr(state, "presence_data", {}) or {},
+            "freshness": _freshness_val(getattr(state, "presence_freshness", None)),
         },
     }
     if hasattr(state, "timestamp") and state.timestamp:
@@ -96,7 +118,7 @@ async def get_world() -> Dict[str, Any]:
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "world": world,
-        "degraded": False,
+        "degraded": getattr(wm, "is_degraded", False),
     }
 
 
@@ -122,7 +144,7 @@ async def get_world_summary() -> Dict[str, Any]:
     return {
         "summary": s if isinstance(s, str) else str(s),
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "degraded": False,
+        "degraded": getattr(wm, "is_degraded", False),
     }
 
 
@@ -153,7 +175,7 @@ async def get_world_region(
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "summary": summary_text,
         "world": _world_state_to_dict(state) if state else {},
-        "degraded": False,
+        "degraded": getattr(wm, "is_degraded", False),
         "region_requested": lat is not None and lon is not None,
     }
     if lat is not None and lon is not None:
@@ -187,9 +209,6 @@ async def get_world_sources() -> Dict[str, Any]:
             "sources": {},
             "detail": "No world state available.",
         }
-
-    def _freshness_val(f) -> str:
-        return getattr(f, "value", "unavailable") if f else "unavailable"
 
     sources: Dict[str, Any] = {
         "crep": {"freshness": _freshness_val(state.crep_freshness)},

@@ -203,6 +203,21 @@ class WorldState:
         return "; ".join(parts) if parts else "World state: limited data available"
 
 
+class _NullSensor:
+    """Stub sensor used when a real sensor fails to import."""
+
+    status = "unavailable"
+
+    async def connect(self) -> bool:
+        return False
+
+    async def read(self) -> Dict[str, Any]:
+        return {}
+
+    async def disconnect(self) -> None:
+        pass
+
+
 class WorldModel:
     """
     MYCA's unified world perception.
@@ -221,6 +236,19 @@ class WorldModel:
     EARTHLIVE_UPDATE_INTERVAL = 120
     PRESENCE_UPDATE_INTERVAL = 5
 
+    # All sensor keys in canonical order
+    _SENSOR_KEYS = (
+        "crep",
+        "earth2",
+        "natureos",
+        "mindex",
+        "mycobrain",
+        "nlm",
+        "earthlive",
+        "presence",
+        "workspace",
+    )
+
     def __init__(self, consciousness: Optional["MYCAConsciousness"] = None):
         self._consciousness = consciousness
         self._current_state = WorldState()
@@ -229,62 +257,19 @@ class WorldModel:
         self._cache_updated: datetime = datetime.now(timezone.utc)
         self._write_queue = WriteBehindQueue()
 
-        # Legacy/test compatibility: simple sensor registry.
-        self._sensors: Dict[str, Any] = {}
-        try:
-            from mycosoft_mas.consciousness.sensors import (
-                CREPSensor,
-                Earth2Sensor,
-                EarthLIVESensor,
-                MINDEXSensor,
-                MycoBrainSensor,
-                NatureOSSensor,
-                NLMSensor,
-                PresenceSensor,
-            )
+        # Build the unified sensor registry (per-sensor error isolation)
+        self._sensors: Dict[str, Any] = self._build_sensor_registry()
 
-            self._sensors = {
-                "crep": CREPSensor(self),
-                "earth2": Earth2Sensor(self),
-                "natureos": NatureOSSensor(self),
-                "mindex": MINDEXSensor(self),
-                "mycobrain": MycoBrainSensor(self),
-                "nlm": NLMSensor(self),
-                "earthlive": EarthLIVESensor(self),
-                "presence": PresenceSensor(self),
-            }
-        except Exception:
-
-            class _NullSensor:
-                status = "unavailable"
-
-                async def connect(self) -> bool:
-                    return False
-
-                async def read(self) -> Dict[str, Any]:
-                    return {}
-
-            # Ensure legacy tests still see all sensor keys even when imports fail.
-            self._sensors = {
-                "crep": _NullSensor(),
-                "earth2": _NullSensor(),
-                "natureos": _NullSensor(),
-                "mindex": _NullSensor(),
-                "mycobrain": _NullSensor(),
-                "nlm": _NullSensor(),
-                "earthlive": _NullSensor(),
-                "presence": _NullSensor(),
-            }
-
-        # Sensors (lazy-loaded)
-        self._crep_sensor: Optional["CREPSensor"] = None
-        self._earth2_sensor: Optional["Earth2Sensor"] = None
-        self._natureos_sensor: Optional["NatureOSSensor"] = None
-        self._mindex_sensor: Optional["MINDEXSensor"] = None
-        self._mycobrain_sensor: Optional["MycoBrainSensor"] = None
-        self._nlm_sensor: Optional["NLMSensor"] = None
-        self._earthlive_sensor: Optional["EarthLIVESensor"] = None
-        self._presence_sensor: Optional["PresenceSensor"] = None
+        # Named refs populated from the same _sensors dict
+        self._crep_sensor = self._sensors.get("crep")
+        self._earth2_sensor = self._sensors.get("earth2")
+        self._natureos_sensor = self._sensors.get("natureos")
+        self._mindex_sensor = self._sensors.get("mindex")
+        self._mycobrain_sensor = self._sensors.get("mycobrain")
+        self._nlm_sensor = self._sensors.get("nlm")
+        self._earthlive_sensor = self._sensors.get("earthlive")
+        self._presence_sensor = self._sensors.get("presence")
+        self._workspace_sensor = self._sensors.get("workspace")
 
         # Timestamps for throttling
         self._last_crep_update: Optional[datetime] = None
@@ -297,35 +282,83 @@ class WorldModel:
         self._last_presence_update: Optional[datetime] = None
 
         self._lock = asyncio.Lock()
+        self._sensors_initialized = False
+
+    def _build_sensor_registry(self) -> Dict[str, Any]:
+        """Build sensor registry with per-sensor error isolation.
+
+        Each sensor is constructed inside its own try/except so one
+        missing or broken module does not collapse all sensors.
+        """
+        from mycosoft_mas.consciousness.sensors import (
+            CREPSensor,
+            Earth2Sensor,
+            EarthLIVESensor,
+            MINDEXSensor,
+            MycoBrainSensor,
+            NatureOSSensor,
+            NLMSensor,
+            PresenceSensor,
+            WorkspaceSensor,
+        )
+
+        sensor_classes = {
+            "crep": CREPSensor,
+            "earth2": Earth2Sensor,
+            "natureos": NatureOSSensor,
+            "mindex": MINDEXSensor,
+            "mycobrain": MycoBrainSensor,
+            "nlm": NLMSensor,
+            "earthlive": EarthLIVESensor,
+            "presence": PresenceSensor,
+            "workspace": WorkspaceSensor,
+        }
+
+        registry: Dict[str, Any] = {}
+        for name, cls in sensor_classes.items():
+            try:
+                if cls is not None:
+                    registry[name] = cls(self)
+                else:
+                    logger.warning("Sensor class %s is None (import failed), using NullSensor", name)
+                    registry[name] = _NullSensor()
+            except Exception as exc:
+                logger.warning("Failed to construct sensor %s: %s", name, exc)
+                registry[name] = _NullSensor()
+        return registry
 
     async def initialize_sensors(self) -> None:
-        """Initialize all world sensors."""
-        try:
-            from mycosoft_mas.consciousness.sensors import (
-                CREPSensor,
-                Earth2Sensor,
-                EarthLIVESensor,
-                MINDEXSensor,
-                MycoBrainSensor,
-                NatureOSSensor,
-                NLMSensor,
-                PresenceSensor,
-                WorkspaceSensor,
-            )
+        """Initialize all world sensors (idempotent).
 
-            self._crep_sensor = CREPSensor(self)
-            self._earth2_sensor = Earth2Sensor(self)
-            self._natureos_sensor = NatureOSSensor(self)
-            self._mindex_sensor = MINDEXSensor(self)
-            self._mycobrain_sensor = MycoBrainSensor(self)
-            self._nlm_sensor = NLMSensor(self)
-            self._earthlive_sensor = EarthLIVESensor(self)
-            self._presence_sensor = PresenceSensor(self)
-            self._workspace_sensor = WorkspaceSensor(self)
+        Rebuilds the sensor registry and syncs named refs.
+        Safe to call multiple times.
+        """
+        if self._sensors_initialized:
+            return
 
-            logger.info("World sensors initialized")
-        except ImportError as e:
-            logger.warning(f"Could not initialize some sensors: {e}")
+        # Rebuild registry so sensors constructed after __init__ pick up
+        # any newly available modules.
+        self._sensors = self._build_sensor_registry()
+
+        # Sync named refs from the same dict
+        self._crep_sensor = self._sensors.get("crep")
+        self._earth2_sensor = self._sensors.get("earth2")
+        self._natureos_sensor = self._sensors.get("natureos")
+        self._mindex_sensor = self._sensors.get("mindex")
+        self._mycobrain_sensor = self._sensors.get("mycobrain")
+        self._nlm_sensor = self._sensors.get("nlm")
+        self._earthlive_sensor = self._sensors.get("earthlive")
+        self._presence_sensor = self._sensors.get("presence")
+        self._workspace_sensor = self._sensors.get("workspace")
+
+        self._sensors_initialized = True
+        logger.info("World sensors initialized (%d sensors)", len(self._sensors))
+
+    @property
+    def is_degraded(self) -> bool:
+        """True when more than half of sensors are NullSensor stubs."""
+        null_count = sum(1 for s in self._sensors.values() if isinstance(s, _NullSensor))
+        return null_count > len(self._sensors) // 2
 
     async def initialize(self) -> None:
         """Legacy init: connect all sensors."""
@@ -807,8 +840,19 @@ class WorldModel:
         """Start write-behind processor loop."""
         self._write_queue.start()
 
+    async def disconnect_all(self) -> None:
+        """Disconnect all sensors that support it."""
+        for name, sensor in self._sensors.items():
+            disconnect = getattr(sensor, "disconnect", None)
+            if asyncio.iscoroutinefunction(disconnect):
+                try:
+                    await disconnect()
+                except Exception as exc:
+                    logger.debug("Error disconnecting sensor %s: %s", name, exc)
+
     async def shutdown(self) -> None:
-        """Shutdown background write queue."""
+        """Shutdown background write queue and disconnect sensors."""
+        await self.disconnect_all()
         await self._write_queue.stop()
 
     async def get_state(self) -> Dict[str, Any]:

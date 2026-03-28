@@ -12,6 +12,7 @@ Created: February 10, 2026
 """
 
 import logging
+import os
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
@@ -33,9 +34,9 @@ class Earth2Sensor(BaseSensor):
     weather forecasting, climate predictions, and spore dispersal models.
     """
 
-    # API endpoints
-    EARTH2_API_BASE = "http://192.168.0.188:8001/api/earth2"
-    LOCAL_API_BASE = "http://localhost:8220"  # Local GPU service
+    # API endpoints (env-configurable)
+    EARTH2_API_BASE = os.getenv("MYCA_EARTH2_URL", "http://192.168.0.188:8001/api/earth2")
+    LOCAL_API_BASE = os.getenv("MYCA_EARTH2_LOCAL_URL", "http://localhost:8220")
 
     def __init__(self, world_model: Optional["WorldModel"] = None):
         super().__init__(world_model, "earth2")

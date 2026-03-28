@@ -12,6 +12,7 @@ Created: February 10, 2026
 """
 
 import logging
+import os
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
@@ -33,8 +34,8 @@ class NatureOSSensor(BaseSensor):
     device status, and ecosystem health data.
     """
 
-    # API endpoints
-    NATUREOS_API_BASE = "http://192.168.0.188:8001/api/natureos"
+    # API endpoints (env-configurable)
+    NATUREOS_API_BASE = os.getenv("MYCA_NATUREOS_URL", "http://192.168.0.188:8001/api/natureos")
 
     def __init__(self, world_model: Optional["WorldModel"] = None):
         super().__init__(world_model, "natureos")

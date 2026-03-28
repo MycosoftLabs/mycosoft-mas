@@ -15,6 +15,7 @@ Created: February 10, 2026
 """
 
 import logging
+import os
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
@@ -36,9 +37,9 @@ class CREPSensor(BaseSensor):
     global situational awareness data.
     """
 
-    # API endpoints
-    CREP_API_BASE = "http://192.168.0.187:3000/api/crep"
-    FALLBACK_API_BASE = "http://localhost:3010/api/crep"
+    # API endpoints (env-configurable)
+    CREP_API_BASE = os.getenv("MYCA_CREP_URL", "http://192.168.0.187:3000/api/crep")
+    FALLBACK_API_BASE = os.getenv("MYCA_CREP_FALLBACK_URL", "http://localhost:3010/api/crep")
     # Legacy aliases used by tests/older code.
     CREP_API = CREP_API_BASE
     MAS_API = CREP_API_BASE
