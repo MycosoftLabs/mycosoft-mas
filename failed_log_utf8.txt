@@ -1,0 +1,498 @@
+﻿dependency-management (3.11)	UNKNOWN STEP	∩╗┐2026-03-24T02:28:06.2705994Z Current runner version: '2.332.0'
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2733385Z ##[group]Runner Image Provisioner
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2734209Z Hosted Compute Agent
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2734896Z Version: 20260213.493
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2735593Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2736295Z Build Date: 2026-02-13T00:28:41Z
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2737026Z Worker ID: {a72146d2-34f3-4394-8aff-6b7c49815672}
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2737694Z Azure Region: eastus
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2738274Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2740459Z ##[group]Operating System
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2741264Z Ubuntu
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2741724Z 24.04.3
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2742177Z LTS
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2742688Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2743206Z ##[group]Runner Image
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2743774Z Image: ubuntu-24.04
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2744325Z Version: 20260309.50.1
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2746447Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260309.50/images/ubuntu/Ubuntu2404-Readme.md
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2749200Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260309.50
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2751041Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2755826Z ##[group]GITHUB_TOKEN Permissions
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2758821Z Actions: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2759399Z ArtifactMetadata: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2760596Z Attestations: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2761450Z Checks: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2762296Z Contents: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2763010Z Deployments: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2763567Z Discussions: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2764080Z Issues: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2764640Z Metadata: read
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2765124Z Models: read
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2765657Z Packages: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2766205Z Pages: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2766816Z PullRequests: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2767378Z RepositoryProjects: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2767919Z SecurityEvents: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2768551Z Statuses: write
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2769306Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2772138Z Secret source: Actions
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.2773567Z Prepare workflow directory
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.3131888Z Prepare all required actions
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.3170844Z Getting action download info
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.6282424Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.7652967Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:06.8541733Z Download action repository 'github/codeql-action@v3' (SHA:ebcb5b36ded6beda4ceefea6a8bc4cc885255bb3)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.6503925Z Complete job name: dependency-management (3.11)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7350437Z ##[group]Run actions/checkout@v4
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7351841Z with:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7352607Z   repository: MycosoftLabs/mycosoft-mas
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7353959Z   token: ***
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7354656Z   ssh-strict: true
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7355374Z   ssh-user: git
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7356118Z   persist-credentials: true
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7356999Z   clean: true
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7357731Z   sparse-checkout-cone-mode: true
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7358640Z   fetch-depth: 1
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7359356Z   fetch-tags: false
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7360423Z   show-progress: true
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7361294Z   lfs: false
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7362000Z   submodules: false
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7362758Z   set-safe-directory: true
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.7363892Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8524152Z Syncing repository: MycosoftLabs/mycosoft-mas
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8527049Z ##[group]Getting Git version info
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8528518Z Working directory is '/home/runner/work/mycosoft-mas/mycosoft-mas'
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8530585Z [command]/usr/bin/git version
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8601186Z git version 2.53.0
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8628635Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8645069Z Temporarily overriding HOME='/home/runner/work/_temp/34120adf-8fec-4c9e-bc0d-8a017e53511e' before making global git config changes
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8648461Z Adding repository directory to the temporary git global config as a safe directory
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8658577Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8706922Z Deleting the contents of '/home/runner/work/mycosoft-mas/mycosoft-mas'
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8711032Z ##[group]Initializing the repository
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8715700Z [command]/usr/bin/git init /home/runner/work/mycosoft-mas/mycosoft-mas
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8836843Z hint: Using 'master' as the name for the initial branch. This default branch name
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8839776Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8841889Z hint: to use in all of your new repositories, which will suppress this warning,
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8843289Z hint: call:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8843953Z hint:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8845352Z hint: 	git config --global init.defaultBranch <name>
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8846653Z hint:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8847677Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8849683Z hint: 'development'. The just-created branch can be renamed via this command:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8851500Z hint:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8852598Z hint: 	git branch -m <name>
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8853897Z hint:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8855614Z hint: Disable this message with "git config set advice.defaultBranchName false"
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8857725Z Initialized empty Git repository in /home/runner/work/mycosoft-mas/mycosoft-mas/.git/
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8861451Z [command]/usr/bin/git remote add origin https://github.com/MycosoftLabs/mycosoft-mas
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8895081Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8896394Z ##[group]Disabling automatic garbage collection
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8899155Z [command]/usr/bin/git config --local gc.auto 0
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8933559Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8935627Z ##[group]Setting up auth
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8942218Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.8979031Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.9354622Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.9391151Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.9636423Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.9671096Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.9929531Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.9968676Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.9971150Z ##[group]Fetching the repository
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:07.9980260Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +7f9c3bbae3d3a1e9c6bbf6653a715ebe763b8586:refs/remotes/origin/main
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:15.7841625Z From https://github.com/MycosoftLabs/mycosoft-mas
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:15.7844148Z  * [new ref]         7f9c3bbae3d3a1e9c6bbf6653a715ebe763b8586 -> origin/main
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:15.7875182Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:15.7875936Z ##[group]Determining the checkout info
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:15.7877544Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:15.7883718Z [command]/usr/bin/git sparse-checkout disable
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:15.7928484Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:15.7955980Z ##[group]Checking out the ref
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:15.7960789Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:16.8605622Z Updating files:  14% (1038/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0497524Z Updating files:  15% (1039/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0543746Z Updating files:  16% (1108/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0610316Z Updating files:  17% (1177/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0651757Z Updating files:  18% (1247/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0693827Z Updating files:  19% (1316/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0734758Z Updating files:  20% (1385/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0781134Z Updating files:  21% (1454/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0827099Z Updating files:  22% (1524/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0880628Z Updating files:  23% (1593/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0932144Z Updating files:  24% (1662/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.0982450Z Updating files:  25% (1731/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1092527Z Updating files:  26% (1800/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1152623Z Updating files:  27% (1870/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1208844Z Updating files:  28% (1939/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1259236Z Updating files:  29% (2008/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1319923Z Updating files:  30% (2077/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1368833Z Updating files:  31% (2147/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1428148Z Updating files:  32% (2216/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1481882Z Updating files:  33% (2285/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1539336Z Updating files:  34% (2354/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1616496Z Updating files:  35% (2424/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1677299Z Updating files:  36% (2493/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1725195Z Updating files:  37% (2562/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1773718Z Updating files:  38% (2631/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1819599Z Updating files:  39% (2700/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1854540Z Updating files:  40% (2770/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1952194Z Updating files:  41% (2839/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.1989484Z Updating files:  42% (2908/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2023733Z Updating files:  43% (2977/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2066090Z Updating files:  44% (3047/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2104480Z Updating files:  45% (3116/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2133926Z Updating files:  46% (3185/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2182758Z Updating files:  47% (3254/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2217217Z Updating files:  48% (3324/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2253509Z Updating files:  49% (3393/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2295393Z Updating files:  50% (3462/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2363319Z Updating files:  51% (3531/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2422053Z Updating files:  52% (3600/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2460205Z Updating files:  53% (3670/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2489491Z Updating files:  54% (3739/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2529719Z Updating files:  55% (3808/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2558422Z Updating files:  56% (3877/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2588942Z Updating files:  57% (3947/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2633690Z Updating files:  58% (4016/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2674651Z Updating files:  59% (4085/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2710538Z Updating files:  60% (4154/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2768115Z Updating files:  61% (4224/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2814703Z Updating files:  62% (4293/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2865153Z Updating files:  63% (4362/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2930895Z Updating files:  64% (4431/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.2997463Z Updating files:  65% (4500/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3048652Z Updating files:  66% (4570/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3101191Z Updating files:  67% (4639/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3145491Z Updating files:  68% (4708/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3188186Z Updating files:  69% (4777/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3231039Z Updating files:  70% (4847/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3279455Z Updating files:  71% (4916/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3344866Z Updating files:  72% (4985/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3396580Z Updating files:  73% (5054/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3447540Z Updating files:  74% (5124/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3495463Z Updating files:  75% (5193/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3533736Z Updating files:  76% (5262/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3578312Z Updating files:  77% (5331/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3625419Z Updating files:  78% (5400/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3682949Z Updating files:  79% (5470/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3724231Z Updating files:  80% (5539/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3792088Z Updating files:  81% (5608/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3832901Z Updating files:  82% (5677/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3872838Z Updating files:  83% (5747/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3912541Z Updating files:  84% (5816/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.3959059Z Updating files:  85% (5885/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4003539Z Updating files:  86% (5954/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4053731Z Updating files:  87% (6024/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4101856Z Updating files:  88% (6093/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4143821Z Updating files:  89% (6162/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4189783Z Updating files:  90% (6231/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4237108Z Updating files:  91% (6300/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4280560Z Updating files:  92% (6370/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4336623Z Updating files:  93% (6439/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4426158Z Updating files:  94% (6508/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4494556Z Updating files:  95% (6577/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4563804Z Updating files:  96% (6647/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4631000Z Updating files:  97% (6716/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4680580Z Updating files:  98% (6785/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4722482Z Updating files:  99% (6854/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4722896Z Updating files: 100% (6923/6923)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4723281Z Updating files: 100% (6923/6923), done.
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4849951Z Switched to a new branch 'main'
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4852722Z branch 'main' set up to track 'origin/main'.
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.4992415Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5038358Z [command]/usr/bin/git log -1 --format=%H
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5062416Z 7f9c3bbae3d3a1e9c6bbf6653a715ebe763b8586
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5294470Z ##[group]Run actions/setup-python@v5
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5294733Z with:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5294917Z   python-version: 3.11
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5295110Z   check-latest: false
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5295425Z   token: ***
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5295606Z   update-environment: true
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5295820Z   allow-prereleases: false
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5296027Z   freethreaded: false
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.5296215Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7080703Z ##[group]Installed versions
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7180635Z Successfully set up CPython (3.11.15)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7181448Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7295804Z ##[group]Run python -m pip install --upgrade pip
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7296253Z [36;1mpython -m pip install --upgrade pip[0m
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7296627Z [36;1mpip install pip-tools poetry tox pip-audit pipdeptree[0m
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7358984Z shell: /usr/bin/bash -e {0}
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7359216Z env:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7359467Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7359889Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7360596Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7360956Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7361301Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7361684Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:17.7361974Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:18.4438072Z Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages (26.0.1)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.0885957Z Collecting pip-tools
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.1542702Z   Downloading pip_tools-7.5.3-py3-none-any.whl.metadata (27 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.1990673Z Collecting poetry
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.2036813Z   Downloading poetry-2.3.2-py3-none-any.whl.metadata (7.2 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.2592225Z Collecting tox
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.2634466Z   Downloading tox-4.50.3-py3-none-any.whl.metadata (3.6 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.2817750Z Collecting pip-audit
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.2860578Z   Downloading pip_audit-2.10.0-py3-none-any.whl.metadata (28 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3091454Z Collecting pipdeptree
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3141016Z   Downloading pipdeptree-2.34.0-py3-none-any.whl.metadata (3.9 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3281999Z Collecting build>=1.0.0 (from pip-tools)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3325409Z   Downloading build-1.4.0-py3-none-any.whl.metadata (5.8 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3496864Z Collecting click>=8 (from pip-tools)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3536408Z   Downloading click-8.3.1-py3-none-any.whl.metadata (2.6 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3575074Z Requirement already satisfied: pip>=22.2 in /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages (from pip-tools) (26.0.1)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3648049Z Collecting pyproject_hooks (from pip-tools)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3685030Z   Downloading pyproject_hooks-1.2.0-py3-none-any.whl.metadata (1.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3719374Z Requirement already satisfied: setuptools in /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages (from pip-tools) (79.0.1)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3875669Z Collecting wheel (from pip-tools)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.3913817Z   Downloading wheel-0.46.3-py3-none-any.whl.metadata (2.4 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.4058081Z Collecting cachecontrol<0.15.0,>=0.14.0 (from cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.4096816Z   Downloading cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.4246411Z Collecting cleo<3.0.0,>=2.1.0 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.4286137Z   Downloading cleo-2.1.0-py3-none-any.whl.metadata (12 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.5538633Z Collecting dulwich<2,>=0.25.0 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.5578317Z   Downloading dulwich-1.1.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (5.9 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.5740667Z Collecting fastjsonschema<3.0.0,>=2.18.0 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.5778814Z   Downloading fastjsonschema-2.21.2-py3-none-any.whl.metadata (2.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.5906228Z Collecting findpython<0.8.0,>=0.6.2 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.5944300Z   Downloading findpython-0.7.1-py3-none-any.whl.metadata (5.4 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6062291Z Collecting installer<0.8.0,>=0.7.0 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6100890Z   Downloading installer-0.7.0-py3-none-any.whl.metadata (936 bytes)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6339300Z Collecting keyring<26.0.0,>=25.1.0 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6382389Z   Downloading keyring-25.7.0-py3-none-any.whl.metadata (21 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6550435Z Collecting packaging>=24.2 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6593397Z   Downloading packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6774195Z Collecting pbs-installer>=2025.6.10 (from pbs-installer[download,install]>=2025.6.10->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6814109Z   Downloading pbs_installer-2026.3.20-py3-none-any.whl.metadata (991 bytes)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6952482Z Collecting pkginfo<2.0,>=1.12 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.6989962Z   Downloading pkginfo-1.12.1.2-py3-none-any.whl.metadata (13 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.7174774Z Collecting platformdirs<5,>=3.0.0 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.7216318Z   Downloading platformdirs-4.9.4-py3-none-any.whl.metadata (4.7 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.7374695Z Collecting poetry-core==2.3.1 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.7415476Z   Downloading poetry_core-2.3.1-py3-none-any.whl.metadata (3.8 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.7622070Z Collecting requests<3.0,>=2.26 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.7661627Z   Downloading requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.7793190Z Collecting requests-toolbelt<2.0.0,>=1.0.0 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.7841021Z   Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl.metadata (14 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.7983168Z Collecting shellingham<2.0,>=1.5 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.8019895Z   Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.8177935Z Collecting tomlkit<1.0.0,>=0.11.4 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.8217652Z   Downloading tomlkit-0.14.0-py3-none-any.whl.metadata (2.8 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.8484457Z Collecting trove-classifiers>=2022.5.19 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.8525123Z   Downloading trove_classifiers-2026.1.14.14-py3-none-any.whl.metadata (2.4 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.8850279Z Collecting virtualenv>=20.26.6 (from poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.8895525Z   Downloading virtualenv-21.2.0-py3-none-any.whl.metadata (3.5 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.9565989Z Collecting msgpack<2.0.0,>=0.5.2 (from cachecontrol<0.15.0,>=0.14.0->cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.9610439Z   Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.9818590Z Collecting filelock>=3.8.0 (from cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.9857159Z   Downloading filelock-3.25.2-py3-none-any.whl.metadata (2.0 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:19.9962082Z Collecting crashtest<0.5.0,>=0.4.1 (from cleo<3.0.0,>=2.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.0005850Z   Downloading crashtest-0.4.1-py3-none-any.whl.metadata (1.1 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5049169Z Collecting rapidfuzz<4.0.0,>=3.0.0 (from cleo<3.0.0,>=2.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5092455Z   Downloading rapidfuzz-3.14.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (12 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5301423Z Collecting urllib3>=2.2.2 (from dulwich<2,>=0.25.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5347484Z   Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5514108Z Collecting typing_extensions>=4.6.0 (from dulwich<2,>=0.25.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5554230Z   Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5714447Z Collecting SecretStorage>=3.2 (from keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5752920Z   Downloading secretstorage-3.5.0-py3-none-any.whl.metadata (4.0 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5864171Z Collecting jeepney>=0.4.2 (from keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.5902308Z   Downloading jeepney-0.9.0-py3-none-any.whl.metadata (1.2 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.6135632Z Collecting importlib_metadata>=4.11.4 (from keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.6179312Z   Downloading importlib_metadata-9.0.0-py3-none-any.whl.metadata (4.5 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.6395878Z Collecting jaraco.classes (from keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.6448506Z   Downloading jaraco.classes-3.4.0-py3-none-any.whl.metadata (2.6 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.6614247Z Collecting jaraco.functools (from keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.6654792Z   Downloading jaraco_functools-4.4.0-py3-none-any.whl.metadata (3.0 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.6786934Z Collecting jaraco.context (from keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.6824624Z   Downloading jaraco_context-6.1.2-py3-none-any.whl.metadata (4.2 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.7675021Z Collecting charset_normalizer<4,>=2 (from requests<3.0,>=2.26->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.7728902Z   Downloading charset_normalizer-3.4.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.7890595Z Collecting idna<4,>=2.5 (from requests<3.0,>=2.26->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.7937325Z   Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8142988Z Collecting certifi>=2017.4.17 (from requests<3.0,>=2.26->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8187756Z   Downloading certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8399926Z Collecting cachetools>=7.0.3 (from tox)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8441993Z   Downloading cachetools-7.0.5-py3-none-any.whl.metadata (5.6 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8574677Z Collecting colorama>=0.4.6 (from tox)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8614014Z   Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8769798Z Collecting pluggy>=1.6 (from tox)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8829986Z   Downloading pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8949166Z Collecting pyproject-api>=1.10 (from tox)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.8993574Z   Downloading pyproject_api-1.10.0-py3-none-any.whl.metadata (2.7 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.9103008Z Collecting tomli-w>=1.2 (from tox)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.9151400Z   Downloading tomli_w-1.2.0-py3-none-any.whl.metadata (5.7 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.9445482Z Collecting cyclonedx-python-lib<12,>=5 (from pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.9485362Z   Downloading cyclonedx_python_lib-11.7.0-py3-none-any.whl.metadata (6.8 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.9625716Z Collecting pip-api>=0.0.28 (from pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.9665295Z   Downloading pip_api-0.0.34-py3-none-any.whl.metadata (6.6 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.9811085Z Collecting pip-requirements-parser>=32.0.0 (from pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:20.9850940Z   Downloading pip_requirements_parser-32.0.1-py3-none-any.whl.metadata (9.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.0200954Z Collecting rich>=12.4 (from pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.0245655Z   Downloading rich-14.3.3-py3-none-any.whl.metadata (18 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.0442379Z Collecting tomli>=2.2.1 (from pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.0481889Z   Downloading tomli-2.4.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (10 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.0650818Z Collecting license-expression<31,>=30 (from cyclonedx-python-lib<12,>=5->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.0690808Z   Downloading license_expression-30.4.4-py3-none-any.whl.metadata (11 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.0862528Z Collecting packageurl-python<2,>=0.11 (from cyclonedx-python-lib<12,>=5->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.0904406Z   Downloading packageurl_python-0.17.6-py3-none-any.whl.metadata (5.1 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1071108Z Collecting py-serializable<3.0.0,>=2.1.0 (from cyclonedx-python-lib<12,>=5->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1116051Z   Downloading py_serializable-2.1.0-py3-none-any.whl.metadata (4.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1242396Z Collecting sortedcontainers<3.0.0,>=2.4.0 (from cyclonedx-python-lib<12,>=5->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1285331Z   Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1438153Z Collecting boolean.py>=4.0 (from license-expression<31,>=30->cyclonedx-python-lib<12,>=5->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1476012Z   Downloading boolean_py-5.0-py3-none-any.whl.metadata (2.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1624809Z Collecting defusedxml<0.8.0,>=0.7.1 (from py-serializable<3.0.0,>=2.1.0->cyclonedx-python-lib<12,>=5->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1668683Z   Downloading defusedxml-0.7.1-py2.py3-none-any.whl.metadata (32 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1921484Z Collecting zipp>=3.20 (from importlib_metadata>=4.11.4->keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.1960217Z   Downloading zipp-3.23.0-py3-none-any.whl.metadata (3.6 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.2153175Z Collecting httpx<1,>=0.27.0 (from pbs-installer[download,install]>=2025.6.10->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.2192395Z   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.2863658Z Collecting zstandard>=0.21.0 (from pbs-installer[download,install]>=2025.6.10->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.2907505Z   Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.3101081Z Collecting anyio (from httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.3139302Z   Downloading anyio-4.12.1-py3-none-any.whl.metadata (4.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.3313476Z Collecting httpcore==1.* (from httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.3353670Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.3492766Z Collecting h11>=0.16 (from httpcore==1.*->httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.3529711Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.3799695Z Collecting pyparsing (from pip-requirements-parser>=32.0.0->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.3839347Z   Downloading pyparsing-3.3.2-py3-none-any.whl.metadata (5.8 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.4011998Z Collecting markdown-it-py>=2.2.0 (from rich>=12.4->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.4052100Z   Downloading markdown_it_py-4.0.0-py3-none-any.whl.metadata (7.3 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.4774596Z Collecting pygments<3.0.0,>=2.13.0 (from rich>=12.4->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.4814526Z   Downloading pygments-2.19.2-py3-none-any.whl.metadata (2.5 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.4945966Z Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=12.4->pip-audit)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.4984241Z   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.6770353Z Collecting cryptography>=2.0 (from SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.6821579Z   Downloading cryptography-46.0.5-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.7867361Z Collecting cffi>=2.0.0 (from cryptography>=2.0->SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.7910825Z   Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8042171Z Collecting pycparser (from cffi>=2.0.0->cryptography>=2.0->SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8082506Z   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8232349Z Collecting distlib<1,>=0.3.7 (from virtualenv>=20.26.6->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8272715Z   Downloading distlib-0.4.0-py2.py3-none-any.whl.metadata (5.2 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8409407Z Collecting python-discovery>=1 (from virtualenv>=20.26.6->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8446823Z   Downloading python_discovery-1.2.0-py3-none-any.whl.metadata (5.4 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8706506Z Collecting more-itertools (from jaraco.classes->keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8745937Z   Downloading more_itertools-10.8.0-py3-none-any.whl.metadata (39 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8883643Z Collecting backports.tarfile (from jaraco.context->keyring<26.0.0,>=25.1.0->poetry)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.8920819Z   Downloading backports.tarfile-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.9092281Z Downloading pip_tools-7.5.3-py3-none-any.whl (71 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.9165547Z Downloading poetry-2.3.2-py3-none-any.whl (287 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.9262232Z Downloading poetry_core-2.3.1-py3-none-any.whl (340 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.9338459Z Downloading build-1.4.0-py3-none-any.whl (24 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.9396557Z Downloading cachecontrol-0.14.4-py3-none-any.whl (22 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:21.9467305Z Downloading cleo-2.1.0-py3-none-any.whl (78 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0147682Z Downloading crashtest-0.4.1-py3-none-any.whl (7.6 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0210588Z Downloading dulwich-1.1.0-cp311-cp311-manylinux_2_28_x86_64.whl (1.4 MB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0357345Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 1.4/1.4 MB 113.8 MB/s  0:00:00
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0397955Z Downloading fastjsonschema-2.21.2-py3-none-any.whl (24 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0456904Z Downloading findpython-0.7.1-py3-none-any.whl (21 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0513411Z Downloading installer-0.7.0-py3-none-any.whl (453 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0604983Z Downloading keyring-25.7.0-py3-none-any.whl (39 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0666056Z Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (426 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0743659Z Downloading pkginfo-1.12.1.2-py3-none-any.whl (32 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0815511Z Downloading platformdirs-4.9.4-py3-none-any.whl (21 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0878652Z Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.0951427Z Downloading rapidfuzz-3.14.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (3.2 MB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1128483Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 3.2/3.2 MB 197.5 MB/s  0:00:00
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1168313Z Downloading requests-2.32.5-py3-none-any.whl (64 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1231469Z Downloading charset_normalizer-3.4.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (204 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1296054Z Downloading idna-3.11-py3-none-any.whl (71 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1355025Z Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl (54 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1415874Z Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1479341Z Downloading tomlkit-0.14.0-py3-none-any.whl (39 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1542239Z Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1624027Z Downloading tox-4.50.3-py3-none-any.whl (207 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1719703Z Downloading pip_audit-2.10.0-py3-none-any.whl (61 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1781425Z Downloading cyclonedx_python_lib-11.7.0-py3-none-any.whl (513 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1869845Z Downloading license_expression-30.4.4-py3-none-any.whl (120 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1931272Z Downloading packageurl_python-0.17.6-py3-none-any.whl (36 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.1989000Z Downloading py_serializable-2.1.0-py3-none-any.whl (23 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2047215Z Downloading defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2109591Z Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2168975Z Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2244756Z Downloading pipdeptree-2.34.0-py3-none-any.whl (44 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2314705Z Downloading boolean_py-5.0-py3-none-any.whl (26 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2372217Z Downloading cachetools-7.0.5-py3-none-any.whl (13 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2436210Z Downloading certifi-2026.2.25-py3-none-any.whl (153 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2507644Z Downloading click-8.3.1-py3-none-any.whl (108 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2576964Z Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2638444Z Downloading filelock-3.25.2-py3-none-any.whl (26 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2697921Z Downloading importlib_metadata-9.0.0-py3-none-any.whl (27 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2759716Z Downloading jeepney-0.9.0-py3-none-any.whl (49 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2834683Z Downloading packaging-26.0-py3-none-any.whl (74 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2902987Z Downloading pbs_installer-2026.3.20-py3-none-any.whl (72 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.2970238Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3034043Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3094488Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3159895Z Downloading pip_api-0.0.34-py3-none-any.whl (120 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3226057Z Downloading pip_requirements_parser-32.0.1-py3-none-any.whl (35 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3286523Z Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3350735Z Downloading pyproject_api-1.10.0-py3-none-any.whl (13 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3408789Z Downloading rich-14.3.3-py3-none-any.whl (310 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3482525Z Downloading pygments-2.19.2-py3-none-any.whl (1.2 MB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3573137Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 1.2/1.2 MB 160.3 MB/s  0:00:00
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3612867Z Downloading markdown_it_py-4.0.0-py3-none-any.whl (87 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3675124Z Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3734588Z Downloading secretstorage-3.5.0-py3-none-any.whl (15 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.3792656Z Downloading cryptography-46.0.5-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4025299Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 4.5/4.5 MB 206.0 MB/s  0:00:00
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4067895Z Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4134826Z Downloading tomli-2.4.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (243 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4211569Z Downloading tomli_w-1.2.0-py3-none-any.whl (6.7 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4271004Z Downloading trove_classifiers-2026.1.14.14-py3-none-any.whl (14 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4335392Z Downloading virtualenv-21.2.0-py3-none-any.whl (5.8 MB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4592992Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 5.8/5.8 MB 241.7 MB/s  0:00:00
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4658830Z Downloading distlib-0.4.0-py2.py3-none-any.whl (469 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4792826Z Downloading python_discovery-1.2.0-py3-none-any.whl (31 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4854023Z Downloading zipp-3.23.0-py3-none-any.whl (10 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.4910621Z Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.6 MB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5160612Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 5.6/5.6 MB 235.3 MB/s  0:00:00
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5202487Z Downloading anyio-4.12.1-py3-none-any.whl (113 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5268219Z Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5332427Z Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5395737Z Downloading backports.tarfile-1.2.0-py3-none-any.whl (30 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5457585Z Downloading jaraco_functools-4.4.0-py3-none-any.whl (10 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5513167Z Downloading more_itertools-10.8.0-py3-none-any.whl (69 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5574856Z Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5640348Z Downloading pyparsing-3.3.2-py3-none-any.whl (122 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.5703659Z Downloading wheel-0.46.3-py3-none-any.whl (30 kB)
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:22.7278165Z Installing collected packages: trove-classifiers, sortedcontainers, fastjsonschema, distlib, boolean.py, zstandard, zipp, urllib3, typing_extensions, tomlkit, tomli-w, tomli, shellingham, rapidfuzz, pyproject_hooks, pyparsing, pygments, pycparser, poetry-core, pluggy, platformdirs, pkginfo, pip-api, pbs-installer, packaging, packageurl-python, msgpack, more-itertools, mdurl, license-expression, jeepney, installer, idna, h11, filelock, defusedxml, crashtest, colorama, click, charset_normalizer, certifi, cachetools, backports.tarfile, wheel, requests, python-discovery, pyproject-api, py-serializable, pipdeptree, pip-requirements-parser, markdown-it-py, jaraco.functools, jaraco.context, jaraco.classes, importlib_metadata, httpcore, findpython, dulwich, cleo, cffi, build, anyio, virtualenv, rich, requests-toolbelt, pip-tools, httpx, cyclonedx-python-lib, cryptography, cachecontrol, tox, SecretStorage, pip-audit, keyring, poetry
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:26.9817149Z 
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:26.9853346Z Successfully installed SecretStorage-3.5.0 anyio-4.12.1 backports.tarfile-1.2.0 boolean.py-5.0 build-1.4.0 cachecontrol-0.14.4 cachetools-7.0.5 certifi-2026.2.25 cffi-2.0.0 charset_normalizer-3.4.6 cleo-2.1.0 click-8.3.1 colorama-0.4.6 crashtest-0.4.1 cryptography-46.0.5 cyclonedx-python-lib-11.7.0 defusedxml-0.7.1 distlib-0.4.0 dulwich-1.1.0 fastjsonschema-2.21.2 filelock-3.25.2 findpython-0.7.1 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.11 importlib_metadata-9.0.0 installer-0.7.0 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.4.0 jeepney-0.9.0 keyring-25.7.0 license-expression-30.4.4 markdown-it-py-4.0.0 mdurl-0.1.2 more-itertools-10.8.0 msgpack-1.1.2 packageurl-python-0.17.6 packaging-26.0 pbs-installer-2026.3.20 pip-api-0.0.34 pip-audit-2.10.0 pip-requirements-parser-32.0.1 pip-tools-7.5.3 pipdeptree-2.34.0 pkginfo-1.12.1.2 platformdirs-4.9.4 pluggy-1.6.0 poetry-2.3.2 poetry-core-2.3.1 py-serializable-2.1.0 pycparser-3.0 pygments-2.19.2 pyparsing-3.3.2 pyproject-api-1.10.0 pyproject_hooks-1.2.0 python-discovery-1.2.0 rapidfuzz-3.14.3 requests-2.32.5 requests-toolbelt-1.0.0 rich-14.3.3 shellingham-1.5.4 sortedcontainers-2.4.0 tomli-2.4.0 tomli-w-1.2.0 tomlkit-0.14.0 tox-4.50.3 trove-classifiers-2026.1.14.14 typing_extensions-4.15.0 urllib3-2.6.3 virtualenv-21.2.0 wheel-0.46.3 zipp-3.23.0 zstandard-0.25.0
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2502259Z ##[group]Run poetry export --without-hashes --format=requirements.txt > requirements.txt
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2502884Z [36;1mpoetry export --without-hashes --format=requirements.txt > requirements.txt[0m
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2552278Z shell: /usr/bin/bash -e {0}
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2552497Z env:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2552730Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2553133Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2553521Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2553871Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2554206Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2554546Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.2554835Z ##[endgroup]
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.8057117Z The requested command export does not exist.
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.8057512Z 
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.8057848Z Documentation: https://python-poetry.org/docs/cli/
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.8617867Z ##[error]Process completed with exit code 1.
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.8743614Z Post job cleanup.
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.9711991Z [command]/usr/bin/git version
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.9750733Z git version 2.53.0
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.9797109Z Temporarily overriding HOME='/home/runner/work/_temp/bb21ffc7-863c-48aa-8f4a-b8f84216e007' before making global git config changes
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.9798483Z Adding repository directory to the temporary git global config as a safe directory
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.9804312Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.9845265Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:27.9881288Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:28.0142147Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:28.0165968Z http.https://github.com/.extraheader
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:28.0179457Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:28.0213306Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:28.0477164Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:28.0512070Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:28.0883325Z Cleaning up orphan processes
+dependency-management (3.11)	UNKNOWN STEP	2026-03-24T02:28:28.1198384Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-python@v5. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
