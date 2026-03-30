@@ -1,0 +1,1836 @@
+﻿test-build	UNKNOWN STEP	∩╗┐2026-03-30T18:24:39.0166733Z Current runner version: '2.333.0'
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0200466Z ##[group]Runner Image Provisioner
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0201860Z Hosted Compute Agent
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0203045Z Version: 20260213.493
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0204011Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0205215Z Build Date: 2026-02-13T00:28:41Z
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0206339Z Worker ID: {3d6fc3a9-008d-45ff-b79b-b137d670df8c}
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0207458Z Azure Region: eastus2
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0208483Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0210651Z ##[group]Operating System
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0211594Z Ubuntu
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0212709Z 24.04.4
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0213583Z LTS
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0214385Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0215403Z ##[group]Runner Image
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0216441Z Image: ubuntu-24.04
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0217297Z Version: 20260323.65.1
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0219301Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260323.65/images/ubuntu/Ubuntu2404-Readme.md
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0221786Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260323.65
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0223687Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0228190Z ##[group]GITHUB_TOKEN Permissions
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0231245Z Actions: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0232499Z ArtifactMetadata: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0233463Z Attestations: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0234286Z Checks: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0234974Z Contents: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0235853Z Deployments: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0236667Z Discussions: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0237490Z Issues: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0238651Z Metadata: read
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0239626Z Models: read
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0240335Z Packages: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0241076Z Pages: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0242416Z PullRequests: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0243322Z RepositoryProjects: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0244279Z SecurityEvents: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0245099Z Statuses: write
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0245929Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0249159Z Secret source: Actions
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0250431Z Prepare workflow directory
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0854066Z Prepare all required actions
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.0910709Z Getting action download info
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.4289030Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.5806090Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+test-build	UNKNOWN STEP	2026-03-30T18:24:39.7300638Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.0184120Z Complete job name: test-build
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.0691862Z ##[group]Checking docker version
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.0705240Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1083853Z '1.48'
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1098822Z Docker daemon API version: '1.48'
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1099661Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1253006Z '1.48'
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1263337Z Docker client API version: '1.48'
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1268779Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1271673Z ##[group]Clean up resources from previous jobs
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1277996Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=873f91"
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1412643Z ##[command]/usr/bin/docker network prune --force --filter "label=873f91"
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1530859Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1531395Z ##[group]Create local container network
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.1541368Z ##[command]/usr/bin/docker network create --label 873f91 github_network_0935cd90b6d54ad1b64329f2c56bb98a
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.2080059Z 51f7cb496a57c6aee0abfeea5d04e89ef1138f08fb9ad55b8a2a7a7723dff635
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.2099022Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.2123901Z ##[group]Starting postgres service container
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.2144929Z ##[command]/usr/bin/docker pull postgres:15-alpine
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.5360808Z 15-alpine: Pulling from library/postgres
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6237747Z 589002ba0eae: Already exists
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6274069Z aa104f8e5799: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6276481Z ac1ff2379be8: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6277959Z 8c9e2aa22b4c: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6279328Z 765f80b9a483: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6280559Z a27cb555d458: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6281915Z 610258b635a8: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6283360Z 2a9c4fd442cb: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6284522Z 9f6d6f38d9d3: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6285685Z b53228f7876a: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6286902Z 34c88efd36aa: Pulling fs layer
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6288095Z a27cb555d458: Waiting
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6289017Z 9f6d6f38d9d3: Waiting
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6289859Z b53228f7876a: Waiting
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6290871Z 610258b635a8: Waiting
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6291925Z 2a9c4fd442cb: Waiting
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6293125Z 34c88efd36aa: Waiting
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.6294124Z 765f80b9a483: Waiting
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.7118327Z 8c9e2aa22b4c: Verifying Checksum
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.7120109Z 8c9e2aa22b4c: Download complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.7555507Z ac1ff2379be8: Verifying Checksum
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.7557678Z ac1ff2379be8: Download complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.7608716Z aa104f8e5799: Download complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.8207876Z aa104f8e5799: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.8241770Z 765f80b9a483: Verifying Checksum
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.8243928Z 765f80b9a483: Download complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.8555796Z 610258b635a8: Download complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.8775948Z ac1ff2379be8: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.8947050Z 8c9e2aa22b4c: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.9078054Z 765f80b9a483: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.9255373Z 2a9c4fd442cb: Verifying Checksum
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.9257489Z 2a9c4fd442cb: Download complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.9810338Z 9f6d6f38d9d3: Verifying Checksum
+test-build	UNKNOWN STEP	2026-03-30T18:24:40.9814285Z 9f6d6f38d9d3: Download complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:41.0763690Z 34c88efd36aa: Verifying Checksum
+test-build	UNKNOWN STEP	2026-03-30T18:24:41.0765851Z 34c88efd36aa: Download complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:41.1236557Z b53228f7876a: Verifying Checksum
+test-build	UNKNOWN STEP	2026-03-30T18:24:41.9047643Z a27cb555d458: Verifying Checksum
+test-build	UNKNOWN STEP	2026-03-30T18:24:41.9048380Z a27cb555d458: Download complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.2347158Z a27cb555d458: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.2511374Z 610258b635a8: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.2652920Z 2a9c4fd442cb: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.2790569Z 9f6d6f38d9d3: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.2918397Z b53228f7876a: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.3069365Z 34c88efd36aa: Pull complete
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.3119530Z Digest: sha256:fceb6f86328c36f2438fae3b851b0cc57c4a7e69a58c866d9ce24281f2cf0c9c
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.3144047Z Status: Downloaded newer image for postgres:15-alpine
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.3154122Z docker.io/library/postgres:15-alpine
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.3213906Z ##[command]/usr/bin/docker create --name b969b0bd141e48c0a1b8edb3a8afee8e_postgres15alpine_5edfe2 --label 873f91 --network github_network_0935cd90b6d54ad1b64329f2c56bb98a --network-alias postgres -p 5432:5432 --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5 -e "POSTGRES_PASSWORD=example" -e GITHUB_ACTIONS=true -e CI=true postgres:15-alpine
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.3480140Z 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.3501791Z ##[command]/usr/bin/docker start 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6348624Z 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6373561Z ##[command]/usr/bin/docker ps --all --filter id=4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6495714Z 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8 Up Less than a second (health: starting)
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6515745Z ##[command]/usr/bin/docker port 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6638531Z 5432/tcp -> 0.0.0.0:5432
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6639528Z 5432/tcp -> [::]:5432
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6687382Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6696149Z ##[group]Waiting for all services to be ready
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6709492Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6829841Z starting
+test-build	UNKNOWN STEP	2026-03-30T18:24:44.6851249Z postgres service is starting, waiting 2 seconds before checking again.
+test-build	UNKNOWN STEP	2026-03-30T18:24:46.6849055Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:24:46.6967264Z starting
+test-build	UNKNOWN STEP	2026-03-30T18:24:46.6979520Z postgres service is starting, waiting 4 seconds before checking again.
+test-build	UNKNOWN STEP	2026-03-30T18:24:50.8210632Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:24:50.8331525Z starting
+test-build	UNKNOWN STEP	2026-03-30T18:24:50.8367571Z postgres service is starting, waiting 7 seconds before checking again.
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.8675559Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.8797730Z healthy
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.8813555Z postgres service is healthy.
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.8814171Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9083545Z ##[group]Run actions/checkout@v4
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9084090Z with:
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9084295Z   repository: MycosoftLabs/mycosoft-mas
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9084736Z   token: ***
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9084919Z   ssh-strict: true
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9085101Z   ssh-user: git
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9085290Z   persist-credentials: true
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9085496Z   clean: true
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9085685Z   sparse-checkout-cone-mode: true
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9085910Z   fetch-depth: 1
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9086101Z   fetch-tags: false
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9086277Z   show-progress: true
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9086464Z   lfs: false
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9086632Z   submodules: false
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9086818Z   set-safe-directory: true
+test-build	UNKNOWN STEP	2026-03-30T18:24:57.9087211Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0209324Z Syncing repository: MycosoftLabs/mycosoft-mas
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0210732Z ##[group]Getting Git version info
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0211208Z Working directory is '/home/runner/work/mycosoft-mas/mycosoft-mas'
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0211773Z [command]/usr/bin/git version
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0261744Z git version 2.53.0
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0289137Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0310396Z Temporarily overriding HOME='/home/runner/work/_temp/34a7ce5e-c826-4b6c-a7b8-0929d259c5a5' before making global git config changes
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0311202Z Adding repository directory to the temporary git global config as a safe directory
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0316213Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0349663Z Deleting the contents of '/home/runner/work/mycosoft-mas/mycosoft-mas'
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0353488Z ##[group]Initializing the repository
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0357826Z [command]/usr/bin/git init /home/runner/work/mycosoft-mas/mycosoft-mas
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0449300Z hint: Using 'master' as the name for the initial branch. This default branch name
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0533803Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0534826Z hint: to use in all of your new repositories, which will suppress this warning,
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0535437Z hint: call:
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0535706Z hint:
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0536130Z hint: 	git config --global init.defaultBranch <name>
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0536656Z hint:
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0537186Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0538166Z hint: 'development'. The just-created branch can be renamed via this command:
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0539065Z hint:
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0539333Z hint: 	git branch -m <name>
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0539662Z hint:
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0540142Z hint: Disable this message with "git config set advice.defaultBranchName false"
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0541054Z Initialized empty Git repository in /home/runner/work/mycosoft-mas/mycosoft-mas/.git/
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0543082Z [command]/usr/bin/git remote add origin https://github.com/MycosoftLabs/mycosoft-mas
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0544569Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0545176Z ##[group]Disabling automatic garbage collection
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0545738Z [command]/usr/bin/git config --local gc.auto 0
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0547149Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0547672Z ##[group]Setting up auth
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0548321Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0573806Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0859684Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.0888290Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.1105300Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.1136939Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.1363254Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.1396844Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.1397402Z ##[group]Fetching the repository
+test-build	UNKNOWN STEP	2026-03-30T18:24:58.1405790Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d:refs/remotes/origin/main
+test-build	UNKNOWN STEP	2026-03-30T18:25:04.6341731Z From https://github.com/MycosoftLabs/mycosoft-mas
+test-build	UNKNOWN STEP	2026-03-30T18:25:04.6342639Z  * [new ref]         2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d -> origin/main
+test-build	UNKNOWN STEP	2026-03-30T18:25:04.6369708Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:25:04.6370071Z ##[group]Determining the checkout info
+test-build	UNKNOWN STEP	2026-03-30T18:25:04.6372503Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:25:04.6377544Z [command]/usr/bin/git sparse-checkout disable
+test-build	UNKNOWN STEP	2026-03-30T18:25:04.6412919Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+test-build	UNKNOWN STEP	2026-03-30T18:25:04.6437892Z ##[group]Checking out the ref
+test-build	UNKNOWN STEP	2026-03-30T18:25:04.6442408Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.7873249Z Updating files:  15% (1048/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.7917799Z Updating files:  16% (1113/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.7973396Z Updating files:  17% (1183/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8015200Z Updating files:  18% (1252/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8055274Z Updating files:  19% (1322/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8092704Z Updating files:  20% (1391/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8139325Z Updating files:  21% (1461/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8184819Z Updating files:  22% (1531/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8232228Z Updating files:  23% (1600/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8280697Z Updating files:  24% (1670/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8331642Z Updating files:  25% (1739/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8429677Z Updating files:  26% (1809/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8486088Z Updating files:  27% (1878/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8541862Z Updating files:  28% (1948/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8598242Z Updating files:  29% (2017/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8647796Z Updating files:  30% (2087/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8694175Z Updating files:  31% (2157/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8754390Z Updating files:  32% (2226/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8804494Z Updating files:  33% (2296/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8854697Z Updating files:  34% (2365/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8907438Z Updating files:  35% (2435/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8948759Z Updating files:  36% (2504/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.8981417Z Updating files:  37% (2574/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9031813Z Updating files:  38% (2643/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9074296Z Updating files:  39% (2713/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9113477Z Updating files:  40% (2782/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9200704Z Updating files:  41% (2852/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9235575Z Updating files:  42% (2922/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9263643Z Updating files:  43% (2991/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9309122Z Updating files:  44% (3061/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9345304Z Updating files:  45% (3130/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9372911Z Updating files:  46% (3200/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9422992Z Updating files:  47% (3269/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9453563Z Updating files:  48% (3339/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9490975Z Updating files:  49% (3408/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9532703Z Updating files:  50% (3478/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9608406Z Updating files:  51% (3548/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9655539Z Updating files:  52% (3617/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9690139Z Updating files:  53% (3687/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9719847Z Updating files:  54% (3756/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9758613Z Updating files:  55% (3826/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9785268Z Updating files:  56% (3895/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9818604Z Updating files:  57% (3965/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9860832Z Updating files:  58% (4034/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9901878Z Updating files:  59% (4104/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:05.9949748Z Updating files:  60% (4173/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0010672Z Updating files:  61% (4243/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0056615Z Updating files:  62% (4313/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0103312Z Updating files:  63% (4382/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0185168Z Updating files:  64% (4452/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0253396Z Updating files:  65% (4521/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0309368Z Updating files:  66% (4591/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0359025Z Updating files:  67% (4660/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0403405Z Updating files:  68% (4730/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0444088Z Updating files:  69% (4799/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0489748Z Updating files:  70% (4869/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0539534Z Updating files:  71% (4939/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0602050Z Updating files:  72% (5008/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0652658Z Updating files:  73% (5078/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0702428Z Updating files:  74% (5147/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0751053Z Updating files:  75% (5217/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0790007Z Updating files:  76% (5286/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0831706Z Updating files:  77% (5356/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0882824Z Updating files:  78% (5425/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0935021Z Updating files:  79% (5495/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.0975038Z Updating files:  80% (5564/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1040434Z Updating files:  81% (5634/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1081150Z Updating files:  82% (5704/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1150340Z Updating files:  83% (5773/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1175917Z Updating files:  84% (5843/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1220256Z Updating files:  85% (5912/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1265389Z Updating files:  86% (5982/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1315528Z Updating files:  87% (6051/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1360750Z Updating files:  88% (6121/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1401361Z Updating files:  89% (6190/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1447720Z Updating files:  90% (6260/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1494754Z Updating files:  91% (6330/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1538747Z Updating files:  92% (6399/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1580810Z Updating files:  93% (6469/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1632976Z Updating files:  94% (6538/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1674188Z Updating files:  95% (6608/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1718252Z Updating files:  96% (6677/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1759139Z Updating files:  97% (6747/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1795937Z Updating files:  98% (6816/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1835140Z Updating files:  99% (6886/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1835625Z Updating files: 100% (6955/6955)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1836452Z Updating files: 100% (6955/6955), done.
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1956020Z Switched to a new branch 'main'
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.1959214Z branch 'main' set up to track 'origin/main'.
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2098769Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2138035Z [command]/usr/bin/git log -1 --format=%H
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2158868Z 2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2368893Z ##[group]Run actions/setup-python@v5
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2369167Z with:
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2369337Z   python-version: 3.13
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2369553Z   check-latest: false
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2369856Z   token: ***
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2370043Z   update-environment: true
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2370261Z   allow-prereleases: false
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2370469Z   freethreaded: false
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.2370655Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4034225Z ##[group]Installed versions
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4139699Z Successfully set up CPython (3.13.12)
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4140511Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4827862Z ##[group]Run actions/cache@v4
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4828106Z with:
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4828283Z   path: ~/.cache/pypoetry
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4828674Z   key: Linux-poetry-c4216d5386c2806ba171914e77c0f989efe20dcae498c2ba39363a9fb42b2dfa
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4829098Z   enableCrossOsArchive: false
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4829331Z   fail-on-cache-miss: false
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4829540Z   lookup-only: false
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4829730Z   save-always: false
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4829897Z env:
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4830123Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4830545Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.12/x64/lib/pkgconfig
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4830962Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4831322Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4831679Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4832439Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.12/x64/lib
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.4832775Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7251836Z Cache not found for input keys: Linux-poetry-c4216d5386c2806ba171914e77c0f989efe20dcae498c2ba39363a9fb42b2dfa
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7336896Z ##[group]Run pip install poetry
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7337204Z [36;1mpip install poetry[0m
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7418171Z shell: /usr/bin/bash -e {0}
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7418418Z env:
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7418659Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7419088Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.12/x64/lib/pkgconfig
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7419503Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7419865Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7420239Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7420606Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.12/x64/lib
+test-build	UNKNOWN STEP	2026-03-30T18:25:06.7420914Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.6903892Z Collecting poetry
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.7591116Z   Downloading poetry-2.3.3-py3-none-any.whl.metadata (7.2 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.7798796Z Collecting build<2.0.0,>=1.2.1 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.7881537Z   Downloading build-1.4.2-py3-none-any.whl.metadata (5.8 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.8066615Z Collecting cachecontrol<0.15.0,>=0.14.0 (from cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.8137485Z   Downloading cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.8317349Z Collecting cleo<3.0.0,>=2.1.0 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.8391162Z   Downloading cleo-2.1.0-py3-none-any.whl.metadata (12 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.9713196Z Collecting dulwich<2,>=0.25.0 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.9797371Z   Downloading dulwich-1.1.0-cp313-cp313-manylinux_2_28_x86_64.whl.metadata (5.9 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:09.9979600Z Collecting fastjsonschema<3.0.0,>=2.18.0 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.0049460Z   Downloading fastjsonschema-2.21.2-py3-none-any.whl.metadata (2.3 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.0207038Z Collecting findpython<0.8.0,>=0.6.2 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.0285179Z   Downloading findpython-0.7.1-py3-none-any.whl.metadata (5.4 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.0434338Z Collecting installer<0.8.0,>=0.7.0 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.0503957Z   Downloading installer-0.7.0-py3-none-any.whl.metadata (936 bytes)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.0780664Z Collecting keyring<26.0.0,>=25.1.0 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.0855122Z   Downloading keyring-25.7.0-py3-none-any.whl.metadata (21 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.1063871Z Collecting packaging>=24.2 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.1133903Z   Downloading packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.1338866Z Collecting pbs-installer>=2025.6.10 (from pbs-installer[download,install]>=2025.6.10->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.1406296Z   Downloading pbs_installer-2026.3.25-py3-none-any.whl.metadata (991 bytes)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.1575891Z Collecting pkginfo<2.0,>=1.12 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.1658466Z   Downloading pkginfo-1.12.1.2-py3-none-any.whl.metadata (13 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.1885460Z Collecting platformdirs<5,>=3.0.0 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.1960766Z   Downloading platformdirs-4.9.4-py3-none-any.whl.metadata (4.7 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.2153747Z Collecting poetry-core==2.3.2 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.2224122Z   Downloading poetry_core-2.3.2-py3-none-any.whl.metadata (3.8 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.2358644Z Collecting pyproject-hooks<2.0.0,>=1.0.0 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.2429853Z   Downloading pyproject_hooks-1.2.0-py3-none-any.whl.metadata (1.3 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.2664100Z Collecting requests<3.0,>=2.26 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.2745793Z   Downloading requests-2.33.1-py3-none-any.whl.metadata (4.8 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.2903762Z Collecting requests-toolbelt<2.0.0,>=1.0.0 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.2975970Z   Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl.metadata (14 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.3139523Z Collecting shellingham<2.0,>=1.5 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.3211124Z   Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.3419680Z Collecting tomlkit<1.0.0,>=0.11.4 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.3494525Z   Downloading tomlkit-0.14.0-py3-none-any.whl.metadata (2.8 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.3768112Z Collecting trove-classifiers>=2022.5.19 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.3846319Z   Downloading trove_classifiers-2026.1.14.14-py3-none-any.whl.metadata (2.4 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.4195014Z Collecting virtualenv>=20.26.6 (from poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.4269065Z   Downloading virtualenv-21.2.0-py3-none-any.whl.metadata (3.5 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.4926259Z Collecting msgpack<2.0.0,>=0.5.2 (from cachecontrol<0.15.0,>=0.14.0->cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.5002153Z   Downloading msgpack-1.1.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.5249740Z Collecting filelock>=3.8.0 (from cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.5337798Z   Downloading filelock-3.25.2-py3-none-any.whl.metadata (2.0 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.5476007Z Collecting crashtest<0.5.0,>=0.4.1 (from cleo<3.0.0,>=2.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:10.5704691Z   Downloading crashtest-0.4.1-py3-none-any.whl.metadata (1.1 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.0091404Z Collecting rapidfuzz<4.0.0,>=3.0.0 (from cleo<3.0.0,>=2.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.0165045Z   Downloading rapidfuzz-3.14.3-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (12 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.0404645Z Collecting urllib3>=2.2.2 (from dulwich<2,>=0.25.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.0475332Z   Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.0682273Z Collecting SecretStorage>=3.2 (from keyring<26.0.0,>=25.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.0775099Z   Downloading secretstorage-3.5.0-py3-none-any.whl.metadata (4.0 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.0930080Z Collecting jeepney>=0.4.2 (from keyring<26.0.0,>=25.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.0999213Z   Downloading jeepney-0.9.0-py3-none-any.whl.metadata (1.2 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.1155589Z Collecting jaraco.classes (from keyring<26.0.0,>=25.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.1222681Z   Downloading jaraco.classes-3.4.0-py3-none-any.whl.metadata (2.6 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.1436964Z Collecting jaraco.functools (from keyring<26.0.0,>=25.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.1525307Z   Downloading jaraco_functools-4.4.0-py3-none-any.whl.metadata (3.0 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.1691267Z Collecting jaraco.context (from keyring<26.0.0,>=25.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.1760878Z   Downloading jaraco_context-6.1.2-py3-none-any.whl.metadata (4.2 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.2635347Z Collecting charset_normalizer<4,>=2 (from requests<3.0,>=2.26->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.2710089Z   Downloading charset_normalizer-3.4.6-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.2900224Z Collecting idna<4,>=2.5 (from requests<3.0,>=2.26->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.3000480Z   Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.3221323Z Collecting certifi>=2023.5.7 (from requests<3.0,>=2.26->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.3293817Z   Downloading certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.3572909Z Collecting httpx<1,>=0.27.0 (from pbs-installer[download,install]>=2025.6.10->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.3643416Z   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.4318295Z Collecting zstandard>=0.21.0 (from pbs-installer[download,install]>=2025.6.10->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.4435257Z   Downloading zstandard-0.25.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.3 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.4669356Z Collecting anyio (from httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.4745505Z   Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.4950682Z Collecting httpcore==1.* (from httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.5026384Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.5212567Z Collecting h11>=0.16 (from httpcore==1.*->httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.5285057Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.7399930Z Collecting cryptography>=2.0 (from SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.7474148Z   Downloading cryptography-46.0.6-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.8455081Z Collecting cffi>=2.0.0 (from cryptography>=2.0->SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.8534481Z   Downloading cffi-2.0.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.8688538Z Collecting pycparser (from cffi>=2.0.0->cryptography>=2.0->SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.8762113Z   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.8920898Z Collecting distlib<1,>=0.3.7 (from virtualenv>=20.26.6->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.8989692Z   Downloading distlib-0.4.0-py2.py3-none-any.whl.metadata (5.2 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.9166080Z Collecting python-discovery>=1 (from virtualenv>=20.26.6->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.9239763Z   Downloading python_discovery-1.2.1-py3-none-any.whl.metadata (5.4 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.9497890Z Collecting more-itertools (from jaraco.classes->keyring<26.0.0,>=25.1.0->poetry)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.9569815Z   Downloading more_itertools-10.8.0-py3-none-any.whl.metadata (39 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.9705751Z Downloading poetry-2.3.3-py3-none-any.whl (288 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:11.9911066Z Downloading poetry_core-2.3.2-py3-none-any.whl (340 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0061035Z Downloading build-1.4.2-py3-none-any.whl (24 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0152179Z Downloading cachecontrol-0.14.4-py3-none-any.whl (22 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0254121Z Downloading cleo-2.1.0-py3-none-any.whl (78 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0343889Z Downloading crashtest-0.4.1-py3-none-any.whl (7.6 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0429071Z Downloading dulwich-1.1.0-cp313-cp313-manylinux_2_28_x86_64.whl (1.4 MB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0628591Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 1.4/1.4 MB 71.7 MB/s  0:00:00
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0696194Z Downloading fastjsonschema-2.21.2-py3-none-any.whl (24 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0782684Z Downloading findpython-0.7.1-py3-none-any.whl (21 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0868736Z Downloading installer-0.7.0-py3-none-any.whl (453 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.0966698Z Downloading keyring-25.7.0-py3-none-any.whl (39 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1069518Z Downloading msgpack-1.1.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (424 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1164445Z Downloading pkginfo-1.12.1.2-py3-none-any.whl (32 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1257160Z Downloading platformdirs-4.9.4-py3-none-any.whl (21 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1349250Z Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1434890Z Downloading rapidfuzz-3.14.3-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (3.2 MB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1606680Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 3.2/3.2 MB 195.4 MB/s  0:00:00
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1675518Z Downloading requests-2.33.1-py3-none-any.whl (64 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1767500Z Downloading charset_normalizer-3.4.6-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (206 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1859292Z Downloading idna-3.11-py3-none-any.whl (71 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.1955224Z Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl (54 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2043466Z Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2127647Z Downloading tomlkit-0.14.0-py3-none-any.whl (39 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2214620Z Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2305989Z Downloading certifi-2026.2.25-py3-none-any.whl (153 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2411844Z Downloading filelock-3.25.2-py3-none-any.whl (26 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2503238Z Downloading jeepney-0.9.0-py3-none-any.whl (49 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2590737Z Downloading packaging-26.0-py3-none-any.whl (74 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2678162Z Downloading pbs_installer-2026.3.25-py3-none-any.whl (72 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2766449Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2854999Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.2944507Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.3031726Z Downloading secretstorage-3.5.0-py3-none-any.whl (15 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.3130512Z Downloading cryptography-46.0.6-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.3317303Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 4.5/4.5 MB 260.9 MB/s  0:00:00
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.3388770Z Downloading cffi-2.0.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (219 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.3484396Z Downloading trove_classifiers-2026.1.14.14-py3-none-any.whl (14 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.3586751Z Downloading virtualenv-21.2.0-py3-none-any.whl (5.8 MB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.3838960Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 5.8/5.8 MB 243.6 MB/s  0:00:00
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.3919547Z Downloading distlib-0.4.0-py2.py3-none-any.whl (469 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.4020540Z Downloading python_discovery-1.2.1-py3-none-any.whl (31 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.4111308Z Downloading zstandard-0.25.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.5 MB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.4294857Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 5.5/5.5 MB 331.3 MB/s  0:00:00
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.4363726Z Downloading anyio-4.13.0-py3-none-any.whl (114 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.4456556Z Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.4540601Z Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.4626925Z Downloading jaraco_functools-4.4.0-py3-none-any.whl (10 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.4711153Z Downloading more_itertools-10.8.0-py3-none-any.whl (69 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.4800048Z Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+test-build	UNKNOWN STEP	2026-03-30T18:25:12.6061643Z Installing collected packages: trove-classifiers, fastjsonschema, distlib, zstandard, urllib3, tomlkit, shellingham, rapidfuzz, pyproject-hooks, pycparser, poetry-core, platformdirs, pkginfo, pbs-installer, packaging, msgpack, more-itertools, jeepney, jaraco.context, installer, idna, h11, filelock, crashtest, charset_normalizer, certifi, requests, python-discovery, jaraco.functools, jaraco.classes, httpcore, findpython, dulwich, cleo, cffi, build, anyio, virtualenv, requests-toolbelt, httpx, cryptography, cachecontrol, SecretStorage, keyring, poetry
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.3406087Z 
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.3455420Z Successfully installed SecretStorage-3.5.0 anyio-4.13.0 build-1.4.2 cachecontrol-0.14.4 certifi-2026.2.25 cffi-2.0.0 charset_normalizer-3.4.6 cleo-2.1.0 crashtest-0.4.1 cryptography-46.0.6 distlib-0.4.0 dulwich-1.1.0 fastjsonschema-2.21.2 filelock-3.25.2 findpython-0.7.1 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.11 installer-0.7.0 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.4.0 jeepney-0.9.0 keyring-25.7.0 more-itertools-10.8.0 msgpack-1.1.2 packaging-26.0 pbs-installer-2026.3.25 pkginfo-1.12.1.2 platformdirs-4.9.4 poetry-2.3.3 poetry-core-2.3.2 pycparser-3.0 pyproject-hooks-1.2.0 python-discovery-1.2.1 rapidfuzz-3.14.3 requests-2.33.1 requests-toolbelt-1.0.0 shellingham-1.5.4 tomlkit-0.14.0 trove-classifiers-2026.1.14.14 urllib3-2.6.3 virtualenv-21.2.0 zstandard-0.25.0
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7119171Z ##[group]Run poetry lock --no-update && poetry install --with dev
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7119661Z [36;1mpoetry lock --no-update && poetry install --with dev[0m
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7147127Z shell: /usr/bin/bash -e {0}
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7147368Z env:
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7147624Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7148047Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.12/x64/lib/pkgconfig
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7148464Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7148834Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7149201Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.12/x64
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7149565Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.12/x64/lib
+test-build	UNKNOWN STEP	2026-03-30T18:25:15.7149867Z ##[endgroup]
+test-build	UNKNOWN STEP	2026-03-30T18:25:17.6211401Z Creating virtualenv mycosoft-mas in /home/runner/work/mycosoft-mas/mycosoft-mas/.venv
+test-build	UNKNOWN STEP	2026-03-30T18:25:17.9914525Z 
+test-build	UNKNOWN STEP	2026-03-30T18:25:17.9915159Z The option "--no-update" does not exist
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.0517864Z ##[error]Process completed with exit code 1.
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.0613328Z Post job cleanup.
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1554738Z [command]/usr/bin/git version
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1590145Z git version 2.53.0
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1632968Z Temporarily overriding HOME='/home/runner/work/_temp/f6f1fb76-4c22-4dec-bdc0-9ca981d41f1a' before making global git config changes
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1634344Z Adding repository directory to the temporary git global config as a safe directory
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1638783Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1674773Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1706820Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1950310Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1973822Z http.https://github.com/.extraheader
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.1985899Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2016463Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2269282Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2306231Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2655285Z Print service container logs: b969b0bd141e48c0a1b8edb3a8afee8e_postgres15alpine_5edfe2
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2659616Z ##[command]/usr/bin/docker logs --details 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2784656Z  sh: locale: not found
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2785281Z  2026-03-30 18:24:45.393 UTC [35] WARNING:  no usable system locales were found
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2786131Z  initdb: warning: enabling "trust" authentication for local connections
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2792570Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2793386Z  The files belonging to this database system will be owned by user "postgres".
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2794137Z  2026-03-30 18:24:46.159 UTC [1] LOG:  starting PostgreSQL 15.17 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2794835Z  2026-03-30 18:24:46.159 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2795293Z  2026-03-30 18:24:46.159 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2795805Z  2026-03-30 18:24:46.160 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2796356Z  2026-03-30 18:24:46.163 UTC [55] LOG:  database system was shut down at 2026-03-30 18:24:46 UTC
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2796845Z  2026-03-30 18:24:46.167 UTC [1] LOG:  database system is ready to accept connections
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2797273Z  2026-03-30 18:24:54.670 UTC [65] FATAL:  role "root" does not exist
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2797649Z  2026-03-30 18:25:04.710 UTC [73] FATAL:  role "root" does not exist
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2798273Z  2026-03-30 18:25:14.753 UTC [80] FATAL:  role "root" does not exist
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2798838Z  This user must also own the server process.
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2799228Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2799645Z  The database cluster will be initialized with locale "en_US.utf8".
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2800069Z  The default database encoding has accordingly been set to "UTF8".
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2800715Z  The default text search configuration will be set to "english".
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2801235Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2801503Z  Data page checksums are disabled.
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2801746Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2802019Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2802625Z  creating subdirectories ... ok
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2802924Z  selecting dynamic shared memory implementation ... posix
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2803249Z  selecting default max_connections ... 100
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2803533Z  selecting default shared_buffers ... 128MB
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2803799Z  selecting default time zone ... UTC
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2804040Z  creating configuration files ... ok
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2804287Z  running bootstrap script ... ok
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2804564Z  performing post-bootstrap initialization ... ok
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2804859Z  syncing data to disk ... ok
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2805065Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2805204Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2805407Z  Success. You can now start the database server using:
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2805680Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2805884Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2806155Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2806686Z  waiting for server to start....2026-03-30 18:24:45.940 UTC [41] LOG:  starting PostgreSQL 15.17 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2807484Z  2026-03-30 18:24:45.941 UTC [41] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2808276Z  2026-03-30 18:24:45.944 UTC [44] LOG:  database system was shut down at 2026-03-30 18:24:45 UTC
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2808755Z  2026-03-30 18:24:45.948 UTC [41] LOG:  database system is ready to accept connections
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2809102Z   done
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2809264Z  server started
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2809429Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2809896Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2810265Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2810595Z  waiting for server to shut down...2026-03-30 18:24:46.039 UTC [41] LOG:  received fast shutdown request
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2811159Z  .2026-03-30 18:24:46.040 UTC [41] LOG:  aborting any active transactions
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2811755Z  2026-03-30 18:24:46.043 UTC [41] LOG:  background worker "logical replication launcher" (PID 47) exited with exit code 1
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2812583Z  2026-03-30 18:24:46.043 UTC [42] LOG:  shutting down
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2812954Z  2026-03-30 18:24:46.044 UTC [42] LOG:  checkpoint starting: shutdown immediate
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2813906Z  2026-03-30 18:24:46.047 UTC [42] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.001 s, sync=0.001 s, total=0.004 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2814837Z  2026-03-30 18:24:46.051 UTC [41] LOG:  database system is shut down
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2815137Z   done
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2815292Z  server stopped
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2815461Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2815671Z  PostgreSQL init process complete; ready for start up.
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2815943Z  
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2822520Z Stop and remove container: b969b0bd141e48c0a1b8edb3a8afee8e_postgres15alpine_5edfe2
+test-build	UNKNOWN STEP	2026-03-30T18:25:18.2827981Z ##[command]/usr/bin/docker rm --force 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:25:19.5370384Z 4a3ef5b9f232f80c809759c596f3d2f24808274bd2253dbe41cc174735d5b1f8
+test-build	UNKNOWN STEP	2026-03-30T18:25:19.5396900Z Remove container network: github_network_0935cd90b6d54ad1b64329f2c56bb98a
+test-build	UNKNOWN STEP	2026-03-30T18:25:19.5401138Z ##[command]/usr/bin/docker network rm github_network_0935cd90b6d54ad1b64329f2c56bb98a
+test-build	UNKNOWN STEP	2026-03-30T18:25:19.6345816Z github_network_0935cd90b6d54ad1b64329f2c56bb98a
+test-build	UNKNOWN STEP	2026-03-30T18:25:19.6409620Z Cleaning up orphan processes
+test-build	UNKNOWN STEP	2026-03-30T18:25:19.6727445Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/cache@v4, actions/checkout@v4, actions/setup-python@v5. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+security	UNKNOWN STEP	∩╗┐2026-03-30T18:24:39.0397853Z Current runner version: '2.333.0'
+security	UNKNOWN STEP	2026-03-30T18:24:39.0423810Z ##[group]Runner Image Provisioner
+security	UNKNOWN STEP	2026-03-30T18:24:39.0424745Z Hosted Compute Agent
+security	UNKNOWN STEP	2026-03-30T18:24:39.0425345Z Version: 20260213.493
+security	UNKNOWN STEP	2026-03-30T18:24:39.0425930Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+security	UNKNOWN STEP	2026-03-30T18:24:39.0426673Z Build Date: 2026-02-13T00:28:41Z
+security	UNKNOWN STEP	2026-03-30T18:24:39.0427318Z Worker ID: {0a113e74-cbca-4437-8356-7b605c856271}
+security	UNKNOWN STEP	2026-03-30T18:24:39.0428049Z Azure Region: northcentralus
+security	UNKNOWN STEP	2026-03-30T18:24:39.0428589Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:39.0430272Z ##[group]Operating System
+security	UNKNOWN STEP	2026-03-30T18:24:39.0430855Z Ubuntu
+security	UNKNOWN STEP	2026-03-30T18:24:39.0431323Z 24.04.4
+security	UNKNOWN STEP	2026-03-30T18:24:39.0431921Z LTS
+security	UNKNOWN STEP	2026-03-30T18:24:39.0432573Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:39.0433322Z ##[group]Runner Image
+security	UNKNOWN STEP	2026-03-30T18:24:39.0434133Z Image: ubuntu-24.04
+security	UNKNOWN STEP	2026-03-30T18:24:39.0434673Z Version: 20260323.65.1
+security	UNKNOWN STEP	2026-03-30T18:24:39.0435897Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260323.65/images/ubuntu/Ubuntu2404-Readme.md
+security	UNKNOWN STEP	2026-03-30T18:24:39.0437357Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260323.65
+security	UNKNOWN STEP	2026-03-30T18:24:39.0438246Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:39.0440890Z ##[group]GITHUB_TOKEN Permissions
+security	UNKNOWN STEP	2026-03-30T18:24:39.0443307Z Actions: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0444115Z ArtifactMetadata: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0444657Z Attestations: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0445180Z Checks: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0445695Z Contents: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0446235Z Deployments: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0446725Z Discussions: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0447275Z Issues: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0447818Z Metadata: read
+security	UNKNOWN STEP	2026-03-30T18:24:39.0448279Z Models: read
+security	UNKNOWN STEP	2026-03-30T18:24:39.0448796Z Packages: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0449292Z Pages: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0449899Z PullRequests: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0450402Z RepositoryProjects: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0451110Z SecurityEvents: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0451654Z Statuses: write
+security	UNKNOWN STEP	2026-03-30T18:24:39.0452123Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:39.0454744Z Secret source: Actions
+security	UNKNOWN STEP	2026-03-30T18:24:39.0455680Z Prepare workflow directory
+security	UNKNOWN STEP	2026-03-30T18:24:39.0797737Z Prepare all required actions
+security	UNKNOWN STEP	2026-03-30T18:24:39.0836871Z Getting action download info
+security	UNKNOWN STEP	2026-03-30T18:24:39.4597575Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+security	UNKNOWN STEP	2026-03-30T18:24:39.5851461Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+security	UNKNOWN STEP	2026-03-30T18:24:39.7786389Z Complete job name: security
+security	UNKNOWN STEP	2026-03-30T18:24:39.8540823Z ##[group]Run actions/checkout@v4
+security	UNKNOWN STEP	2026-03-30T18:24:39.8541881Z with:
+security	UNKNOWN STEP	2026-03-30T18:24:39.8542593Z   repository: MycosoftLabs/mycosoft-mas
+security	UNKNOWN STEP	2026-03-30T18:24:39.8543411Z   token: ***
+security	UNKNOWN STEP	2026-03-30T18:24:39.8543840Z   ssh-strict: true
+security	UNKNOWN STEP	2026-03-30T18:24:39.8544268Z   ssh-user: git
+security	UNKNOWN STEP	2026-03-30T18:24:39.8544732Z   persist-credentials: true
+security	UNKNOWN STEP	2026-03-30T18:24:39.8545245Z   clean: true
+security	UNKNOWN STEP	2026-03-30T18:24:39.8545697Z   sparse-checkout-cone-mode: true
+security	UNKNOWN STEP	2026-03-30T18:24:39.8546227Z   fetch-depth: 1
+security	UNKNOWN STEP	2026-03-30T18:24:39.8546700Z   fetch-tags: false
+security	UNKNOWN STEP	2026-03-30T18:24:39.8547143Z   show-progress: true
+security	UNKNOWN STEP	2026-03-30T18:24:39.8547598Z   lfs: false
+security	UNKNOWN STEP	2026-03-30T18:24:39.8548005Z   submodules: false
+security	UNKNOWN STEP	2026-03-30T18:24:39.8548455Z   set-safe-directory: true
+security	UNKNOWN STEP	2026-03-30T18:24:39.8549243Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:39.9675280Z Syncing repository: MycosoftLabs/mycosoft-mas
+security	UNKNOWN STEP	2026-03-30T18:24:39.9677764Z ##[group]Getting Git version info
+security	UNKNOWN STEP	2026-03-30T18:24:39.9678720Z Working directory is '/home/runner/work/mycosoft-mas/mycosoft-mas'
+security	UNKNOWN STEP	2026-03-30T18:24:39.9679868Z [command]/usr/bin/git version
+security	UNKNOWN STEP	2026-03-30T18:24:39.9748534Z git version 2.53.0
+security	UNKNOWN STEP	2026-03-30T18:24:39.9777515Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:39.9793499Z Temporarily overriding HOME='/home/runner/work/_temp/dd1aee8f-8ffb-4b31-a70b-a98ec05aa17f' before making global git config changes
+security	UNKNOWN STEP	2026-03-30T18:24:39.9808685Z Adding repository directory to the temporary git global config as a safe directory
+security	UNKNOWN STEP	2026-03-30T18:24:39.9810483Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+security	UNKNOWN STEP	2026-03-30T18:24:39.9845193Z Deleting the contents of '/home/runner/work/mycosoft-mas/mycosoft-mas'
+security	UNKNOWN STEP	2026-03-30T18:24:39.9848983Z ##[group]Initializing the repository
+security	UNKNOWN STEP	2026-03-30T18:24:39.9853498Z [command]/usr/bin/git init /home/runner/work/mycosoft-mas/mycosoft-mas
+security	UNKNOWN STEP	2026-03-30T18:24:39.9945983Z hint: Using 'master' as the name for the initial branch. This default branch name
+security	UNKNOWN STEP	2026-03-30T18:24:39.9948341Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+security	UNKNOWN STEP	2026-03-30T18:24:39.9950568Z hint: to use in all of your new repositories, which will suppress this warning,
+security	UNKNOWN STEP	2026-03-30T18:24:39.9952768Z hint: call:
+security	UNKNOWN STEP	2026-03-30T18:24:39.9953734Z hint:
+security	UNKNOWN STEP	2026-03-30T18:24:39.9954867Z hint: 	git config --global init.defaultBranch <name>
+security	UNKNOWN STEP	2026-03-30T18:24:39.9956149Z hint:
+security	UNKNOWN STEP	2026-03-30T18:24:39.9957180Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+security	UNKNOWN STEP	2026-03-30T18:24:39.9959057Z hint: 'development'. The just-created branch can be renamed via this command:
+security	UNKNOWN STEP	2026-03-30T18:24:39.9960622Z hint:
+security	UNKNOWN STEP	2026-03-30T18:24:39.9961467Z hint: 	git branch -m <name>
+security	UNKNOWN STEP	2026-03-30T18:24:39.9962637Z hint:
+security	UNKNOWN STEP	2026-03-30T18:24:39.9963849Z hint: Disable this message with "git config set advice.defaultBranchName false"
+security	UNKNOWN STEP	2026-03-30T18:24:39.9965802Z Initialized empty Git repository in /home/runner/work/mycosoft-mas/mycosoft-mas/.git/
+security	UNKNOWN STEP	2026-03-30T18:24:39.9969254Z [command]/usr/bin/git remote add origin https://github.com/MycosoftLabs/mycosoft-mas
+security	UNKNOWN STEP	2026-03-30T18:24:39.9997020Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:39.9998384Z ##[group]Disabling automatic garbage collection
+security	UNKNOWN STEP	2026-03-30T18:24:40.0002041Z [command]/usr/bin/git config --local gc.auto 0
+security	UNKNOWN STEP	2026-03-30T18:24:40.0032061Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:40.0033872Z ##[group]Setting up auth
+security	UNKNOWN STEP	2026-03-30T18:24:40.0040083Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+security	UNKNOWN STEP	2026-03-30T18:24:40.0071764Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+security	UNKNOWN STEP	2026-03-30T18:24:40.0367115Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+security	UNKNOWN STEP	2026-03-30T18:24:40.0396683Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+security	UNKNOWN STEP	2026-03-30T18:24:40.0639058Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+security	UNKNOWN STEP	2026-03-30T18:24:40.0684504Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+security	UNKNOWN STEP	2026-03-30T18:24:40.0948518Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+security	UNKNOWN STEP	2026-03-30T18:24:40.0991218Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:40.0994734Z ##[group]Fetching the repository
+security	UNKNOWN STEP	2026-03-30T18:24:40.1004000Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d:refs/remotes/origin/main
+security	UNKNOWN STEP	2026-03-30T18:24:47.6639348Z From https://github.com/MycosoftLabs/mycosoft-mas
+security	UNKNOWN STEP	2026-03-30T18:24:47.6642564Z  * [new ref]         2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d -> origin/main
+security	UNKNOWN STEP	2026-03-30T18:24:47.6673201Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:47.6674761Z ##[group]Determining the checkout info
+security	UNKNOWN STEP	2026-03-30T18:24:47.6676196Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:47.6679195Z [command]/usr/bin/git sparse-checkout disable
+security	UNKNOWN STEP	2026-03-30T18:24:47.6719518Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+security	UNKNOWN STEP	2026-03-30T18:24:47.6746295Z ##[group]Checking out the ref
+security	UNKNOWN STEP	2026-03-30T18:24:47.6749313Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+security	UNKNOWN STEP	2026-03-30T18:24:48.8428539Z Updating files:  15% (1048/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8474374Z Updating files:  16% (1113/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8534338Z Updating files:  17% (1183/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8576952Z Updating files:  18% (1252/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8619272Z Updating files:  19% (1322/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8657647Z Updating files:  20% (1391/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8706377Z Updating files:  21% (1461/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8752290Z Updating files:  22% (1531/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8802987Z Updating files:  23% (1600/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8852831Z Updating files:  24% (1670/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.8903869Z Updating files:  25% (1739/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9003854Z Updating files:  26% (1809/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9060433Z Updating files:  27% (1878/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9115877Z Updating files:  28% (1948/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9172408Z Updating files:  29% (2017/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9224867Z Updating files:  30% (2087/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9273298Z Updating files:  31% (2157/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9334876Z Updating files:  32% (2226/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9383596Z Updating files:  33% (2296/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9433657Z Updating files:  34% (2365/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9486822Z Updating files:  35% (2435/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9528270Z Updating files:  36% (2504/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9561469Z Updating files:  37% (2574/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9615558Z Updating files:  38% (2643/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9658744Z Updating files:  39% (2713/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9697563Z Updating files:  40% (2782/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9786755Z Updating files:  41% (2852/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9822211Z Updating files:  42% (2922/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9851005Z Updating files:  43% (2991/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9899806Z Updating files:  44% (3061/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9937073Z Updating files:  45% (3130/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:48.9967249Z Updating files:  46% (3200/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0019158Z Updating files:  47% (3269/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0052149Z Updating files:  48% (3339/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0091627Z Updating files:  49% (3408/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0134653Z Updating files:  50% (3478/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0216580Z Updating files:  51% (3548/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0264753Z Updating files:  52% (3617/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0302092Z Updating files:  53% (3687/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0332803Z Updating files:  54% (3756/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0371560Z Updating files:  55% (3826/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0402045Z Updating files:  56% (3895/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0449044Z Updating files:  57% (3965/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0493221Z Updating files:  58% (4034/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0535467Z Updating files:  59% (4104/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0569254Z Updating files:  60% (4173/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0630806Z Updating files:  61% (4243/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0677106Z Updating files:  62% (4313/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0724637Z Updating files:  63% (4382/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0771597Z Updating files:  64% (4452/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0824625Z Updating files:  65% (4521/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0872423Z Updating files:  66% (4591/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0921736Z Updating files:  67% (4660/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.0966199Z Updating files:  68% (4730/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1005897Z Updating files:  69% (4799/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1049430Z Updating files:  70% (4869/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1098146Z Updating files:  71% (4939/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1160444Z Updating files:  72% (5008/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1211488Z Updating files:  73% (5078/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1264133Z Updating files:  74% (5147/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1313559Z Updating files:  75% (5217/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1352103Z Updating files:  76% (5286/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1393633Z Updating files:  77% (5356/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1445243Z Updating files:  78% (5425/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1496736Z Updating files:  79% (5495/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1537640Z Updating files:  80% (5564/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1607388Z Updating files:  81% (5634/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1650316Z Updating files:  82% (5704/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1687824Z Updating files:  83% (5773/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1727004Z Updating files:  84% (5843/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1772151Z Updating files:  85% (5912/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1817137Z Updating files:  86% (5982/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1870345Z Updating files:  87% (6051/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1918410Z Updating files:  88% (6121/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.1959466Z Updating files:  89% (6190/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2006516Z Updating files:  90% (6260/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2060660Z Updating files:  91% (6330/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2107076Z Updating files:  92% (6399/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2151640Z Updating files:  93% (6469/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2205667Z Updating files:  94% (6538/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2248636Z Updating files:  95% (6608/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2294758Z Updating files:  96% (6677/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2336591Z Updating files:  97% (6747/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2373386Z Updating files:  98% (6816/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2413056Z Updating files:  99% (6886/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2413557Z Updating files: 100% (6955/6955)
+security	UNKNOWN STEP	2026-03-30T18:24:49.2414322Z Updating files: 100% (6955/6955), done.
+security	UNKNOWN STEP	2026-03-30T18:24:49.2556675Z Switched to a new branch 'main'
+security	UNKNOWN STEP	2026-03-30T18:24:49.2557912Z branch 'main' set up to track 'origin/main'.
+security	UNKNOWN STEP	2026-03-30T18:24:49.2701683Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:49.2745677Z [command]/usr/bin/git log -1 --format=%H
+security	UNKNOWN STEP	2026-03-30T18:24:49.2772636Z 2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d
+security	UNKNOWN STEP	2026-03-30T18:24:49.3072707Z ##[group]Run actions/setup-python@v5
+security	UNKNOWN STEP	2026-03-30T18:24:49.3073014Z with:
+security	UNKNOWN STEP	2026-03-30T18:24:49.3073207Z   python-version: 3.11
+security	UNKNOWN STEP	2026-03-30T18:24:49.3073441Z   check-latest: false
+security	UNKNOWN STEP	2026-03-30T18:24:49.3073781Z   token: ***
+security	UNKNOWN STEP	2026-03-30T18:24:49.3073988Z   update-environment: true
+security	UNKNOWN STEP	2026-03-30T18:24:49.3074236Z   allow-prereleases: false
+security	UNKNOWN STEP	2026-03-30T18:24:49.3074458Z   freethreaded: false
+security	UNKNOWN STEP	2026-03-30T18:24:49.3074668Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:49.4887362Z ##[group]Installed versions
+security	UNKNOWN STEP	2026-03-30T18:24:49.5009783Z Successfully set up CPython (3.11.15)
+security	UNKNOWN STEP	2026-03-30T18:24:49.5011537Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:49.5170285Z ##[group]Run pip install poetry
+security	UNKNOWN STEP	2026-03-30T18:24:49.5170830Z [36;1mpip install poetry[0m
+security	UNKNOWN STEP	2026-03-30T18:24:49.6994904Z shell: /usr/bin/bash -e {0}
+security	UNKNOWN STEP	2026-03-30T18:24:49.6995204Z env:
+security	UNKNOWN STEP	2026-03-30T18:24:49.6995487Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+security	UNKNOWN STEP	2026-03-30T18:24:49.6995949Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+security	UNKNOWN STEP	2026-03-30T18:24:49.6996382Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+security	UNKNOWN STEP	2026-03-30T18:24:49.6996753Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+security	UNKNOWN STEP	2026-03-30T18:24:49.6997135Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+security	UNKNOWN STEP	2026-03-30T18:24:49.6997512Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+security	UNKNOWN STEP	2026-03-30T18:24:49.6997842Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:51.0397150Z Collecting poetry
+security	UNKNOWN STEP	2026-03-30T18:24:51.0988793Z   Downloading poetry-2.3.3-py3-none-any.whl.metadata (7.2 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.1158876Z Collecting build<2.0.0,>=1.2.1 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.1202377Z   Downloading build-1.4.2-py3-none-any.whl.metadata (5.8 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.1359210Z Collecting cachecontrol<0.15.0,>=0.14.0 (from cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.1422792Z   Downloading cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.1758297Z Collecting cleo<3.0.0,>=2.1.0 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.1804546Z   Downloading cleo-2.1.0-py3-none-any.whl.metadata (12 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.3167174Z Collecting dulwich<2,>=0.25.0 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.3219880Z   Downloading dulwich-1.1.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (5.9 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.3374049Z Collecting fastjsonschema<3.0.0,>=2.18.0 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.3422123Z   Downloading fastjsonschema-2.21.2-py3-none-any.whl.metadata (2.3 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.3647357Z Collecting findpython<0.8.0,>=0.6.2 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.3652670Z   Downloading findpython-0.7.1-py3-none-any.whl.metadata (5.4 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.3743565Z Collecting installer<0.8.0,>=0.7.0 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.3782237Z   Downloading installer-0.7.0-py3-none-any.whl.metadata (936 bytes)
+security	UNKNOWN STEP	2026-03-30T18:24:51.4118535Z Collecting keyring<26.0.0,>=25.1.0 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.4159940Z   Downloading keyring-25.7.0-py3-none-any.whl.metadata (21 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.4337763Z Collecting packaging>=24.2 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.4378841Z   Downloading packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.4560444Z Collecting pbs-installer>=2025.6.10 (from pbs-installer[download,install]>=2025.6.10->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.4613794Z   Downloading pbs_installer-2026.3.25-py3-none-any.whl.metadata (991 bytes)
+security	UNKNOWN STEP	2026-03-30T18:24:51.4777183Z Collecting pkginfo<2.0,>=1.12 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.4819940Z   Downloading pkginfo-1.12.1.2-py3-none-any.whl.metadata (13 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5016746Z Collecting platformdirs<5,>=3.0.0 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5059518Z   Downloading platformdirs-4.9.4-py3-none-any.whl.metadata (4.7 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5222750Z Collecting poetry-core==2.3.2 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5272287Z   Downloading poetry_core-2.3.2-py3-none-any.whl.metadata (3.8 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5391859Z Collecting pyproject-hooks<2.0.0,>=1.0.0 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5444709Z   Downloading pyproject_hooks-1.2.0-py3-none-any.whl.metadata (1.3 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5655784Z Collecting requests<3.0,>=2.26 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5698580Z   Downloading requests-2.33.1-py3-none-any.whl.metadata (4.8 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5831703Z Collecting requests-toolbelt<2.0.0,>=1.0.0 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.5877548Z   Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl.metadata (14 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.6008807Z Collecting shellingham<2.0,>=1.5 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.6051151Z   Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.6199375Z Collecting tomlkit<1.0.0,>=0.11.4 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.6238350Z   Downloading tomlkit-0.14.0-py3-none-any.whl.metadata (2.8 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.6476900Z Collecting trove-classifiers>=2022.5.19 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.6524202Z   Downloading trove_classifiers-2026.1.14.14-py3-none-any.whl.metadata (2.4 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.6853911Z Collecting virtualenv>=20.26.6 (from poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.6896481Z   Downloading virtualenv-21.2.0-py3-none-any.whl.metadata (3.5 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.7574572Z Collecting msgpack<2.0.0,>=0.5.2 (from cachecontrol<0.15.0,>=0.14.0->cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.7621726Z   Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.7830742Z Collecting filelock>=3.8.0 (from cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.7877293Z   Downloading filelock-3.25.2-py3-none-any.whl.metadata (2.0 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:51.7978513Z Collecting crashtest<0.5.0,>=0.4.1 (from cleo<3.0.0,>=2.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:51.8023683Z   Downloading crashtest-0.4.1-py3-none-any.whl.metadata (1.1 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.2930371Z Collecting rapidfuzz<4.0.0,>=3.0.0 (from cleo<3.0.0,>=2.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.2977915Z   Downloading rapidfuzz-3.14.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (12 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.3218929Z Collecting urllib3>=2.2.2 (from dulwich<2,>=0.25.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.3268170Z   Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.3448172Z Collecting typing_extensions>=4.6.0 (from dulwich<2,>=0.25.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.3508408Z   Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.3777230Z Collecting SecretStorage>=3.2 (from keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.3815960Z   Downloading secretstorage-3.5.0-py3-none-any.whl.metadata (4.0 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.3934502Z Collecting jeepney>=0.4.2 (from keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.3975111Z   Downloading jeepney-0.9.0-py3-none-any.whl.metadata (1.2 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.4628878Z Collecting importlib_metadata>=4.11.4 (from keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.4685416Z   Downloading importlib_metadata-9.0.0-py3-none-any.whl.metadata (4.5 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.4811565Z Collecting jaraco.classes (from keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.4849823Z   Downloading jaraco.classes-3.4.0-py3-none-any.whl.metadata (2.6 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.5021093Z Collecting jaraco.functools (from keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.5066122Z   Downloading jaraco_functools-4.4.0-py3-none-any.whl.metadata (3.0 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.5213687Z Collecting jaraco.context (from keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.5257920Z   Downloading jaraco_context-6.1.2-py3-none-any.whl.metadata (4.2 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.6154936Z Collecting charset_normalizer<4,>=2 (from requests<3.0,>=2.26->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.6204322Z   Downloading charset_normalizer-3.4.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.6366778Z Collecting idna<4,>=2.5 (from requests<3.0,>=2.26->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.6406041Z   Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.6576042Z Collecting certifi>=2023.5.7 (from requests<3.0,>=2.26->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.6614556Z   Downloading certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.6829296Z Collecting zipp>=3.20 (from importlib_metadata>=4.11.4->keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.6874328Z   Downloading zipp-3.23.0-py3-none-any.whl.metadata (3.6 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.7068640Z Collecting httpx<1,>=0.27.0 (from pbs-installer[download,install]>=2025.6.10->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.7117738Z   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.7797698Z Collecting zstandard>=0.21.0 (from pbs-installer[download,install]>=2025.6.10->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.7849283Z   Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.3 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.8107530Z Collecting anyio (from httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.8158389Z   Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.8346235Z Collecting httpcore==1.* (from httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.8391989Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:52.8516040Z Collecting h11>=0.16 (from httpcore==1.*->httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:52.8555498Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.0331140Z Collecting cryptography>=2.0 (from SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:53.0374485Z   Downloading cryptography-46.0.6-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.1937999Z Collecting cffi>=2.0.0 (from cryptography>=2.0->SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:53.1980556Z   Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2107016Z Collecting pycparser (from cffi>=2.0.0->cryptography>=2.0->SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2146451Z   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2272075Z Collecting distlib<1,>=0.3.7 (from virtualenv>=20.26.6->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2310503Z   Downloading distlib-0.4.0-py2.py3-none-any.whl.metadata (5.2 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2435235Z Collecting python-discovery>=1 (from virtualenv>=20.26.6->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2476170Z   Downloading python_discovery-1.2.1-py3-none-any.whl.metadata (5.4 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2714180Z Collecting more-itertools (from jaraco.classes->keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2756766Z   Downloading more_itertools-10.8.0-py3-none-any.whl.metadata (39 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2875276Z Collecting backports.tarfile (from jaraco.context->keyring<26.0.0,>=25.1.0->poetry)
+security	UNKNOWN STEP	2026-03-30T18:24:53.2914053Z   Downloading backports.tarfile-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3018972Z Downloading poetry-2.3.3-py3-none-any.whl (288 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3243584Z Downloading poetry_core-2.3.2-py3-none-any.whl (340 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3331108Z Downloading build-1.4.2-py3-none-any.whl (24 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3388255Z Downloading cachecontrol-0.14.4-py3-none-any.whl (22 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3444091Z Downloading cleo-2.1.0-py3-none-any.whl (78 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3506630Z Downloading crashtest-0.4.1-py3-none-any.whl (7.6 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3565762Z Downloading dulwich-1.1.0-cp311-cp311-manylinux_2_28_x86_64.whl (1.4 MB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3677869Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 1.4/1.4 MB 140.4 MB/s  0:00:00
+security	UNKNOWN STEP	2026-03-30T18:24:53.3723092Z Downloading fastjsonschema-2.21.2-py3-none-any.whl (24 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3778652Z Downloading findpython-0.7.1-py3-none-any.whl (21 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3834743Z Downloading installer-0.7.0-py3-none-any.whl (453 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3903334Z Downloading keyring-25.7.0-py3-none-any.whl (39 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.3963915Z Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (426 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4027411Z Downloading pkginfo-1.12.1.2-py3-none-any.whl (32 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4082856Z Downloading platformdirs-4.9.4-py3-none-any.whl (21 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4146562Z Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4206799Z Downloading rapidfuzz-3.14.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (3.2 MB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4430206Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 3.2/3.2 MB 150.6 MB/s  0:00:00
+security	UNKNOWN STEP	2026-03-30T18:24:53.4471053Z Downloading requests-2.33.1-py3-none-any.whl (64 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4538468Z Downloading charset_normalizer-3.4.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (204 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4606066Z Downloading idna-3.11-py3-none-any.whl (71 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4664196Z Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl (54 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4720678Z Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4776135Z Downloading tomlkit-0.14.0-py3-none-any.whl (39 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4832527Z Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4893411Z Downloading certifi-2026.2.25-py3-none-any.whl (153 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.4955120Z Downloading filelock-3.25.2-py3-none-any.whl (26 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5014175Z Downloading importlib_metadata-9.0.0-py3-none-any.whl (27 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5076135Z Downloading jeepney-0.9.0-py3-none-any.whl (49 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5138891Z Downloading packaging-26.0-py3-none-any.whl (74 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5197651Z Downloading pbs_installer-2026.3.25-py3-none-any.whl (72 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5271495Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5341630Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5407892Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5463657Z Downloading secretstorage-3.5.0-py3-none-any.whl (15 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5521307Z Downloading cryptography-46.0.6-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5848339Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 4.5/4.5 MB 142.4 MB/s  0:00:00
+security	UNKNOWN STEP	2026-03-30T18:24:53.5897304Z Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.5979883Z Downloading trove_classifiers-2026.1.14.14-py3-none-any.whl (14 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.6041135Z Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.6111027Z Downloading virtualenv-21.2.0-py3-none-any.whl (5.8 MB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.6345205Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 5.8/5.8 MB 280.5 MB/s  0:00:00
+security	UNKNOWN STEP	2026-03-30T18:24:53.6393153Z Downloading distlib-0.4.0-py2.py3-none-any.whl (469 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.6471219Z Downloading python_discovery-1.2.1-py3-none-any.whl (31 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.6529802Z Downloading zipp-3.23.0-py3-none-any.whl (10 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.6597476Z Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.6 MB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.6840968Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 5.6/5.6 MB 254.2 MB/s  0:00:00
+security	UNKNOWN STEP	2026-03-30T18:24:53.6933408Z Downloading anyio-4.13.0-py3-none-any.whl (114 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.7005365Z Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.7065157Z Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.7120490Z Downloading backports.tarfile-1.2.0-py3-none-any.whl (30 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.7179188Z Downloading jaraco_functools-4.4.0-py3-none-any.whl (10 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.7239207Z Downloading more_itertools-10.8.0-py3-none-any.whl (69 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.7301843Z Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+security	UNKNOWN STEP	2026-03-30T18:24:53.8439206Z Installing collected packages: trove-classifiers, fastjsonschema, distlib, zstandard, zipp, urllib3, typing_extensions, tomlkit, shellingham, rapidfuzz, pyproject-hooks, pycparser, poetry-core, platformdirs, pkginfo, pbs-installer, packaging, msgpack, more-itertools, jeepney, installer, idna, h11, filelock, crashtest, charset_normalizer, certifi, backports.tarfile, requests, python-discovery, jaraco.functools, jaraco.context, jaraco.classes, importlib_metadata, httpcore, findpython, dulwich, cleo, cffi, build, anyio, virtualenv, requests-toolbelt, httpx, cryptography, cachecontrol, SecretStorage, keyring, poetry
+security	UNKNOWN STEP	2026-03-30T18:24:57.2245719Z 
+security	UNKNOWN STEP	2026-03-30T18:24:57.2274349Z Successfully installed SecretStorage-3.5.0 anyio-4.13.0 backports.tarfile-1.2.0 build-1.4.2 cachecontrol-0.14.4 certifi-2026.2.25 cffi-2.0.0 charset_normalizer-3.4.6 cleo-2.1.0 crashtest-0.4.1 cryptography-46.0.6 distlib-0.4.0 dulwich-1.1.0 fastjsonschema-2.21.2 filelock-3.25.2 findpython-0.7.1 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.11 importlib_metadata-9.0.0 installer-0.7.0 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.4.0 jeepney-0.9.0 keyring-25.7.0 more-itertools-10.8.0 msgpack-1.1.2 packaging-26.0 pbs-installer-2026.3.25 pkginfo-1.12.1.2 platformdirs-4.9.4 poetry-2.3.3 poetry-core-2.3.2 pycparser-3.0 pyproject-hooks-1.2.0 python-discovery-1.2.1 rapidfuzz-3.14.3 requests-2.33.1 requests-toolbelt-1.0.0 shellingham-1.5.4 tomlkit-0.14.0 trove-classifiers-2026.1.14.14 typing_extensions-4.15.0 urllib3-2.6.3 virtualenv-21.2.0 zipp-3.23.0 zstandard-0.25.0
+security	UNKNOWN STEP	2026-03-30T18:24:57.7006676Z ##[group]Run poetry lock --no-update && poetry install --with dev
+security	UNKNOWN STEP	2026-03-30T18:24:57.7007200Z [36;1mpoetry lock --no-update && poetry install --with dev[0m
+security	UNKNOWN STEP	2026-03-30T18:24:57.7034983Z shell: /usr/bin/bash -e {0}
+security	UNKNOWN STEP	2026-03-30T18:24:57.7035238Z env:
+security	UNKNOWN STEP	2026-03-30T18:24:57.7035508Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+security	UNKNOWN STEP	2026-03-30T18:24:57.7035960Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+security	UNKNOWN STEP	2026-03-30T18:24:57.7036420Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+security	UNKNOWN STEP	2026-03-30T18:24:57.7036814Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+security	UNKNOWN STEP	2026-03-30T18:24:57.7037189Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+security	UNKNOWN STEP	2026-03-30T18:24:57.7037576Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+security	UNKNOWN STEP	2026-03-30T18:24:57.7037894Z ##[endgroup]
+security	UNKNOWN STEP	2026-03-30T18:24:58.3846258Z Creating virtualenv mycosoft-mas in /home/runner/work/mycosoft-mas/mycosoft-mas/.venv
+security	UNKNOWN STEP	2026-03-30T18:24:58.7348751Z 
+security	UNKNOWN STEP	2026-03-30T18:24:58.7349319Z The option "--no-update" does not exist
+security	UNKNOWN STEP	2026-03-30T18:24:58.8047025Z ##[error]Process completed with exit code 1.
+security	UNKNOWN STEP	2026-03-30T18:24:58.8163064Z Post job cleanup.
+security	UNKNOWN STEP	2026-03-30T18:24:58.9121036Z [command]/usr/bin/git version
+security	UNKNOWN STEP	2026-03-30T18:24:58.9157697Z git version 2.53.0
+security	UNKNOWN STEP	2026-03-30T18:24:58.9201596Z Temporarily overriding HOME='/home/runner/work/_temp/af3a5d16-eb42-4b36-ba8e-155a322a36b0' before making global git config changes
+security	UNKNOWN STEP	2026-03-30T18:24:58.9203425Z Adding repository directory to the temporary git global config as a safe directory
+security	UNKNOWN STEP	2026-03-30T18:24:58.9215682Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+security	UNKNOWN STEP	2026-03-30T18:24:58.9251838Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+security	UNKNOWN STEP	2026-03-30T18:24:58.9285872Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+security	UNKNOWN STEP	2026-03-30T18:24:58.9530825Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+security	UNKNOWN STEP	2026-03-30T18:24:58.9553682Z http.https://github.com/.extraheader
+security	UNKNOWN STEP	2026-03-30T18:24:58.9566693Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+security	UNKNOWN STEP	2026-03-30T18:24:58.9598347Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+security	UNKNOWN STEP	2026-03-30T18:24:58.9837764Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+security	UNKNOWN STEP	2026-03-30T18:24:58.9868574Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+security	UNKNOWN STEP	2026-03-30T18:24:59.0235765Z Cleaning up orphan processes
+security	UNKNOWN STEP	2026-03-30T18:24:59.0499577Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-python@v5. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+lint	UNKNOWN STEP	∩╗┐2026-03-30T18:24:39.8750123Z Current runner version: '2.333.0'
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8777620Z ##[group]Runner Image Provisioner
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8778495Z Hosted Compute Agent
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8779076Z Version: 20260213.493
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8779714Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8780432Z Build Date: 2026-02-13T00:28:41Z
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8781085Z Worker ID: {85d5bf21-7feb-49b2-8c62-5903aaa37b91}
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8781779Z Azure Region: northcentralus
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8782309Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8783859Z ##[group]Operating System
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8784439Z Ubuntu
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8784938Z 24.04.4
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8785336Z LTS
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8785891Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8786758Z ##[group]Runner Image
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8787320Z Image: ubuntu-24.04
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8787910Z Version: 20260323.65.1
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8789091Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260323.65/images/ubuntu/Ubuntu2404-Readme.md
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8790534Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260323.65
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8791426Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8794156Z ##[group]GITHUB_TOKEN Permissions
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8796364Z Actions: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8796937Z ArtifactMetadata: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8797555Z Attestations: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8798063Z Checks: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8798498Z Contents: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8799066Z Deployments: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8799570Z Discussions: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8800060Z Issues: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8800570Z Metadata: read
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8801067Z Models: read
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8801545Z Packages: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8802105Z Pages: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8802741Z PullRequests: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8803242Z RepositoryProjects: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8803870Z SecurityEvents: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8804369Z Statuses: write
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8804877Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8807739Z Secret source: Actions
+lint	UNKNOWN STEP	2026-03-30T18:24:39.8808462Z Prepare workflow directory
+lint	UNKNOWN STEP	2026-03-30T18:24:39.9152344Z Prepare all required actions
+lint	UNKNOWN STEP	2026-03-30T18:24:39.9192534Z Getting action download info
+lint	UNKNOWN STEP	2026-03-30T18:24:40.3484134Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+lint	UNKNOWN STEP	2026-03-30T18:24:40.4793458Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+lint	UNKNOWN STEP	2026-03-30T18:24:40.6623060Z Complete job name: lint
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7373832Z ##[group]Run actions/checkout@v4
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7374904Z with:
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7375354Z   repository: MycosoftLabs/mycosoft-mas
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7376100Z   token: ***
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7376761Z   ssh-strict: true
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7377174Z   ssh-user: git
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7377602Z   persist-credentials: true
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7378076Z   clean: true
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7378498Z   sparse-checkout-cone-mode: true
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7379002Z   fetch-depth: 1
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7379465Z   fetch-tags: false
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7379899Z   show-progress: true
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7380343Z   lfs: false
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7380740Z   submodules: false
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7381180Z   set-safe-directory: true
+lint	UNKNOWN STEP	2026-03-30T18:24:40.7381974Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8473144Z Syncing repository: MycosoftLabs/mycosoft-mas
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8476517Z ##[group]Getting Git version info
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8478046Z Working directory is '/home/runner/work/mycosoft-mas/mycosoft-mas'
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8480097Z [command]/usr/bin/git version
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8515593Z git version 2.53.0
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8558046Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8579027Z Temporarily overriding HOME='/home/runner/work/_temp/be44f15f-eb85-4ffb-9279-d38434e15d7f' before making global git config changes
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8596750Z Adding repository directory to the temporary git global config as a safe directory
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8599072Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8634717Z Deleting the contents of '/home/runner/work/mycosoft-mas/mycosoft-mas'
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8639153Z ##[group]Initializing the repository
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8644426Z [command]/usr/bin/git init /home/runner/work/mycosoft-mas/mycosoft-mas
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8752323Z hint: Using 'master' as the name for the initial branch. This default branch name
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8754382Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8755500Z hint: to use in all of your new repositories, which will suppress this warning,
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8756681Z hint: call:
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8757099Z hint:
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8757655Z hint: 	git config --global init.defaultBranch <name>
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8758309Z hint:
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8759118Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8760173Z hint: 'development'. The just-created branch can be renamed via this command:
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8761009Z hint:
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8761429Z hint: 	git branch -m <name>
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8761918Z hint:
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8762591Z hint: Disable this message with "git config set advice.defaultBranchName false"
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8764007Z Initialized empty Git repository in /home/runner/work/mycosoft-mas/mycosoft-mas/.git/
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8766548Z [command]/usr/bin/git remote add origin https://github.com/MycosoftLabs/mycosoft-mas
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8797682Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8798455Z ##[group]Disabling automatic garbage collection
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8802035Z [command]/usr/bin/git config --local gc.auto 0
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8832638Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8834008Z ##[group]Setting up auth
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8840886Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint	UNKNOWN STEP	2026-03-30T18:24:40.8873451Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint	UNKNOWN STEP	2026-03-30T18:24:40.9194314Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint	UNKNOWN STEP	2026-03-30T18:24:40.9231096Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint	UNKNOWN STEP	2026-03-30T18:24:40.9485490Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	UNKNOWN STEP	2026-03-30T18:24:40.9537198Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	UNKNOWN STEP	2026-03-30T18:24:40.9784815Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+lint	UNKNOWN STEP	2026-03-30T18:24:40.9820512Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:40.9821492Z ##[group]Fetching the repository
+lint	UNKNOWN STEP	2026-03-30T18:24:40.9830735Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d:refs/remotes/origin/main
+lint	UNKNOWN STEP	2026-03-30T18:24:48.5302333Z From https://github.com/MycosoftLabs/mycosoft-mas
+lint	UNKNOWN STEP	2026-03-30T18:24:48.5305493Z  * [new ref]         2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d -> origin/main
+lint	UNKNOWN STEP	2026-03-30T18:24:48.5331442Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:48.5333020Z ##[group]Determining the checkout info
+lint	UNKNOWN STEP	2026-03-30T18:24:48.5334817Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:48.5337493Z [command]/usr/bin/git sparse-checkout disable
+lint	UNKNOWN STEP	2026-03-30T18:24:48.5373956Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+lint	UNKNOWN STEP	2026-03-30T18:24:48.5399482Z ##[group]Checking out the ref
+lint	UNKNOWN STEP	2026-03-30T18:24:48.5402667Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+lint	UNKNOWN STEP	2026-03-30T18:24:49.5639682Z Updating files:  14% (1043/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7085428Z Updating files:  15% (1044/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7130441Z Updating files:  16% (1113/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7187318Z Updating files:  17% (1183/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7231103Z Updating files:  18% (1252/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7271750Z Updating files:  19% (1322/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7310283Z Updating files:  20% (1391/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7356138Z Updating files:  21% (1461/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7399197Z Updating files:  22% (1531/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7446971Z Updating files:  23% (1600/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7496563Z Updating files:  24% (1670/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7547397Z Updating files:  25% (1739/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7646542Z Updating files:  26% (1809/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7702861Z Updating files:  27% (1878/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7758606Z Updating files:  28% (1948/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7814581Z Updating files:  29% (2017/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7864626Z Updating files:  30% (2087/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7911533Z Updating files:  31% (2157/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.7972593Z Updating files:  32% (2226/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8022920Z Updating files:  33% (2296/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8072856Z Updating files:  34% (2365/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8124960Z Updating files:  35% (2435/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8176480Z Updating files:  36% (2504/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8210040Z Updating files:  37% (2574/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8261262Z Updating files:  38% (2643/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8302835Z Updating files:  39% (2713/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8343414Z Updating files:  40% (2782/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8434740Z Updating files:  41% (2852/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8469388Z Updating files:  42% (2922/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8500381Z Updating files:  43% (2991/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8547922Z Updating files:  44% (3061/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8583926Z Updating files:  45% (3130/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8612591Z Updating files:  46% (3200/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8663150Z Updating files:  47% (3269/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8694705Z Updating files:  48% (3339/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8732707Z Updating files:  49% (3408/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8784135Z Updating files:  50% (3478/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8863427Z Updating files:  51% (3548/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8911277Z Updating files:  52% (3617/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8946540Z Updating files:  53% (3687/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.8976978Z Updating files:  54% (3756/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9015593Z Updating files:  55% (3826/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9042609Z Updating files:  56% (3895/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9076111Z Updating files:  57% (3965/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9120664Z Updating files:  58% (4034/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9162185Z Updating files:  59% (4104/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9196576Z Updating files:  60% (4173/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9261494Z Updating files:  61% (4243/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9307990Z Updating files:  62% (4313/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9354763Z Updating files:  63% (4382/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9402744Z Updating files:  64% (4452/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9455424Z Updating files:  65% (4521/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9503145Z Updating files:  66% (4591/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9552995Z Updating files:  67% (4660/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9597592Z Updating files:  68% (4730/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9637468Z Updating files:  69% (4799/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9696592Z Updating files:  70% (4869/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9756794Z Updating files:  71% (4939/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9819238Z Updating files:  72% (5008/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9876989Z Updating files:  73% (5078/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9927057Z Updating files:  74% (5147/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:49.9985583Z Updating files:  75% (5217/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0049230Z Updating files:  76% (5286/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0108843Z Updating files:  77% (5356/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0180367Z Updating files:  78% (5425/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0234695Z Updating files:  79% (5495/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0276329Z Updating files:  80% (5564/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0342924Z Updating files:  81% (5634/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0384875Z Updating files:  82% (5704/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0423431Z Updating files:  83% (5773/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0463201Z Updating files:  84% (5843/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0508243Z Updating files:  85% (5912/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0552510Z Updating files:  86% (5982/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0602511Z Updating files:  87% (6051/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0649376Z Updating files:  88% (6121/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0691322Z Updating files:  89% (6190/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0738560Z Updating files:  90% (6260/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0785225Z Updating files:  91% (6330/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0830489Z Updating files:  92% (6399/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0872952Z Updating files:  93% (6469/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0925540Z Updating files:  94% (6538/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.0969589Z Updating files:  95% (6608/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1013213Z Updating files:  96% (6677/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1054374Z Updating files:  97% (6747/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1091846Z Updating files:  98% (6816/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1131226Z Updating files:  99% (6886/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1131834Z Updating files: 100% (6955/6955)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1132216Z Updating files: 100% (6955/6955), done.
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1255733Z Switched to a new branch 'main'
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1258420Z branch 'main' set up to track 'origin/main'.
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1397113Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1435907Z [command]/usr/bin/git log -1 --format=%H
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1458619Z 2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1704767Z ##[group]Run actions/setup-python@v5
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1705055Z with:
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1705237Z   python-version: 3.11
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1705459Z   check-latest: false
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1705792Z   token: ***
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1705992Z   update-environment: true
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1706528Z   allow-prereleases: false
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1706757Z   freethreaded: false
+lint	UNKNOWN STEP	2026-03-30T18:24:50.1706962Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3404455Z ##[group]Installed versions
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3502845Z Successfully set up CPython (3.11.15)
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3503955Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3618738Z ##[group]Run pip install poetry
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3619081Z [36;1mpip install poetry[0m
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3754617Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3754923Z env:
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3755227Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3755757Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3756584Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3757037Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3757480Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3757935Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+lint	UNKNOWN STEP	2026-03-30T18:24:50.3758306Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:24:53.2718452Z Collecting poetry
+lint	UNKNOWN STEP	2026-03-30T18:24:53.3309096Z   Downloading poetry-2.3.3-py3-none-any.whl.metadata (7.2 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.3467268Z Collecting build<2.0.0,>=1.2.1 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.3504068Z   Downloading build-1.4.2-py3-none-any.whl.metadata (5.8 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.3644792Z Collecting cachecontrol<0.15.0,>=0.14.0 (from cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.3679885Z   Downloading cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.3977060Z Collecting cleo<3.0.0,>=2.1.0 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.4014775Z   Downloading cleo-2.1.0-py3-none-any.whl.metadata (12 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.5330604Z Collecting dulwich<2,>=0.25.0 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.5370473Z   Downloading dulwich-1.1.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (5.9 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.5510627Z Collecting fastjsonschema<3.0.0,>=2.18.0 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.5545779Z   Downloading fastjsonschema-2.21.2-py3-none-any.whl.metadata (2.3 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.5666665Z Collecting findpython<0.8.0,>=0.6.2 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.5702359Z   Downloading findpython-0.7.1-py3-none-any.whl.metadata (5.4 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.5823612Z Collecting installer<0.8.0,>=0.7.0 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.5859044Z   Downloading installer-0.7.0-py3-none-any.whl.metadata (936 bytes)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.6094920Z Collecting keyring<26.0.0,>=25.1.0 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.6131183Z   Downloading keyring-25.7.0-py3-none-any.whl.metadata (21 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.6315443Z Collecting packaging>=24.2 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.6351994Z   Downloading packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.6562123Z Collecting pbs-installer>=2025.6.10 (from pbs-installer[download,install]>=2025.6.10->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.6598473Z   Downloading pbs_installer-2026.3.25-py3-none-any.whl.metadata (991 bytes)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.6733755Z Collecting pkginfo<2.0,>=1.12 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.6769435Z   Downloading pkginfo-1.12.1.2-py3-none-any.whl.metadata (13 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.6964447Z Collecting platformdirs<5,>=3.0.0 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7001670Z   Downloading platformdirs-4.9.4-py3-none-any.whl.metadata (4.7 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7150493Z Collecting poetry-core==2.3.2 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7188066Z   Downloading poetry_core-2.3.2-py3-none-any.whl.metadata (3.8 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7283293Z Collecting pyproject-hooks<2.0.0,>=1.0.0 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7317448Z   Downloading pyproject_hooks-1.2.0-py3-none-any.whl.metadata (1.3 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7516560Z Collecting requests<3.0,>=2.26 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7574885Z   Downloading requests-2.33.1-py3-none-any.whl.metadata (4.8 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7699443Z Collecting requests-toolbelt<2.0.0,>=1.0.0 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7735568Z   Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl.metadata (14 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7861630Z Collecting shellingham<2.0,>=1.5 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.7898474Z   Downloading shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.8056808Z Collecting tomlkit<1.0.0,>=0.11.4 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.8092329Z   Downloading tomlkit-0.14.0-py3-none-any.whl.metadata (2.8 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.8332015Z Collecting trove-classifiers>=2022.5.19 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.8367904Z   Downloading trove_classifiers-2026.1.14.14-py3-none-any.whl.metadata (2.4 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.8678565Z Collecting virtualenv>=20.26.6 (from poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.8715354Z   Downloading virtualenv-21.2.0-py3-none-any.whl.metadata (3.5 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.9391083Z Collecting msgpack<2.0.0,>=0.5.2 (from cachecontrol<0.15.0,>=0.14.0->cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.9430372Z   Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.9629953Z Collecting filelock>=3.8.0 (from cachecontrol[filecache]<0.15.0,>=0.14.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.9665422Z   Downloading filelock-3.25.2-py3-none-any.whl.metadata (2.0 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.9766535Z Collecting crashtest<0.5.0,>=0.4.1 (from cleo<3.0.0,>=2.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:53.9801573Z   Downloading crashtest-0.4.1-py3-none-any.whl.metadata (1.1 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.4576638Z Collecting rapidfuzz<4.0.0,>=3.0.0 (from cleo<3.0.0,>=2.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.4619076Z   Downloading rapidfuzz-3.14.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (12 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.4823539Z Collecting urllib3>=2.2.2 (from dulwich<2,>=0.25.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.4861107Z   Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.5028729Z Collecting typing_extensions>=4.6.0 (from dulwich<2,>=0.25.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.5066637Z   Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.5221157Z Collecting SecretStorage>=3.2 (from keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.5261660Z   Downloading secretstorage-3.5.0-py3-none-any.whl.metadata (4.0 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.5370910Z Collecting jeepney>=0.4.2 (from keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.5413015Z   Downloading jeepney-0.9.0-py3-none-any.whl.metadata (1.2 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.5989165Z Collecting importlib_metadata>=4.11.4 (from keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.6029120Z   Downloading importlib_metadata-9.0.0-py3-none-any.whl.metadata (4.5 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.6157032Z Collecting jaraco.classes (from keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.6192840Z   Downloading jaraco.classes-3.4.0-py3-none-any.whl.metadata (2.6 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.6353963Z Collecting jaraco.functools (from keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.6390900Z   Downloading jaraco_functools-4.4.0-py3-none-any.whl.metadata (3.0 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.6539452Z Collecting jaraco.context (from keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.6573528Z   Downloading jaraco_context-6.1.2-py3-none-any.whl.metadata (4.2 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.7435316Z Collecting charset_normalizer<4,>=2 (from requests<3.0,>=2.26->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.7479090Z   Downloading charset_normalizer-3.4.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.7637377Z Collecting idna<4,>=2.5 (from requests<3.0,>=2.26->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.7685530Z   Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.7864035Z Collecting certifi>=2023.5.7 (from requests<3.0,>=2.26->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.7900100Z   Downloading certifi-2026.2.25-py3-none-any.whl.metadata (2.5 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.8136420Z Collecting zipp>=3.20 (from importlib_metadata>=4.11.4->keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.8171348Z   Downloading zipp-3.23.0-py3-none-any.whl.metadata (3.6 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.8348998Z Collecting httpx<1,>=0.27.0 (from pbs-installer[download,install]>=2025.6.10->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.8387254Z   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.9117543Z Collecting zstandard>=0.21.0 (from pbs-installer[download,install]>=2025.6.10->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:54.9158111Z   Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.3 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:55.6395674Z Collecting anyio (from httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:55.6434958Z   Downloading anyio-4.13.0-py3-none-any.whl.metadata (4.5 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:55.6620185Z Collecting httpcore==1.* (from httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:55.6658894Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:55.6784508Z Collecting h11>=0.16 (from httpcore==1.*->httpx<1,>=0.27.0->pbs-installer[download,install]>=2025.6.10->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:55.6822871Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:55.8534093Z Collecting cryptography>=2.0 (from SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:55.8572988Z   Downloading cryptography-46.0.6-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0087406Z Collecting cffi>=2.0.0 (from cryptography>=2.0->SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0138527Z   Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0265504Z Collecting pycparser (from cffi>=2.0.0->cryptography>=2.0->SecretStorage>=3.2->keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0300501Z   Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0434214Z Collecting distlib<1,>=0.3.7 (from virtualenv>=20.26.6->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0468383Z   Downloading distlib-0.4.0-py2.py3-none-any.whl.metadata (5.2 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0598541Z Collecting python-discovery>=1 (from virtualenv>=20.26.6->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0633731Z   Downloading python_discovery-1.2.1-py3-none-any.whl.metadata (5.4 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0881562Z Collecting more-itertools (from jaraco.classes->keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.0919150Z   Downloading more_itertools-10.8.0-py3-none-any.whl.metadata (39 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1030930Z Collecting backports.tarfile (from jaraco.context->keyring<26.0.0,>=25.1.0->poetry)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1065665Z   Downloading backports.tarfile-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1253914Z Downloading poetry-2.3.3-py3-none-any.whl (288 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1342911Z Downloading poetry_core-2.3.2-py3-none-any.whl (340 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1417435Z Downloading build-1.4.2-py3-none-any.whl (24 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1469827Z Downloading cachecontrol-0.14.4-py3-none-any.whl (22 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1522922Z Downloading cleo-2.1.0-py3-none-any.whl (78 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1578028Z Downloading crashtest-0.4.1-py3-none-any.whl (7.6 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1642645Z Downloading dulwich-1.1.0-cp311-cp311-manylinux_2_28_x86_64.whl (1.4 MB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1774380Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 1.4/1.4 MB 118.0 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1811309Z Downloading fastjsonschema-2.21.2-py3-none-any.whl (24 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1866886Z Downloading findpython-0.7.1-py3-none-any.whl (21 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.1932618Z Downloading installer-0.7.0-py3-none-any.whl (453 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2001386Z Downloading keyring-25.7.0-py3-none-any.whl (39 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2056856Z Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (426 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2123704Z Downloading pkginfo-1.12.1.2-py3-none-any.whl (32 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2181874Z Downloading platformdirs-4.9.4-py3-none-any.whl (21 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2242661Z Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2299806Z Downloading rapidfuzz-3.14.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (3.2 MB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2456934Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 3.2/3.2 MB 231.2 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2495960Z Downloading requests-2.33.1-py3-none-any.whl (64 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2553097Z Downloading charset_normalizer-3.4.6-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (204 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2611360Z Downloading idna-3.11-py3-none-any.whl (71 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2663721Z Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl (54 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2723104Z Downloading shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2774863Z Downloading tomlkit-0.14.0-py3-none-any.whl (39 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2831395Z Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.2975032Z Downloading certifi-2026.2.25-py3-none-any.whl (153 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3031143Z Downloading filelock-3.25.2-py3-none-any.whl (26 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3084612Z Downloading importlib_metadata-9.0.0-py3-none-any.whl (27 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3136072Z Downloading jeepney-0.9.0-py3-none-any.whl (49 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3194397Z Downloading packaging-26.0-py3-none-any.whl (74 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3249359Z Downloading pbs_installer-2026.3.25-py3-none-any.whl (72 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3303450Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3360378Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3419254Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3470038Z Downloading secretstorage-3.5.0-py3-none-any.whl (15 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3523224Z Downloading cryptography-46.0.6-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3676814Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 4.5/4.5 MB 323.3 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3719460Z Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3779111Z Downloading trove_classifiers-2026.1.14.14-py3-none-any.whl (14 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3833955Z Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.3892896Z Downloading virtualenv-21.2.0-py3-none-any.whl (5.8 MB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4286108Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 5.8/5.8 MB 154.2 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4327300Z Downloading distlib-0.4.0-py2.py3-none-any.whl (469 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4390920Z Downloading python_discovery-1.2.1-py3-none-any.whl (31 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4446098Z Downloading zipp-3.23.0-py3-none-any.whl (10 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4503119Z Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.6 MB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4708390Z    ΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöüΓöü 5.6/5.6 MB 291.1 MB/s  0:00:00
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4746063Z Downloading anyio-4.13.0-py3-none-any.whl (114 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4803321Z Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4858479Z Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4911839Z Downloading backports.tarfile-1.2.0-py3-none-any.whl (30 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.4965606Z Downloading jaraco_functools-4.4.0-py3-none-any.whl (10 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.5020069Z Downloading more_itertools-10.8.0-py3-none-any.whl (69 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.5076578Z Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+lint	UNKNOWN STEP	2026-03-30T18:24:56.6342104Z Installing collected packages: trove-classifiers, fastjsonschema, distlib, zstandard, zipp, urllib3, typing_extensions, tomlkit, shellingham, rapidfuzz, pyproject-hooks, pycparser, poetry-core, platformdirs, pkginfo, pbs-installer, packaging, msgpack, more-itertools, jeepney, installer, idna, h11, filelock, crashtest, charset_normalizer, certifi, backports.tarfile, requests, python-discovery, jaraco.functools, jaraco.context, jaraco.classes, importlib_metadata, httpcore, findpython, dulwich, cleo, cffi, build, anyio, virtualenv, requests-toolbelt, httpx, cryptography, cachecontrol, SecretStorage, keyring, poetry
+lint	UNKNOWN STEP	2026-03-30T18:24:59.1877475Z 
+lint	UNKNOWN STEP	2026-03-30T18:24:59.1905602Z Successfully installed SecretStorage-3.5.0 anyio-4.13.0 backports.tarfile-1.2.0 build-1.4.2 cachecontrol-0.14.4 certifi-2026.2.25 cffi-2.0.0 charset_normalizer-3.4.6 cleo-2.1.0 crashtest-0.4.1 cryptography-46.0.6 distlib-0.4.0 dulwich-1.1.0 fastjsonschema-2.21.2 filelock-3.25.2 findpython-0.7.1 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.11 importlib_metadata-9.0.0 installer-0.7.0 jaraco.classes-3.4.0 jaraco.context-6.1.2 jaraco.functools-4.4.0 jeepney-0.9.0 keyring-25.7.0 more-itertools-10.8.0 msgpack-1.1.2 packaging-26.0 pbs-installer-2026.3.25 pkginfo-1.12.1.2 platformdirs-4.9.4 poetry-2.3.3 poetry-core-2.3.2 pycparser-3.0 pyproject-hooks-1.2.0 python-discovery-1.2.1 rapidfuzz-3.14.3 requests-2.33.1 requests-toolbelt-1.0.0 shellingham-1.5.4 tomlkit-0.14.0 trove-classifiers-2026.1.14.14 typing_extensions-4.15.0 urllib3-2.6.3 virtualenv-21.2.0 zipp-3.23.0 zstandard-0.25.0
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5882590Z ##[group]Run poetry lock --no-update && poetry install --with dev
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5883098Z [36;1mpoetry lock --no-update && poetry install --with dev[0m
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5911259Z shell: /usr/bin/bash -e {0}
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5911521Z env:
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5911821Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5912292Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5912758Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5913166Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5913567Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5913982Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+lint	UNKNOWN STEP	2026-03-30T18:24:59.5914323Z ##[endgroup]
+lint	UNKNOWN STEP	2026-03-30T18:25:01.0237677Z Creating virtualenv mycosoft-mas in /home/runner/work/mycosoft-mas/mycosoft-mas/.venv
+lint	UNKNOWN STEP	2026-03-30T18:25:01.3683450Z 
+lint	UNKNOWN STEP	2026-03-30T18:25:01.3684118Z The option "--no-update" does not exist
+lint	UNKNOWN STEP	2026-03-30T18:25:01.4280876Z ##[error]Process completed with exit code 1.
+lint	UNKNOWN STEP	2026-03-30T18:25:01.4395823Z Post job cleanup.
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5354642Z [command]/usr/bin/git version
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5394437Z git version 2.53.0
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5442785Z Temporarily overriding HOME='/home/runner/work/_temp/9a3d7f91-d2df-40a1-8ce9-80b8ab242c82' before making global git config changes
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5444158Z Adding repository directory to the temporary git global config as a safe directory
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5450147Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5491910Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5527724Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5787104Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5812428Z http.https://github.com/.extraheader
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5825776Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+lint	UNKNOWN STEP	2026-03-30T18:25:01.5859032Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+lint	UNKNOWN STEP	2026-03-30T18:25:01.6107186Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+lint	UNKNOWN STEP	2026-03-30T18:25:01.6141874Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+lint	UNKNOWN STEP	2026-03-30T18:25:01.6507474Z Cleaning up orphan processes
+lint	UNKNOWN STEP	2026-03-30T18:25:01.6782719Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-python@v5. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+test (3.11)	UNKNOWN STEP	∩╗┐2026-03-30T18:24:38.8939646Z Current runner version: '2.333.0'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8963986Z ##[group]Runner Image Provisioner
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8964764Z Hosted Compute Agent
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8965454Z Version: 20260213.493
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8966064Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8966742Z Build Date: 2026-02-13T00:28:41Z
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8967419Z Worker ID: {9c723912-4827-4074-b0fc-23740c578e60}
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8968084Z Azure Region: eastus2
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8968816Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8970420Z ##[group]Operating System
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8971036Z Ubuntu
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8971525Z 24.04.4
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8971998Z LTS
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8972472Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8972969Z ##[group]Runner Image
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8973507Z Image: ubuntu-24.04
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8974070Z Version: 20260323.65.1
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8975178Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260323.65/images/ubuntu/Ubuntu2404-Readme.md
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8976658Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260323.65
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8977542Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8980577Z ##[group]GITHUB_TOKEN Permissions
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8983003Z Actions: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8983661Z ArtifactMetadata: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8984211Z Attestations: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8984723Z Checks: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8985164Z Contents: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8985764Z Deployments: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8986247Z Discussions: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8986745Z Issues: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8987260Z Metadata: read
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8987754Z Models: read
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8988221Z Packages: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8989166Z Pages: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8989796Z PullRequests: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8990309Z RepositoryProjects: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8990932Z SecurityEvents: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8991430Z Statuses: write
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8991940Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8994797Z Secret source: Actions
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.8995526Z Prepare workflow directory
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.9414962Z Prepare all required actions
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:38.9452627Z Getting action download info
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.2619447Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.3604824Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.6995981Z Complete job name: test (3.11)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7416919Z ##[group]Checking docker version
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7430118Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7785713Z '1.48'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7796778Z Docker daemon API version: '1.48'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7797534Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7939382Z '1.48'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7951934Z Docker client API version: '1.48'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7956655Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7959905Z ##[group]Clean up resources from previous jobs
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.7964942Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=a7698b"
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.8090275Z ##[command]/usr/bin/docker network prune --force --filter "label=a7698b"
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.8203722Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.8204197Z ##[group]Create local container network
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.8213872Z ##[command]/usr/bin/docker network create --label a7698b github_network_e9cd88234f354fe192a7665fe9dccafd
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.8747282Z 4769ac38a031058f438a151ba8bce81a57610715c4526904b7946961cd456c86
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.8765722Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.8788868Z ##[group]Starting redis service container
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.8809735Z ##[command]/usr/bin/docker pull redis
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:39.8927275Z Using default tag: latest
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.2203006Z latest: Pulling from library/redis
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3009253Z ec781dee3f47: Pulling fs layer
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3010737Z 5f7274725e4f: Pulling fs layer
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3012384Z f4f2f7018ed9: Pulling fs layer
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3013507Z 3f63903b0cb8: Pulling fs layer
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3014677Z c9ff57cee690: Pulling fs layer
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3015876Z 4f4fb700ef54: Pulling fs layer
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3016687Z 3e6b2202a764: Pulling fs layer
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3017476Z 3f63903b0cb8: Waiting
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3018060Z c9ff57cee690: Waiting
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3018890Z 4f4fb700ef54: Waiting
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3019452Z 3e6b2202a764: Waiting
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.3822787Z f4f2f7018ed9: Verifying Checksum
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.4024437Z 5f7274725e4f: Verifying Checksum
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.4025858Z 5f7274725e4f: Download complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.5317250Z c9ff57cee690: Verifying Checksum
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.5319628Z c9ff57cee690: Download complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.6380430Z 4f4fb700ef54: Verifying Checksum
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.6386090Z 4f4fb700ef54: Download complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.7456059Z 3e6b2202a764: Verifying Checksum
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.7456698Z 3e6b2202a764: Download complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.8572238Z 3f63903b0cb8: Verifying Checksum
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.8573523Z 3f63903b0cb8: Download complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.8597845Z ec781dee3f47: Verifying Checksum
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:40.8598698Z ec781dee3f47: Download complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:41.7807328Z ec781dee3f47: Pull complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.0487325Z 5f7274725e4f: Pull complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.0860570Z f4f2f7018ed9: Pull complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4036972Z 3f63903b0cb8: Pull complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4143515Z c9ff57cee690: Pull complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4234392Z 4f4fb700ef54: Pull complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4359713Z 3e6b2202a764: Pull complete
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4401548Z Digest: sha256:009cc37796fbdbe1b631b4cc0582bed167e5e403ed8bcd06f77eb6cb5aeb6f93
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4430534Z Status: Downloaded newer image for redis:latest
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4431094Z docker.io/library/redis:latest
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4466077Z ##[command]/usr/bin/docker create --name b86fb1cb6c914e9aafe22502c71926fd_redis_b136f4 --label a7698b --network github_network_e9cd88234f354fe192a7665fe9dccafd --network-alias redis -p 6379:6379 --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5 -e GITHUB_ACTIONS=true -e CI=true redis
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4693194Z b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.4712636Z ##[command]/usr/bin/docker start b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6299662Z b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6321972Z ##[command]/usr/bin/docker ps --all --filter id=b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6459810Z b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7 Up Less than a second (health: starting)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6501739Z ##[command]/usr/bin/docker port b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6647945Z 6379/tcp -> 0.0.0.0:6379
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6649324Z 6379/tcp -> [::]:6379
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6700041Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6708898Z ##[group]Waiting for all services to be ready
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6722181Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6833777Z starting
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:45.6856677Z redis service is starting, waiting 2 seconds before checking again.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:47.6851799Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:47.6970077Z starting
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:47.6982087Z redis service is starting, waiting 3 seconds before checking again.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:51.5502909Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:51.5619121Z starting
+test (3.11)	UNKNOWN STEP	2026-03-30T18:24:51.5630453Z redis service is starting, waiting 8 seconds before checking again.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4330285Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4450530Z healthy
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4491473Z redis service is healthy.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4492141Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4737878Z ##[group]Run actions/checkout@v4
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4738748Z with:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4738975Z   repository: MycosoftLabs/mycosoft-mas
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4739448Z   token: ***
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4739757Z   ssh-strict: true
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4740015Z   ssh-user: git
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4740334Z   persist-credentials: true
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4740590Z   clean: true
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4740793Z   sparse-checkout-cone-mode: true
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4741043Z   fetch-depth: 1
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4741226Z   fetch-tags: false
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4741412Z   show-progress: true
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4741595Z   lfs: false
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4741770Z   submodules: false
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4741962Z   set-safe-directory: true
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.4742502Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5822436Z Syncing repository: MycosoftLabs/mycosoft-mas
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5823714Z ##[group]Getting Git version info
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5824183Z Working directory is '/home/runner/work/mycosoft-mas/mycosoft-mas'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5824750Z [command]/usr/bin/git version
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5866052Z git version 2.53.0
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5892867Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5905934Z Temporarily overriding HOME='/home/runner/work/_temp/046ed27b-91be-4873-b7aa-41ea97a9a4b4' before making global git config changes
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5906984Z Adding repository directory to the temporary git global config as a safe directory
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5917954Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5948894Z Deleting the contents of '/home/runner/work/mycosoft-mas/mycosoft-mas'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5952472Z ##[group]Initializing the repository
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.5956402Z [command]/usr/bin/git init /home/runner/work/mycosoft-mas/mycosoft-mas
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6027235Z hint: Using 'master' as the name for the initial branch. This default branch name
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6028212Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6029318Z hint: to use in all of your new repositories, which will suppress this warning,
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6029924Z hint: call:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6030221Z hint:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6030542Z hint: 	git config --global init.defaultBranch <name>
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6030863Z hint:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6031153Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6031667Z hint: 'development'. The just-created branch can be renamed via this command:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6032045Z hint:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6032222Z hint: 	git branch -m <name>
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6032438Z hint:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6032741Z hint: Disable this message with "git config set advice.defaultBranchName false"
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6033324Z Initialized empty Git repository in /home/runner/work/mycosoft-mas/mycosoft-mas/.git/
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6040587Z [command]/usr/bin/git remote add origin https://github.com/MycosoftLabs/mycosoft-mas
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6067359Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6067807Z ##[group]Disabling automatic garbage collection
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6071851Z [command]/usr/bin/git config --local gc.auto 0
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6097872Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6098301Z ##[group]Setting up auth
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6104908Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6133277Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6409396Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6436704Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6649117Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6677000Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6896166Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6927679Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6928240Z ##[group]Fetching the repository
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:00.6936097Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d:refs/remotes/origin/main
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:06.9541277Z From https://github.com/MycosoftLabs/mycosoft-mas
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:06.9542259Z  * [new ref]         2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d -> origin/main
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:06.9569820Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:06.9570423Z ##[group]Determining the checkout info
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:06.9572895Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:06.9578226Z [command]/usr/bin/git sparse-checkout disable
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:06.9613590Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:06.9642616Z ##[group]Checking out the ref
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:06.9644357Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.0896354Z Updating files:  15% (1050/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.0940735Z Updating files:  16% (1113/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.0996392Z Updating files:  17% (1183/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1037919Z Updating files:  18% (1252/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1078236Z Updating files:  19% (1322/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1116545Z Updating files:  20% (1391/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1162783Z Updating files:  21% (1461/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1205729Z Updating files:  22% (1531/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1253811Z Updating files:  23% (1600/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1302456Z Updating files:  24% (1670/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1353346Z Updating files:  25% (1739/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1450431Z Updating files:  26% (1809/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1506202Z Updating files:  27% (1878/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1563044Z Updating files:  28% (1948/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1619313Z Updating files:  29% (2017/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1669714Z Updating files:  30% (2087/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1715890Z Updating files:  31% (2157/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1776668Z Updating files:  32% (2226/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1826828Z Updating files:  33% (2296/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1877088Z Updating files:  34% (2365/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1929531Z Updating files:  35% (2435/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.1972034Z Updating files:  36% (2504/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2005061Z Updating files:  37% (2574/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2055127Z Updating files:  38% (2643/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2095839Z Updating files:  39% (2713/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2134843Z Updating files:  40% (2782/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2220898Z Updating files:  41% (2852/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2255030Z Updating files:  42% (2922/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2283124Z Updating files:  43% (2991/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2327839Z Updating files:  44% (3061/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2363420Z Updating files:  45% (3130/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2391031Z Updating files:  46% (3200/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2439950Z Updating files:  47% (3269/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2470196Z Updating files:  48% (3339/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2569912Z Updating files:  49% (3408/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2570647Z Updating files:  50% (3478/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2631470Z Updating files:  51% (3548/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2678615Z Updating files:  52% (3617/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2713494Z Updating files:  53% (3687/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2742817Z Updating files:  54% (3756/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2781003Z Updating files:  55% (3826/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2807047Z Updating files:  56% (3895/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2840534Z Updating files:  57% (3965/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2883086Z Updating files:  58% (4034/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2922954Z Updating files:  59% (4104/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.2956457Z Updating files:  60% (4173/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3017263Z Updating files:  61% (4243/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3062875Z Updating files:  62% (4313/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3109190Z Updating files:  63% (4382/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3177978Z Updating files:  64% (4452/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3233001Z Updating files:  65% (4521/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3281399Z Updating files:  66% (4591/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3330430Z Updating files:  67% (4660/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3375150Z Updating files:  68% (4730/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3415100Z Updating files:  69% (4799/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3458106Z Updating files:  70% (4869/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3506989Z Updating files:  71% (4939/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3568842Z Updating files:  72% (5008/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3618841Z Updating files:  73% (5078/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3668041Z Updating files:  74% (5147/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3716181Z Updating files:  75% (5217/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3754621Z Updating files:  76% (5286/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3796399Z Updating files:  77% (5356/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3847044Z Updating files:  78% (5425/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3898797Z Updating files:  79% (5495/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.3938185Z Updating files:  80% (5564/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4003434Z Updating files:  81% (5634/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4044801Z Updating files:  82% (5704/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4083153Z Updating files:  83% (5773/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4123464Z Updating files:  84% (5843/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4168491Z Updating files:  85% (5912/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4212673Z Updating files:  86% (5982/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4263045Z Updating files:  87% (6051/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4308102Z Updating files:  88% (6121/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4348736Z Updating files:  89% (6190/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4394503Z Updating files:  90% (6260/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4440803Z Updating files:  91% (6330/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4484811Z Updating files:  92% (6399/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4526967Z Updating files:  93% (6469/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4579190Z Updating files:  94% (6538/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4620783Z Updating files:  95% (6608/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4664297Z Updating files:  96% (6677/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4705251Z Updating files:  97% (6747/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4742012Z Updating files:  98% (6816/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4781661Z Updating files:  99% (6886/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4782163Z Updating files: 100% (6955/6955)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4782471Z Updating files: 100% (6955/6955), done.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4900803Z Switched to a new branch 'main'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.4904141Z branch 'main' set up to track 'origin/main'.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5042714Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5079553Z [command]/usr/bin/git log -1 --format=%H
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5101605Z 2f259b9b9e0f0872980cdcfc6fdc08e9b8e9980d
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5315532Z ##[group]Run actions/setup-python@v5
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5315799Z with:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5315969Z   python-version: 3.11
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5316174Z   check-latest: false
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5316475Z   token: ***
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5316657Z   update-environment: true
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5316882Z   allow-prereleases: false
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5317080Z   freethreaded: false
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.5317266Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.6987682Z ##[group]Installed versions
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7078760Z Successfully set up CPython (3.11.15)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7080206Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7197683Z ##[group]Run curl -sSL https://install.python-poetry.org | python3 -
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7198276Z [36;1mcurl -sSL https://install.python-poetry.org | python3 -[0m
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7240738Z shell: /usr/bin/bash -e {0}
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7240983Z env:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7241221Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7241653Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7242080Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7242427Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7242776Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7243123Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:08.7243422Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2662361Z Retrieving Poetry metadata
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2662686Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2664770Z # Welcome to Poetry!
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2665070Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2665329Z This will download and install the latest version of Poetry,
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2665843Z a dependency and package manager for Python.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2666134Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2666414Z It will add the `poetry` command to Poetry's bin directory, located at:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2666829Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2666942Z /home/runner/.local/bin
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2667131Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2667453Z You can uninstall at any time by executing this script with the --uninstall option,
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2668059Z and these changes will be reverted.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2668560Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2668707Z Installing Poetry (2.3.3)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2669095Z Installing Poetry (2.3.3): Creating environment
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2669570Z Installing Poetry (2.3.3): Installing Poetry
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2669984Z Installing Poetry (2.3.3): Creating script
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2670378Z Installing Poetry (2.3.3): Done
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2670611Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2670749Z Poetry (2.3.3) is installed now. Great!
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2670994Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2671183Z You can test that everything is set up by executing:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2671492Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2671599Z `poetry --version`
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2671772Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2809878Z ##[group]Run poetry lock --no-update
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2810233Z [36;1mpoetry lock --no-update[0m
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2810484Z [36;1mpoetry install --with dev[0m
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2837898Z shell: /usr/bin/bash -e {0}
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2838120Z env:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2838556Z   pythonLocation: /opt/hostedtoolcache/Python/3.11.15/x64
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2838995Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib/pkgconfig
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2839409Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2839780Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2840148Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.11.15/x64
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2840528Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.11.15/x64/lib
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:20.2840832Z ##[endgroup]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.0309762Z Creating virtualenv mycosoft-mas in /home/runner/work/mycosoft-mas/mycosoft-mas/.venv
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.3368232Z 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.3368721Z The option "--no-update" does not exist
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.3889219Z ##[error]Process completed with exit code 1.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.3977842Z Post job cleanup.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.4898199Z [command]/usr/bin/git version
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.4933696Z git version 2.53.0
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.4977499Z Temporarily overriding HOME='/home/runner/work/_temp/151a758c-5d67-47db-aef8-ec8efa4bd1e0' before making global git config changes
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.4979105Z Adding repository directory to the temporary git global config as a safe directory
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.4985177Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/mycosoft-mas/mycosoft-mas
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5024712Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5055677Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5290686Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5310920Z http.https://github.com/.extraheader
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5323870Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5356690Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5595654Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5626067Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5941480Z Print service container logs: b86fb1cb6c914e9aafe22502c71926fd_redis_b136f4
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.5945871Z ##[command]/usr/bin/docker logs --details b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6060686Z  Starting Redis Server
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6063449Z  1:C 30 Mar 2026 18:24:45.651 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6065468Z  1:C 30 Mar 2026 18:24:45.651 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6066021Z  1:C 30 Mar 2026 18:24:45.651 * Redis version=8.6.2, bits=64, commit=00000000, modified=1, pid=1, just started
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6066517Z  1:C 30 Mar 2026 18:24:45.651 * Configuration loaded
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6066853Z  1:M 30 Mar 2026 18:24:45.651 * monotonic clock: POSIX clock_gettime
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6067219Z  1:M 30 Mar 2026 18:24:45.652 * Running mode=standalone, port=6379.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6067595Z  1:M 30 Mar 2026 18:24:45.652 * <bf> RedisBloom version 8.6.0 (Git=unknown)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6068008Z  1:M 30 Mar 2026 18:24:45.652 * <bf> Registering configuration options: [
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6069023Z  1:M 30 Mar 2026 18:24:45.652 * <bf> 	{ bf-error-rate       :      0.01 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6069771Z  1:M 30 Mar 2026 18:24:45.652 * <bf> 	{ bf-initial-size     :       100 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6070208Z  1:M 30 Mar 2026 18:24:45.652 * <bf> 	{ bf-expansion-factor :         2 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6070572Z  1:M 30 Mar 2026 18:24:45.652 * <bf> 	{ cf-bucket-size      :         2 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6070948Z  1:M 30 Mar 2026 18:24:45.652 * <bf> 	{ cf-initial-size     :      1024 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6071349Z  1:M 30 Mar 2026 18:24:45.652 * <bf> 	{ cf-max-iterations   :        20 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6071709Z  1:M 30 Mar 2026 18:24:45.652 * <bf> 	{ cf-expansion-factor :         1 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6072069Z  1:M 30 Mar 2026 18:24:45.652 * <bf> 	{ cf-max-expansions   :        32 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6072366Z  1:M 30 Mar 2026 18:24:45.652 * <bf> ]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6072742Z  1:M 30 Mar 2026 18:24:45.652 * Module 'bf' loaded from /usr/local/lib/redis/modules//redisbloom.so
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6073274Z  1:M 30 Mar 2026 18:24:45.654 * <search> Redis version found by RedisSearch : 8.6.2 - oss
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6073738Z  1:M 30 Mar 2026 18:24:45.654 * <search> RediSearch version 8.6.0 (Git=7782b97)
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6074178Z  1:M 30 Mar 2026 18:24:45.655 * <search> Low level api version 1 initialized successfully
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6075454Z  1:M 30 Mar 2026 18:24:45.655 * <search> gc: ON, prefix min length: 2, min word length to stem: 4, prefix max expansions: 200, query timeout (ms): 500, timeout policy: return, oom policy: return, cursor read size: 1000, cursor max idle (ms): 300000, max doctable size: 1000000, max number of search results:  1000000, default scorer: BM25STD, 
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6076872Z  1:M 30 Mar 2026 18:24:45.655 * <search> Initialized thread pools!
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6077567Z  1:M 30 Mar 2026 18:24:45.655 * <search> Disabled workers threadpool of size 0
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6078105Z  1:M 30 Mar 2026 18:24:45.655 * <search> Subscribe to config changes
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6078880Z  1:M 30 Mar 2026 18:24:45.655 * <search> Subscribe to cluster slot migration events
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6079297Z  1:M 30 Mar 2026 18:24:45.655 * <search> Enabled role change notification
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6079816Z  1:M 30 Mar 2026 18:24:45.655 * <search> Cluster configuration: AUTO partitions, type: 0, coordinator timeout: 0ms
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6080433Z  1:M 30 Mar 2026 18:24:45.655 * Module 'search' loaded from /usr/local/lib/redis/modules//redisearch.so
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6081276Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> RedisTimeSeries version 80600, git_sha=05fd355db748676861dc4c17d19c8c1ca74c0154
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6081914Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> Redis version found by RedisTimeSeries : 8.6.2 - oss
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6082400Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> Registering configuration options: [
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6082838Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> 	{ ts-compaction-policy   :              }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6083300Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> 	{ ts-num-threads         :            3 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6083732Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> 	{ ts-retention-policy    :            0 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6084154Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> 	{ ts-duplicate-policy    :        block }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6084582Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> 	{ ts-chunk-size-bytes    :         4096 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6085023Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> 	{ ts-encoding            :   compressed }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6085476Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> 	{ ts-ignore-max-time-diff:            0 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6085915Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> 	{ ts-ignore-max-val-diff :     0.000000 }
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6086269Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> ]
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6086569Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> Detected redis oss
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6086918Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> Subscribe to ASM events
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6087289Z  1:M 30 Mar 2026 18:24:45.656 * <timeseries> Enabled diskless replication
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6087804Z  1:M 30 Mar 2026 18:24:45.656 * Module 'timeseries' loaded from /usr/local/lib/redis/modules//redistimeseries.so
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6088534Z  1:M 30 Mar 2026 18:24:45.656 * <ReJSON> Created new data type 'ReJSON-RL'
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6088968Z  1:M 30 Mar 2026 18:24:45.656 * <ReJSON> version: 80600 git sha: unknown branch: unknown
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6089385Z  1:M 30 Mar 2026 18:24:45.657 * <ReJSON> Exported RedisJSON_V1 API
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6089739Z  1:M 30 Mar 2026 18:24:45.657 * <ReJSON> Exported RedisJSON_V2 API
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6090151Z  1:M 30 Mar 2026 18:24:45.657 * <ReJSON> Exported RedisJSON_V3 API
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6090515Z  1:M 30 Mar 2026 18:24:45.657 * <ReJSON> Exported RedisJSON_V4 API
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6090856Z  1:M 30 Mar 2026 18:24:45.657 * <ReJSON> Exported RedisJSON_V5 API
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6091187Z  1:M 30 Mar 2026 18:24:45.657 * <ReJSON> Exported RedisJSON_V6 API
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6091543Z  1:M 30 Mar 2026 18:24:45.657 * <ReJSON> Enabled diskless replication
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6091971Z  1:M 30 Mar 2026 18:24:45.657 * <ReJSON> Initialized shared string cache, thread safe: true.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6092474Z  1:M 30 Mar 2026 18:24:45.657 * Module 'ReJSON' loaded from /usr/local/lib/redis/modules//rejson.so
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6093078Z  1:M 30 Mar 2026 18:24:45.657 * <search> Acquired RedisJSON_V6 API
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6093426Z  1:M 30 Mar 2026 18:24:45.657 * Server initialized
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6093737Z  1:M 30 Mar 2026 18:24:45.657 * Ready to accept connections tcp
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6094534Z  1:M 30 Mar 2026 18:24:45.657 # WARNING: Redis does not require authentication and is not protected by network restrictions. Redis will accept connections from any IP address on any network interface.
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6100629Z Stop and remove container: b86fb1cb6c914e9aafe22502c71926fd_redis_b136f4
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:21.6104930Z ##[command]/usr/bin/docker rm --force b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:22.9354986Z b58bd0b2ca4e1a916d386c79df0dc1f2a1dd85e208afc39234d1dcd1603e19a7
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:22.9381463Z Remove container network: github_network_e9cd88234f354fe192a7665fe9dccafd
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:22.9386009Z ##[command]/usr/bin/docker network rm github_network_e9cd88234f354fe192a7665fe9dccafd
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:23.0281592Z github_network_e9cd88234f354fe192a7665fe9dccafd
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:23.0341000Z Cleaning up orphan processes
+test (3.11)	UNKNOWN STEP	2026-03-30T18:25:23.0789024Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-python@v5. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

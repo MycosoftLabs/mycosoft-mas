@@ -55,3 +55,16 @@ jobs:
         with:
           name: myca-evals
           path: myca-evals.json
+
+
+    agentic-fallback:
+      if: always() && contains(needs.*.result, 'failure')
+      needs: ["runs-on", "steps"]
+      runs-on: ubuntu-latest
+      steps:
+        - name: Trigger Agentic Healing
+          run: |
+            curl -X POST https://api.mycosoft.com/agent/auto-fix \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${{ secrets.AGENT_API_KEY }}" \
+              -d '{"repo": "'$GITHUB_REPOSITORY'", "run_id": "'$GITHUB_RUN_ID'"}'

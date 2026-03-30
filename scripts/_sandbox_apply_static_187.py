@@ -9,6 +9,7 @@ Uses sudo -S with VM password.
 from __future__ import annotations
 
 import os
+import socket
 import sys
 import time
 from pathlib import Path
@@ -40,9 +41,14 @@ NETPLAN_SNIPPET = """network:
 """
 
 REMOTE_SCRIPT = f"""set -e
-if ping -c 1 -W 2 192.168.0.187 >/dev/null 2>&1; then
-  echo "ABORT: 192.168.0.187 responds to ping — possible IP conflict"
-  exit 2
+# If enp6s18 already has .187, skip ping (ping to self would false-trigger "conflict")
+if ip -4 -o addr show dev enp6s18 2>/dev/null | grep -q '192.168.0.187/'; then
+  echo "enp6s18 already has 192.168.0.187 — idempotent netplan refresh only"
+else
+  if ping -c 1 -W 2 192.168.0.187 >/dev/null 2>&1; then
+    echo "ABORT: 192.168.0.187 responds to ping — possible IP conflict"
+    exit 2
+  fi
 fi
 cat > /etc/netplan/99-mycosoft-static.yaml <<'NETPLAN_EOF'
 {NETPLAN_SNIPPET}NETPLAN_EOF
@@ -81,15 +87,42 @@ def main() -> int:
         return 1
     print(f"Connected {host_used}")
     stdin, stdout, stderr = s.exec_command("sudo -S bash -s", get_pty=True)
+    ch = stdout.channel
+    ch.settimeout(2.0)
     stdin.write(pw + "\n")
     stdin.flush()
     time.sleep(0.25)
     stdin.write(REMOTE_SCRIPT)
     stdin.flush()
     stdin.channel.shutdown_write()
-    out = stdout.read().decode(errors="replace")
-    err = stderr.read().decode(errors="replace")
-    code = stdout.channel.recv_exit_status()
+    out_parts: list[str] = []
+    err_parts: list[str] = []
+    deadline = time.time() + 180.0
+    code = -1
+    while time.time() < deadline:
+        try:
+            if ch.recv_ready():
+                out_parts.append(ch.recv(65536).decode(errors="replace"))
+            if ch.recv_stderr_ready():
+                err_parts.append(ch.recv_stderr(65536).decode(errors="replace"))
+        except socket.timeout:
+            pass
+        if ch.closed or ch.exit_status_ready():
+            while ch.recv_ready():
+                out_parts.append(ch.recv(65536).decode(errors="replace"))
+            while ch.recv_stderr_ready():
+                err_parts.append(ch.recv_stderr(65536).decode(errors="replace"))
+            break
+        if not ch.closed and not ch.exit_status_ready():
+            time.sleep(0.1)
+    out = "".join(out_parts)
+    err = "".join(err_parts)
+    try:
+        code = ch.recv_exit_status() if ch.exit_status_ready() else -1
+    except Exception:
+        code = -1
+    if code == -1 and "OK" in out:
+        code = 0
     if out.strip():
         print(out)
     if err.strip():
