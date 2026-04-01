@@ -57,7 +57,11 @@ blake3 = "^1.0.8"
 cbor2 = "^5.6.0"
 pycdlib = "^1.14.0"
 stripe = "^11.0.0"
+typer = "^0.15.0"
 open-wallet-standard = {version = ">=0.1.0", optional = true}
+
+[tool.poetry.scripts]
+myca = "mycosoft_mas.cli:app"
 
 [tool.poetry.group.gpu.dependencies]
 torch = {version = "^2.5.0", optional = true}
