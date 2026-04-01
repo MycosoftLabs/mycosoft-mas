@@ -418,6 +418,15 @@ except ImportError:
     economy_router = None
     ECONOMY_API_AVAILABLE = False
 
+# Agent Payments API — x402 payment protocol (Ampersend + CrewAI)
+try:
+    from mycosoft_mas.core.routers.agent_payments_api import router as agent_payments_router
+
+    AGENT_PAYMENTS_API_AVAILABLE = True
+except ImportError:
+    agent_payments_router = None
+    AGENT_PAYMENTS_API_AVAILABLE = False
+
 # MYCA Widget API - interactive visualizations (maps, molecules, taxonomy trees)
 try:
     from mycosoft_mas.core.routers.widget_api import router as widget_router
@@ -982,6 +991,13 @@ except NameError:
 try:
     if ECONOMY_API_AVAILABLE and economy_router:
         app.include_router(economy_router, tags=["myca-economy"])
+except NameError:
+    pass
+
+# Agent Payments API — x402 payment protocol (Ampersend + CrewAI + Tiger Tiers)
+try:
+    if AGENT_PAYMENTS_API_AVAILABLE and agent_payments_router:
+        app.include_router(agent_payments_router, tags=["agent-payments", "x402"])
 except NameError:
     pass
 

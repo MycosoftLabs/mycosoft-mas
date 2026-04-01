@@ -67,6 +67,7 @@ _safe_import(".corporate.legal_compliance_agent", "LegalComplianceAgent")
 # Financial Agents
 _safe_import(".financial.financial_agent", "FinancialAgent")
 _safe_import(".financial.financial_operations_agent", "FinancialOperationsAgent")
+_safe_import(".financial.agent_payments", "AgentPaymentsAgent")
 
 # Bio Agents (Track 3 - Full Platform Integration)
 _safe_import(".bio.culture_vision_agent", "CultureVisionAgent")
