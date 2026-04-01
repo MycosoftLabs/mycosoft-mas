@@ -58,6 +58,11 @@ cbor2 = "^5.6.0"
 pycdlib = "^1.14.0"
 stripe = "^11.0.0"
 typer = "^0.15.0"
+# Agent Payments deps — install separately via:
+#   uv add ampersend-sdk==0.0.13 google-adk crewai x402
+#   npm install -g @ampersend_ai/ampersend-sdk@0.0.14  (CLI)
+# These have transitive deps (x402-a2a) not yet on PyPI, so kept out of
+# the Poetry lock to avoid blocking the rest of the system.
 open-wallet-standard = {version = ">=0.1.0", optional = true}
 
 [tool.poetry.scripts]
