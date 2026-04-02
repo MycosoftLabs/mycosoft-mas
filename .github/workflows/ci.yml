@@ -215,14 +215,19 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USERNAME: ${{ secrets.DEPLOY_USERNAME }}
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
     steps:
     - name: Deploy to production
+      if: env.DEPLOY_HOST != '' && env.DEPLOY_USERNAME != '' && env.DEPLOY_KEY != ''
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.DEPLOY_HOST }}
-        username: ${{ secrets.DEPLOY_USERNAME }}
-        key: ${{ secrets.DEPLOY_KEY }}
+        host: ${{ env.DEPLOY_HOST }}
+        username: ${{ env.DEPLOY_USERNAME }}
+        key: ${{ env.DEPLOY_KEY }}
         script: |
           set -euo pipefail
           exec 9>/tmp/mas-ci-deploy.lock
@@ -239,6 +244,10 @@ jobs:
             exit 1
           fi
           docker system prune -f
+
+    - name: Skip deploy when VM credentials are unavailable
+      if: env.DEPLOY_HOST == '' || env.DEPLOY_USERNAME == '' || env.DEPLOY_KEY == ''
+      run: echo "VM deploy credentials unavailable; skipping deploy stage in this environment."
 
   # Programmatic deploy: trigger via GitHub UI or API (workflow_dispatch)
   deploy-dispatch:
