@@ -116,17 +116,3 @@ jobs:
               sleep 5
             done
             curl -sf http://localhost:8001/health || exit 1
-
-
-
-    agentic-fallback:
-      if: always() && contains(needs.*.result, 'failure')
-      needs: ["name", "runs-on", "timeout-minutes", "permissions", "steps", "name", "runs-on", "needs", "environment", "steps"]
-      runs-on: ubuntu-latest
-      steps:
-        - name: Trigger Agentic Healing
-          run: |
-            curl -X POST https://api.mycosoft.com/agent/auto-fix \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer ${{ secrets.AGENT_API_KEY }}" \
-              -d '{"repo": "'$GITHUB_REPOSITORY'", "run_id": "'$GITHUB_RUN_ID'"}'
