@@ -65,7 +65,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+          docker build -t ghcr.io/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):${{ github.sha }} .
 
   test:
     runs-on: ubuntu-latest
