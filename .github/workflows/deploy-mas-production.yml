@@ -10,15 +10,6 @@
 name: Deploy MAS to Production (VM 188)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'mycosoft_mas/**'
-      - 'config/**'
-      - 'pyproject.toml'
-      - 'poetry.lock'
-      - 'Dockerfile'
-      - '.github/workflows/deploy-mas-production.yml'
   workflow_dispatch:
 
 concurrency:
