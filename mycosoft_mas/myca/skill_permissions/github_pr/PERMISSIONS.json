@@ -32,6 +32,13 @@
       "./docs/",
       "./scripts/"
     ],
+    "deny": [
+      "**/.env*",
+      "**/*secret*",
+      "**/*credential*",
+      "**/*password*",
+      "**/.git/**"
+    ],
     "deny_paths": [
       "~/.ssh",
       "~/.aws",

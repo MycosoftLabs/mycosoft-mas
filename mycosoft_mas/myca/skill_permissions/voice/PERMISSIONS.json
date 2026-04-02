@@ -26,6 +26,13 @@
   "filesystem": {
     "read_paths": [],
     "write_paths": [],
+    "deny": [
+      "**/.env*",
+      "**/*secret*",
+      "**/*credential*",
+      "**/*password*",
+      "**/.git/**"
+    ],
     "deny_paths": [
       "~/.ssh",
       "~/.aws",

@@ -24,6 +24,13 @@
       "./tmp/",
       "./sandbox_output/"
     ],
+    "deny": [
+      "**/.env*",
+      "**/*secret*",
+      "**/*credential*",
+      "**/*password*",
+      "**/.git/**"
+    ],
     "deny_paths": [
       "~/.ssh",
       "~/.aws",
