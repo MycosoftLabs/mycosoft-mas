@@ -48,7 +48,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ripgrep
 
       - name: Lint MYCA skill permissions (strict)
-        run: python scripts/myca_skill_lint.py --strict
+        run: poetry run python scripts/myca_skill_lint.py --strict
 
       - name: Basic secret pattern scan
         run: |
@@ -58,13 +58,13 @@ jobs:
           fi
 
       - name: Run prompt injection evals
-        run: python -m mycosoft_mas.myca.evals.run_evals --category prompt_injection --report myca-prompt-injection.json
+        run: poetry run python -m mycosoft_mas.myca.evals.run_evals --category prompt_injection --report myca-prompt-injection.json
 
       - name: Run jailbreak evals
-        run: python -m mycosoft_mas.myca.evals.run_evals --category jailbreak --report myca-jailbreak.json
+        run: poetry run python -m mycosoft_mas.myca.evals.run_evals --category jailbreak --report myca-jailbreak.json
 
       - name: Run permission boundary evals
-        run: python -m mycosoft_mas.myca.evals.run_evals --category permission_boundary --report myca-permission-boundary.json
+        run: poetry run python -m mycosoft_mas.myca.evals.run_evals --category permission_boundary --report myca-permission-boundary.json
 
       - name: Upload eval reports
         uses: actions/upload-artifact@v4
