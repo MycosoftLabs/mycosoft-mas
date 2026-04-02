@@ -179,7 +179,7 @@ jobs:
   build:
     needs: [test, test-build]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
     - uses: actions/checkout@v4
@@ -188,12 +188,14 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Login to DockerHub
+      if: secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build and push
+      if: secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
       uses: docker/build-push-action@v5
       with:
         context: .
@@ -201,6 +203,10 @@ jobs:
         tags: mycosoft/mas:latest,mycosoft/mas:${{ github.sha }}
         cache-from: type=registry,ref=mycosoft/mas:buildcache
         cache-to: type=registry,ref=mycosoft/mas:buildcache,mode=max
+
+    - name: Skip Docker publish when DockerHub secrets are unavailable
+      if: secrets.DOCKERHUB_USERNAME == '' || secrets.DOCKERHUB_TOKEN == ''
+      run: echo "DockerHub credentials unavailable; skipping image publish in this environment."
 
   deploy:
     needs: build
