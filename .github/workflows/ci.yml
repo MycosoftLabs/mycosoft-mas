@@ -12,6 +12,10 @@ on:
         required: false
         default: 'mas'
 
+concurrency:
+  group: mas-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-build:
     runs-on: ubuntu-latest
@@ -211,9 +215,20 @@ jobs:
         username: ${{ secrets.DEPLOY_USERNAME }}
         key: ${{ secrets.DEPLOY_KEY }}
         script: |
+          set -euo pipefail
+          exec 9>/tmp/mas-ci-deploy.lock
+          flock -n 9 || { echo "Another MAS CI deploy is already running"; exit 1; }
+          PREV_COMMIT="$(cd /opt/mycosoft-mas && git rev-parse HEAD)"
           cd /opt/mycosoft-mas
           docker-compose pull
           docker-compose up -d
+          if ! curl -sf http://localhost:8001/health >/dev/null; then
+            echo "MAS CI deploy health check failed; rolling back to $PREV_COMMIT"
+            git reset --hard "$PREV_COMMIT"
+            docker-compose pull
+            docker-compose up -d
+            exit 1
+          fi
           docker system prune -f
 
   # Programmatic deploy: trigger via GitHub UI or API (workflow_dispatch)
@@ -228,10 +243,21 @@ jobs:
         username: ${{ secrets.DEPLOY_USERNAME }}
         key: ${{ secrets.DEPLOY_KEY }}
         script: |
+          set -euo pipefail
+          exec 9>/tmp/mas-ci-dispatch.lock
+          flock -n 9 || { echo "Another MAS dispatch deploy is already running"; exit 1; }
           cd /opt/mycosoft-mas
+          PREV_COMMIT="$(git rev-parse HEAD)"
           git pull origin main
           docker-compose pull
           docker-compose up -d
+          if ! curl -sf http://localhost:8001/health >/dev/null; then
+            echo "Dispatch deploy health check failed; rolling back to $PREV_COMMIT"
+            git reset --hard "$PREV_COMMIT"
+            docker-compose pull
+            docker-compose up -d
+            exit 1
+          fi
           docker system prune -f
           echo "Deployed via workflow_dispatch at $(date)"
 

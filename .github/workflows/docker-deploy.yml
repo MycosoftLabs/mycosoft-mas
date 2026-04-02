@@ -3,6 +3,10 @@ name: Deploy MAS Containers
 on:
   workflow_dispatch:
 
+concurrency:
+  group: docker-deploy-production
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest

@@ -28,6 +28,10 @@ on:
           - mindex
           - website
 
+concurrency:
+  group: deploy-to-vms
+  cancel-in-progress: false
+
 jobs:
   deploy-mas:
     runs-on: ubuntu-latest
@@ -40,12 +44,21 @@ jobs:
           username: mycosoft
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           script: |
+            set -euo pipefail
+            exec 9>/tmp/deploy-mas-vm.lock
+            flock -n 9 || { echo "Another MAS VM deploy is already running"; exit 1; }
+            PREV_COMMIT="$(cd /home/mycosoft/mycosoft/mas 2>/dev/null && git rev-parse HEAD || cd /opt/mycosoft/mas && git rev-parse HEAD)"
             cd /home/mycosoft/mycosoft/mas || cd /opt/mycosoft/mas || exit 1
             git fetch origin && git reset --hard origin/main
             source venv/bin/activate 2>/dev/null || true
-            sudo systemctl restart mas-orchestrator 2>/dev/null || pip install -e . && python -m mycosoft_mas.core.myca_main &
+            sudo systemctl restart mas-orchestrator 2>/dev/null || (pip install -e . && python -m mycosoft_mas.core.myca_main &)
             sleep 5
-            curl -sf http://localhost:8001/health || exit 1
+            if ! curl -sf http://localhost:8001/health >/dev/null; then
+              echo "MAS deploy health check failed, rolling back git state to $PREV_COMMIT"
+              git reset --hard "$PREV_COMMIT"
+              sudo systemctl restart mas-orchestrator 2>/dev/null || true
+              exit 1
+            fi
 
   deploy-mindex:
     runs-on: ubuntu-latest
@@ -58,12 +71,21 @@ jobs:
           username: mycosoft
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           script: |
+            set -euo pipefail
+            exec 9>/tmp/deploy-mindex-vm.lock
+            flock -n 9 || { echo "Another MINDEX deploy is already running"; exit 1; }
             cd /opt/mycosoft/mindex || exit 1
+            PREV_COMMIT="$(git rev-parse HEAD)"
             git fetch origin && git reset --hard origin/main
             docker compose pull 2>/dev/null || true
             docker compose up -d --build
             sleep 10
-            curl -sf http://localhost:8000/health || exit 1
+            if ! curl -sf http://localhost:8000/health >/dev/null; then
+              echo "MINDEX deploy health check failed, rolling back git state to $PREV_COMMIT"
+              git reset --hard "$PREV_COMMIT"
+              docker compose up -d --build || true
+              exit 1
+            fi
 
   # For website-only production deploys, use the website repo workflow:
   # .github/workflows/deploy-sandbox-production.yml (uses GitHub secrets, no local .env).
@@ -78,12 +100,22 @@ jobs:
           username: mycosoft
           key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
           script: |
+            set -euo pipefail
+            exec 9>/tmp/deploy-website-vm.lock
+            flock -n 9 || { echo "Another website VM deploy is already running"; exit 1; }
             cd /opt/mycosoft/website || exit 1
+            PREV_COMMIT="$(git rev-parse HEAD)"
             git fetch origin && git reset --hard origin/main
             docker compose -p mycosoft-production build --no-cache mycosoft-website
             docker compose -p mycosoft-production up -d mycosoft-website
             sleep 5
-            curl -sf http://localhost:3000 -o /dev/null || exit 1
+            if ! curl -sf http://localhost:3000 -o /dev/null; then
+              echo "Website deploy health check failed, rolling back git state to $PREV_COMMIT"
+              git reset --hard "$PREV_COMMIT"
+              docker compose -p mycosoft-production build --no-cache mycosoft-website || true
+              docker compose -p mycosoft-production up -d mycosoft-website || true
+              exit 1
+            fi
       - name: Purge Cloudflare cache
         if: success()
         env:

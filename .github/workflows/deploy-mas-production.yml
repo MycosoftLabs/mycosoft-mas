@@ -21,6 +21,10 @@ on:
       - '.github/workflows/deploy-mas-production.yml'
   workflow_dispatch:
 
+concurrency:
+  group: deploy-mas-production
+  cancel-in-progress: false
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   REGISTRY: ghcr.io
@@ -86,7 +90,17 @@ jobs:
           command_timeout: 10m
           envs: IMAGE_FULL,GHCR_PULL_TOKEN
           script: |
-            set -e
+            set -euo pipefail
+            exec 9>/tmp/deploy-mas-production.lock
+            flock -n 9 || { echo "Another MAS deploy is already running"; exit 1; }
+
+            rollback_image=""
+            if docker ps -a --format '{{.Names}}' | grep -qx myca-orchestrator-new; then
+              rollback_image="$(docker inspect -f '{{.Config.Image}}' myca-orchestrator-new || true)"
+            elif docker ps -a --format '{{.Names}}' | grep -qx myca-orchestrator; then
+              rollback_image="$(docker inspect -f '{{.Config.Image}}' myca-orchestrator || true)"
+            fi
+
             if [ -n "$GHCR_PULL_TOKEN" ]; then
               echo "$GHCR_PULL_TOKEN" | docker login ghcr.io -u mycosoft --password-stdin
             fi
@@ -115,4 +129,17 @@ jobs:
               echo "Attempt $i: waiting 5s..."
               sleep 5
             done
-            curl -sf http://localhost:8001/health || exit 1
+            if ! curl -sf http://localhost:8001/health >/dev/null; then
+              echo "Deploy health check failed. Attempting rollback..."
+              docker rm -f myca-orchestrator-new 2>/dev/null || true
+              if [ -n "${rollback_image}" ]; then
+                docker run -d --name myca-orchestrator-new -p 8001:8000 \
+                  $ENV_FILE_OPT \
+                  -e MINDEX_API_URL=http://192.168.0.189:8000 \
+                  --restart unless-stopped \
+                  "${rollback_image}"
+                sleep 15
+                curl -sf http://localhost:8001/health >/dev/null || true
+              fi
+              exit 1
+            fi
