@@ -16,6 +16,14 @@
 | `docs/INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md` | **Integration contract matrix**: MAS↔MINDEX, BFF, CREP, voice, n8n. Use for integration status. |
 | `docs/DOC_DRIFT_AND_INDEX_TRIAGE_MAR19_2026.md` | **Doc drift triage**: Unchecked items, cursor_index_scan import. Use for backlog closure. |
 
+## Nemotron Migration Execution (Mar 31, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/NEMOTRON_MIGRATION_EXECUTION_COMPLETE_MAR31_2026.md` | **Execution complete**: Corporate-first Nemotron migration across MAS/AVANI/Website/MINDEX/NLM/MDP/MMP with routing telemetry, tests, smoke matrix, cutover, and rollback assets. |
+| `docs/NEMOTRON_MODEL_COMPARISON_AND_DECISION_DOSSIER_MAR31_2026.md` | **Model dossier**: Nemotron model specs/context/pricing/latency recommendations by category. |
+| `docs/MYCA_AVANI_ROUTE_CONTRACT_VALIDATION_MAR31_2026.md` | **AVANI parity**: Website route contract validation and compatibility checks. |
+| `docs/NEMOTRON_ROLLBACK_RUNBOOK_MAR31_2026.md` | **Rollback operations**: Soft/global rollback triggers and commands. |
+
 ## World View Search and Platform Cohesion (Mar 14, 2026)
 | Doc | Purpose |
 |-----|---------|
@@ -181,6 +189,7 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/MYCA_ETHICS_TRAINING_SYSTEM_MAR04_2026.md` | **Complete**: Sandbox MYCA instances, training scenarios, grading, Observer integration; website `/ethics-training/*`; Morgan + Michelle only |
+| `docs/ETHICS_TRAINING_SANDBOX_SCENARIOS_REPAIR_COMPLETE_APR01_2026.md` | **Repair complete**: Structured MAS chat/scenario error contracts, website scenarios/sandbox error UX fixes, localhost auth/runtime verification, and focused tests. |
 
 ## MYCA Desktop Workstation (Mar 3–4, 2026)
 

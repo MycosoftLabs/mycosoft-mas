@@ -147,6 +147,9 @@ class TestLLMRouter:
 
             assert response.content == "Test response"
             assert response.model == "gpt-4o-mini"
+            assert isinstance(response.raw_response, dict)
+            assert "routing" in response.raw_response
+            assert response.raw_response["routing"]["provider"] == "litellm"
 
     @pytest.mark.asyncio
     async def test_budget_exceeded_error(self, mock_config):

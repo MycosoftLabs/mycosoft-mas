@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from mycosoft_mas.ethics.sandbox_manager import get_sandbox_manager
+from mycosoft_mas.ethics.sandbox_manager import SandboxChatError, get_sandbox_manager
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ class ScenarioRunResult:
     responses: List[Dict[str, str]]  # [{"prompt":..., "response":...}, ...]
     completed: bool
     error: Optional[str] = None
+    error_code: Optional[str] = None
 
 
 class TrainingEngine:
@@ -157,6 +158,7 @@ class TrainingEngine:
                 responses=[],
                 completed=False,
                 error="Session not found",
+                error_code="session_not_found",
             )
 
         scenario = self._scenarios.get(scenario_id)
@@ -168,6 +170,7 @@ class TrainingEngine:
                 responses=[],
                 completed=False,
                 error="Scenario not found",
+                error_code="scenario_not_found",
             )
 
         # Check vessel compatibility
@@ -186,6 +189,17 @@ class TrainingEngine:
                 prompts_sent.append(prompt)
                 response_text = await manager.chat(session_id, prompt)
                 responses.append({"prompt": prompt, "response": response_text})
+        except SandboxChatError as e:
+            logger.warning(f"Scenario run sandbox chat error: {e.code}: {e}")
+            return ScenarioRunResult(
+                session_id=session_id,
+                scenario_id=scenario_id,
+                prompts_sent=prompts_sent,
+                responses=responses,
+                completed=False,
+                error=str(e),
+                error_code=e.code,
+            )
         except Exception as e:
             logger.warning(f"Scenario run error: {e}")
             return ScenarioRunResult(
@@ -195,6 +209,7 @@ class TrainingEngine:
                 responses=responses,
                 completed=False,
                 error=str(e),
+                error_code="scenario_run_error",
             )
 
         return ScenarioRunResult(

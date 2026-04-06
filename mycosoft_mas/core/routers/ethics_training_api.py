@@ -15,7 +15,11 @@ from mycosoft_mas.ethics.observer_integration import (
     get_observer_notes,
     record_grade_observation,
 )
-from mycosoft_mas.ethics.sandbox_manager import SessionState, get_sandbox_manager
+from mycosoft_mas.ethics.sandbox_manager import (
+    SandboxChatError,
+    SessionState,
+    get_sandbox_manager,
+)
 from mycosoft_mas.ethics.training_engine import get_training_engine
 from mycosoft_mas.ethics.vessels import DevelopmentalVessel
 
@@ -100,8 +104,16 @@ async def chat_sandbox(session_id: str, req: ChatRequest) -> Dict[str, str]:
     try:
         response = await mgr.chat(session_id, req.message, req.audio_base64)
         return {"response": response}
+    except SandboxChatError as e:
+        payload: Dict[str, Any] = {"error": e.code, "detail": str(e)}
+        if e.detail:
+            payload["meta"] = {"reason": e.detail}
+        raise HTTPException(status_code=e.status_code, detail=payload)
     except ValueError as e:
-        raise HTTPException(404, str(e))
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "invalid_chat_request", "detail": str(e)},
+        )
 
 
 @router.delete("/sandbox/{session_id}")
@@ -159,12 +171,19 @@ async def run_scenario(req: RunScenarioRequest) -> Dict[str, Any]:
     grading = get_grading_engine()
     run_result = await engine.run_scenario(req.session_id, req.scenario_id)
     if not run_result.completed:
-        return {
-            "completed": False,
-            "error": run_result.error,
+        error_code = run_result.error_code or "scenario_run_error"
+        status = (
+            404
+            if error_code in {"session_not_found", "scenario_not_found"}
+            else 503
+            if error_code in {"llm_provider_failure", "empty_model_response"}
+            else 500
+        )
+        raise HTTPException(status_code=status, detail={
+            "error": error_code,
+            "detail": run_result.error or "Scenario run failed",
             "responses": run_result.responses,
-            "grade": None,
-        }
+        })
     grade = await grading.grade_scenario(req.session_id, req.scenario_id, run_result=run_result)
     grade_dict = grade.to_dict()
     session = get_sandbox_manager().get_session(req.session_id)

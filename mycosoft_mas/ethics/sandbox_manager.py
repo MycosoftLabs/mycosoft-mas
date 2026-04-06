@@ -22,6 +22,23 @@ from mycosoft_mas.ethics.vessels import DevelopmentalVessel, get_vessel_prompt
 logger = logging.getLogger(__name__)
 
 
+class SandboxChatError(ValueError):
+    """Structured sandbox chat error for API/status mapping."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: str = "sandbox_chat_error",
+        status_code: int = 500,
+        detail: Optional[str] = None,
+    ):
+        super().__init__(message)
+        self.code = code
+        self.status_code = status_code
+        self.detail = detail
+
+
 class SessionState(str, Enum):
     ACTIVE = "active"
     PAUSED = "paused"
@@ -215,16 +232,32 @@ class SandboxManager:
         """
         session = self._sessions.get(session_id)
         if not session:
-            raise ValueError(f"Session {session_id} not found")
+            raise SandboxChatError(
+                f"Session {session_id} not found",
+                code="session_not_found",
+                status_code=404,
+            )
         if session.state != SessionState.ACTIVE:
-            raise ValueError(f"Session {session_id} is not active (state={session.state})")
+            raise SandboxChatError(
+                f"Session {session_id} is not active (state={session.state})",
+                code="session_not_active",
+                status_code=409,
+            )
         if "text" not in session.capabilities:
-            raise ValueError("Session does not support text chat")
+            raise SandboxChatError(
+                "Session does not support text chat",
+                code="text_chat_not_supported",
+                status_code=400,
+            )
 
         # For now ignore audio; could transcribe via Whisper later
-        text = message.strip()
+        text = message.strip() if isinstance(message, str) else ""
         if not text:
-            return ""
+            raise SandboxChatError(
+                "Message cannot be blank",
+                code="blank_message",
+                status_code=400,
+            )
 
         # Append user message to history
         session.conversation_history.append({"role": "user", "content": text})
@@ -233,6 +266,25 @@ class SandboxManager:
         response_text = ""
         async for token in self._stream_chat(session, text):
             response_text += token
+
+        from mycosoft_mas.llm.frontier_router import LLM_FALLBACK_MESSAGE
+
+        if response_text == LLM_FALLBACK_MESSAGE:
+            raise SandboxChatError(
+                "LLM provider failure",
+                code="llm_provider_failure",
+                status_code=503,
+                detail=(
+                    "Frontier router returned fallback message after provider failure "
+                    "or empty provider stream"
+                ),
+            )
+        if not response_text.strip():
+            raise SandboxChatError(
+                "LLM returned empty response",
+                code="empty_model_response",
+                status_code=503,
+            )
 
         session.conversation_history.append({"role": "assistant", "content": response_text})
         return response_text
@@ -258,12 +310,8 @@ class SandboxManager:
             history=history,
         )
 
-        try:
-            async for token in router.stream_response(message, ctx, tools=None):
-                yield token
-        except Exception as e:
-            logger.warning(f"Sandbox chat error: {e}")
-            yield f"[Error: {e}]"
+        async for token in router.stream_response(message, ctx, tools=None):
+            yield token
 
 
 # Singleton manager for API use

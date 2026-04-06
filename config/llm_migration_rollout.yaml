@@ -1,0 +1,94 @@
+version: 1
+generated_on: "2026-03-31"
+strategy: corporate-first
+global:
+  backend_mode: hybrid
+  fallback_provider: ollama
+  fallback_model: llama3.2
+  fallback_enabled: true
+
+quality_gates:
+  corporate:
+    max_p95_latency_ms: 7000
+    min_structured_correctness: 0.95
+    max_fallback_rate: 0.05
+    max_error_rate: 0.02
+  infrastructure:
+    max_p95_latency_ms: 6000
+    min_structured_correctness: 0.92
+    max_fallback_rate: 0.07
+    max_error_rate: 0.03
+  device:
+    max_p95_latency_ms: 4500
+    min_structured_correctness: 0.90
+    max_fallback_rate: 0.08
+    max_error_rate: 0.03
+  route:
+    max_p95_latency_ms: 3500
+    min_structured_correctness: 0.93
+    max_fallback_rate: 0.06
+    max_error_rate: 0.03
+  nlm:
+    max_p95_latency_ms: 8000
+    min_structured_correctness: 0.94
+    max_fallback_rate: 0.05
+    max_error_rate: 0.02
+  consciousness:
+    max_p95_latency_ms: 9000
+    min_structured_correctness: 0.96
+    max_fallback_rate: 0.05
+    max_error_rate: 0.02
+
+rollout_waves:
+  - wave: 1
+    category: corporate
+    enabled_backend_mode: nemotron
+    status: active
+    model: ${NEMOTRON_MODEL_CORPORATE:-nemotron-super}
+    required_checks:
+      - avani_contract_parity
+      - website_proxy_contract_parity
+      - fallback_behavior_verified
+      - quality_gate_pass
+  - wave: 2
+    category: infrastructure
+    enabled_backend_mode: nemotron
+    status: pending
+    model: ${NEMOTRON_MODEL_INFRA:-nemotron-nano}
+    required_checks:
+      - quality_gate_pass
+      - fallback_behavior_verified
+  - wave: 3
+    category: device
+    enabled_backend_mode: nemotron
+    status: pending
+    model: ${NEMOTRON_MODEL_DEVICE:-nemotron-nano}
+    required_checks:
+      - quality_gate_pass
+      - fallback_behavior_verified
+  - wave: 4
+    category: route
+    enabled_backend_mode: nemotron
+    status: pending
+    model: ${NEMOTRON_MODEL_ROUTE:-nemotron-nano}
+    required_checks:
+      - quality_gate_pass
+      - fallback_behavior_verified
+  - wave: 5
+    category: nlm
+    enabled_backend_mode: nemotron
+    status: pending
+    model: ${NEMOTRON_MODEL_NLM:-nemotron-super}
+    required_checks:
+      - quality_gate_pass
+      - retrieval_fidelity_pass
+      - fallback_behavior_verified
+  - wave: 6
+    category: consciousness
+    enabled_backend_mode: nemotron
+    status: pending
+    model: ${NEMOTRON_MODEL_CONSCIOUSNESS:-nemotron-super}
+    required_checks:
+      - quality_gate_pass
+      - cognition_parity_pass
+      - fallback_behavior_verified

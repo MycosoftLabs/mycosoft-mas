@@ -185,11 +185,11 @@ Metered live worldstate connection for external agents. All endpoints require `X
 | `/api/ethics/training/sandbox` | POST | Create sandbox session |
 | `/api/ethics/training/sandbox` | GET | List sessions |
 | `/api/ethics/training/sandbox/{id}` | GET | Get session details |
-| `/api/ethics/training/sandbox/{id}/chat` | POST | Chat with sandboxed MYCA |
+| `/api/ethics/training/sandbox/{id}/chat` | POST | Chat with sandboxed MYCA; returns structured 4xx/5xx errors for blank input, inactive/missing session, and provider failures |
 | `/api/ethics/training/sandbox/{id}` | DELETE | Destroy session |
 | `/api/ethics/training/scenarios` | GET | List scenarios |
 | `/api/ethics/training/scenarios/{id}` | GET | Get scenario details |
-| `/api/ethics/training/run` | POST | Run scenario on session |
+| `/api/ethics/training/run` | POST | Run scenario on session; returns structured HTTP errors when scenario execution fails |
 | `/api/ethics/training/grades/{session_id}` | GET | Get grades for session |
 | `/api/ethics/training/report` | POST | Generate aggregate report |
 | `/api/ethics/training/observations` | GET | Observer MYCA notes |

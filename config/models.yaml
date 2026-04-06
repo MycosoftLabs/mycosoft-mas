@@ -39,6 +39,9 @@ providers:
     base_url: ${OLLAMA_BASE_URL:-http://localhost:11434}
 
 roles:
+  # Category-friendly aliases for migration toggles
+  myca_core: nemotron:${NEMOTRON_MODEL_CORPORATE:-nemotron-super}
+  myca_edge: nemotron:${NEMOTRON_MODEL_DEVICE:-nemotron-nano}
   planning_model: openai:${LLM_MODEL_PLANNING:-gpt-4o-mini}
   execution_model: local:${LLM_MODEL_EXECUTION:-gpt-4o-mini}
   fast_model: openai:${LLM_MODEL_FAST:-gpt-4o-mini}
@@ -47,13 +50,19 @@ roles:
 
 # Unified model roles for LLMRouter, FrontierLLMRouter, LLMBrain (Nemotron MYCA rollout)
 model_roles:
-  myca_core: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
-  myca_edge: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
+  myca_core: nemotron:${NEMOTRON_MODEL_CORPORATE:-nemotron-super}
+  myca_edge: nemotron:${NEMOTRON_MODEL_DEVICE:-nemotron-nano}
   # MYCA2 sandbox — same boot defaults as MYCA; override via MINDEX alias -> candidate (artifact_uri)
   myca2_core: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
   myca2_edge: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
   myca2_sandbox: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
   psilo_overlay: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
+  corporate_primary: nemotron:${NEMOTRON_MODEL_CORPORATE:-nemotron-super}
+  infra_primary: nemotron:${NEMOTRON_MODEL_INFRA:-nemotron-nano}
+  device_primary: nemotron:${NEMOTRON_MODEL_DEVICE:-nemotron-nano}
+  route_primary: nemotron:${NEMOTRON_MODEL_ROUTE:-nemotron-nano}
+  nlm_primary: nemotron:${NEMOTRON_MODEL_NLM:-nemotron-super}
+  consciousness_primary: nemotron:${NEMOTRON_MODEL_CONSCIOUSNESS:-nemotron-super}
   nemotron_super: nemotron:${NEMOTRON_MODEL_SUPER:-nemotron-super}
   nemotron_nano: nemotron:${NEMOTRON_MODEL_NANO:-nemotron-nano}
   planning: openai:${LLM_MODEL_PLANNING:-gpt-4o-mini}

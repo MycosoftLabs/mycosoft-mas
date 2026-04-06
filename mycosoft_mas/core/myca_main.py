@@ -1714,6 +1714,11 @@ async def startup_event():
     import logging
 
     logger = logging.getLogger("MAS_Startup")
+    if os.getenv("MAS_SKIP_BACKGROUND_STARTUP", "0") == "1":
+        logger.warning(
+            "MAS_SKIP_BACKGROUND_STARTUP=1 set; skipping background startup tasks for API recovery mode"
+        )
+        return
     logger.info("MAS Orchestrator HTTP stack ready — scheduling background initialization")
     app.state.mas_startup_task = asyncio.create_task(_mas_background_startup())
 

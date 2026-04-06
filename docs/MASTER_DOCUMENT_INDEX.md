@@ -1,5 +1,19 @@
 # Master Document Index
 
+## Ethics Training Sandbox And Scenarios Repair (Apr 1, 2026)
+- `docs/ETHICS_TRAINING_SANDBOX_SCENARIOS_REPAIR_COMPLETE_APR01_2026.md` – **Repair complete**: MAS chat contract hardening, structured API errors, scenarios automation/test coverage, localhost runtime verification, and Supabase/auth origin checks.
+
+## Nemotron Migration Execution (Mar 31, 2026)
+- `docs/NEMOTRON_MIGRATION_EXECUTION_COMPLETE_MAR31_2026.md` – **Execution complete**: Corporate-first Nemotron migration delivered across MAS/AVANI/Website/MINDEX/NLM/MDP/MMP with telemetry, tests, smoke matrix, route inventory, cutover sheet, and rollback runbook.
+- `docs/NEMOTRON_MODEL_COMPARISON_AND_DECISION_DOSSIER_MAR31_2026.md` – **Model dossier**: Nemotron model comparison, cost/latency/context and category recommendations.
+- `docs/MYCA_AVANI_ROUTE_CONTRACT_VALIDATION_MAR31_2026.md` – **AVANI route parity**: Contract validation, proxy changes, and corporate wave checks.
+- `docs/WEBSITE_MYCA_MAS_PROXY_ROUTE_INVENTORY_MAR31_2026.md` – **Website route inventory**: MYCA/MAS proxy routes and Nemotron compatibility checks.
+- `docs/MINDEX_LLM_PERSISTENCE_RETRIEVAL_METADATA_MAP_MAR31_2026.md` – **MINDEX metadata map**: Provider/model/mode/fallback provenance contract.
+- `docs/MYCA_COGNITION_PIPELINE_FIDELITY_MAP_MAR31_2026.md` – **Cognition fidelity map**: Brain/intention/memory/consciousness parity and gates.
+- `docs/NLM_MDP_MMP_ROUTE_SERVICE_COVERAGE_MAR31_2026.md` – **Protocol coverage**: NLM + MDP/MMP route/service deterministic fallback requirements.
+- `docs/NEMOTRON_ROUTE_API_SERVICE_CUTOVER_SHEET_MAR31_2026.md` – **Cutover sheet**: Changed files, owners, toggles, and rollback commands.
+- `docs/NEMOTRON_ROLLBACK_RUNBOOK_MAR31_2026.md` – **Rollback runbook**: Trigger thresholds, soft/global rollback, and forward-recovery flow.
+
 ## Platform Gap Docs (Mar 19, 2026)
 - `docs/PLATFORM_GAP_AUDIT_AND_BACKLOG_MAR19_2026.md` – **Master backlog**: Executive summary, P0–P3 waves, dependency graph, link to gap_report_latest.json, refresh via gap_scan_cursor_background / GET /agents/gap/scan.
 - `docs/INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md` – **Contract matrix**: Rows = MAS↔MINDEX, website BFF, NatureOS/SignalR, CREP command, device/MycoBrain, voice stack, n8n; columns = repo, env, health URLs, definition of done, canonical doc.

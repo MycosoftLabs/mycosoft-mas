@@ -16,7 +16,9 @@ from mycosoft_mas.llm.backend_selection import (
     FAST,
     PLANNING,
     BackendSelection,
+    get_backend_mode_for_role,
     get_backend_for_role,
+    get_role_category,
 )
 from mycosoft_mas.llm.config import LLMConfig, get_llm_config
 from mycosoft_mas.llm.llm_ledger import persist_to_supabase_ledger
@@ -146,6 +148,32 @@ class LLMRouter:
             timeout=self.config.default_timeout,
             max_retries=self.config.default_max_retries,
         )
+
+    def _attach_routing_telemetry(
+        self,
+        response: LLMResponse,
+        *,
+        task_type: str,
+        role: str,
+        backend_provider: str,
+        backend_model: str,
+        fallback_used: bool = False,
+        fallback_reason: str = "",
+    ) -> None:
+        """Attach provider/model/latency/fallback labels for migration observability."""
+        if response.raw_response is None or not isinstance(response.raw_response, dict):
+            response.raw_response = {}
+        response.raw_response["routing"] = {
+            "task_type": task_type,
+            "role": role,
+            "category": get_role_category(role),
+            "backend_mode": get_backend_mode_for_role(role),
+            "provider": backend_provider,
+            "model": backend_model,
+            "fallback_used": fallback_used,
+            "fallback_reason": fallback_reason or "",
+            "duration_ms": response.duration_ms,
+        }
 
     def _init_providers(self) -> None:
         """Initialize configured providers."""
@@ -319,6 +347,13 @@ class LLMRouter:
                     tool_choice=tool_choice,
                     **kwargs,
                 )
+                self._attach_routing_telemetry(
+                    response,
+                    task_type=task_type,
+                    role=role,
+                    backend_provider=selection.provider,
+                    backend_model=selected_model,
+                )
                 self._usage.add_usage(
                     tokens=response.usage.total_tokens,
                     cost=response.estimated_cost,
@@ -354,6 +389,13 @@ class LLMRouter:
                 tool_choice=tool_choice,
                 **kwargs,
             )
+            self._attach_routing_telemetry(
+                response,
+                task_type=task_type,
+                role=role,
+                backend_provider=provider_name,
+                backend_model=selected_model,
+            )
 
             # Update tracking
             self._health[provider_name].mark_success()
@@ -388,6 +430,9 @@ class LLMRouter:
                     tools=tools,
                     tool_choice=tool_choice,
                     exclude_provider=provider_name,
+                    task_type=task_type,
+                    role=role,
+                    fallback_reason=e.message,
                     **kwargs,
                 )
 
@@ -398,6 +443,9 @@ class LLMRouter:
         messages: list[Message],
         model: str,
         exclude_provider: str,
+        task_type: str = "execution",
+        role: str = EXECUTION,
+        fallback_reason: str = "",
         **kwargs: Any,
     ) -> LLMResponse:
         """Try fallback providers when primary fails."""
@@ -424,6 +472,15 @@ class LLMRouter:
                     messages=messages,
                     model=fallback_model,
                     **kwargs,
+                )
+                self._attach_routing_telemetry(
+                    response,
+                    task_type=task_type,
+                    role=role,
+                    backend_provider=fallback_name,
+                    backend_model=fallback_model,
+                    fallback_used=True,
+                    fallback_reason=fallback_reason or f"primary_provider_{exclude_provider}_failed",
                 )
 
                 self._health[fallback_name].mark_success()

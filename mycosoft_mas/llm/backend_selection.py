@@ -37,6 +37,19 @@ FAST = "fast"
 EMBEDDING = "embedding"
 FALLBACK = "fallback"
 
+# Category identifiers used by migration toggles.
+_CATEGORY_CORPORATE = "corporate"
+_CATEGORY_INFRA = "infrastructure"
+_CATEGORY_DEVICE = "device"
+_CATEGORY_ROUTE = "route"
+_CATEGORY_NLM = "nlm"
+_CATEGORY_CONSCIOUSNESS = "consciousness"
+
+_MODE_HYBRID = "hybrid"
+_MODE_NEMOTRON = "nemotron"
+_MODE_LLAMA = "llama"
+_VALID_MODES = frozenset({_MODE_HYBRID, _MODE_NEMOTRON, _MODE_LLAMA})
+
 
 @dataclass
 class BackendSelection:
@@ -93,6 +106,140 @@ def _load_models_yaml() -> dict:
                 data = yaml.safe_load(f) or {}
                 return data
     return {}
+
+
+def _infer_role_category(role: str) -> str:
+    """Infer a backend category for role-aware migration toggles."""
+    role_l = (role or "").strip().lower()
+    if role_l in {
+        MYCA_CORE,
+        MYCA2_CORE,
+        MYCA2_SANDBOX,
+        PLANNING,
+        EXECUTION,
+        FAST,
+        FALLBACK,
+    }:
+        return _CATEGORY_CORPORATE
+    if role_l in {EMBEDDING, "nlm", "rag", "retrieval"}:
+        return _CATEGORY_NLM
+    if role_l in {MYCA_EDGE, MYCA2_EDGE, PSILO_OVERLAY}:
+        return _CATEGORY_DEVICE
+
+    if any(k in role_l for k in ("device", "mycobrain", "telemetry", "sensor", "gateway")):
+        return _CATEGORY_DEVICE
+    if any(k in role_l for k in ("infra", "deployment", "ops", "security", "docker", "proxmox")):
+        return _CATEGORY_INFRA
+    if any(k in role_l for k in ("route", "router", "routing", "route_monitor", "dispatch")):
+        return _CATEGORY_ROUTE
+    if any(k in role_l for k in ("conscious", "intention", "memory", "brain", "reflection", "grounding")):
+        return _CATEGORY_CONSCIOUSNESS
+    if any(k in role_l for k in ("nlm", "embed", "retriev", "rag")):
+        return _CATEGORY_NLM
+    return _CATEGORY_CORPORATE
+
+
+def _get_backend_mode(role: str) -> str:
+    """
+    Resolve backend mode for a role.
+
+    Global mode can be set with MYCA_BACKEND_MODE=hybrid|nemotron|llama.
+    Per-category overrides are available through:
+    - MYCA_BACKEND_MODE_CORPORATE
+    - MYCA_BACKEND_MODE_INFRA
+    - MYCA_BACKEND_MODE_DEVICE
+    - MYCA_BACKEND_MODE_ROUTE
+    - MYCA_BACKEND_MODE_NLM
+    - MYCA_BACKEND_MODE_CONSCIOUSNESS
+    """
+    global_mode = os.getenv("MYCA_BACKEND_MODE", _MODE_HYBRID).strip().lower()
+    if global_mode not in _VALID_MODES:
+        global_mode = _MODE_HYBRID
+
+    category = _infer_role_category(role)
+    category_env_map = {
+        _CATEGORY_CORPORATE: "MYCA_BACKEND_MODE_CORPORATE",
+        _CATEGORY_INFRA: "MYCA_BACKEND_MODE_INFRA",
+        _CATEGORY_DEVICE: "MYCA_BACKEND_MODE_DEVICE",
+        _CATEGORY_ROUTE: "MYCA_BACKEND_MODE_ROUTE",
+        _CATEGORY_NLM: "MYCA_BACKEND_MODE_NLM",
+        _CATEGORY_CONSCIOUSNESS: "MYCA_BACKEND_MODE_CONSCIOUSNESS",
+    }
+    override_name = category_env_map.get(category, "")
+    if override_name:
+        override_mode = os.getenv(override_name, "").strip().lower()
+        if override_mode in _VALID_MODES:
+            return override_mode
+    return global_mode
+
+
+def _resolve_nemotron_model_for_role(role: str) -> str:
+    """Resolve per-category Nemotron model override."""
+    category = _infer_role_category(role)
+    env_key_by_category = {
+        _CATEGORY_CORPORATE: "NEMOTRON_MODEL_CORPORATE",
+        _CATEGORY_INFRA: "NEMOTRON_MODEL_INFRA",
+        _CATEGORY_DEVICE: "NEMOTRON_MODEL_DEVICE",
+        _CATEGORY_ROUTE: "NEMOTRON_MODEL_ROUTE",
+        _CATEGORY_NLM: "NEMOTRON_MODEL_NLM",
+        _CATEGORY_CONSCIOUSNESS: "NEMOTRON_MODEL_CONSCIOUSNESS",
+    }
+    env_key = env_key_by_category.get(category, "")
+    if env_key and os.getenv(env_key):
+        return _expand_env(os.getenv(env_key, "").strip())
+    if role in (NEMOTRON_NANO, MYCA_EDGE, MYCA2_EDGE, PSILO_OVERLAY):
+        return _expand_env(os.getenv("NEMOTRON_MODEL_NANO", "nemotron-nano"))
+    return _expand_env(os.getenv("NEMOTRON_MODEL_SUPER", "nemotron-super"))
+
+
+def _forced_selection_for_mode(role: str, mode: str) -> BackendSelection | None:
+    """
+    Build forced BackendSelection for explicit backend mode.
+
+    hybrid -> None (use normal role resolution)
+    nemotron -> force OpenAI-compatible Nemotron endpoint if configured
+    llama -> force Ollama/Llama endpoint
+    """
+    if mode == _MODE_HYBRID:
+        return None
+
+    ollama_url = os.getenv("OLLAMA_BASE_URL", os.getenv("OLLAMA_URL", "http://localhost:11434"))
+    if mode == _MODE_LLAMA:
+        return BackendSelection(
+            provider="ollama",
+            base_url=ollama_url.rstrip("/"),
+            model=os.getenv("OLLAMA_MODEL", "llama3.2"),
+            api_key="",
+        )
+
+    nemotron_base = os.getenv("NEMOTRON_BASE_URL", "").strip()
+    if mode == _MODE_NEMOTRON and nemotron_base:
+        return BackendSelection(
+            provider="nemotron",
+            base_url=nemotron_base.rstrip("/"),
+            model=_resolve_nemotron_model_for_role(role),
+            api_key=os.getenv("NEMOTRON_API_KEY", ""),
+        )
+
+    # If Nemotron is forced but not configured, fail closed to local Llama.
+    if mode == _MODE_NEMOTRON:
+        return BackendSelection(
+            provider="ollama",
+            base_url=ollama_url.rstrip("/"),
+            model=os.getenv("OLLAMA_MODEL", "llama3.2"),
+            api_key="",
+        )
+    return None
+
+
+def get_role_category(role: ModelRole) -> str:
+    """Public helper used by telemetry and tests."""
+    return _infer_role_category(role)
+
+
+def get_backend_mode_for_role(role: ModelRole) -> str:
+    """Public helper used by telemetry and tests."""
+    return _get_backend_mode(role)
 
 
 def get_backend_for_role(role: ModelRole) -> BackendSelection:
@@ -152,6 +299,11 @@ def get_backend_for_role(role: ModelRole) -> BackendSelection:
                 )
         except Exception:
             pass
+
+    mode = _get_backend_mode(role)
+    forced = _forced_selection_for_mode(role, mode)
+    if forced is not None:
+        return forced
 
     # Aliases: myca_core -> nemotron_super or local/ollama when Nemotron not set
     role_key = role
