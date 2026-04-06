@@ -1,5 +1,10 @@
 # Master Document Index
 
+## Website video and NAS media reliability (Apr 6, 2026)
+- `../WEBSITE/website/docs/VIDEO_MEDIA_RELIABILITY_RUNBOOK_APR06_2026.md` – **Runbook**: VM 187 NAS path, Docker bind mount, zero-byte MP4 detection, `scripts/verify_sandbox_nas_media.py`, `/api/health/media`, Cloudflare purge, synthetic HEAD checks.
+- `../WEBSITE/website/docs/CLOUDFLARE_ASSETS_VIDEO_CACHE_APR06_2026.md` – **Edge cache**: Recommended Cache Rules for `/assets/*.mp4` and purge discipline.
+- `../WEBSITE/website/docs/VIDEO_R2_STREAM_MIGRATION_PLAN_APR06_2026.md` – **Optional**: R2/Stream migration for off-NAS delivery and adaptive bitrate.
+
 ## Ethics Training Sandbox And Scenarios Repair (Apr 1, 2026)
 - `docs/ETHICS_TRAINING_SANDBOX_SCENARIOS_REPAIR_COMPLETE_APR01_2026.md` – **Repair complete**: MAS chat contract hardening, structured API errors, scenarios automation/test coverage, localhost runtime verification, and Supabase/auth origin checks.
 

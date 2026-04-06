@@ -48,6 +48,13 @@
 |-----|---------|
 | `docs/SANDBOX_MAS_MINDEX_RECOVERY_AND_REDEPLOY_MAR12_2026.md` | **Recovery + redeploy report**: Sandbox outage recovery, Cloudflare tunnel/cache purge, website container stabilization, MAS/MINDEX health verification, and final runtime state. |
 
+## Website video / NAS media (Apr 6, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `WEBSITE/website/docs/VIDEO_MEDIA_RELIABILITY_RUNBOOK_APR06_2026.md` | **NAS + Docker + MP4**: Bind mount verification, zero-byte detection, `verify_sandbox_nas_media.py`, `/api/health/media`, purge, synthetic checks. |
+| `WEBSITE/website/docs/CLOUDFLARE_ASSETS_VIDEO_CACHE_APR06_2026.md` | **Edge cache** for `/assets` video; purge after NAS changes. |
+| `WEBSITE/website/docs/VIDEO_R2_STREAM_MIGRATION_PLAN_APR06_2026.md` | **Optional** R2/Stream for redundant origin and ABR. |
+
 ## Network Topology and UniFi (Mar 7, 2026)
 | Doc | Purpose |
 |-----|---------|
