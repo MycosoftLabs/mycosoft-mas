@@ -935,6 +935,135 @@ class MemoryCoordinator:
 
         return results[:limit]
 
+    # =========================================================================
+    # Palace Integration (April 7, 2026)
+    # Unified spatial memory organization with AAAK compression
+    # =========================================================================
+
+    _palace_navigator = None
+    _retrieval_stack = None
+
+    async def _ensure_palace(self):
+        """Lazy-initialize palace components."""
+        if self._palace_navigator is None:
+            try:
+                from mycosoft_mas.memory.palace.navigator import get_palace_navigator
+                from mycosoft_mas.memory.palace.retrieval_stack import get_retrieval_stack
+
+                self._palace_navigator = await get_palace_navigator()
+                self._retrieval_stack = await get_retrieval_stack()
+            except Exception as e:
+                logger.warning(f"Palace initialization failed (non-fatal): {e}")
+
+    async def palace_ingest(
+        self,
+        content: str,
+        wing: Optional[str] = None,
+        room: Optional[str] = None,
+        hall: Optional[str] = None,
+        importance: float = 0.5,
+        tags: Optional[List[str]] = None,
+        agent_id: str = "",
+        source_file: str = "",
+    ) -> Optional[UUID]:
+        """
+        Ingest content into the memory palace with spatial classification.
+
+        Auto-classifies wing/room/hall if not provided.
+        This is the primary method for filing data from any source
+        (CREP, devices, MINDEX, Earth2, agents, workflows) into the palace.
+        """
+        await self._ensure_palace()
+        if not self._palace_navigator:
+            return None
+
+        try:
+            return await self._palace_navigator.file_drawer(
+                content=content,
+                wing=wing,
+                room=room,
+                hall=hall,
+                importance=importance,
+                tags=tags,
+                agent_id=agent_id,
+                source_file=source_file,
+            )
+        except Exception as e:
+            logger.warning(f"Palace ingest failed: {e}")
+            return None
+
+    async def palace_search(
+        self,
+        query: Optional[str] = None,
+        wing: Optional[str] = None,
+        room: Optional[str] = None,
+        hall: Optional[str] = None,
+        limit: int = 20,
+    ) -> List[Dict[str, Any]]:
+        """Search the memory palace with spatial filters."""
+        await self._ensure_palace()
+        if not self._palace_navigator:
+            return []
+
+        try:
+            return await self._palace_navigator.search_drawers(
+                query=query, wing=wing, room=room, hall=hall, limit=limit
+            )
+        except Exception as e:
+            logger.warning(f"Palace search failed: {e}")
+            return []
+
+    async def palace_wake_up(self, wing: Optional[str] = None) -> str:
+        """Load L0+L1 context (~170 tokens) for session/agent initialization."""
+        await self._ensure_palace()
+        if not self._retrieval_stack:
+            return "Palace not initialized."
+
+        try:
+            return await self._retrieval_stack.wake_up(wing=wing)
+        except Exception as e:
+            logger.warning(f"Palace wake_up failed: {e}")
+            return "Context loading failed."
+
+    async def palace_recall(
+        self, wing: str, room: Optional[str] = None, limit: int = 10
+    ) -> str:
+        """L2 room-scoped recall."""
+        await self._ensure_palace()
+        if not self._retrieval_stack:
+            return ""
+
+        try:
+            return await self._retrieval_stack.recall(wing=wing, room=room, limit=limit)
+        except Exception as e:
+            logger.warning(f"Palace recall failed: {e}")
+            return ""
+
+    async def palace_deep_search(
+        self, query: str, wing: Optional[str] = None, limit: int = 10
+    ) -> str:
+        """L3 deep semantic search."""
+        await self._ensure_palace()
+        if not self._retrieval_stack:
+            return ""
+
+        try:
+            return await self._retrieval_stack.search(query=query, wing=wing, limit=limit)
+        except Exception as e:
+            logger.warning(f"Palace deep search failed: {e}")
+            return ""
+
+    async def palace_status(self) -> Dict[str, Any]:
+        """Get palace status overview."""
+        await self._ensure_palace()
+        if not self._palace_navigator:
+            return {"initialized": False}
+
+        try:
+            return await self._palace_navigator.get_status()
+        except Exception as e:
+            return {"initialized": False, "error": str(e)}
+
 
 # Singleton instance
 _coordinator: Optional[MemoryCoordinator] = None

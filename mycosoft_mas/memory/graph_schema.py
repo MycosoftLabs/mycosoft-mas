@@ -11,8 +11,13 @@ from typing import Any, Dict, List, Optional
 
 
 class NodeType(str, Enum):
-    """Types of nodes in the knowledge graph."""
+    """Unified types of nodes in the knowledge graph.
 
+    Merges types from persistent_graph (system/infra), mindex_graph (scientific),
+    and palace (data sources) into a single comprehensive enum.
+    """
+
+    # Original graph_schema types
     SPECIES = "species"
     DEVICE = "device"
     LOCATION = "location"
@@ -25,10 +30,40 @@ class NodeType(str, Enum):
     ENTITY = "entity"
     FACT = "fact"
 
+    # From persistent_graph (system architecture)
+    SYSTEM = "system"
+    AGENT = "agent"
+    API = "api"
+    SERVICE = "service"
+    DATABASE = "database"
+    FILE = "file"
+    WORKFLOW = "workflow"
+    MEMORY = "memory"
+
+    # Scientific / MINDEX types
+    TRAIT = "trait"
+    COMPOUND = "compound"
+    BEHAVIOR = "behavior"
+    HABITAT = "habitat"
+    GENE = "gene"
+    PUBLICATION = "publication"
+
+    # Palace / data source types
+    CREP_EVENT = "crep_event"
+    WEATHER = "weather"
+    SENSOR = "sensor"
+    WING = "wing"
+    ROOM = "room"
+
 
 class EdgeType(str, Enum):
-    """Types of edges in the knowledge graph."""
+    """Unified types of edges in the knowledge graph.
 
+    Merges relationships from all three graph systems plus temporal
+    predicates inspired by mempalace.
+    """
+
+    # Original graph_schema types
     RELATED_TO = "related_to"
     CONTAINS = "contains"
     LOCATED_AT = "located_at"
@@ -40,6 +75,29 @@ class EdgeType(str, Enum):
     FOLLOWED_BY = "followed_by"
     CAUSED_BY = "caused_by"
     PART_OF = "part_of"
+
+    # From persistent_graph
+    DEPENDS_ON = "depends_on"
+    CALLS = "calls"
+    PRODUCES = "produces"
+    CONSUMES = "consumes"
+    CONNECTS_TO = "connects_to"
+    MANAGES = "manages"
+    HOSTS = "hosts"
+    IMPLEMENTS = "implements"
+
+    # Scientific / MINDEX types
+    IS_A = "is_a"
+    HAS_TRAIT = "has_trait"
+    FOUND_IN = "found_in"
+    ENCODES = "encodes"
+
+    # Temporal predicates (from mempalace)
+    DECIDED = "decided"
+    OBSERVED = "observed"
+    DETECTED = "detected"
+    PREDICTED = "predicted"
+    MEASURED = "measured"
 
 
 @dataclass
@@ -81,7 +139,7 @@ class KnowledgeNode:
 
 @dataclass
 class KnowledgeEdge:
-    """An edge in the knowledge graph."""
+    """An edge in the knowledge graph with temporal validity."""
 
     id: str
     source_id: str
@@ -92,6 +150,12 @@ class KnowledgeEdge:
     is_bidirectional: bool = False
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    # Temporal validity (from mempalace temporal knowledge graph)
+    valid_from: Optional[datetime] = None
+    valid_to: Optional[datetime] = None
+    confidence: float = 1.0
+    source_closet: Optional[str] = None
+    source_file: Optional[str] = None
 
     @classmethod
     def from_db_row(cls, row: Dict) -> "KnowledgeEdge":
@@ -105,7 +169,20 @@ class KnowledgeEdge:
             is_bidirectional=row.get("is_bidirectional", False),
             created_at=row.get("created_at"),
             updated_at=row.get("updated_at"),
+            valid_from=row.get("valid_from"),
+            valid_to=row.get("valid_to"),
+            confidence=row.get("confidence", 1.0),
+            source_closet=row.get("source_closet"),
+            source_file=row.get("source_file"),
         )
+
+    @property
+    def is_currently_valid(self) -> bool:
+        """Check if this edge is currently valid (no end date or future end)."""
+        if self.valid_to is None:
+            return True
+        now = datetime.utcnow()
+        return self.valid_to > now
 
 
 @dataclass
