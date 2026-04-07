@@ -33,30 +33,30 @@ def main() -> None:
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     c.connect("192.168.0.188", username="mycosoft", password=pw, timeout=45)
 
-    script = r"""set -e
-echo "=== Docker Ollama containers ==="
-docker ps -a --format 'table {{.Names}}\t{{.Status}}' 2>/dev/null | grep -iE 'ollama|NAME' || true
-for name in $(docker ps -a --format '{{.Names}}' 2>/dev/null | grep -i ollama || true); do
-  st=$(docker inspect -f '{{.State.Status}}' "$name" 2>/dev/null || echo missing)
-  if [ "$st" = "exited" ] || [ "$st" = "created" ]; then
-    echo "Starting container: $name"
-    docker start "$name" || true
-  fi
+    script = r"""
+set -e
+echo "=== Docker: containers matching ollama ==="
+docker ps -a 2>/dev/null | grep -i ollama || true
+for id in $(docker ps -aq --filter name=ollama 2>/dev/null); do
+  echo "docker start $id"
+  docker start "$id" 2>/dev/null || true
 done
 sleep 2
 echo "=== GET /api/tags (native Ollama) ==="
-curl -sS -m 8 http://127.0.0.1:11434/api/tags 2>&1 | head -c 2000 || echo "FAIL_11434"
+curl -sS -m 8 http://127.0.0.1:11434/api/tags 2>&1 | head -c 2000 || echo "curl_tags_failed"
 echo ""
 echo "=== GET /v1/models (OpenAI compat for MYCA) ==="
-curl -sS -m 8 http://127.0.0.1:11434/v1/models 2>&1 | head -c 2000 || echo "FAIL_V1"
+curl -sS -m 8 http://127.0.0.1:11434/v1/models 2>&1 | head -c 2000 || echo "curl_v1_failed"
 echo ""
 """
-    _, out, err = c.exec_command(f"bash -lc {repr(script)}", timeout=120)
-    stdout = out.read().decode("utf-8", "replace")
-    stderr = err.read().decode("utf-8", "replace")
-    print(stdout)
-    if stderr.strip():
-        print("stderr:", stderr[:800])
+    stdin, stdout, stderr = c.exec_command("bash -s", timeout=120)
+    stdin.write(script.encode("utf-8"))
+    stdin.close()
+    out = stdout.read().decode("utf-8", "replace")
+    err = stderr.read().decode("utf-8", "replace")
+    print(out)
+    if err.strip():
+        print("stderr:", err[:800])
     c.close()
 
 
