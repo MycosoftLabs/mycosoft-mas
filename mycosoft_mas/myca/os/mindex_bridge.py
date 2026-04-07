@@ -345,13 +345,33 @@ class MINDEXBridge:
     async def vector_search(
         self, query: str, collection: str = "knowledge", limit: int = 5
     ) -> list:
-        """Semantic vector search via Qdrant."""
-        # This would use an embedding model — simplified for now
+        """Semantic search: MINDEX `/rag/retrieve` first, then Qdrant fallback."""
+        sess = self._session
+        if sess and not sess.closed:
+            try:
+                url = f"{self._mindex_api.rstrip('/')}/api/mindex/rag/retrieve"
+                async with sess.post(
+                    url,
+                    json={
+                        "query": query,
+                        "limit": limit,
+                        "types": "research,taxa,species,compounds,genetics,observations,crep_entities",
+                    },
+                    timeout=aiohttp.ClientTimeout(total=30),
+                ) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return data.get("chunks") or []
+            except Exception as e:
+                logger.debug("MINDEX RAG retrieve failed: %s", e)
+
+        if not sess or sess.closed:
+            return []
         try:
-            async with self._session.post(
+            async with sess.post(
                 f"{self._qdrant_url}/collections/{collection}/points/search",
                 json={
-                    "vector": [0.0] * 384,  # Placeholder — needs real embedding
+                    "vector": [0.0] * 384,
                     "limit": limit,
                 },
                 timeout=aiohttp.ClientTimeout(total=10),

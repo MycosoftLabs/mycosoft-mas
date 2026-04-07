@@ -1,5 +1,11 @@
 # Master Document Index
 
+## Gap scan reconciliation and backlog execution (Apr 6, 2026)
+- `docs/GAP_SCAN_RECONCILIATION_APR06_2026.md` – **Fresh gap scan vs Mar 2026 claims**: Automated counts, false positives, by-repo summary, reconciliation table.
+- `docs/GROUNDING_RAG_EXECUTION_STATUS_APR06_2026.md` – **Grounding + RAG**: MINDEX `POST /api/mindex/rag/retrieve` + MAS bridge wiring; remaining embedding/spatial/temporal work.
+- `docs/CREP_PROTOCOL_PRIORITY_APR06_2026.md` – **CREP + protocol priorities**: Ordered CREP imagery/Live Data work; UCP/WebMCP/TLS ordering.
+- `docs/DEFERRED_GAPS_GO_NO_GO_APR06_2026.md` – **Deferred items**: Recommended GO/schedule for staff API, bridges, Morgan UX, large six-pack.
+
 ## Website video and NAS media reliability (Apr 6, 2026)
 - `../WEBSITE/website/docs/VIDEO_MEDIA_RELIABILITY_RUNBOOK_APR06_2026.md` – **Runbook**: VM 187 NAS path, Docker bind mount, zero-byte MP4 detection, `scripts/verify_sandbox_nas_media.py`, `/api/health/media`, Cloudflare purge, synthetic HEAD checks.
 - `../WEBSITE/website/docs/CLOUDFLARE_ASSETS_VIDEO_CACHE_APR06_2026.md` – **Edge cache**: Recommended Cache Rules for `/assets/*.mp4` and purge discipline.

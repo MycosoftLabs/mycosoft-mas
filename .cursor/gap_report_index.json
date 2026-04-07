@@ -4,10 +4,10 @@
     "docs\\MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md",
     "docs\\SYSTEM_REGISTRY_FEB04_2026.md"
   ],
-  "referenced_paths_count": 185,
-  "files_checked": 157,
+  "referenced_paths_count": 438,
+  "files_checked": 389,
   "files_excluded": 8,
-  "files_with_gaps": 34,
+  "files_with_gaps": 84,
   "referenced_files_with_gaps": [
     {
       "path": ".cursor\\CURSOR_DOCS_INDEX.md",
@@ -15,16 +15,31 @@
       "gaps": [
         {
           "kind": "todo_fixme",
-          "line_no": 69,
+          "line_no": 244,
           "snippet": "| `docs/WORK_TODOS_GAPS_AND_MISSING_AGENTS_RULES_FEB10_2026.md` | Work streams, vision gaps, agents/rules |"
         },
         {
           "kind": "stub",
-          "line_no": 86,
+          "line_no": 33,
+          "snippet": "| `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` | **World view search suggestions and MINDEX/SEARCH/MYCA/NATUR"
+        },
+        {
+          "kind": "stub",
+          "line_no": 74,
+          "snippet": "| `docs/INTEGRATION_TEST_MATRIX_MAR11_2026.md` | **Integration test matrix**: Regression guardrails, CREP/search/device/"
+        },
+        {
+          "kind": "stub",
+          "line_no": 143,
+          "snippet": "| `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` | **Large items scaffolding**: Design stubs for Jobs 18\u201323 (control pl"
+        },
+        {
+          "kind": "stub",
+          "line_no": 262,
           "snippet": "| `docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md` | **Auto-apply linter/analyzer fixes**: codeActionsOnSave, formatOnSave"
         }
       ],
-      "gap_count": 2
+      "gap_count": 5
     },
     {
       "path": ".cursor\\agents\\search-engineer.md",
@@ -44,51 +59,68 @@
       "gaps": [
         {
           "kind": "todo_fixme",
-          "line_no": 2255,
+          "line_no": 3227,
           "snippet": "\"path\": \"docs\\\\SECURITY_TODO_FIXES_FEB12_2026.md\","
         },
         {
           "kind": "todo_fixme",
-          "line_no": 2257,
+          "line_no": 3229,
           "snippet": "\"title\": \"Security TODO Fixes - February 12, 2026\","
         },
         {
           "kind": "todo_fixme",
-          "line_no": 2567,
+          "line_no": 3593,
           "snippet": "\"path\": \"docs\\\\TODO_AUDIT_FEB12_2026.md\","
         },
         {
           "kind": "todo_fixme",
-          "line_no": 2569,
+          "line_no": 3595,
           "snippet": "\"title\": \"TODO Audit Report - February 12, 2026\","
         },
         {
           "kind": "todo_fixme",
-          "line_no": 2807,
+          "line_no": 3893,
           "snippet": "\"path\": \"docs\\\\WORK_TODOS_GAPS_AND_MISSING_AGENTS_RULES_FEB10_2026.md\","
         },
         {
           "kind": "stub",
-          "line_no": 1037,
+          "line_no": 1499,
           "snippet": "\"path\": \"docs\\\\MEMORY_STUBS_IMPLEMENTATION_FEB12_2026.md\","
         },
         {
           "kind": "stub",
-          "line_no": 1039,
+          "line_no": 1501,
           "snippet": "\"title\": \"Memory System Stubs Implementation\","
         },
         {
           "kind": "stub",
-          "line_no": 2411,
+          "line_no": 3407,
           "snippet": "\"path\": \"docs\\\\STUB_IMPLEMENTATIONS_FEB12_2026.md\","
         },
         {
           "kind": "stub",
-          "line_no": 2413,
+          "line_no": 3409,
           "snippet": "\"title\": \"Stub and Placeholder Implementations Completed - February 12, 2026\","
         }
       ],
       "gap_count": 9
+    },
+    {
+      "path": "docs\\API_CATALOG_FEB04_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\API_CATALOG_FEB04_2026.md",
+      "gaps": [
+        {
+          "kind": "501",
+          "line_no": 318,
+          "snippet": "| `/api/sporebase/order` | POST | Submit SporeBase order intake (replaces previous 501 response) |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 55,
+          "snippet": "| `/api/myca/grounding/ep/{ep_id}` | GET | Grounding EP inspection with placeholder fallback when upstream storage is un"
+        }
+      ],
+      "gap_count": 2
     },
     {
       "path": "docs\\AUTONOMOUS_CURSOR_SYSTEM_FEB12_2026.md",
@@ -157,6 +189,30 @@
       "gap_count": 6
     },
     {
+      "path": "docs\\CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 123,
+          "snippet": "- Finance agent maturity varies; MCP sits on normalized discovery, but some agents may return placeholders"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\COMPONENTS_REMOVED_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\COMPONENTS_REMOVED_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "501",
+          "line_no": 34,
+          "snippet": "| B0C6FY4JXF | be quiet! Dark Power Pro 13 1600W Power Supply \\| ATX 3.1 Compliant \\| 80 Plus Tit | BN501 | dev-boards |"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
       "path": "docs\\CONSCIOUSNESS_PIPELINE_OPTIMIZATION_FEB11_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\CONSCIOUSNESS_PIPELINE_OPTIMIZATION_FEB11_2026.md",
       "gaps": [
@@ -187,6 +243,18 @@
         }
       ],
       "gap_count": 5
+    },
+    {
+      "path": "docs\\COWORK_VS_MYCA_SCOPE_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\COWORK_VS_MYCA_SCOPE_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 51,
+          "snippet": "**Not yet implemented** \u2014 document when built."
+        }
+      ],
+      "gap_count": 1
     },
     {
       "path": "docs\\CREDENTIAL_MANAGEMENT_BEST_PRACTICES_FEB09_2026.md",
@@ -229,6 +297,111 @@
         }
       ],
       "gap_count": 7
+    },
+    {
+      "path": "docs\\CREP_INATURALIST_MINDEX_ETL_MAR09_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\CREP_INATURALIST_MINDEX_ETL_MAR09_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 103,
+          "snippet": "- [ ] **MINDEX**: Add `POST /api/mindex/observations/clone` (or equivalent) to accept batch of observations from iNatura"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 104,
+          "snippet": "- [ ] **MINDEX ETL**: Create `inaturalist_observations_sync` job to fetch by region/taxon and upsert to `obs.observation"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 105,
+          "snippet": "- [ ] **CREP API**: After returning iNaturalist/GBIF data, call MINDEX clone endpoint in background"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 106,
+          "snippet": "- [ ] **CREP Map**: Implement LOD \u2013 clustering at low zoom, individual markers at high zoom"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 107,
+          "snippet": "- [ ] **CREP Map**: Ensure all life-form circles (fungal, plant, animal, etc.) open detail widget on click (entity.prope"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 108,
+          "snippet": "- [ ] **Documentation**: Update CREP data flow docs to reflect clone-on-display and local-first"
+        }
+      ],
+      "gap_count": 6
+    },
+    {
+      "path": "docs\\CREP_SYSTEM_INTEGRATION_AUDIT_MAR11_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\CREP_SYSTEM_INTEGRATION_AUDIT_MAR11_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 24,
+          "snippet": "| **Investigation API** | \u2713 (MINDEX) | \u2713 (MINDEX) | \u2713 (MINDEX) | \u2713 | Calls MINDEX at 189:8000; raises 503 when MINDEX un"
+        },
+        {
+          "kind": "stub",
+          "line_no": 78,
+          "snippet": "| ~~Investigation stub on MINDEX fail~~ | ~~`investigation_api.py`~~ | ~~Medium~~ | **Resolved** \u2013 API raises 503; no st"
+        }
+      ],
+      "gap_count": 2
+    },
+    {
+      "path": "docs\\CSUITE_OPENCLAW_GOLDEN_IMAGE_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\CSUITE_OPENCLAW_GOLDEN_IMAGE_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 53,
+          "snippet": "- **Role manifests** (Todo 4): Per-role app stacks (MYCAOS, Perplexity, Cursor, Claude Cowork)"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 54,
+          "snippet": "- **MYCA/MAS integration** (Todo 5): Heartbeat, reporting, escalation wiring"
+        },
+        {
+          "kind": "stub",
+          "line_no": 19,
+          "snippet": "| **5. Persona seeds** | Per-role stub in `persona_seeds\\{role}_default.md` |"
+        }
+      ],
+      "gap_count": 3
+    },
+    {
+      "path": "docs\\CSUITE_OPENCLAW_VM_ROLLOUT_COMPLETE_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\CSUITE_OPENCLAW_VM_ROLLOUT_COMPLETE_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 122,
+          "snippet": "- Escalation forwarding to MYCA task queue or Discord/Slack (TODO in csuite_api.py)"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\CSUITE_WINDOWS_EXECUTION_COMPLETE_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\CSUITE_WINDOWS_EXECUTION_COMPLETE_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 116,
+          "snippet": "- [ ] Manual Windows setup in Proxmox console (staff)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 117,
+          "snippet": "- [ ] OpenClaw/bootstrap per golden image doc (staff)"
+        }
+      ],
+      "gap_count": 2
     },
     {
       "path": "docs\\CURSOR_MCP_AND_EXTENSIONS_FEB12_2026.md",
@@ -302,6 +475,18 @@
       "gap_count": 3
     },
     {
+      "path": "docs\\CURSOR_WORKFLOW_ORCHESTRATION_ROLLOUT_COMPLETE_MAR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\CURSOR_WORKFLOW_ORCHESTRATION_ROLLOUT_COMPLETE_MAR14_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 49,
+          "snippet": "- **Relationship:** `.cursor/plans/*.plan.md` = active ledger; dated docs in `docs/` = durable completion; `tasks/todo.m"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
       "path": "docs\\DATA_LOSS_AND_DRIVE_FULL_RECOVERY_FEB06_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\DATA_LOSS_AND_DRIVE_FULL_RECOVERY_FEB06_2026.md",
       "gaps": [
@@ -322,6 +507,413 @@
         }
       ],
       "gap_count": 3
+    },
+    {
+      "path": "docs\\DEVICE_JETSON16_CORTEX_ARCHITECTURE_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\DEVICE_JETSON16_CORTEX_ARCHITECTURE_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "501",
+          "line_no": 97,
+          "snippet": "| Edge operator runtime | Not implemented | Design in Phase 2 |"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\DOABLE_SEARCH_AND_ANSWER_PIPELINE_MAR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\DOABLE_SEARCH_AND_ANSWER_PIPELINE_MAR14_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 136,
+          "snippet": "- [ ] **Unified search orchestration** endpoint (MAS or website) that chains MINDEX \u2192 memory \u2192 CREP \u2192 Earth2 \u2192 LLM."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 137,
+          "snippet": "- [ ] **MINDEX schema** for answer-snippets, Q&A pairs, and worldview facts; ETL jobs to ingest from LLM/CREP/Earth2."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 138,
+          "snippet": "- [ ] **Widget registry** and missing-widget detection; deploy path for new widget types."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 139,
+          "snippet": "- [ ] **Question/answer registration** for memory, NLM, and ETL so repeated questions hit MINDEX first."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 140,
+          "snippet": "- [ ] **Tests**: Add each Try: suggestion and key test queries to an automated pipeline that verifies ETL \u2192 MINDEX \u2192 sec"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 141,
+          "snippet": "- [ ] **Nemotron**: When merged, plug Nemotron into the same orchestration and storage pipeline."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 142,
+          "snippet": "- [ ] **Docs**: Update SYSTEM_REGISTRY, API_CATALOG, and MASTER_DOCUMENT_INDEX when new endpoints and widgets exist."
+        },
+        {
+          "kind": "stub",
+          "line_no": 53,
+          "snippet": "- **Missing widget**: When a result type has no widget, the system must (1) register it as missing, (2) create the widge"
+        }
+      ],
+      "gap_count": 8
+    },
+    {
+      "path": "docs\\DOABLE_SEARCH_ROLLOUT_COMPLETE_MAR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\DOABLE_SEARCH_ROLLOUT_COMPLETE_MAR14_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 23,
+          "snippet": "- ETL stub in `mindex_etl/jobs/` for answer materialization."
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\DOC_DRIFT_AND_INDEX_TRIAGE_MAR19_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\DOC_DRIFT_AND_INDEX_TRIAGE_MAR19_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 52,
+          "snippet": "| .cursor/CURSOR_DOCS_INDEX.md | 2 | todo_fixme | open | MAS | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 53,
+          "snippet": "| .cursor/agents/search-engineer.md | 1 | todo_fixme | open | MINDEX | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 54,
+          "snippet": "| .cursor/docs_manifest.json | 9 | todo_fixme | noise | \u2014 | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 55,
+          "snippet": "| docs/AUTONOMOUS_CURSOR_SYSTEM_FEB12_2026.md | 2 | todo_fixme | open | MAS | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 57,
+          "snippet": "| docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md | 6 | todo_fixme | open | MAS | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 59,
+          "snippet": "| docs/CREDENTIAL_MANAGEMENT_BEST_PRACTICES_FEB09_2026.md | 7 | todo_fixme | open | MAS | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 61,
+          "snippet": "| docs/CURSOR_SUITE_AUDIT_FEB12_2026.md | 6 | todo_fixme | open | MAS | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 62,
+          "snippet": "| docs/CURSOR_TEAM_AUDIT_FEB12_2026.md | 3 | todo_fixme | open | MAS | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 65,
+          "snippet": "| docs/GROUNDED_COGNITION_V0_FEB17_2026.md | 6 | todo_fixme | open | MAS | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 66,
+          "snippet": "| docs/MASTER_DOCUMENT_INDEX.md | 4 | todo_fixme | open | docs | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 77,
+          "snippet": "| docs/SEARCH_SUBAGENT_MASTER_FEB10_2026.md | 2 | todo_fixme | open | MINDEX | \u2014 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 81,
+          "snippet": "| docs/STUB_IMPLEMENTATIONS_FEB12_2026.md | 16 | todo_fixme | open | MAS | \u2014 |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 81,
+          "snippet": "| docs/STUB_IMPLEMENTATIONS_FEB12_2026.md | 16 | todo_fixme | open | MAS | \u2014 |"
+        }
+      ],
+      "gap_count": 13
+    },
+    {
+      "path": "docs\\ETHICS_TRAINING_SANDBOX_SCENARIOS_REPAIR_COMPLETE_APR01_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\ETHICS_TRAINING_SANDBOX_SCENARIOS_REPAIR_COMPLETE_APR01_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 10,
+          "snippet": "Repair the ethics training sandbox and scenarios system so it is a real text-to-text tool (no mock/stub behavior in user"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\EXECUTION_WAVES_AND_ACCEPTANCE_MAR19_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\EXECUTION_WAVES_AND_ACCEPTANCE_MAR19_2026.md",
+      "gaps": [
+        {
+          "kind": "501",
+          "line_no": 31,
+          "snippet": "**Scope:** BFF normalization, MAS\u2194MINDEX alignment, CREP command path, 501 reconciliation."
+        },
+        {
+          "kind": "501",
+          "line_no": 49,
+          "snippet": "- Rules updated: 501 claim qualified in mycosoft-full-codebase-map.mdc, mycosoft-full-context-and-registries.mdc"
+        },
+        {
+          "kind": "stub",
+          "line_no": 85,
+          "snippet": "- Scientific dashboard shows real series (not placeholder)"
+        },
+        {
+          "kind": "stub",
+          "line_no": 93,
+          "snippet": "- **FCI monitor, bio page, electrode-map:** Use real API via useFCI; no placeholder series in production paths."
+        },
+        {
+          "kind": "stub",
+          "line_no": 94,
+          "snippet": "- **SUPERAPP / NatureOS:** Doc-level stubs (cursor_index_scan) in SUPERAPP_ARCHITECTURE, NATUREOS_*; implementation trac"
+        }
+      ],
+      "gap_count": 5
+    },
+    {
+      "path": "docs\\EXTERNAL_REPO_GAP_ALIGNMENT_MAR10_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\EXTERNAL_REPO_GAP_ALIGNMENT_MAR10_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 35,
+          "snippet": "- **TODO**: Create `/api/mindex/research/search` \u2014 currently uses `/api/mindex/research?search=...`."
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 47,
+          "snippet": "- **MASTER_DOCUMENT_INDEX** \u2014 Stub/TODO references."
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 99,
+          "snippet": "| Security TODOs (SECURITY_BUGFIXES_FEB09_2026) | tirith, shannon support pentest/validation. **Strengthens** security p"
+        },
+        {
+          "kind": "stub",
+          "line_no": 29,
+          "snippet": "- **SpatialService, TemporalService** \u2014 Stubs only; PostGIS/TimescaleDB integration planned."
+        },
+        {
+          "kind": "stub",
+          "line_no": 38,
+          "snippet": "### 3. NatureOS Placeholder Removal"
+        },
+        {
+          "kind": "stub",
+          "line_no": 41,
+          "snippet": "- **FungaService stubs** \u2014 Lab tools, experiments placeholder."
+        },
+        {
+          "kind": "stub",
+          "line_no": 47,
+          "snippet": "- **MASTER_DOCUMENT_INDEX** \u2014 Stub/TODO references."
+        },
+        {
+          "kind": "stub",
+          "line_no": 50,
+          "snippet": "### 5. Stub and Placeholder Debt"
+        },
+        {
+          "kind": "stub",
+          "line_no": 52,
+          "snippet": "- **STUB_IMPLEMENTATIONS_FEB12_2026** \u2014 Agent lifecycle, anomaly querying, Clerky API, NAS write, etc."
+        },
+        {
+          "kind": "stub",
+          "line_no": 53,
+          "snippet": "- **Relevance**: LocalAI, llmfit, tirith, shannon are new prototypes, not replacements for existing stubs. **No conflict"
+        },
+        {
+          "kind": "stub",
+          "line_no": 65,
+          "snippet": "| Grounded cognition spatial stub | PostGIS is separate; Turf is client/API-side. **No overlap.** |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 77,
+          "snippet": "| Stub implementations | LocalAI is new capability; not replacing stubs. **Neutral.** |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 89,
+          "snippet": "| Platform-wide stubs | Finance patterns stay in MAS/C-suite; no WEBSITE runtime. **No conflict.** |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 137,
+          "snippet": "6. **Watchlist** (Prefect, plotly.py, vinext, ctop): Revisit only after reducing current platform gaps (e.g., stub repla"
+        }
+      ],
+      "gap_count": 14
+    },
+    {
+      "path": "docs\\FCI_MYCORRHIZAE_BRIDGE_DESIGN_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\FCI_MYCORRHIZAE_BRIDGE_DESIGN_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 49,
+          "snippet": "- **Behavior:** Creates placeholder device if not yet registered (enables FCI-first flow)"
+        },
+        {
+          "kind": "stub",
+          "line_no": 66,
+          "snippet": "1. Add `POST /api/devices/{device_id}/fci-summary` to MAS device registry (stub)."
+        }
+      ],
+      "gap_count": 2
+    },
+    {
+      "path": "docs\\GAPS_AND_SECURITY_AUDIT_MAR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\GAPS_AND_SECURITY_AUDIT_MAR14_2026.md",
+      "gaps": [
+        {
+          "kind": "501",
+          "line_no": 83,
+          "snippet": "- **Website API routes:** Per Feb 2026 audits, no routes return HTTP 501; 501s were fixed previously."
+        },
+        {
+          "kind": "501",
+          "line_no": 84,
+          "snippet": "- **Sporebase order route:** Handles 404/501 from upstream; that\u2019s client-side handling of backend status, not a 501 fro"
+        },
+        {
+          "kind": "stub",
+          "line_no": 10,
+          "snippet": "## 1. Implementation gaps (unfinished / stubs)"
+        },
+        {
+          "kind": "stub",
+          "line_no": 15,
+          "snippet": "- **Gap:** Comment: *\"3. Specialist routing (CREP/Earth2) \u2014 stub for now; wire per worldstate boundary docs\"*. `speciali"
+        },
+        {
+          "kind": "stub",
+          "line_no": 18,
+          "snippet": "### 1.2 Phase 2 engine stubs (H3, event boundary)"
+        },
+        {
+          "kind": "stub",
+          "line_no": 21,
+          "snippet": "- **Gap:** Phase 2 stubs for H3 indexing and event boundary detection are mentioned; implementation not present."
+        },
+        {
+          "kind": "stub",
+          "line_no": 22,
+          "snippet": "- **Action:** Either implement or remove/downgrade stubs and document in a dedicated engine plan."
+        },
+        {
+          "kind": "stub",
+          "line_no": 28,
+          "snippet": "- **Action:** Confirm intended provider (e.g. PersonaPlex/Moshi) and replace stub with real provider id."
+        },
+        {
+          "kind": "stub",
+          "line_no": 30,
+          "snippet": "### 1.4 Legacy / stub agents"
+        },
+        {
+          "kind": "stub",
+          "line_no": 34,
+          "snippet": "- **Action:** Decide which stubs to implement vs retire; document in agent registry and update verification script."
+        },
+        {
+          "kind": "stub",
+          "line_no": 41,
+          "snippet": "- MINDEX answer/QA/worldview schema and write APIs not yet implemented."
+        },
+        {
+          "kind": "stub",
+          "line_no": 56,
+          "snippet": "| `scripts/setup_mycobrain_cloudflare.py` | `vm_password = 'REDACTED_VM_SSH_PASSWORD'` \u2014 placeholder, not env. | Load fr"
+        },
+        {
+          "kind": "stub",
+          "line_no": 99,
+          "snippet": "- Resolve voice bridge stub and engine stubs per product decisions."
+        },
+        {
+          "kind": "stub",
+          "line_no": 110,
+          "snippet": "- **1.2 Phase 2 engine stubs:** Documented in `docs/ENGINES_PHASE2_STUBS_MAR14_2026.md`; `engines/__init__.py` docstring"
+        },
+        {
+          "kind": "stub",
+          "line_no": 112,
+          "snippet": "- **1.4 Legacy stub agents:** Documented in `scripts/verify_agents.py` header and this audit \u00a7 1.4 \u2014 stubs are intention"
+        }
+      ],
+      "gap_count": 15
+    },
+    {
+      "path": "docs\\GAP_PLAN_CHANGES_LOG_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\GAP_PLAN_CHANGES_LOG_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 71,
+          "snippet": "| `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` | Design stubs for Jobs 18\u201323 (control plane, bridges, etc.) |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 116,
+          "snippet": "| [GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md](./GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md) | Large-item design stubs |"
+        }
+      ],
+      "gap_count": 2
+    },
+    {
+      "path": "docs\\GPU_ENRICHMENT_STRATEGY_MAR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\GPU_ENRICHMENT_STRATEGY_MAR14_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 128,
+          "snippet": "- [ ] Earth2 and PhysicsNeMo have a concrete input backlog and owner list. (This document.)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 129,
+          "snippet": "- [ ] PersonaPlex has a defined worldstate context envelope rather than ad hoc prompt text. (Section 4.)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 130,
+          "snippet": "- [ ] Staging plan prefers lightweight inference first. (Section 5.)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 131,
+          "snippet": "- [ ] Source prioritization rules are documented. (Section 6.)"
+        }
+      ],
+      "gap_count": 4
     },
     {
       "path": "docs\\GROUNDED_COGNITION_FULL_SPRINT_COMPLETE_FEB17_2026.md",
@@ -403,31 +995,233 @@
       "gap_count": 6
     },
     {
+      "path": "docs\\INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 21,
+          "snippet": "| **NatureOS / SignalR** | WEBSITE, NatureOS | `NATUREOS_API_URL`, SignalR hub URL | \u2014 | Live-map and AI Studio use real"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\JETSON_BACKED_MYCORBRAIN_ARCHITECTURE_COMPLETE_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\JETSON_BACKED_MYCORBRAIN_ARCHITECTURE_COMPLETE_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 11,
+          "snippet": "All seven plan todos for the Jetson-Backed MycoBrain Field Architecture have been completed. This document summarizes de"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 51,
+          "snippet": "- All plan todos marked complete"
+        }
+      ],
+      "gap_count": 2
+    },
+    {
+      "path": "docs\\JETSON_MYCOBRAIN_PRODUCTION_DEPLOY_MAR13_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\JETSON_MYCOBRAIN_PRODUCTION_DEPLOY_MAR13_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 193,
+          "snippet": "- [ ] Side A: HELLO frame with correct `role` (mushroom1/hyphae1) and `fw_version: side-a-mdp-2.0.0`"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 194,
+          "snippet": "- [ ] Side B: Heartbeat frames every 5s with `fw_version: side-b-mdp-2.0.0`"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 195,
+          "snippet": "- [ ] Telemetry frames contain BME688 data (temp, humidity, pressure, IAQ for mushroom1; + soil_moisture for hyphae1)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 199,
+          "snippet": "- [ ] Health: `curl http://<jetson-ip>:8080/health` returns 200"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 200,
+          "snippet": "- [ ] Telemetry latest: `curl http://<jetson-ip>:8080/telemetry/latest` returns JSON array"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 201,
+          "snippet": "- [ ] Telemetry stream: `curl -N http://<jetson-ip>:8080/telemetry/stream` shows SSE events"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 202,
+          "snippet": "- [ ] MAS registry: Device appears in `GET /api/devices/network` with status online"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 203,
+          "snippet": "- [ ] NLM translate: Telemetry reaches NLM `/api/translate` (check MAS logs)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 204,
+          "snippet": "- [ ] MINDEX FCI: Telemetry reaches MINDEX `/api/fci/telemetry` (if configured)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 208,
+          "snippet": "- [ ] Health: `curl http://<gateway-ip>:8003/health` returns 200"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 209,
+          "snippet": "- [ ] Devices: `curl http://<gateway-ip>:8003/devices` lists ingested device IDs"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 210,
+          "snippet": "- [ ] Self-heartbeat: Gateway appears in MAS registry every 30s"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 214,
+          "snippet": "- [ ] Device detail page: `/natureos/devices/<deviceId>` shows identity, telemetry, command panel"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 215,
+          "snippet": "- [ ] Live telemetry card: Polls every 5s, displays sensor readings"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 216,
+          "snippet": "- [ ] Command panel: Read sensors, beep, LED, e-stop (admin required)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 217,
+          "snippet": "- [ ] Network page: Device cards link to \"View Details\" \u2192 detail page"
+        }
+      ],
+      "gap_count": 16
+    },
+    {
       "path": "docs\\MASTER_DOCUMENT_INDEX.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MASTER_DOCUMENT_INDEX.md",
       "gaps": [
         {
           "kind": "todo_fixme",
-          "line_no": 23,
+          "line_no": 232,
+          "snippet": "- `docs/JETSON_BACKED_MYCORBRAIN_ARCHITECTURE_COMPLETE_MAR07_2026.md` \u2013 **Plan complete**: All seven todos done; deliver"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 385,
           "snippet": "- `docs/GROUNDED_COGNITION_FULL_SPRINT_COMPLETE_FEB17_2026.md` \u2013 **Full sprint complete**: All 18 tasks \u2013 MINDEX migrati"
         },
         {
+          "kind": "501",
+          "line_no": 372,
+          "snippet": "- `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` \u2013 **Execution complete**: Memory layers (procedural/episodic/seman"
+        },
+        {
           "kind": "stub",
-          "line_no": 92,
+          "line_no": 74,
+          "snippet": "- `docs/GAPS_AND_SECURITY_AUDIT_MAR14_2026.md` \u2013 **Implementation gaps and security issues**: Unfinished stubs (search s"
+        },
+        {
+          "kind": "stub",
+          "line_no": 87,
+          "snippet": "- `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` \u2013 **World view search suggestions and MINDEX/SEARCH/MYCA/NATUR"
+        },
+        {
+          "kind": "stub",
+          "line_no": 124,
+          "snippet": "- `docs/CORE_PLATFORM_HARDENING_PLAN_MAR11_2026.md` \u2013 **Core platform hardening plan**: Simulated MINDEX router removal;"
+        },
+        {
+          "kind": "stub",
+          "line_no": 126,
+          "snippet": "- `docs/INTEGRATION_TEST_MATRIX_MAR11_2026.md` \u2013 **Integration test matrix**: VM reachability smoke, regression guardrai"
+        },
+        {
+          "kind": "stub",
+          "line_no": 251,
+          "snippet": "- `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` \u2013 **Large items scaffolding**: Design stubs for Jobs 18\u201323 (control pl"
+        },
+        {
+          "kind": "stub",
+          "line_no": 372,
+          "snippet": "- `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` \u2013 **Execution complete**: Memory layers (procedural/episodic/seman"
+        },
+        {
+          "kind": "stub",
+          "line_no": 454,
           "snippet": "- `docs/GROUNDED_COGNITION_V0_FEB17_2026.md` \u2013 **Grounded Cognition Phase 1 complete**: Experience Packets, GroundingGat"
         },
         {
           "kind": "stub",
-          "line_no": 140,
+          "line_no": 502,
           "snippet": "- `docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md` \u2013 **Linter and analyzer fixes auto-applied**: `editor.codeActionsOnSave"
         },
         {
           "kind": "stub",
-          "line_no": 175,
+          "line_no": 537,
           "snippet": "## Stub and Placeholder Implementations (Feb 12, 2026)"
         }
       ],
-      "gap_count": 4
+      "gap_count": 12
+    },
+    {
+      "path": "docs\\MASTER_SPREADSHEET_AUTOMATION_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MASTER_SPREADSHEET_AUTOMATION_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 123,
+          "snippet": "1. Create the tab in the Google Sheet and note its GID (from URL: `gid=XXXXXXXX`)"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\MICA_MERKLE_LEDGER_INTEGRATION_MAR09_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MICA_MERKLE_LEDGER_INTEGRATION_MAR09_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 71,
+          "snippet": "1. Before orchestrator/consciousness reasoning: call `POST /api/merkle/roots/thought` with current self/world/event root"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\MINDEX_NEMOTRON_RAG_PLAN_MAR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MINDEX_NEMOTRON_RAG_PLAN_MAR14_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 11,
+          "snippet": "- **MINDEXBridge** (`mycosoft_mas/myca/os/mindex_bridge.py`): `search_knowledge()` calls MINDEX API `/api/mindex/unified"
+        },
+        {
+          "kind": "stub",
+          "line_no": 19,
+          "snippet": "- Replace placeholder semantic lookup with a **real embedding + optional rerank** pipeline and a **central retrieval con"
+        },
+        {
+          "kind": "stub",
+          "line_no": 89,
+          "snippet": "- Replace `vector_search()` placeholder with a call to the central retrieval contract (MINDEX `POST /api/rag/retrieve` o"
+        }
+      ],
+      "gap_count": 3
     },
     {
       "path": "docs\\MYCA_ECOSYSTEM_UNIFICATION_FEB17_2026.md",
@@ -437,6 +1231,42 @@
           "kind": "unchecked",
           "line_no": 70,
           "snippet": "- [ ] Pricing/billing calls /api/mas/commerce/quote, /api/mas/commerce/checkout"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\MYCA_ETHICS_TRAINING_SYSTEM_MAR04_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_ETHICS_TRAINING_SYSTEM_MAR04_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 23,
+          "snippet": "| ObserverIntegration | `mycosoft_mas/ethics/observer_integration.py` | Record observations; batch summary; stub for pro"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_CONSTITUTION_MAR16_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_EXPORT_CONSTITUTION_MAR16_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 145,
+          "snippet": "Use placeholder notation:"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_EXTERNAL_ACCESS_MAR16_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_EXPORT_EXTERNAL_ACCESS_MAR16_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 185,
+          "snippet": "**Never include** credentials, passwords, or API keys in export documents. Use environment variables and placeholders."
         }
       ],
       "gap_count": 1
@@ -551,6 +1381,87 @@
       "gap_count": 18
     },
     {
+      "path": "docs\\MYCA_RUNTIME_HARDENING_COMPLETE_MAR06_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_RUNTIME_HARDENING_COMPLETE_MAR06_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 38,
+          "snippet": "- Expands `${ENV_VAR}` placeholders used in channel mappings."
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\MYCA_STAFF_IDENTITY_AND_MEMORY_COMPLETE_MAR06_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_STAFF_IDENTITY_AND_MEMORY_COMPLETE_MAR06_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 23,
+          "snippet": "- expands `${ENV_VAR}` placeholders used for channel IDs"
+        },
+        {
+          "kind": "stub",
+          "line_no": 41,
+          "snippet": "- Upgraded workspace dispatch paths to use real Slack, Discord, Signal, WhatsApp, Asana, and email clients where possibl"
+        }
+      ],
+      "gap_count": 2
+    },
+    {
+      "path": "docs\\MYCA_SUPPORT_UPGRADE_AUDIT_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_SUPPORT_UPGRADE_AUDIT_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 275,
+          "snippet": "- [ ] Morgan can see MYCA state (consciousness, grounding, confirmations) from dashboard"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 276,
+          "snippet": "- [ ] MYCA receives page context (\"Morgan is on CREP\") when chatting"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 277,
+          "snippet": "- [ ] MYCA can query device registry for \"devices online\""
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 278,
+          "snippet": "- [ ] Morgan oversight panel exists and shows tasks, confirmations, workflow runs"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 279,
+          "snippet": "- [ ] Staff/task context available to MYCA (when API exists)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 280,
+          "snippet": "- [ ] NatureOS summary endpoint returns machine-readable state"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 281,
+          "snippet": "- [ ] MycoBrain telemetry flows to MYCA when relevant (bridge)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 282,
+          "snippet": "- [ ] Cowork vs MYCA scope documented"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 283,
+          "snippet": "- [ ] MYCA\u2192n8n trigger pattern documented and used"
+        }
+      ],
+      "gap_count": 9
+    },
+    {
       "path": "docs\\MYCA_WORLDVIEW_INTEGRATION_AUDIT_FEB17_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_WORLDVIEW_INTEGRATION_AUDIT_FEB17_2026.md",
       "gaps": [
@@ -606,6 +1517,50 @@
         }
       ],
       "gap_count": 10
+    },
+    {
+      "path": "docs\\MYCOBRAIN_FIRMWARE_ROADMAP_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCOBRAIN_FIRMWARE_ROADMAP_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "501",
+          "line_no": 33,
+          "snippet": "| **estop** | \u274c | Not implemented |"
+        },
+        {
+          "kind": "501",
+          "line_no": 45,
+          "snippet": "| **LoRa** | \u274c | Not implemented |"
+        },
+        {
+          "kind": "501",
+          "line_no": 46,
+          "snippet": "| **BLE** | \u274c | Not implemented |"
+        },
+        {
+          "kind": "501",
+          "line_no": 47,
+          "snippet": "| **WiFi** | \u274c | Not implemented |"
+        },
+        {
+          "kind": "501",
+          "line_no": 48,
+          "snippet": "| **SIM/modem** | \u274c | Not implemented |"
+        }
+      ],
+      "gap_count": 5
+    },
+    {
+      "path": "docs\\MYCORRHIZAE_MYCA_TELEMETRY_BRIDGE_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCORRHIZAE_MYCA_TELEMETRY_BRIDGE_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 37,
+          "snippet": "## Not Yet Implemented"
+        }
+      ],
+      "gap_count": 1
     },
     {
       "path": "docs\\NATUREOS_FULL_PLATFORM_COMPLETE_FEB19_2026.md",
@@ -734,6 +1689,55 @@
       "gap_count": 17
     },
     {
+      "path": "docs\\NEMOTRON_VERIFICATION_ROLLOUT_MAR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\NEMOTRON_VERIFICATION_ROLLOUT_MAR14_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 92,
+          "snippet": "- [ ] One canonical end-to-end flow proven (browser mic \u2192 bridge \u2192 brain \u2192 AVANI \u2192 speech \u2192 memory)."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 93,
+          "snippet": "- [ ] Regression tests added/run for route unification, governance enforcement, retrieval provenance, full-duplex interr"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 94,
+          "snippet": "- [ ] Docs updated: MASTER_DOCUMENT_INDEX, CURSOR_DOCS_INDEX (vital only), grounding/worldstate docs if contracts change"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 95,
+          "snippet": "- [ ] Registries updated: SYSTEM_REGISTRY (inference services, AVANI backend, speech, RAG), API_CATALOG (new endpoints),"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 96,
+          "snippet": "- [ ] Deployment topology and ops runbooks aligned with actual service placement (187/188/189/190, NAS)."
+        }
+      ],
+      "gap_count": 5
+    },
+    {
+      "path": "docs\\NEXT_JOBS_FROM_GAPS_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\NEXT_JOBS_FROM_GAPS_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 117,
+          "snippet": "- [ ] Staff/task context API available (deferred \u2014 requires Asana/GitHub)"
+        },
+        {
+          "kind": "stub",
+          "line_no": 34,
+          "snippet": "| 4 | **Replace stub implementations** | MAS, MINDEX | 3\u20135 days | Financial agents (Mercury, QuickBooks, Pulley), Resear"
+        }
+      ],
+      "gap_count": 2
+    },
+    {
       "path": "docs\\PETRI_DEPLOYMENT_HANDOFF_FEB20_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\PETRI_DEPLOYMENT_HANDOFF_FEB20_2026.md",
       "gaps": [
@@ -833,6 +1837,186 @@
         }
       ],
       "gap_count": 10
+    },
+    {
+      "path": "docs\\PLANNING_ETHICS_CONTEXT_COMPLETE_MAR03_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\PLANNING_ETHICS_CONTEXT_COMPLETE_MAR03_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 19,
+          "snippet": "- [ ] `docs/PLANNING_ETHICS_CONTEXT_SYSTEM_MAR03_2026.md` exists and is readable"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 20,
+          "snippet": "- [ ] `docs/michele_alignment_debate_outline.docx.md` exists and is readable"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 21,
+          "snippet": "- [ ] Both docs listed in `MASTER_DOCUMENT_INDEX.md` under \"Planning \u2192 Ethics Context System\""
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 22,
+          "snippet": "- [ ] Both docs listed in `.cursor/CURSOR_DOCS_INDEX.md`"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 23,
+          "snippet": "- [ ] Run `python scripts/build_docs_manifest.py` \u2014 manifest includes both paths"
+        }
+      ],
+      "gap_count": 5
+    },
+    {
+      "path": "docs\\PLASTICITY_FORGE_PHASE1_COMPLETE_MAR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\PLASTICITY_FORGE_PHASE1_COMPLETE_MAR14_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 28,
+          "snippet": "- Real telemetry translation, persistence (e.g. `nlm.nature_embeddings`), and trainer data from MINDEX; no placeholder t"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\PLATFORM_GAP_AUDIT_AND_BACKLOG_MAR19_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\PLATFORM_GAP_AUDIT_AND_BACKLOG_MAR19_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 63,
+          "snippet": "- Fix every TODO without triage (many are noise in bundled/vendored code)."
+        },
+        {
+          "kind": "501",
+          "line_no": 43,
+          "snippet": "| **P1** | Integration contracts (BFF, MAS\u2194MINDEX, CREP command, 501 reconciliation) | Blocks P2/P3 |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 15,
+          "snippet": "- Stubs: 298 (structural; many intentional base-class patterns)"
+        }
+      ],
+      "gap_count": 3
+    },
+    {
+      "path": "docs\\PR75_IMPLEMENTATION_PLAN_MAR09_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\PR75_IMPLEMENTATION_PLAN_MAR09_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 329,
+          "snippet": "- [ ] Run identity migration on MINDEX (requires `MINDEX_DB_PASSWORD` in .env)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 333,
+          "snippet": "- [ ] Create Guardian dashboard page"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 334,
+          "snippet": "- [ ] Create Avani governance page"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 335,
+          "snippet": "- [ ] Create Identity section"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 336,
+          "snippet": "- [ ] Create Liquid Fungal section (or extend scientific dashboard)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 337,
+          "snippet": "- [ ] Add Jetson hardware plan page (optional)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 338,
+          "snippet": "- [ ] Micah/MAS tool integration on website"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 339,
+          "snippet": "- [ ] Multi-agent app flows on website"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 340,
+          "snippet": "- [ ] Marketing pages for new capabilities"
+        }
+      ],
+      "gap_count": 9
+    },
+    {
+      "path": "docs\\SANDBOX_AND_PRODUCTION_ALWAYS_ON_MAR02_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\SANDBOX_AND_PRODUCTION_ALWAYS_ON_MAR02_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 38,
+          "snippet": "- [ ] In Proxmox (or your hypervisor), set the **Sandbox VM (187)** to **Start on boot** / **Start at boot**."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 39,
+          "snippet": "- [ ] For production: set the **production website VM** to **Start on boot** as well."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 40,
+          "snippet": "- [ ] After a host reboot, confirm the VM(s) come up (e.g. wait 2\u20135 minutes, then ping or SSH)."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 44,
+          "snippet": "- [ ] On 187 (and on production clone):"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 47,
+          "snippet": "- [ ] Ensure the tunnel service starts after reboot:"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 51,
+          "snippet": "- [ ] Optional: add a small cron or systemd timer that checks tunnel health and restarts it if needed."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 55,
+          "snippet": "- [ ] The website container is run with `--restart unless-stopped`. So once the VM is up and Docker is running, the cont"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 56,
+          "snippet": "- [ ] Ensure Docker daemon starts on boot (default on most VMs):"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 58,
+          "snippet": "- [ ] After a VM reboot, verify:"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 63,
+          "snippet": "- [ ] Use a simple heartbeat (e.g. MAS or external cron) that hits `https://sandbox.mycosoft.com/health` (or production "
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 64,
+          "snippet": "- [ ] Optionally, use Proxmox or host-level alerts if the VM stops unexpectedly."
+        }
+      ],
+      "gap_count": 11
     },
     {
       "path": "docs\\SEARCH_SUBAGENT_MASTER_FEB10_2026.md",
@@ -1101,6 +2285,72 @@
       "gap_count": 5
     },
     {
+      "path": "docs\\SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md",
+      "gaps": [
+        {
+          "kind": "501",
+          "line_no": 9,
+          "snippet": "Executed the remaining System Gaps phases covering memory persistence, scientific database APIs, financial/corporate/res"
+        },
+        {
+          "kind": "501",
+          "line_no": 59,
+          "snippet": "2. Verify website route no longer returns `501`:"
+        },
+        {
+          "kind": "stub",
+          "line_no": 9,
+          "snippet": "Executed the remaining System Gaps phases covering memory persistence, scientific database APIs, financial/corporate/res"
+        },
+        {
+          "kind": "stub",
+          "line_no": 30,
+          "snippet": "### Phase 7 - Stub Replacements"
+        },
+        {
+          "kind": "stub",
+          "line_no": 67,
+          "snippet": "5. Verify HPL endpoint returns parsed operations instead of the prior stub message:"
+        }
+      ],
+      "gap_count": 5
+    },
+    {
+      "path": "docs\\UNIFI_SCAN_RESULTS_MAR07_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\UNIFI_SCAN_RESULTS_MAR07_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 40,
+          "snippet": "5. **Reconcile** into [NETWORK_TOPOLOGY_UBIQUITI_PLAN_MAR07_2026.md](./NETWORK_TOPOLOGY_UBIQUITI_PLAN_MAR07_2026.md): re"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\WORK_ITEMIZATION_AND_PUSH_PLAN_FEB28_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\WORK_ITEMIZATION_AND_PUSH_PLAN_FEB28_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 145,
+          "snippet": "- `scripts/_scan_real_todos.py`"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 499,
+          "snippet": "- `scripts/_scan_real_todos.py`"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 911,
+          "snippet": "- `scripts/_scan_real_todos.py`"
+        }
+      ],
+      "gap_count": 3
+    },
+    {
       "path": "docs\\WORK_SUMMARY_FEB15_18_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\WORK_SUMMARY_FEB15_18_2026.md",
       "gaps": [
@@ -1146,18 +2396,193 @@
         }
       ],
       "gap_count": 8
+    },
+    {
+      "path": "docs\\WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 236,
+          "snippet": "- [ ] Try: buttons show rotating world-view suggestions (not just fungal)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 237,
+          "snippet": "- [ ] Typing placeholder cycles through nature, environment, CREP, Earth2, agent-use examples"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 238,
+          "snippet": "- [ ] Fallback placeholder is \"Search nature, environment, live data...\" (or equivalent)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 239,
+          "snippet": "- [ ] Clicking any Try: suggestion routes to `/search?q=` and FluidSearchCanvas handles it"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 240,
+          "snippet": "- [ ] MycaSuggestionsWidget tip reflects world-view"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 241,
+          "snippet": "- [ ] Clear path documented for Phases 4\u20136 (MINDEX, MYCA, NATUREOS)"
+        },
+        {
+          "kind": "stub",
+          "line_no": 9,
+          "snippet": "Shift Mycosoft from fungi-focused search and marketing to a **full world view platform** serving humans, AI agents, bots"
+        },
+        {
+          "kind": "stub",
+          "line_no": 40,
+          "snippet": "| **Fallback placeholder** | \"Search fungi, compounds...\" | L236 |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 41,
+          "snippet": "| **Typing placeholder** | DEFAULT_SUGGESTIONS: fungi, compounds, genetics, mycelium, etc. | `hooks/use-typing-placehold"
+        },
+        {
+          "kind": "stub",
+          "line_no": 61,
+          "snippet": "2. **Placeholders** reinforce fungi; no agent/bot/machine framing"
+        },
+        {
+          "kind": "stub",
+          "line_no": 102,
+          "snippet": "### Phase 2: Typing Placeholder and Fallback (Website)"
+        },
+        {
+          "kind": "stub",
+          "line_no": 104,
+          "snippet": "**Goal**: Expand typing placeholder and fallback to world-view framing."
+        },
+        {
+          "kind": "stub",
+          "line_no": 108,
+          "snippet": "1. **Update `use-typing-placeholder.ts` DEFAULT_SUGGESTIONS**"
+        },
+        {
+          "kind": "stub",
+          "line_no": 118,
+          "snippet": "2. **Update hero-search fallback placeholder**"
+        },
+        {
+          "kind": "stub",
+          "line_no": 121,
+          "snippet": "**Files**: `hooks/use-typing-placeholder.ts`, `components/home/hero-search.tsx`"
+        },
+        {
+          "kind": "stub",
+          "line_no": 205,
+          "snippet": "| **2** | Typing placeholder + fallback | ~30 min | None |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 237,
+          "snippet": "- [ ] Typing placeholder cycles through nature, environment, CREP, Earth2, agent-use examples"
+        },
+        {
+          "kind": "stub",
+          "line_no": 238,
+          "snippet": "- [ ] Fallback placeholder is \"Search nature, environment, live data...\" (or equivalent)"
+        }
+      ],
+      "gap_count": 18
+    },
+    {
+      "path": "mycosoft_mas\\core\\routers\\device_registry_api.py",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\mycosoft_mas\\core\\routers\\device_registry_api.py",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 396,
+          "snippet": "Device need not exist; will be created as placeholder if missing."
+        },
+        {
+          "kind": "stub",
+          "line_no": 404,
+          "snippet": "\"device_name\": \"FCI-Placeholder\","
+        }
+      ],
+      "gap_count": 2
+    },
+    {
+      "path": "mycosoft_mas\\core\\routers\\worldstate_api.py",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\mycosoft_mas\\core\\routers\\worldstate_api.py",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 164,
+          "snippet": "\"note\": \"Regional filtering of CREP/earthlive entities not yet implemented; full state returned.\","
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "mycosoft_mas\\myca\\os\\gateway.py",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\mycosoft_mas\\myca\\os\\gateway.py",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 645,
+          "snippet": "# TODO: Fetch metrics from MINDEX when /api/mindex/metrics available"
+        },
+        {
+          "kind": "stub",
+          "line_no": 342,
+          "snippet": "\"\"\"GET /sessions \u2014 Active conversation sessions (placeholder).\"\"\""
+        }
+      ],
+      "gap_count": 2
+    },
+    {
+      "path": "mycosoft_mas\\myca\\os\\staff_registry.py",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\mycosoft_mas\\myca\\os\\staff_registry.py",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 5,
+          "snippet": "environment-variable placeholders used for channel identities."
+        },
+        {
+          "kind": "stub",
+          "line_no": 22,
+          "snippet": "def _expand_env_placeholders(value: Any) -> Any:"
+        },
+        {
+          "kind": "stub",
+          "line_no": 30,
+          "snippet": "return {k: _expand_env_placeholders(v) for k, v in value.items()}"
+        },
+        {
+          "kind": "stub",
+          "line_no": 32,
+          "snippet": "return [_expand_env_placeholders(v) for v in value]"
+        },
+        {
+          "kind": "stub",
+          "line_no": 50,
+          "snippet": "expanded = _expand_env_placeholders(info)"
+        }
+      ],
+      "gap_count": 5
     }
   ],
   "suggested_plans": [
     {
       "title": "Complete indexed work",
-      "description": "34 indexed files have TODO/FIXME/501/pending work. Prioritize docs and code referenced in MASTER_DOCUMENT_INDEX.",
+      "description": "84 indexed files have TODO/FIXME/501/pending work. Prioritize docs and code referenced in MASTER_DOCUMENT_INDEX.",
       "priority": "high"
     }
   ],
   "summary": {
-    "index_gaps_total": 180,
-    "files_with_gaps": 34,
+    "index_gaps_total": 395,
+    "files_with_gaps": 84,
     "files_excluded_as_meta_docs": 8
   },
   "source": "cursor_index_scan",

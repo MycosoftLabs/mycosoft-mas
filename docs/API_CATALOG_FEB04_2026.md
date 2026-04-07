@@ -586,6 +586,14 @@ Answer/QA/worldview persistence for Doable Search Rollout; used for second-searc
 | `/api/mindex/search/queries` | POST | Record normalized query ledger entry |
 | `/api/mindex/search/qa` | GET, POST | QA pair read/write for reusable question-answer pairs |
 
+### RAG retrieval (`/api/mindex/rag/*`) – Apr 6, 2026
+
+Central provenance-rich retrieval for MYCA (keyword path via unified search; embedding/rerank can extend).
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/mindex/rag/retrieve` | POST | Body: `query`, `limit`, `types` (unified-search domains); returns `chunks` with `content`, `source_id`, `collection`, `score`, `provenance_root` |
+
 ---
 
 ## Website API Endpoints (Next.js)
