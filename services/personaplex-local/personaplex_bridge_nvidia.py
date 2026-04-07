@@ -649,7 +649,8 @@ async def query_mas_brain(session: BridgeSession, user_text: str) -> Optional[di
             logger.info(f"MAS Brain response: {len(data.get('response', ''))} chars, tool_calls: {len(data.get('tool_calls', []))}")
             return data
         else:
-            logger.warning(f"MAS Brain returned {response.status_code}")
+            snippet = (response.text or "")[:800].replace("\n", " ")
+            logger.warning(f"MAS Brain returned {response.status_code}: {snippet}")
             return None
     except httpx.TimeoutException:
         logger.warning("MAS Brain query timed out")
@@ -1053,6 +1054,23 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                                         # Moshi does NOT support kind 0x02 (text→TTS). Use edge-tts fallback.
                                         should_tts = payload.get("forward_to_moshi", False) or payload.get("type") == "inject_feedback"
                                         if should_tts and text:
+                                            try_moshi_text = os.getenv(
+                                                "BRIDGE_TRY_MOSHI_TEXT_TTS", "true"
+                                            ).lower() in ("1", "true", "yes")
+
+                                            async def _try_moshi_text_tts() -> None:
+                                                if not try_moshi_text:
+                                                    return
+                                                try:
+                                                    await moshi.send_bytes(b"\x02" + text.encode("utf-8"))
+                                                    logger.info(
+                                                        f"[{session_id[:8]}] Sent 0x02 text frame to Moshi (last-resort TTS)"
+                                                    )
+                                                except Exception as ex:
+                                                    logger.warning(
+                                                        f"[{session_id[:8]}] Moshi 0x02 text TTS failed: {ex}"
+                                                    )
+
                                             if TTS_FALLBACK_AVAILABLE and tts_synthesize_to_opus:
                                                 logger.info(f"[{session_id[:8]}] TTS fallback (edge-tts): {text[:60]}...")
                                                 s.is_tts_playing = True
@@ -1061,10 +1079,25 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                                                     packets = await tts_synthesize_to_opus(text)
                                                     for pkt in packets:
                                                         await websocket.send_bytes(b"\x01" + pkt)
+                                                    if not packets:
+                                                        logger.error(
+                                                            f"[{session_id[:8]}] edge-tts/ffmpeg produced 0 Opus packets — "
+                                                            "install ffmpeg, pip install edge-tts opuslib; optional FFMPEG_PATH. "
+                                                            "Set BRIDGE_TRY_MOSHI_TEXT_TTS=true (default) to try Moshi 0x02."
+                                                        )
+                                                        await _try_moshi_text_tts()
                                                 finally:
                                                     s.is_tts_playing = False
                                             else:
-                                                logger.warning(f"[{session_id[:8]}] TTS unavailable (edge-tts fallback not loaded); no audio")
+                                                logger.warning(
+                                                    f"[{session_id[:8]}] TTS module unavailable (edge-tts import failed); trying Moshi text"
+                                                )
+                                                s.is_tts_playing = True
+                                                try:
+                                                    await websocket.send_json({"type": "text", "text": text, "speaker": "myca"})
+                                                    await _try_moshi_text_tts()
+                                                finally:
+                                                    s.is_tts_playing = False
                                         if payload.get("type") == "barge_in" or payload.get("interrupt"):
                                             logger.info(f"[{session_id[:8]}] Explicit barge-in from frontend")
                                             if s.duplex_session:

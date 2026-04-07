@@ -9,6 +9,7 @@ Frontend expects 0x01 + raw Opus packets (24kHz, mono, 20ms frames).
 """
 import asyncio
 import logging
+import os
 import shutil
 from typing import List
 
@@ -30,10 +31,12 @@ async def synthesize_to_opus(text: str, voice: str = DEFAULT_VOICE) -> List[byte
     if not text or not text.strip():
         return []
 
-    # Check ffmpeg availability
-    ffmpeg_path = shutil.which("ffmpeg")
+    # ffmpeg: PATH or explicit (Windows installs often omit PATH for the bridge process)
+    ffmpeg_path = os.environ.get("FFMPEG_PATH", "").strip() or shutil.which("ffmpeg")
     if not ffmpeg_path:
-        logger.warning("TTS fallback: ffmpeg not found in PATH; edge-tts needs ffmpeg for MP3->PCM")
+        logger.warning(
+            "TTS fallback: ffmpeg not found (set FFMPEG_PATH or add ffmpeg to PATH); edge-tts needs ffmpeg for MP3->PCM"
+        )
         return []
 
     try:

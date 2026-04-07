@@ -69,7 +69,7 @@ def test_nemotron_mode_without_base_url_uses_local_openai_default(monkeypatch):
     monkeypatch.setenv("OLLAMA_MODEL", "llama3.2")
     selection = get_backend_for_role(MYCA_CORE)
     assert selection.provider == "nemotron"
-    assert selection.base_url == "http://127.0.0.1:11435"
+    assert selection.base_url == "http://127.0.0.1:11434"
     assert selection.model
 
 

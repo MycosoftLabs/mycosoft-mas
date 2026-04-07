@@ -55,8 +55,8 @@ def resolve_nemotron_base_url() -> str:
     OpenAI-compatible Nemotron on the same host as MAS (VM 188 or dev machine).
 
     Set NEMOTRON_BASE_URL to override (remote GPU, Docker hostname, etc.).
-    If unset, defaults to http://127.0.0.1:NEMOTRON_HTTP_PORT (default port 11435,
-    beside Ollama on 11434). Set NEMOTRON_HTTP_PORT if your local server uses another port.
+    If unset, defaults to http://127.0.0.1:NEMOTRON_HTTP_PORT (default port 11434,
+    Ollama OpenAI-compatible API on the MAS VM). Use 11435+ if you run a dedicated vLLM/Nemotron server.
     """
     if os.getenv("NEMOTRON_DISABLE_LOCAL_DEFAULT", "").strip().lower() in (
         "1",
@@ -68,7 +68,7 @@ def resolve_nemotron_base_url() -> str:
     if explicit:
         return explicit.rstrip("/")
     host = (os.getenv("NEMOTRON_HOST") or "127.0.0.1").strip() or "127.0.0.1"
-    port = (os.getenv("NEMOTRON_HTTP_PORT") or "11435").strip() or "11435"
+    port = (os.getenv("NEMOTRON_HTTP_PORT") or "11434").strip() or "11434"
     return f"http://{host}:{port}"
 _VALID_MODES = frozenset({_MODE_HYBRID, _MODE_NEMOTRON, _MODE_LLAMA})
 
@@ -365,7 +365,7 @@ def get_backend_for_role(role: ModelRole) -> BackendSelection:
             )
         default_url = "http://localhost:11434"
         if prov_name == "nemotron":
-            default_url = resolve_nemotron_base_url() or "http://127.0.0.1:11435"
+            default_url = resolve_nemotron_base_url() or "http://127.0.0.1:11434"
         elif prov_name == "local":
             default_url = os.getenv("LLM_BASE_URL", "http://localhost:4000")
         return BackendSelection(

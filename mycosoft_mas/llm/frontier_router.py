@@ -252,6 +252,9 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
             if not resp.tool_calls:
                 text = (resp.content or "").strip()
                 if not text:
+                    logger.warning(
+                        "[MYCA Brain] OpenAI-tool provider returned empty content — check Ollama/model on MAS or API keys"
+                    )
                     yield LLM_FALLBACK_MESSAGE
                     return
                 for ch in text:
