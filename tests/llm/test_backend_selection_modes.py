@@ -13,6 +13,9 @@ def _clear_mode_env(monkeypatch):
         "NEMOTRON_BASE_URL",
         "NEMOTRON_MODEL_SUPER",
         "NEMOTRON_MODEL_CORPORATE",
+        "NEMOTRON_DISABLE_LOCAL_DEFAULT",
+        "NEMOTRON_HOST",
+        "NEMOTRON_HTTP_PORT",
         "OLLAMA_BASE_URL",
         "OLLAMA_MODEL",
     ):
@@ -58,9 +61,22 @@ def test_category_override_wins_over_global(monkeypatch):
     assert selection.model == "nemotron-super-cat"
 
 
-def test_nemotron_mode_without_base_url_falls_back_to_ollama(monkeypatch):
+def test_nemotron_mode_without_base_url_uses_local_openai_default(monkeypatch):
+    """MYCA_BACKEND_MODE=nemotron with no NEMOTRON_BASE_URL → same-host OpenAI-compatible default."""
     _clear_mode_env(monkeypatch)
     monkeypatch.setenv("MYCA_BACKEND_MODE", "nemotron")
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    monkeypatch.setenv("OLLAMA_MODEL", "llama3.2")
+    selection = get_backend_for_role(MYCA_CORE)
+    assert selection.provider == "nemotron"
+    assert selection.base_url == "http://127.0.0.1:11435"
+    assert selection.model
+
+
+def test_nemotron_mode_disable_local_default_falls_back_to_ollama(monkeypatch):
+    _clear_mode_env(monkeypatch)
+    monkeypatch.setenv("MYCA_BACKEND_MODE", "nemotron")
+    monkeypatch.setenv("NEMOTRON_DISABLE_LOCAL_DEFAULT", "1")
     monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
     monkeypatch.setenv("OLLAMA_MODEL", "llama3.2")
     selection = get_backend_for_role(MYCA_CORE)

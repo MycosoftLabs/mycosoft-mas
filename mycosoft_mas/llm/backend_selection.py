@@ -48,6 +48,28 @@ _CATEGORY_CONSCIOUSNESS = "consciousness"
 _MODE_HYBRID = "hybrid"
 _MODE_NEMOTRON = "nemotron"
 _MODE_LLAMA = "llama"
+
+
+def resolve_nemotron_base_url() -> str:
+    """
+    OpenAI-compatible Nemotron on the same host as MAS (VM 188 or dev machine).
+
+    Set NEMOTRON_BASE_URL to override (remote GPU, Docker hostname, etc.).
+    If unset, defaults to http://127.0.0.1:NEMOTRON_HTTP_PORT (default port 11435,
+    beside Ollama on 11434). Set NEMOTRON_HTTP_PORT if your local server uses another port.
+    """
+    if os.getenv("NEMOTRON_DISABLE_LOCAL_DEFAULT", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    ):
+        return os.getenv("NEMOTRON_BASE_URL", "").strip()
+    explicit = os.getenv("NEMOTRON_BASE_URL", "").strip()
+    if explicit:
+        return explicit.rstrip("/")
+    host = (os.getenv("NEMOTRON_HOST") or "127.0.0.1").strip() or "127.0.0.1"
+    port = (os.getenv("NEMOTRON_HTTP_PORT") or "11435").strip() or "11435"
+    return f"http://{host}:{port}"
 _VALID_MODES = frozenset({_MODE_HYBRID, _MODE_NEMOTRON, _MODE_LLAMA})
 
 
@@ -212,7 +234,7 @@ def _forced_selection_for_mode(role: str, mode: str) -> BackendSelection | None:
             api_key="",
         )
 
-    nemotron_base = os.getenv("NEMOTRON_BASE_URL", "").strip()
+    nemotron_base = resolve_nemotron_base_url()
     if mode == _MODE_NEMOTRON and nemotron_base:
         return BackendSelection(
             provider="nemotron",
@@ -221,7 +243,7 @@ def _forced_selection_for_mode(role: str, mode: str) -> BackendSelection | None:
             api_key=os.getenv("NEMOTRON_API_KEY", ""),
         )
 
-    # If Nemotron is forced but not configured, fail closed to local Llama.
+    # If Nemotron is forced but local default disabled and no URL, fail closed to local Llama.
     if mode == _MODE_NEMOTRON:
         return BackendSelection(
             provider="ollama",
@@ -336,20 +358,25 @@ def get_backend_for_role(role: ModelRole) -> BackendSelection:
         if not base_url and prov_name == "local":
             base_url = os.getenv("LLM_BASE_URL", "http://localhost:4000")
         if not base_url and prov_name == "nemotron":
-            base_url = os.getenv("NEMOTRON_BASE_URL", "")
+            base_url = resolve_nemotron_base_url()
         if not base_url and prov_name == "ollama":
             base_url = os.getenv(
                 "OLLAMA_BASE_URL", os.getenv("OLLAMA_URL", "http://localhost:11434")
             )
+        default_url = "http://localhost:11434"
+        if prov_name == "nemotron":
+            default_url = resolve_nemotron_base_url() or "http://127.0.0.1:11435"
+        elif prov_name == "local":
+            default_url = os.getenv("LLM_BASE_URL", "http://localhost:4000")
         return BackendSelection(
             provider=prov_name,
-            base_url=(base_url or "http://localhost:11434").rstrip("/"),
+            base_url=(base_url or default_url).rstrip("/"),
             model=model,
             api_key=api_key,
         )
 
     # No YAML role spec: use env-based defaults
-    nemotron_base = os.getenv("NEMOTRON_BASE_URL", "").strip()
+    nemotron_base = resolve_nemotron_base_url()
     if role in (NEMOTRON_SUPER, MYCA_CORE, MYCA2_CORE, MYCA2_SANDBOX):
         if nemotron_base:
             return BackendSelection(

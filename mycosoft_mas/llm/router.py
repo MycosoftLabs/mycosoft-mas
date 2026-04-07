@@ -334,7 +334,7 @@ class LLMRouter:
         # Unified backend-selection path (Nemotron/Ollama from config/models.yaml)
         role = self._role_for_task_type(task_type)
         selection = get_backend_for_role(role)
-        if selection.provider in ("nemotron", "ollama"):
+        if selection.provider in ("nemotron", "ollama", "openai_compatible"):
             prov = self._provider_for_selection(selection)
             selected_model = model or selection.model
             try:
@@ -541,7 +541,7 @@ class LLMRouter:
     ) -> EmbeddingResponse:
         """Generate embeddings with automatic routing."""
         selection = get_backend_for_role(EMBEDDING)
-        if selection.provider in ("nemotron", "ollama"):
+        if selection.provider in ("nemotron", "ollama", "openai_compatible"):
             prov = self._provider_for_selection(selection)
             selected_model = model or selection.model
             return await prov.embed(texts=texts, model=selected_model, **kwargs)
@@ -572,7 +572,7 @@ class LLMRouter:
         """Stream chat completion response."""
         role = self._role_for_task_type(task_type)
         selection = get_backend_for_role(role)
-        if selection.provider in ("nemotron", "ollama"):
+        if selection.provider in ("nemotron", "ollama", "openai_compatible"):
             prov = self._provider_for_selection(selection)
             selected_model = model or selection.model
             async for chunk in prov.chat_stream(

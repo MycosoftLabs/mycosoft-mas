@@ -11,14 +11,20 @@ LLM_ROUTER_MODE env var controls routing:
   hybrid                  — Intelligent routing based on task type
 """
 
+import json
 import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import AsyncGenerator, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional
 
 from mycosoft_mas.llm.backend_selection import MYCA_CORE, BackendSelection, get_backend_for_role
 from mycosoft_mas.llm.error_sanitizer import sanitize_error_body, sanitize_for_log
+from mycosoft_mas.llm.providers.base import Message
+from mycosoft_mas.llm.providers.openai_compatible import OpenAICompatibleProvider
+
+if TYPE_CHECKING:
+    from mycosoft_mas.llm.tool_pipeline import ConversationToolManager
 
 logger = logging.getLogger(__name__)
 
@@ -147,12 +153,148 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
 
         return messages
 
+    @staticmethod
+    def _dict_messages_to_provider_messages(messages: List[Dict[str, Any]]) -> List[Message]:
+        out: List[Message] = []
+        for m in messages:
+            out.append(
+                Message(
+                    role=m["role"],
+                    content=m.get("content") or "",
+                    name=m.get("name"),
+                    tool_calls=m.get("tool_calls"),
+                    tool_call_id=m.get("tool_call_id"),
+                )
+            )
+        return out
+
+    @staticmethod
+    def _registry_tools_to_openai_tools(tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Convert MYCA registry tool dicts to OpenAI Chat Completions tool schema."""
+        out: List[Dict[str, Any]] = []
+        for t in tools:
+            if t.get("type") == "function" and "function" in t:
+                out.append(t)
+                continue
+            name = t.get("name", "")
+            desc = (t.get("description") or "").strip() or name
+            params = t.get("parameters") or {"type": "object", "properties": {}}
+            out.append(
+                {
+                    "type": "function",
+                    "function": {
+                        "name": name,
+                        "description": desc,
+                        "parameters": params,
+                    },
+                }
+            )
+        return out
+
+    @staticmethod
+    def _normalize_tool_calls_for_executor(raw: Optional[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+        normalized: List[Dict[str, Any]] = []
+        for tc in raw or []:
+            if not isinstance(tc, dict):
+                continue
+            if tc.get("type") == "function" and isinstance(tc.get("function"), dict):
+                fn = tc["function"]
+                args = fn.get("arguments", "{}")
+                if isinstance(args, str):
+                    try:
+                        args = json.loads(args)
+                    except json.JSONDecodeError:
+                        args = {}
+                normalized.append(
+                    {
+                        "id": tc.get("id", ""),
+                        "name": fn.get("name", ""),
+                        "arguments": args if isinstance(args, dict) else {},
+                    }
+                )
+        return normalized
+
+    async def _stream_openai_tool_loop(
+        self,
+        selection: BackendSelection,
+        messages: List[Dict[str, Any]],
+        tools: List[Dict[str, Any]],
+        tool_manager: "ConversationToolManager",
+    ) -> AsyncGenerator[str, None]:
+        """
+        Nemotron / OpenAI-compatible / Ollama (OpenAI shim): multi-turn tool execution then streamed text.
+        Connects MAS tool registry to the LLM for search, CREP, map, and agent delegation.
+        """
+        openai_tools = self._registry_tools_to_openai_tools(tools)
+        if not openai_tools:
+            async for t in self._stream_openai_compatible(selection, messages):
+                yield t
+            return
+
+        prov = OpenAICompatibleProvider(
+            api_key=selection.api_key or "",
+            base_url=selection.base_url.rstrip("/"),
+            timeout=120,
+            max_retries=2,
+        )
+        msgs = self._dict_messages_to_provider_messages(messages)
+        max_rounds = 5
+
+        for _round in range(max_rounds):
+            resp = await prov.chat(
+                messages=msgs,
+                model=selection.model,
+                temperature=0.7,
+                max_tokens=2048,
+                tools=openai_tools,
+                tool_choice="auto",
+            )
+            if not resp.tool_calls:
+                text = (resp.content or "").strip()
+                if not text:
+                    yield LLM_FALLBACK_MESSAGE
+                    return
+                for ch in text:
+                    yield ch
+                return
+
+            normalized = self._normalize_tool_calls_for_executor(resp.tool_calls)
+            if not normalized:
+                text = (resp.content or "").strip()
+                for ch in (text if text else LLM_FALLBACK_MESSAGE):
+                    yield ch
+                return
+
+            msgs.append(
+                Message(
+                    role="assistant",
+                    content=resp.content or "",
+                    tool_calls=resp.tool_calls,
+                )
+            )
+
+            executed = await tool_manager.process_tool_calls(normalized)
+
+            for call in executed:
+                payload = tool_manager.format_tool_result_for_injection(call)
+                msgs.append(
+                    Message(
+                        role="tool",
+                        content=payload,
+                        tool_call_id=call.id,
+                    )
+                )
+
+        logger.warning("[MYCA Brain] Tool loop exceeded max_rounds — yielding fallback")
+        yield LLM_FALLBACK_MESSAGE
+
     async def stream_response(
         self,
         message: str,
         context: ConversationContext,
         tools: Optional[List[Dict]] = None,
         provider: str = "auto",
+        tool_manager: Optional["ConversationToolManager"] = None,
     ) -> AsyncGenerator[str, None]:
         """
         Stream response from frontier LLM.
@@ -162,6 +304,7 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
             context: Conversation context
             tools: Available tools for function calling
             provider: "auto", "gemini", "claude", or "openai"
+            tool_manager: When set with tools, runs OpenAI tool calls against MAS registry (Nemotron path)
 
         Yields:
             Response tokens as they arrive
@@ -178,7 +321,18 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
 
         yielded = 0
         try:
-            if provider == "nemotron":
+            # Native tool calling on OpenAI-compatible backends (Nemotron, KVTC bundles, Ollama w/ tools)
+            if (
+                tools
+                and tool_manager is not None
+                and selection.provider in ("nemotron", "openai_compatible", "ollama")
+            ):
+                async for token in self._stream_openai_tool_loop(
+                    selection, messages, tools, tool_manager
+                ):
+                    yielded += 1
+                    yield token
+            elif provider == "nemotron":
                 async for token in self._stream_openai_compatible(selection, messages):
                     yielded += 1
                     yield token
@@ -213,7 +367,9 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                     fallback = self._select_provider()  # None => config-based (cloud)
                     if fallback not in ("ollama", "nemotron"):
                         logger.info(f"[MYCA Brain] {provider} empty — falling back to {fallback}")
-                        async for token in self.stream_response(message, context, tools, fallback):
+                        async for token in self.stream_response(
+                            message, context, tools, fallback, tool_manager
+                        ):
                             yield token
                         return
                 yield LLM_FALLBACK_MESSAGE
@@ -226,7 +382,9 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                 fallback = self._select_provider()  # None => config-based (cloud)
                 if fallback not in ("ollama", "nemotron"):
                     logger.info(f"[MYCA Brain] {provider} failed — falling back to {fallback}")
-                    async for token in self.stream_response(message, context, tools, fallback):
+                    async for token in self.stream_response(
+                        message, context, tools, fallback, tool_manager
+                    ):
                         yield token
                     return
             yield LLM_FALLBACK_MESSAGE
@@ -235,6 +393,11 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
         """Select best available provider. Uses backend_selection (Nemotron/Ollama) when selection given."""
         if selection is None:
             selection = get_backend_for_role(MYCA_CORE)
+
+        # KVTC / MYCA2 bundles expose provider openai_compatible — same OpenAI HTTP path as Nemotron
+        primary = selection.provider
+        if primary == "openai_compatible":
+            primary = "nemotron"
 
         if self.router_mode == "ollama_only":
             return "ollama"
@@ -246,10 +409,9 @@ Be warm, professional, and helpful. Answer questions directly and honestly."""
                 return "claude"
             if self.openai_api_key and self.provider_health["openai"]["healthy"]:
                 return "openai"
-            return selection.provider
+            return primary
 
         # local_first (default): prefer MYCA core backend (nemotron or ollama) from backend_selection
-        primary = selection.provider
         if primary == "nemotron" and self.provider_health.get("nemotron", {}).get("healthy", True):
             return "nemotron"
         if primary == "ollama" and self.provider_health["ollama"]["healthy"]:

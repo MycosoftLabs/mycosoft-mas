@@ -17,7 +17,10 @@ This is the cognitive layer between PersonaPlex voice and MYCA's intelligence.
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from mycosoft_mas.llm.tool_pipeline import ConversationToolManager
 
 logger = logging.getLogger("MYCAMemoryBrain")
 
@@ -346,6 +349,7 @@ class MYCAMemoryBrain:
         history: Optional[List[Dict[str, str]]] = None,
         tools: Optional[List[Dict]] = None,
         provider: str = "auto",
+        tool_manager: Optional["ConversationToolManager"] = None,
     ) -> AsyncGenerator[str, None]:
         """
         Stream a memory-aware response.
@@ -407,9 +411,13 @@ class MYCAMemoryBrain:
                     0, {"role": "system", "content": f"[MEMORY CONTEXT]\n{memory_prompt}"}
                 )
 
-            # Stream response from frontier LLM
+            # Stream response from frontier LLM (Nemotron tool loop when tool_manager + tools)
             async for token in self._frontier_router.stream_response(
-                message=message, context=frontier_context, tools=tools, provider=provider
+                message=message,
+                context=frontier_context,
+                tools=tools,
+                provider=provider,
+                tool_manager=tool_manager,
             ):
                 full_response.append(token)
                 yield token
@@ -436,6 +444,7 @@ class MYCAMemoryBrain:
         history: Optional[List[Dict[str, str]]] = None,
         tools: Optional[List[Dict]] = None,
         provider: str = "auto",
+        tool_manager: Optional["ConversationToolManager"] = None,
     ) -> str:
         """
         Get a complete memory-aware response (non-streaming).
@@ -452,6 +461,7 @@ class MYCAMemoryBrain:
             history=history,
             tools=tools,
             provider=provider,
+            tool_manager=tool_manager,
         ):
             tokens.append(token)
         return "".join(tokens)

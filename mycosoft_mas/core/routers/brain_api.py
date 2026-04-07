@@ -21,6 +21,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.llm.backend_selection import MYCA_CORE, get_backend_for_role
 from mycosoft_mas.llm.error_sanitizer import sanitize_for_log, sanitize_for_user
 from mycosoft_mas.llm.tool_pipeline import create_tool_manager_for_skill
 from mycosoft_mas.myca.event_ledger import get_ledger
@@ -147,7 +148,7 @@ async def brain_chat(request: BrainChatRequest):
             else None
         )
 
-        # Get response
+        # Get response (pass tool_manager so Nemotron/Ollama can run MAS tool calls)
         response = await brain.get_response(
             message=request.message,
             session_id=session_id,
@@ -156,6 +157,7 @@ async def brain_chat(request: BrainChatRequest):
             history=request.history,
             tools=tools,
             provider=request.provider,
+            tool_manager=tool_manager,
         )
 
         # Get memory context if requested
@@ -168,14 +170,9 @@ async def brain_chat(request: BrainChatRequest):
             except Exception as e:
                 logger.warning(f"Failed to get memory context: {e}")
 
-        # Determine provider used (from brain stats)
-        stats = await brain.get_stats()
-        provider_used = request.provider if request.provider != "auto" else "gemini"
-        if stats.get("frontier_router") and stats.get("provider_health"):
-            for p, health in stats["provider_health"].items():
-                if health.get("healthy", False):
-                    provider_used = p
-                    break
+        # Resolved backend (Nemotron / Ollama / etc.) for telemetry
+        selection = get_backend_for_role(MYCA_CORE)
+        provider_used = request.provider if request.provider != "auto" else selection.provider
 
         return BrainChatResponse(
             response=response,
@@ -230,6 +227,7 @@ async def brain_stream(request: BrainChatRequest):
                     history=request.history,
                     tools=tools,
                     provider=request.provider,
+                    tool_manager=tool_manager,
                 ):
                     # Send as SSE event
                     yield f"data: {json.dumps({'token': token})}\n\n"

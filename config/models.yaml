@@ -25,7 +25,8 @@ providers:
     api_key: ${LLM_API_KEY:-}
     base_url: ${LLM_BASE_URL:-http://litellm:4000}
 
-  # Nemotron (OpenAI-compatible); NEMOTRON_BASE_URL for local/GPU deployment
+  # Nemotron (OpenAI-compatible). If NEMOTRON_BASE_URL is unset, backend_selection uses
+  # http://127.0.0.1:${NEMOTRON_HTTP_PORT:-11435} on the MAS host (see resolve_nemotron_base_url).
   nemotron:
     provider: openai_compatible
     model: ${NEMOTRON_MODEL_SUPER:-nemotron-super}
