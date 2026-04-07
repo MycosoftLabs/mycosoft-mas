@@ -616,6 +616,231 @@ class PersistentKnowledgeGraph:
             "by_edge_type": {r["edge_type"]: r["count"] for r in edge_type_counts},
         }
 
+    # =========================================================================
+    # Temporal Knowledge Graph (Palace Integration - April 7, 2026)
+    # Adds temporal validity windows, contradiction detection, timeline queries
+    # =========================================================================
+
+    async def add_temporal_edge(
+        self,
+        source_id: UUID,
+        target_id: UUID,
+        edge_type: EdgeType,
+        valid_from: Optional[datetime] = None,
+        valid_to: Optional[datetime] = None,
+        confidence: float = 1.0,
+        properties: Optional[Dict[str, Any]] = None,
+        weight: float = 1.0,
+        source_closet: Optional[str] = None,
+        source_file: Optional[str] = None,
+    ) -> Edge:
+        """Add an edge with temporal validity window."""
+        await self.initialize()
+
+        async with self._pool.acquire() as conn:
+            import json
+
+            row = await conn.fetchrow(
+                """
+                INSERT INTO graph.edges (
+                    source_id, target_id, edge_type, properties, weight,
+                    valid_from, valid_to, confidence, source_closet, source_file
+                ) VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, $8, $9, $10)
+                ON CONFLICT (source_id, target_id, edge_type) DO UPDATE SET
+                    properties = EXCLUDED.properties,
+                    weight = EXCLUDED.weight,
+                    valid_from = EXCLUDED.valid_from,
+                    valid_to = EXCLUDED.valid_to,
+                    confidence = EXCLUDED.confidence,
+                    source_closet = EXCLUDED.source_closet,
+                    source_file = EXCLUDED.source_file
+                RETURNING id, created_at
+                """,
+                source_id,
+                target_id,
+                edge_type.value,
+                json.dumps(properties or {}),
+                weight,
+                valid_from or datetime.utcnow(),
+                valid_to,
+                confidence,
+                source_closet,
+                source_file,
+            )
+
+            edge = Edge(
+                id=row["id"],
+                source_id=source_id,
+                target_id=target_id,
+                edge_type=edge_type,
+                properties=properties or {},
+                weight=weight,
+                created_at=row["created_at"],
+            )
+
+            self._edge_cache[edge.id] = edge
+            if source_id not in self._adjacency:
+                self._adjacency[source_id] = []
+            if target_id not in self._adjacency[source_id]:
+                self._adjacency[source_id].append(target_id)
+
+            return edge
+
+    async def invalidate_edge(
+        self, edge_id: UUID, valid_to: Optional[datetime] = None
+    ) -> bool:
+        """Mark an edge as no longer valid (temporal invalidation)."""
+        await self.initialize()
+        end_time = valid_to or datetime.utcnow()
+
+        async with self._pool.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE graph.edges SET valid_to = $1
+                WHERE id = $2 AND (valid_to IS NULL OR valid_to > $1)
+                """,
+                end_time,
+                edge_id,
+            )
+            return "UPDATE 1" in result
+
+    async def query_as_of(
+        self,
+        node_name: str,
+        as_of: datetime,
+        edge_type: Optional[EdgeType] = None,
+    ) -> List[Dict[str, Any]]:
+        """Query facts valid at a specific point in time."""
+        await self.initialize()
+
+        async with self._pool.acquire() as conn:
+            import json
+
+            query = """
+                SELECT e.*, ns.name as source_name, nt.name as target_name,
+                       ns.node_type as source_type, nt.node_type as target_type
+                FROM graph.edges e
+                JOIN graph.nodes ns ON ns.id = e.source_id
+                JOIN graph.nodes nt ON nt.id = e.target_id
+                WHERE (ns.name ILIKE $1 OR nt.name ILIKE $1)
+                AND (e.valid_from IS NULL OR e.valid_from <= $2)
+                AND (e.valid_to IS NULL OR e.valid_to > $2)
+            """
+            params = [node_name, as_of]
+
+            if edge_type:
+                query += " AND e.edge_type = $3"
+                params.append(edge_type.value)
+
+            query += " ORDER BY e.valid_from DESC"
+
+            rows = await conn.fetch(query, *params)
+
+            return [
+                {
+                    "edge_id": str(row["id"]),
+                    "source": row["source_name"],
+                    "source_type": row["source_type"],
+                    "predicate": row["edge_type"],
+                    "target": row["target_name"],
+                    "target_type": row["target_type"],
+                    "valid_from": row["valid_from"].isoformat() if row["valid_from"] else None,
+                    "valid_to": row["valid_to"].isoformat() if row["valid_to"] else None,
+                    "confidence": row.get("confidence", 1.0),
+                    "weight": row["weight"],
+                }
+                for row in rows
+            ]
+
+    async def get_timeline(
+        self, entity_name: str, limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """Get chronological timeline of facts about an entity."""
+        await self.initialize()
+
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT e.*, ns.name as source_name, nt.name as target_name
+                FROM graph.edges e
+                JOIN graph.nodes ns ON ns.id = e.source_id
+                JOIN graph.nodes nt ON nt.id = e.target_id
+                WHERE ns.name ILIKE $1 OR nt.name ILIKE $1
+                ORDER BY COALESCE(e.valid_from, e.created_at) ASC
+                LIMIT $2
+                """,
+                entity_name,
+                limit,
+            )
+
+            timeline = []
+            for row in rows:
+                entry = {
+                    "subject": row["source_name"],
+                    "predicate": row["edge_type"],
+                    "object": row["target_name"],
+                    "valid_from": row["valid_from"].isoformat() if row.get("valid_from") else None,
+                    "valid_to": row["valid_to"].isoformat() if row.get("valid_to") else None,
+                    "confidence": row.get("confidence", 1.0),
+                    "is_current": row.get("valid_to") is None,
+                }
+                timeline.append(entry)
+
+            return timeline
+
+    async def add_fact(
+        self,
+        subject: str,
+        predicate: str,
+        obj: str,
+        subject_type: str = "entity",
+        object_type: str = "entity",
+        confidence: float = 1.0,
+        valid_from: Optional[datetime] = None,
+        source_file: str = "",
+    ) -> Dict[str, Any]:
+        """
+        High-level method to add a fact as a temporal triple.
+        Creates nodes if they don't exist, adds temporal edge.
+        """
+        await self.initialize()
+
+        # Get or create subject node
+        s_type = NodeType(subject_type) if subject_type in [e.value for e in NodeType] else NodeType.CONCEPT
+        subject_node = await self.find_node_by_name(subject, s_type)
+        if not subject_node:
+            subject_node = await self.add_node(
+                Node(node_type=s_type, name=subject, properties={})
+            )
+
+        # Get or create object node
+        o_type = NodeType(object_type) if object_type in [e.value for e in NodeType] else NodeType.CONCEPT
+        object_node = await self.find_node_by_name(obj, o_type)
+        if not object_node:
+            object_node = await self.add_node(
+                Node(node_type=o_type, name=obj, properties={})
+            )
+
+        # Get edge type
+        e_type = EdgeType(predicate) if predicate in [e.value for e in EdgeType] else EdgeType.RELATED_TO
+
+        edge = await self.add_temporal_edge(
+            source_id=subject_node.id,
+            target_id=object_node.id,
+            edge_type=e_type,
+            valid_from=valid_from or datetime.utcnow(),
+            confidence=confidence,
+            source_file=source_file,
+        )
+
+        return {
+            "subject": subject,
+            "predicate": predicate,
+            "object": obj,
+            "edge_id": str(edge.id),
+            "valid_from": (valid_from or datetime.utcnow()).isoformat(),
+        }
+
 
 # Singleton
 _graph: Optional[PersistentKnowledgeGraph] = None

@@ -493,3 +493,218 @@ class AgentMemoryMixin:
             await self.share_learning(fact, source="learning", confidence=confidence)
 
         return success
+
+    # =========================================================================
+    # Palace Memory Operations (April 7, 2026)
+    # Spatial memory + AAAK diary + contradiction detection + tunnels
+    # =========================================================================
+
+    async def palace_remember(
+        self,
+        content: str,
+        wing: Optional[str] = None,
+        room: Optional[str] = None,
+        hall: Optional[str] = None,
+        importance: float = 0.5,
+        tags: Optional[List[str]] = None,
+    ) -> Optional[UUID]:
+        """
+        File content into the memory palace with spatial metadata.
+
+        Auto-classifies wing/room/hall if not provided.
+        """
+        if not self._memory:
+            await self.init_memory()
+        if not self._memory:
+            return None
+
+        try:
+            return await self._memory.palace_ingest(
+                content=content,
+                wing=wing,
+                room=room,
+                hall=hall,
+                importance=importance,
+                tags=tags,
+                agent_id=self._agent_namespace or "unknown",
+            )
+        except Exception as e:
+            logger.warning(f"Palace remember failed: {e}")
+            return None
+
+    async def palace_recall(
+        self,
+        query: Optional[str] = None,
+        wing: Optional[str] = None,
+        room: Optional[str] = None,
+        hall: Optional[str] = None,
+        limit: int = 10,
+    ) -> List[Dict[str, Any]]:
+        """Wing/room-scoped retrieval from the memory palace."""
+        if not self._memory:
+            await self.init_memory()
+        if not self._memory:
+            return []
+
+        try:
+            return await self._memory.palace_search(
+                query=query, wing=wing, room=room, hall=hall, limit=limit
+            )
+        except Exception as e:
+            logger.warning(f"Palace recall failed: {e}")
+            return []
+
+    async def palace_search(self, query: str, limit: int = 10) -> str:
+        """L3 deep semantic search across all palace memory."""
+        if not self._memory:
+            await self.init_memory()
+        if not self._memory:
+            return ""
+
+        try:
+            return await self._memory.palace_deep_search(query=query, limit=limit)
+        except Exception as e:
+            logger.warning(f"Palace search failed: {e}")
+            return ""
+
+    async def wake_up(self, wing: Optional[str] = None) -> str:
+        """
+        Load L0+L1 context (~170 tokens) for agent initialization.
+
+        Call at agent start to get compact identity + critical facts context.
+        """
+        if not self._memory:
+            await self.init_memory()
+        if not self._memory:
+            return ""
+
+        try:
+            return await self._memory.palace_wake_up(wing=wing)
+        except Exception as e:
+            logger.warning(f"Wake-up failed: {e}")
+            return ""
+
+    async def get_tunnels(self, wing: str) -> List[Dict[str, Any]]:
+        """Discover cross-domain connections (tunnels) from a wing."""
+        if not self._memory:
+            await self.init_memory()
+        if not self._memory:
+            return []
+
+        try:
+            await self._memory._ensure_palace()
+            if self._memory._palace_navigator:
+                tunnels = await self._memory._palace_navigator.find_tunnels(wing)
+                return [
+                    {
+                        "room": t.room_name,
+                        "wing_a": t.wing_a,
+                        "wing_b": t.wing_b,
+                        "strength": t.strength,
+                    }
+                    for t in tunnels
+                ]
+        except Exception as e:
+            logger.warning(f"Get tunnels failed: {e}")
+        return []
+
+    async def diary_write(self, summary: str, wing: Optional[str] = None) -> bool:
+        """
+        Write an AAAK diary entry for this agent.
+        Persists across sessions for domain expertise continuity.
+        """
+        if not self._memory:
+            await self.init_memory()
+        if not self._memory:
+            return False
+
+        try:
+            await self._memory._ensure_palace()
+            from mycosoft_mas.memory.palace.aaak_dialect import AAKEncoder
+            from mycosoft_mas.memory.palace.db_pool import get_shared_pool
+
+            encoder = AAKEncoder()
+            aaak = encoder.compress(
+                content=summary,
+                wing=wing or "agents",
+                room=self._agent_namespace or "unknown",
+                agent_id=self._agent_namespace or "unknown",
+            )
+
+            pool = await get_shared_pool()
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    INSERT INTO mindex.agent_diaries (agent_id, entry_aaak, entry_raw, wing, room)
+                    VALUES ($1, $2, $3::jsonb, $4, $5)
+                    """,
+                    self._agent_namespace or "unknown",
+                    aaak,
+                    __import__("json").dumps({"summary": summary}),
+                    wing or "agents",
+                    self._agent_namespace or "unknown",
+                )
+            return True
+        except Exception as e:
+            logger.warning(f"Diary write failed: {e}")
+            return False
+
+    async def diary_read(self, n: int = 5) -> List[Dict[str, str]]:
+        """Read the last N diary entries for this agent."""
+        try:
+            from mycosoft_mas.memory.palace.db_pool import get_shared_pool
+
+            pool = await get_shared_pool()
+            async with pool.acquire() as conn:
+                rows = await conn.fetch(
+                    """
+                    SELECT entry_aaak, entry_raw, wing, room, created_at
+                    FROM mindex.agent_diaries
+                    WHERE agent_id = $1
+                    ORDER BY created_at DESC
+                    LIMIT $2
+                    """,
+                    self._agent_namespace or "unknown",
+                    n,
+                )
+                return [
+                    {
+                        "aaak": row["entry_aaak"],
+                        "raw": row["entry_raw"],
+                        "wing": row["wing"],
+                        "room": row["room"],
+                        "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+                    }
+                    for row in rows
+                ]
+        except Exception as e:
+            logger.warning(f"Diary read failed: {e}")
+            return []
+
+    async def check_fact(
+        self, subject: str, predicate: str, obj: str
+    ) -> Dict[str, Any]:
+        """Check for contradictions before filing a fact."""
+        try:
+            from mycosoft_mas.memory.palace.contradiction_detector import (
+                ContradictionDetector,
+            )
+
+            detector = ContradictionDetector()
+            await detector.initialize()
+            return await detector.check_and_report(subject, predicate, obj)
+        except Exception as e:
+            logger.warning(f"Fact check failed: {e}")
+            return {"safe": True, "contradictions": [], "recommendation": "Check unavailable."}
+
+    async def get_timeline(self, entity: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get chronological timeline of facts about an entity."""
+        try:
+            from mycosoft_mas.memory.persistent_graph import get_knowledge_graph
+
+            graph = get_knowledge_graph()
+            await graph.initialize()
+            return await graph.get_timeline(entity, limit=limit)
+        except Exception as e:
+            logger.warning(f"Timeline query failed: {e}")
+            return []

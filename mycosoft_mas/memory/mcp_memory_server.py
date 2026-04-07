@@ -175,6 +175,165 @@ class MCPMemoryServer:
                     },
                 },
             ),
+            # =================================================================
+            # Palace Navigation Tools (April 7, 2026)
+            # =================================================================
+            MCPToolDefinition(
+                name="palace_status",
+                description="Get memory palace overview: wing/room/drawer/tunnel counts.",
+                parameters={"type": "object", "properties": {}},
+            ),
+            MCPToolDefinition(
+                name="palace_list_wings",
+                description="List all wings (domains) in the memory palace with counts.",
+                parameters={"type": "object", "properties": {}},
+            ),
+            MCPToolDefinition(
+                name="palace_list_rooms",
+                description="List rooms in a wing.",
+                parameters={"type": "object", "properties": {
+                    "wing": {"type": "string", "description": "Wing name to list rooms for"},
+                }},
+            ),
+            MCPToolDefinition(
+                name="palace_get_taxonomy",
+                description="Get full palace taxonomy: wing -> room -> hall hierarchy.",
+                parameters={"type": "object", "properties": {}},
+            ),
+            MCPToolDefinition(
+                name="palace_search",
+                description="Search memory palace drawers with wing/room/hall filters.",
+                parameters={"type": "object", "properties": {
+                    "query": {"type": "string", "description": "Search text"},
+                    "wing": {"type": "string", "description": "Filter by wing"},
+                    "room": {"type": "string", "description": "Filter by room"},
+                    "hall": {"type": "string", "description": "Filter by hall (facts/events/discoveries/preferences/advice)"},
+                    "limit": {"type": "integer", "description": "Max results", "default": 20},
+                }},
+            ),
+            MCPToolDefinition(
+                name="palace_check_duplicate",
+                description="Check if content already exists in the palace.",
+                parameters={"type": "object", "properties": {
+                    "content": {"type": "string", "description": "Content to check"},
+                }, "required": ["content"]},
+            ),
+            MCPToolDefinition(
+                name="palace_traverse",
+                description="Walk the graph from a wing, showing connected rooms and tunnels.",
+                parameters={"type": "object", "properties": {
+                    "wing": {"type": "string", "description": "Wing to start traversal from"},
+                }, "required": ["wing"]},
+            ),
+            MCPToolDefinition(
+                name="palace_find_tunnels",
+                description="Find cross-wing connections (rooms bridging two wings).",
+                parameters={"type": "object", "properties": {
+                    "wing_a": {"type": "string", "description": "First wing"},
+                    "wing_b": {"type": "string", "description": "Second wing (optional)"},
+                }, "required": ["wing_a"]},
+            ),
+            MCPToolDefinition(
+                name="palace_file_drawer",
+                description="File new content into the palace with spatial classification.",
+                parameters={"type": "object", "properties": {
+                    "content": {"type": "string", "description": "Content to file"},
+                    "wing": {"type": "string", "description": "Wing (auto-detected if omitted)"},
+                    "room": {"type": "string", "description": "Room (auto-detected if omitted)"},
+                    "hall": {"type": "string", "description": "Hall type", "enum": ["facts", "events", "discoveries", "preferences", "advice"]},
+                    "importance": {"type": "number", "description": "Importance 0.0-1.0"},
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                }, "required": ["content"]},
+            ),
+            # Knowledge Graph Tools
+            MCPToolDefinition(
+                name="kg_query",
+                description="Query entity relationships with optional temporal filtering (as_of date).",
+                parameters={"type": "object", "properties": {
+                    "entity": {"type": "string", "description": "Entity name to query"},
+                    "as_of": {"type": "string", "description": "ISO date for historical query (optional)"},
+                    "limit": {"type": "integer", "default": 20},
+                }, "required": ["entity"]},
+            ),
+            MCPToolDefinition(
+                name="kg_add",
+                description="Add a temporal fact triple to the knowledge graph.",
+                parameters={"type": "object", "properties": {
+                    "subject": {"type": "string"},
+                    "predicate": {"type": "string"},
+                    "object": {"type": "string"},
+                    "confidence": {"type": "number", "default": 1.0},
+                    "source": {"type": "string", "default": "mcp"},
+                }, "required": ["subject", "predicate", "object"]},
+            ),
+            MCPToolDefinition(
+                name="kg_invalidate",
+                description="Mark a fact as no longer valid (set end date).",
+                parameters={"type": "object", "properties": {
+                    "edge_id": {"type": "string", "description": "Edge UUID to invalidate"},
+                }, "required": ["edge_id"]},
+            ),
+            MCPToolDefinition(
+                name="kg_timeline",
+                description="Get chronological timeline of facts about an entity.",
+                parameters={"type": "object", "properties": {
+                    "entity": {"type": "string"},
+                    "limit": {"type": "integer", "default": 50},
+                }, "required": ["entity"]},
+            ),
+            MCPToolDefinition(
+                name="kg_contradictions",
+                description="Check if a new fact contradicts existing knowledge.",
+                parameters={"type": "object", "properties": {
+                    "subject": {"type": "string"},
+                    "predicate": {"type": "string"},
+                    "object": {"type": "string"},
+                }, "required": ["subject", "predicate", "object"]},
+            ),
+            # Agent Diary Tools
+            MCPToolDefinition(
+                name="agent_diary_write",
+                description="Write an AAAK-compressed diary entry for an agent.",
+                parameters={"type": "object", "properties": {
+                    "agent_id": {"type": "string", "description": "Agent identifier"},
+                    "summary": {"type": "string", "description": "Session summary to compress"},
+                    "wing": {"type": "string", "default": "agents"},
+                }, "required": ["agent_id", "summary"]},
+            ),
+            MCPToolDefinition(
+                name="agent_diary_read",
+                description="Read recent diary entries for an agent.",
+                parameters={"type": "object", "properties": {
+                    "agent_id": {"type": "string"},
+                    "limit": {"type": "integer", "default": 5},
+                }, "required": ["agent_id"]},
+            ),
+            # Context Loading Tools
+            MCPToolDefinition(
+                name="palace_wake_up",
+                description="Load L0+L1 context (~170 tokens) for session initialization.",
+                parameters={"type": "object", "properties": {
+                    "wing": {"type": "string", "description": "Optional wing focus"},
+                }},
+            ),
+            MCPToolDefinition(
+                name="palace_recall",
+                description="L2 room-scoped context recall.",
+                parameters={"type": "object", "properties": {
+                    "wing": {"type": "string"},
+                    "room": {"type": "string"},
+                    "limit": {"type": "integer", "default": 10},
+                }, "required": ["wing"]},
+            ),
+            MCPToolDefinition(
+                name="palace_deep_search",
+                description="L3 deep semantic search across all palace memory.",
+                parameters={"type": "object", "properties": {
+                    "query": {"type": "string"},
+                    "wing": {"type": "string"},
+                    "limit": {"type": "integer", "default": 10},
+                }, "required": ["query"]},
+            ),
         ]
 
     async def initialize(self) -> None:
@@ -202,12 +361,36 @@ class MCPMemoryServer:
     async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Execute an MCP tool call."""
         handlers = {
+            # Original memory tools
             "memory_write": self._handle_write,
             "memory_read": self._handle_read,
             "memory_update": self._handle_update,
             "memory_delete": self._handle_delete,
             "memory_search": self._handle_search,
             "memory_list": self._handle_list,
+            # Palace navigation tools
+            "palace_status": self._handle_palace_status,
+            "palace_list_wings": self._handle_palace_list_wings,
+            "palace_list_rooms": self._handle_palace_list_rooms,
+            "palace_get_taxonomy": self._handle_palace_get_taxonomy,
+            "palace_search": self._handle_palace_search,
+            "palace_check_duplicate": self._handle_palace_check_duplicate,
+            "palace_traverse": self._handle_palace_traverse,
+            "palace_find_tunnels": self._handle_palace_find_tunnels,
+            "palace_file_drawer": self._handle_palace_file_drawer,
+            # Knowledge graph tools
+            "kg_query": self._handle_kg_query,
+            "kg_add": self._handle_kg_add,
+            "kg_invalidate": self._handle_kg_invalidate,
+            "kg_timeline": self._handle_kg_timeline,
+            "kg_contradictions": self._handle_kg_contradictions,
+            # Agent diary tools
+            "agent_diary_write": self._handle_diary_write,
+            "agent_diary_read": self._handle_diary_read,
+            # Context loading tools
+            "palace_wake_up": self._handle_palace_wake_up,
+            "palace_recall": self._handle_palace_recall,
+            "palace_deep_search": self._handle_palace_deep_search,
         }
 
         handler = handlers.get(tool_name)
@@ -509,10 +692,269 @@ class MCPMemoryServer:
         """Get server statistics."""
         return {
             "cached_memories": len(self._memory_cache),
-            "tools_available": len(self._tools),
+            "tools_available": len(self._tools) + 19,  # +19 palace tools
             "database_connected": self._pool is not None,
             "initialized": self._initialized,
         }
+
+    # =========================================================================
+    # Palace Tool Handlers (April 7, 2026)
+    # =========================================================================
+
+    async def _get_palace_navigator(self):
+        """Lazy-load palace navigator."""
+        try:
+            from mycosoft_mas.memory.palace.navigator import get_palace_navigator
+            return await get_palace_navigator()
+        except Exception as e:
+            logger.error(f"Failed to get palace navigator: {e}")
+            return None
+
+    async def _get_retrieval_stack(self):
+        """Lazy-load retrieval stack."""
+        try:
+            from mycosoft_mas.memory.palace.retrieval_stack import get_retrieval_stack
+            return await get_retrieval_stack()
+        except Exception as e:
+            logger.error(f"Failed to get retrieval stack: {e}")
+            return None
+
+    async def _handle_palace_status(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        nav = await self._get_palace_navigator()
+        if not nav:
+            return {"error": "Palace not initialized"}
+        return await nav.get_status()
+
+    async def _handle_palace_list_wings(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        nav = await self._get_palace_navigator()
+        if not nav:
+            return {"error": "Palace not initialized"}
+        wings = await nav.list_wings()
+        return {"wings": [{"name": w.name, "description": w.description,
+                           "source_type": w.source_type.value if hasattr(w.source_type, 'value') else str(w.source_type),
+                           "room_count": w.room_count, "drawer_count": w.drawer_count}
+                          for w in wings]}
+
+    async def _handle_palace_list_rooms(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        nav = await self._get_palace_navigator()
+        if not nav:
+            return {"error": "Palace not initialized"}
+        rooms = await nav.list_rooms(wing_name=args.get("wing"))
+        return {"rooms": [{"name": r.name, "wing": r.wing_name,
+                           "drawer_count": r.drawer_count, "description": r.description}
+                          for r in rooms]}
+
+    async def _handle_palace_get_taxonomy(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        nav = await self._get_palace_navigator()
+        if not nav:
+            return {"error": "Palace not initialized"}
+        taxonomy = await nav.get_taxonomy()
+        return {"taxonomy": taxonomy.to_dict()}
+
+    async def _handle_palace_search(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        nav = await self._get_palace_navigator()
+        if not nav:
+            return {"error": "Palace not initialized"}
+        results = await nav.search_drawers(
+            query=args.get("query"),
+            wing=args.get("wing"),
+            room=args.get("room"),
+            hall=args.get("hall"),
+            limit=args.get("limit", 20),
+        )
+        return {"results": results, "count": len(results)}
+
+    async def _handle_palace_check_duplicate(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        nav = await self._get_palace_navigator()
+        if not nav:
+            return {"error": "Palace not initialized"}
+        content = args.get("content", "")
+        result = await nav.check_duplicate(content)
+        if result:
+            return {"duplicate": True, **result}
+        return {"duplicate": False}
+
+    async def _handle_palace_traverse(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Graph traversal — find connected rooms from a starting room."""
+        nav = await self._get_palace_navigator()
+        if not nav:
+            return {"error": "Palace not initialized"}
+        wing = args.get("wing", "")
+        rooms = await nav.list_rooms(wing_name=wing)
+        tunnels = await nav.find_tunnels(wing)
+        return {
+            "wing": wing,
+            "rooms": [{"name": r.name, "drawer_count": r.drawer_count} for r in rooms],
+            "tunnels": [{"room": t.room_name, "connects_to": t.wing_b if t.wing_a == wing else t.wing_a}
+                        for t in tunnels],
+        }
+
+    async def _handle_palace_find_tunnels(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        nav = await self._get_palace_navigator()
+        if not nav:
+            return {"error": "Palace not initialized"}
+        tunnels = await nav.find_tunnels(
+            wing_a=args.get("wing_a", ""),
+            wing_b=args.get("wing_b"),
+        )
+        return {"tunnels": [{"room": t.room_name, "wing_a": t.wing_a,
+                             "wing_b": t.wing_b, "strength": t.strength}
+                            for t in tunnels]}
+
+    async def _handle_palace_file_drawer(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        nav = await self._get_palace_navigator()
+        if not nav:
+            return {"error": "Palace not initialized"}
+        entry_id = await nav.file_drawer(
+            content=args.get("content", ""),
+            wing=args.get("wing"),
+            room=args.get("room"),
+            hall=args.get("hall"),
+            importance=args.get("importance", 0.5),
+            tags=args.get("tags", []),
+            agent_id=args.get("agent_id", "mcp"),
+        )
+        return {"success": entry_id is not None, "entry_id": str(entry_id) if entry_id else None}
+
+    # Knowledge Graph handlers
+    async def _handle_kg_query(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            from mycosoft_mas.memory.persistent_graph import get_knowledge_graph
+            graph = get_knowledge_graph()
+            await graph.initialize()
+
+            entity = args.get("entity", "")
+            as_of_str = args.get("as_of")
+
+            if as_of_str:
+                from datetime import datetime
+                as_of = datetime.fromisoformat(as_of_str)
+                return {"facts": await graph.query_as_of(entity, as_of)}
+            else:
+                return {"facts": await graph.get_timeline(entity, limit=args.get("limit", 20))}
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def _handle_kg_add(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            from mycosoft_mas.memory.persistent_graph import get_knowledge_graph
+            graph = get_knowledge_graph()
+            await graph.initialize()
+            result = await graph.add_fact(
+                subject=args.get("subject", ""),
+                predicate=args.get("predicate", "related_to"),
+                obj=args.get("object", ""),
+                confidence=args.get("confidence", 1.0),
+                source_file=args.get("source", "mcp"),
+            )
+            return {"success": True, **result}
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def _handle_kg_invalidate(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            from mycosoft_mas.memory.persistent_graph import get_knowledge_graph
+            from uuid import UUID
+            graph = get_knowledge_graph()
+            await graph.initialize()
+            edge_id = UUID(args.get("edge_id", ""))
+            success = await graph.invalidate_edge(edge_id)
+            return {"success": success}
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def _handle_kg_timeline(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            from mycosoft_mas.memory.persistent_graph import get_knowledge_graph
+            graph = get_knowledge_graph()
+            await graph.initialize()
+            return {"timeline": await graph.get_timeline(
+                args.get("entity", ""), limit=args.get("limit", 50)
+            )}
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def _handle_kg_contradictions(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            from mycosoft_mas.memory.palace.contradiction_detector import ContradictionDetector
+            detector = ContradictionDetector()
+            await detector.initialize()
+            return await detector.check_and_report(
+                subject=args.get("subject", ""),
+                predicate=args.get("predicate", ""),
+                obj=args.get("object", ""),
+            )
+        except Exception as e:
+            return {"error": str(e)}
+
+    # Agent diary handlers
+    async def _handle_diary_write(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            from mycosoft_mas.memory.palace.aaak_dialect import AAKEncoder
+            from mycosoft_mas.memory.palace.db_pool import get_shared_pool
+
+            encoder = AAKEncoder()
+            agent_id = args.get("agent_id", "mcp")
+            summary = args.get("summary", "")
+            wing = args.get("wing", "agents")
+
+            aaak = encoder.compress(content=summary, wing=wing, room=agent_id, agent_id=agent_id)
+
+            pool = await get_shared_pool()
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """INSERT INTO mindex.agent_diaries (agent_id, entry_aaak, entry_raw, wing, room)
+                    VALUES ($1, $2, $3::jsonb, $4, $5)""",
+                    agent_id, aaak, json.dumps({"summary": summary}), wing, agent_id,
+                )
+            return {"success": True, "aaak": aaak}
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def _handle_diary_read(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            from mycosoft_mas.memory.palace.db_pool import get_shared_pool
+            pool = await get_shared_pool()
+            async with pool.acquire() as conn:
+                rows = await conn.fetch(
+                    """SELECT entry_aaak, entry_raw, created_at FROM mindex.agent_diaries
+                    WHERE agent_id = $1 ORDER BY created_at DESC LIMIT $2""",
+                    args.get("agent_id", "mcp"), args.get("limit", 5),
+                )
+            return {"entries": [{"aaak": r["entry_aaak"], "raw": r["entry_raw"],
+                                 "created_at": r["created_at"].isoformat()} for r in rows]}
+        except Exception as e:
+            return {"error": str(e)}
+
+    # Context loading handlers
+    async def _handle_palace_wake_up(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        stack = await self._get_retrieval_stack()
+        if not stack:
+            return {"error": "Retrieval stack not initialized"}
+        context = await stack.wake_up(wing=args.get("wing"))
+        return {"context": context, "tokens_estimate": len(context) // 4}
+
+    async def _handle_palace_recall(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        stack = await self._get_retrieval_stack()
+        if not stack:
+            return {"error": "Retrieval stack not initialized"}
+        context = await stack.recall(
+            wing=args.get("wing", ""),
+            room=args.get("room"),
+            limit=args.get("limit", 10),
+        )
+        return {"context": context, "tokens_estimate": len(context) // 4}
+
+    async def _handle_palace_deep_search(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        stack = await self._get_retrieval_stack()
+        if not stack:
+            return {"error": "Retrieval stack not initialized"}
+        context = await stack.search(
+            query=args.get("query", ""),
+            wing=args.get("wing"),
+            limit=args.get("limit", 10),
+        )
+        return {"context": context, "tokens_estimate": len(context) // 4}
 
 
 # MCP Protocol Handler
