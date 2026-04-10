@@ -10,6 +10,7 @@ Bridges MycoBrain service with Mycosoft MAS orchestrator for:
 
 import asyncio
 import logging
+import os
 import httpx
 from typing import Dict, Any, Optional, List
 from datetime import datetime
@@ -30,6 +31,28 @@ class MycoBrainMASIntegration:
         self.mas_url = mas_url
         self.mindex_url = mindex_url
         self.client = httpx.AsyncClient(timeout=10.0)
+
+    def _build_mindex_headers(self) -> Dict[str, str]:
+        """Build auth headers for MINDEX internal endpoints when available."""
+        headers: Dict[str, str] = {}
+        internal_token = os.getenv("MINDEX_INTERNAL_TOKEN", "").strip()
+        api_key = os.getenv("MINDEX_API_KEY", "").strip()
+        if internal_token:
+            headers["X-Internal-Token"] = internal_token
+        if api_key:
+            headers["X-API-Key"] = api_key
+        return headers
+
+    def _build_mycobrain_payload(self, telemetry_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Normalize telemetry payload into MINDEX MycoBrain ingest schema.
+
+        If upstream already provides a `payload` object, pass it through.
+        Otherwise, preserve incoming telemetry under `raw`.
+        """
+        if isinstance(telemetry_data.get("payload"), dict):
+            return telemetry_data["payload"]
+        return {"raw": telemetry_data}
     
     async def register_device_with_mas(
         self,
@@ -63,18 +86,38 @@ class MycoBrainMASIntegration:
         telemetry_data: Dict[str, Any],
     ) -> bool:
         """Forward telemetry data to MINDEX."""
+        headers = self._build_mindex_headers()
+        request_body = {
+            "serial_number": device_id,
+            "recorded_at": datetime.now().isoformat(),
+            "payload": self._build_mycobrain_payload(telemetry_data),
+        }
+
+        # Canonical internal route first, then compatibility path.
+        candidate_paths = [
+            "/api/mindex/internal/mycobrain/telemetry/ingest",
+            "/api/mindex/mycobrain/telemetry/ingest",
+        ]
+
         try:
-            response = await self.client.post(
-                f"{self.mindex_url}/api/mindex/telemetry",
-                json={
-                    "source": "mycobrain",
-                    "device_id": device_id,
-                    "timestamp": datetime.now().isoformat(),
-                    "data": telemetry_data,
-                },
-            )
-            response.raise_for_status()
-            return True
+            for path in candidate_paths:
+                try:
+                    response = await self.client.post(
+                        f"{self.mindex_url.rstrip('/')}{path}",
+                        json=request_body,
+                        headers=headers or None,
+                    )
+                    if 200 <= response.status_code < 300:
+                        return True
+                    logger.warning(
+                        "MINDEX telemetry forward failed on %s status=%s body=%s",
+                        path,
+                        response.status_code,
+                        response.text[:500],
+                    )
+                except Exception as endpoint_error:
+                    logger.warning("MINDEX telemetry forward error on %s: %s", path, endpoint_error)
+            return False
         except Exception as e:
             logger.error(f"Failed to forward telemetry to MINDEX: {e}")
             return False
