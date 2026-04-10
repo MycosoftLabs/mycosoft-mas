@@ -577,7 +577,7 @@
 
 ## Fungi Compute Application (Feb 9-10, 2026)
 - `docs/FUNGI_COMPUTE_APP_FEB09_2026.md` ? **Complete Fungi Compute implementation**: NatureOS app for biological computing visualization with real-time oscilloscope, spectrum analyzer, signal fingerprint, event mempool, SDR filter controls, bi-directional stimulation, NLM integration, device map, Petri Dish sync, and Earth2/CREP correlation. Full WebSocket streaming, 20+ React components with glass material Tron-inspired design, Python SDR pipeline, and Next.js API routes.
-- **[NEW] Scientific Integration**: Added STFT spectrogram (Buffi method), spike train linguistic analyzer (Adamatzky method), causality network graph (Fukasawa method), species database (8 fungi from literature), experiment designer, ùV-scale oscilloscope, pattern classification library. App now implements every major analysis technique from published fungal electrophysiology research.
+- **[NEW] Scientific Integration**: Added STFT spectrogram (Buffi method), spike train linguistic analyzer (Adamatzky method), causality network graph (Fukasawa method), species database (8 fungi from literature), experiment designer, ?V-scale oscilloscope, pattern classification library. App now implements every major analysis technique from published fungal electrophysiology research.
 
 ## FCI Implementation Complete (Feb 10, 2026)
 - `docs/FCI_IMPLEMENTATION_COMPLETE_FEB10_2026.md` ? **Complete FCI implementation**: MycoBrain FCI firmware (ESP32-S3, ADS1115 ADC, bioelectric signal acquisition, DSP, GFST pattern detection), Mycorrhizae Protocol specification (novel biological computing protocol with Ed25519 signatures, semantic translation), HPL Signal Pattern Language, MINDEX schema (10 tables including fci_devices, fci_readings, fci_patterns, pgvector embeddings), MAS FCI API router, website FCI API routes, CREP visualization widgets (FCISignalWidget, FCIPatternChart), MycoBrain FCI integration page. 27 files created, 7 files modified.
@@ -699,7 +699,9 @@
 
 - `docs/FUSARIUM_OPERATOR_APPLICATION_AND_CROSS_SYSTEM_INTEGRATION_COMPLETE_APR09_2026.md` ? Operator app, cross-system integration, and verification record for Fusarium (Apr 09, 2026).
 
-- docs/FUSARIUM_PLANS_USED_SYSTEMS_GAPS_AND_INTEGRATIONS_APR10_2026.md ù Planning lineage, systems map, current gaps, routes, APIs, widgets, and data-source reference for Fusarium (Apr 10, 2026).
-- docs/FUSARIUM_FULLSCREEN_OPERATOR_APP_EXECUTION_PLAN_APR10_2026.md ù Next-phase execution plan for the fullscreen Fusarium operator app with left and right rails, central canvas, and viewport-aware action button (Apr 10, 2026).
+- docs/FUSARIUM_PLANS_USED_SYSTEMS_GAPS_AND_INTEGRATIONS_APR10_2026.md ? Planning lineage, systems map, current gaps, routes, APIs, widgets, and data-source reference for Fusarium (Apr 10, 2026).
+- docs/FUSARIUM_FULLSCREEN_OPERATOR_APP_EXECUTION_PLAN_APR10_2026.md ? Next-phase execution plan for the fullscreen Fusarium operator app with left and right rails, central canvas, and viewport-aware action button (Apr 10, 2026).
 
-- docs/FUSARIUM_ADDITIVE_MINDEX_DEFENSE_PLANE_COMPLETE_APR10_2026.md ù Additive defense-side MINDEX catalog, silos, manifests, model-registry bridge, and Fusarium UI integration completion record (Apr 10, 2026).
+- docs/FUSARIUM_ADDITIVE_MINDEX_DEFENSE_PLANE_COMPLETE_APR10_2026.md ? Additive defense-side MINDEX catalog, silos, manifests, model-registry bridge, and Fusarium UI integration completion record (Apr 10, 2026).
+- `docs/GAP_FILL_PLAN_ALL_PENDING_EDITS_APR10_2026.md` - Cross-repo gap-fill plan with full pending-edit inventory and phased closure plan after integration deployment (Apr 10, 2026).
+- `docs/PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md` - Phase A execution log: MINDEX runtime recovery, live-state route activation, MAS runtime verification, and remaining blocker details (Apr 10, 2026).
