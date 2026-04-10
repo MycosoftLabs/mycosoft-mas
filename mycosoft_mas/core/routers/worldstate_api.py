@@ -9,10 +9,12 @@ Created: March 14, 2026
 """
 
 import asyncio
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Query
+import aiohttp
 
 router = APIRouter(prefix="/api/myca/world", tags=["worldstate", "myca"])
 
@@ -69,6 +71,34 @@ def _world_state_to_dict(state: Any) -> Dict[str, Any]:
     return out
 
 
+async def _fetch_mindex_live_state() -> Dict[str, Any]:
+    """Best-effort fetch of consolidated MINDEX live integration state."""
+    mindex_base = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
+    headers: Dict[str, str] = {}
+    internal_token = os.getenv("MINDEX_INTERNAL_TOKEN", "").strip()
+    api_key = os.getenv("MINDEX_API_KEY", "").strip()
+    if internal_token:
+        headers["X-Internal-Token"] = internal_token
+    if api_key:
+        headers["X-API-Key"] = api_key
+    candidates = [
+        f"{mindex_base}/api/mindex/internal/state/live",
+        f"{mindex_base}/api/mindex/state/live",
+    ]
+    timeout = aiohttp.ClientTimeout(total=4)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        for url in candidates:
+            try:
+                async with session.get(url, headers=headers or None) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        data["available"] = True
+                        return data
+            except Exception:
+                continue
+    return {"available": False}
+
+
 @router.get("")
 async def get_world() -> Dict[str, Any]:
     """
@@ -92,6 +122,11 @@ async def get_world() -> Dict[str, Any]:
         world["economy"] = economy_data
     except Exception:
         world["economy"] = {"ows_status": "unavailable"}
+
+    try:
+        world["mindex_live"] = await _fetch_mindex_live_state()
+    except Exception:
+        world["mindex_live"] = {"available": False}
 
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),

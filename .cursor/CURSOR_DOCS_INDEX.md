@@ -8,6 +8,14 @@
 
 ---
 
+## Deep Agents v0.5 Integration (Apr 9, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/DEEP_AGENTS_V05_INTEGRATION_PLAN.md` | **Canonical plan**: Deep Agents v0.5 integration architecture, phases, and rollout strategy across MAS and related systems. |
+| `docs/DEEP_AGENTS_V05_FOUNDATION_IMPLEMENTATION_APR09_2026.md` | **Current implementation state**: Foundation-level code integration delivered, verification evidence, and pending rollout tasks. |
+| `docs/DEEP_AGENTS_V05_CROSS_SYSTEM_HOOKS_APR09_2026.md` | **Cross-system expansion**: Domain hooks now dispatch Deep Agent tasks from NatureOS platform, search, security, device operations, and MYCA voice orchestration paths. |
+| `docs/DEEP_AGENTS_V05_MULTI_REPO_SYSTEM_INTEGRATION_APR09_2026.md` | **Multi-repo expansion**: MAS ingress endpoint + WEBSITE/MINDEX/NatureOS event publishers for cross-system Deep Agent orchestration. |
+
 ## Platform Gap and Backlog (Mar 19, 2026) — default entry for "what's left"
 | Doc | Purpose |
 |-----|---------|
@@ -54,6 +62,11 @@
 | `WEBSITE/website/docs/VIDEO_MEDIA_RELIABILITY_RUNBOOK_APR06_2026.md` | **NAS + Docker + MP4**: Bind mount verification, zero-byte detection, `verify_sandbox_nas_media.py`, `/api/health/media`, purge, synthetic checks. |
 | `WEBSITE/website/docs/CLOUDFLARE_ASSETS_VIDEO_CACHE_APR06_2026.md` | **Edge cache** for `/assets` video; purge after NAS changes. |
 | `WEBSITE/website/docs/VIDEO_R2_STREAM_MIGRATION_PLAN_APR06_2026.md` | **Optional** R2/Stream for redundant origin and ABR. |
+
+## MINDEX Jetson to NatureOS Fusarium Pipeline (Apr 8, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MINDEX_JETSON_NATUREOS_FUSARIUM_PIPELINE_COMPLETE_APR08_2026.md` | **Pipeline completion**: MINDEX fanout to NatureOS + Fusarium mirror, live-state API for MYCA with NLM outputs, self/world state, fingerprint state, and Merkle roots. |
 
 ## Network Topology and UniFi (Mar 7, 2026)
 | Doc | Purpose |
@@ -338,3 +351,12 @@
 ## Dev server (website)
 
 When in Cursor and the website dev server is down, run **`.\scripts\ensure-dev-server.ps1`** in the **WEBSITE/website** repo to bring up the single dev server on **port 3010** (no duplicate servers). See `dev-server-guardian` agent and `dev-server-3010.mdc` rule.
+
+- docs/FUSARIUM_FULL_ARCHITECTURE_IMPLEMENTATION_COMPLETE_APR09_2026.md - Full implementation completion record for all FUSARIUM pillars (Apr 09, 2026).
+
+- docs/FUSARIUM_OPERATOR_APPLICATION_AND_CROSS_SYSTEM_INTEGRATION_COMPLETE_APR09_2026.md - Cross-system operator app completion record for Fusarium (Apr 09, 2026).
+
+- docs/FUSARIUM_PLANS_USED_SYSTEMS_GAPS_AND_INTEGRATIONS_APR10_2026.md - Current reference for Fusarium planning lineage, systems, integrations, and remaining gaps (Apr 10, 2026).
+- docs/FUSARIUM_FULLSCREEN_OPERATOR_APP_EXECUTION_PLAN_APR10_2026.md - Active execution doc for turning Fusarium into a fullscreen operator app with left/right rails and viewport-aware actions (Apr 10, 2026).
+
+- docs/FUSARIUM_ADDITIVE_MINDEX_DEFENSE_PLANE_COMPLETE_APR10_2026.md - Completion record for additive MINDEX defense-plane architecture and Fusarium integration (Apr 10, 2026).

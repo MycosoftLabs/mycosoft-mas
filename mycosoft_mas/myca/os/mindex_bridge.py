@@ -38,6 +38,16 @@ class MINDEXBridge:
         self._redis = None
         self._pg_pool = None
 
+    def _build_mindex_headers(self) -> dict:
+        headers: dict = {}
+        internal_token = os.getenv("MINDEX_INTERNAL_TOKEN", "").strip()
+        api_key = os.getenv("MINDEX_API_KEY", "").strip()
+        if internal_token:
+            headers["X-Internal-Token"] = internal_token
+        if api_key:
+            headers["X-API-Key"] = api_key
+        return headers
+
     async def initialize(self):
         self._session = aiohttp.ClientSession()
 
@@ -146,6 +156,37 @@ class MINDEXBridge:
         checks["healthy"] = checks.get("api", False)
         return checks
 
+    async def get_live_integration_state(self) -> dict:
+        """
+        Fetch consolidated live MINDEX state for MYCA runtime context.
+
+        This surfaces telemetry + NLM outputs + fingerprint/merkle provenance in one call.
+        """
+        if not self._session or self._session.closed:
+            return {"available": False, "reason": "session_closed"}
+
+        headers = self._build_mindex_headers()
+        candidates = [
+            f"{self._mindex_api.rstrip('/')}/api/mindex/internal/state/live",
+            f"{self._mindex_api.rstrip('/')}/api/mindex/state/live",
+        ]
+        for url in candidates:
+            try:
+                async with self._session.get(
+                    url,
+                    headers=headers or None,
+                    timeout=aiohttp.ClientTimeout(total=10),
+                ) as resp:
+                    if resp.status == 200:
+                        payload = await resp.json()
+                        payload["available"] = True
+                        return payload
+                    logger.debug("MINDEX live state non-200 from %s: %s", url, resp.status)
+            except Exception as exc:
+                logger.debug("MINDEX live state fetch failed from %s: %s", url, exc)
+
+        return {"available": False, "reason": "unreachable"}
+
     # ── Memory Operations ────────────────────────────────────────
 
     async def remember(self, key: str, value: str, ttl: int = None, layer: str = "working"):
@@ -217,6 +258,10 @@ class MINDEXBridge:
         result: dict,
         session_id: str = "e2e-demo",
         user_id: Optional[str] = None,
+        self_state: Optional[dict] = None,
+        world_state: Optional[dict] = None,
+        fingerprint_state: Optional[dict] = None,
+        merkle_roots: Optional[dict] = None,
     ) -> Optional[str]:
         """Store a deployment experience packet to MINDEX for grounded cognition.
 
@@ -229,6 +274,21 @@ class MINDEXBridge:
             return None
         ep_id = str(uuid.uuid4())
         user_id = user_id or task.get("source", "morgan")
+        resolved_self_state = self_state or task.get("self_state") or result.get("self_state") or {}
+        resolved_world_state = world_state or task.get("world_state") or result.get("world_state") or {}
+        resolved_fingerprint_state = (
+            fingerprint_state
+            or task.get("fingerprint_state")
+            or result.get("fingerprint_state")
+            or {}
+        )
+        resolved_merkle_roots = (
+            merkle_roots
+            or task.get("merkle_roots")
+            or result.get("merkle_roots")
+            or {}
+        )
+
         body = {
             "id": ep_id,
             "session_id": session_id,
@@ -248,15 +308,21 @@ class MINDEXBridge:
                     }
                 ),
             },
-            "self_state": {},
-            "world_state": {},
+            "self_state": resolved_self_state,
+            "world_state": resolved_world_state,
             "uncertainty": {},
-            "provenance": {"source": "myca_os", "demo": "e2e-deploy"},
+            "provenance": {
+                "source": "myca_os",
+                "demo": "e2e-deploy",
+                "fingerprint_state": resolved_fingerprint_state,
+                "merkle_roots": resolved_merkle_roots,
+            },
         }
-        headers = {}
-        api_key = os.getenv("MINDEX_API_KEY") or os.getenv("API_KEYS", "").split(",")[0].strip()
-        if api_key:
-            headers["X-API-Key"] = api_key
+        headers = self._build_mindex_headers()
+        if not headers:
+            legacy_api_key = os.getenv("API_KEYS", "").split(",")[0].strip()
+            if legacy_api_key:
+                headers["X-API-Key"] = legacy_api_key
         try:
             async with self._session.post(
                 f"{self._mindex_api.rstrip('/')}/api/mindex/grounding/experience-packets",
