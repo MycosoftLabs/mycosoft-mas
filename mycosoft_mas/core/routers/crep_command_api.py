@@ -13,10 +13,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.crep import get_crep_command_bus
+from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/crep", tags=["crep"])
+sensor_network_client = MaritimeSensorNetworkClient()
 
 
 # ============================================================================
@@ -140,3 +142,49 @@ async def list_crep_tools():
         },
     ]
     return {"tools": tools}
+
+
+# ============================================================================
+# CREP MARITIME SENSOR COMMANDS — TAC-O
+# ============================================================================
+
+
+@router.post("/command/sensor/deploy")
+async def deploy_sensor(command: dict):
+    """Deploy a maritime sensor at specified depth/location."""
+    sensor_id = command.get("sensor_id")
+    if not sensor_id:
+        raise HTTPException(status_code=400, detail="sensor_id_required")
+    result = await sensor_network_client.send_command(
+        sensor_id=sensor_id,
+        command="deploy",
+        params={"depth_m": command.get("depth_m"), "location": command.get("location")},
+    )
+    return {"command": "deploy", **result}
+
+
+@router.post("/command/sensor/reconfigure")
+async def reconfigure_sensor(command: dict):
+    """Reconfigure a maritime sensor's operating parameters."""
+    sensor_id = command.get("sensor_id")
+    if not sensor_id:
+        raise HTTPException(status_code=400, detail="sensor_id_required")
+    result = await sensor_network_client.reconfigure_sensor(
+        sensor_id=sensor_id,
+        config=command.get("config", {}),
+    )
+    return {"command": "reconfigure", **result}
+
+
+@router.post("/command/sensor/interrogate")
+async def interrogate_sensor(command: dict):
+    """Interrogate a maritime sensor for current status and data."""
+    sensor_id = command.get("sensor_id")
+    if not sensor_id:
+        raise HTTPException(status_code=400, detail="sensor_id_required")
+    result = await sensor_network_client.send_command(
+        sensor_id=sensor_id,
+        command="interrogate",
+        params=command.get("params", {}),
+    )
+    return {"command": "interrogate", **result}

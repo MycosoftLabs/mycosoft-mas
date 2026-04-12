@@ -1,48 +1,45 @@
+"""FUSARIUM API Router.
+
+No mock/synthetic responses. All operational data is sourced from MINDEX and upstream services.
 """
-FUSARIUM API Router
-February 12, 2026
 
-FastAPI router for FUSARIUM defense system endpoints.
-
-FUSARIUM is Mycosoft's integrated defense system combining:
-- Fungal species distribution data
-- Spore dispersal modeling
-- Agricultural/infrastructure risk zone mapping
-- Threat detection for SOC integration
-
-Endpoints:
-- /species - Fungal species distribution data
-- /dispersal - Spore dispersal modeling
-- /risk-zones - Risk zone mapping
-- /threats - Threat detection for SOC
-- /health - Health check
-"""
+from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
-logger = logging.getLogger(__name__)
+from mycosoft_mas.agents.clusters.taco import (
+    AnomalyInvestigatorAgent,
+    DataCuratorAgent,
+    OceanPredictorAgent,
+    PolicyComplianceAgent,
+    SignalClassifierAgent,
+)
+from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Configuration
-MINDEX_API_URL = "http://192.168.0.189:8000"
-CREP_API_URL = "http://192.168.0.187:3000/api/crep"
-
-
-# =============================================================================
-# Request/Response Models
-# =============================================================================
+MINDEX_API_URL = os.environ.get("MINDEX_API_URL", "http://192.168.0.189:8000/api/mindex").rstrip("/")
+MINDEX_INTERNAL_TOKEN = os.environ.get("MINDEX_INTERNAL_TOKEN", "").strip()
+MINDEX_API_KEY = os.environ.get("MINDEX_API_KEY", "").strip()
+sensor_network_client = MaritimeSensorNetworkClient()
+TACO_AGENTS = {
+    "signal_classifier": SignalClassifierAgent(config={}),
+    "anomaly_investigator": AnomalyInvestigatorAgent(config={}),
+    "ocean_predictor": OceanPredictorAgent(config={}),
+    "policy_compliance": PolicyComplianceAgent(config={}),
+    "data_curator": DataCuratorAgent(config={}),
+}
 
 
 class SpeciesQueryParams(BaseModel):
-    """Query parameters for species search."""
-
     min_lat: Optional[float] = Field(default=None, ge=-90, le=90)
     max_lat: Optional[float] = Field(default=None, ge=-90, le=90)
     min_lon: Optional[float] = Field(default=None, ge=-180, le=180)
@@ -53,8 +50,6 @@ class SpeciesQueryParams(BaseModel):
 
 
 class DispersalRequest(BaseModel):
-    """Request for spore dispersal modeling."""
-
     origin_lat: float = Field(ge=-90, le=90)
     origin_lon: float = Field(ge=-180, le=180)
     species: Optional[str] = None
@@ -62,211 +57,26 @@ class DispersalRequest(BaseModel):
     wind_factor: float = Field(default=1.0, ge=0.1, le=5.0)
 
 
-class DispersalZone(BaseModel):
-    """Dispersal zone model."""
-
-    center_lat: float
-    center_lon: float
-    radius_km: float
-    concentration: float
-    time_hours: int
-    species: Optional[str] = None
-
-
-class RiskZone(BaseModel):
-    """Risk zone model."""
-
-    id: str
-    name: str
-    center_lat: float
-    center_lon: float
-    radius_km: float
-    risk_level: float  # 0-1
-    primary_threat: str
-    affected_crops: List[str] = []
-    recommendations: List[str] = []
-
-
-class ThreatAlert(BaseModel):
-    """Threat alert model for SOC integration."""
-
-    id: str
-    title: str
-    description: str
-    severity: str  # low, medium, high, critical
-    category: str  # fungal, weather, infrastructure, biological
-    source: str
-    location_lat: Optional[float] = None
-    location_lon: Optional[float] = None
-    radius_km: Optional[float] = None
-    timestamp: str
-    metadata: Dict[str, Any] = {}
-
-
-# =============================================================================
-# In-memory data stores (would connect to MINDEX in production)
-# =============================================================================
-
-# Known pathogenic Fusarium species
-PATHOGENIC_SPECIES = [
-    {
-        "id": "fusarium-oxysporum",
-        "name": "Fusarium oxysporum",
-        "common_name": "Panama disease",
-        "pathogenic": True,
-        "affected_crops": ["banana", "tomato", "cotton"],
-        "optimal_temp_c": 28,
-        "humidity_threshold": 70,
-    },
-    {
-        "id": "fusarium-graminearum",
-        "name": "Fusarium graminearum",
-        "common_name": "Head blight",
-        "pathogenic": True,
-        "affected_crops": ["wheat", "barley", "corn"],
-        "optimal_temp_c": 25,
-        "humidity_threshold": 75,
-    },
-    {
-        "id": "fusarium-verticillioides",
-        "name": "Fusarium verticillioides",
-        "common_name": "Ear rot",
-        "pathogenic": True,
-        "affected_crops": ["corn", "sorghum"],
-        "optimal_temp_c": 30,
-        "humidity_threshold": 65,
-    },
-    {
-        "id": "fusarium-solani",
-        "name": "Fusarium solani",
-        "common_name": "Root rot",
-        "pathogenic": True,
-        "affected_crops": ["potato", "soybean", "pea"],
-        "optimal_temp_c": 24,
-        "humidity_threshold": 80,
-    },
-    {
-        "id": "fusarium-proliferatum",
-        "name": "Fusarium proliferatum",
-        "common_name": "Stalk rot",
-        "pathogenic": True,
-        "affected_crops": ["corn", "asparagus", "garlic"],
-        "optimal_temp_c": 27,
-        "humidity_threshold": 70,
-    },
-]
-
-
-# =============================================================================
-# Helper Functions
-# =============================================================================
-
-
-async def fetch_weather_data(lat: float, lon: float) -> Dict[str, Any]:
-    """Fetch weather data for dispersal modeling."""
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(f"{CREP_API_URL}/weather")
-            if response.status_code == 200:
-                return response.json()
-    except Exception as e:
-        logger.warning(f"Could not fetch weather data: {e}")
-
-    # Return default weather if unavailable
-    return {
-        "wind_speed_ms": 5.0,
-        "wind_direction_deg": 180,
-        "temperature_c": 25,
-        "humidity_pct": 70,
-        "precipitation_mm": 0,
-    }
-
-
-def calculate_dispersal_zones(
-    origin_lat: float,
-    origin_lon: float,
-    forecast_hours: int,
-    weather: Dict[str, Any],
-    wind_factor: float = 1.0,
-) -> List[Dict[str, Any]]:
-    """Calculate spore dispersal zones based on weather conditions."""
-    import math
-
-    zones = []
-    wind_speed = weather.get("wind_speed_ms", 5.0) * wind_factor
-    wind_dir = math.radians(weather.get("wind_direction_deg", 180))
-    humidity = weather.get("humidity_pct", 70)
-
-    for hours in range(6, forecast_hours + 1, 6):
-        # Simple dispersal model: distance = wind_speed * time
-        distance_km = (wind_speed * 3.6) * hours * 0.001  # Convert to km
-
-        # Calculate center of dispersal zone
-        # Spores travel in wind direction
-        delta_lat = (distance_km / 111) * math.cos(wind_dir)
-        delta_lon = (distance_km / (111 * math.cos(math.radians(origin_lat)))) * math.sin(wind_dir)
-
-        center_lat = origin_lat + delta_lat
-        center_lon = origin_lon + delta_lon
-
-        # Concentration decreases with distance and time
-        base_concentration = 1.0 / (1 + hours / 12)
-        humidity_factor = humidity / 100 if humidity > 50 else 0.5
-        concentration = base_concentration * humidity_factor
-
-        # Radius expands with time due to diffusion
-        radius_km = 10 + (hours * 0.5)
-
-        zones.append(
-            {
-                "center_lat": round(center_lat, 4),
-                "center_lon": round(center_lon, 4),
-                "radius_km": round(radius_km, 2),
-                "concentration": round(concentration, 3),
-                "time_hours": hours,
-            }
+async def _get(path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async with httpx.AsyncClient(timeout=25.0) as client:
+        headers = (
+            {"X-Internal-Token": MINDEX_INTERNAL_TOKEN}
+            if MINDEX_INTERNAL_TOKEN
+            else {"X-API-Key": MINDEX_API_KEY} if MINDEX_API_KEY else None
         )
-
-    return zones
-
-
-def calculate_risk_level(
-    temp: float,
-    humidity: float,
-    species_optimal_temp: float,
-    species_humidity_threshold: float,
-) -> float:
-    """Calculate infection risk level (0-1) based on environmental conditions."""
-    # Temperature factor: closer to optimal = higher risk
-    temp_diff = abs(temp - species_optimal_temp)
-    temp_factor = max(0, 1 - (temp_diff / 20))
-
-    # Humidity factor: above threshold = high risk
-    if humidity >= species_humidity_threshold:
-        humidity_factor = 1.0
-    elif humidity >= species_humidity_threshold - 20:
-        humidity_factor = (humidity - (species_humidity_threshold - 20)) / 20
-    else:
-        humidity_factor = 0.1
-
-    # Combined risk
-    risk = (temp_factor * 0.4) + (humidity_factor * 0.6)
-    return round(min(1.0, max(0.0, risk)), 2)
-
-
-# =============================================================================
-# API Endpoints
-# =============================================================================
+        response = await client.get(f"{MINDEX_API_URL}{path}", params=params, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return data if isinstance(data, dict) else {"items": data}
 
 
 @router.get("/health")
 async def health_check():
-    """Health check for FUSARIUM API."""
     return {
         "status": "healthy",
         "service": "fusarium",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": "1.0.0",
+        "upstream": MINDEX_API_URL,
     }
 
 
@@ -280,84 +90,51 @@ async def get_fungal_species(
     pathogenic_only: bool = False,
     limit: int = Query(default=100, ge=1, le=1000),
 ):
-    """
-    Get fungal species distribution data.
-
-    Filters:
-    - Bounding box (min_lat, max_lat, min_lon, max_lon)
-    - Species name (partial match)
-    - Pathogenic only flag
-
-    Returns list of species with locations.
-    """
-    # Try to fetch from MINDEX first
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            params = {"limit": limit}
-            if species_name:
-                params["name"] = species_name
-            if pathogenic_only:
-                params["pathogenic"] = "true"
+        params: Dict[str, Any] = {"limit": limit}
+        if species_name:
+            params["name"] = species_name
+        if pathogenic_only:
+            params["pathogenic"] = "true"
+        if min_lat is not None:
+            params["min_lat"] = min_lat
+        if max_lat is not None:
+            params["max_lat"] = max_lat
+        if min_lon is not None:
+            params["min_lon"] = min_lon
+        if max_lon is not None:
+            params["max_lon"] = max_lon
 
-            response = await client.get(
-                f"{MINDEX_API_URL}/api/species/fungi",
-                params=params,
-            )
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("species", data) if isinstance(data, dict) else data
-    except Exception as e:
-        logger.warning(f"Could not fetch from MINDEX, using local data: {e}")
-
-    # Fallback to local data
-    species_list = PATHOGENIC_SPECIES if pathogenic_only else PATHOGENIC_SPECIES
-
-    if species_name:
-        species_list = [s for s in species_list if species_name.lower() in s["name"].lower()]
-
-    # Add mock location data for visualization
-    import random
-
-    result = []
-    for species in species_list[:limit]:
-        entry = species.copy()
-        # Generate random locations within bounds or global
-        lat = random.uniform(min_lat or -60, max_lat or 60)
-        lon = random.uniform(min_lon or -180, max_lon or 180)
-        entry["latitude"] = round(lat, 4)
-        entry["longitude"] = round(lon, 4)
-        entry["observation_count"] = random.randint(10, 500)
-        result.append(entry)
-
-    return result
+        data = await _get("/species/fungi", params)
+        if "species" in data and isinstance(data["species"], list):
+            return data["species"]
+        if "items" in data and isinstance(data["items"], list):
+            return data["items"]
+        return []
+    except httpx.HTTPError as exc:
+        logger.error("Species query failed: %s", exc)
+        raise HTTPException(status_code=502, detail="mindex_species_query_failed") from exc
 
 
-@router.post("/dispersal", response_model=List[DispersalZone])
+@router.post("/dispersal")
 async def calculate_spore_dispersal(request: DispersalRequest):
-    """
-    Calculate spore dispersal forecast from origin point.
-
-    Uses weather data to model spore transport over time.
-    Returns list of dispersal zones with concentration estimates.
-    """
-    # Fetch weather data
-    weather = await fetch_weather_data(request.origin_lat, request.origin_lon)
-
-    # Calculate dispersal zones
-    zones = calculate_dispersal_zones(
-        origin_lat=request.origin_lat,
-        origin_lon=request.origin_lon,
-        forecast_hours=request.forecast_hours,
-        weather=weather,
-        wind_factor=request.wind_factor,
-    )
-
-    # Add species to zones if specified
-    if request.species:
-        for zone in zones:
-            zone["species"] = request.species
-
-    return zones
+    payload = {
+        "origin_lat": request.origin_lat,
+        "origin_lon": request.origin_lon,
+        "species": request.species,
+        "forecast_hours": request.forecast_hours,
+        "wind_factor": request.wind_factor,
+    }
+    # Uses tactical assessment endpoint as current upstream model surface.
+    async with httpx.AsyncClient(timeout=25.0) as client:
+        headers = (
+            {"X-Internal-Token": MINDEX_INTERNAL_TOKEN}
+            if MINDEX_INTERNAL_TOKEN
+            else {"X-API-Key": MINDEX_API_KEY} if MINDEX_API_KEY else None
+        )
+        response = await client.post(f"{MINDEX_API_URL}/nlm/assess/tactical", json=payload, headers=headers)
+        response.raise_for_status()
+        return response.json()
 
 
 @router.get("/dispersal")
@@ -366,232 +143,259 @@ async def get_current_dispersal(
     max_lat: Optional[float] = Query(default=None, ge=-90, le=90),
     min_lon: Optional[float] = Query(default=None, ge=-180, le=180),
     max_lon: Optional[float] = Query(default=None, ge=-180, le=180),
-    time: Optional[str] = None,
 ):
-    """
-    Get current spore dispersal data for visualization.
-
-    Returns active dispersal zones based on recent modeling.
-    """
-    # For now, return sample data for visualization
-    center_lat = ((min_lat or -90) + (max_lat or 90)) / 2
-    center_lon = ((min_lon or -180) + (max_lon or 180)) / 2
-
-    weather = await fetch_weather_data(center_lat, center_lon)
-
-    # Generate sample dispersal from a hypothetical source
-    zones = calculate_dispersal_zones(
-        origin_lat=center_lat,
-        origin_lon=center_lon,
-        forecast_hours=48,
-        weather=weather,
-    )
-
+    # Returns ocean environment + assessments; client can render active zones from real observations.
+    ocean = await _get("/maritime/ocean-environments", {"limit": 200})
+    assessments = await _get("/taco/assessments", {"limit": 200, "offset": 0})
     return {
         "timestamp": datetime.utcnow().isoformat(),
-        "zones": zones,
-        "weather": weather,
+        "bounds": {"min_lat": min_lat, "max_lat": max_lat, "min_lon": min_lon, "max_lon": max_lon},
+        "ocean_environments": ocean.get("environments", []),
+        "assessments": assessments.get("assessments", []),
     }
 
 
-@router.get("/risk-zones", response_model=List[RiskZone])
+@router.get("/risk-zones")
 async def get_risk_zones(
-    min_lat: Optional[float] = Query(default=None, ge=-90, le=90),
-    max_lat: Optional[float] = Query(default=None, ge=-90, le=90),
-    min_lon: Optional[float] = Query(default=None, ge=-180, le=180),
-    max_lon: Optional[float] = Query(default=None, ge=-180, le=180),
     crop: Optional[str] = None,
-    threat_level: Optional[str] = None,  # low, medium, high
+    threat_level: Optional[str] = None,
 ):
-    """
-    Get agricultural/infrastructure risk zones.
-
-    Returns areas at risk of fungal infection based on:
-    - Weather conditions
-    - Known species presence
-    - Crop susceptibility
-    """
-    # Fetch current weather
-    center_lat = ((min_lat or 0) + (max_lat or 0)) / 2 if min_lat and max_lat else 40.0
-    center_lon = ((min_lon or 0) + (max_lon or 0)) / 2 if min_lon and max_lon else -100.0
-    weather = await fetch_weather_data(center_lat, center_lon)
-
-    temp = weather.get("temperature_c", 25)
-    humidity = weather.get("humidity_pct", 70)
-
-    risk_zones = []
-
-    for i, species in enumerate(PATHOGENIC_SPECIES):
-        # Skip if filtering by crop and this species doesn't affect it
-        if crop and crop.lower() not in [c.lower() for c in species.get("affected_crops", [])]:
+    assessments = await _get("/taco/assessments", {"limit": 200, "offset": 0})
+    result = []
+    for item in assessments.get("assessments", []):
+        urgency = float(item.get("urgency", 0.0))
+        if threat_level == "low" and urgency > 0.33:
             continue
-
-        # Calculate risk level
-        risk = calculate_risk_level(
-            temp=temp,
-            humidity=humidity,
-            species_optimal_temp=species.get("optimal_temp_c", 25),
-            species_humidity_threshold=species.get("humidity_threshold", 70),
-        )
-
-        # Filter by threat level
-        if threat_level:
-            if threat_level == "low" and risk > 0.33:
-                continue
-            elif threat_level == "medium" and (risk <= 0.33 or risk > 0.66):
-                continue
-            elif threat_level == "high" and risk <= 0.66:
-                continue
-
-        # Generate risk zone
-        import random
-
-        zone_lat = center_lat + random.uniform(-5, 5)
-        zone_lon = center_lon + random.uniform(-5, 5)
-
-        recommendations = []
-        if risk > 0.66:
-            recommendations = [
-                "Apply preventive fungicides",
-                "Increase monitoring frequency",
-                "Prepare contingency harvest plan",
-            ]
-        elif risk > 0.33:
-            recommendations = [
-                "Monitor weather conditions",
-                "Inspect crops weekly",
-                "Ensure good drainage",
-            ]
-        else:
-            recommendations = ["Standard monitoring"]
-
-        risk_zones.append(
-            RiskZone(
-                id=f"risk-zone-{i}",
-                name=f"{species['common_name']} Risk Zone",
-                center_lat=round(zone_lat, 4),
-                center_lon=round(zone_lon, 4),
-                radius_km=round(random.uniform(20, 100), 1),
-                risk_level=risk,
-                primary_threat=species["name"],
-                affected_crops=species.get("affected_crops", []),
-                recommendations=recommendations,
-            )
-        )
-
-    return risk_zones
+        if threat_level == "medium" and not (0.33 < urgency <= 0.66):
+            continue
+        if threat_level == "high" and urgency <= 0.66:
+            continue
+        if crop and crop.lower() not in str(item).lower():
+            continue
+        result.append(item)
+    return result
 
 
-@router.get("/threats", response_model=List[ThreatAlert])
+@router.get("/threats")
 async def get_active_threats(
     severity: Optional[str] = None,
     category: Optional[str] = None,
     limit: int = Query(default=50, ge=1, le=200),
 ):
-    """
-    Get active FUSARIUM threats for SOC integration.
-
-    Returns threat alerts combining:
-    - Fungal infection risk
-    - Weather-related threats
-    - Infrastructure impacts
-    """
-    # Fetch current conditions
-    weather = await fetch_weather_data(40.0, -100.0)
-    temp = weather.get("temperature_c", 25)
-    humidity = weather.get("humidity_pct", 70)
-
-    threats = []
-
-    # Generate threats based on species and conditions
-    for species in PATHOGENIC_SPECIES:
-        risk = calculate_risk_level(
-            temp=temp,
-            humidity=humidity,
-            species_optimal_temp=species.get("optimal_temp_c", 25),
-            species_humidity_threshold=species.get("humidity_threshold", 70),
-        )
-
-        if risk < 0.33:
-            continue  # Skip low-risk
-
-        threat_severity = "critical" if risk > 0.8 else "high" if risk > 0.66 else "medium"
-
-        # Filter by severity if specified
-        if severity and threat_severity != severity:
+    assessments = await _get("/taco/assessments", {"limit": max(limit, 200), "offset": 0})
+    threats: List[Dict[str, Any]] = []
+    for item in assessments.get("assessments", []):
+        urgency = float(item.get("urgency", 0.0))
+        threat_severity = "critical" if urgency >= 0.85 else "high" if urgency >= 0.66 else "medium" if urgency >= 0.33 else "low"
+        domain_category = item.get("assessment_type", "marine")
+        if severity and severity != threat_severity:
             continue
-
-        # Filter by category if specified
-        if category and category != "fungal":
+        if category and category != domain_category:
             continue
-
-        import random
-
         threats.append(
-            ThreatAlert(
-                id=f"fusarium-{species['id']}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-                title=f"{species['common_name']} Outbreak Risk",
-                description=f"High risk of {species['name']} outbreak affecting {', '.join(species.get('affected_crops', [])[:3])}",
-                severity=threat_severity,
-                category="fungal",
-                source="fusarium",
-                location_lat=round(random.uniform(25, 50), 4),
-                location_lon=round(random.uniform(-125, -70), 4),
-                radius_km=round(random.uniform(50, 200), 1),
-                timestamp=datetime.utcnow().isoformat(),
-                metadata={
-                    "species": species["name"],
-                    "risk_level": risk,
-                    "affected_crops": species.get("affected_crops", []),
-                    "optimal_conditions": {
-                        "temperature_c": species.get("optimal_temp_c"),
-                        "humidity_threshold": species.get("humidity_threshold"),
-                    },
-                    "current_conditions": {
-                        "temperature_c": temp,
-                        "humidity_pct": humidity,
-                    },
-                },
-            )
+            {
+                "id": str(item.get("assessment_id") or item.get("id") or datetime.utcnow().timestamp()),
+                "title": item.get("classification", {}).get("label", "Tactical Assessment"),
+                "description": item.get("recommendation", {}).get("summary", "Assessment available"),
+                "severity": threat_severity,
+                "category": domain_category,
+                "source": "mindex/taco",
+                "timestamp": item.get("created_at") or item.get("observed_at") or datetime.utcnow().isoformat(),
+                "metadata": item,
+            }
         )
-
-    # Add weather-related threats if conditions are severe
-    if humidity > 90 or temp > 35:
-        threats.append(
-            ThreatAlert(
-                id=f"weather-alert-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-                title="Severe Weather Conditions",
-                description="Environmental conditions highly favorable for fungal proliferation",
-                severity="high",
-                category="weather",
-                source="fusarium",
-                timestamp=datetime.utcnow().isoformat(),
-                metadata={
-                    "temperature_c": temp,
-                    "humidity_pct": humidity,
-                },
-            )
-        )
-
-    return threats[:limit]
+        if len(threats) >= limit:
+            break
+    return threats
 
 
 @router.post("/threats/report")
-async def report_threat(threat: ThreatAlert):
-    """
-    Report a new FUSARIUM threat.
-
-    Creates a threat alert and optionally pushes to SOC.
-    """
-    logger.info(f"FUSARIUM threat reported: {threat.title} ({threat.severity})")
-
-    # In production, this would:
-    # 1. Store the threat in database
-    # 2. Push to SOC via /api/security/incidents
-    # 3. Trigger notifications
-
+async def report_threat(threat: Dict[str, Any]):
+    # Persist externally once incident write endpoint is available.
     return {
         "status": "received",
-        "threat_id": threat.id,
+        "threat": threat,
         "timestamp": datetime.utcnow().isoformat(),
     }
+
+
+@router.get("/maritime/threat-panel")
+async def maritime_threat_panel():
+    return await get_active_threats(category="hydrosphere", limit=100)
+
+
+@router.get("/maritime/sensor-network")
+async def maritime_sensor_network():
+    return await _get("/taco/sensor-status")
+
+
+@router.get("/maritime/contacts")
+async def maritime_contacts(limit: int = Query(default=100, ge=1, le=500)):
+    observations = await _get("/taco/observations", {"limit": limit, "offset": 0})
+    contacts = []
+    for item in observations.get("observations", []):
+        classification = item.get("nlm_classification") or {}
+        contacts.append(
+            {
+                "observation_id": item.get("observation_id"),
+                "sensor_id": item.get("sensor_id"),
+                "sensor_type": item.get("sensor_type"),
+                "classification": classification.get("classification") or classification.get("label"),
+                "confidence": item.get("confidence"),
+                "anomaly_score": item.get("anomaly_score"),
+                "latitude": item.get("latitude"),
+                "longitude": item.get("longitude"),
+                "depth_m": item.get("depth_m"),
+                "timestamp": item.get("observed_at"),
+                "avani_review": item.get("avani_review"),
+            }
+        )
+    return {"contacts": contacts, "total": len(contacts)}
+
+
+@router.get("/maritime/environment")
+async def maritime_environment(
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+    radius_nm: float = Query(default=25.0, ge=1.0, le=500.0),
+):
+    params: Dict[str, Any] = {"limit": 50}
+    if lat is not None and lon is not None:
+        params.update({"lat": lat, "lon": lon, "radius_nm": radius_nm})
+    environments = await _get("/maritime/ocean-environments", params)
+    return {"environment": environments.get("environments", []), "total": len(environments.get("environments", []))}
+
+
+@router.post("/maritime/assess")
+async def maritime_assessment(payload: Dict[str, Any]):
+    async with httpx.AsyncClient(timeout=25.0) as client:
+        headers = (
+            {"X-Internal-Token": MINDEX_INTERNAL_TOKEN}
+            if MINDEX_INTERNAL_TOKEN
+            else {"X-API-Key": MINDEX_API_KEY} if MINDEX_API_KEY else None
+        )
+        response = await client.post(f"{MINDEX_API_URL}/nlm/assess/tactical", json=payload, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+
+@router.get("/maritime/threat-history")
+async def maritime_threat_history(limit: int = Query(default=100, ge=1, le=500)):
+    return await _get("/taco/assessments", {"limit": limit, "offset": 0})
+
+
+@router.get("/maritime/fusion-status")
+async def maritime_fusion_status():
+    sensors = await sensor_network_client.get_sensor_status()
+    assessments = await _get("/taco/assessments", {"limit": 200, "offset": 0})
+    observations = await _get("/taco/observations", {"limit": 200, "offset": 0})
+    return {
+        "sources": {
+            "maritime_sensor_network": {"online_sensors": len(sensors), "status": "online" if sensors else "degraded"},
+            "mindex_observations": {"count": observations.get("total", 0)},
+            "taco_assessments": {"count": assessments.get("total", 0)},
+        },
+        "processing_lag": "live",
+        "data_quality_metrics": {
+            "observation_count": observations.get("total", 0),
+            "assessment_count": assessments.get("total", 0),
+        },
+    }
+
+
+@router.get("/maritime/correlation-graph")
+async def maritime_correlation_graph(limit: int = Query(default=100, ge=1, le=500)):
+    events = await _get("/fusarium/correlation-events", {"limit": limit})
+    nodes = {}
+    edges = []
+    for event in events.get("events", []):
+        entity_id = str(event.get("entity_id"))
+        nodes[entity_id] = {"id": entity_id, "type": "entity"}
+        for domain in event.get("domains", []):
+            domain_id = f"domain:{domain}"
+            nodes[domain_id] = {"id": domain_id, "type": "domain", "label": domain}
+            edges.append({"source": entity_id, "target": domain_id, "confidence": event.get("confidence", 0.0)})
+    return {"nodes": list(nodes.values()), "edges": edges, "total_events": events.get("total", 0)}
+
+
+@router.get("/maritime/provenance/{observation_id}")
+async def maritime_provenance(observation_id: str):
+    observation = await _get(f"/taco/observations/{observation_id}")
+    related = await _get("/taco/assessments", {"limit": 100, "offset": 0})
+    matching = [
+        item
+        for item in related.get("assessments", [])
+        if observation_id in [str(value) for value in item.get("observation_ids", [])]
+    ]
+    return {
+        "observation": observation.get("observation"),
+        "related_assessments": matching,
+        "merkle_hash": (observation.get("observation") or {}).get("merkle_hash"),
+    }
+
+
+@router.get("/maritime/decision-aid")
+async def maritime_decision_aid(limit: int = Query(default=25, ge=1, le=100)):
+    assessments = await _get("/taco/assessments", {"limit": limit, "offset": 0})
+    recommendations = []
+    for item in assessments.get("assessments", []):
+        recommendation = item.get("recommendation")
+        if recommendation:
+            recommendations.append(recommendation)
+    return {
+        "recommendations": recommendations,
+        "total": len(recommendations),
+        "source": "mindex/taco_assessments",
+    }
+
+
+@router.get("/maritime/agents/status")
+async def maritime_agents_status():
+    agents = []
+    for key, agent in TACO_AGENTS.items():
+        status = agent.get_status()
+        status["agent_key"] = key
+        agents.append(status)
+    return {"agents": agents, "total": len(agents)}
+
+
+@router.post("/maritime/command/sensor/{action}")
+async def maritime_sensor_command(action: str, payload: Dict[str, Any]):
+    sensor_id = payload.get("sensor_id")
+    if not sensor_id:
+        raise HTTPException(status_code=400, detail="sensor_id_required")
+    result = await sensor_network_client.send_command(sensor_id=sensor_id, command=action, params=payload)
+    return {"action": action, **result}
+
+
+@router.post("/maritime/voice-command")
+async def maritime_voice_command(command: Dict[str, Any]):
+    from mycosoft_mas.core.routers.voice_command_api import taco_voice_command
+
+    return await taco_voice_command(command)
+
+
+@router.websocket("/maritime/stream")
+async def maritime_stream(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        await websocket.send_json({"type": "connected", "timestamp": datetime.utcnow().isoformat()})
+        while True:
+            packet = await websocket.receive_json()
+            if packet.get("type") == "ping":
+                snapshot = {
+                    "type": "sensor_status",
+                    "timestamp": datetime.utcnow().isoformat(),
+                        "data": await sensor_network_client.get_sensor_status(),
+                }
+                await websocket.send_json(snapshot)
+            else:
+                await websocket.send_json(
+                    {
+                        "type": "agent_action",
+                        "timestamp": datetime.utcnow().isoformat(),
+                        "data": packet,
+                    }
+                )
+    except WebSocketDisconnect:
+        logger.info("FUSARIUM maritime stream disconnected")

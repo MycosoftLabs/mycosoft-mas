@@ -61,6 +61,7 @@ from mycosoft_mas.core.routers.event_ledger_api import router as event_ledger_ro
 from mycosoft_mas.core.routers.evolution_api import router as evolution_router
 from mycosoft_mas.core.routers.fleet_api import router as fleet_router
 from mycosoft_mas.core.routers.fusarium_api import router as fusarium_router
+from mycosoft_mas.core.routers.fusarium_platform_api import router as fusarium_platform_router
 from mycosoft_mas.core.routers.gap_api import router as gap_api_router
 from mycosoft_mas.core.routers.guardian_api import router as guardian_router
 from mycosoft_mas.core.routers.ingest_api import router as ingest_router
@@ -232,6 +233,15 @@ try:
 except ImportError:
     a2a_router = None
     A2A_API_AVAILABLE = False
+
+# Agent Protocol (Deep Agents v0.5) - internal async MYCA-to-MYCA protocol
+try:
+    from mycosoft_mas.core.routers.agent_protocol_api import router as agent_protocol_router
+
+    AGENT_PROTOCOL_AVAILABLE = True
+except ImportError:
+    agent_protocol_router = None
+    AGENT_PROTOCOL_AVAILABLE = False
 
 # A2A WebSocket - MYCA_A2A_WS_ENABLED=true to enable
 try:
@@ -747,6 +757,7 @@ app.include_router(platform_router, prefix="/platform", tags=["platform"])
 app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
 app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(fusarium_router, prefix="/api/fusarium", tags=["fusarium"])
+app.include_router(fusarium_platform_router, prefix="/api/fusarium", tags=["fusarium-platform"])
 app.include_router(redteam_router, tags=["redteam"])
 app.include_router(ethics_router)
 app.include_router(ethics_training_router)
@@ -856,6 +867,13 @@ if SANDBOX_WS_AVAILABLE and sandbox_ws_router:
 try:
     if A2A_API_AVAILABLE and a2a_router:
         app.include_router(a2a_router)
+except NameError:
+    pass
+
+# Agent Protocol (Deep Agents v0.5) Gateway - internal async tasks
+try:
+    if AGENT_PROTOCOL_AVAILABLE and agent_protocol_router:
+        app.include_router(agent_protocol_router)
 except NameError:
     pass
 
@@ -1559,6 +1577,17 @@ async def _mas_background_startup() -> None:
 
     logger = logging.getLogger("MAS_Startup")
 
+    # Ensure consciousness is initialized for /api/myca/world endpoints.
+    try:
+        from mycosoft_mas.consciousness import get_consciousness
+
+        consciousness = get_consciousness()
+        if not consciousness.is_conscious:
+            await consciousness.awaken()
+        logger.info("✓ MYCA consciousness is active")
+    except Exception as exc:
+        logger.warning("Consciousness awaken failed during startup: %s", exc)
+
     # Get agent registry - this loads all 42+ agents and marks them active
     registry = get_agent_registry()
     all_agents = registry.list_all()
@@ -1707,6 +1736,22 @@ async def _mas_background_startup() -> None:
 
     logger.info("✓ MAS ready - all agents operational 24/7")
 
+    # Initialize Deep Agent orchestrator (feature-flagged; no-op when disabled)
+    try:
+        from mycosoft_mas.deep_agents.config import get_deep_agents_config
+        from mycosoft_mas.deep_agents.orchestrator import get_deep_agent_orchestrator
+
+        deep_cfg = get_deep_agents_config()
+        if deep_cfg.enabled or deep_cfg.protocol_enabled:
+            await get_deep_agent_orchestrator().initialize()
+            logger.info(
+                "✓ Deep Agents orchestrator initialized (enabled=%s protocol=%s)",
+                deep_cfg.enabled,
+                deep_cfg.protocol_enabled,
+            )
+    except Exception as exc:
+        logger.warning("Deep Agents orchestrator init failed: %s", exc)
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -1776,3 +1821,14 @@ async def shutdown_event():
         logger.info("Agent supervisor stopped")
     except Exception as exc:
         logger.warning("Agent supervisor stop error: %s", exc)
+
+    # Stop Deep Agent orchestrator resources
+    try:
+        from mycosoft_mas.deep_agents.orchestrator import get_deep_agent_orchestrator
+
+        await get_deep_agent_orchestrator().shutdown()
+        logger.info("Deep Agents orchestrator stopped")
+    except Exception as exc:
+        logger.warning("Deep Agents orchestrator stop error: %s", exc)
+
+

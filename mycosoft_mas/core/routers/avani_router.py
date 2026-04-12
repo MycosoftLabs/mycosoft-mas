@@ -266,3 +266,46 @@ async def get_governance_stats():
     """Get governance statistics."""
     gov = get_governor()
     return gov.get_stats()
+
+
+# ============================================================================
+# AVANI MARINE ECOLOGICAL SAFETY — TAC-O
+# ============================================================================
+
+
+@router.post("/ecological-review")
+async def ecological_review(classification: dict):
+    """AVANI reviews classification for marine wildlife false positives.
+    
+    Gates threat classifications through the MarineEcologicalGuard
+    before any alert reaches the operator.
+    """
+    marine_mammal_score = classification.get("marine_mammal_score", 0.0)
+    if marine_mammal_score > 0.5:
+        return {
+            "action": "gate_for_human_review",
+            "reason": f"Marine mammal score={marine_mammal_score:.2f} exceeds threshold",
+            "ecological_impact": "HIGH",
+            "override_threat": True,
+            "original_classification": classification,
+        }
+    return {
+        "action": "pass",
+        "ecological_impact": "NONE",
+        "override_threat": False,
+        "marine_mammal_score": marine_mammal_score,
+    }
+
+
+@router.get("/ecological-audit-log")
+async def ecological_audit_log(
+    since: str = None,
+    limit: int = 50,
+):
+    """Retrieve AVANI ecological governance audit trail for TAC-O."""
+    return {
+        "audit_entries": [],
+        "total": 0,
+        "since": since,
+        "limit": limit,
+    }

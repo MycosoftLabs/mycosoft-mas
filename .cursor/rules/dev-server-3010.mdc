@@ -29,6 +29,11 @@ alwaysApply: true
    Or from website repo: `Start-Process powershell -WindowStyle Hidden -ArgumentList "-NoProfile", "-NoExit", "-Command", "cd '$PWD'; npm run dev:next-only"`.
 3. **If port 3010 is in use but not responding:** In Cursor terminal you may run the one-shot port free: `Get-NetTCPConnection -LocalPort 3010 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`. Then start the dev server **externally** as in step 2.
 
+## Restart automatically — never ask the user
+
+- After **`.env.local` / `NEXT_PUBLIC_*` changes**, **`next.config`**, or any change that requires Next to reload env or the dev bundle: **restart the dev server yourself** (free port 3010 if stuck, then `Start-Process` Hidden with `npm run dev:next-only` as above).
+- **Do not** tell the user to restart or ask whether to restart — **execute the restart every time it is needed**.
+
 ## Resource discipline
 
 - Only one Next.js dev process for the website. No duplicate `next dev` or `node .\node_modules\next\...` processes.

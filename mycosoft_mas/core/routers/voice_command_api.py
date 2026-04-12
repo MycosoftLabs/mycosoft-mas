@@ -24,9 +24,16 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.agents.clusters.taco.ocean_predictor_agent import OceanPredictorAgent
+from mycosoft_mas.agents.clusters.taco.signal_classifier_agent import SignalClassifierAgent
+from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
+
 logger = logging.getLogger("VoiceCommandAPI")
 
 router = APIRouter(prefix="/voice", tags=["voice"])
+sensor_network_client = MaritimeSensorNetworkClient()
+signal_classifier_agent = SignalClassifierAgent(config={})
+ocean_predictor_agent = OceanPredictorAgent(config={})
 
 
 # ============================================================================
@@ -257,3 +264,120 @@ async def voice_command_health():
         "version": "1.0.0",
         "router_available": router_available,
     }
+
+
+# ============================================================================
+# TAC-O MARITIME VOICE COMMANDS
+# ============================================================================
+
+TACO_VOICE_INTENTS = {
+    "classify_contact": "Run classification on bearing {bearing} range {range}",
+    "sonar_prediction": "What is current sonar performance prediction",
+    "sensor_status": "Report sensor network status",
+    "threat_summary": "Give me current threat summary",
+    "deploy_sensor": "Deploy sensor at depth {depth}",
+    "environmental_report": "Report current ocean environment",
+}
+
+
+@router.post("/taco")
+async def taco_voice_command(command: dict):
+    """Process TAC-O maritime voice commands.
+    
+    Accepts natural language maritime commands and routes them
+    to the appropriate TAC-O agent or FUSARIUM maritime endpoint.
+    """
+    intent = command.get("intent", "")
+    params = command.get("params", {})
+
+    if intent not in TACO_VOICE_INTENTS:
+        return {
+            "status": "unrecognized",
+            "available_intents": list(TACO_VOICE_INTENTS.keys()),
+        }
+    try:
+        if intent == "sensor_status":
+            sensors = await sensor_network_client.get_sensor_status()
+            return {
+                "status": "routed",
+                "intent": intent,
+                "params": params,
+                "result": {"sensors": sensors, "total": len(sensors)},
+                "speak": f"Maritime sensor network status loaded for {len(sensors)} sensors",
+            }
+
+        if intent == "deploy_sensor":
+            sensor_id = params.get("sensor_id")
+            if not sensor_id:
+                raise HTTPException(status_code=400, detail="sensor_id_required")
+            result = await sensor_network_client.send_command(sensor_id, "deploy", params)
+            return {
+                "status": "routed",
+                "intent": intent,
+                "params": params,
+                "result": result,
+                "speak": f"Deploy command sent for sensor {sensor_id}",
+            }
+
+        if intent == "classify_contact":
+            result = await signal_classifier_agent.process_task(
+                {"type": "classify_acoustic", "sensor_data": params.get("sensor_data", params)}
+            )
+            return {
+                "status": "routed",
+                "intent": intent,
+                "params": params,
+                "result": result.get("result"),
+                "speak": "Contact classification completed" if result.get("status") == "success" else "Contact classification failed",
+            }
+
+        if intent == "sonar_prediction":
+            result = await ocean_predictor_agent.process_task(
+                {"type": "predict_sonar_performance", "environment": params}
+            )
+            return {
+                "status": "routed",
+                "intent": intent,
+                "params": params,
+                "result": result.get("result"),
+                "speak": "Sonar performance prediction ready" if result.get("status") == "success" else "Sonar prediction failed",
+            }
+
+        if intent == "environmental_report":
+            result = await ocean_predictor_agent.process_task(
+                {"type": "forecast_environment", "location": params}
+            )
+            return {
+                "status": "routed",
+                "intent": intent,
+                "params": params,
+                "result": result.get("result"),
+                "speak": "Environmental report ready" if result.get("status") == "success" else "Environmental report failed",
+            }
+
+        if intent == "threat_summary":
+            assessments = await sensor_network_client._get_json(f"{sensor_network_client.mindex_url}/taco/assessments?limit=10&offset=0")
+            items = assessments.get("assessments", [])
+            return {
+                "status": "routed",
+                "intent": intent,
+                "params": params,
+                "result": {"assessments": items, "total": len(items)},
+                "speak": f"Loaded {len(items)} recent tactical assessments",
+            }
+
+        return {
+            "status": "routed",
+            "intent": intent,
+            "params": params,
+            "template": TACO_VOICE_INTENTS[intent],
+            "speak": f"Processing {intent.replace('_', ' ')} command",
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "status": "error",
+            "intent": intent,
+            "params": params,
+            "error": str(exc),
+            "speak": f"Unable to process {intent.replace('_', ' ')} command",
+        }

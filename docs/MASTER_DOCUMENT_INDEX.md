@@ -705,3 +705,5 @@
 - docs/FUSARIUM_ADDITIVE_MINDEX_DEFENSE_PLANE_COMPLETE_APR10_2026.md ? Additive defense-side MINDEX catalog, silos, manifests, model-registry bridge, and Fusarium UI integration completion record (Apr 10, 2026).
 - `docs/GAP_FILL_PLAN_ALL_PENDING_EDITS_APR10_2026.md` - Cross-repo gap-fill plan with full pending-edit inventory and phased closure plan after integration deployment (Apr 10, 2026).
 - `docs/PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md` - Phase A execution log: MINDEX runtime recovery, live-state route activation, MAS runtime verification, and remaining blocker details (Apr 10, 2026).
+
+- docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md – Full architecture reference for Fusarium across frontend, middleware/BFF, backend, data, edge, and platform integrations (Apr 10, 2026).

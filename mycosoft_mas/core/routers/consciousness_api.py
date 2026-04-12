@@ -11,9 +11,11 @@ Created: February 10, 2026
 """
 
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+import aiohttp
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
@@ -95,6 +97,31 @@ class AlertRequest(BaseModel):
     message: str = Field(..., description="Alert message")
     priority: str = Field("normal", description="Priority: low, normal, high, urgent")
     speak: bool = Field(False, description="Whether to speak the alert")
+
+
+async def _fetch_mindex_live_state() -> Dict[str, Any]:
+    """Fetch consolidated MINDEX live state for MYCA world responses."""
+    base = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
+    headers: Dict[str, str] = {}
+    internal_token = os.getenv("MINDEX_INTERNAL_TOKEN", "").strip()
+    api_key = os.getenv("MINDEX_API_KEY", "").strip()
+    if internal_token:
+        headers["X-Internal-Token"] = internal_token
+    if api_key:
+        headers["X-API-Key"] = api_key
+    candidates = [f"{base}/api/mindex/internal/state/live", f"{base}/api/mindex/state/live"]
+    timeout = aiohttp.ClientTimeout(total=10)
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        for url in candidates:
+            try:
+                async with session.get(url, headers=headers or None) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        data["available"] = True
+                        return data
+            except Exception:
+                continue
+    return {"available": False}
 
 
 # =============================================================================
@@ -557,13 +584,24 @@ async def get_world_state():
         logger.warning("WorldState.to_summary failed: %s", e)
         summary = "World state available (summary generation failed)"
 
+    mindex_data = _get(state, "mindex_data")
+    try:
+        mindex_live = await _fetch_mindex_live_state()
+        if isinstance(mindex_data, dict):
+            mindex_data = {**mindex_data, "live_state": mindex_live}
+        else:
+            mindex_data = {"live_state": mindex_live}
+    except Exception:
+        if mindex_data is None:
+            mindex_data = {"live_state": {"available": False}}
+
     return WorldStateResponse(
         timestamp=state.timestamp.isoformat() if state else datetime.now(timezone.utc).isoformat(),
         summary=summary,
         crep=_get(state, "crep_data"),
         earth2=_get(state, "earth2_data"),
         natureos=_get(state, "natureos_data"),
-        mindex=_get(state, "mindex_data"),
+        mindex=mindex_data,
         mycobrain=_get(state, "mycobrain_data"),
         nlm=_get(state, "nlm_insights"),
         earthlive=_get(state, "earthlive_packet"),

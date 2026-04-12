@@ -16,6 +16,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.consciousness import get_consciousness
+from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,16 @@ async def search_execute(request: SearchExecuteRequest) -> Dict[str, Any]:
             session_id=request.session_id,
             consciousness=consciousness,
             limit=request.limit,
+        )
+        schedule_domain_task(
+            domain="search",
+            task=f"Analyze and enrich search result for query: {request.query}",
+            context={
+                "query": request.query,
+                "user_id": request.user_id,
+                "session_id": request.session_id,
+                "result_focus": result.get("focus"),
+            },
         )
         return result
     except Exception as e:

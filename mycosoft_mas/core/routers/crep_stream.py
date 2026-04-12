@@ -19,6 +19,7 @@ from typing import Any, Dict, Optional, Set
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
+from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
 from mycosoft_mas.realtime.redis_pubsub import (
     Channel,
     PubSubMessage,
@@ -124,6 +125,7 @@ class CREPStreamManager:
 
 
 manager = CREPStreamManager()
+sensor_network_client = MaritimeSensorNetworkClient()
 
 
 @router.websocket("/stream")
@@ -222,4 +224,55 @@ async def get_crep_stream_status():
         "subscription_active": manager._subscription_active,
         "channel": Channel.CREP_LIVE.value,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# ============================================================================
+# CREP MARITIME SENSOR DATA SOURCES — TAC-O
+# ============================================================================
+
+TACTICAL_SENSOR_SOURCE = {
+    "name": "fusarium_maritime_sensors",
+    "type": "maritime_sensor_network",
+    "protocol": "mdp_websocket",
+    "categories": ["acoustic_detection", "magnetic_anomaly", "environmental"],
+    "refresh_interval": 1,
+}
+
+MARITIME_DATA_SOURCES = [
+    TACTICAL_SENSOR_SOURCE,
+    {
+        "name": "noaa_ocean_buoys",
+        "type": "ocean_environment",
+        "protocol": "http_poll",
+        "categories": ["temperature", "salinity", "current", "wave"],
+        "refresh_interval": 300,
+    },
+    {
+        "name": "hycom_ocean_model",
+        "type": "ocean_forecast",
+        "protocol": "http_poll",
+        "categories": ["sound_speed", "thermocline", "current_forecast"],
+        "refresh_interval": 3600,
+    },
+]
+
+
+@router.get("/maritime/sources")
+async def get_maritime_sources():
+    """List available maritime data sources for CREP integration."""
+    return {
+        "sources": MARITIME_DATA_SOURCES,
+        "total": len(MARITIME_DATA_SOURCES),
+    }
+
+
+@router.get("/maritime/sensors")
+async def get_maritime_sensors():
+    """Get current maritime sensor network status for CREP map layer."""
+    sensors = await sensor_network_client.get_sensor_status()
+    return {
+        "sensors": sensors,
+        "total": len(sensors),
+        "source": TACTICAL_SENSOR_SOURCE["name"],
     }

@@ -12,6 +12,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel
 
+from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -408,6 +410,16 @@ async def create_organization(data: OrganizationCreate):
     _peers[org_id] = []
     _audit_logs[org_id] = []
 
+    schedule_domain_task(
+        domain="natureos",
+        task=f"New organization created in NatureOS: {org.name}",
+        context={
+            "organization_id": org.id,
+            "slug": org.slug,
+            "plan": org.plan.value,
+        },
+    )
+
     return org
 
 
@@ -468,6 +480,16 @@ async def invite_member(org_id: str, data: MemberInvite):
 
     # Update member count
     _organizations[org_id].memberCount = len(_members[org_id])
+    schedule_domain_task(
+        domain="natureos",
+        task=f"Organization member invited: {data.email}",
+        context={
+            "organization_id": org_id,
+            "member_id": member.id,
+            "email": data.email,
+            "role": data.role.value,
+        },
+    )
 
     return member
 
@@ -560,6 +582,17 @@ async def connect_peer(org_id: str, data: PeerConnect):
     if org_id not in _peers:
         _peers[org_id] = []
     _peers[org_id].append(peer)
+
+    schedule_domain_task(
+        domain="natureos",
+        task=f"Federation peer connected: {peer.name}",
+        context={
+            "organization_id": org_id,
+            "peer_id": peer.id,
+            "endpoint": peer.endpoint,
+            "status": peer.status.value,
+        },
+    )
 
     return peer
 

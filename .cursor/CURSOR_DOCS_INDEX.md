@@ -362,3 +362,5 @@ When in Cursor and the website dev server is down, run **`.\scripts\ensure-dev-s
 - docs/FUSARIUM_ADDITIVE_MINDEX_DEFENSE_PLANE_COMPLETE_APR10_2026.md - Completion record for additive MINDEX defense-plane architecture and Fusarium integration (Apr 10, 2026).
 - docs/GAP_FILL_PLAN_ALL_PENDING_EDITS_APR10_2026.md - Cross-repo pending-edit inventory with phased gap-fill execution plan and deployment stabilization checklist (Apr 10, 2026).
 - docs/PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md - Phase A runtime stabilization report covering MINDEX live-state route activation, MAS runtime status, and remaining consciousness/token blockers (Apr 10, 2026).
+
+- docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md - Canonical frontend/middleware/backend/full-system architecture reference for Fusarium (Apr 10, 2026).

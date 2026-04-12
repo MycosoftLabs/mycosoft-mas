@@ -1,0 +1,38 @@
+---
+description: Website (mycosoft.com) code and UX must not be edited unless Morgan explicitly requests that change. Prevents unauthorized page, component, asset, and copy edits.
+alwaysApply: true
+---
+
+# Website changes — explicit permission only (hard rule)
+
+## CRITICAL
+
+**Do not modify the public website codebase** unless Morgan **explicitly instructs** you to make **that specific change** in the current task (same conversation thread).
+
+This applies to the **WEBSITE/website** repo and any path that ships UI or public behavior for **mycosoft.com**, including:
+
+- `app/**` (pages, layouts, API routes that affect UX or content)
+- `components/**`
+- `lib/**` when used for front-end behavior, assets, or routing
+- `middleware.ts`, `next.config.*`, global styles, `public/**` references
+- Copy, videos, images, hero sources, navigation, theme, defense/devices/marketing pages
+
+## DO NOT
+
+- “Improve” pages, swap videos, retarget assets, or adjust layout **without** a direct request
+- Fix “related” files while working on something else unless Morgan asked for that scope
+- Assume creative or product decisions (what appears on defense, devices, home, etc.)
+
+## DO
+
+- **Ask first** if something looks wrong but Morgan did not ask to change it
+- Keep edits **strictly** within the files and behavior Morgan named
+- Prefer **backend-only** or **MAS-only** changes when the task allows, and **leave the website untouched**
+
+## If a bug fix requires touching the website
+
+Only touch website files when Morgan **asked to fix that bug** or **approved** editing those files after you explain the minimal change needed.
+
+---
+
+**Rationale:** The site is product and brand. Unrequested edits (including hero/video swaps) are unacceptable.

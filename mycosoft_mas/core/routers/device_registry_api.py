@@ -16,6 +16,8 @@ import httpx
 from fastapi import APIRouter, Body, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
+
 logger = logging.getLogger("DeviceRegistry")
 
 router = APIRouter(prefix="/api/devices", tags=["device-registry"])
@@ -239,6 +241,17 @@ def _upsert_device_heartbeat(heartbeat: DeviceHeartbeat) -> Dict[str, Any]:
 
     if is_new:
         _register_device_with_orchestrator(device_id, _device_registry[device_id])
+        schedule_domain_task(
+            domain="device",
+            task=f"New device registered: {heartbeat.device_name} ({device_id})",
+            context={
+                "device_id": device_id,
+                "device_name": heartbeat.device_name,
+                "device_role": heartbeat.device_role,
+                "connection_type": heartbeat.connection_type,
+                "ingestion_source": heartbeat.ingestion_source,
+            },
+        )
 
     _cleanup_expired_devices()
 
@@ -509,6 +522,17 @@ async def send_device_command(
                     status_code=response.status_code,
                     detail=f"Device returned error: {response.text}",
                 )
+
+            schedule_domain_task(
+                domain="device",
+                task=f"Device command executed: {cmd.command} on {device_id}",
+                context={
+                    "device_id": device_id,
+                    "command": cmd.command,
+                    "params": cmd.params,
+                    "connection_type": device.get("connection_type"),
+                },
+            )
 
             return {
                 "status": "ok",

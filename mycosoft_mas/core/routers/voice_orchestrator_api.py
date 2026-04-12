@@ -28,6 +28,8 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
+
 logger = logging.getLogger("VoiceOrchestrator")
 
 router = APIRouter(prefix="/voice/orchestrator", tags=["voice"])
@@ -501,6 +503,20 @@ class MYCAOrchestrator:
             writes=memory_writes,
             context_injected=context_injected,
             turns_in_session=conv_context["turn_count"],
+        )
+
+        schedule_domain_task(
+            domain="myca",
+            task="Review and refine voice orchestrator turn",
+            context={
+                "conversation_id": conv_id,
+                "session_id": session_id,
+                "user_id": user_id,
+                "source": request.source,
+                "modality": request.modality,
+                "intent_type": intent.get("type"),
+                "actions_taken_count": len(actions_taken),
+            },
         )
 
         return VoiceOrchestratorResponse(

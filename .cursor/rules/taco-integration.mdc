@@ -1,0 +1,48 @@
+---
+description: Rules for TAC-O maritime integration work (Zeetachec subcontract)
+globs: ["**/taco/**", "**/maritime/**", "**/fusarium/**maritime**", "**/zeetachec**"]
+---
+
+# TAC-O Integration Rules
+
+## Data Handling
+- All sensor data from Zeetachec is CUI -- encrypt at rest (AES-256-GCM) and in transit (TLS 1.3)
+- Apply Merkle hashing to every stored observation in MINDEX
+- Never log raw CUI data to stdout/console in production
+- Use environment variables for all credentials and API keys
+
+## Architecture
+- Zeeta sensors -> MycoBrain (edge processing) -> MDP -> MAS (classification) -> MINDEX (storage)
+- NLM inference runs at TWO tiers: Jetson edge (fast, lightweight ONNX) and server (full model)
+- AVANI ecological safety check is MANDATORY before any threat alert reaches operator
+- Marine mammal filter score > 0.5 gates classification for human review
+
+## API Patterns
+- Maritime endpoints follow existing patterns in fusarium_api.py and crep_stream.py
+- Use WebSocket for real-time feeds, REST for queries
+- FUSARIUM maritime routes: /fusarium/maritime/*
+- CREP maritime routes: /crep/maritime/*
+- Worldview maritime routes: /worldview/maritime/*
+
+## Agent Patterns
+- TAC-O agents live in mycosoft_mas/agents/clusters/taco/
+- All agents extend BaseAgent from mycosoft_mas/agents/base_agent.py
+- Register agents in agent_manager.py and cluster_manager.py
+- Agent IDs use taco- prefix (e.g. taco-signal-classifier)
+
+## NLM Patterns
+- Maritime fingerprints extend existing dataclass patterns
+- Maritime heads are additive to existing heads in nlm/model/heads.py
+- Deterministic physics transforms (Mackenzie, Thorp, Snell) run before neural encoding
+- Export models as ONNX for Jetson edge deployment
+
+## Testing
+- Every new module requires tests
+- Test acoustic classification with synthetic waveforms
+- Test AVANI filter with known marine mammal frequency profiles
+- Test MDP protocol with mock Zeeta sensor frames
+
+## Database
+- Maritime tables: acoustic_signatures, ocean_environments, magnetic_baselines, taco_observations, taco_assessments
+- All tables use PostGIS GEOGRAPHY columns for spatial queries
+- Qdrant collections: acoustic_signatures (512d cosine), magnetic_anomalies (256d cosine)

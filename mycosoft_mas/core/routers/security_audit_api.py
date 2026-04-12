@@ -14,6 +14,8 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
+
 logger = logging.getLogger("SecurityAuditAPI")
 
 router = APIRouter(prefix="/api/security", tags=["security"])
@@ -412,6 +414,19 @@ async def log_audit_entry(request: AuditLogRequest):
         logger.warning(log_msg)
     else:
         logger.info(log_msg)
+
+    schedule_domain_task(
+        domain="security",
+        task=f"Review security audit event: {request.action}",
+        context={
+            "entry_id": entry.entry_id,
+            "user_id": request.user_id,
+            "resource": request.resource,
+            "success": request.success,
+            "severity": request.severity,
+            "details": request.details or {},
+        },
+    )
 
     return entry
 
