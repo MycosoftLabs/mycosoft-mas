@@ -4,17 +4,27 @@ Deploy containers and workloads to the GPU compute node (mycosoft-gpu01).
 
 ## When to Use
 
-- Deploy PersonaPlex/Moshi voice containers
-- Deploy Earth2 simulation containers
-- Deploy ML inference containers
+- Deploy PersonaPlex/Moshi voice stack (Legion 4080B voice host)
+- Deploy Earth2 Studio API (Legion 4080A Earth-2 host, WSL Linux)
+- Deploy ML inference containers (optional Docker path)
+- Register 24/7 startup on Windows Legions (`scripts/gpu-node/windows/*24x7*.ps1`)
 - Check GPU node status
-- Manage GPU workloads
+
+## Topology (UniFi LAN, April 2026)
+
+| Role | IP | SSH user (default) | Services |
+|------|-----|-------------------|----------|
+| Voice / PersonaPlex / Ollama (Nemotron) | 192.168.0.241 | `owner1` or `mycosoft` | Moshi 8998, Bridge 8999, Ollama 11434 |
+| Earth-2 / CREP inference | 192.168.0.249 | `owner2` or `mycosoft` | `earth2_api_server` 8220 (WSL) |
+
+Legacy single-node docs may reference 192.168.0.190; prefer split defaults in `mycosoft_mas/integrations/gpu_node_client.py`.
 
 ## Prerequisites
 
-- SSH key configured (already set up via `ssh gpu01`)
-- GPU node running at 192.168.0.190
-- Docker images available
+- SSH key configured to each Legion
+- NVIDIA driver + `nvidia-smi` on host
+- For voice: `Setup-PersonaPlex-VoiceHost.ps1`, `personaplex-repo`, local model weights (real data only)
+- For Earth-2: `Invoke-WSLGPUNodeSetup.ps1 -Role Earth2` so `earth2studio` exists in WSL venv
 
 ## Commands
 
@@ -79,24 +89,52 @@ ssh gpu01 "docker stop <container_name> && docker rm <container_name>"
 ssh gpu01 "nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv"
 ```
 
+## 24/7 Windows services (Legions)
+
+On **voice** host (241), after repo + venv + models exist:
+
+```powershell
+cd <mycosoft-mas>\scripts\gpu-node\windows
+.\Start-LegionVoice-24x7.ps1
+# optional: logon startup
+.\Register-MycosoftLegionStartup.ps1 -Role Voice
+```
+
+On **Earth-2** host (249), after WSL venv + repo in `/root/mycosoft-mas`:
+
+```powershell
+.\Start-LegionEarth2API-24x7.ps1
+.\Register-MycosoftLegionStartup.ps1 -Role Earth2
+```
+
 ## Integration
 
-After deploying, update environment variables:
+MAS orchestrator (VM 188) and website should point at LAN services:
 
 ```env
-# In website .env.local or MAS .env
-MOSHI_API_URL=http://192.168.0.190:8998
-EARTH2_API_URL=http://192.168.0.190:8220
+# MAS: Nemotron / Ollama on voice GPU (not 188 unless Ollama runs there)
+NEMOTRON_HOST=192.168.0.241
+NEMOTRON_HTTP_PORT=11434
+OLLAMA_BASE_URL=http://192.168.0.241:11434
+
+EARTH2_API_URL=http://192.168.0.249:8220
+
+# Website test-voice: bridge on voice host (sandbox/production)
+PERSONAPLEX_BRIDGE_URL=http://192.168.0.241:8999
+NEXT_PUBLIC_PERSONAPLEX_BRIDGE_URL=http://192.168.0.241:8999
 ```
 
 ## Verification
 
 ```bash
-# Test Moshi health
-curl http://192.168.0.190:8998/health
+# Voice: bridge (from MAS or dev PC)
+curl http://192.168.0.241:8999/health
 
-# Test Earth2 health
-curl http://192.168.0.190:8220/health
+# Earth-2 API
+curl http://192.168.0.249:8220/health
+
+# Ollama on voice host
+curl http://192.168.0.241:11434/api/tags
 ```
 
 ## Troubleshooting

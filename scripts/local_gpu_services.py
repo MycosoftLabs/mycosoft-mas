@@ -3,6 +3,10 @@
 MYCOSOFT Local GPU Services - February 5, 2026
 Unified startup for all GPU-accelerated services on local Windows machine with RTX 5090.
 
+Production / split topology: voice and Earth-2 run on separate Legion 4080 hosts on the UniFi LAN
+(see GPUNodeClient: GPU_VOICE_IP / GPU_EARTH2_IP, SSH ubiquity-gpu-voice / ubiquity-gpu-earth2).
+This script is for **local dev** on one machine only.
+
 Services:
 - Earth2Studio API (port 8220) - Weather model inference
 - PersonaPlex/Moshi (port 8998) - Voice AI

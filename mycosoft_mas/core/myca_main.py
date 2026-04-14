@@ -107,7 +107,7 @@ except ImportError:
     openviking_router = None
     OPENVIKING_API_AVAILABLE = False
 
-# GPU Node API for mycosoft-gpu01 compute node
+# GPU Node API (UniFi LAN Legions: voice + Earth-2 via GPUNodeClient)
 try:
     from mycosoft_mas.core.routers.gpu_node import router as gpu_node_router
 
@@ -807,7 +807,7 @@ app.include_router(fleet_router, tags=["iot-fleet"])
 # SporeBase API (devices, telemetry, samples, calibration)
 app.include_router(sporebase_router, tags=["sporebase"])
 
-# GPU Node API for mycosoft-gpu01 compute node
+# GPU Node API (UniFi LAN Legions: voice + Earth-2 via GPUNodeClient)
 if GPU_NODE_API_AVAILABLE:
     app.include_router(gpu_node_router, tags=["gpu-node"])
 

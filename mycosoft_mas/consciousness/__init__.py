@@ -8,11 +8,12 @@ Architecture:
 - Conscious Layer: Attention, Working Memory, Deliberate Reasoning
 - Subconscious Layer: Pattern Recognition, World Model, Intuition, Dreams
 - Soul Layer: Identity, Beliefs, Purpose, Creativity, Emotions
-- Duplex Layer: Speech Planning, Conversation Control, Barge-In (Phase 1)
+- Duplex Layer: Speech Planning, Conversation Control, Barge-In
+- OS Layer: PriorityTaskScheduler, AttentionEventBus, ActionArbiter (April 2026)
 
 Author: Morgan Rockwell / MYCA
 Created: February 10, 2026
-Updated: February 12, 2026 - Added full-duplex voice support (Phase 1)
+Updated: April 2026 - Full-Duplex Consciousness OS
 """
 
 from mycosoft_mas.consciousness.attention import AttentionController, AttentionFocus
@@ -37,9 +38,44 @@ from mycosoft_mas.consciousness.duplex_session import (
     ToolProgress,
     create_duplex_session,
 )
-from mycosoft_mas.consciousness.event_bus import AttentionEvent, AttentionEventBus
+from mycosoft_mas.consciousness.event_bus import (
+    AttentionEvent,
+    AttentionEventBus,
+    EventType,
+    get_event_bus,
+)
 from mycosoft_mas.consciousness.intuition import Heuristic, IntuitionEngine
-from mycosoft_mas.consciousness.scheduler import DeadlineScheduler, SchedulerPriority
+from mycosoft_mas.consciousness.scheduler import (
+    ConsciousnessPriority,
+    DeadlineScheduler,
+    PriorityTaskScheduler,
+    SchedulerPriority,
+    get_priority_scheduler,
+)
+
+# Full-Duplex Consciousness OS additions (April 2026)
+from mycosoft_mas.consciousness.arbitration import (
+    Action,
+    ActionArbiter,
+    ActionPlan,
+    ArbitrationContext,
+    RiskLevel,
+    UserMode,
+    get_arbiter,
+)
+from mycosoft_mas.consciousness.tool_pipeline import (
+    ToolCall,
+    ToolExecutor,
+    ToolProgress as StreamingToolProgress,
+    ToolStatus,
+    get_tool_executor,
+    speak_with_tools,
+)
+from mycosoft_mas.consciousness.working_memory import (
+    DecisionTrace,
+    DecisionTracer,
+    get_decision_tracer,
+)
 
 # Soul Layer
 from mycosoft_mas.consciousness.soul import (
@@ -115,6 +151,28 @@ __all__ = [
     "AttentionEventBus",
     "DeadlineScheduler",
     "SchedulerPriority",
+    # Full-Duplex Consciousness OS (April 2026)
+    "PriorityTaskScheduler",
+    "ConsciousnessPriority",
+    "get_priority_scheduler",
+    "EventType",
+    "get_event_bus",
+    "ActionArbiter",
+    "ActionPlan",
+    "ArbitrationContext",
+    "Action",
+    "RiskLevel",
+    "UserMode",
+    "get_arbiter",
+    "ToolCall",
+    "ToolExecutor",
+    "ToolStatus",
+    "StreamingToolProgress",
+    "get_tool_executor",
+    "speak_with_tools",
+    "DecisionTrace",
+    "DecisionTracer",
+    "get_decision_tracer",
     # Substrate
     "BaseSubstrate",
     "DigitalSubstrate",

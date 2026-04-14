@@ -1,15 +1,20 @@
 """
 GPU Node Client for Mycosoft MAS
 
-Provides programmatic access to the mycosoft-gpu01 node (192.168.0.190)
-for GPU workload management, container deployment, and status monitoring.
+Provides SSH-backed access to dedicated GPU Legion workstations on the LAN.
+
+Topology (defaults, override with env):
+  - Voice / PersonaPlex / Moshi / Nemotron: GPU_VOICE_IP (192.168.0.241), SSH Host ``ubiquity-gpu-voice`` (aliases: gpu-voice, gpu01) on UniFi Dream Machine LAN
+  - Earth-2: GPU_EARTH2_IP (192.168.0.249), SSH Host ``ubiquity-gpu-earth2`` (alias: gpu-earth2)
+
+Legacy: GPU_NODE_IP / GPU_NODE_SSH_HOST refer to the voice node when GPU_VOICE_* is unset.
 
 Usage:
-    from mycosoft_mas.integrations.gpu_node_client import GPUNodeClient
+    from mycosoft_mas.integrations.gpu_node_client import GPUNodeClient, get_gpu_client
 
-    client = GPUNodeClient()
-    status = await client.get_gpu_status()
-    await client.deploy_container("moshi-voice", "mycosoft/moshi-voice:latest", 8998)
+    voice = get_gpu_client("voice")
+    earth = get_gpu_client("earth2")
+    status = await voice.get_gpu_status()
 """
 
 import asyncio
@@ -20,6 +25,16 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+
+def _voice_node_ip() -> str:
+    """PersonaPlex / Moshi / Nemotron (Legion RTX 4080 #1)."""
+    return os.getenv("GPU_VOICE_IP") or os.getenv("GPU_NODE_IP") or "192.168.0.241"
+
+
+def _earth2_node_ip() -> str:
+    """Earth-2 and related simulation workloads (Legion RTX 4080 #2)."""
+    return os.getenv("GPU_EARTH2_IP") or "192.168.0.249"
 
 
 @dataclass
@@ -45,42 +60,60 @@ class ContainerInfo:
 
 
 class GPUNodeClient:
-    """Client for interacting with mycosoft-gpu01 GPU compute node."""
+    """Client for interacting with Mycosoft GPU Legion nodes (voice vs Earth-2)."""
 
-    # Node configuration
-    HOSTNAME = os.getenv("GPU_NODE_HOSTNAME", "gpu01")
-    IP = os.getenv("GPU_NODE_IP", "192.168.0.190")
-    USER = os.getenv("GPU_NODE_USER", "mycosoft")
+    NODE_VOICE = "voice"
+    NODE_EARTH2 = "earth2"
 
-    # Known GPU services
+    # Known GPU services (deploy targets depend on node — see deploy_service)
     SERVICES = {
         "moshi-voice": {
             "image": "mycosoft/moshi-voice:latest",
             "port": 8998,
             "gpu": True,
             "health_endpoint": "/health",
+            "node": NODE_VOICE,
         },
         "earth2-inference": {
             "image": "mycosoft/earth2-inference:latest",
             "port": 8220,
             "gpu": True,
             "health_endpoint": "/health",
+            "node": NODE_EARTH2,
         },
         "personaplex-bridge": {
             "image": "mycosoft/personaplex-bridge:latest",
             "port": 8999,
             "gpu": False,
             "health_endpoint": "/health",
+            "node": NODE_VOICE,
         },
     }
 
-    def __init__(self, ssh_host: Optional[str] = None):
+    def __init__(self, ssh_host: Optional[str] = None, node: str = NODE_VOICE):
         """Initialize GPU node client.
 
         Args:
-            ssh_host: SSH host alias. If omitted, uses env GPU_NODE_SSH_HOST or HOSTNAME.
+            ssh_host: SSH host alias. If omitted, uses per-node env (GPU_VOICE_SSH_HOST / GPU_EARTH2_SSH_HOST).
+            node: ``voice`` (PersonaPlex/Moshi/Nemotron) or ``earth2`` (Earth-2 stack).
         """
-        self.ssh_host = ssh_host or os.getenv("GPU_NODE_SSH_HOST", self.HOSTNAME)
+        self.node = node if node in (self.NODE_VOICE, self.NODE_EARTH2) else self.NODE_VOICE
+        if self.node == self.NODE_EARTH2:
+            self.IP = _earth2_node_ip()
+            # Default matches DESKTOP-K33SCFE local account; override with GPU_EARTH2_USER / GPU_NODE_USER.
+            self.USER = os.getenv("GPU_EARTH2_USER") or os.getenv("GPU_NODE_USER") or "owner2"
+            default_host = "ubiquity-gpu-earth2"
+            self.ssh_host = ssh_host or os.getenv("GPU_EARTH2_SSH_HOST") or os.getenv(
+                "GPU_NODE_EARTH2_SSH_HOST", default_host
+            )
+        else:
+            self.IP = _voice_node_ip()
+            # Default matches local Legion login (4080B); override with GPU_VOICE_USER / GPU_NODE_USER.
+            self.USER = os.getenv("GPU_VOICE_USER") or os.getenv("GPU_NODE_USER") or "owner1"
+            default_host = "ubiquity-gpu-voice"
+            self.ssh_host = ssh_host or os.getenv("GPU_VOICE_SSH_HOST") or os.getenv(
+                "GPU_NODE_SSH_HOST", default_host
+            )
 
     def _run_ssh(self, command: str, timeout: int = 30) -> tuple[int, str, str]:
         """Execute SSH command on GPU node.
@@ -302,6 +335,10 @@ class GPUNodeClient:
             logger.error(f"Unknown service: {service_name}")
             return False
 
+        target_node = self.SERVICES[service_name]["node"]
+        if target_node != self.node:
+            return await get_gpu_client(target_node).deploy_service(service_name)
+
         config = self.SERVICES[service_name]
         return await self.deploy_container(
             name=service_name, image=config["image"], port=config["port"], gpu=config["gpu"]
@@ -313,11 +350,10 @@ class GPUNodeClient:
         inference_port: int = 8998,
         mas_orchestrator_url: str = "http://192.168.0.188:8001",
     ) -> bool:
-        """Deploy bridge on gpu01 pointing to remote inference host.
+        """Deploy bridge on the voice Legion node, pointing at Moshi inference (any host:port).
 
-        This is the split architecture:
-        - Logic/interface bridge on gpu01 (1080 Ti host)
-        - Heavy Moshi inference on remote host (e.g. RTX 5090 machine)
+        Typical split: bridge on ``ubiquity-gpu-voice`` with ``MOSHI_HOST`` set to the machine
+        running Moshi (often same host ``127.0.0.1`` or GPU_VOICE_IP on the Dream Machine LAN).
         """
         return await self.deploy_container(
             name="personaplex-bridge",
@@ -343,6 +379,10 @@ class GPUNodeClient:
         """
         if service_name not in self.SERVICES:
             return {"status": "unknown", "error": "Unknown service"}
+
+        target_node = self.SERVICES[service_name]["node"]
+        if target_node != self.node:
+            return await get_gpu_client(target_node).get_service_health(service_name)
 
         config = self.SERVICES[service_name]
         port = config["port"]
@@ -431,43 +471,59 @@ class GPUNodeClient:
             return False
 
 
-# Singleton instance
-_client: Optional[GPUNodeClient] = None
+# One client per node (voice / earth2)
+_clients: Dict[str, GPUNodeClient] = {}
 
 
-def get_gpu_client() -> GPUNodeClient:
-    """Get or create GPU node client singleton."""
-    global _client
-    if _client is None:
-        _client = GPUNodeClient()
-    return _client
+def get_gpu_client(node: str = GPUNodeClient.NODE_VOICE) -> GPUNodeClient:
+    """Return a cached GPUNodeClient for ``voice`` or ``earth2`` (Ubiquiti / Dream Machine LAN)."""
+    if node not in _clients:
+        _clients[node] = GPUNodeClient(node=node)
+    return _clients[node]
 
 
 # Convenience functions
 async def check_gpu_node() -> Dict[str, Any]:
-    """Quick check of GPU node status."""
-    client = get_gpu_client()
-
-    if not await client.is_reachable():
-        return {"status": "offline", "reachable": False}
-
-    return {"status": "online", "reachable": True, **await client.get_system_info()}
+    """Quick check of both GPU Legion nodes (voice + Earth-2)."""
+    voice = get_gpu_client(GPUNodeClient.NODE_VOICE)
+    earth = get_gpu_client(GPUNodeClient.NODE_EARTH2)
+    v_ok = await voice.is_reachable()
+    e_ok = await earth.is_reachable()
+    any_up = v_ok or e_ok
+    payload: Dict[str, Any] = {
+        "status": "online" if any_up else "offline",
+        "reachable": v_ok,
+        "network": "unifi_dream_machine_lan",
+        "voice": {"ip": voice.IP, "ssh_host": voice.ssh_host, "reachable": v_ok},
+        "earth2": {"ip": earth.IP, "ssh_host": earth.ssh_host, "reachable": e_ok},
+    }
+    if v_ok:
+        v_info = await voice.get_system_info()
+        payload["voice"].update(v_info)
+        for k, v in v_info.items():
+            if k not in payload:
+                payload[k] = v
+    if e_ok:
+        payload["earth2"].update(await earth.get_system_info())
+    return payload
 
 
 async def deploy_gpu_service(service_name: str) -> Dict[str, Any]:
-    """Deploy a known GPU service."""
-    client = get_gpu_client()
+    """Deploy a known GPU service to the correct Legion host (voice vs Earth-2)."""
+    if service_name not in GPUNodeClient.SERVICES:
+        return {"success": False, "error": f"Unknown service: {service_name}"}
+    node = GPUNodeClient.SERVICES[service_name]["node"]
+    client = get_gpu_client(node)
 
     if not await client.is_reachable():
-        return {"success": False, "error": "GPU node not reachable"}
+        return {"success": False, "error": f"GPU node not reachable ({client.ssh_host} / {client.IP})"}
 
     success = await client.deploy_service(service_name)
 
     if success:
-        # Wait a moment for container to start
         await asyncio.sleep(3)
         health = await client.get_service_health(service_name)
-        return {"success": True, "health": health}
+        return {"success": True, "health": health, "node": node, "host": client.IP}
 
     return {"success": False, "error": "Deployment failed"}
 
@@ -477,11 +533,11 @@ async def deploy_personaplex_split(
     inference_port: int = 8998,
     mas_orchestrator_url: str = "http://192.168.0.188:8001",
 ) -> Dict[str, Any]:
-    """Deploy split PersonaPlex with bridge on gpu01 and remote inference."""
-    client = get_gpu_client()
+    """Deploy split PersonaPlex: bridge on voice Legion (ubiquity-gpu-voice), Moshi at inference_host."""
+    client = get_gpu_client(GPUNodeClient.NODE_VOICE)
 
     if not await client.is_reachable():
-        return {"success": False, "error": "GPU logic node not reachable"}
+        return {"success": False, "error": "GPU voice node not reachable (ubiquity-gpu-voice)"}
 
     ok = await client.deploy_personaplex_bridge_remote(
         inference_host=inference_host,
@@ -489,7 +545,7 @@ async def deploy_personaplex_split(
         mas_orchestrator_url=mas_orchestrator_url,
     )
     if not ok:
-        return {"success": False, "error": "Failed to deploy bridge on gpu01"}
+        return {"success": False, "error": "Failed to deploy bridge on voice GPU host"}
 
     await asyncio.sleep(3)
     bridge_health = await client.get_service_health("personaplex-bridge")
@@ -508,11 +564,16 @@ if __name__ == "__main__":
     import sys
 
     async def main():
-        client = GPUNodeClient()
+        node = GPUNodeClient.NODE_VOICE
+        if len(sys.argv) > 2 and sys.argv[1] == "--node":
+            node = sys.argv[2]
+            sys.argv = [sys.argv[0]] + sys.argv[3:]
+        client = GPUNodeClient(node=node)
 
         if len(sys.argv) < 2:
-            print("Usage: python gpu_node_client.py <command>")
+            print("Usage: python gpu_node_client.py [--node voice|earth2] <command>")
             print("Commands: status, containers, gpu, deploy <service>, stop <container>")
+            print("SSH: ubiquity-gpu-voice / ubiquity-gpu-earth2 (UniFi Dream Machine LAN)")
             return
 
         cmd = sys.argv[1]

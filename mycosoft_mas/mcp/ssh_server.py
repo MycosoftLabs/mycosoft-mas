@@ -61,7 +61,10 @@ VM_INVENTORY = {
     "sandbox": {"ip": "192.168.0.187", "name": "Sandbox", "user": "mycosoft"},
     "mas": {"ip": "192.168.0.188", "name": "MAS Orchestrator", "user": "mycosoft"},
     "mindex": {"ip": "192.168.0.189", "name": "MINDEX Database", "user": "mycosoft"},
-    "gpu": {"ip": "192.168.0.190", "name": "GPU Node", "user": "mycosoft"},
+    # UniFi Dream Machine (Ubiquiti) LAN — Legion RTX 4080 workstations
+    "ubiquity-gpu-voice": {"ip": "192.168.0.241", "name": "GPU Voice (PersonaPlex/Moshi/Nemotron)", "user": "owner1"},
+    "ubiquity-gpu-earth2": {"ip": "192.168.0.249", "name": "GPU Earth-2", "user": "owner2"},
+    "gpu": {"ip": "192.168.0.241", "name": "GPU Node (alias → voice Legion)", "user": "owner1"},
     "myca": {"ip": "192.168.0.191", "name": "MYCA Workspace", "user": "mycosoft"},
 }
 

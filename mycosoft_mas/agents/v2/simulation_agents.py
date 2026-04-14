@@ -5,6 +5,7 @@ Created: February 3, 2026
 """
 
 import logging
+import os
 from enum import Enum
 from typing import Any, Dict
 from uuid import uuid4
@@ -383,7 +384,8 @@ class UnifiedLatentsAgent(BaseScientificAgent):
     evaluate_model      : Compute FID / FVD / PSNR metrics for a checkpoint.
     """
 
-    GPU_NODE = "192.168.0.190"
+    # Heavy UL training targets Earth-2 Legion by default (see GPU_EARTH2_IP).
+    GPU_NODE = os.getenv("GPU_EARTH2_IP") or os.getenv("GPU_NODE_IP") or "192.168.0.249"
 
     def __init__(self):
         super().__init__(

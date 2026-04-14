@@ -1,5 +1,9 @@
 # Master Document Index
 
+## WSL2 Legion GPU nodes ù Earth2 + Voice (Apr 15, 2026)
+- `docs/WSL_LEGION_GPU_NODES_APR15_2026.md` ù **WSL2 runbook**: 4080A Earth2 vs 4080B voice; `Invoke-WSLGPUNodeSetup.ps1` + `wsl-gpu-node-setup.sh`; PyTorch CUDA, earth2studio, Moshi/PersonaPlex deps, Ollama, Hugging Face; no bare-metal NVIDIA drivers inside WSL.
+- `docs/STORAGE_LAYOUT_LEGION_GPU_APR15_2026.md` ó **Storage layout**: `Initialize-MycosoftDataLayout.ps1`, `wsl-mycosoft-data-layout.sh`; models/cache/data/memory; HF, Torch, Ollama env vars.
+
 ## Deep Agents v0.5 Integration (Apr 9, 2026)
 - `docs/DEEP_AGENTS_V05_INTEGRATION_PLAN.md` ? **Integration plan**: Multi-phase Deep Agents v0.5 rollout across MAS with async subagents, middleware, filesystem, and protocol strategy.
 - `docs/DEEP_AGENTS_V05_FOUNDATION_IMPLEMENTATION_APR09_2026.md` ? **Foundation implementation**: Feature-flagged Deep Agent package, agent protocol router, startup wiring, observability/permission/redis middleware, and compile/lint verification.
@@ -706,4 +710,4 @@
 - `docs/GAP_FILL_PLAN_ALL_PENDING_EDITS_APR10_2026.md` - Cross-repo gap-fill plan with full pending-edit inventory and phased closure plan after integration deployment (Apr 10, 2026).
 - `docs/PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md` - Phase A execution log: MINDEX runtime recovery, live-state route activation, MAS runtime verification, and remaining blocker details (Apr 10, 2026).
 
-- docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md ñ Full architecture reference for Fusarium across frontend, middleware/BFF, backend, data, edge, and platform integrations (Apr 10, 2026).
+- docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md ù Full architecture reference for Fusarium across frontend, middleware/BFF, backend, data, edge, and platform integrations (Apr 10, 2026).

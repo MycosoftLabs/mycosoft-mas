@@ -27,6 +27,11 @@ from typing import Any, Dict, Optional
 logger = logging.getLogger(__name__)
 
 
+def _earth2_base_ip() -> str:
+    """Earth-2 / simulation Legion on UniFi LAN (override with GPU_EARTH2_IP or GPU_NODE_IP)."""
+    return os.getenv("GPU_EARTH2_IP") or os.getenv("GPU_NODE_IP") or "192.168.0.249"
+
+
 class NvidiaModelType(str, Enum):
     """NVIDIA model types available to MYCA."""
 
@@ -58,10 +63,16 @@ class NvidiaConfig:
     """Configuration for NVIDIA model integration."""
 
     api_key: str = ""
-    earth2_endpoint: str = "http://192.168.0.190:8080"  # GPU node
-    physicsnemo_endpoint: str = "http://192.168.0.190:8081"
-    nemo_endpoint: str = "http://192.168.0.190:8082"
-    gpu_node_ip: str = "192.168.0.190"
+    earth2_endpoint: str = field(
+        default_factory=lambda: os.getenv("EARTH2_SIM_ENDPOINT", f"http://{_earth2_base_ip()}:8080")
+    )
+    physicsnemo_endpoint: str = field(
+        default_factory=lambda: os.getenv("PHYSICSNEMO_SIM_ENDPOINT", f"http://{_earth2_base_ip()}:8081")
+    )
+    nemo_endpoint: str = field(
+        default_factory=lambda: os.getenv("NEMO_SIM_ENDPOINT", f"http://{_earth2_base_ip()}:8082")
+    )
+    gpu_node_ip: str = field(default_factory=_earth2_base_ip)
     timeout: float = 120.0  # Physics sims can be slow
     max_retries: int = 3
 

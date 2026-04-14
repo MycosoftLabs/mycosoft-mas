@@ -10,7 +10,7 @@ Provides endpoints the website model-training page calls to:
 - Export trained models
 
 This router sits on the MAS Orchestrator (192.168.0.188:8001)
-and delegates actual compute to the GPU node (192.168.0.190) via SSH/Docker.
+and delegates actual compute to a GPU Legion (default: voice at GPU_VOICE_IP / 192.168.0.241) via SSH/Docker.
 """
 
 import asyncio
@@ -37,7 +37,9 @@ _training_runs: List[Dict[str, Any]] = []
 _checkpoints: List[Dict[str, Any]] = []
 _active_run_id: Optional[str] = None
 
-GPU_NODE_IP = os.getenv("GPU_NODE_IP", "192.168.0.190")
+GPU_NODE_IP = (
+    os.getenv("GPU_TRAINING_IP") or os.getenv("GPU_VOICE_IP") or os.getenv("GPU_NODE_IP") or "192.168.0.241"
+)
 MINDEX_API_URL = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000")
 NLM_MODEL_DIR = os.getenv("NLM_MODEL_DIR", "/models/nlm")
 NLM_CHECKPOINT_DIR = os.getenv("NLM_CHECKPOINT_DIR", "/models/nlm/checkpoints")

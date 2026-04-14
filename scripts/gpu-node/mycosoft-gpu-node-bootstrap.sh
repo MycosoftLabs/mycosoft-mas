@@ -3,7 +3,11 @@
 # Mycosoft GPU Node Bootstrap Script
 # Target: Desktop-T7NKNVS → mycosoft-gpu01
 # Date: February 13, 2026
-# 
+#
+# IMPORTANT: This script is for **bare-metal Ubuntu Server** with NVIDIA .deb drivers.
+# For **WSL2 on Windows Legions**, use scripts/gpu-node/wsl/wsl-gpu-node-setup.sh instead
+# (do not install nvidia-driver-* inside WSL — use Windows driver + CUDA user libs).
+#
 # Run this AFTER Ubuntu Server is installed and SSH is confirmed working.
 # Execute as: sudo bash mycosoft-gpu-node-bootstrap.sh
 # =============================================================================

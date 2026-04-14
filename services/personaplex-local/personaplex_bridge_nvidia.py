@@ -56,6 +56,21 @@ except ImportError as e:
     logging.getLogger("personaplex-bridge").warning(f"Duplex session not available: {e}")
     DUPLEX_AVAILABLE = False
 
+# Import ConversationController for structured barge-in management
+try:
+    from mycosoft_mas.consciousness.conversation_control import (
+        ConversationController,
+        VoiceActivityDetector,
+        create_conversation_controller,
+    )
+    CONVERSATION_CONTROLLER_AVAILABLE = True
+except ImportError as e:
+    logging.getLogger("personaplex-bridge").warning(
+        f"ConversationController not available: {e}"
+    )
+    CONVERSATION_CONTROLLER_AVAILABLE = False
+    ConversationController = None  # type: ignore
+
 # TTS fallback: Moshi does not support kind 0x02 (text→TTS). Use edge-tts for MYCA speech.
 try:
     _bridge_dir = Path(__file__).resolve().parent

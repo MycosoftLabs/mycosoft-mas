@@ -5,6 +5,7 @@ Covers the UnifiedLatentsAgent (v2 simulation agent) and the
 /api/unified-latents/* HTTP endpoints.
 """
 
+import os
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -16,6 +17,8 @@ from mycosoft_mas.agents.v2.simulation_agents import (
     UnifiedLatentsAgent,
     get_simulation_agent,
 )
+
+_EXPECTED_UL_GPU = os.getenv("GPU_EARTH2_IP") or os.getenv("GPU_NODE_IP") or "192.168.0.249"
 
 # ---------------------------------------------------------------------------
 # Agent tests
@@ -49,7 +52,7 @@ class TestUnifiedLatentsAgentInit:
         assert "2602.17270" in agent.description
 
     def test_gpu_node(self, agent):
-        assert agent.GPU_NODE == "192.168.0.190"
+        assert agent.GPU_NODE == _EXPECTED_UL_GPU
 
 
 class TestUnifiedLatentsRegistry:
@@ -158,7 +161,7 @@ class TestTrainModel:
         assert "run_id" in result
         assert result["dataset"] == "imagenet-512"
         assert result["status"] == "queued"
-        assert result["gpu_node"] == "192.168.0.190"
+        assert result["gpu_node"] == _EXPECTED_UL_GPU
 
     @pytest.mark.asyncio
     async def test_get_status_after_train(self, agent):

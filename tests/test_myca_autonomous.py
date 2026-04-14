@@ -5,6 +5,8 @@ Tests for MYCA Autonomous Systems - Soul, Economy, Knowledge, Taxonomy, Widgets
 Tests the foundational components of MYCA's autonomous AI capabilities.
 """
 
+import os
+
 import pytest
 
 # ============================================================================
@@ -291,7 +293,8 @@ class TestNvidiaProvider:
 
         config = NvidiaConfig()
         provider = NvidiaModelProvider(config)
-        assert provider.config.gpu_node_ip == "192.168.0.190"
+        expected = os.getenv("GPU_EARTH2_IP") or os.getenv("GPU_NODE_IP") or "192.168.0.249"
+        assert provider.config.gpu_node_ip == expected
 
     def test_simulation_types(self):
         """All simulation types are defined."""

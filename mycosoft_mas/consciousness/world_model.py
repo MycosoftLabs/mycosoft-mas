@@ -847,6 +847,72 @@ class WorldModel:
         }
 
 
+    # ── Evented world model (Full-Duplex Consciousness OS) ──────────────────
+
+    def get_cached_context(self) -> Dict[str, Any]:
+        """
+        Instant access to the warm in-memory world cache.
+
+        Returns immediately — no network call.  The cache is kept warm by
+        background sensor loops so this is always usable from the fast path.
+        """
+        state = self._current_state
+        return {
+            "timestamp": state.timestamp.isoformat(),
+            "crep": state.crep_data,
+            "predictions": state.predictions,
+            "ecosystem": state.ecosystem_status,
+            "devices": state.device_telemetry,
+            "presence": state.presence_data,
+            "alerts": state.pending_alerts,
+            "summary": state.to_summary(),
+        }
+
+    async def _publish_anomaly(
+        self,
+        source: str,
+        data: Dict[str, Any],
+        reason: str = "",
+    ) -> None:
+        """
+        Publish a WORLD_ANOMALY event to the attention bus.
+
+        Called by sensor handlers when they detect something noteworthy.
+        Subconscious processes MUST use this instead of calling speech directly.
+        """
+        try:
+            from mycosoft_mas.consciousness.event_bus import AttentionEvent, get_event_bus
+
+            event_bus = get_event_bus()
+            await event_bus.publish(
+                AttentionEvent(
+                    type="world_anomaly",
+                    source=source,
+                    data={**data, "reason": reason},
+                    priority=7,
+                )
+            )
+        except Exception as exc:
+            logger.debug(f"WorldModel._publish_anomaly failed: {exc}")
+
+    def _is_anomaly(self, sensor_key: str, new_data: Dict[str, Any]) -> bool:
+        """
+        Heuristic: is this sensor reading anomalous vs the warm cache?
+
+        Override in subclasses or extend with domain-specific logic.
+        """
+        alerts = new_data.get("alerts", [])
+        if alerts:
+            return True
+        # CREP-specific: large count changes
+        if sensor_key == "crep":
+            cached_flights = self._current_state.total_flights
+            new_flights = new_data.get("total_flights", cached_flights)
+            if abs(new_flights - cached_flights) > 500:
+                return True
+        return False
+
+
 class StandaloneWorldModel:
     """Standalone world model for use without full consciousness."""
 

@@ -20,6 +20,7 @@ echo   - PersonaPlex/Moshi: localhost:8998  (voice AI, 23GB VRAM)
 echo   - PersonaPlex Bridge:localhost:8999  (voice routing)
 echo   - Earth2Studio API:  localhost:8220  (weather AI)
 echo.
+echo Production: Moshi/bridge on GPU_VOICE_IP ; Earth2 API on GPU_EARTH2_IP (see MAS env).
 echo For dev server, run: npm run dev in website folder (localhost:3010)
 echo.
 echo Starting unified GPU services...

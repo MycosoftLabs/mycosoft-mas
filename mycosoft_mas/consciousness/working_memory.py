@@ -391,3 +391,90 @@ class WorkingMemory:
     def clear_turn_thoughts(self) -> None:
         """Clear ThoughtObjects at turn boundary."""
         self._thought_objects.clear()
+
+
+# ---------------------------------------------------------------------------
+# Decision Traces — lightweight audit trail (Full-Duplex Consciousness OS)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class DecisionTrace:
+    """
+    Lightweight record of one conscious decision.
+
+    Stored in RAM only (no network call). Useful for debugging why MYCA
+    chose to speak, defer, call a tool, etc.
+    """
+
+    action: str
+    reason: str
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    context: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "action": self.action,
+            "reason": self.reason,
+            "timestamp": self.timestamp.isoformat(),
+            "context": self.context,
+        }
+
+
+class DecisionTracer:
+    """
+    In-RAM ring-buffer of recent decisions.
+
+    Used by ActionArbiter and ConversationController to record
+    *why* MYCA made each decision.  Max 200 traces kept in memory.
+    """
+
+    MAX_TRACES = 200
+
+    def __init__(self) -> None:
+        self._traces: List[DecisionTrace] = []
+
+    def add(
+        self,
+        action: str,
+        reason: str,
+        **context_kwargs: Any,
+    ) -> DecisionTrace:
+        """
+        Record a decision.
+
+        Args:
+            action: What was decided (e.g. "speak_now", "call_tool:calculator")
+            reason: Short human-readable explanation
+            **context_kwargs: Optional key=value pairs for debugging
+
+        Returns:
+            The created DecisionTrace
+        """
+        trace = DecisionTrace(action=action, reason=reason, context=context_kwargs)
+        self._traces.append(trace)
+        if len(self._traces) > self.MAX_TRACES:
+            self._traces = self._traces[-self.MAX_TRACES :]
+        return trace
+
+    def recent(self, n: int = 10) -> List[DecisionTrace]:
+        """Get the n most recent traces."""
+        return list(self._traces[-n:])
+
+    def to_list(self) -> List[Dict[str, Any]]:
+        return [t.to_dict() for t in self._traces]
+
+    def clear(self) -> None:
+        self._traces.clear()
+
+
+# Module-level singleton
+_tracer: Optional[DecisionTracer] = None
+
+
+def get_decision_tracer() -> DecisionTracer:
+    """Get the global DecisionTracer instance."""
+    global _tracer
+    if _tracer is None:
+        _tracer = DecisionTracer()
+    return _tracer

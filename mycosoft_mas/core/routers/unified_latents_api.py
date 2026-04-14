@@ -8,10 +8,11 @@ UL jointly regularises latent representations with a diffusion prior and
 decodes them with a diffusion model, yielding SOTA quality on both images
 (FID 1.4 on ImageNet-512) and video (FVD 1.3 on Kinetics-600).
 
-All heavy inference is dispatched to the GPU node (192.168.0.190).
+All heavy inference is dispatched to the Earth-2 Legion GPU (GPU_EARTH2_IP, default 192.168.0.249).
 """
 
 import logging
+import os
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -19,6 +20,10 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/unified-latents", tags=["unified-latents"])
+
+
+def _ul_gpu_node_label() -> str:
+    return os.getenv("GPU_EARTH2_IP") or os.getenv("GPU_NODE_IP") or "192.168.0.249"
 
 
 # ---------------------------------------------------------------------------
@@ -115,7 +120,7 @@ async def info():
             "imagenet_512_fid": 1.4,
             "kinetics_600_fvd": 1.3,
         },
-        "gpu_node": "192.168.0.190",
+        "gpu_node": _ul_gpu_node_label(),
     }
 
 
