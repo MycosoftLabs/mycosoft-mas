@@ -46,8 +46,9 @@ The dev server runs in a **hidden** process; Cursor's terminal is not used and n
 
 ## How to start voice services (Moshi, Bridge) externally
 
+- **Default:** Do **not** run Moshi/bridge on the dev PC — use the **Voice Legion** (see `dev-machine-no-local-gpu-inference.mdc`).
 - **Moshi + Bridge on Voice Legion (192.168.0.241):** Run on that machine in an external terminal there (SSH session or external window on the node).
-- **Moshi + Bridge locally:** Open an **external** PowerShell or Windows Terminal window and run:
+- **Moshi + Bridge locally (exception / rare CUDA debugging only):** Open an **external** PowerShell or Windows Terminal window and run:
   - Moshi: `python scripts/start_moshi_server.py` (or equivalent) in MAS repo.
   - Bridge: `python services/personaplex-local/personaplex_bridge_nvidia.py` in MAS repo.
 - Do **not** run these in Cursor's integrated terminal for long-running use.

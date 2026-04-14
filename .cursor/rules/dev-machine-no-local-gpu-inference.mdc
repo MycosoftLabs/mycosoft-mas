@@ -1,0 +1,31 @@
+---
+description: Heavy GPU inference (Moshi, PersonaPlex bridge, Earth-2 API, Ollama Nemotron) must run only on Legions 241/249 — never on the dev PC when Cursor or Claude starts local servers.
+alwaysApply: true
+---
+
+# Dev machine — no local GPU voice / Earth-2 inference
+
+## Policy
+
+- **Do not** start on the developer workstation: Moshi (`8998`), PersonaPlex bridge (`8999`), `local_gpu_services.py`, Earth-2 API (`8220`), or Ollama **for** Mycosoft voice/Nemotron **when the intent is normal MYCA/website work**.
+- Those workloads belong on the **split Legions** (UniFi LAN):
+  - **4080B Voice Legion** `192.168.0.241` — Moshi, PersonaPlex bridge, Ollama/Nemotron (`GPU_VOICE_IP`).
+  - **4080A Earth-2 Legion** `192.168.0.249` — `earth2_api_server` / earth2studio (`GPU_EARTH2_IP`, port `8220` via WSL portproxy as documented).
+- **Local website dev** (`npm run dev` / `dev:next-only` on **3010**) only serves the Next.js app. It must point at remote services via env:
+  - `PERSONAPLEX_BRIDGE_URL` / `NEXT_PUBLIC_PERSONAPLEX_BRIDGE_URL` → `http://192.168.0.241:8999` (or your LAN bridge URL).
+  - Do **not** set `NEXT_PUBLIC_USE_LOCAL_GPU=true` or `USE_LOCAL_VOICE=1` unless you are explicitly debugging GPU code **on that machine** and accept VRAM use.
+
+## Agents and IDEs
+
+- When **Cursor** or **Claude** workflows start a “local dev server,” that means **website 3010** (and optional lightweight APIs), **not** spinning up PersonaPlex/Moshi/Earth-2 on localhost.
+- **Triage, maintenance, and restarts** of GPU stacks are performed **on each Legion** (scheduled watchdog + logon tasks), not by polling scripts from the dev PC every few seconds.
+
+## Where to look
+
+- Legion startup: `scripts/gpu-node/windows/Register-MycosoftLegionStartup.ps1`, `Start-LegionVoice-24x7.ps1`, `Start-LegionEarth2API-24x7.ps1`.
+- Legion health watchdog (periodic, not a tight loop): `scripts/gpu-node/windows/Register-LegionGPUWatchdog.ps1`, `Invoke-LegionGPUWatchdog.ps1`.
+- Doc: `docs/LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md`.
+
+## Exceptions
+
+- Rare **on-box debugging** of CUDA/Moshi on the dev machine is allowed only when the user explicitly requests it; still prefer SSH to **241** or **249** for integration testing.

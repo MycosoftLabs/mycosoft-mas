@@ -1,6 +1,6 @@
 # GPU Node Deploy Skill
 
-Deploy containers and workloads to the GPU compute node (mycosoft-gpu01).
+Deploy containers and workloads to **Legion** GPU hosts on the UniFi LAN (Voice **192.168.0.241**, Earth-2 **192.168.0.249**).
 
 ## When to Use
 
@@ -31,7 +31,7 @@ Legacy single-node docs may reference 192.168.0.190; prefer split defaults in `m
 ### Check GPU Status
 
 ```bash
-ssh gpu01 "nvidia-smi"
+ssh ubiquity-gpu-voice "nvidia-smi"
 ```
 
 ### Deploy PersonaPlex Voice Service
@@ -39,10 +39,10 @@ ssh gpu01 "nvidia-smi"
 ```bash
 # Build and push image first (from MAS repo)
 docker build -t mycosoft/moshi-voice:latest -f services/personaplex-local/Dockerfile.gpu .
-docker save mycosoft/moshi-voice:latest | ssh gpu01 "docker load"
+docker save mycosoft/moshi-voice:latest | ssh ubiquity-gpu-voice "docker load"
 
-# Deploy on GPU node
-ssh gpu01 "docker run -d --name moshi-voice \
+# Deploy on Voice Legion
+ssh ubiquity-gpu-voice "docker run -d --name moshi-voice \
   --gpus all \
   -p 8998:8998 \
   -e MOSHI_MODEL_PATH=/models \
@@ -55,10 +55,10 @@ ssh gpu01 "docker run -d --name moshi-voice \
 ```bash
 # Build and push image
 docker build -t mycosoft/earth2-inference:latest -f services/earth2/Dockerfile .
-docker save mycosoft/earth2-inference:latest | ssh gpu01 "docker load"
+docker save mycosoft/earth2-inference:latest | ssh ubiquity-gpu-earth2 "docker load"
 
-# Deploy on GPU node
-ssh gpu01 "docker run -d --name earth2-inference \
+# Deploy on Earth-2 Legion
+ssh ubiquity-gpu-earth2 "docker run -d --name earth2-inference \
   --gpus all \
   -p 8220:8220 \
   --restart unless-stopped \
@@ -68,25 +68,25 @@ ssh gpu01 "docker run -d --name earth2-inference \
 ### Check Running Containers
 
 ```bash
-ssh gpu01 "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+ssh ubiquity-gpu-voice "docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
 ```
 
 ### View Container Logs
 
 ```bash
-ssh gpu01 "docker logs <container_name> --tail 100"
+ssh ubiquity-gpu-voice "docker logs <container_name> --tail 100"
 ```
 
 ### Stop and Remove Container
 
 ```bash
-ssh gpu01 "docker stop <container_name> && docker rm <container_name>"
+ssh ubiquity-gpu-voice "docker stop <container_name> && docker rm <container_name>"
 ```
 
 ### Check GPU Memory
 
 ```bash
-ssh gpu01 "nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv"
+ssh ubiquity-gpu-voice "nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv"
 ```
 
 ## 24/7 Windows services (Legions)
@@ -107,6 +107,19 @@ On **Earth-2** host (249), after WSL venv + repo in `/root/mycosoft-mas`:
 .\Ensure-Earth2WSLPortProxy.ps1   # after each reboot WSL IP changes; forwards host :8220 into WSL
 .\Register-MycosoftLegionStartup.ps1 -Role Earth2
 ```
+
+### Periodic health watchdog (Legions only — not the dev PC)
+
+Register a **15-minute** (default) scheduled task that probes localhost health and reruns the starter after repeated failures. Avoids tight loops and avoids running heavy checks from the developer machine.
+
+```powershell
+cd <mycosoft-mas>\scripts\gpu-node\windows
+.\Register-LegionGPUWatchdog.ps1 -Role Voice -IntervalMinutes 15
+# or Earth-2 host:
+.\Register-LegionGPUWatchdog.ps1 -Role Earth2 -IntervalMinutes 15
+```
+
+Doc: `docs/LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md`. Cursor rule: do not start Moshi/bridge/Earth-2 on the dev PC for routine work (`.cursor/rules/dev-machine-no-local-gpu-inference.mdc`).
 
 WSL2 NAT: the API listens inside Ubuntu; `Ensure-Earth2WSLPortProxy.ps1` maps Windows `0.0.0.0:8220` to the current WSL IP so MAS/CREP on the LAN can use `http://192.168.0.249:8220`.
 
@@ -145,22 +158,22 @@ curl http://192.168.0.241:11434/api/tags
 ### Container Won't Start
 
 ```bash
-# Check Docker logs
-ssh gpu01 "docker logs <container_name>"
+# Check Docker logs (use your SSH host alias, e.g. ubiquity-gpu-voice)
+ssh ubiquity-gpu-voice "docker logs <container_name>"
 
 # Check GPU available
-ssh gpu01 "nvidia-smi"
+ssh ubiquity-gpu-voice "nvidia-smi"
 
 # Check Docker GPU runtime
-ssh gpu01 "docker info | grep -i nvidia"
+ssh ubiquity-gpu-voice "docker info | grep -i nvidia"
 ```
 
 ### Out of GPU Memory
 
 ```bash
 # Check what's using memory
-ssh gpu01 "nvidia-smi"
+ssh ubiquity-gpu-voice "nvidia-smi"
 
-# Kill all GPU processes
-ssh gpu01 "sudo nvidia-smi --gpu-reset"
+# Kill all GPU processes (use with care on shared Legions)
+ssh ubiquity-gpu-voice "sudo nvidia-smi --gpu-reset"
 ```

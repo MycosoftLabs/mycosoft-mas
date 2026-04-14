@@ -1,0 +1,23 @@
+# Ensures Legion watchdog scripts are present on main — does NOT hit LAN IPs (GitHub cannot reach 192.168.x.x).
+name: Legion GPU scripts present
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/gpu-node/windows/**"
+      - ".github/workflows/legion-gpu-scripts-validate.yml"
+
+jobs:
+  files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert watchdog scripts exist
+        run: |
+          test -f scripts/gpu-node/windows/Invoke-LegionGPUWatchdog.ps1
+          test -f scripts/gpu-node/windows/Register-LegionGPUWatchdog.ps1
+          test -f scripts/gpu-node/windows/Start-LegionVoice-24x7.ps1
+          test -f scripts/gpu-node/windows/Start-LegionEarth2API-24x7.ps1
+          echo "Legion GPU script layout OK."

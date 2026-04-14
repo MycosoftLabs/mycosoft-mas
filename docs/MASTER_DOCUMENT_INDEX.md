@@ -1,7 +1,7 @@
 # Master Document Index
 
-## Cross-system integration topology — Apr 13, 2026
-- `docs/CROSS_SYSTEM_INTEGRATION_TOPOLOGY_RECONCILIATION_APR13_2026.md` — **Legion 241/249 vs legacy 190**: VM table, env keys, curl verification; keeps [INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md](INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md) aligned with `gpu_node_client.py` and WSL runbooks.
+## Legion GPU watchdog — no local GPU on dev PC (Apr 14, 2026)
+- `docs/LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md` — **4080A Earth-2 / 4080B Voice**: Task Scheduler watchdog on each Legion; dev PC keeps **3010** only; Moshi/PersonaPlex/Earth-2 on **241/249**. Rule: `.cursor/rules/dev-machine-no-local-gpu-inference.mdc`.
 
 ## WSL2 Legion GPU nodes � Earth2 + Voice (Apr 15, 2026)
 - `docs/WSL_LEGION_GPU_NODES_APR15_2026.md` � **WSL2 runbook**: 4080A Earth2 vs 4080B voice; `Invoke-WSLGPUNodeSetup.ps1` + `wsl-gpu-node-setup.sh`; PyTorch CUDA, earth2studio, Moshi/PersonaPlex deps, Ollama, Hugging Face; no bare-metal NVIDIA drivers inside WSL.

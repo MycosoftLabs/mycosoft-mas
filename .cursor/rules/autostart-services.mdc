@@ -36,16 +36,18 @@ Run these in separate windows so services persist when Cursor closes:
 **CRITICAL:** n8n requires Docker Desktop. If Docker is not running, start it first with `.\scripts\docker-healthcheck.ps1 -StartDocker`.
 **PERIODIC:** Docker Healthcheck (#6) should run every 30 minutes during active sessions to prevent resource waste.
 
-## Optional GPU Voice Services (Start when voice features needed)
+## GPU voice / Earth-2 — NOT on this dev PC (policy)
 
-These services require GPU and should ONLY be started when voice features are actively being used. Kill them when done to free resources.
+**Do not** add Moshi, PersonaPlex bridge, Earth-2 API, or Ollama-for-MYCA to autostart on the developer machine. Cursor/Claude “local dev server” means **website 3010**, not GPU inference on localhost.
 
-| # | Service | Port | Script | Purpose | Check Command | Start Command |
-|---|---------|------|--------|---------|---------------|---------------|
-| 4 | Moshi TTS/STT Server | 8998 | `scripts/start_moshi_server.py` | Native voice TTS/STT with GPU acceleration | `curl -s http://localhost:8998/health` | `python scripts/start_moshi_server.py` |
-| 5 | PersonaPlex Bridge | 8999 | `services/personaplex-local/personaplex_bridge_nvidia.py` | Bridges Moshi to WebSocket for browser | `curl -s http://localhost:8999/health` | `python services/personaplex-local/personaplex_bridge_nvidia.py` |
+Heavy stacks run on the **Legions** (see `dev-machine-no-local-gpu-inference.mdc`):
 
-**WARNING:** GPU services use ~23GB+ VRAM combined. Only start when needed and KILL when done using `scripts/dev-machine-cleanup.ps1 -KillStaleGPU`.
+| Host | Role | Scripts (run **on that Legion**, not on dev PC) |
+|------|------|---------------------------------------------------|
+| 192.168.0.241 | Voice (4080B) | `scripts/gpu-node/windows/Start-LegionVoice-24x7.ps1`, `Register-MycosoftLegionStartup.ps1 -Role Voice`, `Register-LegionGPUWatchdog.ps1 -Role Voice` |
+| 192.168.0.249 | Earth-2 (4080A) | `Start-LegionEarth2API-24x7.ps1`, `Register-MycosoftLegionStartup.ps1 -Role Earth2`, `Register-LegionGPUWatchdog.ps1 -Role Earth2` |
+
+Local website `.env.local` should point `PERSONAPLEX_BRIDGE_URL` at **241:8999**, not localhost, unless you are doing rare on-box CUDA debugging.
 
 ## Optional: Gap Report for Cursor (all chats)
 
