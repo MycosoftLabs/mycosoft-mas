@@ -16,7 +16,8 @@ try:
 
     _env_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
     if os.path.exists(_env_path):
-        load_dotenv(_env_path)
+        # Prefer repo .env over inherited empty vars (e.g. EARTH2_API_URL for remote Legion proxy).
+        load_dotenv(_env_path, override=True)
 except ImportError:
     pass
 

@@ -82,8 +82,11 @@ class Earth2StudioService:
         # Memory integration (Feb 5, 2026)
         self._earth2_memory = None
 
-        # Ensure output directory exists
-        Path(self.output_path).mkdir(parents=True, exist_ok=True)
+        # Ensure output directory exists (MAS VM may not have /opt/earth2 — use remote EARTH2_API_URL instead)
+        try:
+            Path(self.output_path).mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            logger.warning("Earth2 output dir not creatable (%s): %s", self.output_path, e)
 
         logger.info(
             f"Earth2StudioService initialized: GPU={gpu_device}, cache={self.model_cache_path}"
