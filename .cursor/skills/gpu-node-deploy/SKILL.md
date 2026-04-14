@@ -104,8 +104,11 @@ On **Earth-2** host (249), after WSL venv + repo in `/root/mycosoft-mas`:
 
 ```powershell
 .\Start-LegionEarth2API-24x7.ps1
+.\Ensure-Earth2WSLPortProxy.ps1   # after each reboot WSL IP changes; forwards host :8220 into WSL
 .\Register-MycosoftLegionStartup.ps1 -Role Earth2
 ```
+
+WSL2 NAT: the API listens inside Ubuntu; `Ensure-Earth2WSLPortProxy.ps1` maps Windows `0.0.0.0:8220` to the current WSL IP so MAS/CREP on the LAN can use `http://192.168.0.249:8220`.
 
 ## Integration
 
