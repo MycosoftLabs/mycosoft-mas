@@ -23,7 +23,7 @@ def _earth2_remote_url() -> str:
     return os.getenv("EARTH2_API_URL", "").strip()
 
 
-async def _fetch_remote_earth2_health(timeout: float = 12.0) -> Optional[Dict[str, Any]]:
+async def _fetch_remote_earth2_health(timeout: float = 5.0) -> Optional[Dict[str, Any]]:
     """
     When EARTH2_API_URL is set (Legion Earth-2 API or other remote), proxy health from there.
     MAS VM usually does not run Earth2Studio locally; avoids 500s from embedded service init.

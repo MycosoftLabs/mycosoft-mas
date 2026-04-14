@@ -37,4 +37,10 @@ _, o, e = c.exec_command(
 )
 print("=== curl 249:8220/health from MAS ===")
 print(o.read().decode("utf-8", "replace") + e.read().decode("utf-8", "replace"))
+_, o, e = c.exec_command(
+    "curl -sS -m 20 http://127.0.0.1:8001/api/earth2/status 2>&1",
+    timeout=35,
+)
+print("=== GET localhost:8001/api/earth2/status ===")
+print(o.read().decode("utf-8", "replace") + e.read().decode("utf-8", "replace"))
 c.close()
