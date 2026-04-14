@@ -298,6 +298,14 @@ Master spreadsheet projection from Supabase; n8n triggers after ingest.
 | `/ws/scientific/data` | WS | Scientific experiment telemetry |
 | `/ws/system/health` | WS | Infrastructure/system health |
 
+### Earth-2 API (`/api/earth2/*`) – Apr 13, 2026
+
+**Router:** `mycosoft_mas/core/routers/earth2_api.py` — upstream Earth-2 stack on **192.168.0.249:8220** via `EARTH2_API_URL`. Website proxies `GET /api/earth2` → `GET /api/earth2/status`.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/earth2/status` | GET | Earth-2 service health, GPU, loaded models (specialist command; not passive worldstate) |
+
 ### Scientific API (`/api/scientific/*`) – Feb 28, 2026
 
 | Endpoint | Method | Description |

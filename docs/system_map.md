@@ -1,5 +1,16 @@
 # Mycosoft MAS System Map
 
+## Edge GPU Legions (Apr 2026)
+
+Inference is **not** on MAS VM **192.168.0.188**. Use two UniFi-LAN Legions:
+
+| Host | IP | Role |
+|------|-----|------|
+| Voice Legion | 192.168.0.241 | PersonaPlex bridge 8999, Moshi 8998, Ollama 11434 (`GPU_VOICE_IP`) |
+| Earth-2 Legion | 192.168.0.249 | Earth-2 / earth2studio API 8220 (`GPU_EARTH2_IP`, `EARTH2_API_URL`) |
+
+Legacy single GPU **192.168.0.190** is obsolete in current runbooks. See `docs/CROSS_SYSTEM_INTEGRATION_TOPOLOGY_RECONCILIATION_APR13_2026.md`.
+
 ## System Architecture Overview
 
 ```mermaid

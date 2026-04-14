@@ -26,7 +26,8 @@ When Claude Code, Claude Cowork, or Cursor needs to run commands on VMs, upload/
 - `sandbox` → 192.168.0.187  
 - `mas` → 192.168.0.188  
 - `mindex` → 192.168.0.189  
-- `gpu` → 192.168.0.190  
+- `gpu` → 192.168.0.241 (Voice Legion; legacy 190 deprecated)  
+- `gpu-earth2` → 192.168.0.249 (Earth-2 Legion; add to MCP `VM_HOSTS` if missing)  
 - `myca` → 192.168.0.191  
 
 ## Cursor Fallback

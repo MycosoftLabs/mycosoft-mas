@@ -107,7 +107,7 @@ Use the right agent for the right task. All agents live in `.cursor/agents/`.
 | `infrastructure-ops` | VM management, Docker containers, SSH, NAS, Proxmox |
 | `process-manager` | GPU cleanup, port conflicts, zombie processes, autostart |
 | `terminal-watcher` | **Read terminals for errors, diagnostics, debugging** — use when any agent runs dev server (hot reload), tests, build, or deploy; reads terminals folder, detects failures, suggests fixes |
-| `gpu-node-ops` | GPU node (gpu01/192.168.0.190) deployment, PersonaPlex/Earth2 containers, nvidia-smi, offload from dev machine |
+| `gpu-node-ops` | GPU Legions (voice **192.168.0.241**, Earth-2 **192.168.0.249**), PersonaPlex/Earth2 containers, nvidia-smi, offload from dev machine |
 | `backup-ops` | Cursor chat backup, Proxmox snapshots, DB backups |
 
 ### Token / Efficiency

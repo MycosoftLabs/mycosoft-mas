@@ -8,14 +8,15 @@ alwaysApply: true
 
 ## VM layout (canonical)
 
-**Sandbox, MAS, and MINDEX each have their own VM; the GPU node is separate (190).**
+**Sandbox, MAS, and MINDEX each have their own VM; GPU workloads use two Legions (241 voice, 249 Earth-2). Legacy 190 may still appear in old docs.**
 
 | VM | IP | Role | Key ports |
 |----|-----|------|-----------|
 | **Sandbox** | 192.168.0.187 | Website (Docker), MycoBrain host, optional services | Website 3000, MycoBrain 8003, Mycorrhizae 8002? |
-| **MAS** | 192.168.0.188 | Multi-Agent System, orchestrator | **8001** (orchestrator), n8n 5678, Ollama 11434 |
+| **MAS** | 192.168.0.188 | Multi-Agent System, orchestrator | **8001** (orchestrator), n8n 5678 |
 | **MINDEX** | 192.168.0.189 | Database + vector store | Postgres 5432, Redis 6379, Qdrant 6333, **MINDEX API 8000** |
-| **GPU node** | 192.168.0.190 | GPU workloads (voice, Earth2, inference) | TBD |
+| **Voice Legion** | 192.168.0.241 | PersonaPlex bridge, Moshi, Ollama/Nemotron | Bridge **8999**, Moshi **8998**, Ollama **11434** |
+| **Earth-2 Legion** | 192.168.0.249 | earth2studio / Earth-2 API (often WSL + host portproxy) | Earth-2 **8220** |
 | **MYCA** | 192.168.0.191 | MYCA AI Secretary, n8n, platform connectors | n8n 5678, FastAPI 8000, Caddy 443, signal-cli 8089, Node Daemon WS 9000 |
 
 - **MAS Orchestrator** is a systemd service on MAS VM (188); always on. Health: `http://192.168.0.188:8001/health`.
@@ -35,7 +36,7 @@ alwaysApply: true
 
 ## VM-to-VM connectivity
 
-All VMs are on 192.168.0.x (187 Sandbox, 188 MAS, 189 MINDEX, 190 GPU node). They call each other by IP, e.g.:
+All VMs are on 192.168.0.x (187 Sandbox, 188 MAS, 189 MINDEX; Legions 241/249 for GPU). They call each other by IP, e.g.:
 - Sandbox (187) → MAS `http://192.168.0.188:8001`, MINDEX `http://192.168.0.189:8000`
 - MAS (188) → MINDEX `http://192.168.0.189:8000`, Sandbox website `http://192.168.0.187:3000`
 - MINDEX (189) → MAS `http://192.168.0.188:8001`, Sandbox `http://192.168.0.187:3000`

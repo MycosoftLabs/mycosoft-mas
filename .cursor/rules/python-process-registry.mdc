@@ -26,7 +26,7 @@ These run in the background and should be restarted if found down. Managed by `s
 
 ## 2. VM SERVICES (always-on, run on VMs not local)
 
-MAS has its own VM (188), Sandbox (187), MINDEX (189), GPU node (190). Do NOT start these locally.
+MAS has its own VM (188), Sandbox (187), MINDEX (189). GPU workloads run on **Legions** (241 voice, 249 Earth-2), not on dev PC. Legacy reference to GPU **190** is deprecated. Do NOT start VM services locally.
 
 | Service | VM | Port | Script/Entry | Notes |
 |---------|-----|------|-------------|-------|
@@ -38,8 +38,9 @@ MAS has its own VM (188), Sandbox (187), MINDEX (189), GPU node (190). Do NOT st
 | PostgreSQL | 189 | 5432 | Docker container | MINDEX VM: main database |
 | Redis | 189 | 6379 | Docker container | MINDEX VM: cache |
 | Qdrant | 189 | 6333 | Docker container | MINDEX VM: vector DB |
-| Ollama | 188 | 11434 | Docker container | MAS VM: LLM service |
-| GPU workloads | 190 | TBD | TBD | GPU node: voice, Earth2, inference (when moved) |
+| Ollama (optional / legacy) | 188 | 11434 | Docker container | MAS VM; Nemotron may target **241:11434** via env instead |
+| Voice GPU (Moshi, bridge, Ollama) | 241 | 8998, 8999, 11434 | Legion | Primary GPU for PersonaPlex + Nemotron when `GPU_VOICE_IP` set |
+| Earth-2 GPU | 249 | 8220 | Legion/WSL | `EARTH2_API_URL`; re-run WSL portproxy after reboot |
 
 ## 3. GPU SERVICES (resource-heavy, start ONLY when needed)
 

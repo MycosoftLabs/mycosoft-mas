@@ -11,6 +11,10 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (Apr 13, 2026)
+
+- **Cross-system integration topology** — Canonical split Legions (**192.168.0.241** voice, **192.168.0.249** Earth-2) documented; legacy **192.168.0.190** deprecated in runbooks. Doc: `docs/CROSS_SYSTEM_INTEGRATION_TOPOLOGY_RECONCILIATION_APR13_2026.md`. `docs/INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md` updated. LAN health script: `scripts/verify_cross_system_health.ps1`.
+
 ## Recent Updates (Mar 19, 2026)
 
 - **OpenViking Edge Memory Integration** — Bidirectional bridge between MAS 6-layer memory and OpenViking context databases on Jetson Orin edge devices:

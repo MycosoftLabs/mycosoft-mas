@@ -21,7 +21,7 @@ Each row is an **integration surface**. Columns: owning repo, env vars, health U
 | **NatureOS / SignalR** | WEBSITE, NatureOS | `NATUREOS_API_URL`, SignalR hub URL | — | Live-map and AI Studio use real SignalR; no stub endpoints | [SUPERAPP_ARCHITECTURE_AND_UNIFICATION_FEB19_2026.md](SUPERAPP_ARCHITECTURE_AND_UNIFICATION_FEB19_2026.md) |
 | **CREP command** | MAS, WEBSITE | — | CREP dashboard loads | Commands flow MAS→WebSocket→CREP; schema matches contract; smoke: flyTo, showLayer per contract | [CREP_COMMAND_CONTRACT_MAR13_2026.md](CREP_COMMAND_CONTRACT_MAR13_2026.md) |
 | **Device / MycoBrain** | MAS, WEBSITE | `MYCOBRAIN_*`, `MAS_REGISTRY_URL` | `http://localhost:8003/health` | Device Manager shows real devices; heartbeat→MAS; no mock device list | [CREP_SYSTEM_INTEGRATION_AUDIT_MAR11_2026.md](CREP_SYSTEM_INTEGRATION_AUDIT_MAR11_2026.md) |
-| **Voice stack** | MAS, WEBSITE | `VOICE_PROVIDER`, PersonaPlex URLs | `http://localhost:8999/health` | speak→MAS→audio path works; bridge wired to real provider | [VOICE_TEST_QUICK_START_FEB18_2026.md](VOICE_TEST_QUICK_START_FEB18_2026.md) |
+| **Voice stack** | MAS, WEBSITE | `VOICE_PROVIDER`, `PERSONAPLEX_BRIDGE_URL`, `NEXT_PUBLIC_PERSONAPLEX_BRIDGE_URL`, `OLLAMA_BASE_URL` / `GPU_VOICE_IP` (MAS) | LAN: `http://192.168.0.241:8999/health`; local dev on Legion: `http://localhost:8999/health` | speak→MAS→audio path works; bridge wired to real provider | [VOICE_TEST_QUICK_START_FEB18_2026.md](VOICE_TEST_QUICK_START_FEB18_2026.md) |
 | **n8n** | MAS | `N8N_URL` | `http://192.168.0.188:5678/healthz` | Workflows trigger MAS/MINDEX; sync local+cloud per n8n-management | [.cursor/rules/n8n-management.mdc](../.cursor/rules/n8n-management.mdc) |
 | **Scientific / FCI** | WEBSITE | — | `/api/bio/fci`, `/api/fci/devices` | useFCI and useFCIDevices fetch real APIs; empty state on failure; no mock device/session fallback | [no-mock-data.mdc](../.cursor/rules/no-mock-data.mdc) |
 
@@ -37,7 +37,7 @@ Each row is an **integration surface**. Columns: owning repo, env vars, health U
 | **Devices** | HTTP heartbeat (30s poll) | MycoBrain→MAS registry; no push spine |
 | **n8n** | Webhooks (inbound) | Not push; workflows triggered by HTTP |
 
-**GPU placement:** Voice (Moshi/PersonaPlex) and Earth2 run on **GPU node 192.168.0.190** in production; locally for dev. See [python-process-registry.mdc](../.cursor/rules/python-process-registry.mdc) port table. Bridge 8999, Moshi 8998; kill after testing to free VRAM.
+**GPU placement (split Legions, Apr 2026):** Voice (Moshi/PersonaPlex bridge, Ollama/Nemotron) runs on **192.168.0.241** (`GPU_VOICE_IP`). Earth-2 API (WSL, portproxy host **8220**) runs on **192.168.0.249** (`GPU_EARTH2_IP`, `EARTH2_API_URL`). Legacy single-node **192.168.0.190** is deprecated for new runbooks unless explicitly still in use. See [WSL_LEGION_GPU_NODES_APR15_2026.md](WSL_LEGION_GPU_NODES_APR15_2026.md), [.cursor/skills/gpu-node-deploy/SKILL.md](../.cursor/skills/gpu-node-deploy/SKILL.md), `mycosoft_mas/integrations/gpu_node_client.py` defaults, and [python-process-registry.mdc](../.cursor/rules/python-process-registry.mdc). Bridge **8999**, Moshi **8998**, Earth-2 **8220**.
 
 ---
 
@@ -48,4 +48,5 @@ Each row is an **integration surface**. Columns: owning repo, env vars, health U
 | Sandbox | 192.168.0.187 | Website 3000, MycoBrain 8003 |
 | MAS | 192.168.0.188 | Orchestrator 8001, n8n 5678, Ollama 11434 |
 | MINDEX | 192.168.0.189 | API 8000, Postgres 5432, Redis 6379, Qdrant 6333 |
-| GPU node | 192.168.0.190 | Voice, Earth2, inference |
+| Voice Legion (PersonaPlex / Moshi / Ollama) | 192.168.0.241 | Bridge 8999, Moshi 8998, Ollama 11434 |
+| Earth-2 Legion (earth2studio / API) | 192.168.0.249 | Earth-2 HTTP **8220** (WSL; re-run portproxy after WSL IP change) |
