@@ -19,12 +19,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _earth2_remote_url() -> str:
+    return os.getenv("EARTH2_API_URL", "").strip()
+
+
 async def _fetch_remote_earth2_health(timeout: float = 12.0) -> Optional[Dict[str, Any]]:
     """
     When EARTH2_API_URL is set (Legion Earth-2 API or other remote), proxy health from there.
     MAS VM usually does not run Earth2Studio locally; avoids 500s from embedded service init.
     """
-    base = os.getenv("EARTH2_API_URL", "").strip()
+    base = _earth2_remote_url()
     if not base:
         return None
     url = f"{base.rstrip('/')}/health"
@@ -171,6 +175,21 @@ async def health_check() -> Dict[str, Any]:
             "remote_models_loaded": models_n,
             "remote_health": remote,
         }
+    if _earth2_remote_url():
+        base = _earth2_remote_url().rstrip("/")
+        return {
+            "status": "degraded",
+            "service": "earth2",
+            "source": "remote_api_unreachable",
+            "earth2_api_url": base,
+            "available": False,
+            "models_available": False,
+            "gpu_device": "remote",
+            "active_runs": 0,
+            "loaded_models": [],
+            "hint": "MAS could not reach EARTH2_API_URL (firewall on Legion 249, API down, or routing). "
+            "On the Earth-2 host run scripts/gpu-node/windows/Ensure-Earth2LANFirewall.ps1 (elevated) and Ensure-Earth2WSLPortProxy.ps1.",
+        }
     try:
         from mycosoft_mas.earth2 import get_earth2_service
 
@@ -215,6 +234,21 @@ async def get_status() -> Dict[str, Any]:
             "remote_models_loaded": models_n,
             "active_runs": 0,
             "remote_health": remote,
+        }
+    if _earth2_remote_url():
+        base = _earth2_remote_url().rstrip("/")
+        return {
+            "service": "earth2_remote",
+            "source": "remote_api_unreachable",
+            "earth2_api_url": base,
+            "available": False,
+            "gpu_device": "remote",
+            "model_cache_path": None,
+            "output_path": None,
+            "loaded_models": [],
+            "active_runs": 0,
+            "error": "Could not GET /health from EARTH2_API_URL (timeout, connection refused, or TLS error).",
+            "hint": "Open TCP 8220 from LAN on the Earth-2 Legion; see Ensure-Earth2LANFirewall.ps1.",
         }
     try:
         from mycosoft_mas.earth2 import get_earth2_service
