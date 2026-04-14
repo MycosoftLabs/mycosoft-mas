@@ -50,9 +50,12 @@ if ($env:MYCOSOFT_EARTH2_PYTHON) { $WslPython = $env:MYCOSOFT_EARTH2_PYTHON }
 if ($env:MYCOSOFT_EARTH2_REPO) { $WslRepoRoot = $env:MYCOSOFT_EARTH2_REPO }
 
 $logWsl = "$WslRepoRoot/earth2-api-nohup.log".Replace('\', '/')
-# Use venv python directly (avoids flaky `source` over ssh/cmd quoting).
-$bashLine = "export EARTH2_API_HOST=0.0.0.0; export EARTH2_API_PORT=$ApiPort; cd $WslRepoRoot && nohup $WslPython scripts/earth2_api_server.py >> $logWsl 2>&1 &"
+$daemonSh = "$WslRepoRoot/scripts/gpu-node/wsl/run-earth2-api-daemon.sh".Replace('\', '/')
+# Detach from PowerShell: spawn WSL in a new process (nohup inside WSL was unreliable via bash -lc from Win32).
+$bashLine = "chmod +x `"$daemonSh`" 2>/dev/null; export EARTH2_API_HOST=0.0.0.0; export EARTH2_API_PORT=$ApiPort; export MYCOSOFT_EARTH2_REPO=$WslRepoRoot; export MYCOSOFT_EARTH2_PYTHON=$WslPython; nohup bash `"$daemonSh`" </dev/null >/dev/null 2>&1 &"
 
-L "Starting Earth2 API in WSL ($WslDistro)..."
-wsl -d $WslDistro -u root -- bash -lc $bashLine
-L "Launched. Tail log in WSL: $logWsl  API: http://<this-host-LAN-IP>:${ApiPort}/docs"
+L "Starting Earth2 API in WSL ($WslDistro) detached..."
+$psi = Start-Process -FilePath "wsl.exe" -ArgumentList @(
+    "-d", $WslDistro, "-u", "root", "--", "bash", "-lc", $bashLine
+) -WindowStyle Hidden -PassThru
+L "WSL launcher PID: $($psi.Id). Tail log in WSL: $logWsl  API: http://<this-host-LAN-IP>:${ApiPort}/docs"
