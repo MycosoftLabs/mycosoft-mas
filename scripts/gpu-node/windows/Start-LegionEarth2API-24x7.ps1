@@ -11,13 +11,13 @@
   Binds EARTH2_API_HOST=0.0.0.0 for LAN access from MAS/CREP (port 8220).
 
   Env overrides (Windows):
-    MYCOSOFT_WSL_DISTRO     default Ubuntu
-    MYCOSOFT_EARTH2_VENV    full path to activate script inside WSL
+    MYCOSOFT_WSL_DISTRO   default Ubuntu
+    MYCOSOFT_EARTH2_PYTHON  venv python inside WSL (default below)
     MYCOSOFT_EARTH2_REPO    repo root inside WSL
 #>
 param(
     [string]$WslDistro = "Ubuntu",
-    [string]$WslVenvActivate = "/root/mycosoft-venvs/mycosoft-earth2-wsl/bin/activate",
+    [string]$WslPython = "/root/mycosoft-venvs/mycosoft-earth2-wsl/bin/python",
     [string]$WslRepoRoot = "/root/mycosoft-mas",
     [int]$ApiPort = 8220,
     [switch]$SkipFirewall
@@ -46,12 +46,12 @@ if (-not $SkipFirewall) {
 }
 
 if ($env:MYCOSOFT_WSL_DISTRO) { $WslDistro = $env:MYCOSOFT_WSL_DISTRO }
-if ($env:MYCOSOFT_EARTH2_VENV) { $WslVenvActivate = $env:MYCOSOFT_EARTH2_VENV }
+if ($env:MYCOSOFT_EARTH2_PYTHON) { $WslPython = $env:MYCOSOFT_EARTH2_PYTHON }
 if ($env:MYCOSOFT_EARTH2_REPO) { $WslRepoRoot = $env:MYCOSOFT_EARTH2_REPO }
 
 $logWsl = "$WslRepoRoot/earth2-api-nohup.log".Replace('\', '/')
-# bash -lc one line: activate, exports, nohup python in background (paths must not contain spaces for this simple form)
-$bashLine = "source $WslVenvActivate && export EARTH2_API_HOST=0.0.0.0 && export EARTH2_API_PORT=$ApiPort && cd $WslRepoRoot && nohup python scripts/earth2_api_server.py >> $logWsl 2>&1 &"
+# Use venv python directly (avoids flaky `source` over ssh/cmd quoting).
+$bashLine = "export EARTH2_API_HOST=0.0.0.0; export EARTH2_API_PORT=$ApiPort; cd $WslRepoRoot && nohup $WslPython scripts/earth2_api_server.py >> $logWsl 2>&1 &"
 
 L "Starting Earth2 API in WSL ($WslDistro)..."
 wsl -d $WslDistro -u root -- bash -lc $bashLine
