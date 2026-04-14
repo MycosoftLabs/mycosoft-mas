@@ -4,8 +4,8 @@ Earth2 Bridge — Weather and climate simulation context.
 Fetches weather predictions and simulation data from Earth2 API.
 Used when MYCA is asked about weather, climate, or simulation.
 
-Earth2 API: typically 8220 (local GPU) or 188:8220 (MAS proxy).
-MAS scientific_equipment_api uses EARTH2_API_URL default http://192.168.0.188:8220.
+Earth2 API: Legion Earth-2 host 192.168.0.249:8220 (set EARTH2_API_URL), or local 8220.
+MAS API routes proxy to EARTH2_API_URL when set (see earth2_api._fetch_remote_earth2_health).
 
 Date: 2026-03-02
 """
@@ -25,7 +25,7 @@ class Earth2Bridge:
     def __init__(self, os_ref):
         self._os = os_ref
         self._session: Optional[aiohttp.ClientSession] = None
-        self._earth2_url = os.getenv("EARTH2_API_URL", "http://192.168.0.188:8220")
+        self._earth2_url = os.getenv("EARTH2_API_URL", "http://192.168.0.249:8220")
         self._mas_url = os.getenv("MAS_API_URL", "http://192.168.0.188:8001")
 
     async def initialize(self):

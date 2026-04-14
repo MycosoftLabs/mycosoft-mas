@@ -43,7 +43,10 @@ async def get_live_simulation_data():
     """
     physics_base = os.getenv("PHYSICSNEMO_API_URL", "http://192.168.0.188:8400")
     physics_path = os.getenv("PHYSICSNEMO_STATUS_ENDPOINT", "/api/physicsnemo/status")
-    earth2_base = os.getenv("EARTH2_API_URL", "http://192.168.0.188:8220")
+    # Live prediction paths are served by MAS (/api/earth2/...), not the raw Legion :8220 API.
+    earth2_base = os.getenv(
+        "EARTH2_LIVE_DATA_BASE", os.getenv("MAS_API_URL", "http://192.168.0.188:8001")
+    )
     earth2_path = os.getenv("EARTH2_PREDICTIONS_ENDPOINT", "/api/earth2/predictions/latest")
 
     physics_url = f"{physics_base.rstrip('/')}{physics_path}"

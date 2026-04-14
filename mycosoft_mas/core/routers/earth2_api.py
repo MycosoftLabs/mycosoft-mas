@@ -6,15 +6,38 @@ FastAPI router for Earth-2 AI weather model endpoints.
 """
 
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
+import httpx
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+async def _fetch_remote_earth2_health(timeout: float = 12.0) -> Optional[Dict[str, Any]]:
+    """
+    When EARTH2_API_URL is set (Legion Earth-2 API or other remote), proxy health from there.
+    MAS VM usually does not run Earth2Studio locally; avoids 500s from embedded service init.
+    """
+    base = os.getenv("EARTH2_API_URL", "").strip()
+    if not base:
+        return None
+    url = f"{base.rstrip('/')}/health"
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            r = await client.get(url)
+            if r.status_code != 200:
+                logger.warning("Remote Earth-2 GET %s returned %s", url, r.status_code)
+                return None
+            return r.json()
+    except Exception as e:
+        logger.warning("Remote Earth-2 health fetch failed: %s", e)
+        return None
 
 
 # ============================================================================
@@ -129,6 +152,25 @@ class RunStatusResponse(BaseModel):
 @router.get("/health")
 async def health_check() -> Dict[str, Any]:
     """Check Earth-2 service health."""
+    remote = await _fetch_remote_earth2_health()
+    if remote is not None:
+        gpu_ok = bool(remote.get("gpu", True))
+        st = str(remote.get("status", "")).lower()
+        overall = "healthy" if st == "healthy" and gpu_ok else "degraded"
+        models_n = int(remote.get("models_loaded", 0) or 0)
+        return {
+            "status": overall,
+            "service": "earth2",
+            "source": "remote_api",
+            "earth2_api_url": os.getenv("EARTH2_API_URL", "").strip().rstrip("/"),
+            "available": gpu_ok,
+            "models_available": gpu_ok and models_n > 0,
+            "gpu_device": "remote",
+            "active_runs": 0,
+            "loaded_models": [],
+            "remote_models_loaded": models_n,
+            "remote_health": remote,
+        }
     try:
         from mycosoft_mas.earth2 import get_earth2_service
 
@@ -137,6 +179,7 @@ async def health_check() -> Dict[str, Any]:
         return {
             "status": "healthy",
             "service": "earth2",
+            "source": "local_service",
             "available": status["available"],
             "models_available": status["available"],
             "gpu_device": status["gpu_device"],
@@ -155,10 +198,32 @@ async def health_check() -> Dict[str, Any]:
 @router.get("/status")
 async def get_status() -> Dict[str, Any]:
     """Get detailed Earth-2 service status."""
-    from mycosoft_mas.earth2 import get_earth2_service
+    remote = await _fetch_remote_earth2_health()
+    if remote is not None:
+        base = os.getenv("EARTH2_API_URL", "").strip().rstrip("/")
+        models_n = int(remote.get("models_loaded", 0) or 0)
+        gpu_ok = bool(remote.get("gpu", True))
+        return {
+            "service": "earth2_remote",
+            "source": "remote_api",
+            "earth2_api_url": base,
+            "available": gpu_ok,
+            "gpu_device": "remote",
+            "model_cache_path": None,
+            "output_path": None,
+            "loaded_models": [],
+            "remote_models_loaded": models_n,
+            "active_runs": 0,
+            "remote_health": remote,
+        }
+    try:
+        from mycosoft_mas.earth2 import get_earth2_service
 
-    service = get_earth2_service()
-    return await service.get_status()
+        service = get_earth2_service()
+        return await service.get_status()
+    except Exception as e:
+        logger.exception("Earth-2 status failed")
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
 
 @router.get("/models")
