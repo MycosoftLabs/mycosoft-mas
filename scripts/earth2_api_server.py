@@ -14,7 +14,7 @@ os.environ.setdefault("UVICORN_LOOP", "asyncio")
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Callable
 from contextlib import asynccontextmanager
 
 # FastAPI
@@ -112,36 +112,45 @@ AVAILABLE_MODELS = {
     "fcn": {
         "name": "FourCastNet",
         "description": "NVIDIA's Fourier Neural Operator for weather forecasting",
-        "class": "FCN",
-        "module": "earth2studio.models.px",
         "max_lead_time": 240,
         "variables": ["t2m", "u10m", "v10m", "msl", "z500", "t850"],
     },
     "pangu": {
-        "name": "Pangu-Weather",
-        "description": "Huawei's 3D transformer for global weather prediction",
-        "class": "Pangu",
-        "module": "earth2studio.models.px",
+        "name": "Pangu-Weather (6h)",
+        "description": "Huawei Pangu — 6-hour ONNX checkpoint via earth2studio.models.px.Pangu6",
         "max_lead_time": 168,
         "variables": ["t2m", "u10m", "v10m", "msl", "z500", "t850", "q700"],
     },
     "graphcast": {
-        "name": "GraphCast",
-        "description": "DeepMind's GNN-based weather model",
-        "class": "GraphCast",
-        "module": "earth2studio.models.px",
+        "name": "GraphCast Small",
+        "description": "GraphCast (small checkpoint) via earth2studio.models.px.GraphCastSmall",
         "max_lead_time": 240,
         "variables": ["t2m", "u10m", "v10m", "msl", "z500", "t850"],
     },
     "sfno": {
         "name": "SFNO",
-        "description": "Spherical Fourier Neural Operator",
-        "class": "SFNO",
-        "module": "earth2studio.models.px",
+        "description": "Spherical Fourier Neural Operator (Modulus Makani checkpoint)",
         "max_lead_time": 168,
         "variables": ["t2m", "u10m", "v10m", "msl"],
     },
 }
+
+
+def _load_prognostic_model(model_name: str) -> Any:
+    """Load px prognostic models using Earth2Studio's load_model(load_default_package()) APIs."""
+    from earth2studio.models.px import FCN, GraphCastSmall, Pangu6, SFNO
+
+    device = os.environ.get("EARTH2_MODEL_DEVICE", "cuda:0")
+
+    loaders: Dict[str, Callable[[], Any]] = {
+        "fcn": lambda: FCN.load_model(FCN.load_default_package()),
+        "pangu": lambda: Pangu6.load_model(Pangu6.load_default_package()),
+        "graphcast": lambda: GraphCastSmall.load_model(GraphCastSmall.load_default_package()),
+        "sfno": lambda: SFNO.load_model(SFNO.load_default_package(), device=device),
+    }
+    if model_name not in loaders:
+        raise ValueError(f"Unknown model key: {model_name}")
+    return loaders[model_name]()
 
 # ============================================================================
 # FastAPI App
@@ -258,14 +267,10 @@ async def load_model(model_name: str):
         return {"status": "already_loaded", "model": model_name}
     
     try:
-        info = AVAILABLE_MODELS[model_name]
-        module = __import__(info["module"], fromlist=[info["class"]])
-        model_class = getattr(module, info["class"])
-        
         logger.info(f"Loading model: {model_name}")
-        # Run in a worker thread so nest_asyncio / Earth2Studio does not see uvicorn's event loop.
+        # Worker thread: Earth2Studio load_model must not run on uvicorn's asyncio loop (nest_asyncio vs uvloop).
         def _load_sync() -> Any:
-            return model_class.load()
+            return _load_prognostic_model(model_name)
 
         model = await asyncio.to_thread(_load_sync)
         state.loaded_models[model_name] = model

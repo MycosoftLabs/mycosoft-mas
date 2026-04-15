@@ -15,7 +15,7 @@ export EARTH2_API_PORT=8220
 REPO=/root/mycosoft-mas
 if [ ! -d "$REPO" ]; then REPO=$HOME/mycosoft-mas; fi
 cd "$REPO"
-git fetch origin
+git fetch -q origin
 git reset --hard origin/main
 pkill -f earth2_api_server.py 2>/dev/null || true
 fuser -k 8220/tcp 2>/dev/null || true
