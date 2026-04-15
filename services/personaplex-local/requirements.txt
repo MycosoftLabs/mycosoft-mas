@@ -1,6 +1,9 @@
 # PersonaPlex Local Server Requirements - January 28, 2026
 torch>=2.1.0
 torchaudio>=2.1.0
+einops>=0.7.0
+sphn>=0.2.0
+sentencepiece>=0.2.0
 transformers>=4.36.0
 accelerate>=0.25.0
 websockets>=12.0
