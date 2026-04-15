@@ -249,6 +249,20 @@ async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depen
     if device_id in serial_connections:
         ser = serial_connections[device_id]
         if ser.is_open:
+            # Keep devices[] in sync without blocking serial I/O here (async worker must stay responsive)
+            if device_id not in devices:
+                devices[device_id] = {
+                    "device_id": device_id,
+                    "port": port,
+                    "status": "connected",
+                    "connected_at": datetime.now().isoformat(),
+                    "info": {
+                        "firmware": "unknown",
+                        "board": "MycoBrain ESP32-S3",
+                        "note": "Registry resynced from open serial handle",
+                    },
+                    "protocol": "MDP v1",
+                }
             return {"status": "already_connected", "device_id": device_id, "port": port}
         del serial_connections[device_id]
     
@@ -543,6 +557,8 @@ async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port
                 "protocol": device.get("protocol", "MDP v1"),
                 "port_name": device.get("port", ""),
                 "service_version": "2.2.0",
+                # All MDP serial ids on this process (same host:port in MAS); used for multi-board gateways
+                "mdp_device_ids_on_host": list(devices.keys()),
             }
         }
         
@@ -589,7 +605,7 @@ async def heartbeat_loop():
                 # Register the service itself as available
                 service_payload = {
                     "device_id": f"mycobrain-service-{host.replace('.', '-')}",
-                    "device_name": f"{DEVICE_NAME} (No Devices)",
+                    "device_name": f"{DEVICE_NAME} · HTTP service (no ESP32 in /devices yet)",
                     "device_role": "gateway",
                     "device_display_name": DEVICE_DISPLAY_NAME,
                     "host": host,
@@ -601,7 +617,11 @@ async def heartbeat_loop():
                     "location": DEVICE_LOCATION,
                     "connection_type": connection_type,
                     "ingestion_source": "serial",
-                    "extra": {"service_version": "2.2.0", "status": "waiting_for_device"}
+                    "extra": {
+                        "service_version": "2.2.0",
+                        "status": "waiting_for_device",
+                        "mdp_device_ids_on_host": [],
+                    }
                 }
                 try:
                     async with httpx.AsyncClient(timeout=10.0) as client:

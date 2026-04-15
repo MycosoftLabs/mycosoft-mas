@@ -20,6 +20,85 @@ from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
 
 logger = logging.getLogger("DeviceRegistry")
 
+
+def _mycobrain_service_forward_headers() -> Dict[str, str]:
+    """Optional API key when the MycoBrain HTTP service requires X-API-Key (e.g. Jetson gateway)."""
+    key = os.getenv("MYCOBRAIN_SERVICE_FORWARD_API_KEY") or os.getenv("MYCOBRAIN_API_KEY")
+    if key:
+        return {"X-API-Key": key}
+    return {}
+
+
+async def _resolve_mycobrain_mdp_http_id(
+    registry_device_id: str,
+    device: Dict[str, Any],
+    base_url: str,
+    client: httpx.AsyncClient,
+) -> str:
+    """
+    Registry device_id may be a gateway-only heartbeat (mycobrain-service-*) while the
+    MycoBrain HTTP API paths use mycobrain-<PORT> for serial MDP devices. Resolve the path id.
+    """
+    extra = device.get("extra") or {}
+    explicit = extra.get("mdp_device_id") or extra.get("primary_serial_device_id")
+    if explicit:
+        return str(explicit)
+
+    board = (device.get("board_type") or "").lower()
+    is_service_gateway = board == "service" or registry_device_id.startswith("mycobrain-service-")
+    if not is_service_gateway:
+        return registry_device_id
+
+    snap = extra.get("mdp_device_ids_on_host")
+    if isinstance(snap, list) and len(snap) == 1:
+        return str(snap[0])
+
+    h = _mycobrain_service_forward_headers()
+    try:
+        r = await client.get(f"{base_url}/devices", headers=h)
+        if r.status_code != 200:
+            logger.warning(
+                "GET /devices returned %s for gateway %s",
+                r.status_code,
+                registry_device_id,
+            )
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"Gateway {registry_device_id} could not list serial devices (HTTP {r.status_code}). "
+                    "Connect an ESP32 on this host or select the mycobrain-<PORT> registry entry."
+                ),
+            )
+        data = r.json()
+        devs = data.get("devices") or []
+        if not devs:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"Gateway {registry_device_id} has no serial MDP device connected. "
+                    "Plug in the MycoBrain or wait for auto-connect; use the mycobrain-<PORT> row for commands."
+                ),
+            )
+        if len(devs) == 1:
+            return devs[0].get("device_id") or registry_device_id
+        for d in devs:
+            did = (d.get("device_id") or "").lower()
+            if any(
+                x in did
+                for x in ("com", "ttyusb", "ttyacm", "cu.usb", "wchusb", "serial")
+            ):
+                return d.get("device_id") or registry_device_id
+        return devs[0].get("device_id") or registry_device_id
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning("MDP path resolve failed for %s: %s", registry_device_id, e)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Could not resolve MDP device on gateway {registry_device_id}: {e}",
+        ) from e
+
+
 router = APIRouter(prefix="/api/devices", tags=["device-registry"])
 
 # In-memory device registry (Redis can be added later for persistence)
@@ -504,17 +583,21 @@ async def send_device_command(
     else:
         base_url = f"http://{host}:{port}"
 
+    h_forward = _mycobrain_service_forward_headers()
+
     # Forward command to device
     try:
         async with httpx.AsyncClient(timeout=cmd.timeout) as client:
+            path_id = await _resolve_mycobrain_mdp_http_id(device_id, device, base_url, client)
             response = await client.post(
-                f"{base_url}/devices/{device_id}/command",
+                f"{base_url}/devices/{path_id}/command",
                 json={
                     "command": {
                         "cmd": cmd.command,
                         **cmd.params,
                     }
                 },
+                headers=h_forward,
             )
 
             if response.status_code != 200:
@@ -531,17 +614,21 @@ async def send_device_command(
                     "command": cmd.command,
                     "params": cmd.params,
                     "connection_type": device.get("connection_type"),
+                    "mdp_path_id": path_id,
                 },
             )
 
             return {
                 "status": "ok",
                 "device_id": device_id,
+                "mdp_path_id": path_id,
                 "command": cmd.command,
                 "response": response.json(),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
+    except HTTPException:
+        raise
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail=f"Command timeout for device {device_id}")
     except httpx.ConnectError as e:
@@ -581,9 +668,15 @@ async def get_device_telemetry(device_id: str):
     else:
         base_url = f"http://{host}:{port}"
 
+    h_forward = _mycobrain_service_forward_headers()
+
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(f"{base_url}/devices/{device_id}/telemetry")
+            path_id = await _resolve_mycobrain_mdp_http_id(device_id, device, base_url, client)
+            response = await client.get(
+                f"{base_url}/devices/{path_id}/telemetry",
+                headers=h_forward,
+            )
 
             if response.status_code != 200:
                 raise HTTPException(
@@ -591,8 +684,13 @@ async def get_device_telemetry(device_id: str):
                     detail=f"Device returned error: {response.text}",
                 )
 
-            return response.json()
+            body = response.json()
+            if isinstance(body, dict):
+                body["mdp_path_id"] = path_id
+            return body
 
+    except HTTPException:
+        raise
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail=f"Telemetry timeout for device {device_id}")
     except httpx.ConnectError as e:

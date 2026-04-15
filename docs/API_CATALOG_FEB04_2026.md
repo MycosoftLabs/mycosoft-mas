@@ -454,8 +454,8 @@ This API provides heartbeat-based registration and management for remote MycoBra
 | `/api/devices/{device_id}` | GET | Get specific device info |
 | `/api/devices/{device_id}` | DELETE | Unregister device from registry |
 | `/api/devices/{device_id}/fci-summary` | POST | Store FCI summary in device extra (bridge from Mycorrhizae/FCI) |
-| `/api/devices/{device_id}/command` | POST | Forward command to remote device via HTTP |
-| `/api/devices/{device_id}/telemetry` | GET | Fetch telemetry from remote device |
+| `/api/devices/{device_id}/command` | POST | Forward command to MycoBrain HTTP service; **gateway resolve** (Apr 15, 2026): if registry id is `mycobrain-service-*` or `board_type=service`, MAS resolves MDP path id via `extra.mdp_device_ids_on_host`, `extra.mdp_device_id`, or `GET http://host:port/devices` on the gateway. Response includes `mdp_path_id`. Optional env on MAS: `MYCOBRAIN_SERVICE_FORWARD_API_KEY` / `MYCOBRAIN_API_KEY` for `X-API-Key` to Jetson-secured services. |
+| `/api/devices/{device_id}/telemetry` | GET | Fetch telemetry from remote device (same MDP path resolution as command) |
 | `/api/devices/health` | GET | Device registry health check |
 
 **Router**: `mycosoft_mas/core/routers/device_registry_api.py`

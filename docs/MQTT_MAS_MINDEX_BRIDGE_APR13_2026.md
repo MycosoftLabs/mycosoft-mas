@@ -21,6 +21,10 @@ Subscribe to the LAN MQTT broker (default `192.168.0.196:1883`), receive Jetson 
 
 Set `MQTT_BRIDGE_HEARTBEAT_ON_TELEMETRY=0` to disable implicit heartbeat on `telemetry` messages.
 
+### MAS `POST /api/devices/{id}/command` vs gateway-only heartbeats (Apr 15, 2026)
+
+If the registry still has a **`mycobrain-service-*`** row (HTTP service waiting for USB), MAS **resolves** the real MDP id (`mycobrain-COM7`, etc.) via `GET http://{host}:{port}/devices` on that gateway or via heartbeat `extra.mdp_device_ids_on_host` / `extra.mdp_device_id`. Jetson gateways that require API keys: set **`MYCOBRAIN_SERVICE_FORWARD_API_KEY`** (or **`MYCOBRAIN_API_KEY`**) on the **MAS** orchestrator host so forwarded calls include `X-API-Key`.
+
 ## Environment variables
 
 | Variable | Default | Description |
