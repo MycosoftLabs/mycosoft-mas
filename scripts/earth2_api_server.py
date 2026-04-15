@@ -7,9 +7,15 @@ This allows the Sandbox VM (192.168.0.187) to call GPU-accelerated inference rem
 
 import os
 import sys
+from pathlib import Path
 
 # Prefer before other imports: some stacks default to uvloop; Earth2Studio uses nest_asyncio.
 os.environ.setdefault("UVICORN_LOOP", "asyncio")
+
+# Repo root so `mycosoft_mas.earth2.open_meteo_crep_grid` imports when run from scripts/
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 import asyncio
 import logging
@@ -18,7 +24,7 @@ from typing import Optional, List, Dict, Any, Callable
 from contextlib import asynccontextmanager
 
 # FastAPI
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import uvicorn
@@ -319,6 +325,66 @@ async def run_inference(request: InferenceRequest, background_tasks: BackgroundT
         status="queued",
         forecast_id=forecast_id,
         message=f"Inference queued. Model: {AVAILABLE_MODELS[model_name]['name']}, Lead time: {request.lead_time}h",
+    )
+
+
+@app.get("/layers/grid")
+async def layers_grid(
+    variable: str = Query("t2m"),
+    hours: int = Query(0, ge=0, le=240),
+    north: float = Query(85.0),
+    south: float = Query(-85.0),
+    east: float = Query(180.0),
+    west: float = Query(-180.0),
+    resolution: float = Query(0.5),
+):
+    """
+    CREP scalar grid: Open-Meteo operational forecast (same pipeline as MAS fallback).
+    GPU models expose load/status elsewhere; map values are real forecast data from Open-Meteo.
+    """
+    from mycosoft_mas.earth2.open_meteo_crep_grid import fetch_scalar_grid_async
+
+    extra = {
+        "earth2_api_server": True,
+        "loaded_models": list(state.loaded_models.keys()),
+        "gpu_available": state.gpu_available,
+    }
+    return await fetch_scalar_grid_async(
+        variable=variable,
+        hours=hours,
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        resolution=resolution,
+        extra_meta=extra,
+    )
+
+
+@app.get("/layers/wind")
+async def layers_wind(
+    hours: int = Query(0, ge=0, le=240),
+    north: float = Query(85.0),
+    south: float = Query(-85.0),
+    east: float = Query(180.0),
+    west: float = Query(-180.0),
+    resolution: float = Query(0.5),
+):
+    from mycosoft_mas.earth2.open_meteo_crep_grid import fetch_wind_grids_async
+
+    extra = {
+        "earth2_api_server": True,
+        "loaded_models": list(state.loaded_models.keys()),
+        "gpu_available": state.gpu_available,
+    }
+    return await fetch_wind_grids_async(
+        hours=hours,
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        resolution=resolution,
+        extra_meta=extra,
     )
 
 

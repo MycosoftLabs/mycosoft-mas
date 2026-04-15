@@ -44,6 +44,42 @@ async def _fetch_remote_earth2_health(timeout: float = 5.0) -> Optional[Dict[str
         return None
 
 
+async def _fetch_remote_earth2_layers_subpath(
+    subpath: str,
+    params: Dict[str, Any],
+    timeout: float = 120.0,
+) -> Optional[Dict[str, Any]]:
+    """Proxy CREP layer rasters to Legion Earth-2 API (e.g. layers/grid, layers/wind)."""
+    base = _earth2_remote_url()
+    if not base:
+        return None
+    url = f"{base.rstrip('/')}/{subpath.lstrip('/')}"
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            r = await client.get(url, params=params)
+            if r.status_code != 200:
+                logger.warning("Remote Earth-2 GET %s returned %s", url, r.status_code)
+                return None
+            return r.json()
+    except Exception as e:
+        logger.warning("Remote Earth-2 layers proxy failed (%s): %s", url, e)
+        return None
+
+
+def _scalar_grid_payload_ok(data: Optional[Dict[str, Any]]) -> bool:
+    if not data or not isinstance(data.get("grid"), list):
+        return False
+    g = data["grid"]
+    return len(g) > 0 and isinstance(g[0], list)
+
+
+def _wind_payload_ok(data: Optional[Dict[str, Any]]) -> bool:
+    if not data:
+        return False
+    u, v = data.get("u"), data.get("v")
+    return isinstance(u, list) and len(u) > 0 and isinstance(v, list) and len(v) > 0
+
+
 # ============================================================================
 # Request/Response Models
 # ============================================================================
@@ -656,6 +692,90 @@ async def list_earth2_alerts() -> Dict[str, Any]:
         "earth2_remote_configured": bool(_earth2_remote_url()),
         "message": "No active alerts in queue. Connect n8n Earth-2 workflows to populate.",
     }
+
+
+@router.get("/layers/grid")
+async def earth2_layers_grid(
+    variable: str = Query("t2m"),
+    hours: int = Query(0, ge=0, le=240),
+    north: float = Query(85.0),
+    south: float = Query(-85.0),
+    east: float = Query(180.0),
+    west: float = Query(-180.0),
+    resolution: float = Query(0.5),
+) -> Dict[str, Any]:
+    """
+    Scalar weather grid for CREP map overlays.
+    Proxies to EARTH2_API_URL when set; otherwise uses Open-Meteo operational forecast (real API data).
+    """
+    params: Dict[str, Any] = {
+        "variable": variable,
+        "hours": hours,
+        "north": north,
+        "south": south,
+        "east": east,
+        "west": west,
+        "resolution": resolution,
+    }
+    remote = await _fetch_remote_earth2_layers_subpath("layers/grid", params)
+    if _scalar_grid_payload_ok(remote):
+        return remote  # type: ignore[return-value]
+
+    from mycosoft_mas.earth2.open_meteo_crep_grid import fetch_scalar_grid_async
+
+    try:
+        return await fetch_scalar_grid_async(
+            variable=variable,
+            hours=hours,
+            north=north,
+            south=south,
+            east=east,
+            west=west,
+            resolution=resolution,
+            extra_meta={"mas_route": "layers/grid", "fallback": "open_meteo_forecast"},
+        )
+    except Exception as e:
+        logger.exception("earth2_layers_grid failed: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+
+
+@router.get("/layers/wind")
+async def earth2_layers_wind(
+    hours: int = Query(0, ge=0, le=240),
+    north: float = Query(85.0),
+    south: float = Query(-85.0),
+    east: float = Query(180.0),
+    west: float = Query(-180.0),
+    resolution: float = Query(0.5),
+) -> Dict[str, Any]:
+    """Wind u/v grids for CREP. Proxy to remote Earth-2 API or Open-Meteo forecast."""
+    params: Dict[str, Any] = {
+        "hours": hours,
+        "north": north,
+        "south": south,
+        "east": east,
+        "west": west,
+        "resolution": resolution,
+    }
+    remote = await _fetch_remote_earth2_layers_subpath("layers/wind", params)
+    if _wind_payload_ok(remote):
+        return remote  # type: ignore[return-value]
+
+    from mycosoft_mas.earth2.open_meteo_crep_grid import fetch_wind_grids_async
+
+    try:
+        return await fetch_wind_grids_async(
+            hours=hours,
+            north=north,
+            south=south,
+            east=east,
+            west=west,
+            resolution=resolution,
+            extra_meta={"mas_route": "layers/wind", "fallback": "open_meteo_forecast"},
+        )
+    except Exception as e:
+        logger.exception("earth2_layers_wind failed: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
 
 @router.get("/layers")
