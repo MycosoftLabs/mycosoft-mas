@@ -18,6 +18,7 @@
 | **MINDEX** | 192.168.0.189 | Database + vector store | Postgres 5432, Redis 6379, Qdrant 6333/6334, **MINDEX API 8000** (if deployed) |
 | **GPU node** | 192.168.0.190 | GPU workloads (voice, Earth2, inference) | TBD |
 | **MYCA** | 192.168.0.191 | MYCA AI Secretary, n8n workflows, omnichannel connectors | n8n 5678, FastAPI 8000, Caddy 443, signal-cli 8089, Node Daemon WS 9000 |
+| **MycoDAO Pulse** (optional) | 192.168.0.198 | New VM on Proxmox **192.168.0.90** only (not 202). Ubuntu **24.04**; default **4 vCPU / 8 GB / 64 GB** for site + Pulse. Calls MAS **188** and MINDEX **189** over HTTP | Next.js (e.g. 3000) — `docs/MYCODAO_PULSE_PROXMOX_VM_AUTOMATION_APR14_2026.md` |
 
 **MAS Orchestrator** is a systemd service on the MAS VM; it stays on and is the main entry for agents/voice/scientific APIs.
 

@@ -332,6 +332,9 @@
 ## Proxmox and CREP Restore (Mar 5, 2026)
 - `docs/PROXMOX_CREP_RESTORE_MAR05_2026.md` ? **Proxmox fix and CREP restore**: `fix_proxmox_firewall.sh`, `start_crep_collectors.sh`, Proxmox check in autostart-healthcheck, CREP in MAS `/health`. Use for VM 188 CREP deployment.
 
+## MycoDAO Pulse VM (Apr 14, 2026)
+- `docs/MYCODAO_PULSE_PROXMOX_VM_AUTOMATION_APR14_2026.md` ? **MycoDAO Pulse Proxmox automation**: `scripts/provision_mycodao_pulse_vm.py`; Proxmox **192.168.0.90** / **pve3** only (not 202). **Ubuntu 24.04 LTS** cloud image; default **4 vCPU / 8 GB RAM / 64 GB** disk for site + Pulse; guest IP **192.168.0.198**; MAS **188** + MINDEX **189** via HTTP; `.credentials.local` only.
+
 ## MYCA Living Employee Full Integration Phase 0 (Mar 2, 2026)
 - `docs/MYCA_LIVING_EMPLOYEE_FULL_INTEGRATION_PHASE0_COMPLETE_MAR02_2026.md` ? **Phase 0 complete**: Memory injection, MAS memory API, MINDEX KG, CREP, Earth2, MycoBrain bridges; context assembly pipeline in llm_brain. MYCA OS now grounded in all platform systems before computer-use.
 
