@@ -644,6 +644,20 @@ async def get_run_output(run_id: str) -> Dict[str, Any]:
 # ============================================================================
 
 
+@router.get("/alerts")
+async def list_earth2_alerts() -> Dict[str, Any]:
+    """
+    Active Earth-2 / workflow alerts for CREP (n8n workflows 48–50 when wired).
+    Returns an empty list when no alert feed is configured — never synthetic mock alerts.
+    """
+    return {
+        "alerts": [],
+        "source": "mas",
+        "earth2_remote_configured": bool(_earth2_remote_url()),
+        "message": "No active alerts in queue. Connect n8n Earth-2 workflows to populate.",
+    }
+
+
 @router.get("/layers")
 async def list_layers() -> Dict[str, Any]:
     """List available visualization layers for CREP/Earth Simulator."""
