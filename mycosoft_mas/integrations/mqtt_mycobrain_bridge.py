@@ -9,11 +9,15 @@ Topic layout (prefix configurable, default ``mycobrain``):
 
 Environment (see docs/MQTT_MAS_MINDEX_BRIDGE_APR13_2026.md):
   MQTT_BROKER_HOST, MQTT_BROKER_PORT, MQTT_USERNAME, MQTT_PASSWORD,
-  MQTT_TOPIC_PREFIX, MAS_API_URL, MINDEX_API_URL, MINDEX_INTERNAL_TOKEN
+  MQTT_TOPIC_PREFIX, MAS_API_URL, MINDEX_API_URL,
+  MINDEX_INTERNAL_TOKEN or MINDEX_INTERNAL_SECRET (HMAC; preferred when set)
 """
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
 import json
 import logging
 import os
@@ -29,6 +33,19 @@ import httpx
 logger = logging.getLogger(__name__)
 
 _TOPIC_RE = re.compile(r"^([^/]+)/([^/]+)/(heartbeat|envelope|telemetry)$")
+
+
+def _mindex_hmac_token(service_name: str, secret: str) -> str:
+    """Same algorithm as mindex_api/auth/internal_auth._generate_internal_token."""
+    timestamp = str(int(time.time()))
+    message = f"{service_name}:{timestamp}"
+    signature = hmac.new(
+        secret.encode("utf-8"),
+        message.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    raw = f"{service_name}:{timestamp}:{signature}"
+    return base64.b64encode(raw.encode("utf-8")).decode("utf-8")
 
 
 @dataclass
@@ -120,7 +137,15 @@ class MqttMycoBrainBridge:
         return os.environ.get("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
 
     def _internal_token(self) -> str:
-        return (os.environ.get("MINDEX_INTERNAL_TOKEN") or os.environ.get("MINDEX_INTERNAL_TOKENS", "").split(",")[0] or "").strip()
+        secret = (os.environ.get("MINDEX_INTERNAL_SECRET") or "").strip()
+        if secret:
+            svc = (os.environ.get("MINDEX_INTERNAL_SERVICE_NAME") or "mas-mqtt-bridge").strip()
+            return _mindex_hmac_token(svc, secret)
+        return (
+            os.environ.get("MINDEX_INTERNAL_TOKEN")
+            or os.environ.get("MINDEX_INTERNAL_TOKENS", "").split(",")[0]
+            or ""
+        ).strip()
 
     def post_mas_heartbeat(self, payload: Dict[str, Any]) -> None:
         url = f"{self._mas_url()}/api/devices/heartbeat"

@@ -5,7 +5,7 @@ Deploy MQTT MycoBrain bridge on MAS VM (192.168.0.188).
 - Pulls latest mycosoft-mas on the VM
 - Installs paho-mqtt + httpx (user pip)
 - Writes ~/.config/mqtt-mycobrain-bridge.env (600) with LAN URLs and secrets
-  (MINDEX token read from MINDEX VM /home/mycosoft/mindex/.env; MQTT password = VM password)
+  (MINDEX token from MINDEX VM; MQTT password from env / .credentials.local / _jetson_mqtt.env)
 - Installs and starts systemd: mqtt-mycobrain-bridge
 
 Usage (from MAS repo root, .credentials.local present):
@@ -13,7 +13,7 @@ Usage (from MAS repo root, .credentials.local present):
 """
 from __future__ import annotations
 
-import io
+import json
 import os
 import re
 import shlex
@@ -44,12 +44,32 @@ def load_vm_password() -> str:
     sys.exit(1)
 
 
+def _parse_mqtt_password_from_jetson_env(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        if line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        if k.strip() == "MYCOBRAIN_MQTT_PASSWORD":
+            got = v.strip().strip('"').strip("'")
+            return got or None
+    return None
+
+
 def load_mqtt_broker_password(fallback: str) -> str:
-    """LAN broker auth — see docs/MQTT_LAN_WSS_DEPLOYMENT_AND_JETSON_HANDOFF_APR08_2026.md."""
+    """LAN broker auth — see docs/MQTT_LAN_WSS_DEPLOYMENT_AND_JETSON_HANDOFF_APR08_2026.md.
+
+    Order: process env → repo _jetson_mqtt.env (Jetson/LAN canonical) → .credentials.local → VM SSH fallback.
+    """
     for key in ("MQTT_BROKER_PASSWORD", "MYCOBRAIN_MQTT_PASSWORD"):
         v = os.environ.get(key, "").strip()
         if v:
             return v
+    jetson_env = REPO_ROOT / "_jetson_mqtt.env"
+    from_jetson = _parse_mqtt_password_from_jetson_env(jetson_env)
+    if from_jetson:
+        return from_jetson
     creds = REPO_ROOT / ".credentials.local"
     if creds.exists():
         for line in creds.read_text().splitlines():
@@ -61,19 +81,45 @@ def load_mqtt_broker_password(fallback: str) -> str:
     return fallback
 
 
-def first_internal_token(env_text: str) -> str | None:
-    for line in env_text.splitlines():
-        line = line.strip()
+def first_internal_secret(env_text: str) -> str | None:
+    for raw in env_text.splitlines():
+        line = raw.strip()
         if line.startswith("#") or "=" not in line:
             continue
+        if line.startswith("export "):
+            line = line[7:].strip()
         k, v = line.split("=", 1)
-        if k.strip() == "MINDEX_INTERNAL_TOKENS":
-            # comma-separated or single
+        if k.strip() == "MINDEX_INTERNAL_SECRET":
+            val = v.strip().strip('"').strip("'")
+            return val or None
+    return None
+
+
+def first_internal_token(env_text: str) -> str | None:
+    """Match MINDEX pydantic parsing: comma list or JSON array (see mindex_api/config.py)."""
+    for raw in env_text.splitlines():
+        line = raw.strip()
+        if line.startswith("#") or "=" not in line:
+            continue
+        if line.startswith("export "):
+            line = line[7:].strip()
+        k, v = line.split("=", 1)
+        ks = k.strip()
+        if ks == "MINDEX_INTERNAL_TOKENS":
             part = v.strip().strip('"').strip("'")
             if not part:
-                return None
-            return part.split(",")[0].strip()
-        if k.strip() == "MINDEX_INTERNAL_TOKEN":
+                continue
+            if part.startswith("["):
+                try:
+                    parsed = json.loads(part)
+                    if isinstance(parsed, list) and parsed:
+                        return str(parsed[0]).strip()
+                except json.JSONDecodeError:
+                    pass
+            if "," in part:
+                return part.split(",")[0].strip()
+            return part
+        if ks == "MINDEX_INTERNAL_TOKEN":
             return v.strip().strip('"').strip("'") or None
     return None
 
@@ -96,17 +142,40 @@ def main() -> None:
     mqtt_password = load_mqtt_broker_password(password)
     user = os.environ.get("VM_SSH_USER", "mycosoft")
 
-    # --- MINDEX: read internal token ---
+    # --- MINDEX auth: prefer HMAC secret, else PSK (same sources as orchestrator) ---
     mindex = paramiko.SSHClient()
     mindex.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     mindex.connect(MINDEX_HOST, username=user, password=password, timeout=30)
     env_body = sftp_read_text(mindex, MINDEX_ENV_PATH)
     mindex.close()
-    token = first_internal_token(env_body or "")
-    if not token:
+    mas_probe = paramiko.SSHClient()
+    mas_probe.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    mas_probe.connect(MAS_HOST, username=user, password=password, timeout=30)
+    mas_env = sftp_read_text(mas_probe, f"{MAS_REPO}/.env")
+    mas_probe.close()
+    local_txt = ""
+    for name in (".credentials.local", ".env"):
+        p = REPO_ROOT / name
+        if p.exists():
+            local_txt += p.read_text(encoding="utf-8", errors="replace") + "\n"
+    buckets = [env_body or "", mas_env or "", local_txt]
+    secret: str | None = None
+    for body in buckets:
+        if body:
+            secret = first_internal_secret(body)
+            if secret:
+                break
+    token: str | None = None
+    if not secret:
+        for body in buckets:
+            if body:
+                token = first_internal_token(body)
+                if token:
+                    break
+    if not secret and not token:
         print(
-            "WARN: Could not read MINDEX_INTERNAL_TOKENS from MINDEX VM; "
-            "bridge will log 'MINDEX_INTERNAL_TOKEN unset' until you fix ~/.config/mqtt-mycobrain-bridge.env",
+            "WARN: No MINDEX_INTERNAL_SECRET or MINDEX_INTERNAL_TOKEN in MINDEX/MAS .env or local creds; "
+            "MINDEX telemetry will 401 until ~/.config/mqtt-mycobrain-bridge.env is fixed",
             file=sys.stderr,
         )
 
@@ -122,7 +191,9 @@ def main() -> None:
         f"MYCOBRAIN_MQTT_PASSWORD={mqtt_password}",
         "LOG_LEVEL=INFO",
     ]
-    if token:
+    if secret:
+        env_lines.append(f"MINDEX_INTERNAL_SECRET={secret}")
+    elif token:
         env_lines.append(f"MINDEX_INTERNAL_TOKEN={token}")
 
     env_content = "\n".join(env_lines) + "\n"
