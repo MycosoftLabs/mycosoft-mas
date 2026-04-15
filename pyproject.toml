@@ -58,6 +58,7 @@ cbor2 = "^5.6.0"
 pycdlib = "^1.14.0"
 stripe = "^11.0.0"
 typer = "^0.15.0"
+paho-mqtt = "^2.1.0"
 # Agent Payments deps — install separately via:
 #   uv add ampersend-sdk==0.0.13 google-adk crewai x402
 #   npm install -g @ampersend_ai/ampersend-sdk@0.0.14  (CLI)

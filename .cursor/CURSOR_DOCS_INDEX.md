@@ -68,6 +68,12 @@
 |-----|---------|
 | `docs/MINDEX_JETSON_NATUREOS_FUSARIUM_PIPELINE_COMPLETE_APR08_2026.md` | **Pipeline completion**: MINDEX fanout to NatureOS + Fusarium mirror, live-state API for MYCA with NLM outputs, self/world state, fingerprint state, and Merkle roots. |
 
+## MQTT broker → MAS + MINDEX (Apr 13, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MQTT_LAN_WSS_DEPLOYMENT_AND_JETSON_HANDOFF_APR08_2026.md` | **Broker endpoints**: LAN `mqtt://192.168.0.196:1883`, public WSS; Jetson bootstrap script. |
+| `docs/MQTT_MAS_MINDEX_BRIDGE_APR13_2026.md` | **Bridge service**: Subscribe `mycobrain/#` → MAS device heartbeats + MINDEX `/telemetry/envelope`; CREP/device network visibility. |
+
 ## Network Topology and UniFi (Mar 7, 2026)
 | Doc | Purpose |
 |-----|---------|
