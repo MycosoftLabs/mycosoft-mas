@@ -25,6 +25,7 @@ from contextlib import asynccontextmanager
 
 # FastAPI
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import uvicorn
@@ -386,6 +387,43 @@ async def layers_wind(
         resolution=resolution,
         extra_meta=extra,
     )
+
+
+@app.get("/tiles/{variable}/{z}/{x}/{y}")
+async def tiles_weather_raster(
+    variable: str,
+    z: int,
+    x: int,
+    y: int,
+    hours: int = Query(0, ge=0, le=240),
+    model: Optional[str] = Query(None),
+):
+    """
+    CREP MapLibre raster tiles — PNG/Web Mercator, same colormap as CREP heatmap (Open-Meteo forecast).
+    """
+    from mycosoft_mas.earth2.tile_render import render_weather_tile_png
+
+    extra = {
+        "earth2_api_server": True,
+        "loaded_models": list(state.loaded_models.keys()),
+        "gpu_available": state.gpu_available,
+        "model": model,
+    }
+    try:
+        png, hdrs = await render_weather_tile_png(
+            variable=variable,
+            z=z,
+            x=x,
+            y=y,
+            hours=hours,
+            extra_meta=extra,
+        )
+        return Response(content=png, media_type="image/png", headers=hdrs)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("tile render failed: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
 
 @app.get("/gpu/status")

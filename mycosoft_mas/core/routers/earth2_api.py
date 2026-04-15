@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,35 @@ async def _fetch_remote_earth2_layers_subpath(
             return r.json()
     except Exception as e:
         logger.warning("Remote Earth-2 layers proxy failed (%s): %s", url, e)
+        return None
+
+
+async def _fetch_remote_earth2_tile(
+    variable: str,
+    z: int,
+    x: int,
+    y: int,
+    params: Dict[str, Any],
+    timeout: float = 120.0,
+) -> Optional[bytes]:
+    """Proxy PNG tile from Legion `GET /tiles/{variable}/{z}/{x}/{y}` (EARTH2_API_URL)."""
+    base = _earth2_remote_url()
+    if not base:
+        return None
+    url = f"{base.rstrip('/')}/tiles/{variable}/{z}/{x}/{y}"
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            r = await client.get(url, params=params)
+            if r.status_code != 200:
+                logger.warning("Remote Earth-2 tile GET %s returned %s", url, r.status_code)
+                return None
+            ct = (r.headers.get("content-type") or "").lower()
+            if "png" not in ct and r.content[:8] != b"\x89PNG\r\n\x1a\n":
+                logger.warning("Remote Earth-2 tile GET %s: unexpected content-type %s", url, ct)
+                return None
+            return r.content
+    except Exception as e:
+        logger.warning("Remote Earth-2 tile fetch failed (%s): %s", url, e)
         return None
 
 
@@ -775,6 +805,54 @@ async def earth2_layers_wind(
         )
     except Exception as e:
         logger.exception("earth2_layers_wind failed: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+
+
+@router.get("/tiles/{variable}/{z}/{x}/{y}")
+async def earth2_tiles(
+    variable: str,
+    z: int,
+    x: int,
+    y: int,
+    hours: int = Query(0, ge=0, le=240),
+    model: Optional[str] = Query(None),
+) -> Response:
+    """
+    Map tile (PNG) for MapLibre raster sources — Web Mercator, real Open-Meteo forecast data.
+    Proxies to EARTH2_API_URL when set; otherwise renders via `tile_render` on MAS.
+    """
+    params: Dict[str, Any] = {"hours": hours}
+    if model:
+        params["model"] = model
+
+    remote = await _fetch_remote_earth2_tile(variable, z, x, y, params)
+    if remote:
+        return Response(
+            content=remote,
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=120"},
+        )
+
+    from mycosoft_mas.earth2.tile_render import render_weather_tile_png
+
+    try:
+        png, hdrs = await render_weather_tile_png(
+            variable=variable,
+            z=z,
+            x=x,
+            y=y,
+            hours=hours,
+            extra_meta={
+                "mas_route": "tiles",
+                "fallback": "open_meteo_forecast",
+                "model": model,
+            },
+        )
+        return Response(content=png, media_type="image/png", headers=hdrs)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.exception("earth2_tiles failed: %s", e)
         raise HTTPException(status_code=503, detail=str(e)) from e
 
 
