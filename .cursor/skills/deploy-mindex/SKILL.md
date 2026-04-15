@@ -42,15 +42,15 @@ git reset --hard origin/main
 ### Step 3: Stop MINDEX API
 
 ```bash
-docker compose stop mindex-api
-docker compose rm -f mindex-api
+docker compose stop api
+docker compose rm -f api
 ```
 
 ### Step 4: Rebuild and start
 
 ```bash
-docker compose build --no-cache mindex-api
-docker compose up -d mindex-api
+docker compose build --no-cache api
+docker compose up -d api
 ```
 
 ### Step 5: Health check
