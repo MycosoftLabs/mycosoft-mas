@@ -7,6 +7,10 @@ This allows the Sandbox VM (192.168.0.187) to call GPU-accelerated inference rem
 
 import os
 import sys
+
+# Prefer before other imports: some stacks default to uvloop; Earth2Studio uses nest_asyncio.
+os.environ.setdefault("UVICORN_LOOP", "asyncio")
+
 import asyncio
 import logging
 from datetime import datetime, timedelta
@@ -198,6 +202,18 @@ async def health():
     }
 
 
+@app.get("/health/event_loop")
+async def health_event_loop():
+    """Diagnostic: which asyncio loop the ASGI server is running (uvloop breaks nest_asyncio in some Earth2 paths)."""
+    loop = asyncio.get_running_loop()
+    cls = loop.__class__
+    return {
+        "loop_class": cls.__name__,
+        "loop_module": getattr(cls, "__module__", ""),
+        "uvicorn_loop_env": os.environ.get("UVICORN_LOOP", ""),
+    }
+
+
 @app.get("/models", response_model=List[ModelInfoResponse])
 async def list_models():
     """List available models"""
@@ -247,7 +263,11 @@ async def load_model(model_name: str):
         model_class = getattr(module, info["class"])
         
         logger.info(f"Loading model: {model_name}")
-        model = model_class.load()
+        # Run in a worker thread so nest_asyncio / Earth2Studio does not see uvicorn's event loop.
+        def _load_sync() -> Any:
+            return model_class.load()
+
+        model = await asyncio.to_thread(_load_sync)
         state.loaded_models[model_name] = model
         
         return {"status": "loaded", "model": model_name}
@@ -336,9 +356,14 @@ if __name__ == "__main__":
 =====================================================================
 """)
     
+    # asyncio loop: earth2studio / deps may call asyncio.get_event_loop() in ways that break under uvloop.
+    loop = os.environ.get("UVICORN_LOOP", "asyncio")
+    if loop not in ("asyncio", "uvloop", "auto"):
+        loop = "asyncio"
     uvicorn.run(
         app,
         host=host,
         port=port,
         log_level="info",
+        loop=loop,
     )
