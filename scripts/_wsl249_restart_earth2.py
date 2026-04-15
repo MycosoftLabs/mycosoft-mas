@@ -48,8 +48,8 @@ def main() -> None:
     print((o.read() + e.read()).decode("utf-8", errors="replace")[:12000])
 
     _, o2, e2 = c.exec_command(
-        "curl -sS -m 600 -X POST http://127.0.0.1:8220/models/sfno/load",
-        timeout=660,
+        "curl -sS -m 1800 -X POST http://127.0.0.1:8220/models/sfno/load",
+        timeout=1900,
     )
     print("=== POST load ===")
     print((o2.read() + e2.read()).decode("utf-8", errors="replace")[:6000])
