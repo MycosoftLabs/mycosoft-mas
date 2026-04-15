@@ -1,4 +1,4 @@
-"""SSH 249: SFTP bash to Windows, run in WSL as root — install Makani + earth2studio[sfno] in Earth-2 venv."""
+"""SSH 249: install Earth2Studio px optional deps (FCN uses PhysicsNeMo; SFNO uses Makani per pyproject)."""
 from __future__ import annotations
 
 import sys
@@ -8,28 +8,25 @@ import paramiko
 
 KEY = Path.home() / ".ssh" / "id_ed25519"
 
+# See earth2studio pyproject.toml optional-dependencies: fcn, sfno; uv.sources makani git rev.
 SCRIPT = b"""#!/usr/bin/env bash
 set -euo pipefail
 PYS="${MYCOSOFT_EARTH2_PYTHON:-/root/mycosoft-venvs/mycosoft-earth2-wsl/bin/python}"
 PIP="$(dirname "$PYS")/pip"
 test -x "$PYS" || { echo "missing venv python: $PYS"; exit 1; }
-"$PIP" --version
 "$PIP" install -U pip wheel setuptools
-# Pre-install numpy + binary cftime so pip does not backtrack into ancient sdist builds.
-"$PIP" install --prefer-binary numpy 'cftime>=1.6.4'
-# SFNO: Modulus Makani (required by earth2studio.models.px.SFNO)
-"$PIP" install --prefer-binary 'makani[all] @ git+https://github.com/NVIDIA/modulus-makani.git@v0.1.0'
-# Extra deps for SFNO model package
-if "$PIP" show nvidia-earth2studio >/dev/null 2>&1; then
-  "$PIP" install --prefer-binary 'nvidia-earth2studio[sfno]'
-else
-  "$PIP" install --prefer-binary 'earth2studio[sfno]'
-fi
-"$PIP" show earth2studio 2>/dev/null || "$PIP" show nvidia-earth2studio
+"$PIP" install --prefer-binary 'numpy>=1.26' 'cftime>=1.6.4'
+# FCN (FourCastNet / AFNO)
+"$PIP" install --prefer-binary 'nvidia-physicsnemo>=1.0.1'
+# SFNO: Makani from NVIDIA/makani (same rev as earth2studio lockfile)
+"$PIP" install --prefer-binary 'makani @ git+https://github.com/NVIDIA/makani.git@b38fcb2799d7dbc146fa60459f3f9823394a8bf1'
+# Remaining SFNO extras (torch-harmonics etc.); best-effort.
+"$PIP" install --prefer-binary 'pynvml>=12.0.0' 'ruamel.yaml>=0.18.10' 'scipy>=1.10.0' 'torch-harmonics>=0.8.0' || true
+"$PIP" show nvidia-physicsnemo makani earth2studio 2>/dev/null | head -80
 echo OK
 """
 
-WIN_PATH = r"C:/Users/owner2/install-sfno-deps-wsl.sh"
+WIN_PATH = r"C:/Users/owner2/install-earth2-px-extras-wsl.sh"
 
 
 def main() -> None:
@@ -42,12 +39,12 @@ def main() -> None:
         f.write(SCRIPT.replace(b"\r\n", b"\n"))
     sftp.close()
 
-    wsl = "wsl.exe -d Ubuntu -u root -- /bin/bash /mnt/c/Users/owner2/install-sfno-deps-wsl.sh"
+    wsl = "wsl.exe -d Ubuntu -u root -- /bin/bash /mnt/c/Users/owner2/install-earth2-px-extras-wsl.sh"
     _, o, e = c.exec_command(wsl, timeout=2400)
     out = (o.read() + e.read()).decode("utf-8", errors="replace")
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    print(out[-32000:])
+    print(out[-40000:])
     print("exit_status", o.channel.recv_exit_status(), flush=True)
 
     c.close()
