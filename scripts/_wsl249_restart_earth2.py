@@ -47,12 +47,20 @@ def main() -> None:
     print("=== restart ===")
     print((o.read() + e.read()).decode("utf-8", errors="replace")[:12000])
 
+    # FCN uses AFNO/physicsnemo — smoke test without Modulus Makani (SFNO dependency).
     _, o2, e2 = c.exec_command(
+        "curl -sS -m 1800 -X POST http://127.0.0.1:8220/models/fcn/load",
+        timeout=1900,
+    )
+    print("=== POST load (fcn) ===")
+    print((o2.read() + e2.read()).decode("utf-8", errors="replace")[:6000])
+
+    _, o3, e3 = c.exec_command(
         "curl -sS -m 1800 -X POST http://127.0.0.1:8220/models/sfno/load",
         timeout=1900,
     )
-    print("=== POST load ===")
-    print((o2.read() + e2.read()).decode("utf-8", errors="replace")[:6000])
+    print("=== POST load (sfno) ===")
+    print((o3.read() + e3.read()).decode("utf-8", errors="replace")[:6000])
 
     c.close()
 
