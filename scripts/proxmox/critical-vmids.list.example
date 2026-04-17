@@ -1,0 +1,6 @@
+# Copy to Proxmox host: /etc/mycosoft/pve-critical-vmids
+# One Proxmox VMID per line (from `qm list` — not the guest 192.168.0.x address).
+# 101
+# 102
+# 103
+# 104

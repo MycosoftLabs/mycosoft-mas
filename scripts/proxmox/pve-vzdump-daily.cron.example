@@ -1,0 +1,9 @@
+# Example root crontab snippet — daily snapshot-mode backups of production guests.
+# 1) Replace VMIDS with your real IDs from `qm list` on the PVE host.
+# 2) Replace BACKUPSTOR with a storage ID that accepts backups (Datacenter → Storage).
+# 3) Install: sudo crontab -e   (paste the line without leading #)
+#
+# VMIDs are NOT LAN IPs. Example mapping (your cluster may differ):
+#   Sandbox 192.168.0.187, MAS 188, MINDEX 189, MYCA 191 → note each qm list ID.
+#
+# 0 3 * * * /usr/sbin/vzdump VMID_SANDBOX VMID_MAS VMID_MINDEX VMID_MYCA --mode snapshot --compress zstd --storage BACKUPSTOR --quiet 1 --mailto root@localhost

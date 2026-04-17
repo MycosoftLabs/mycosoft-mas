@@ -1,5 +1,11 @@
 # Master Document Index
 
+## Proxmox — always-on VMs + daily backups (Apr 17, 2026)
+- `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` — **Runbook**: `onboot`, optional 5‑min ensure script, boot order, daily backup job / `vzdump`, HA caveats (single vs cluster), UPS; scripts under `scripts/proxmox/`.
+
+## Fluid Search — Full AI interface milestone 1 (Apr 17, 2026)
+- `../WEBSITE/website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md` — **Website**: context contract, unified POST, MAS `search_context`, intention merge, MYCA threading, single narrative policy, tests path.
+
 ## MYCA Harness 2026 — Nemotron / PersonaPlex / MINDEX search-in-LLM / NLM (Apr 17, 2026)
 - `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` — **MAS**: completion summary, env vars, verification, follow-ups (harness execution endpoint on MINDEX).
 - `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` — **MAS**: integration patch notes, `HARNESS_API_ENABLED`, safety notes.
