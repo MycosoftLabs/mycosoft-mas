@@ -1,5 +1,11 @@
 # Master Document Index
 
+## MYCA readiness execution plan (Apr 17, 2026)
+- `docs/MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md` — **Execution plan**: concrete P0/P1/P2 workstreams with exact files, acceptance criteria, mandatory tests, rollout, and rollback rules to make audit items real.
+
+## MAS full index + unfinished gap audit (Apr 17, 2026)
+- `docs/MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md` — **MAS**: subsystem index snapshot (routers/harness/myca_os/mindex/nlm/avani/integrations), priority unfinished-stub audit for MYCA+MINDEX+AVANI+MYCOBRAIN+website, and immediate execution checklist.
+
 ## Proxmox — always-on VMs + daily backups (Apr 17, 2026)
 - `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` — **Runbook**: `onboot`, optional 5‑min ensure script, boot order, daily backup job / `vzdump`, HA caveats (single vs cluster), UPS; scripts under `scripts/proxmox/`.
 

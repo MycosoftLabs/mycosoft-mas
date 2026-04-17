@@ -190,6 +190,8 @@
 
 | Doc | Purpose |
 |-----|---------|
+| `docs/MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md` | **MYCA readiness execution plan**: concrete engineering plan to convert gap audit into implementation (workstreams, file targets, tests, rollout/rollback). |
+| `docs/MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md` | **MAS full index + gap audit**: subsystem inventory and unfinished-vital scan for MYCA/MINDEX/AVANI/MYCOBRAIN/website with priority execution checklist. |
 | `docs/MASTER_DOCUMENT_INDEX.md` | Full TOC; dated sections, all key docs |
 | `docs/SYSTEM_REGISTRY_FEB04_2026.md` | Systems, APIs, agents, services, devices |
 | `docs/API_CATALOG_FEB04_2026.md` | API catalog |
