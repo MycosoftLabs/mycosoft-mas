@@ -1,5 +1,11 @@
 # Master Document Index
 
+## MYCA readiness execution plan (Apr 17, 2026)
+- `docs/MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md` — **Execution plan**: concrete P0/P1/P2 workstreams with exact files, acceptance criteria, mandatory tests, rollout, and rollback rules to make audit items real.
+
+## MAS full index + unfinished gap audit (Apr 17, 2026)
+- `docs/MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md` — **MAS**: subsystem index snapshot (routers/harness/myca_os/mindex/nlm/avani/integrations), priority unfinished-stub audit for MYCA+MINDEX+AVANI+MYCOBRAIN+website, and immediate execution checklist.
+
 ## MYCA Harness 2026 — Nemotron / PersonaPlex / MINDEX search-in-LLM / NLM (Apr 17, 2026)
 - `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` — **MAS**: completion summary, env vars, verification, follow-ups (harness execution endpoint on MINDEX).
 - `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` — **MAS**: integration patch notes, `HARNESS_API_ENABLED`, safety notes.
