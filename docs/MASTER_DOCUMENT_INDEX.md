@@ -1,5 +1,14 @@
 # Master Document Index
 
+## MYCA Harness 2026 — Nemotron / PersonaPlex / MINDEX search-in-LLM / NLM (Apr 17, 2026)
+- `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` — **MAS**: completion summary, env vars, verification, follow-ups (harness execution endpoint on MINDEX).
+- `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` — **MAS**: integration patch notes, `HARNESS_API_ENABLED`, safety notes.
+- `mycosoft_mas/harness/README.md` — quick use, static answers, MINDEX grounding, turbo-quant, tests.
+
+## MycoDAO Pulse — Supabase · MINDEX · MYCA (Apr 14, 2026)
+- `docs/MYCODAO_AGENT_CLUSTER_MYCA_ORCHESTRATION_APR14_2026.md` — **MAS**: MycoDAO agent cluster under MYCA; orchestrator task contracts; MycoDAOAgent evolution; registry and n8n notes.
+- `../../MYCODAO/docs/MYCODAO_SUPABASE_MINDEX_MAS_ORCHESTRATION_FULL_PLAN_APR14_2026.md` — **MYCODAO**: full plan — Supabase `mycodao` schema, MINDEX mirrors/ETL, Pulse integration phases, security and wave timeline.
+
 ## Legion GPU watchdog — no local GPU on dev PC (Apr 14, 2026)
 - `docs/LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md` — **4080A Earth-2 / 4080B Voice**: Task Scheduler watchdog on each Legion; dev PC keeps **3010** only; Moshi/PersonaPlex/Earth-2 on **241/249**. Rule: `.cursor/rules/dev-machine-no-local-gpu-inference.mdc`.
 
@@ -331,9 +340,6 @@
 
 ## Proxmox and CREP Restore (Mar 5, 2026)
 - `docs/PROXMOX_CREP_RESTORE_MAR05_2026.md` ? **Proxmox fix and CREP restore**: `fix_proxmox_firewall.sh`, `start_crep_collectors.sh`, Proxmox check in autostart-healthcheck, CREP in MAS `/health`. Use for VM 188 CREP deployment.
-
-## MycoDAO Pulse VM (Apr 14, 2026)
-- `docs/MYCODAO_PULSE_PROXMOX_VM_AUTOMATION_APR14_2026.md` ? **MycoDAO Pulse Proxmox automation**: `scripts/provision_mycodao_pulse_vm.py`; Proxmox **192.168.0.90** / **pve3** only (not 202). **Ubuntu 24.04 LTS** cloud image; default **4 vCPU / 8 GB RAM / 64 GB** disk for site + Pulse; guest IP **192.168.0.198**; MAS **188** + MINDEX **189** via HTTP; `.credentials.local` only.
 
 ## MYCA Living Employee Full Integration Phase 0 (Mar 2, 2026)
 - `docs/MYCA_LIVING_EMPLOYEE_FULL_INTEGRATION_PHASE0_COMPLETE_MAR02_2026.md` ? **Phase 0 complete**: Memory injection, MAS memory API, MINDEX KG, CREP, Earth2, MycoBrain bridges; context assembly pipeline in llm_brain. MYCA OS now grounded in all platform systems before computer-use.

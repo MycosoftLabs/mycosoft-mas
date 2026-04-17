@@ -11,6 +11,10 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (Apr 17, 2026)
+
+- **MYCA Harness 2026** — Monorepo package `mycosoft_mas.harness` (Nemotron via backend selection + env overrides, PersonaPlex HTTP ASR/TTS, YAML static answers, **MINDEX unified search-in-LLM** for grounded text, turbo-quant placeholder, intention brain SQLite under `data/harness/`, harness MINDEX HTTP client + `record_execution`, NLM interface with lazy imports). Optional API: set `HARNESS_API_ENABLED=1` to mount `GET/POST /api/harness/*` from `myca_main.py`. Docs: `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md`, `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md`. Tests: `tests/test_harness_smoke.py`.
+
 ## Recent Updates (Apr 14, 2026)
 
 - **Legion GPU watchdog + dev-PC policy** — Heavy inference (Moshi, PersonaPlex bridge, Earth-2 API) must not run on the developer workstation for routine Cursor/website work; use Legions **241/249**. Watchdog: `scripts/gpu-node/windows/Invoke-LegionGPUWatchdog.ps1`, `Register-LegionGPUWatchdog.ps1`. Doc: `docs/LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md`. Rule: `.cursor/rules/dev-machine-no-local-gpu-inference.mdc`.

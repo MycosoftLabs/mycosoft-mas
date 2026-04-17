@@ -1,0 +1,5 @@
+# Example static answers — copy to a writable path and set HARNESS_STATIC_ANSWERS_PATH
+myca safety:
+  answer: MYCA operates under constitutional constraints and AVANI governance for environmental safety.
+device protocol sporebase:
+  answer: SporeBase devices use MDP v1; see NatureOS documentation for provisioning.

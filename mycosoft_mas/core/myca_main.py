@@ -775,6 +775,17 @@ if OPENVIKING_API_AVAILABLE:
     app.include_router(openviking_router, tags=["openviking", "edge-memory"])
 app.include_router(nlq_router, tags=["nlq"])
 app.include_router(search_orchestrator_router, tags=["search"])
+
+# MYCA Harness — Nemotron / PersonaPlex / MINDEX search-in-LLM / optional NLM (feature-flagged)
+if os.environ.get("HARNESS_API_ENABLED", "").strip().lower() in ("1", "true", "yes"):
+    try:
+        from mycosoft_mas.harness.api import router as harness_api_router
+
+        app.include_router(harness_api_router)
+    except ImportError as e:
+        import logging as _logging
+
+        _logging.getLogger(__name__).warning("HARNESS_API_ENABLED set but harness import failed: %s", e)
 app.include_router(earth_search_router, tags=["earth-search"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
     app.include_router(iot_router, tags=["iot"])

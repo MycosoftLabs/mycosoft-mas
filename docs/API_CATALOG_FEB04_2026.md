@@ -62,6 +62,19 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 |----------|--------|-------------|
 | `/api/search/execute` | POST | Canonical unified search: body `query`, optional `session_id`, `user_id`; returns focus, results.keyword/semantic/specialist, memories, timestamp. Website proxy and NLQ use this. |
 
+### MYCA Harness API (`/api/harness/*`) – Apr 17, 2026
+
+Optional: mount when `HARNESS_API_ENABLED=1` on the MAS orchestrator. Nemotron (via unified backend selection + overrides), PersonaPlex bridge ASR/TTS, YAML static answers, **MINDEX unified search-in-LLM** (no external video APIs), optional NLM, MINDEX execution log (`record_execution` best-effort).
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/harness/health` | GET | Harness component health |
+| `/api/harness/packet` | POST | Run `HarnessPacket` through the harness engine; returns `HarnessResult` |
+
+**Router:** `mycosoft_mas/harness/api.py`
+
+**Env (subset):** `HARNESS_API_ENABLED`, `HARNESS_GROUND_WITH_MINDEX`, `HARNESS_MINDEX_SEARCH_TYPES`, `HARNESS_MINDEX_TIMEOUT`, `MINDEX_API_URL`, `MINDEX_API_KEY`, `PERSONAPLEX_BRIDGE_URL`, `HARNESS_ENABLE_TURBO_QUANT`, `HARNESS_NLM_ENABLED`. See `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md`.
+
 ### C-Suite API (`/api/csuite/*`) – Mar 7, 2026
 
 Heartbeat, reporting, and escalation from executive-assistant VMs (CEO, CFO, CTO, COO) on Proxmox 90.

@@ -68,6 +68,19 @@
 |-----|---------|
 | `docs/MINDEX_JETSON_NATUREOS_FUSARIUM_PIPELINE_COMPLETE_APR08_2026.md` | **Pipeline completion**: MINDEX fanout to NatureOS + Fusarium mirror, live-state API for MYCA with NLM outputs, self/world state, fingerprint state, and Merkle roots. |
 
+## MYCA Harness 2026 (Apr 17, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` | **Complete**: MINDEX search-in-LLM (no external video), env vars, verification. |
+| `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` | **Integration patch**: `mycosoft_mas.harness` wiring notes, `HARNESS_API_ENABLED`. |
+| `mycosoft_mas/harness/README.md` | Quick start, env, static file path, MINDEX grounding, tests. |
+
+## MycoDAO Pulse — Supabase · MINDEX · MYCA (Apr 14, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCODAO_AGENT_CLUSTER_MYCA_ORCHESTRATION_APR14_2026.md` | **MAS**: MycoDAO agent cluster under MYCA; task envelopes; APIs/credentials pattern; registry/n8n checklist. |
+| `../../MYCODAO/docs/MYCODAO_SUPABASE_MINDEX_MAS_ORCHESTRATION_FULL_PLAN_APR14_2026.md` | **MYCODAO**: Supabase `mycodao` schema, MINDEX mirrors/ETL, Pulse phases P0–P3, security, waves. |
+
 ## MQTT broker → MAS + MINDEX (Apr 13, 2026)
 | Doc | Purpose |
 |-----|---------|
