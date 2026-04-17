@@ -11,7 +11,9 @@
 ## Proxmox — production VMs always-on (Apr 17, 2026)
 | Doc | Purpose |
 |-----|---------|
-| `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` | **Runbook**: `onboot`, optional 5‑min ensure script, daily backups, HA caveats; `scripts/proxmox/*.sh`. |
+| `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` | **Runbook + API path**: `apply_production_vm_policy_api.py` (onboot, start, discovery, host crontab); shell scripts; HA caveats. |
+| `scripts/proxmox/apply_production_vm_policy_api.py` | **Execute** (agents): Proxmox API + root ticket + SSH; no user steps. |
+| `.cursor/rules/proxmox-agents-execute-all.mdc` | **Policy**: never delegate PVE to Morgan. |
 
 ## Deep Agents v0.5 Integration (Apr 9, 2026)
 | Doc | Purpose |

@@ -88,16 +88,32 @@ See `scripts/proxmox/pve-vzdump-daily.cron.example` — set real VMIDs and stora
 - **Disk / full ZFS pool / host OOM:** the guest may not start; fix the **node** and **storage** first.  
 - **Intentional** `qm stop` for work: the **ensure** script will start it again; use a maintenance window and remove the ID from the list as above.
 
-## 8. Files in the MAS repo
+## 8. Autonomous agent path (preferred)
+
+Agents run from the dev PC or any machine on the LAN with `.credentials.local` loaded:
+
+```powershell
+cd <MAS-repo>
+# Load .credentials.local into process env (same pattern as deploy scripts)
+Get-Content .credentials.local | ForEach-Object { if ($_ -match '^([^#=]+)=(.*)$') { [Environment]::SetEnvironmentVariable($matches[1].Trim(), $matches[2].Trim(), 'Process') } }
+python scripts/proxmox/apply_production_vm_policy_api.py
+```
+
+**Requires in `.credentials.local`:** `PROXMOX_TOKEN_ID` and `PROXMOX_TOKEN_SECRET` (Datacenter → Permissions → API Tokens on PVE). Optional: `PROXMOX_HOST` or `PROXMOX_HOSTS` (default `192.168.0.202`), `PVE_PRODUCTION_VMIDS` (comma-separated VMIDs if discovery is incomplete), `PROXMOX202_PASSWORD` or `VM_PASSWORD` for root SSH when installing `/etc/crontab` jobs.
+
+The script sets **onboot**, **starts** stopped production guests, discovers VMIDs by guest IP when the QEMU agent is up, and appends **ensure** + **vzdump** crontab lines on the hypervisor when SSH succeeds.
+
+## 9. Files in the MAS repo
 
 | File | Purpose |
 |------|--------|
-| `scripts/proxmox/pve-set-onboot-production.sh` | Set `onboot=1` for listed VMIDs |
-| `scripts/proxmox/pve-ensure-critical-running.sh` | Cron: start if `stopped` |
+| `scripts/proxmox/apply_production_vm_policy_api.py` | **Primary**: API + optional SSH install (agents run this) |
+| `scripts/proxmox/pve-set-onboot-production.sh` | On-host: set `onboot=1` for listed VMIDs |
+| `scripts/proxmox/pve-ensure-critical-running.sh` | On-host cron: start if `stopped` |
 | `scripts/proxmox/pve-vzdump-daily.cron.example` | Example `vzdump` line |
 | `scripts/proxmox/critical-vmids.list.example` | Template for `/etc/mycosoft/pve-critical-vmids` |
 
-## 9. After you apply
+## 10. After you apply
 
 - Reboot the **PVE node** once in a maintenance window and confirm all four (or your set) guests return.  
 - Confirm **Datacenter → Backup** job shows **OK** in **Task log** the next day.

@@ -46,15 +46,27 @@ Standard pattern: `docker stop` -> `docker rm` -> `docker build --no-cache` -> `
 -v /opt/mycosoft/media/website/assets:/app/public/assets:ro
 ```
 
-## Proxmox Snapshots
+## Proxmox — YOU apply policy (never delegate to Morgan)
+
+**Mandatory script:** From MAS repo, load `.credentials.local`, then:
+
+```powershell
+python scripts/proxmox/apply_production_vm_policy_api.py
+```
+
+Uses **API tokens** (`PROXMOX_TOKEN_ID`, `PROXMOX_TOKEN_SECRET`) for `onboot`, start-if-stopped, discovery by guest IP; optionally **SSH root** to PVE to append `/etc/crontab` lines for **vzdump daily** + **ensure-running every 5 min**. Flags: `--api-only` if SSH unavailable.
+
+See `.cursor/rules/proxmox-agents-execute-all.mdc` and `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md`.
+
+## Proxmox Snapshots (target policy)
 
 | Schedule | Frequency | Retention | VMs |
 |----------|-----------|-----------|-----|
-| Daily | 2:00 AM | 7 days | All (187, 188, 189) |
-| Weekly | Sunday 3:00 AM | 4 weeks | All |
-| Monthly | 1st of month | 12 months | All |
+| Daily | 3:00 AM (script default) | 7 (`--maxfiles 7`) | Production VMID set |
+| Weekly | Sunday 3:00 AM | 4 weeks | Optional |
+| Monthly | 1st of month | 12 months | Optional |
 
-Proxmox host manages backups. Access via Proxmox web UI or API.
+After running `apply_production_vm_policy_api.py`, the host **crontab** drives vzdump when SSH install succeeds.
 
 ## NAS Storage
 
