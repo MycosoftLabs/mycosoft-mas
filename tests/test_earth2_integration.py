@@ -278,7 +278,7 @@ class TestEarth2Agents:
 
         assert agent is not None
         assert agent.agent_id == "weather-forecast"
-        assert "atlas_era5" in agent.capabilities
+        assert "atlas_era5" in agent.get_capabilities()
 
     def test_nowcast_agent_creation(self, can_import_agents):
         """Test NowcastAgent creation"""

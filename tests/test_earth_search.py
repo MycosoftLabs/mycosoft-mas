@@ -260,12 +260,14 @@ class TestEarthSearchAPI:
         from mycosoft_mas.core.routers.earth_search_api import router
 
         paths = {r.path for r in router.routes}
-        assert "/query" in paths
-        assert "/domains" in paths
-        assert "/sources" in paths
-        assert "/health" in paths
-        assert "/crep" in paths
-        assert "/ingest" in paths
+        base = router.prefix or ""
+        # Routes may be registered as full paths (prefix + path) depending on FastAPI version
+        assert any(p.endswith("/query") for p in paths) or f"{base}/query" in paths
+        assert any(p.endswith("/domains") for p in paths) or f"{base}/domains" in paths
+        assert any(p.endswith("/sources") for p in paths) or f"{base}/sources" in paths
+        assert any(p.endswith("/health") for p in paths) or f"{base}/health" in paths
+        assert any(p.endswith("/crep") for p in paths) or f"{base}/crep" in paths
+        assert any(p.endswith("/ingest") for p in paths) or f"{base}/ingest" in paths
 
 
 # ── Ingestion Pipeline Tests ─────────────────────────────────────────────────

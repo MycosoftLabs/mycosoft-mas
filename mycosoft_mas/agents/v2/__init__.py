@@ -133,6 +133,13 @@ except Exception as e:
     _log.warning("v2 taxonomy_ingestion_agent unavailable: %s", e)
     TaxonomyIngestionAgent = IngestionTarget = IngestionState = None  # type: ignore[misc, assignment]
 
+try:
+    # Submodule reference so `mycosoft_mas.agents.v2.reciprocal_turing_agent` resolves for tests/patch
+    from . import reciprocal_turing_agent
+except Exception as e:
+    _log.warning("v2 reciprocal_turing_agent unavailable: %s", e)
+    reciprocal_turing_agent = None  # type: ignore[misc, assignment]
+
 
 __all__ = [
     # Base

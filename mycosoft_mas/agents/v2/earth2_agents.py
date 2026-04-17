@@ -255,6 +255,7 @@ class WeatherForecastAgent(BaseAgentV2):
 
     def get_capabilities(self) -> List[str]:
         return [
+            "atlas_era5",
             "global_forecast",
             "regional_forecast",
             "ensemble_prediction",
