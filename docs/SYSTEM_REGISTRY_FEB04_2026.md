@@ -13,7 +13,7 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 
 ## Recent Updates (Apr 17, 2026)
 
-- **MYCA Harness 2026** — Monorepo package `mycosoft_mas.harness` (Nemotron via backend selection + env overrides, PersonaPlex HTTP ASR/TTS, YAML static answers, **MINDEX unified search-in-LLM** for grounded text, turbo-quant placeholder, intention brain SQLite under `data/harness/`, harness MINDEX HTTP client + `record_execution`, NLM interface with lazy imports). Optional API: set `HARNESS_API_ENABLED=1` to mount `GET/POST /api/harness/*` from `myca_main.py`. Docs: `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md`, `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md`. Tests: `tests/test_harness_smoke.py`.
+- **MYCA Harness 2026** — Monorepo package `mycosoft_mas.harness` (Nemotron via backend selection + env overrides, PersonaPlex HTTP ASR/TTS, YAML static answers, **MINDEX unified search-in-LLM** for grounded text, turbo-quant placeholder, intention brain SQLite under `data/harness/`, harness MINDEX HTTP client + `record_execution`, NLM interface with lazy imports). **Default:** `GET/POST /api/harness/*` mounted from `myca_main.py` unless `HARNESS_API_DISABLED=1`. Optional `BRAIN_CHAT_USE_HARNESS` routes `POST /voice/brain/chat` through the harness. Docs: `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md`, `config/harness.env.example`. Tests: `tests/test_harness_smoke.py`, `tests/test_harness_api.py`.
 
 ## Recent Updates (Apr 14, 2026)
 

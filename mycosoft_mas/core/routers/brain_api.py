@@ -13,6 +13,7 @@ Endpoints:
 
 import json
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -46,6 +47,10 @@ class BrainChatRequest(BaseModel):
     history: Optional[List[Dict[str, str]]] = Field(None, description="Conversation history")
     provider: str = Field("auto", description="LLM provider: auto, gemini, claude, openai")
     include_memory_context: bool = Field(True, description="Include recalled memories in response")
+    use_harness: bool | None = Field(
+        None,
+        description="If true, route through MYCA harness (MINDEX search-in-LLM + Nemotron). None = use BRAIN_CHAT_USE_HARNESS env",
+    )
 
 
 class BrainChatResponse(BaseModel):
@@ -98,6 +103,17 @@ def _get_voice_tool_manager():
     return _voice_tool_manager
 
 
+def _harness_chat_enabled(request: BrainChatRequest) -> bool:
+    if request.use_harness is not None:
+        return request.use_harness
+    return os.environ.get("BRAIN_CHAT_USE_HARNESS", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
 def _log_voice_brain_turn(
     session_id: str, conversation_id: str, user_id: str, source: str = "brain"
 ) -> None:
@@ -132,14 +148,42 @@ async def brain_chat(request: BrainChatRequest):
     5. Returns structured response with actions taken
     """
     try:
-        brain = await get_brain()
-
         # Ensure IDs
         session_id = request.session_id or str(uuid4())
         conversation_id = request.conversation_id or str(uuid4())
         _log_voice_brain_turn(
             session_id, conversation_id, request.user_id, source="voice_brain_chat"
         )
+
+        if _harness_chat_enabled(request):
+            from mycosoft_mas.harness.engine import get_engine
+            from mycosoft_mas.harness.models import HarnessPacket
+
+            eng = get_engine()
+            hres = await eng.run(
+                HarnessPacket(
+                    query=request.message,
+                    session_id=session_id,
+                    user_id=request.user_id,
+                    metadata={"source": "brain_chat"},
+                )
+            )
+            return BrainChatResponse(
+                response=hres.text or "",
+                provider="harness",
+                session_id=session_id,
+                conversation_id=conversation_id,
+                memory_context=None,
+                actions_taken=[
+                    {
+                        "type": "harness",
+                        "route": hres.route.value,
+                        "sources": hres.sources,
+                    }
+                ],
+            )
+
+        brain = await get_brain()
 
         tool_manager = _get_voice_tool_manager()
         tools = (

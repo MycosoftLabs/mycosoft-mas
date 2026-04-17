@@ -14,10 +14,12 @@ asyncio.run(engine.run(HarnessPacket(query="Why use MDP v1 on devices?")))
 
 ## HTTP API
 
-Enable with `HARNESS_API_ENABLED=1` on MAS. Then:
+Routes mount **by default**. Disable with `HARNESS_API_DISABLED=1` if needed.
 
 - `GET /api/harness/health`
 - `POST /api/harness/packet` with JSON `HarnessPacket`
+
+**Brain chat:** `POST /voice/brain/chat` with `{ "use_harness": true }` or env `BRAIN_CHAT_USE_HARNESS=1` routes the message through `HarnessEngine` (MINDEX-grounded Nemotron path) instead of the memory-integrated brain.
 
 ## STATIC answers
 
@@ -29,4 +31,4 @@ Copy `static_answers.example.yaml` to a writable path and set `HARNESS_STATIC_AN
 
 ## Tests
 
-`pytest tests/test_harness_smoke.py`
+`pytest tests/test_harness_smoke.py tests/test_harness_api.py`

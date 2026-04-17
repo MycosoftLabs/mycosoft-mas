@@ -80,7 +80,7 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` | **Complete**: MINDEX search-in-LLM (no external video), env vars, verification. |
-| `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` | **Integration patch**: `mycosoft_mas.harness` wiring notes, `HARNESS_API_ENABLED`. |
+| `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` | **Integration patch**: `mycosoft_mas.harness` wiring notes (legacy; see completion doc for default-on API). |
 | `mycosoft_mas/harness/README.md` | Quick start, env, static file path, MINDEX grounding, tests. |
 
 ## MycoDAO Pulse — Supabase · MINDEX · MYCA (Apr 14, 2026)

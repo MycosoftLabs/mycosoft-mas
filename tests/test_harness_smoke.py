@@ -8,7 +8,9 @@ import pytest
 
 from mycosoft_mas.harness.config import HarnessConfig
 from mycosoft_mas.harness.engine import HarnessEngine, set_engine
+from mycosoft_mas.harness.intention_brain import IntentionBrain
 from mycosoft_mas.harness.models import HarnessPacket, RouteType
+from mycosoft_mas.harness.planner import HarnessPlanner
 from mycosoft_mas.harness.router import HarnessRouter
 from mycosoft_mas.harness.static_search import StaticSearch
 from mycosoft_mas.harness.static_system import StaticSystem
@@ -100,6 +102,19 @@ def test_router_nemotron_no_grounding():
     r = HarnessRouter()
     p = HarnessPacket(query="hello", metadata={"no_grounding": True})
     assert r.classify(p) == RouteType.NEMOTRON
+
+
+def test_planner_includes_intention_when_goal_exists(cfg):
+    ib = IntentionBrain(cfg.intention_db_path)
+    gid = ib.add_goal("test harness goal", status="active")
+    planner = HarnessPlanner(ib)
+    plan = planner.plan(
+        HarnessPacket(query="q"),
+        RouteType.MINDEX_GROUNDED,
+    )
+    assert plan.get("intention") is not None
+    assert plan["intention"]["goal_id"] == gid
+    assert "consider_goal:" in "".join(plan["steps"])
 
 
 @pytest.mark.asyncio

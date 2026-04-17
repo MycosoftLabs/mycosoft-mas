@@ -60,11 +60,11 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/search/execute` | POST | Canonical unified search: body `query`, optional `session_id`, `user_id`; returns focus, results.keyword/semantic/specialist, memories, timestamp. Website proxy and NLQ use this. |
+| `/api/search/execute` | POST | Canonical unified search: body `query`, optional `session_id`, `user_id`, optional `search_context` (Fluid Search Apr 17, 2026: `fluid_route` snapshot, `conversation_id`, `recent_queries`, `search_ai_history`, `focused_widget`); returns focus, results.keyword/semantic/specialist, memories, timestamp. Website proxy and NLQ use this. |
 
 ### MYCA Harness API (`/api/harness/*`) – Apr 17, 2026
 
-Optional: mount when `HARNESS_API_ENABLED=1` on the MAS orchestrator. Nemotron (via unified backend selection + overrides), PersonaPlex bridge ASR/TTS, YAML static answers, **MINDEX unified search-in-LLM** (no external video APIs), optional NLM, MINDEX execution log (`record_execution` best-effort).
+Mounted **by default** on MAS unless `HARNESS_API_DISABLED=1` (or legacy `HARNESS_API_ENABLED=false`). Nemotron (via unified backend selection + overrides), PersonaPlex bridge ASR/TTS, YAML static answers, **MINDEX unified search-in-LLM** (no external video APIs), optional NLM, MINDEX execution log (`record_execution` best-effort). Brain: optional `BRAIN_CHAT_USE_HARNESS` / `use_harness` on `POST /voice/brain/chat`.
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -73,7 +73,7 @@ Optional: mount when `HARNESS_API_ENABLED=1` on the MAS orchestrator. Nemotron (
 
 **Router:** `mycosoft_mas/harness/api.py`
 
-**Env (subset):** `HARNESS_API_ENABLED`, `HARNESS_GROUND_WITH_MINDEX`, `HARNESS_MINDEX_SEARCH_TYPES`, `HARNESS_MINDEX_TIMEOUT`, `MINDEX_API_URL`, `MINDEX_API_KEY`, `PERSONAPLEX_BRIDGE_URL`, `HARNESS_ENABLE_TURBO_QUANT`, `HARNESS_NLM_ENABLED`. See `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md`.
+**Env (subset):** `HARNESS_API_DISABLED`, `HARNESS_API_ENABLED` (legacy off), `BRAIN_CHAT_USE_HARNESS`, `HARNESS_GROUND_WITH_MINDEX`, `HARNESS_MINDEX_SEARCH_TYPES`, `HARNESS_MINDEX_TIMEOUT`, `MINDEX_API_URL`, `MINDEX_API_KEY`, `PERSONAPLEX_BRIDGE_URL`, `HARNESS_ENABLE_TURBO_QUANT`, `HARNESS_NLM_ENABLED`. See `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md`, `config/harness.env.example`.
 
 ### C-Suite API (`/api/csuite/*`) – Mar 7, 2026
 
@@ -636,6 +636,8 @@ Central provenance-rich retrieval for MYCA (keyword path via unified search; emb
 | `/api/mindex/telemetry` | GET, POST | MINDEX telemetry proxy + envelope ingest |
 | `/api/mindex/telemetry/samples` | GET | MINDEX samples proxy (verified flags) |
 | `/api/mindex/research/search` | GET | MINDEX research search proxy |
+| `/api/search/unified` | GET, POST | Fluid Search: parallel MINDEX/Earth/MAS buckets + single AI narrative (`resolveUnifiedAiNarrative`). **POST** body: `q`, optional `types`, `limit`, `ai`, `lat`, `lng`, `fluidContext` (same shape as `FluidSearchContext`); route forwards to GET with `x-fluid-search-context` header (base64 JSON). See `website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md`. |
+| `/api/search/ai` | POST | MYCA search answers; Fluid Search calls with `integrated`, `context`, `sessionId`, `userId`, `conversationId`, `history` when narrative is not taken from MAS `focus`. |
 
 ---
 
