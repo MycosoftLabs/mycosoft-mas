@@ -14,10 +14,16 @@ class HarnessPlanner:
 
     def plan(self, packet: HarnessPacket, route: RouteType) -> dict[str, Any]:
         steps: list[str] = []
+        intention: dict[str, Any] | None = None
         if self._brain:
             task = self._brain.get_next_task()
             if task:
                 steps.append(f"consider_goal:{task.goal_id}")
+                intention = {
+                    "goal_id": task.goal_id,
+                    "description": task.description,
+                    "status": task.status,
+                }
         if route == RouteType.STATIC:
             steps.append("static_lookup")
         elif route == RouteType.MINDEX_GROUNDED:
@@ -34,7 +40,10 @@ class HarnessPlanner:
             steps.append("tts")
         else:
             steps.append("nemotron_generate")
-        return {"steps": steps, "route": route.value}
+        out: dict[str, Any] = {"steps": steps, "route": route.value}
+        if intention is not None:
+            out["intention"] = intention
+        return out
 
 
 def attach_result_meta(result: HarnessResult, plan: dict[str, Any]) -> HarnessResult:

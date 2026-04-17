@@ -24,6 +24,7 @@ alwaysApply: true
 | Browser verification | Use cursor-ide-browser MCP to test pages | "Test in your browser" |
 | Kill stale processes | Run dev-machine-cleanup.ps1 | "Run the cleanup script" |
 | SSH to VMs (187/188/189) | Use paramiko/plink with creds from .credentials.local | "SSH to the VM and run..." |
+| **Proxmox** (onboot, start VM, vzdump/cron on host) | Run `python scripts/proxmox/apply_production_vm_policy_api.py` after loading creds; API token + optional root SSH to PVE. See `proxmox-agents-execute-all.mdc`. | "Open Proxmox UI…" / "SSH to Proxmox…" |
 | Restart Sandbox tunnel (1033) | Run _restart_sandbox_tunnel.py or SSH + sudo systemctl restart cloudflared | "Restart cloudflared on 187" |
 
 ### Scripts That Must NEVER Exist or Run

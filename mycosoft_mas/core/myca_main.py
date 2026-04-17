@@ -776,8 +776,17 @@ if OPENVIKING_API_AVAILABLE:
 app.include_router(nlq_router, tags=["nlq"])
 app.include_router(search_orchestrator_router, tags=["search"])
 
-# MYCA Harness — Nemotron / PersonaPlex / MINDEX search-in-LLM / optional NLM (feature-flagged)
-if os.environ.get("HARNESS_API_ENABLED", "").strip().lower() in ("1", "true", "yes"):
+# MYCA Harness — Nemotron / PersonaPlex / MINDEX search-in-LLM / optional NLM (mounted by default; opt-out)
+def _mount_harness_api() -> bool:
+    if os.environ.get("HARNESS_API_DISABLED", "").strip().lower() in ("1", "true", "yes", "on"):
+        return False
+    # Legacy explicit off
+    if os.environ.get("HARNESS_API_ENABLED", "").strip().lower() in ("0", "false", "no", "off"):
+        return False
+    return True
+
+
+if _mount_harness_api():
     try:
         from mycosoft_mas.harness.api import router as harness_api_router
 
@@ -785,7 +794,7 @@ if os.environ.get("HARNESS_API_ENABLED", "").strip().lower() in ("1", "true", "y
     except ImportError as e:
         import logging as _logging
 
-        _logging.getLogger(__name__).warning("HARNESS_API_ENABLED set but harness import failed: %s", e)
+        _logging.getLogger(__name__).warning("Harness API import failed (set HARNESS_API_DISABLED=1 to silence): %s", e)
 app.include_router(earth_search_router, tags=["earth-search"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
     app.include_router(iot_router, tags=["iot"])

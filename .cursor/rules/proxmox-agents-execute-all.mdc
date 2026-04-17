@@ -1,0 +1,30 @@
+---
+description: Agents MUST apply Proxmox policy (API + SSH) themselves — never delegate hypervisor UI or manual steps to the user.
+alwaysApply: true
+---
+
+# Proxmox — Agents Execute Everything (Critical)
+
+## CRITICAL
+
+**Never ask Morgan to open the Proxmox UI, SSH to the hypervisor, paste cron lines, or “run this on PVE”.** You have the same credentials as other automation: `.credentials.local` (`PROXMOX_TOKEN_ID`, `PROXMOX_TOKEN_SECRET`, `PROXMOX_HOST` / `PROXMOX_HOSTS`, `PROXMOX202_PASSWORD` / `VM_PASSWORD` for root SSH to the PVE host when API tokens are insufficient). Use **`python scripts/proxmox/apply_production_vm_policy_api.py`** after loading credentials.
+
+## Required behavior
+
+| Task | Agent action |
+|------|----------------|
+| Set **Start at boot**, start stopped production VMs | Run `apply_production_vm_policy_api.py` (uses API + optional SSH side effects) |
+| Daily backup / vzdump / ensure-running cron on PVE | Same script (`--api-only` skips SSH install only when SSH is genuinely unavailable) |
+| List VMs / diagnose | Proxmox API via token or `infrastructure-ops` + MCP `ssh_exec` to **root@PVE** when API fails |
+| Token missing | Add placeholder keys to `.credentials.local` template only — never commit secrets; rotate any token that appeared in old scripts |
+
+## Failure handling
+
+If the dev PC cannot reach `192.168.0.x`, report **network reachability** with evidence (timeout, unreachable). Do not ask Morgan to click Proxmox; retry from a context that has LAN access or fix routing. Still **attempt** API/SSH once per session when policy work is requested.
+
+## Cross-references
+
+- `scripts/proxmox/apply_production_vm_policy_api.py`
+- `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md`
+- `.cursor/agents/infrastructure-ops.md`
+- `mycosoft_mas/integrations/proxmox_integration.py`

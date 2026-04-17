@@ -30,7 +30,7 @@ Python package: `mycosoft_mas.harness` (MAS monorepo).
 
 ## HTTP exposure
 
-Set **`HARNESS_API_ENABLED=1`** on the MAS orchestrator to mount harness routes.
+Harness routes mount **by default**. Use **`HARNESS_API_DISABLED=1`** to omit `/api/harness/*`. Legacy: `HARNESS_API_ENABLED=false` also disables.
 
 ## Environment variables
 

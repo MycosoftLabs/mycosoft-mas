@@ -8,6 +8,13 @@
 
 ---
 
+## Proxmox — production VMs always-on (Apr 17, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` | **Runbook + API path**: `apply_production_vm_policy_api.py` (onboot, start, discovery, host crontab); shell scripts; HA caveats. |
+| `scripts/proxmox/apply_production_vm_policy_api.py` | **Execute** (agents): Proxmox API + root ticket + SSH; no user steps. |
+| `.cursor/rules/proxmox-agents-execute-all.mdc` | **Policy**: never delegate PVE to Morgan. |
+
 ## Deep Agents v0.5 Integration (Apr 9, 2026)
 | Doc | Purpose |
 |-----|---------|
@@ -39,6 +46,7 @@
 | `docs/DOABLE_SEARCH_AND_ANSWER_PIPELINE_MAR14_2026.md` | **Doable search and answer pipeline (master plan)**: Every search uses full MYCA context (brain, memory, intention, finger, LLM, MINDEX); ingest → store → instant second search; widget registry and missing widgets; training/ETL/memory; frontier LLM → MINDEX; fix unanswerable search; Nemotron 3 alignment. Use for search orchestration, MINDEX pipeline, and widget rollout. |
 | `docs/NEMOTRON_ROUTING_AND_PERSISTENCE_MAR14_2026.md` | **Nemotron routing and persistence**: Role-based routing via backend_selection; same MINDEX storage pipeline for search and voice/orchestrator answers. Use for LLM routing and answer persistence. |
 | `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` | **World view search suggestions and MINDEX/SEARCH/MYCA/NATUREOS cohesion**: Shift from fungi-focused to full world-view platform; rotating Try: suggestions; typing placeholder expansion; MINDEX expansion for holistic Earth data. Use for homepage search, fluid search, and platform unification. |
+| `../WEBSITE/website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md` | **Fluid Search milestone 1**: Context contract, unified POST, MAS `search_context`, intention merge, MYCA threading, single narrative policy. |
 | `docs/GROUNDING_ARCHITECTURE_LOCKED_MAR14_2026.md` | **Grounding architecture (locked)**: WorldState, SelfState, ExperiencePacket, GroundingGate, llm_brain path; packet build/attach/store; world refresh loop. Use for worldstate contract and grounding changes. |
 | `docs/WORLDSTATE_VS_SPECIALIST_COMMAND_BOUNDARY_MAR14_2026.md` | **Worldstate vs specialist command boundary**: Passive awareness (worldstate read API) vs specialist commands (CREP, Earth2); endpoint matrix; boundary rules. Use for CREP/worldstate integration. |
 | `docs/GPU_ENRICHMENT_STRATEGY_MAR14_2026.md` | **GPU enrichment strategy**: Earth2, PhysicsNeMo, PersonaPlex input backlogs; worldstate context envelope; staging plan. Use for Earth2/PhysicsNeMo/PersonaPlex integration. |
@@ -72,7 +80,7 @@
 | Doc | Purpose |
 |-----|---------|
 | `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` | **Complete**: MINDEX search-in-LLM (no external video), env vars, verification. |
-| `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` | **Integration patch**: `mycosoft_mas.harness` wiring notes, `HARNESS_API_ENABLED`. |
+| `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` | **Integration patch**: `mycosoft_mas.harness` wiring notes (legacy; see completion doc for default-on API). |
 | `mycosoft_mas/harness/README.md` | Quick start, env, static file path, MINDEX grounding, tests. |
 
 ## MycoDAO Pulse — Supabase · MINDEX · MYCA (Apr 14, 2026)

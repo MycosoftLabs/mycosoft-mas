@@ -6,9 +6,16 @@
 ## MAS full index + unfinished gap audit (Apr 17, 2026)
 - `docs/MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md` — **MAS**: subsystem index snapshot (routers/harness/myca_os/mindex/nlm/avani/integrations), priority unfinished-stub audit for MYCA+MINDEX+AVANI+MYCOBRAIN+website, and immediate execution checklist.
 
+## Proxmox — always-on VMs + daily backups (Apr 17, 2026)
+- `docs/PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md` — **Runbook**: `onboot`, optional 5‑min ensure script, boot order, daily backup job / `vzdump`, HA caveats (single vs cluster), UPS; scripts under `scripts/proxmox/`.
+
+## Fluid Search — Full AI interface milestone 1 (Apr 17, 2026)
+- `../WEBSITE/website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md` — **Website**: context contract, unified POST, MAS `search_context`, intention merge, MYCA threading, single narrative policy, tests path.
+
 ## MYCA Harness 2026 — Nemotron / PersonaPlex / MINDEX search-in-LLM / NLM (Apr 17, 2026)
-- `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` — **MAS**: completion summary, env vars, verification, follow-ups (harness execution endpoint on MINDEX).
-- `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` — **MAS**: integration patch notes, `HARNESS_API_ENABLED`, safety notes.
+- `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` — **MAS**: completion summary, default-on API, brain env, env vars, verification, follow-ups (MINDEX execution log).
+- `docs/MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md` — **MAS**: integration patch notes (superseded in part by default-on mount + `HARNESS_API_DISABLED`), safety notes.
+- `config/harness.env.example` — **MAS**: example env block for harness + brain.
 - `mycosoft_mas/harness/README.md` — quick use, static answers, MINDEX grounding, turbo-quant, tests.
 
 ## MycoDAO Pulse — Supabase · MINDEX · MYCA (Apr 14, 2026)
