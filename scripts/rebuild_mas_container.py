@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
-Rebuild and restart MAS Docker container on VM 192.168.0.188
+Rebuild and restart MAS Docker container on VM 192.168.0.188.
+
+NOTE: Production on 188 often runs mas-orchestrator.service (host venv + uvicorn on :8001),
+not this container; port 8001 may be held by systemd. For git sync + systemd restart use
+scripts/_pull_and_restart_mas_vm188.py instead.
 """
 import sys
 import time
