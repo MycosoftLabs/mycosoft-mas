@@ -146,7 +146,8 @@ def ensure_super_token(c) -> str:
     return token
 
 
-def register_admin_http(super_token: str) -> None:
+def register_admin_http(super_token: str) -> str | None:
+    """Returns plaintext password if registration request was sent (caller saves)."""
     passwd = ADMIN_PASS or secrets.token_urlsafe(24)
     group_ke = secrets.token_hex(4)
     details = {
@@ -188,17 +189,28 @@ def register_admin_http(super_token: str) -> None:
             raw = r.read().decode("utf-8", errors="replace")
         try:
             j = json.loads(raw)
-            print("registerAdmin ok:", j.get("ok"), "mail:", (j.get("user") or {}).get("mail"))
         except json.JSONDecodeError:
-            print("registerAdmin response length:", len(raw))
+            print("registerAdmin non-JSON response length:", len(raw))
+            return None
+        print(
+            "registerAdmin ok:",
+            j.get("ok"),
+            "mail:",
+            (j.get("user") or {}).get("mail"),
+        )
+        if j.get("ok") is True:
+            return passwd
+        print("registerAdmin did not succeed:", (raw or "")[:400])
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8", errors="replace")[:500]
         print("registerAdmin HTTPError:", e.code, err_body)
     except urllib.error.URLError as e:
         print("registerAdmin URL failed:", e)
+    return None
 
 
-def register_admin_if_needed(c, super_token: str) -> None:
+def register_admin_if_needed(c, super_token: str) -> str | None:
+    """Returns new automation password if registerAdmin ran."""
     cnt = mysql_query(c, "SELECT COUNT(*) FROM Users;")
     try:
         n = int(cnt.split()[0])
@@ -206,9 +218,10 @@ def register_admin_if_needed(c, super_token: str) -> None:
         n = 0
     if n > 0:
         print("Shinobi Users table non-empty; skip registerAdmin.")
-        return
-    register_admin_http(super_token)
+        return None
+    pw = register_admin_http(super_token)
     time.sleep(3)
+    return pw
 
 
 def fetch_user_keys(c) -> tuple[str, str]:
@@ -300,17 +313,23 @@ def purge_cf() -> None:
         print("Cloudflare purge failed:", e)
 
 
-def append_local_credentials(api_key: str, group_key: str) -> None:
+def append_local_credentials(
+    api_key: str, group_key: str, automation_pass: str | None = None
+) -> None:
     """Merge SHINOBI_* into MAS .credentials.local (gitignored), replacing prior values."""
     p = MAS / ".credentials.local"
     if not p.exists():
         return
-    keys_drop = {"SHINOBI_URL", "SHINOBI_API_KEY", "SHINOBI_GROUP_KEY"}
+    keys_api = {"SHINOBI_URL", "SHINOBI_API_KEY", "SHINOBI_GROUP_KEY"}
     lines_out: list[str] = []
     for line in p.read_text(encoding="utf-8").splitlines():
         if line and not line.startswith("#") and "=" in line:
             k = line.split("=", 1)[0].strip()
-            if k in keys_drop:
+            if k in keys_api:
+                continue
+            if k == "SHINOBI_AUTOMATION_MAIL":
+                continue
+            if k == "SHINOBI_AUTOMATION_PASS" and automation_pass is not None:
                 continue
         lines_out.append(line)
     lines_out.append("")
@@ -320,6 +339,9 @@ def append_local_credentials(api_key: str, group_key: str) -> None:
     lines_out.append(f"SHINOBI_URL={SHINOBI_HTTP}")
     lines_out.append(f"SHINOBI_API_KEY={api_key}")
     lines_out.append(f"SHINOBI_GROUP_KEY={group_key}")
+    lines_out.append(f"SHINOBI_AUTOMATION_MAIL={ADMIN_MAIL}")
+    if automation_pass is not None:
+        lines_out.append(f"SHINOBI_AUTOMATION_PASS={automation_pass}")
     p.write_text("\n".join(lines_out).rstrip() + "\n", encoding="utf-8")
     print("Updated SHINOBI_* in .credentials.local")
 
@@ -327,16 +349,17 @@ def append_local_credentials(api_key: str, group_key: str) -> None:
 def main() -> int:
     load_credentials()
     c = ssh_connect(MAS_VM)
+    auto_pass: str | None = None
     try:
         st = ensure_super_token(c)
         print("Super API token length:", len(st))
-        register_admin_if_needed(c, st)
+        auto_pass = register_admin_if_needed(c, st)
         api_key, group_key = fetch_user_keys(c)
         print("Fetched DB key lengths:", len(api_key), len(group_key))
     finally:
         c.close()
 
-    append_local_credentials(api_key, group_key)
+    append_local_credentials(api_key, group_key, automation_pass=auto_pass)
     sync_sandbox_env(api_key, group_key)
     purge_cf()
     print("Done.")
