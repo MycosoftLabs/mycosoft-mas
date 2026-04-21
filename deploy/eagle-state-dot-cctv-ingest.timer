@@ -1,0 +1,13 @@
+# Daily run with jitter so feeds are not all hit at the same wall-clock second.
+# Adjust OnCalendar if you prefer a specific local time.
+
+[Unit]
+Description=Daily timer — State DOT CCTV → MINDEX eagle.video_sources
+
+[Timer]
+OnCalendar=*-*-* 06:15:00
+RandomizedDelaySec=45m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

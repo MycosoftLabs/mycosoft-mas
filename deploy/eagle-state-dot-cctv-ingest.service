@@ -1,0 +1,28 @@
+# State DOT CCTV → MINDEX eagle.video_sources daily warm-cache (Apr 18, 2026)
+# Install on MAS VM (192.168.0.188) or any host with cron/timer + MINDEX_INTERNAL_TOKEN:
+#   sudo cp deploy/eagle-state-dot-cctv-ingest.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now eagle-state-dot-cctv-ingest.timer
+#
+# Set in EnvironmentFile (same vars as website .env for MINDEX + optional WSDOT):
+#   MINDEX_API_URL=http://192.168.0.189:8000
+#   MINDEX_INTERNAL_TOKEN=...
+#   WSDOT_ACCESS_CODE=...   (optional)
+
+[Unit]
+Description=Eagle Eye — State DOT CCTV ingest to MINDEX (bulk-upsert)
+Documentation=file:///home/mycosoft/mycosoft/mas/scripts/eagle_ingest_state_dot_cctv.py
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=mycosoft
+Group=mycosoft
+WorkingDirectory=/home/mycosoft/mycosoft/mas
+Environment=PYTHONPATH=/home/mycosoft/mycosoft/mas
+EnvironmentFile=-/home/mycosoft/mycosoft/mas/.env
+ExecStart=/home/mycosoft/mycosoft/mas/venv/bin/python scripts/eagle_ingest_state_dot_cctv.py
+
+[Install]
+WantedBy=multi-user.target
