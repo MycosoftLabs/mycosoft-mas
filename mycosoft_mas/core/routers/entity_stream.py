@@ -59,6 +59,24 @@ def _passes_filter(
         return True
 
 
+@router.get("/api/entities/stream")
+async def entity_stream_info():
+    """
+    HTTP discovery only — the live feed is WebSocket. Browsers/health scripts
+    that GET this URL used to see 404; this documents the upgrade path.
+    """
+    return {
+        "transport": "websocket",
+        "path": "/api/entities/stream",
+        "query_params": {
+            "cells": "optional comma-separated S2 cell IDs",
+            "types": "optional entity types filter",
+            "time_from": "optional ISO8601 time lower bound",
+        },
+        "example": "wss://192.168.0.188:8001/api/entities/stream",
+    }
+
+
 @router.websocket("/api/entities/stream")
 async def entity_stream(
     websocket: WebSocket,
