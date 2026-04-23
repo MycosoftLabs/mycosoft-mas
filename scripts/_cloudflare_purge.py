@@ -8,7 +8,7 @@ env_path = base / "WEBSITE" / "website" / ".env.local"
 if not env_path.exists():
     env_path = base / "website" / ".env.local"
 if env_path.exists():
-    for line in env_path.read_text().splitlines():
+    for line in env_path.read_text(encoding="utf-8", errors="replace").splitlines():
         if line and not line.startswith("#") and "=" in line:
             k, v = line.split("=", 1)
             os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
