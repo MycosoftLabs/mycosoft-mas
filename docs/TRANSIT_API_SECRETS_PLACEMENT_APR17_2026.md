@@ -27,7 +27,7 @@ Agencies with **no key in code** (MTA, Amtrak, SEPTA, Metrolink, DART, etc.) do 
 
 ## Optional / future
 
-- `WMATA_API_KEY_SECONDARY` — described in the WMATA route comment for failover; wire-up may still be TODO — confirm in `wmata/route.ts` before relying on it.
+- `WMATA_API_KEY_SECONDARY` — **wired:** `app/api/transit/wmata/route.ts` retries all feeds with the secondary key if the primary `fetchMultipleFeeds` result is not ok.
 - `SWIFTLY_API_KEY` — LA Metro (and other Swiftly agencies) when issued.
 - `INAT_API_TOKEN` / `MINDEX_INAT_API_KEY` — iNaturalist (MINDEX `inat_api_token` in `mindex` API settings) for higher rate limits on cache ingest.
 
