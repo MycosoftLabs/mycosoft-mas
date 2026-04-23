@@ -16,7 +16,8 @@ These match `process.env.*` in `app/api/transit/*/route.ts`:
 | Variable | Used by | Notes |
 |----------|---------|--------|
 | `BART_API_KEY` | BART | Query `key=`; a long-standing public sandbox key exists in code as dev fallback — still set a dedicated key in production. |
-| `CTA_TRAIN_TRACKER_API_KEY` | CTA Train | CTA Bus uses a different portal when restored. |
+| `CTA_TRAIN_TRACKER_API_KEY` | CTA Train | Train Tracker API. |
+| `CTA_BUS_TRACKER_API_KEY` | CTA Bus | Bustime v2 `getvehicles` — **separate** from train key. |
 | `TRANSIT_511_API_KEY` | 511 SF Bay | 511 operator feeds. |
 | `WMATA_API_KEY` | WMATA | Header `api_key` on WMATA GTFS-RT URLs. |
 | `MARTA_API_KEY` | MARTA | Query `apiKey=` on MARTA GTFS-RT. |
