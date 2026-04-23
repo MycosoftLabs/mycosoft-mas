@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 r"""
-Merge CREP transit API keys from local WEBSITE/website/.env.local into
+Merge CREP transit + related API keys from local WEBSITE/website/.env.local into
 /opt/mycosoft/website/.env on Sandbox 192.168.0.187, then recreate blue/green.
 
 Only copies keys that exist and are non-empty locally. Never prints values.
-Keys: see .env.example "CREP Live Transit" section.
+Keys: .env.example "CREP Live Transit" (transit) + AirNow (AQI).
 """
 from __future__ import annotations
 
@@ -32,6 +32,9 @@ TRANSIT_KEYS = (
     "METROLINK_API_KEY",
     "DART_API_KEY",
 )
+
+CREP_SANDBOX_EXTRA_KEYS = ("AIRNOW_API_KEY",)
+SYNC_SANDBOX_KEYS = (*TRANSIT_KEYS, *CREP_SANDBOX_EXTRA_KEYS)
 
 
 def merge_env_file(content: str, updates: dict[str, str]) -> str:
@@ -99,12 +102,12 @@ def main() -> int:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     local_path = local_env_path()
     local = parse_local_env(local_path)
-    updates = {k: local[k] for k in TRANSIT_KEYS if local.get(k)}
+    updates = {k: local[k] for k in SYNC_SANDBOX_KEYS if local.get(k)}
     if not updates:
-        print(f"No transit keys found in {local_path} — add keys locally, then re-run.")
+        print(f"No keys found in {local_path} (transit + AIRNOW) — add keys locally, then re-run.")
         return 1
     print(f"Source: {local_path}")
-    print(f"Merging {len(updates)} transit key(s) to {REMOTE} (values not shown).")
+    print(f"Merging {len(updates)} key(s) to {REMOTE} (transit + AIRNOW; values not shown).")
 
     pw = load_creds()
     ssh = paramiko.SSHClient()
