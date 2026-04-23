@@ -1,5 +1,9 @@
 # Master Document Index
 
+## Public transit — API key placement (Apr 17, 2026)
+
+- `docs/TRANSIT_API_SECRETS_PLACEMENT_APR17_2026.md` — **Ops**: env var **names** for website `app/api/transit/*`; GitHub production environment + Sandbox `.env`; no secrets in git; optional iNat token for MINDEX warm-cache.
+
 ## MYCA readiness execution plan (Apr 17, 2026)
 - `docs/MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md` — **Execution plan**: concrete P0/P1/P2 workstreams with exact files, acceptance criteria, mandatory tests, rollout, and rollback rules to make audit items real.
 
@@ -11,6 +15,14 @@
 
 ## Fluid Search — Full AI interface milestone 1 (Apr 17, 2026)
 - `../WEBSITE/website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md` — **Website**: context contract, unified POST, MAS `search_context`, intention merge, MYCA threading, single narrative policy, tests path.
+
+## Eagle Eye — backend integration + Track A review (Apr 17, 2026)
+- `docs/EAGLE_EYE_SYSTEM_WIDE_COMPLETE_APR17_2026.md` — **MAS/WEBSITE/MINDEX**: Track B summary, verification, follow-ups.
+- `docs/EAGLE_EYE_TRACK_A_REVIEW_GATE_APR17_2026.md` — **Review gate** checklist for Track A merges.
+- `../../NLM/docs/NLM_EAGLE_SCENE_INDEX_BATCH_PIPELINE_APR17_2026.md` — **NLM**: batch `scene_index` embedding contract.
+
+## Website VM 187 + MINDEX optimization brief (Apr 18, 2026)
+- `docs/WEBSITE_VM187_MINDEX_OPTIMIZATION_BRIEF_APR18_2026.md` — **Infra + Track B follow-on**: vCPU/RAM/disk, nginx/Node/Cloudflare, MINDEX warm cache + indexes + pgbouncer, OEI positions in DB, tile cache, observability checklist; cross-reference to completed Eagle Track B vs remaining work.
 
 ## MYCA Harness 2026 — Nemotron / PersonaPlex / MINDEX search-in-LLM / NLM (Apr 17, 2026)
 - `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md` — **MAS**: completion summary, default-on API, brain env, env vars, verification, follow-ups (MINDEX execution log).
