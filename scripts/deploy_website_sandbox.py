@@ -22,7 +22,7 @@ if not PASS:
     sys.exit(1)
 
 
-def run_cmd(client, cmd, timeout=600, show_lines=50):
+def run_cmd(client, cmd, timeout=3600, show_lines=50):
     """Run command and show output"""
     print(f"Running: {cmd[:80]}...")
     stdin, stdout, stderr = client.exec_command(cmd, timeout=timeout)
@@ -57,7 +57,12 @@ def main():
         
         # Build Docker image
         print("\n[2/4] Building Docker image (this takes a few minutes)...")
-        exit_code = run_cmd(client, "cd /opt/mycosoft/website && docker build --no-cache -t mycosoft-always-on-mycosoft-website:latest . 2>&1", timeout=600)
+        # Next.js prod build inside Docker often exceeds 10 min on Sandbox VM; keep channel open
+        exit_code = run_cmd(
+            client,
+            "cd /opt/mycosoft/website && docker build --no-cache -t mycosoft-always-on-mycosoft-website:latest . 2>&1",
+            timeout=3600,
+        )
         
         if exit_code != 0:
             print(f"Build may have issues (exit {exit_code}), checking image...")
