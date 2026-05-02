@@ -1,5 +1,31 @@
 # Master Document Index
 
+## NatureOS Apps — cloud-style reorg (May 1, 2026)
+
+- `docs/NATUREOS_REORGANIZATION_MAY01_2026.md` — **Master**: ten Apps order, redirects, new surfaces, follow-up plan shells.
+- `docs/NATUREOS_APP_NATURE_STATISTICS_MAY01_2026.md` — Nature Statistics (`/natureos/nature-statistics`).
+- `docs/NATUREOS_APP_FUNGI_COMPUTE_MAY01_2026.md` — Fungi Compute.
+- `docs/NATUREOS_APP_EARTH_SIMULATOR_MAY01_2026.md` — Earth Simulator.
+- `docs/NATUREOS_APP_VIRTUAL_PETRI_DISH_MAY01_2026.md` — Virtual Petri Dish + MyceliumSeg notes.
+- `docs/NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md` — Biology Simulator landing.
+- `docs/NATUREOS_APP_COMPOUND_ANALYSER_MAY01_2026.md` — Compound Analyser.
+- `docs/NATUREOS_APP_AEROSOL_MAY01_2026.md` — Aerosol + BFF routes.
+- `docs/NATUREOS_APP_ANCESTRY_DATABASE_MAY01_2026.md` — Ancestry Database under `/natureos/ancestry`.
+- `docs/NATUREOS_APP_GROWTH_ANALYTICS_MAY01_2026.md` — Growth Analytics.
+- `docs/NATUREOS_APP_TOOLS_MAY01_2026.md` — Tools hub (`/natureos/tools` index).
+- **Follow-up plan shells (May 1, 2026):** `docs/BIOLOGY_SIMULATOR_UNREAL_INTEGRATION_PLAN_MAY01_2026.md`, `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_PLAN_MAY01_2026.md`, `docs/ANCESTRY_ALL_SPECIES_EXPANSION_PLAN_MAY01_2026.md`, `docs/GROWTH_ANALYTICS_AGENTIC_PLAN_MAY01_2026.md`, `docs/AEROSOL_VIRUS_RADIATION_FEEDS_PLAN_MAY01_2026.md`, `docs/NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_PLAN_MAY01_2026.md`.
+
+## AWS + MVT tile pipeline — IAM, bake, stub (Apr 17, 2026)
+
+- `docs/AWS_MVT_IAM_AND_BUDGET_CHECKLIST_APR24_2026.md` — **Ops**: budget, GitHub secret names, IAM user checklist; no keys in repo. Policy JSON: `scripts/aws/crep_baker_iam/`.
+- `../WEBSITE/website/docs/CURSOR_AWS_MVT_TILE_PIPELINE.md` — **Handoff runbook** (R2, Legions 8230, `bake_mvt_tiles.sh`, env vars).
+- `scripts/bake_mvt_tiles.sh` — **tippecanoe** pmtiles bake + R2 `aws s3 sync` (requires `R2_*`).
+- `scripts/aws_bake_spot.py` — **Optional** EC2 spot launch (env-configured AMI/SG).
+- `scripts/verify_mvt_tile_pipeline.py` — **Health** check for `TILE_RENDER_*` upstreams + optional CDN.
+- `services/crep_tile_render_stub/main.py` — **FastAPI stub** on :8230; `CREP_TILE_STUB_PROFILE=earth2` (249) or `density` (241) for layer allowlists; `scripts/run_crep_tile_stub_8230.sh` / `.ps1`.
+- `scripts/ensure_sandbox_lan_api_urls.py` — **Merges** `TILE_RENDER_EARTH2_URL`, `TILE_RENDER_DENSITY_URL`, `TILE_RENDER_CDN_FALLBACK`, `NEXT_PUBLIC_TILES_CDN` on Sandbox VM 187.
+- `.github/workflows/nightly-mvt-bake.yml` — **GHA** template (`workflow_dispatch`; `if: false` until R2 secrets).
+
 ## Public transit — API key placement (Apr 17, 2026)
 
 - `docs/TRANSIT_API_SECRETS_PLACEMENT_APR17_2026.md` — **Ops**: env var **names** for website `app/api/transit/*`; GitHub production environment + Sandbox `.env`; no secrets in git; optional iNat token for MINDEX warm-cache.
@@ -20,6 +46,9 @@
 - `docs/EAGLE_EYE_SYSTEM_WIDE_COMPLETE_APR17_2026.md` — **MAS/WEBSITE/MINDEX**: Track B summary, verification, follow-ups.
 - `docs/EAGLE_EYE_TRACK_A_REVIEW_GATE_APR17_2026.md` — **Review gate** checklist for Track A merges.
 - `../../NLM/docs/NLM_EAGLE_SCENE_INDEX_BATCH_PIPELINE_APR17_2026.md` — **NLM**: batch `scene_index` embedding contract.
+
+## GPU Legions — NatureOS + FUSARIUM (Apr 17, 2026)
+- `docs/GPU_LEGION_LAYOUT_NATUREOS_FUSARIUM_APR17_2026.md` — **192.168.0.241 Voice / 192.168.0.249 Earth-2**: canonical split, shared GPU pool vs RBAC/data tier, browser tab VRAM note, env + snapshot verification.
 
 ## Website VM 187 + MINDEX optimization brief (Apr 18, 2026)
 - `docs/WEBSITE_VM187_MINDEX_OPTIMIZATION_BRIEF_APR18_2026.md` — **Infra + Track B follow-on**: vCPU/RAM/disk, nginx/Node/Cloudflare, MINDEX warm cache + indexes + pgbouncer, OEI positions in DB, tile cache, observability checklist; cross-reference to completed Eagle Track B vs remaining work.

@@ -8,6 +8,12 @@
 
 ---
 
+## AWS + MVT tile pipeline (Apr 17, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/AWS_MVT_IAM_AND_BUDGET_CHECKLIST_APR24_2026.md` | **IAM + budget + GitHub secret names**; policy JSON under `scripts/aws/crep_baker_iam/`. |
+| `../WEBSITE/website/docs/CURSOR_AWS_MVT_TILE_PIPELINE.md` | **Full handoff**: R2, Legions :8230, bake script, website env. |
+
 ## Proxmox — production VMs always-on (Apr 17, 2026)
 | Doc | Purpose |
 |-----|---------|
@@ -303,7 +309,11 @@
 | `docs/DEV_TO_SANDBOX_PIPELINE_FEB06_2026.md` | Dev → sandbox deploy pipeline |
 | `docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md` | **Auto-apply linter/analyzer fixes**: codeActionsOnSave, formatOnSave, bulk fix commands, code-auditor → stub-implementer workflow |
 | `docs/N8N_WORKFLOW_SYNC_AND_REGISTRY_FEB18_2026.md` | **n8n sync + MYCA registry**: Local and cloud n8n synced from repo; GET /api/workflows/registry, POST /api/workflows/sync-both; rule n8n-management; agents n8n-workflow, n8n-ops, n8n-workflow-sync |
-| `docs/NATUREOS_FULL_PLATFORM_COMPLETE_FEB19_2026.md` | **NatureOS Full Platform complete**: All phases — controllers, services, pages, API routes, MAS integration; verification and gaps |
+| `docs/NATUREOS_REORGANIZATION_MAY01_2026.md` | **NatureOS cloud IA (current)**: fixed-order ten Apps, redirects, Tools hub, Biology Simulator + Aerosol v1; links to per-app docs dated May 1, 2026. |
+| `docs/NATUREOS_APP_AEROSOL_MAY01_2026.md` | **Aerosol app**: layers, BFF `/api/natureos/aerosol/*`, data sources, roadmap. |
+| `docs/NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md` | **Biology Simulator**: landing, MINDEX probes, roadmap to Unreal/agentic phases. |
+| `docs/NATUREOS_APP_TOOLS_MAY01_2026.md` | **Tools hub**: seven categories, real routes only, deep integration follow-on. |
+| `docs/NATUREOS_FULL_PLATFORM_COMPLETE_FEB19_2026.md` | **Historical**: NatureOS .NET + early website phases — still useful for backend detail; website IA superseded by May 2026 reorg doc above. |
 | `docs/COMPOUNDS_BUG_FIX_AND_DEPLOY_FEB19_2026.md` | **Compounds fix deploy**: Species compounds via API proxy; pushed to GitHub; deploy checklist, verification |
 | `docs/DEPLOYMENT_READINESS_CHECK_FEB19_2026.md` | **Deployment readiness**: Pre-deploy verification for handoff agent; Git, build, deploy checklist; do not deploy from this agent |
 | `docs/SANDBOX_PREP_AND_HANDOFF_FEB18_2026.md` | **Sandbox prep entry point**: What is prepared, docs for deploying agent, GitHub repos; deployment in another agent |

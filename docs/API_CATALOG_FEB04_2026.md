@@ -62,6 +62,16 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 |----------|--------|-------------|
 | `/api/search/execute` | POST | Canonical unified search: body `query`, optional `session_id`, `user_id`, optional `search_context` (Fluid Search Apr 17, 2026: `fluid_route` snapshot, `conversation_id`, `recent_queries`, `search_ai_history`, `focused_widget`); returns focus, results.keyword/semantic/specialist, memories, timestamp. Website proxy and NLQ use this. |
 
+### Eagle Eye API (`/api/eagle-eye/*`) – Apr 17, 2026
+
+**Router:** `mycosoft_mas/core/routers/eagle_eye_api.py` — HTTP proxy to MINDEX `eagle.*` using `MINDEX_API_URL` (normalized to `.../api/mindex`) plus `MINDEX_INTERNAL_TOKEN` or `MINDEX_API_KEY`.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/eagle-eye/mindex-health` | GET | Proxies `GET .../eagle/health/stats` (row counts for ops / n8n) |
+| `/api/eagle-eye/video-sources` | GET | Bbox query; same query params as MINDEX `GET /eagle/video-sources` |
+| `/api/eagle-eye/video-events` | GET | Time-range query; same query params as MINDEX `GET /eagle/video-events` |
+
 ### MYCA Harness API (`/api/harness/*`) – Apr 17, 2026
 
 Mounted **by default** on MAS unless `HARNESS_API_DISABLED=1` (or legacy `HARNESS_API_ENABLED=false`). Nemotron (via unified backend selection + overrides), PersonaPlex bridge ASR/TTS, YAML static answers, **MINDEX unified search-in-LLM** (no external video APIs), optional NLM, MINDEX execution log (`record_execution` best-effort). Brain: optional `BRAIN_CHAT_USE_HARNESS` / `use_harness` on `POST /voice/brain/chat`.
@@ -615,6 +625,18 @@ Central provenance-rich retrieval for MYCA (keyword path via unified search; emb
 |----------|--------|-------------|
 | `/api/mindex/rag/retrieve` | POST | Body: `query`, `limit`, `types` (unified-search domains); returns `chunks` with `content`, `source_id`, `collection`, `score`, `provenance_root` |
 
+### Eagle Eye (`/api/mindex/eagle/*` + unified-search) – Apr 17, 2026
+
+Canonical store: schema `eagle` (`video_sources`, `video_events`, `object_tracks`, `scene_index`). **Router:** `mindex_api/routers/eagle.py`.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/mindex/eagle/health/stats` | GET | Row counts per `eagle.*` table |
+| `/api/mindex/eagle/video-sources` | GET | Bbox-scoped camera sources |
+| `/api/mindex/eagle/video-events` | GET | Time-range video events |
+| `/api/mindex/eagle/video-sources/bulk-upsert` | POST | Internal: website `GET /api/eagle/sources` warm-cache persist (chunked), MAS jobs |
+| `/api/mindex/unified-search` | GET | `types` may include **`eagle_video`** (Fluid Search / CREP-aligned camera search) |
+
 ---
 
 ## Website API Endpoints (Next.js)
@@ -631,6 +653,12 @@ Central provenance-rich retrieval for MYCA (keyword path via unified search; emb
 | `/api/voice/session` | POST | Voice session |
 | `/api/natureos/devices` | GET | Device list |
 | `/api/natureos/telemetry` | POST | Telemetry |
+| `/api/natureos/aerosol/pollen` | GET | BFF: pollen layer → MINDEX worldview / proxies (empty state when unavailable) |
+| `/api/natureos/aerosol/spores` | GET | BFF: fungal spore-relevant observations aggregation |
+| `/api/natureos/aerosol/dust` | GET | BFF: dust/adverse weather alignment with CREP/Earth layers |
+| `/api/natureos/aerosol/chemicals` | GET | BFF: MINDEX emissions proxy |
+| `/api/natureos/aerosol/virus` | GET | Placeholder JSON until public-health feeds wired |
+| `/api/natureos/aerosol/radiation` | GET | Placeholder JSON until radiation feeds wired |
 | `/api/scientific/experiments` | GET, POST | Experiments |
 | `/api/bio/sensors` | GET | Biosensor data |
 | `/api/mindex/telemetry` | GET, POST | MINDEX telemetry proxy + envelope ingest |

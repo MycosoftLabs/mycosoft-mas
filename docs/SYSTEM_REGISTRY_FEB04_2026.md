@@ -11,7 +11,13 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (May 1, 2026)
+
+- **NatureOS website IA (cloud console)** — Ten ordered Apps in `WEBSITE/website/components/dashboard/nav.tsx` with canonical routes under `/natureos/*` (Nature Statistics, Fungi Compute, Earth Simulator, Virtual Petri Dish, Biology Simulator landing, Compound Analyser, Aerosol, Ancestry Database, Growth Analytics, Tools hub). Legacy paths redirect via `WEBSITE/website/next.config.js`. New website BFF routes: `GET /api/natureos/aerosol/{pollen,spores,dust,virus,chemicals,radiation}` (MINDEX proxies + explicit pending layers). Docs: `docs/NATUREOS_REORGANIZATION_MAY01_2026.md` + `docs/NATUREOS_APP_*_MAY01_2026.md`; API catalog rows under Website endpoints for aerosol BFF.
+
 ## Recent Updates (Apr 17, 2026)
+
+- **Eagle Eye (Track B)** — MINDEX `eagle.*` APIs + `unified-search` domain `eagle_video`; website `GET /api/eagle/sources` persists merged live fan-out to `POST /api/mindex/eagle/video-sources/bulk-upsert` via `after()`; MAS `/api/eagle-eye/*` proxies to MINDEX for n8n/MYCA; Fluid Search `searchCameras` calls MINDEX unified-search (no mock cameras); Fusarium page honest CREP/Eagle copy. Docs: `docs/EAGLE_EYE_SYSTEM_WIDE_COMPLETE_APR17_2026.md`, `docs/EAGLE_EYE_TRACK_A_REVIEW_GATE_APR17_2026.md`; NLM batch contract: `../../NLM/docs/NLM_EAGLE_SCENE_INDEX_BATCH_PIPELINE_APR17_2026.md` (from repo root: `MAS/NLM/docs/...`).
 
 - **MYCA Harness 2026** — Monorepo package `mycosoft_mas.harness` (Nemotron via backend selection + env overrides, PersonaPlex HTTP ASR/TTS, YAML static answers, **MINDEX unified search-in-LLM** for grounded text, turbo-quant placeholder, intention brain SQLite under `data/harness/`, harness MINDEX HTTP client + `record_execution`, NLM interface with lazy imports). **Default:** `GET/POST /api/harness/*` mounted from `myca_main.py` unless `HARNESS_API_DISABLED=1`. Optional `BRAIN_CHAT_USE_HARNESS` routes `POST /voice/brain/chat` through the harness. Docs: `docs/MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md`, `config/harness.env.example`. Tests: `tests/test_harness_smoke.py`, `tests/test_harness_api.py`.
 
