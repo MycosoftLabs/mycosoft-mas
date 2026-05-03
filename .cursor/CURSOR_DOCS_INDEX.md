@@ -52,6 +52,7 @@
 ## MAY03 — May01 MVP slices + waypoints closure (May 3, 2026)
 | Doc | Purpose |
 |-----|---------|
+| `docs/GITHUB_SYNC_VERIFY_AND_NEXT_PLAN_MAY03_2026.md` | **Merge-to-main log**: cred hygiene notes, pytest/lint evidence, per-repo push table, history-scrub note for mycobrain, next test/deploy steps. |
 | `docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md` | Execution log: completion set, verification commands, manifest. |
 | `docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md` | CREP waypoints: Supabase schema + CRUD + client migration from localStorage. |
 | `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md` | Chemputer MVP — MINDEX-only compound plans. |
