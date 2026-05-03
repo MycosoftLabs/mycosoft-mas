@@ -11,9 +11,17 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from docker.errors import DockerException, NotFound
+try:
+    import docker
+    from docker.errors import DockerException, NotFound
+except ImportError:  # Local dev / slim installs without docker SDK
+    docker = None  # type: ignore[assignment]
 
-import docker
+    class DockerException(Exception):
+        """Placeholder when docker SDK is missing."""
+
+    class NotFound(Exception):
+        """Placeholder when docker SDK is missing."""
 
 from .models import (
     AgentCategory,
@@ -46,6 +54,11 @@ class AgentPool:
 
     async def initialize(self):
         """Initialize Docker client and network"""
+        if docker is None:
+            logger.warning("docker Python SDK not installed; AgentPool disabled (expected on dev workstations)")
+            self.docker_client = None
+            self._initialized = False
+            return
         try:
             self.docker_client = docker.from_env()
             logger.info("Connected to Docker daemon")
@@ -106,6 +119,9 @@ class AgentPool:
         """
         if not self._initialized:
             await self.initialize()
+
+        if self.docker_client is None:
+            raise RuntimeError("AgentPool has no Docker client (SDK missing or initialize failed)")
 
         agent_id = config.agent_id
 
@@ -199,6 +215,10 @@ class AgentPool:
             logger.warning(f"Agent {agent_id} not found in pool")
             return False
 
+        if self.docker_client is None:
+            logger.warning("Docker client unavailable; cannot stop agent")
+            return False
+
         state = self.agents[agent_id]
 
         if not state.container_id:
@@ -262,6 +282,8 @@ class AgentPool:
 
     async def update_agent_health(self):
         """Check and update health status of all agents"""
+        if self.docker_client is None:
+            return
         for agent_id, state in list(self.agents.items()):
             if not state.container_id:
                 continue
@@ -289,6 +311,8 @@ class AgentPool:
 
     async def cleanup_dead_agents(self):
         """Remove dead agent containers"""
+        if self.docker_client is None:
+            return
         for agent_id, state in list(self.agents.items()):
             if state.status == AgentStatus.DEAD and state.container_id:
                 try:

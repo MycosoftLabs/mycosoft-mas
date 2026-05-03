@@ -11,3 +11,7 @@
 ## Out of scope here
 
 - Thin v1 BFF + explicit pending JSON for virus/radiation layers (May 2026).
+
+---
+
+**Continuation queue (May 2, 2026):** Implementation deferred — see `docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md` and `docs/MAY02_CONTINUATION_ROLLOUT_COMPLETE_MAY02_2026.md`.

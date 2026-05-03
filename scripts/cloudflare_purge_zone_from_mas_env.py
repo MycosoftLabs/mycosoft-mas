@@ -1,12 +1,25 @@
-"""Load MAS .credentials.local (utf-8) and purge Cloudflare zone cache (purge_everything)."""
+"""Load Cloudflare credentials from the first available credentials file and purge zone cache (purge_everything)."""
 import json
 import os
 import urllib.request
 from pathlib import Path
 
 mas = Path(__file__).resolve().parent.parent
+code_root = mas.parent.parent  # .../CODE from .../CODE/MAS/mycosoft-mas
+_candidates = [
+    mas / ".credentials.local",
+    code_root / "WEBSITE" / "website" / ".credentials.local",
+    Path.home() / ".mycosoft-credentials",
+]
+_cred_file = next((p for p in _candidates if p.is_file()), None)
+if _cred_file is None:
+    raise SystemExit(
+        "No credentials file found. Expected one of: "
+        + ", ".join(str(p) for p in _candidates)
+    )
+
 _force = {"CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_ZONE_ID", "CLOUDFLARE_ZONE_ID_PRODUCTION"}
-for line in (mas / ".credentials.local").read_text(encoding="utf-8", errors="replace").splitlines():
+for line in _cred_file.read_text(encoding="utf-8", errors="replace").splitlines():
     if line and not line.startswith("#") and "=" in line:
         k, _, v = line.partition("=")
         val = v.strip().strip('"').strip("'")

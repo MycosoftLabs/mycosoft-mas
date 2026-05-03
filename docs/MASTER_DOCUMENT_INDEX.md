@@ -1,5 +1,40 @@
 # Master Document Index
 
+## MAY02 continuation rollout — closure (May 2, 2026)
+
+- `docs/MAY02_CONTINUATION_ROLLOUT_COMPLETE_MAY02_2026.md` — **P0–P3** operationalization outcomes, verification, follow-ups.
+- `docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md` — Queued May 1 plan shells (six tracks) for dedicated sprints.
+- `docs/CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md` — Draft contract for CREP layer entitlements / agent keys.
+
+## MYCA Alive — 4-phase program (May 2, 2026)
+
+- `docs/MYCA_ALIVE_ROLLOUT_MAY02_2026.md` — **Master**: P1–P4 deliverables, verification, cross-links.
+- `docs/MYCA_ALIVE_ALL_PHASES_COMPLETE_MAY02_2026.md` — **Plan completion** summary (implementation vs live acceptance).
+- `docs/LEGION_VOICE_AND_EARTH2_LIVE_MAY02_2026.md` — Voice (241) + Earth-2 (249) health runbook.
+- `docs/REDUNDANCY_AND_DR_MAY02_2026.md` — Proxmox, backups, DR checklist (CC-2).
+- `docs/MASTER_INVENTORY_MAY02_2026.md` — CC-1 inventory (`build_master_inventory.py`).
+
+## Petri Dish v2 — hybrid Rust/WASM + headless engine (May 2, 2026)
+
+- `docs/PETRI_DISH_V2_ARCHITECTURE_MAY02_2026.md` — **Architecture**: `petri_engine` crate, MAS `/api/simulation/petri/v2`, MINDEX `petri_v2` schema, seg service 8051, website BFF + R3F viewer.
+- `docs/PETRI_DISH_V2_RUNBOOK_MAY02_2026.md` — **Runbook**: env vars (`PETRI_ENGINE_V2_URL`, `PETRI_SEG_SERVICE_URL`, `MYCELIUMSEG_ONNX_PATH`), build WASM, MAS restart, migration, Cloudflare purge.
+- `docs/PETRI_DISH_V2_COMPLETE_MAY02_2026.md` — **Plan completion** summary and verification checklist.
+
+## NatureOS — full gap map, integrations, documentation (May 2, 2026)
+
+- `docs/NATUREOS_GAPS_AND_INTEGRATIONS_COMPLETE_MAY02_2026.md` — **Plan completion** summary, verification, backlog pointers (supersedes ad-hoc status for the gaps-and-integrations program).
+- `docs/NATUREOS_FULL_STACK_ARCHITECTURE_AND_INTEGRATIONS_MAY02_2026.md` — **Canonical** NatureOS-A vs B, env matrix, mermaid, verification, cross-links.
+- `docs/NATUREOS_STAGING_MATRIX_MAY02_2026.md` — Staging / smoke curls (BFF, MAS, MINDEX, .NET).
+- `docs/NATUREOS_DEPLOY_PUSH_MATRIX_MAY02_2026.md` — Post-merge deploy order (187 / 188 / 189 / .NET).
+- `docs/NATUREOS_SHELL_INTEGRATION_BACKLOG_MAY02_2026.md` — Waypoints, chat, entitlements, Fusarium deferral, route decision.
+- `docs/NATUREOS_BFF_MATLAB_LAB_PROXY_MAP_MAY02_2026.md` — Website `app/api/natureos/matlab/*` ↔ .NET `MatlabController`; lab TBD.
+- `docs/NATUREOS_BFF_DEVICES_TWIN_MAY02_2026.md` — MycoBrain / devices BFF and registry alignment.
+- `docs/NATUREOS_MINDEX_PER_APP_AND_AEROSOL_MAY02_2026.md` — MINDEX + aerosol ETL notes.
+- `docs/NATUREOS_DOTNET_CORE_API_RUNBOOK_MAY02_2026.md` — `core-api` runbook.
+- `docs/NATUREOS_SIGNALR_VS_WEB_SSE_MAY02_2026.md` — Realtime pattern note.
+- `docs/MYCA_AGENT_WORLDCAT_ROUTING_MAY02_2026.md` — Agents: Worldview catalog first.
+- `scripts/natureos_bff_route_inventory.py` — BFF route inventory (run from MAS repo).
+
 ## NatureOS Apps — cloud-style reorg (May 1, 2026)
 
 - `docs/NATUREOS_REORGANIZATION_MAY01_2026.md` — **Master**: ten Apps order, redirects, new surfaces, follow-up plan shells.
@@ -11,6 +46,8 @@
 - `docs/NATUREOS_APP_COMPOUND_ANALYSER_MAY01_2026.md` — Compound Analyser.
 - `docs/NATUREOS_APP_AEROSOL_MAY01_2026.md` — Aerosol + BFF routes.
 - `docs/NATUREOS_APP_ANCESTRY_DATABASE_MAY01_2026.md` — Ancestry Database under `/natureos/ancestry`.
+- `docs/ALL_LIFE_ANCESTRY_EXPANSION_MAY02_2026.md` — All-life ancestry expansion (MINDEX, BFF, ETL stubs, n8n, follow-ups).
+- `../MINDEX/mindex/docs/ALL_LIFE_ETL_MAY02_2026.md` (MINDEX repo) — All-life ETL orchestration and storage notes.
 - `docs/NATUREOS_APP_GROWTH_ANALYTICS_MAY01_2026.md` — Growth Analytics.
 - `docs/NATUREOS_APP_TOOLS_MAY01_2026.md` — Tools hub (`/natureos/tools` index).
 - **Follow-up plan shells (May 1, 2026):** `docs/BIOLOGY_SIMULATOR_UNREAL_INTEGRATION_PLAN_MAY01_2026.md`, `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_PLAN_MAY01_2026.md`, `docs/ANCESTRY_ALL_SPECIES_EXPANSION_PLAN_MAY01_2026.md`, `docs/GROWTH_ANALYTICS_AGENTIC_PLAN_MAY01_2026.md`, `docs/AEROSOL_VIRUS_RADIATION_FEEDS_PLAN_MAY01_2026.md`, `docs/NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_PLAN_MAY01_2026.md`.

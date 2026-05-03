@@ -27,6 +27,14 @@ else:
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
     app.include_router(build_router(), prefix="/mindex")
 
+    @app.get("/health")
+    async def health():
+        return {
+            "status": "ok",
+            "service": "myceliumseg-api",
+            "db_configured": bool(os.getenv("MINDEX_DATABASE_URL") or os.getenv("DATABASE_URL")),
+        }
+
 
 def main():
     if app is None:

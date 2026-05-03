@@ -6,6 +6,43 @@
 
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
+## MYCA Alive (May 2, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCA_ALIVE_ROLLOUT_MAY02_2026.md` | P1–P4 deliverables, verification matrix, legion + DR + inventory pointers. |
+| `docs/LEGION_VOICE_AND_EARTH2_LIVE_MAY02_2026.md` | 241/249 health URLs and env. |
+| `docs/REDUNDANCY_AND_DR_MAY02_2026.md` | Proxmox + backup expectations. |
+
+## NatureOS integration — May 2, 2026
+| Doc | Purpose |
+|-----|---------|
+| `docs/NATUREOS_GAPS_AND_INTEGRATIONS_COMPLETE_MAY02_2026.md` | **Gaps/integrations program complete** — handoff, verification, backlog vs shipped. |
+| `docs/NATUREOS_FULL_STACK_ARCHITECTURE_AND_INTEGRATIONS_MAY02_2026.md` | **Canonical** NatureOS-A (website) vs NatureOS-B (.NET), BFF, Worldview, env matrix, MAS `natureos_core_api` health. |
+| `docs/NATUREOS_STAGING_MATRIX_MAY02_2026.md` | Smoke curls for BFF, MAS, MINDEX, core-api. |
+| `docs/NATUREOS_DEPLOY_PUSH_MATRIX_MAY02_2026.md` | Deploy order after merges. |
+| `docs/NATUREOS_SHELL_INTEGRATION_BACKLOG_MAY02_2026.md` | Shell: waypoints DB draft, chat, entitlements, Fusarium deferred. |
+| `docs/MYCA_AGENT_WORLDCAT_ROUTING_MAY02_2026.md` | MAS agents: use Worldview `/catalog` — not hardcoded BFF URLs. |
+
+## All-Life Ancestry (May 2, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/ALL_LIFE_ANCESTRY_EXPANSION_MAY02_2026.md` | All-life `/natureos/ancestry` hub: MINDEX + BFF + ETL stubs + n8n + ops follow-ups. |
+| `../MINDEX/mindex/docs/ALL_LIFE_ETL_MAY02_2026.md` | MINDEX ETL orchestration, stubs, storage staging. |
+
+## Petri Dish v2 — hybrid engine (May 2, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/PETRI_DISH_V2_ARCHITECTURE_MAY02_2026.md` | Rust `petri_engine`, WASM, Axum 8050, MAS proxy, MINDEX `0016`, website `petri-dish-v2` + BFF routes. |
+| `docs/PETRI_DISH_V2_RUNBOOK_MAY02_2026.md` | Deploy and troubleshoot engine, seg service, website env. |
+| `docs/PETRI_DISH_V2_COMPLETE_MAY02_2026.md` | Milestone delivery evidence and known follow-ups. |
+
+## MAY02 continuation rollout — closure (May 2, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MAY02_CONTINUATION_ROLLOUT_COMPLETE_MAY02_2026.md` | Continuation plan closure: sandbox CF creds path, Petri Docker + deploy script, P3 queue + CREP key draft, hooks cleanup. |
+| `docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md` | Six May 1 plan shells — ordered backlog for future sprints. |
+| `docs/CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md` | Agent API key `scope` → `CREPDashboardClient` gating (draft). |
+
 ---
 
 ## AWS + MVT tile pipeline (Apr 17, 2026)
@@ -313,7 +350,7 @@
 | `docs/NATUREOS_APP_AEROSOL_MAY01_2026.md` | **Aerosol app**: layers, BFF `/api/natureos/aerosol/*`, data sources, roadmap. |
 | `docs/NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md` | **Biology Simulator**: landing, MINDEX probes, roadmap to Unreal/agentic phases. |
 | `docs/NATUREOS_APP_TOOLS_MAY01_2026.md` | **Tools hub**: seven categories, real routes only, deep integration follow-on. |
-| `docs/NATUREOS_FULL_PLATFORM_COMPLETE_FEB19_2026.md` | **Historical**: NatureOS .NET + early website phases — still useful for backend detail; website IA superseded by May 2026 reorg doc above. |
+| `docs/NATUREOS_FULL_PLATFORM_COMPLETE_FEB19_2026.md` | **Historical**: NatureOS .NET + early website phases — still useful for backend detail; website IA superseded by May 2026 reorg doc; integration/gap wave completion in `NATUREOS_GAPS_AND_INTEGRATIONS_COMPLETE_MAY02_2026.md`. |
 | `docs/COMPOUNDS_BUG_FIX_AND_DEPLOY_FEB19_2026.md` | **Compounds fix deploy**: Species compounds via API proxy; pushed to GitHub; deploy checklist, verification |
 | `docs/DEPLOYMENT_READINESS_CHECK_FEB19_2026.md` | **Deployment readiness**: Pre-deploy verification for handoff agent; Git, build, deploy checklist; do not deploy from this agent |
 | `docs/SANDBOX_PREP_AND_HANDOFF_FEB18_2026.md` | **Sandbox prep entry point**: What is prepared, docs for deploying agent, GitHub repos; deployment in another agent |
