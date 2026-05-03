@@ -1,30 +1,43 @@
-﻿import paramiko
-import time
+﻿"""Try NAS mount credential combinations using only environment-provided passwords.
+
+Do not add literal passwords to this file (policy: no-hardcoded-secrets).
+"""
+from __future__ import annotations
+
+import os
 import sys
+import time
 
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+import paramiko
 
-mindex_host = "192.168.0.189"
-user = "mycosoft"
-passwd = "REDACTED_VM_SSH_PASSWORD"
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-print("Trying different usernames and passwords...")
+mindex_host = os.environ.get("MINDEX_SSH_HOST", "192.168.0.189")
+user = os.environ.get("MINDEX_SSH_USER", "mycosoft")
+passwd = os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD") or ""
+extra_candidates = [
+    p.strip()
+    for p in os.environ.get("NAS_MOUNT_PASSWORD_CANDIDATES", "").split(",")
+    if p.strip()
+]
+
+if not passwd and not extra_candidates:
+    print("Set VM_PASSWORD (SSH) and optionally NAS_MOUNT_PASSWORD_CANDIDATES=comma,separated")
+    sys.exit(1)
+
+print("Connecting over SSH...")
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect(mindex_host, username=user, password=passwd, timeout=30)
+ssh.connect(mindex_host, username=user, password=passwd or extra_candidates[0], timeout=30)
 
-# Try with different credential combinations
-attempts = [
-    ("mycosoft", "REDACTED_VM_SSH_PASSWORD"),
-    ("admin", "REDACTED_VM_SSH_PASSWORD"),
-    ("morgan", "Mushroom1!"),
-    ("morgan", "mushroom1"),
-    ("mycosoft", "Mushroom1!"),
-]
+attempts: list[tuple[str, str]] = []
+if passwd:
+    attempts.append((user, passwd))
+for cand in extra_candidates:
+    attempts.append((user, cand))
 
 for username, password in attempts:
     print(f"\nTrying: username={username}")
-    # Write creds
     cmd = f'''
 sudo bash -c 'cat > /etc/samba/mycosoft-nas.creds << "CREDEOF"
 username={username}
@@ -41,7 +54,7 @@ fi
 '''
     stdin, stdout, stderr = ssh.exec_command(cmd)
     time.sleep(8)
-    result = stdout.read().decode('utf-8', errors='replace')
+    result = stdout.read().decode("utf-8", errors="replace")
     print(result)
     if "SUCCESS" in result:
         break

@@ -19,6 +19,7 @@ Usage:
 
 import argparse
 import json
+import os
 import re
 import ssl
 import socket
@@ -149,19 +150,19 @@ class SecurityAuditScanner:
         (r'api[_-]?key["\s:=]+["\']?[^"\'>\s]{16,}', 'Potential API key in response'),
     ]
     
-    # Proxmox API configuration
+    # Proxmox API configuration (PVEAPIToken=user@pam!tokenid=secret — set PROXMOX_API_TOKEN)
     PROXMOX_CONFIG = {
-        "host": "192.168.0.202",
-        "port": 8006,
-        "token": "root@pam!cursor_agent=bc1c9dc7-6fca-4e89-8a1d-557a9d117a3e"
+        "host": os.getenv("PROXMOX_HOST", "192.168.0.202"),
+        "port": int(os.getenv("PROXMOX_PORT", "8006")),
+        "token": os.getenv("PROXMOX_API_TOKEN", ""),
     }
-    
+
     # UniFi API configuration
     UNIFI_CONFIG = {
-        "host": "192.168.0.1",
-        "port": 443,
-        "username": "cursor_agent",
-        "password": "Mushroom1!2020",
+        "host": os.getenv("UNIFI_HOST", "192.168.0.1"),
+        "port": int(os.getenv("UNIFI_PORT", "443")),
+        "username": os.getenv("UNIFI_USERNAME", ""),
+        "password": os.getenv("UNIFI_PASSWORD", ""),
     }
     
     def __init__(self):
@@ -309,7 +310,11 @@ class SecurityAuditScanner:
         """Scan Proxmox infrastructure via API."""
         print("\n[*] Scanning Proxmox Infrastructure")
         print("=" * 60)
-        
+
+        if not self.PROXMOX_CONFIG.get("token"):
+            print("  [SKIP] Set PROXMOX_API_TOKEN (PVE format user@pam!id=secret)")
+            return None
+
         base_url = f"https://{self.PROXMOX_CONFIG['host']}:{self.PROXMOX_CONFIG['port']}/api2/json"
         headers = {
             "Authorization": f"PVEAPIToken={self.PROXMOX_CONFIG['token']}"

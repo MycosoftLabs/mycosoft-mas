@@ -4,10 +4,11 @@ Deploy Metabase + n8n to MAS VM for MYCA Integration
 Date: January 27, 2026
 """
 
+import os
 import paramiko
 import time
 
-DOCKER_COMPOSE_CONTENT = '''
+DOCKER_COMPOSE_TEMPLATE = '''
 # Metabase + n8n Integration Stack for MYCA
 # Date: January 27, 2026
 
@@ -26,7 +27,7 @@ services:
       MB_DB_DBNAME: metabase
       MB_DB_PORT: 5432
       MB_DB_USER: metabase
-      MB_DB_PASS: MetabasePass123!
+      MB_DB_PASS: __METABASE_DB_PASSWORD__
       MB_DB_HOST: metabase-db
       MB_SITE_NAME: MYCA Intelligence
       MB_SITE_URL: http://192.168.0.188:3000
@@ -53,7 +54,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: metabase
-      POSTGRES_PASSWORD: MetabasePass123!
+      POSTGRES_PASSWORD: __METABASE_DB_PASSWORD__
       POSTGRES_DB: metabase
     volumes:
       - metabase-db-data:/var/lib/postgresql/data
@@ -80,7 +81,7 @@ services:
       N8N_PORT: 5678
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: admin
-      N8N_BASIC_AUTH_PASSWORD: Mushroom1!
+      N8N_BASIC_AUTH_PASSWORD: __N8N_BASIC_AUTH_PASSWORD__
       EXECUTIONS_PROCESS: main
       EXECUTIONS_DATA_SAVE_ON_ERROR: all
       EXECUTIONS_DATA_SAVE_ON_SUCCESS: all
@@ -112,10 +113,24 @@ networks:
 
 def main():
     print("=== Deploying Metabase + n8n to MAS VM ===")
-    
+
+    vm_pass = os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD") or ""
+    mb_pass = os.environ.get("METABASE_DB_PASSWORD") or ""
+    n8n_pass = os.environ.get("N8N_BASIC_AUTH_PASSWORD") or ""
+    if not vm_pass or not mb_pass or not n8n_pass:
+        raise SystemExit(
+            "Set VM_PASSWORD (or VM_SSH_PASSWORD), METABASE_DB_PASSWORD, N8N_BASIC_AUTH_PASSWORD"
+        )
+
+    compose_body = (
+        DOCKER_COMPOSE_TEMPLATE.replace("__METABASE_DB_PASSWORD__", mb_pass).replace(
+            "__N8N_BASIC_AUTH_PASSWORD__", n8n_pass
+        )
+    )
+
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect("192.168.0.188", username="mycosoft", password=vm_pass)
     
     # Create directory
     print("Creating deployment directory...")
@@ -126,7 +141,7 @@ def main():
     print("Writing docker-compose file...")
     sftp = ssh.open_sftp()
     with sftp.file('/home/mycosoft/myca-integrations/docker-compose.yml', 'w') as f:
-        f.write(DOCKER_COMPOSE_CONTENT)
+        f.write(compose_body)
     sftp.close()
     
     # Pull images first
@@ -168,7 +183,7 @@ def main():
     
     print("\n=== Deployment Complete ===")
     print("Metabase: http://192.168.0.188:3000")
-    print("n8n: http://192.168.0.188:5678 (admin / Mushroom1!)")
+    print("n8n: http://192.168.0.188:5678 (admin / password from N8N_BASIC_AUTH_PASSWORD)")
     print("\nNote: Metabase may take 2-3 minutes to fully initialize on first run.")
 
 if __name__ == "__main__":

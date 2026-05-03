@@ -3,14 +3,19 @@
 Deploy simplified Mycosoft sandbox stack using pre-built images
 This gets core services running while we prepare for full build
 """
+import os
 import paramiko
 import time
 
 VM_IP = "192.168.0.187"
 VM_USER = "mycosoft"
-VM_PASS = "REDACTED_VM_SSH_PASSWORD"
+VM_PASS = os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD") or ""
+SANDBOX_POSTGRES_PASSWORD = (
+    os.environ.get("SANDBOX_POSTGRES_PASSWORD") or os.environ.get("POSTGRES_PASSWORD") or ""
+)
+GRAFANA_ADMIN_PASSWORD = os.environ.get("GRAFANA_ADMIN_PASSWORD") or ""
 
-# Simplified docker-compose that uses base images
+# Simplified docker-compose that uses base images (passwords from env; no literals)
 DOCKER_COMPOSE = """
 version: '3.8'
 
@@ -26,7 +31,7 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_USER=mycosoft
-      - POSTGRES_PASSWORD=Mushroom1!
+      - POSTGRES_PASSWORD=__SANDBOX_POSTGRES_PASSWORD__
       - POSTGRES_DB=mycosoft
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -140,7 +145,7 @@ services:
       - "3002:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=Mushroom1!
+      - GF_SECURITY_ADMIN_PASSWORD=__GRAFANA_ADMIN_PASSWORD__
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-worldmap-panel
     volumes:
       - grafana_data:/var/lib/grafana
@@ -342,6 +347,12 @@ print("DEPLOYING MYCOSOFT SANDBOX (SIMPLE MODE)")
 print(f"Target: {VM_IP}")
 print("=" * 70)
 
+if not VM_PASS:
+    raise SystemExit("Set VM_PASSWORD or VM_SSH_PASSWORD before running this script.")
+_compose = DOCKER_COMPOSE.replace("__SANDBOX_POSTGRES_PASSWORD__", SANDBOX_POSTGRES_PASSWORD).replace(
+    "__GRAFANA_ADMIN_PASSWORD__", GRAFANA_ADMIN_PASSWORD
+)
+
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 ssh.connect(VM_IP, username=VM_USER, password=VM_PASS)
@@ -360,7 +371,7 @@ run_cmd(ssh, "mkdir -p ~/mycosoft-sandbox/{website-html,mindex-app,mycobrain-app
 print("\n[3/5] Writing docker-compose.yml...")
 sftp = ssh.open_sftp()
 with sftp.file("/home/mycosoft/mycosoft-sandbox/docker-compose.yml", 'w') as f:
-    f.write(DOCKER_COMPOSE)
+    f.write(_compose)
 
 # Write website HTML
 with sftp.file("/home/mycosoft/mycosoft-sandbox/website-html/index.html", 'w') as f:
@@ -422,7 +433,7 @@ Local URLs:
   - MAS:         http://{VM_IP}:8001
   - MycoBrain:   http://{VM_IP}:8003
   - n8n:         http://{VM_IP}:5678
-  - Grafana:     http://{VM_IP}:3002 (admin/Mushroom1!)
+  - Grafana:     http://{VM_IP}:3002 (admin / value from GRAFANA_ADMIN_PASSWORD)
   - Prometheus:  http://{VM_IP}:9090
 
 Cloudflare Tunnel URLs:

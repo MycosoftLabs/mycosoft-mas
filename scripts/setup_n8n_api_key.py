@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 """Setup n8n API key for workflow imports"""
+import os
+
 import paramiko
 
 def main():
+    vm_pass = os.environ.get("VM_PASSWORD") or os.environ.get("VM_SSH_PASSWORD") or ""
+    if not vm_pass:
+        raise SystemExit("Set VM_PASSWORD or VM_SSH_PASSWORD")
+    metabase_db_pass = os.environ.get("METABASE_DB_PASSWORD") or ""
+    n8n_basic_pass = os.environ.get("N8N_BASIC_AUTH_PASSWORD") or ""
+    if not metabase_db_pass or not n8n_basic_pass:
+        raise SystemExit("Set METABASE_DB_PASSWORD and N8N_BASIC_AUTH_PASSWORD for compose secrets")
+
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.188', username='mycosoft', password='REDACTED_VM_SSH_PASSWORD')
+    ssh.connect("192.168.0.188", username="mycosoft", password=vm_pass)
     
     # Need to restart n8n with API key enabled
     print("=== Updating n8n configuration to enable API key ===")
@@ -18,7 +28,7 @@ def main():
     
     # Update docker-compose with API key env
     print("Updating docker-compose with API configuration...")
-    compose_update = '''
+    compose_update_raw = '''
 cat > /home/mycosoft/myca-integrations/docker-compose.yml << 'EOF'
 version: '3.8'
 
@@ -34,7 +44,7 @@ services:
       MB_DB_DBNAME: metabase
       MB_DB_PORT: 5432
       MB_DB_USER: metabase
-      MB_DB_PASS: MetabasePass123!
+      MB_DB_PASS: __METABASE_DB_PASSWORD__
       MB_DB_HOST: metabase-db
       MB_SITE_NAME: MYCA Intelligence
       MB_SITE_URL: http://192.168.0.188:3000
@@ -60,7 +70,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: metabase
-      POSTGRES_PASSWORD: MetabasePass123!
+      POSTGRES_PASSWORD: __METABASE_DB_PASSWORD__
       POSTGRES_DB: metabase
     volumes:
       - metabase-db-data:/var/lib/postgresql/data
@@ -86,7 +96,7 @@ services:
       N8N_PORT: 5678
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: admin
-      N8N_BASIC_AUTH_PASSWORD: Mushroom1!
+      N8N_BASIC_AUTH_PASSWORD: __N8N_BASIC_AUTH_PASSWORD__
       N8N_PUBLIC_API_DISABLED: "false"
       EXECUTIONS_PROCESS: main
       EXECUTIONS_DATA_SAVE_ON_ERROR: all
@@ -117,6 +127,9 @@ networks:
     name: myca-integration-network
 EOF
 '''
+    compose_update = compose_update_raw.replace(
+        "__METABASE_DB_PASSWORD__", metabase_db_pass
+    ).replace("__N8N_BASIC_AUTH_PASSWORD__", n8n_basic_pass)
     stdin, stdout, stderr = ssh.exec_command(compose_update)
     stdout.channel.recv_exit_status()
     
@@ -147,7 +160,7 @@ EOF
     print("\n=== Alternative: Use cookie session ===")
     print("Since n8n requires API key creation through UI, you need to:")
     print("1. Go to http://192.168.0.188:5678")
-    print("2. Login with admin / Mushroom1!")
+    print("2. Login with admin / (password from N8N_BASIC_AUTH_PASSWORD)")
     print("3. Go to Settings > n8n API")
     print("4. Create a new API key")
     print("5. Add the key to .env.local as N8N_LOCAL_API_KEY")
