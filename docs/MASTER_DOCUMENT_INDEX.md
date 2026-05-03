@@ -18,6 +18,8 @@
 
 - `docs/PETRI_DISH_V2_ARCHITECTURE_MAY02_2026.md` — **Architecture**: `petri_engine` crate, MAS `/api/simulation/petri/v2`, MINDEX `petri_v2` schema, seg service 8051, website BFF + R3F viewer.
 - `docs/PETRI_DISH_V2_RUNBOOK_MAY02_2026.md` — **Runbook**: env vars (`PETRI_ENGINE_V2_URL`, `PETRI_SEG_SERVICE_URL`, `MYCELIUMSEG_ONNX_PATH`), build WASM, MAS restart, migration, Cloudflare purge.
+- `scripts/deploy_petri_v2_stack_vm187.py` — Deploy Rust engine **8050** + MyceliumSeg API **8051** on Sandbox **187**.
+- `scripts/set_petri_engine_env_mas188.py` — Append `PETRI_ENGINE_V2_URL` to MAS **188** `~/mycosoft/mas/.env` and restart `mas-orchestrator`.
 - `docs/PETRI_DISH_V2_COMPLETE_MAY02_2026.md` — **Plan completion** summary and verification checklist.
 
 ## NatureOS — full gap map, integrations, documentation (May 2, 2026)
