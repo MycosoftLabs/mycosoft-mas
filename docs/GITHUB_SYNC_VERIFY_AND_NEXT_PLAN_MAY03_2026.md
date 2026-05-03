@@ -55,6 +55,25 @@
 - **MAS:** `curl -sS http://192.168.0.188:8001/health` and Prometheus health URL above.
 - **Website:** Compare `localhost:3010` vs sandbox after container rebuild + Cloudflare purge (see deployment checklist rules).
 
+## Post-push log (May 3, 2026)
+
+| Repository | Remote / branch | Notes |
+|------------|-----------------|--------|
+| `mycosoft-mas` | `origin` `main` | Pushed `f13ae7bd5` (Prometheus + MCP + docs + May03 completion set). |
+| `website` | `origin` `main` | Rebased on remote; pushed `a748aeaf` (May03 NatureOS BFF/UI). |
+| `mindex` | `origin` `main` | Pushed `3b0ddfc` (all-life ETL, migrations, supabase pack). |
+| `mycobrain` | `origin` `main` | Pushed `5211757` then **security follow-up** `ac4f806` — removed `MQTT/**/config/passwd`, ~19MB jetson backup tarball, and nested `workspace` gitlink from the tree. **History note:** those blobs may still exist in earlier commits — schedule `git filter-repo` if GitHub history must be scrubbed (distinct from key rotation). |
+| `NatureOS` | `origin` `main` | Pushed `73b10f8`. |
+| `Mycorrhizae` | `origin` `main` | Remote repo name `Mycorrhizae`; pushed `02cabfb`. |
+| `NLM` | `origin` `main` | Rebased; pushed `83d74de`. |
+| `sdk` | `origin` `main` | Pushed `4404709`. |
+| `MYCODAO` | `nodefather` + `mycosoftlabs` `main` | No `origin` remote configured locally; pushed `88eba0b` (restored `.gitignore`, ignore nested `MYCO-App`). |
+
+## Incident — nested repos / artifacts (corrective actions)
+
+1. **MYCODAO:** Avoid `git add app/natureapp/` when `MYCO-App` contains its own `.git`; path is now gitignored. Prefer a declared submodule when the app should ship with the monorepo.
+2. **mycobrain:** MQTT `passwd` and jetson backup tarball must never land in VCS; patterns added to `.gitignore`. Regenerate Mosquitto passwords on the deployment host only.
+
 ---
 
 **Related:** `docs/PROMETHEUS_MAS_VM188_RUNBOOK_MAY03_2026.md`, `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md`, `.cursor/rules/no-hardcoded-secrets.mdc`.
