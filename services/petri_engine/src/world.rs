@@ -166,7 +166,7 @@ impl World {
         if self.paused {
             return;
         }
-        let cfg = &self.cfg;
+        let cfg = self.cfg.clone();
         self.nutrients
             .diffuse(cfg.nutrient_diffusion, cfg.nitrogen_diffusion);
         let diff = [0.15f32; chemistry::N_COMPOUNDS];
@@ -181,7 +181,7 @@ impl World {
         for d in &mut self.density {
             *d = 0;
         }
-        let w = cfg.grid_w as usize;
+        let _w = cfg.grid_w as usize;
         for t in &self.tips {
             if !t.alive {
                 continue;
@@ -199,9 +199,16 @@ impl World {
             if !self.tips[idx].alive {
                 continue;
             }
-            let tip = &self.tips[idx];
-            let xi = tip.x as i32;
-            let yi = tip.y as i32;
+            let tip_id = self.tips[idx].id;
+            let tip_x = self.tips[idx].x;
+            let tip_y = self.tips[idx].y;
+            let tip_angle = self.tips[idx].angle;
+            let tip_energy = self.tips[idx].energy;
+            let tip_age = self.tips[idx].age;
+            let tip_lineage = self.tips[idx].lineage;
+
+            let xi = tip_x as i32;
+            let yi = tip_y as i32;
             let dens = self
                 .nutrients
                 .idx(xi, yi)
@@ -209,7 +216,7 @@ impl World {
                 .unwrap_or(0.0);
             let inhibit = 1.0 / (1.0 + dens * cfg.density_inhibition);
 
-            let (sug, nit) = self.nutrients.sample(tip.x, tip.y);
+            let (sug, nit) = self.nutrients.sample(tip_x, tip_y);
             let mem = self.memory.sample(xi, yi);
             let sig = self
                 .signals
@@ -222,21 +229,21 @@ impl World {
             self.chemistry
                 .add_at(chemistry::GLUCOSE, xi, yi, -uptake * 0.01);
 
-            let cos_a = tip.angle.cos();
-            let sin_a = tip.angle.sin();
+            let cos_a = tip_angle.cos();
+            let sin_a = tip_angle.sin();
             let speed = cfg.tip_speed * (0.2 + sug) * inhibit;
-            let nx = (tip.x + cos_a * speed).clamp(1.0, cfg.grid_w as f32 - 2.0);
-            let ny = (tip.y + sin_a * speed).clamp(1.0, cfg.grid_h as f32 - 2.0);
+            let nx = (tip_x + cos_a * speed).clamp(1.0, cfg.grid_w as f32 - 2.0);
+            let ny = (tip_y + sin_a * speed).clamp(1.0, cfg.grid_h as f32 - 2.0);
 
-            let mut energy = tip.energy - cfg.energy_decay_per_step + sug * 0.008;
+            let mut energy = tip_energy - cfg.energy_decay_per_step + sug * 0.008;
             energy = (energy + sig * 0.001).min(2.0);
-            let age = tip.age + 1;
+            let age = tip_age + 1;
 
-            let mut angle = tip.angle + (self.rng.gen::<f32>() - 0.5) * 0.12;
+            let angle = tip_angle + (self.rng.gen::<f32>() - 0.5) * 0.12;
 
             if age > cfg.senescence_age || energy <= 0.05 {
                 self.tips[idx].alive = false;
-                self.push_event(format!("senescence tip {}", tip.id));
+                self.push_event(format!("senescence tip {}", tip_id));
                 continue;
             }
 
@@ -248,7 +255,7 @@ impl World {
                     nx,
                     ny,
                     branch_angle,
-                    tip.lineage,
+                    tip_lineage,
                 ));
                 self.push_event(format!("branch tip {}", self.next_tip_id));
                 self.next_tip_id += 1;

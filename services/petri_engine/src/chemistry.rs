@@ -68,15 +68,17 @@ impl ChemistryGrid {
     }
 
     pub fn set_uniform(&mut self, compound: usize, v: f32) {
-        for c in 0..self.ncells {
-            self.compounds[self.lin(compound, c)] = v;
+        let n = self.ncells;
+        let base = compound * n;
+        for c in 0..n {
+            self.compounds[base + c] = v;
         }
     }
 
     pub fn diffuse_compounds(&mut self, diffusion: &[f32; N_COMPOUNDS], decay: &[f32; N_COMPOUNDS]) {
         let w = self.w as usize;
         let h = self.h as usize;
-        let n = self.ncells;
+        let _n = self.ncells;
         let mut next = self.compounds.clone();
         for comp in 0..N_COMPOUNDS {
             let d = diffusion[comp].min(0.49);
