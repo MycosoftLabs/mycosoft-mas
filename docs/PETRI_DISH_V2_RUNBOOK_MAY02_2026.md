@@ -42,13 +42,22 @@ docker run -d --name myceliumseg-api --restart unless-stopped -p 8051:8051 \
 
 ## MAS VM (188) environment
 
-Set on the **mas-orchestrator** service (systemd `Environment=` or `EnvironmentFile=`):
+The shipped systemd unit uses **`EnvironmentFile=-/home/mycosoft/mycosoft/mas/.env`** (`deploy/mas-orchestrator.service`). Append:
 
 ```bash
 PETRI_ENGINE_V2_URL=http://192.168.0.187:8050
 ```
 
-Restart: `sudo systemctl restart mas-orchestrator`
+**Automated (from dev PC with LAN + credentials):**
+
+```powershell
+cd C:\...\mycosoft-mas
+python scripts/set_petri_engine_env_mas188.py
+```
+
+This idempotently adds the line to `.env` and runs `sudo systemctl restart mas-orchestrator`.
+
+Manual restart: `sudo systemctl restart mas-orchestrator`
 
 Verify:
 

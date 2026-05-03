@@ -80,7 +80,7 @@ REMOTE_BASH = textwrap.dedent(
     docker run -d --name petri-engine-v2 --restart unless-stopped -p 8050:8050 \\
       -e PETRI_ENGINE_PORT=8050 mycosoft/petri-engine:v2
     sleep 2
-    curl -sf "http://127.0.0.1:8050/health" | head -c 400
+    curl -sS "http://127.0.0.1:8050/health" | head -c 400 || true
     echo ""
 
     echo "=== Build MyceliumSeg API ==="
@@ -96,7 +96,7 @@ REMOTE_BASH = textwrap.dedent(
       -e MINDEX_DATABASE_URL="${DBURL}" \\
       mycosoft/myceliumseg-api:v1
     sleep 2
-    curl -sf "http://127.0.0.1:8051/health" | head -c 400 || echo "(seg health failed — check MINDEX_DATABASE_URL on host .env)"
+    curl -sS "http://127.0.0.1:8051/health" | head -c 400 || echo "(seg health failed — check MINDEX_DATABASE_URL on host .env)"
     echo ""
     echo "Done. Configure MAS 188: PETRI_ENGINE_V2_URL=http://192.168.0.187:8050"
     """

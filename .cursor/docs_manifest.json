@@ -1,6 +1,12 @@
 {
-  "count": 754,
+  "count": 917,
   "docs": [
+    {
+      "path": "docs\\AEROSOL_VIRUS_RADIATION_FEEDS_PLAN_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "Aerosol \u2014 Virus & Radiation Data Feeds Plan \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
     {
       "path": "docs\\AGENT_ACTIVATION_COMPLETE_FEB09_2026.md",
       "repo": "MAS",
@@ -80,6 +86,12 @@
       "date": "2026-MAR-07"
     },
     {
+      "path": "docs\\ANCESTRY_ALL_SPECIES_EXPANSION_PLAN_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "Ancestry Database \u2014 All Species / All Kingdoms Expansion Plan \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
       "path": "docs\\ANOMALIES_ENDPOINT_IMPLEMENTATION_FEB12_2026.md",
       "repo": "MAS",
       "title": "Anomalies Endpoint Implementation - Feb 12, 2026",
@@ -140,6 +152,18 @@
       "date": "2026-JAN-20"
     },
     {
+      "path": "docs\\AUDIT_MYCA_MEMORY_IDENTITY_MAR21_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Memory & Identity System Audit Report",
+      "date": "2026-MAR-21"
+    },
+    {
+      "path": "docs\\AUTH_DEPLOY_HARDENING_COMPLETE_MAR15_2026.md",
+      "repo": "MAS",
+      "title": "Auth, Deploy, and Live Performance Plan \u2014 Complete",
+      "date": "2026-MAR-15"
+    },
+    {
       "path": "docs\\AUTH_TEST_REPORT_20260123_164814.md",
       "repo": "MAS",
       "title": "Authentication Flow Test Report",
@@ -194,10 +218,34 @@
       "date": "2026-MAR-09"
     },
     {
+      "path": "docs\\AVANI_NLM_REAL_RUNTIME_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "AVANI NLM Real Runtime (Mar 14, 2026)",
+      "date": "2026-MAR-14"
+    },
+    {
       "path": "docs\\BACKEND_INTEGRATION_COMPLETE_FEB03_2026.md",
       "repo": "MAS",
       "title": "Summary",
       "date": "2026-FEB-03"
+    },
+    {
+      "path": "docs\\BACKGROUND_TERMINALS_AUDIT_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "Background Terminals and Unauthorized PowerShell Audit",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\BACKUP_AND_LFS_AUDIT_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "Backup and LFS Audit \u2014 Mar 16, 2026",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\BIOLOGY_SIMULATOR_UNREAL_INTEGRATION_PLAN_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "Biology Simulator \u2014 Unreal Engine Integration Plan \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
     },
     {
       "path": "docs\\BIO_COMPUTE_FEB06_2026.md",
@@ -240,6 +288,12 @@
       "repo": "MAS",
       "title": "CalDigit Dock USB Diagnostic \u2014 Feb 24, 2026",
       "date": "2026-FEB-24"
+    },
+    {
+      "path": "docs\\CANONICAL_MYCA_VOICE_PATH_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Canonical MYCA Realtime Voice Path \u2014 Mar 14, 2026",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\CFO_MCP_CONNECTOR_COMPLETE_MAR08_2026.md",
@@ -356,6 +410,12 @@
       "date": "2026-FEB-19"
     },
     {
+      "path": "docs\\COMPOUND_ANALYSER_CHEMPUTER_AGENT_PLAN_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "Compound Analyser \u2014 Chemputer Agent Plan \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
       "path": "docs\\Comprehensive action plan.docx.md",
       "repo": "MAS",
       "title": "Comprehensive Integration and Activation Plan for MYCA (Feb 28\u00a02026)",
@@ -416,10 +476,22 @@
       "date": "2026-FEB-09"
     },
     {
+      "path": "docs\\CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md",
+      "repo": "MAS",
+      "title": "CREP \u2014 Agent API Key Scope Contract (Draft \u2014 May 02, 2026)",
+      "date": "2026-MAY-02"
+    },
+    {
       "path": "docs\\CREP_AIRCRAFT_VESSEL_CRASH_FIX.md",
       "repo": "MAS",
       "title": "CREP Dashboard - Aircraft/Vessel/Satellite Marker Fixes",
       "date": null
+    },
+    {
+      "path": "docs\\CREP_COMMAND_CONTRACT_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "CREP Command Contract \u2014 Mar 13, 2026",
+      "date": "2026-MAR-13"
     },
     {
       "path": "docs\\CREP_DATA_SOURCE_APIS.md",
@@ -458,6 +530,12 @@
       "date": "2026-FEB-06"
     },
     {
+      "path": "docs\\CREP_PROTOCOL_PRIORITY_APR06_2026.md",
+      "repo": "MAS",
+      "title": "CREP + Protocol Stack Priority \u2014 April 6, 2026",
+      "date": "2026-APR-06"
+    },
+    {
       "path": "docs\\CREP_SPECIES_ICONS_CLICKABLE_FIX_MAR11_2026.md",
       "repo": "MAS",
       "title": "CREP Species Icons Clickable Fix \u2014 Mar 11, 2026",
@@ -492,6 +570,12 @@
       "repo": "MAS",
       "title": "CREP Website Deployment Reference",
       "date": null
+    },
+    {
+      "path": "docs\\CROSS_SYSTEM_INTEGRATION_TOPOLOGY_RECONCILIATION_APR13_2026.md",
+      "repo": "MAS",
+      "title": "Cross-System Integration Topology Reconciliation \u2014 Apr 13, 2026",
+      "date": "2026-APR-13"
     },
     {
       "path": "docs\\CRYPTOGRAPHIC_INTEGRITY_FEB04_2026.md",
@@ -626,6 +710,12 @@
       "date": "2026-MAR-11"
     },
     {
+      "path": "docs\\CURSOR_WORKFLOW_ORCHESTRATION_ROLLOUT_COMPLETE_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Cursor Workflow Orchestration Rollout Complete",
+      "date": "2026-MAR-14"
+    },
+    {
       "path": "docs\\DASHBOARD_COMPONENTS.md",
       "repo": "MAS",
       "title": "MAS v2 Dashboard Components",
@@ -636,6 +726,36 @@
       "repo": "MAS",
       "title": "Data Loss and 8TB Drive Full \u2013 Root Cause and Fix Report",
       "date": "2026-FEB-06"
+    },
+    {
+      "path": "docs\\DEEP_AGENTS_V05_CROSS_SYSTEM_HOOKS_APR09_2026.md",
+      "repo": "MAS",
+      "title": "Deep Agents v0.5 Cross-System Hooks (Apr 9, 2026)",
+      "date": "2026-APR-09"
+    },
+    {
+      "path": "docs\\DEEP_AGENTS_V05_FOUNDATION_IMPLEMENTATION_APR09_2026.md",
+      "repo": "MAS",
+      "title": "Deep Agents v0.5 Foundation Implementation (Apr 9, 2026)",
+      "date": "2026-APR-09"
+    },
+    {
+      "path": "docs\\DEEP_AGENTS_V05_INTEGRATION_PLAN.md",
+      "repo": "MAS",
+      "title": "Deep Agents v0.5 Integration Plan \u2014 Mycosoft MAS",
+      "date": null
+    },
+    {
+      "path": "docs\\DEEP_AGENTS_V05_MULTI_REPO_SYSTEM_INTEGRATION_APR09_2026.md",
+      "repo": "MAS",
+      "title": "Deep Agents v0.5 Multi-Repo System Integration (Apr 9, 2026)",
+      "date": "2026-APR-09"
+    },
+    {
+      "path": "docs\\DEFERRED_GAPS_GO_NO_GO_APR06_2026.md",
+      "repo": "MAS",
+      "title": "Deferred Gap Items \u2014 Go / No-Go \u2014 April 6, 2026",
+      "date": "2026-APR-06"
     },
     {
       "path": "docs\\DEPLOYMENT_AGENT_HANDOFF_FEB18_2026.md",
@@ -836,6 +956,18 @@
       "date": "2026-FEB-10"
     },
     {
+      "path": "docs\\DOABLE_SEARCH_AND_ANSWER_PIPELINE_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Doable Search and Answer Pipeline \u2014 Master Plan",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\DOABLE_SEARCH_ROLLOUT_COMPLETE_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Doable Search Rollout \u2014 Complete (Mar 14, 2026)",
+      "date": "2026-MAR-14"
+    },
+    {
       "path": "docs\\DOCKER_MANAGEMENT_FEB12_2026.md",
       "repo": "MAS",
       "title": "Docker Management System (Feb 12, 2026)",
@@ -860,6 +992,12 @@
       "date": null
     },
     {
+      "path": "docs\\DOC_DRIFT_AND_INDEX_TRIAGE_MAR19_2026.md",
+      "repo": "MAS",
+      "title": "Doc Drift and Index Triage \u2014 Mar 19, 2026",
+      "date": "2026-MAR-19"
+    },
+    {
       "path": "docs\\earth-2-personaplex-integration-report-2026-01-31.md",
       "repo": "MAS",
       "title": "2026-01-31 Earth-2 and PersonaPlex Integration Report for CREP, FUSARIUM, and Earth Simulator",
@@ -882,6 +1020,12 @@
       "repo": "MAS",
       "title": "Earth2 + PersonaPlex Unified Integration - February 5, 2026",
       "date": "2026-FEB-05"
+    },
+    {
+      "path": "docs\\EARTH_SEARCH_MAR15_2026.md",
+      "repo": "MAS",
+      "title": "Earth Search \u2014 Planetary-Scale Unified Search",
+      "date": "2026-MAR-15"
     },
     {
       "path": "docs\\EARTH_SIMULATOR_VISION_TASKS.md",
@@ -914,9 +1058,33 @@
       "date": null
     },
     {
+      "path": "docs\\ENGINES_PHASE2_STUBS_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Phase 2 Engine Stubs \u2014 Mar 14, 2026",
+      "date": "2026-MAR-14"
+    },
+    {
       "path": "docs\\ENV_INTEGRATIONS.md",
       "repo": "MAS",
       "title": "Global Integration Environment Variables",
+      "date": null
+    },
+    {
+      "path": "docs\\ETHICS_TRAINING_SANDBOX_SCENARIOS_REPAIR_COMPLETE_APR01_2026.md",
+      "repo": "MAS",
+      "title": "Ethics Training Sandbox Scenarios Repair Complete APR01 2026",
+      "date": "2026-APR-01"
+    },
+    {
+      "path": "docs\\EXECUTION_WAVES_AND_ACCEPTANCE_MAR19_2026.md",
+      "repo": "MAS",
+      "title": "Execution Waves and Acceptance \u2014 Mar 19, 2026",
+      "date": "2026-MAR-19"
+    },
+    {
+      "path": "docs\\Expand search capabilities.docx.md",
+      "repo": "MAS",
+      "title": "Comprehensive MINDEX WorldView Expansion & NatureOS Modernisation Plan",
       "date": null
     },
     {
@@ -1058,10 +1226,58 @@
       "date": "2026-FEB-10"
     },
     {
+      "path": "docs\\FUSARIUM_ADDITIVE_MINDEX_DEFENSE_PLANE_COMPLETE_APR10_2026.md",
+      "repo": "MAS",
+      "title": "FUSARIUM Additive MINDEX Defense Plane Complete APR10 2026",
+      "date": "2026-APR-10"
+    },
+    {
+      "path": "docs\\FUSARIUM_FULLSCREEN_OPERATOR_APP_EXECUTION_PLAN_APR10_2026.md",
+      "repo": "MAS",
+      "title": "FUSARIUM Fullscreen Operator App Execution Plan APR10 2026",
+      "date": "2026-APR-10"
+    },
+    {
+      "path": "docs\\FUSARIUM_FULL_ARCHITECTURE_IMPLEMENTATION_COMPLETE_APR09_2026.md",
+      "repo": "MAS",
+      "title": "FUSARIUM Full Architecture Implementation Complete APR09 2026",
+      "date": "2026-APR-09"
+    },
+    {
+      "path": "docs\\FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md",
+      "repo": "MAS",
+      "title": "FUSARIUM Full Frontend Middleware Backend Architecture APR10 2026",
+      "date": "2026-APR-10"
+    },
+    {
+      "path": "docs\\FUSARIUM_OPERATOR_APPLICATION_AND_CROSS_SYSTEM_INTEGRATION_COMPLETE_APR09_2026.md",
+      "repo": "MAS",
+      "title": "FUSARIUM Operator Application And Cross-System Integration Complete APR09 2026",
+      "date": "2026-APR-09"
+    },
+    {
+      "path": "docs\\FUSARIUM_PLANS_USED_SYSTEMS_GAPS_AND_INTEGRATIONS_APR10_2026.md",
+      "repo": "MAS",
+      "title": "FUSARIUM Plans Used, Systems, Gaps, And Integrations APR10 2026",
+      "date": "2026-APR-10"
+    },
+    {
+      "path": "docs\\GAPS_AND_SECURITY_AUDIT_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Gaps and Security Audit \u2014 Mar 14, 2026",
+      "date": "2026-MAR-14"
+    },
+    {
       "path": "docs\\GAP_AGENT_FEB10_2026.md",
       "repo": "MAS",
       "title": "Gap Agent \u2014 Cross-Repo Gap Detection",
       "date": "2026-FEB-10"
+    },
+    {
+      "path": "docs\\GAP_FILL_PLAN_ALL_PENDING_EDITS_APR10_2026.md",
+      "repo": "MAS",
+      "title": "GAP Fill Plan - All Pending Edits - APR10_2026",
+      "date": "2026-APR-10"
     },
     {
       "path": "docs\\GAP_PLAN_CHANGES_LOG_MAR07_2026.md",
@@ -1080,6 +1296,18 @@
       "repo": "MAS",
       "title": "Gap Plan Large Items \u2014 Scaffolding (March 5, 2026)",
       "date": "2026-MAR-05"
+    },
+    {
+      "path": "docs\\GAP_REPORT_MAR15_2026.md",
+      "repo": "MAS",
+      "title": "Pull, Integration & Gap Report \u2014 NLM, MINDEX, MAS, Website",
+      "date": "2026-MAR-15"
+    },
+    {
+      "path": "docs\\GAP_SCAN_RECONCILIATION_APR06_2026.md",
+      "repo": "MAS",
+      "title": "Gap Scan Reconciliation \u2014 April 6, 2026",
+      "date": "2026-APR-06"
     },
     {
       "path": "docs\\GATEWAY_JETSON4_LILYGO_ARCHITECTURE_MAR07_2026.md",
@@ -1110,6 +1338,12 @@
       "repo": "MAS",
       "title": "Git Crisis and Comprehensive Fix \u2013 Feb 10, 2026",
       "date": "2026-FEB-10"
+    },
+    {
+      "path": "docs\\GPU_ENRICHMENT_STRATEGY_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "GPU Enrichment Strategy \u2014 March 14, 2026",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\GPU_NODE_DISCOVERY_FEB13_2026.md",
@@ -1160,10 +1394,40 @@
       "date": "2026-FEB-17"
     },
     {
+      "path": "docs\\GROUNDING_ARCHITECTURE_LOCKED_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Grounding Architecture \u2014 Locked Canonical Design",
+      "date": "2026-MAR-14"
+    },
+    {
       "path": "docs\\GROUNDING_PRODUCTION_ENABLE_MAR05_2026.md",
       "repo": "MAS",
       "title": "Grounding Production Enable \u2014 Mar 5, 2026",
       "date": "2026-MAR-05"
+    },
+    {
+      "path": "docs\\GROUNDING_RAG_EXECUTION_STATUS_APR06_2026.md",
+      "repo": "MAS",
+      "title": "Grounding + RAG Execution Status \u2014 April 6, 2026",
+      "date": "2026-APR-06"
+    },
+    {
+      "path": "docs\\GROWTH_ANALYTICS_AGENTIC_PLAN_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "Growth Analytics \u2014 Agentic Analysis Plan \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\Harness Engineering for MYCA MAS.docx.md",
+      "repo": "MAS",
+      "title": "Integration Patch Plan \u2013 MYCA Harness 2026",
+      "date": null
+    },
+    {
+      "path": "docs\\HUMAN_TEAM_PAGE_DEPLOY_NEXT_STEPS_MAR15_2026.md",
+      "repo": "MAS",
+      "title": "Human Team Page Not Live \u2014 Next Steps (Mar 15, 2026)",
+      "date": "2026-MAR-15"
     },
     {
       "path": "docs\\HYBRID_FIRMWARE_PLAN.md",
@@ -1220,6 +1484,12 @@
       "date": null
     },
     {
+      "path": "docs\\INSTANT_UPDATES_AND_FAST_CICD_MAR15_2026.md",
+      "repo": "MAS",
+      "title": "Instant Website Updates and Faster CI/CD",
+      "date": "2026-MAR-15"
+    },
+    {
       "path": "docs\\Integrations Jan 18 for Mycosoft overview.md",
       "repo": "MAS",
       "title": "Analysis of Candidate GitHub Projects for Mycosoft Integration",
@@ -1236,6 +1506,12 @@
       "repo": "MAS",
       "title": "Integration Changes - January 19, 2026",
       "date": "2026-JAN-19"
+    },
+    {
+      "path": "docs\\INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md",
+      "repo": "MAS",
+      "title": "Integration Completion Matrix \u2014 Mar 19, 2026",
+      "date": "2026-MAR-19"
     },
     {
       "path": "docs\\INTEGRATION_CONTRACTS_CANONICAL_MAR10_2026.md",
@@ -1292,6 +1568,12 @@
       "date": "2026-MAR-09"
     },
     {
+      "path": "docs\\JETSON_MYCOBRAIN_PRODUCTION_DEPLOY_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "Jetson + MycoBrain Production Deployment Guide",
+      "date": "2026-MAR-13"
+    },
+    {
       "path": "docs\\JETSON_OPTIONAL_CORTEX_PATH_MAR07_2026.md",
       "repo": "MAS",
       "title": "Jetson Optional Cortex Path",
@@ -1304,10 +1586,34 @@
       "date": "2026-FEB-06"
     },
     {
+      "path": "docs\\Landing page strategy.docx.md",
+      "repo": "MAS",
+      "title": "NatureOS Dual\u2011Interface Platform \u2013 Technical Specification",
+      "date": null
+    },
+    {
       "path": "docs\\LANGGRAPH_EVALUATION_REPORT.md",
       "repo": "MAS",
       "title": "LangGraph Evaluation Report for MAS v2",
       "date": null
+    },
+    {
+      "path": "docs\\LEGION_GPU_WATCHDOG_AND_NO_LOCAL_GPU_APR14_2026.md",
+      "repo": "MAS",
+      "title": "Legion GPU watchdog and no-local-GPU policy \u2014 Apr 14, 2026",
+      "date": "2026-APR-14"
+    },
+    {
+      "path": "docs\\LIGHTPANDA_MAS_BROWSER_POLICY_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Lightpanda as MAS Browser Runtime \u2014 Policy and Integration",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\LIGHTPANDA_MAS_BROWSER_STRATEGY_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Lightpanda MAS Browser Strategy",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\LOCAL_DEV.md",
@@ -1374,6 +1680,12 @@
       "repo": "MAS",
       "title": "MAS Dashboard Integration",
       "date": null
+    },
+    {
+      "path": "docs\\MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md",
+      "repo": "MAS",
+      "title": "MAS Full Index + Gap Audit (MYCA / MINDEX / AVANI / MYCOBRAIN / Website)",
+      "date": "2026-APR-17"
     },
     {
       "path": "docs\\MAS_IMPLEMENTATION_COMPLETE_JAN27_2026.md",
@@ -1454,6 +1766,12 @@
       "date": null
     },
     {
+      "path": "docs\\MAY02_CONTINUATION_ROLLOUT_COMPLETE_MAY02_2026.md",
+      "repo": "MAS",
+      "title": "MAY02 Continuation & Operationalization Rollout \u2014 Complete (May 02, 2026)",
+      "date": "2026-MAY-02"
+    },
+    {
       "path": "docs\\MDP_PROTOCOL_CONTRACTS_MAR07_2026.md",
       "repo": "MAS",
       "title": "MDP Internal Rail and Gateway Upstream Protocol Contracts",
@@ -1500,6 +1818,12 @@
       "repo": "MAS",
       "title": "Memory System Stubs Implementation",
       "date": "2026-FEB-12"
+    },
+    {
+      "path": "docs\\MEMORY_SYSTEM_AUDIT_MAR21_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Memory System Audit Report",
+      "date": "2026-MAR-21"
     },
     {
       "path": "docs\\MEMORY_SYSTEM_COMPLETE_FEB03_2026.md",
@@ -1592,6 +1916,18 @@
       "date": "2026-MAR-02"
     },
     {
+      "path": "docs\\MINDEX_JETSON_NATUREOS_FUSARIUM_PIPELINE_COMPLETE_APR08_2026.md",
+      "repo": "MAS",
+      "title": "MINDEX Jetson NatureOS Fusarium Pipeline Complete Apr 08 2026",
+      "date": "2026-APR-08"
+    },
+    {
+      "path": "docs\\MINDEX_LLM_PERSISTENCE_RETRIEVAL_METADATA_MAP_MAR31_2026.md",
+      "repo": "MAS",
+      "title": "MINDEX LLM Persistence and Retrieval Metadata Map \u2014 MAR31 2026",
+      "date": "2026-MAR-31"
+    },
+    {
       "path": "docs\\MINDEX_MEGA_DATABASE_STATUS.md",
       "repo": "MAS",
       "title": "MINDEX Mega Database - Implementation Status",
@@ -1608,6 +1944,12 @@
       "repo": "MAS",
       "title": "MINDEX_NAS_SETUP",
       "date": null
+    },
+    {
+      "path": "docs\\MINDEX_NEMOTRON_RAG_PLAN_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "MINDEX Nemotron RAG Plan \u2014 Embedding, Rerank, and Provenance",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\MINDEX_SMELL_TRAINING_SYSTEM.md",
@@ -1664,6 +2006,18 @@
       "date": "2026-FEB-13"
     },
     {
+      "path": "docs\\MQTT_LAN_WSS_DEPLOYMENT_AND_JETSON_HANDOFF_APR08_2026.md",
+      "repo": "MAS",
+      "title": "MQTT LAN + Public WSS Deployment And Jetson Handoff APR08 2026",
+      "date": "2026-APR-08"
+    },
+    {
+      "path": "docs\\MQTT_MAS_MINDEX_BRIDGE_APR13_2026.md",
+      "repo": "MAS",
+      "title": "MQTT \u2192 MAS + MINDEX Bridge APR13 2026",
+      "date": "2026-APR-13"
+    },
+    {
       "path": "docs\\MULTI_AI_INTEGRATION_ARCHITECTURE_FEB12_2026.md",
       "repo": "MAS",
       "title": "Multi-AI Integration Architecture",
@@ -1686,6 +2040,30 @@
       "repo": "MAS",
       "title": "MYCA Autonomous Scientific Architecture (2026)",
       "date": null
+    },
+    {
+      "path": "docs\\MYCA2_PLASTICITY_ROUTER_MOUNT_MAR18_2026.md",
+      "repo": "MAS",
+      "title": "MYCA2: Plasticity router mounted on MAS \u2014 Mar 18, 2026",
+      "date": "2026-MAR-18"
+    },
+    {
+      "path": "docs\\MYCA2_PSILO_STACK_COMPLETE_MAR17_2026.md",
+      "repo": "MAS",
+      "title": "MYCA2 PSILO Full-Stack \u2014 Implementation Complete (Mar 17, 2026)",
+      "date": "2026-MAR-17"
+    },
+    {
+      "path": "docs\\MYCA2_ROLLOUT_VM189_AND_TESTS_MAR17_2026.md",
+      "repo": "MAS",
+      "title": "MYCA2 rollout VM189 + MAS + tests \u2014 Mar 17, 2026",
+      "date": "2026-MAR-17"
+    },
+    {
+      "path": "docs\\MYCA2_VM_ROLLOUT_AND_SMOKE_MAR17_2026.md",
+      "repo": "MAS",
+      "title": "MYCA2 VM rollout and smoke \u2014 Mar 17, 2026",
+      "date": "2026-MAR-17"
     },
     {
       "path": "docs\\MYCA_191_PROXMOX_CONSOLE_DESKTOP_FIX_MAR04_2026.md",
@@ -1730,6 +2108,18 @@
       "date": "2026-FEB-17"
     },
     {
+      "path": "docs\\MYCA_AVANI_ROUTE_CONTRACT_VALIDATION_MAR31_2026.md",
+      "repo": "MAS",
+      "title": "MYCA AVANI Route Contract Validation \u2014 MAR31 2026",
+      "date": "2026-MAR-31"
+    },
+    {
+      "path": "docs\\MYCA_AVANI_WORLDSTATE_CONNECTION_CONTRACT_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "MYCA/AVANI Live Worldstate Connection Contract (Mar 14, 2026)",
+      "date": "2026-MAR-14"
+    },
+    {
       "path": "docs\\MYCA_BOUNDED_PERSONAL_AGENCY_COMPLETE_MAR06_2026.md",
       "repo": "MAS",
       "title": "MYCA Bounded Personal Agency Complete",
@@ -1746,6 +2136,12 @@
       "repo": "MAS",
       "title": "MYCA Autonomous Coding System",
       "date": "2026-FEB-09"
+    },
+    {
+      "path": "docs\\MYCA_COGNITION_PIPELINE_FIDELITY_MAP_MAR31_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Cognition Pipeline Fidelity Map \u2014 MAR31 2026",
+      "date": "2026-MAR-31"
     },
     {
       "path": "docs\\MYCA_CONSCIOUSNESS_ARCHITECTURE_FEB10_2026.md",
@@ -1814,6 +2210,36 @@
       "date": "2026-MAR-04"
     },
     {
+      "path": "docs\\MYCA_EXPORT_CONSTITUTION_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Constitution \u2014 Export for External AI Systems",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_EXTERNAL_ACCESS_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 External Access (MCP, APIs, Services, Website)",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_IDENTITY_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Identity \u2014 Export for External AI Systems",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_INDEX_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export Package for External AI Systems \u2014 Master Index",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SOUL_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Soul \u2014 Export for External AI Systems",
+      "date": "2026-MAR-16"
+    },
+    {
       "path": "docs\\MYCA_FALLBACK_FIX_MAR05_2026.md",
       "repo": "MAS",
       "title": "MYCA Fallback-Only Fix \u2014 March 5, 2026",
@@ -1856,6 +2282,12 @@
       "date": null
     },
     {
+      "path": "docs\\MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Harness Integration Patch \u2014 Apr 17, 2026",
+      "date": "2026-APR-17"
+    },
+    {
       "path": "docs\\MYCA_HYBRID_BRAIN_IMPLEMENTATION_FEB03_2026.md",
       "repo": "MAS",
       "title": "MYCA Hybrid Voice-Brain Architecture Implementation",
@@ -1896,6 +2328,12 @@
       "repo": "MAS",
       "title": "\ud83c\udf44 Mycosoft \u2014 Master Ideas, Concepts & Resources",
       "date": null
+    },
+    {
+      "path": "docs\\MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md",
+      "repo": "MAS",
+      "title": "MYCA MAS Harness \u2014 Implementation Complete APR17_2026",
+      "date": "2026-APR-17"
     },
     {
       "path": "docs\\MYCA_MAS_OPERATIONAL_VISION_JAN26_2026.md",
@@ -2016,6 +2454,12 @@
       "repo": "MAS",
       "title": "MYCA Public Alpha Monday Launch \u2013 Complete",
       "date": "2026-FEB-28"
+    },
+    {
+      "path": "docs\\MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Readiness Execution Plan (Make It Real) \u2014 Apr 17, 2026",
+      "date": "2026-APR-17"
     },
     {
       "path": "docs\\MYCA_RUNTIME_HARDENING_COMPLETE_MAR06_2026.md",
@@ -2156,6 +2600,18 @@
       "date": "2026-FEB-10"
     },
     {
+      "path": "docs\\MYCA_WORLDSTATE_MONETIZATION_COMPLETE_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Worldstate Monetization \u2014 Complete (Mar 14, 2026)",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\MYCA_WORLDSTATE_VERIFICATION_AND_PROOF_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "MYCA/AVANI Worldstate Monetization \u2014 Verification and Proof",
+      "date": "2026-MAR-14"
+    },
+    {
       "path": "docs\\MYCA_WORLDVIEW_INTEGRATION_AUDIT_FEB17_2026.md",
       "repo": "MAS",
       "title": "MYCA Worldview Integration Audit \u2013 February 17, 2026",
@@ -2270,10 +2726,22 @@
       "date": "2026-MAR-07"
     },
     {
+      "path": "docs\\MYCOBRAIN_LIVE_NETWORK_CONTROL_MAR07_2026.md",
+      "repo": "MAS",
+      "title": "MycoBrain Live-Network Control and COM5 Phantom Fix \u2014 Mar 7, 2026",
+      "date": "2026-MAR-07"
+    },
+    {
       "path": "docs\\MYCOBRAIN_LORA_GATEWAY_LINK_TEST_PLAN_MAR13_2026.md",
       "repo": "MAS",
       "title": "MycoBrain LoRa Gateway Link Test Plan (Mar 13, 2026)",
       "date": "2026-MAR-13"
+    },
+    {
+      "path": "docs\\MYCOBRAIN_MDP_GATEWAY_WIRING_COMPLETE_APR15_2026.md",
+      "repo": "MAS",
+      "title": "MycoBrain MDP Gateway Command Wiring \u2014 Complete APR15 2026",
+      "date": "2026-APR-15"
     },
     {
       "path": "docs\\MYCOBRAIN_RAIL_UNIFICATION_COMPLETE_MAR07_2026.md",
@@ -2324,6 +2792,12 @@
       "date": null
     },
     {
+      "path": "docs\\MYCODAO_PULSE_PROXMOX_VM_AUTOMATION_APR14_2026.md",
+      "repo": "MAS",
+      "title": "MycoDAO Pulse \u2014 Proxmox VM automation \u2014 April 14, 2026",
+      "date": "2026-APR-14"
+    },
+    {
       "path": "docs\\MYCOFORGE_SCOPE_AND_BOUNDARY_MAR07_2026.md",
       "repo": "MAS",
       "title": "MycoForge Scope and Boundary",
@@ -2334,6 +2808,12 @@
       "repo": "MAS",
       "title": "Mycorrhizae\u2192MYCA Telemetry Bridge \u2014 March 7, 2026",
       "date": "2026-MAR-07"
+    },
+    {
+      "path": "docs\\MYCOSOFT_COM_PRODUCTION_SANDBOX_ROUTE_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "mycosoft.com Production via Sandbox VM \u2014 March 13, 2026",
+      "date": "2026-MAR-13"
     },
     {
       "path": "docs\\MYCOSOFT_MAS_WEBSITE_ANALYSIS.md",
@@ -2352,6 +2832,18 @@
       "repo": "MAS",
       "title": "Mycosoft-MAS Website Deletion Summary",
       "date": null
+    },
+    {
+      "path": "docs\\MYCOSOFT_ORG_PRODUCTION_VM_CLONE_CI_CD_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "mycosoft.org Redirect, Production VM Clone, and CI/CD \u2014 March 13, 2026",
+      "date": "2026-MAR-13"
+    },
+    {
+      "path": "docs\\MYCOSOFT_PAYMENTS_AUDIT_AND_HOW_FUNDS_REACH_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Mycosoft Payments Audit \u2014 How All Forms of Funds Reach Mycosoft",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\MYCOSOFT_PROTOCOL_UNIFICATION_COMPLETE_FEB23_2026.md",
@@ -2432,6 +2924,66 @@
       "date": "2026-01-31"
     },
     {
+      "path": "docs\\NATUREOS_APP_AEROSOL_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Aerosol \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\NATUREOS_APP_ANCESTRY_DATABASE_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Ancestry Database \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Biology Simulator \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\NATUREOS_APP_COMPOUND_ANALYSER_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Compound Analyser \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\NATUREOS_APP_EARTH_SIMULATOR_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Earth Simulator \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\NATUREOS_APP_FUNGI_COMPUTE_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Fungi Compute \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\NATUREOS_APP_GROWTH_ANALYTICS_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Growth Analytics \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\NATUREOS_APP_NATURE_STATISTICS_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Nature Statistics \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\NATUREOS_APP_TOOLS_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Tools Hub \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
+      "path": "docs\\NATUREOS_APP_VIRTUAL_PETRI_DISH_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS App \u2014 Virtual Petri Dish \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
       "path": "docs\\NATUREOS_FULL_PLATFORM_COMPLETE_FEB19_2026.md",
       "repo": "MAS",
       "title": "NatureOS Full Cloud Platform Plan \u2014 Complete",
@@ -2450,10 +3002,22 @@
       "date": null
     },
     {
+      "path": "docs\\NATUREOS_REORGANIZATION_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS Cloud-Style Reorganization \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
+    },
+    {
       "path": "docs\\NATUREOS_SMELL_TRAINING_UI_2026-01-08.md",
       "repo": "MAS",
       "title": "NatureOS Smell Training UI - January 8, 2026",
       "date": "2026-01-08"
+    },
+    {
+      "path": "docs\\NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_PLAN_MAY01_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS Tools Hub \u2014 Deep Integration Plan \u2014 May 1, 2026",
+      "date": "2026-MAY-01"
     },
     {
       "path": "docs\\NATUREOS_TOOLS_INTEGRATION_TASK_COMPLETE_FEB21_2026.md",
@@ -2472,6 +3036,48 @@
       "repo": "MAS",
       "title": "NatureOS Vision & Design Specification",
       "date": null
+    },
+    {
+      "path": "docs\\NEMOTRON_DEPLOYMENT_TOPOLOGY_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Nemotron MYCA/AVANI Deployment Topology",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\NEMOTRON_MIGRATION_EXECUTION_COMPLETE_MAR31_2026.md",
+      "repo": "MAS",
+      "title": "Nemotron Migration Execution Complete \u2014 MAR31 2026",
+      "date": "2026-MAR-31"
+    },
+    {
+      "path": "docs\\NEMOTRON_MODEL_COMPARISON_AND_DECISION_DOSSIER_MAR31_2026.md",
+      "repo": "MAS",
+      "title": "Nemotron Model Comparison and Decision Dossier (Mar 31, 2026)",
+      "date": "2026-MAR-31"
+    },
+    {
+      "path": "docs\\NEMOTRON_ROLLBACK_RUNBOOK_MAR31_2026.md",
+      "repo": "MAS",
+      "title": "Nemotron Rollback Runbook \u2014 MAR31 2026",
+      "date": "2026-MAR-31"
+    },
+    {
+      "path": "docs\\NEMOTRON_ROUTE_API_SERVICE_CUTOVER_SHEET_MAR31_2026.md",
+      "repo": "MAS",
+      "title": "Nemotron Route/API/Service Cutover Sheet \u2014 MAR31 2026",
+      "date": "2026-MAR-31"
+    },
+    {
+      "path": "docs\\NEMOTRON_ROUTING_AND_PERSISTENCE_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Nemotron Routing and Persistence Alignment (Mar 14, 2026)",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\NEMOTRON_VERIFICATION_ROLLOUT_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Nemotron MYCA/AVANI Verification and Rollout",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\NETWORK_AUDIT_20260121_114517.md",
@@ -2508,6 +3114,12 @@
       "repo": "MAS",
       "title": "Mycosoft Network Infrastructure",
       "date": "2026-JAN-21"
+    },
+    {
+      "path": "docs\\NETWORK_IP_MAC_DEVICE_MAP_MAR07_2026.md",
+      "repo": "MAS",
+      "title": "Network IP/MAC/Device Map \u2014 March 7, 2026",
+      "date": "2026-MAR-07"
     },
     {
       "path": "docs\\NETWORK_MONITOR_AGENT_FEB12_2026.md",
@@ -2558,6 +3170,12 @@
       "date": null
     },
     {
+      "path": "docs\\NLM_MDP_MMP_ROUTE_SERVICE_COVERAGE_MAR31_2026.md",
+      "repo": "MAS",
+      "title": "NLM + MDP/MMP Route and Service Coverage \u2014 MAR31 2026",
+      "date": "2026-MAR-31"
+    },
+    {
       "path": "docs\\NLM_README.md",
       "repo": "MAS",
       "title": "NLM - Nature Learning Model",
@@ -2594,10 +3212,22 @@
       "date": null
     },
     {
+      "path": "docs\\ONSITE_AI_OPENCLAW_COMPLETE_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "On-Site AI (OpenClaw) Integration Complete",
+      "date": "2026-MAR-13"
+    },
+    {
       "path": "docs\\OOM_PREVENTION_FEB18_2026.md",
       "repo": "MAS",
       "title": "Cursor OOM Prevention \u2013 Feb 18, 2026",
       "date": "2026-FEB-18"
+    },
+    {
+      "path": "docs\\OPENVIKING_INTEGRATION_PLAN_MAR19_2026.md",
+      "repo": "MAS",
+      "title": "OpenViking Memory Integration Plan for MAS + OpenClaw/NemoClaw",
+      "date": "2026-MAR-19"
     },
     {
       "path": "docs\\OPTICAL_ACOUSTIC_MODEM_INTEGRATION_2026-01-09.md",
@@ -2612,6 +3242,12 @@
       "date": "2026-MAR-05"
     },
     {
+      "path": "docs\\OWS_WALLET_INTEGRATION_MAR24_2026.md",
+      "repo": "MAS",
+      "title": "OWS Wallet Integration \u2014 March 24, 2026",
+      "date": "2026-MAR-24"
+    },
+    {
       "path": "docs\\P2_TOOLS_FUTURE_ROADMAP.md",
       "repo": "MAS",
       "title": "P2 Tools - Future Integration Roadmap",
@@ -2622,6 +3258,18 @@
       "repo": "MAS",
       "title": "P2 Tools Testing Report",
       "date": null
+    },
+    {
+      "path": "docs\\P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md",
+      "repo": "MAS",
+      "title": "P3 \u2014 May 1 Plan Shells \u2014 Implementation Queue (May 02, 2026)",
+      "date": "2026-MAY-02"
+    },
+    {
+      "path": "docs\\PAYMENT_ONBOARDING_CHECKLIST_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Payment Onboarding Checklist \u2014 Addresses Mycosoft Needs to Get Paid",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\PERPLEXITY_AUDIT_RESPONSE_MAR03_2026.md",
@@ -2750,6 +3398,12 @@
       "date": "2026-FEB-20"
     },
     {
+      "path": "docs\\PETRI_DISH_V2_RUNBOOK_MAY02_2026.md",
+      "repo": "MAS",
+      "title": "Petri Dish v2 \u2014 Deploy Runbook (May 02, 2026)",
+      "date": "2026-MAY-02"
+    },
+    {
       "path": "docs\\PETRI_INTEGRATION_DEMO_WALKTHROUGH_FEB20_2026.md",
       "repo": "MAS",
       "title": "Petri Full Integration Demonstration Walkthrough",
@@ -2772,6 +3426,18 @@
       "repo": "MAS",
       "title": "Phase 1 Agent Runtime \u2014 Completion Log",
       "date": "2026-FEB-10"
+    },
+    {
+      "path": "docs\\PHASE2_MANUAL_CLOUDFLARE_RECOVERY_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "Phase 2 Manual Cloudflare Recovery \u2014 March 13, 2026",
+      "date": "2026-MAR-13"
+    },
+    {
+      "path": "docs\\PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md",
+      "repo": "MAS",
+      "title": "Phase A Runtime Stabilization - MINDEX/MAS - APR10_2026",
+      "date": "2026-APR-10"
     },
     {
       "path": "docs\\PHYSICSNEMO_INTEGRATION_FEB09_2026.md",
@@ -2822,6 +3488,30 @@
       "date": "2026-FEB-12"
     },
     {
+      "path": "docs\\PLASTICITY_FORGE_CONTRACTS_FROZEN_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Plasticity Forge Phase 1 \u2014 Contracts Frozen",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\PLASTICITY_FORGE_OWNERSHIP_LOCKED_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Plasticity Forge Phase 1 \u2014 Source-of-Truth Ownership Locked (Mar 14, 2026)",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\PLASTICITY_FORGE_PHASE1_COMPLETE_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Plasticity Forge Phase 1 \u2014 Complete",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\PLATFORM_GAP_AUDIT_AND_BACKLOG_MAR19_2026.md",
+      "repo": "MAS",
+      "title": "Platform Gap Audit and Backlog \u2014 Mar 19, 2026",
+      "date": "2026-MAR-19"
+    },
+    {
       "path": "docs\\PLATFORM_STRUCTURE_PLAN.md",
       "repo": "MAS",
       "title": "Mycosoft Platform Structure Plan",
@@ -2852,6 +3542,12 @@
       "date": null
     },
     {
+      "path": "docs\\POWERSHELL_POPUP_AUDIT_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "PowerShell Pop-up Audit \u2014 Mar 16, 2026",
+      "date": "2026-MAR-16"
+    },
+    {
       "path": "docs\\PR75_AUTH_GUARDS_COMPLETE_MAR09_2026.md",
       "repo": "MAS",
       "title": "PR #75 Auth Guards Complete",
@@ -2868,6 +3564,12 @@
       "repo": "MAS",
       "title": "Prediction Engine Architecture - February 6, 2026",
       "date": "2026-FEB-06"
+    },
+    {
+      "path": "docs\\PRE_PRODUCTION_CHECKLIST_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "Pre-Production Checklist \u2014 Cloudflare, Supabase, API Routes",
+      "date": "2026-MAR-13"
     },
     {
       "path": "docs\\PRODUCTION_DEPLOYMENT_COMPLETE.md",
@@ -2892,6 +3594,12 @@
       "repo": "MAS",
       "title": "Proxmox 202 Authentication Setup",
       "date": "2026-MAR-08"
+    },
+    {
+      "path": "docs\\PROXMOX_ALWAYS_ON_DAILY_BACKUP_APR17_2026.md",
+      "repo": "MAS",
+      "title": "Proxmox: always-on production VMs and daily backups \u2014 Apr 17, 2026",
+      "date": "2026-APR-17"
     },
     {
       "path": "docs\\PROXMOX_CREP_RESTORE_MAR05_2026.md",
@@ -2928,6 +3636,12 @@
       "repo": "MAS",
       "title": "Quick Start - Document Sync",
       "date": null
+    },
+    {
+      "path": "docs\\R720_AND_BACKUP_TO_NAS_MAR13_2026.md",
+      "repo": "MAS",
+      "title": "R720 PowerEdge Location and Backup-to-NAS Strategy \u2014 March 13, 2026",
+      "date": "2026-MAR-13"
     },
     {
       "path": "docs\\RAAS_AGENT_SERVICE_PLATFORM_MAR11_2026.md",
@@ -2982,6 +3696,24 @@
       "repo": "MAS",
       "title": "Research Agent Task Handler Implementation - February 12, 2026",
       "date": "2026-FEB-12"
+    },
+    {
+      "path": "docs\\RLS_SECURITY_FIXES_APR07_2026.md",
+      "repo": "MAS",
+      "title": "RLS Security Fixes \u2014 April 7, 2026",
+      "date": "2026-APR-07"
+    },
+    {
+      "path": "docs\\ROTATE_SECRETS_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Secrets to Rotate \u2014 Mar 14, 2026",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\ROTATION_RUNBOOK.md",
+      "repo": "MAS",
+      "title": "Secret Rotation Runbook \u2014 Mar 14, 2026",
+      "date": null
     },
     {
       "path": "docs\\ROUTE_VERIFICATION_REPORT_JAN23_2026.md",
@@ -3132,6 +3864,12 @@
       "repo": "MAS",
       "title": "NatureOS Developer SDK",
       "date": null
+    },
+    {
+      "path": "docs\\SEARCH_FOLLOWUP_MAP_CREP_EARTH_INTERNAL_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Search Follow-Up: Map/CREP Full-Screen, Earth Simulator, Internal Answers (Mar 14, 2026)",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\SEARCH_MEMORY_INTEGRATION_FEB05_2026.md",
@@ -3368,6 +4106,12 @@
       "date": "2026-FEB-12"
     },
     {
+      "path": "docs\\SPEECH_DUPLEX_MIGRATION_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Speech Duplex Migration \u2014 Backend-Owned ASR/TTS Preserving Full Duplex",
+      "date": "2026-MAR-14"
+    },
+    {
       "path": "docs\\SPOREBASE_N8N_ALERTS_FEB12_2026.md",
       "repo": "MAS",
       "title": "SporeBase n8n Alert Workflows",
@@ -3396,6 +4140,12 @@
       "repo": "MAS",
       "title": "Status and Next Steps \u2013 Feb 9, 2026",
       "date": "2026-FEB-09"
+    },
+    {
+      "path": "docs\\STORAGE_LAYOUT_LEGION_GPU_APR15_2026.md",
+      "repo": "MAS",
+      "title": "Storage layout \u2014 Legion GPU nodes (Windows + WSL)",
+      "date": "2026-APR-15"
     },
     {
       "path": "docs\\STRIPE_INTEGRATION_COMPLETE.md",
@@ -3438,6 +4188,12 @@
       "repo": "MAS",
       "title": "SUPABASE INTEGRATION PLAN FOR MYCOSOFT",
       "date": null
+    },
+    {
+      "path": "docs\\SUPABASE_OAUTH_PARITY_MYCOSOFT_COM_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Supabase OAuth Parity: mycosoft.com vs sandbox.mycosoft.com",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\SUPABASE_OAUTH_SETUP.md",
@@ -3554,6 +4310,24 @@
       "date": "2026-FEB-04"
     },
     {
+      "path": "docs\\TACO_CUI_HANDLING_APR08_2026.md",
+      "repo": "MAS",
+      "title": "TAC-O CUI Handling Procedures",
+      "date": "2026-APR-08"
+    },
+    {
+      "path": "docs\\TACO_CURSOR_IMPLEMENTATION_PLAN.md",
+      "repo": "MAS",
+      "title": "TAC-O CURSOR IMPLEMENTATION PLAN",
+      "date": null
+    },
+    {
+      "path": "docs\\TACO_NIST_800_171_MAPPING_APR08_2026.md",
+      "repo": "MAS",
+      "title": "TAC-O NIST 800-171 Rev. 2 Control Mapping",
+      "date": "2026-APR-08"
+    },
+    {
       "path": "docs\\TAILSCALE_REMOTE_DEVICE_GUIDE_FEB09_2026.md",
       "repo": "MAS",
       "title": "Tailscale Remote Device Setup Guide",
@@ -3608,6 +4382,12 @@
       "date": "2026-JAN-26"
     },
     {
+      "path": "docs\\TRANSIT_API_SECRETS_PLACEMENT_APR17_2026.md",
+      "repo": "MAS",
+      "title": "Transit API keys \u2014 where to set them (no key values) \u2014 Apr 17, 2026",
+      "date": "2026-APR-17"
+    },
+    {
       "path": "docs\\TWILIO_INTEGRATION.md",
       "repo": "MAS",
       "title": "Twilio Integration Guide",
@@ -3618,6 +4398,12 @@
       "repo": "MAS",
       "title": "Unified Latents (UL) Integration",
       "date": "2026-MAR-03"
+    },
+    {
+      "path": "docs\\UNIFIED_LLM_ROUTING_NEMOTRON_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Unified LLM Routing and Nemotron Integration \u2014 Design",
+      "date": "2026-MAR-14"
     },
     {
       "path": "docs\\UNIFI_SCAN_RESULTS_MAR07_2026.md",
@@ -3854,6 +4640,12 @@
       "date": "2026-MAR-02"
     },
     {
+      "path": "docs\\WEBSITE_MYCA_MAS_PROXY_ROUTE_INVENTORY_MAR31_2026.md",
+      "repo": "MAS",
+      "title": "Website MYCA/MAS Proxy Route Inventory \u2014 MAR31 2026",
+      "date": "2026-MAR-31"
+    },
+    {
       "path": "docs\\WEBSOCKET_AGENT_BUS_FEB09_2026.md",
       "repo": "MAS",
       "title": "WebSocket Agent Bus - February 9, 2026",
@@ -3896,10 +4688,58 @@
       "date": "2026-FEB-10"
     },
     {
+      "path": "docs\\WORLDSTATE_CONTRACT_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Worldstate Contract \u2014 Canonical Design",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\WORLDSTATE_VS_SPECIALIST_COMMAND_BOUNDARY_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Worldstate vs Specialist Command Boundary \u2014 Mar 14, 2026",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\WORLDVIEW_VALIDATION_AND_SEQUENCING_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "Worldview Rollout \u2014 Validation, Documentation, and Implementation Sequencing",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md",
+      "repo": "MAS",
+      "title": "World View Search Suggestions and MINDEX/SEARCH/MYCA/NATUREOS Cohesion Plan",
+      "date": "2026-MAR-14"
+    },
+    {
+      "path": "docs\\WSL_LEGION_GPU_NODES_APR15_2026.md",
+      "repo": "MAS",
+      "title": "WSL2 Legion GPU Nodes \u2014 Earth2 + Voice (Ollama / HF)",
+      "date": "2026-APR-15"
+    },
+    {
       "path": "docs\\WSL_VMMEM_DISABLE_FEB06_2026.md",
       "repo": "MAS",
       "title": "WSL / vmmem Disable and Memory Fix \u2013 February 6, 2026",
       "date": "2026-FEB-06"
+    },
+    {
+      "path": "docs\\zeetachec_mycosoft_taco_plan.md",
+      "repo": "MAS",
+      "title": "Zeetachec + Mycosoft Joint Teaming Plan",
+      "date": null
+    },
+    {
+      "path": "docs\\adr\\ADR-001-runtime-bundle-promotion.md",
+      "repo": "MAS",
+      "title": "ADR-001: Runtime Bundle Promotion",
+      "date": null
+    },
+    {
+      "path": "docs\\adr\\ADR-002-kvtc-serving-plane.md",
+      "repo": "MAS",
+      "title": "ADR-002: KVTC as Serving-Plane KV-Cache Codec",
+      "date": null
     },
     {
       "path": "docs\\agents\\base_agent.md",
@@ -4157,6 +4997,144 @@
       "path": "docs\\myca\\MYCA_DOC_ORGANIZED_LIST.md",
       "repo": "MAS",
       "title": "MYCA Documentation Organized List",
+      "date": null
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_create-api-endpoint_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Create API Endpoint",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_create-api-route_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Create API Route",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_create-integration-client_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Create Integration Client",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_create-mas-agent_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Create MAS Agent",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_create-nextjs-page_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Create Next.js Page",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_create-react-component_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Create React Component",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_database-migration_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Database Migration",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_deploy-mas-service_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Deploy MAS Service",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_deploy-mindex_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Deploy MINDEX",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_deploy-website-sandbox_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Deploy Website Sandbox",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_docker-troubleshoot_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Docker Troubleshoot",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_gpu-node-deploy_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: GPU Node Deploy",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_mobile-audit_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Mobile Audit & Fix",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_neuromorphic-integration_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Neuromorphic Integration",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_run-system-tests_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Run System Tests",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_security-audit_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Security Audit",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_session-summarize_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Session Summarize",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_setup-env-vars_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Setup Env Vars",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_start-dev-website_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Start Dev Website",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_update-registries_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Update Registries",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_vm-health-check_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: VM Health Check",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\MYCA_EXPORT_SKILL_workflow-orchestration_MAR16_2026.md",
+      "repo": "MAS",
+      "title": "MYCA Export \u2014 Skill: Workflow Orchestration",
+      "date": "2026-MAR-16"
+    },
+    {
+      "path": "docs\\MYCA_EXPORT_SKILLS_MAR16_2026\\README.md",
+      "repo": "MAS",
+      "title": "MYCA Export Package \u2014 Skills Directory",
       "date": null
     },
     {
