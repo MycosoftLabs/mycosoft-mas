@@ -60,6 +60,10 @@ from mycosoft_mas.core.routers.earth_search_api import router as earth_search_ro
 from mycosoft_mas.core.routers.ethics_api import router as ethics_router
 from mycosoft_mas.core.routers.ethics_training_api import router as ethics_training_router
 from mycosoft_mas.core.routers.eagle_eye_api import router as eagle_eye_router
+from mycosoft_mas.core.routers.environmental_feeds_mvp_api import (
+    router as environmental_feeds_mvp_router,
+)
+from mycosoft_mas.core.routers.natureos_lab_mvp_api import router as natureos_lab_mvp_router
 from mycosoft_mas.core.routers.event_ledger_api import router as event_ledger_router
 from mycosoft_mas.core.routers.evolution_api import router as evolution_router
 from mycosoft_mas.core.routers.fleet_api import router as fleet_router
@@ -765,6 +769,8 @@ app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(fusarium_router, prefix="/api/fusarium", tags=["fusarium"])
 app.include_router(fusarium_platform_router, prefix="/api/fusarium", tags=["fusarium-platform"])
 app.include_router(eagle_eye_router, prefix="/api/eagle-eye", tags=["eagle-eye"])
+app.include_router(natureos_lab_mvp_router, tags=["natureos-lab-mvp"])
+app.include_router(environmental_feeds_mvp_router, tags=["natureos-environmental-feeds"])
 app.include_router(redteam_router, tags=["redteam"])
 app.include_router(ethics_router)
 app.include_router(ethics_training_router)

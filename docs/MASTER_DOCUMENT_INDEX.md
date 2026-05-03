@@ -1,10 +1,30 @@
 # Master Document Index
 
+## GitHub sync + verification + next plan (May 3, 2026)
+
+- `docs/GITHUB_SYNC_VERIFY_AND_NEXT_PLAN_MAY03_2026.md` — **Pre-merge checklist**: credential hygiene notes, pytest/lint results, Prometheus + MAS health probes, backlog scrub for legacy literals, prioritized next steps.
+
+## Platform audit — inventory + gaps (May 2, 2026)
+
+- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` — **Cross-repo inventory**: VMs, Cursor subagents, MAS agents, website surfaces, BFF **Appendix A** (`501` by design), n8n/MINDEX health evidence, Prometheus status (remediate via runbook), gap-scan summary; replaces missing `MASTER_INVENTORY_MAY02_2026.md` pointer below until that file is generated.
+- `docs/PROMETHEUS_MAS_VM188_RUNBOOK_MAY03_2026.md` — **Prometheus on MAS 188**: diagnose Docker/firewall, LAN verification; use `scripts/diagnose_prometheus_mas188.py` when `.credentials.local` is visible to the shell.
+
 ## MAY02 continuation rollout — closure (May 2, 2026)
 
 - `docs/MAY02_CONTINUATION_ROLLOUT_COMPLETE_MAY02_2026.md` — **P0–P3** operationalization outcomes, verification, follow-ups.
 - `docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md` — Queued May 1 plan shells (six tracks) for dedicated sprints.
 - `docs/CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md` — Draft contract for CREP layer entitlements / agent keys.
+
+## MAY03 — May01 shells MVP closure + waypoints (May 3, 2026)
+
+- `docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md` — Session log: paths touched, verification curls, manifest refresh.
+- `docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md` — CREP waypoints Supabase migrations, API, `WaypointSystem` sync.
+- `docs/ANCESTRY_ALL_SPECIES_EXPANSION_COMPLETE_MAY03_2026.md` — Ancestry explorer kingdom + pagination MVP.
+- `docs/AEROSOL_VIRUS_RADIATION_FEEDS_COMPLETE_MAY03_2026.md` — OpenAQ + Safecast + virus deferral MVP.
+- `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md` — ChemputerAgent + BFF + UI MVP.
+- `docs/GROWTH_ANALYTICS_AGENTIC_COMPLETE_MAY03_2026.md` — Growth analytics agent + instrument summary MVP.
+- `docs/NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_COMPLETE_MAY03_2026.md` — Tools hub deep links + health strip MVP.
+- `docs/BIOLOGY_SIMULATOR_UNREAL_SPIKE_COMPLETE_MAY03_2026.md` — Unreal Pixel Streaming spike + env contract + UI panel.
 
 ## MYCA Alive — 4-phase program (May 2, 2026)
 
@@ -12,7 +32,7 @@
 - `docs/MYCA_ALIVE_ALL_PHASES_COMPLETE_MAY02_2026.md` — **Plan completion** summary (implementation vs live acceptance).
 - `docs/LEGION_VOICE_AND_EARTH2_LIVE_MAY02_2026.md` — Voice (241) + Earth-2 (249) health runbook.
 - `docs/REDUNDANCY_AND_DR_MAY02_2026.md` — Proxmox, backups, DR checklist (CC-2).
-- `docs/MASTER_INVENTORY_MAY02_2026.md` — CC-1 inventory (`build_master_inventory.py`).
+- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` — CC-1 inventory (manual + gap scan); optional codegen: `build_master_inventory.py` if restored.
 
 ## Petri Dish v2 — hybrid Rust/WASM + headless engine (May 2, 2026)
 

@@ -679,6 +679,28 @@ System (MycoBrain) â”€â”€managesâ”€â”€> Device (SporeBase)
 
 ---
 
+## NatureOS Lab + Environmental Feeds MVP (May 03, 2026)
+
+Compound experiment planning and growth telemetry narratives backed by MINDEX; OpenAQ / Safecast / deferred viral-aerosol feeds with honest empty or 503 responses.
+
+### Registered Agents
+
+| Agent ID | Class | Category | Capabilities |
+|----------|-------|----------|--------------|
+| `chemputer_agent` | `ChemputerAgent` | scientific | `chemputer_plan`, `mindex_compounds` |
+| `growth_analytics_agent` | `GrowthAnalyticsAgent` | scientific | `telemetry_summary`, `growth_context` |
+
+### Modules
+
+| File | Purpose |
+|------|---------|
+| `mycosoft_mas/agents/lab/chemputer_agent.py` | Loads compound from MINDEX; returns structured experiment plan |
+| `mycosoft_mas/agents/lab/growth_analytics_agent.py` | Aggregates latest device telemetry from MINDEX |
+| `mycosoft_mas/core/routers/natureos_lab_mvp_api.py` | `/api/natureos/lab/*` |
+| `mycosoft_mas/core/routers/environmental_feeds_mvp_api.py` | `/api/natureos/feeds/*` |
+
+---
+
 ## Liquid AI Fungal Integration (Mar 9, 2026)
 
 Liquid AI-inspired adaptive temporal processing for FCI biosignals, fungal memory bridging, and recursive self-improvement with benchmark tracking.

@@ -1,6 +1,12 @@
 {
-  "count": 917,
+  "count": 928,
   "docs": [
+    {
+      "path": "docs\\AEROSOL_VIRUS_RADIATION_FEEDS_COMPLETE_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "Aerosol / Virus / Radiation Feeds \u2014 MVP Complete (May 03, 2026)",
+      "date": "2026-MAY-03"
+    },
     {
       "path": "docs\\AEROSOL_VIRUS_RADIATION_FEEDS_PLAN_MAY01_2026.md",
       "repo": "MAS",
@@ -84,6 +90,12 @@
       "repo": "MAS",
       "title": "Amazon Business \u2192 Supabase Import Complete \u2014 March 7, 2026",
       "date": "2026-MAR-07"
+    },
+    {
+      "path": "docs\\ANCESTRY_ALL_SPECIES_EXPANSION_COMPLETE_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "Ancestry All-Species Expansion \u2014 MVP Complete (May 03, 2026)",
+      "date": "2026-MAY-03"
     },
     {
       "path": "docs\\ANCESTRY_ALL_SPECIES_EXPANSION_PLAN_MAY01_2026.md",
@@ -248,6 +260,12 @@
       "date": "2026-MAY-01"
     },
     {
+      "path": "docs\\BIOLOGY_SIMULATOR_UNREAL_SPIKE_COMPLETE_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "Biology Simulator \u2014 Unreal Pixel Streaming Spike Complete (May 03, 2026)",
+      "date": "2026-MAY-03"
+    },
+    {
       "path": "docs\\BIO_COMPUTE_FEB06_2026.md",
       "repo": "MAS",
       "title": "Bio-Compute System Documentation",
@@ -410,6 +428,12 @@
       "date": "2026-FEB-19"
     },
     {
+      "path": "docs\\COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "Compound Analyser \u2014 Chemputer Agent MVP Complete (May 03, 2026)",
+      "date": "2026-MAY-03"
+    },
+    {
       "path": "docs\\COMPOUND_ANALYSER_CHEMPUTER_AGENT_PLAN_MAY01_2026.md",
       "repo": "MAS",
       "title": "Compound Analyser \u2014 Chemputer Agent Plan \u2014 May 1, 2026",
@@ -564,6 +588,12 @@
       "repo": "MAS",
       "title": "CREP Voice Control Implementation - February 6, 2026",
       "date": "2026-FEB-06"
+    },
+    {
+      "path": "docs\\CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "CREP Waypoints \u2014 Supabase Source of Truth Complete (May 03, 2026)",
+      "date": "2026-MAY-03"
     },
     {
       "path": "docs\\CREP_WEBSITE_DEPLOYMENT_REFERENCE.md",
@@ -1412,6 +1442,12 @@
       "date": "2026-APR-06"
     },
     {
+      "path": "docs\\GROWTH_ANALYTICS_AGENTIC_COMPLETE_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "Growth Analytics \u2014 Agentic MVP Complete (May 03, 2026)",
+      "date": "2026-MAY-03"
+    },
+    {
       "path": "docs\\GROWTH_ANALYTICS_AGENTIC_PLAN_MAY01_2026.md",
       "repo": "MAS",
       "title": "Growth Analytics \u2014 Agentic Analysis Plan \u2014 May 1, 2026",
@@ -1770,6 +1806,18 @@
       "repo": "MAS",
       "title": "MAY02 Continuation & Operationalization Rollout \u2014 Complete (May 02, 2026)",
       "date": "2026-MAY-02"
+    },
+    {
+      "path": "docs\\MAY02_ROLLOUT_VERIFICATION_EVIDENCE_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "MAY02 Rollout \u2014 Verification Evidence (May 03, 2026)",
+      "date": "2026-MAY-03"
+    },
+    {
+      "path": "docs\\MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "MAY03 Session Execution Log \u2014 MVP Closure (May 03, 2026)",
+      "date": "2026-MAY-03"
     },
     {
       "path": "docs\\MDP_PROTOCOL_CONTRACTS_MAR07_2026.md",
@@ -2846,6 +2894,12 @@
       "date": "2026-MAR-14"
     },
     {
+      "path": "docs\\MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md",
+      "repo": "MAS",
+      "title": "Mycosoft Platform Audit \u2014 Inventory, Services, and Gaps (May 2, 2026)",
+      "date": "2026-MAY-02"
+    },
+    {
       "path": "docs\\MYCOSOFT_PROTOCOL_UNIFICATION_COMPLETE_FEB23_2026.md",
       "repo": "MAS",
       "title": "Mycosoft Protocol Unification \u2014 Complete",
@@ -3012,6 +3066,12 @@
       "repo": "MAS",
       "title": "NatureOS Smell Training UI - January 8, 2026",
       "date": "2026-01-08"
+    },
+    {
+      "path": "docs\\NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_COMPLETE_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "NatureOS Tools Hub \u2014 Deep Integration MVP Complete (May 03, 2026)",
+      "date": "2026-MAY-03"
     },
     {
       "path": "docs\\NATUREOS_TOOLS_HUB_DEEP_INTEGRATION_PLAN_MAY01_2026.md",
@@ -3582,6 +3642,12 @@
       "repo": "MAS",
       "title": "Production Migration Runbook",
       "date": "2026-FEB-09"
+    },
+    {
+      "path": "docs\\PROMETHEUS_MAS_VM188_RUNBOOK_MAY03_2026.md",
+      "repo": "MAS",
+      "title": "Prometheus on MAS VM 188 \u2014 Runbook (May 3, 2026)",
+      "date": "2026-MAY-03"
     },
     {
       "path": "docs\\PROTOCOL_ROLLOUT_RUNBOOK_FEB17_2026.md",

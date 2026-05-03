@@ -16,7 +16,7 @@
 | **P1 Petri v2** | Rust `petri_engine` **borrow-check fixes** (`chemistry.rs`, `world.rs`) so release Docker build succeeds (`fix(petri_engine)` on `main`). Added `services/petri_engine/Dockerfile`, `scripts/myceliumseg/Dockerfile`, `GET /health` on seg API, `scripts/deploy_petri_v2_stack_vm187.py` (health curls use `curl -sS` + `|| true` so `pipefail` does not false-fail the script). **`docs/PETRI_DISH_V2_RUNBOOK_MAY02_2026.md`**. **`scripts/set_petri_engine_env_mas188.py`** appends `PETRI_ENGINE_V2_URL` to **`/home/mycosoft/mycosoft/mas/.env`** (matches `deploy/mas-orchestrator.service` `EnvironmentFile`) and restarts `mas-orchestrator`. Verified **`GET /api/simulation/petri/v2/health`** → `petri_engine_service` ok. |
 | **P2 Verification** | **`scripts/natureos_bff_route_inventory.py`** added; reports **64** `route.ts` handlers under `app/api/natureos`. Petri: **187:8050** + **188** proxy health OK from LAN. Full UI/matrix: `docs/NATUREOS_STAGING_MATRIX_MAY02_2026.md` + Petri runbook + MYCA Alive docs (prior thread). |
 | **P3 May01 shells** | No full implementations in this rollout (multi-sprint). Queue: **`docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md`**; footers added to all six MAY01 plan shells. |
-| **P3 waypoints** | Supabase migration shipped: `WEBSITE/website/supabase/migrations/20260502_natureos_crep_waypoints.sql` (RLS). **localStorage → table** UI migration remains a follow-up. |
+| **P3 waypoints** | **Done May 03, 2026:** migrations `20260502_*` + `20260503_natureos_crep_waypoints_attrs.sql`; CRUD under `app/api/crep/waypoints`; `WaypointSystem` Supabase-first sync. See **`docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md`**. |
 | **P3 entitlements** | Draft contract: **`docs/CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md`** — implementation pending key store design. |
 | **P3 CREP chat audit** | **Single** `MYCAChatWidget` usage in `CREPDashboardClient` (grep — no duplicate mount found). |
 | **P3 sitemap** | **`app/sitemap.ts`** already includes `/natureos` and `/natureos/earth-simulator`. |
@@ -31,7 +31,7 @@
 2. **Petri (after deploy script):** `curl http://192.168.0.187:8050/health` and `curl http://192.168.0.188:8001/api/simulation/petri/v2/health` (with `PETRI_ENGINE_V2_URL` set).  
 3. **Website BFF:** `curl -s http://localhost:3010/api/simulation/petri/v2/health` (dev) proxies MAS.  
 4. **BFF count:** `python scripts/natureos_bff_route_inventory.py` → 64 files.  
-5. **Supabase:** apply `20260502_natureos_crep_waypoints.sql` in target project; enable Realtime on `crep_waypoints` if required.
+5. **Supabase:** apply `20260502_natureos_crep_waypoints.sql` **and** `20260503_natureos_crep_waypoints_attrs.sql` in target project; enable Realtime on `crep_waypoints` if required.
 
 ## Lessons learned
 
@@ -46,5 +46,5 @@
 - **MAS .env:** If `PETRI_ENGINE_V2_URL` must change, edit `/home/mycosoft/mycosoft/mas/.env` on **188** or re-run **`scripts/set_petri_engine_env_mas188.py`**.  
 - **Sandbox 187 git:** Some paths under `~/mycosoft/mas` may be root-owned — `sudo chown -R mycosoft:mycosoft /home/mycosoft/mycosoft/mas` restores clean `git reset --hard` (optional).  
 - Implement **agent key scope** per draft contract.  
-- **localStorage** waypoint migration to Supabase client.  
-- Execute **`P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md`** in separate threads.
+- ~~**localStorage** waypoint migration to Supabase client~~ — closed May 03, 2026 (`docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md`).  
+- Execute remaining items in **`P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md`** beyond MVP slices — see **`docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md`** for May03 MVP completion set.

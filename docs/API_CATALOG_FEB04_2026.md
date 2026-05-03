@@ -72,6 +72,18 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 | `/api/eagle-eye/video-sources` | GET | Bbox query; same query params as MINDEX `GET /eagle/video-sources` |
 | `/api/eagle-eye/video-events` | GET | Time-range query; same query params as MINDEX `GET /eagle/video-events` |
 
+### NatureOS Lab + Environmental Feeds MVP (`/api/natureos/lab/*`, `/api/natureos/feeds/*`) – May 03, 2026
+
+**Routers:** `mycosoft_mas/core/routers/natureos_lab_mvp_api.py`, `mycosoft_mas/core/routers/environmental_feeds_mvp_api.py`
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/natureos/lab/chemputer/plan` | POST | Body `{ compound_id }` — `ChemputerAgent` loads compound from MINDEX only; rejects raw SMILES in MVP |
+| `/api/natureos/lab/growth/instrument-summary` | GET | `GrowthAnalyticsAgent` — aggregates latest rows from MINDEX `GET /telemetry/devices/latest` |
+| `/api/natureos/feeds/openaq/measurements` | GET | OpenAQ v2 measurements via `EnvironmentalClient` (503 on upstream failure) |
+| `/api/natureos/feeds/radiation/status` | GET | Safecast radiation probe; JSON 503 when unreachable (no fabricated dose) |
+| `/api/natureos/feeds/virus-aerosol/status` | GET | Structured deferral — no viral load surrogate |
+
 ### MYCA Harness API (`/api/harness/*`) – Apr 17, 2026
 
 Mounted **by default** on MAS unless `HARNESS_API_DISABLED=1` (or legacy `HARNESS_API_ENABLED=false`). Nemotron (via unified backend selection + overrides), PersonaPlex bridge ASR/TTS, YAML static answers, **MINDEX unified search-in-LLM** (no external video APIs), optional NLM, MINDEX execution log (`record_execution` best-effort). Brain: optional `BRAIN_CHAT_USE_HARNESS` / `use_harness` on `POST /voice/brain/chat`.
@@ -657,8 +669,15 @@ Canonical store: schema `eagle` (`video_sources`, `video_events`, `object_tracks
 | `/api/natureos/aerosol/spores` | GET | BFF: fungal spore-relevant observations aggregation |
 | `/api/natureos/aerosol/dust` | GET | BFF: dust/adverse weather alignment with CREP/Earth layers |
 | `/api/natureos/aerosol/chemicals` | GET | BFF: MINDEX emissions proxy |
-| `/api/natureos/aerosol/virus` | GET | Placeholder JSON until public-health feeds wired |
-| `/api/natureos/aerosol/radiation` | GET | Placeholder JSON until radiation feeds wired |
+| `/api/natureos/aerosol/virus` | GET | BFF → MAS `/api/natureos/feeds/virus-aerosol/status` (structured deferral; no surrogate metrics) |
+| `/api/natureos/aerosol/radiation` | GET | BFF → MAS `/api/natureos/feeds/radiation/status` (Safecast via EnvironmentalClient; 503 when unavailable) |
+| `/api/natureos/feeds/openaq/measurements` | GET | Proxy → MAS OpenAQ measurements |
+| `/api/natureos/lab/chemputer/plan` | POST | Proxy → MAS Chemputer plan |
+| `/api/natureos/lab/growth/instrument-summary` | GET | Proxy → MAS growth instrument summary |
+| `/api/natureos/tools-hub/health` | GET | Aggregated ping: MAS `/health`, MINDEX `/health`, NatureOS `/api/health` |
+| `/api/natureos/biology-simulator/unreal-bridge` | GET | Website-only: Unreal Pixel Streaming env contract (no fake stream) |
+| `/api/crep/waypoints` | GET, POST | Authenticated CRUD: list / create `crep_waypoints` (Supabase RLS) |
+| `/api/crep/waypoints/{id}` | PATCH, DELETE | Update / delete waypoint owned by signed-in user |
 | `/api/scientific/experiments` | GET, POST | Experiments |
 | `/api/bio/sensors` | GET | Biosensor data |
 | `/api/mindex/telemetry` | GET, POST | MINDEX telemetry proxy + envelope ingest |

@@ -7,7 +7,7 @@
 ## Prerequisites
 
 - **Credentials:** `.credentials.local` in **website** or **MAS** repo root must contain:
-  - `VM_PASSWORD=Loserology1!` (or `VM_SSH_PASSWORD=Loserology1!`)
+  - `VM_PASSWORD=<from .credentials.local only>` (same for `VM_SSH_PASSWORD` if used)
   - `VM_SSH_USER=mycosoft`
 - **Never ask the user for the password.** Load from file.
 - **Cloudflare:** For cache purge after website deploy, set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` (e.g. in website `.env.local` or env).

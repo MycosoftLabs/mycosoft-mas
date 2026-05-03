@@ -4,42 +4,104 @@
     "docs\\MEMORY_DOCUMENTATION_INDEX_FEB05_2026.md",
     "docs\\SYSTEM_REGISTRY_FEB04_2026.md"
   ],
-  "referenced_paths_count": 438,
-  "files_checked": 389,
+  "referenced_paths_count": 547,
+  "files_checked": 464,
   "files_excluded": 8,
-  "files_with_gaps": 84,
+  "files_with_gaps": 103,
   "referenced_files_with_gaps": [
+    {
+      "path": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MYCODAO\\docs\\MYCODAO_SUPABASE_MINDEX_MAS_ORCHESTRATION_FULL_PLAN_APR14_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MYCODAO\\docs\\MYCODAO_SUPABASE_MINDEX_MAS_ORCHESTRATION_FULL_PLAN_APR14_2026.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 86,
+          "snippet": "- [ ] No service role in client."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 87,
+          "snippet": "- [ ] No broker secrets in `NEXT_PUBLIC_*`."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 88,
+          "snippet": "- [ ] RLS tested for cross-user denial."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 89,
+          "snippet": "- [ ] Audit log for sensitive settings changes."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 103,
+          "snippet": "- [ ] User can sign in; row appears in `mycodao.profiles`."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 104,
+          "snippet": "- [ ] Pulse reads only allowed columns under RLS."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 105,
+          "snippet": "- [ ] MAS can insert `agent_runs` via server path without exposing keys."
+        },
+        {
+          "kind": "stub",
+          "line_no": 78,
+          "snippet": "| **P1** | Bind dashboard reads/writes to real tables; remove any placeholder \u201cportfolio\u201d data |"
+        }
+      ],
+      "gap_count": 8
+    },
     {
       "path": ".cursor\\CURSOR_DOCS_INDEX.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\.cursor\\CURSOR_DOCS_INDEX.md",
       "gaps": [
         {
           "kind": "todo_fixme",
-          "line_no": 244,
+          "line_no": 343,
           "snippet": "| `docs/WORK_TODOS_GAPS_AND_MISSING_AGENTS_RULES_FEB10_2026.md` | Work streams, vision gaps, agents/rules |"
         },
         {
+          "kind": "501",
+          "line_no": 49,
+          "snippet": "| `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` | VMs, services health snapshot, Cursor subagents, web"
+        },
+        {
           "kind": "stub",
-          "line_no": 33,
+          "line_no": 29,
+          "snippet": "| `docs/ALL_LIFE_ANCESTRY_EXPANSION_MAY02_2026.md` | All-life `/natureos/ancestry` hub: MINDEX + BFF + ETL stubs + n8n +"
+        },
+        {
+          "kind": "stub",
+          "line_no": 30,
+          "snippet": "| `../MINDEX/mindex/docs/ALL_LIFE_ETL_MAY02_2026.md` | MINDEX ETL orchestration, stubs, storage staging. |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 105,
           "snippet": "| `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` | **World view search suggestions and MINDEX/SEARCH/MYCA/NATUR"
         },
         {
           "kind": "stub",
-          "line_no": 74,
+          "line_no": 171,
           "snippet": "| `docs/INTEGRATION_TEST_MATRIX_MAR11_2026.md` | **Integration test matrix**: Regression guardrails, CREP/search/device/"
         },
         {
           "kind": "stub",
-          "line_no": 143,
+          "line_no": 240,
           "snippet": "| `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` | **Large items scaffolding**: Design stubs for Jobs 18\u201323 (control pl"
         },
         {
           "kind": "stub",
-          "line_no": 262,
+          "line_no": 361,
           "snippet": "| `docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md` | **Auto-apply linter/analyzer fixes**: codeActionsOnSave, formatOnSave"
         }
       ],
-      "gap_count": 5
+      "gap_count": 8
     },
     {
       "path": ".cursor\\agents\\search-engineer.md",
@@ -59,51 +121,61 @@
       "gaps": [
         {
           "kind": "todo_fixme",
-          "line_no": 3227,
+          "line_no": 4031,
           "snippet": "\"path\": \"docs\\\\SECURITY_TODO_FIXES_FEB12_2026.md\","
         },
         {
           "kind": "todo_fixme",
-          "line_no": 3229,
+          "line_no": 4033,
           "snippet": "\"title\": \"Security TODO Fixes - February 12, 2026\","
         },
         {
           "kind": "todo_fixme",
-          "line_no": 3593,
+          "line_no": 4433,
           "snippet": "\"path\": \"docs\\\\TODO_AUDIT_FEB12_2026.md\","
         },
         {
           "kind": "todo_fixme",
-          "line_no": 3595,
+          "line_no": 4435,
           "snippet": "\"title\": \"TODO Audit Report - February 12, 2026\","
         },
         {
           "kind": "todo_fixme",
-          "line_no": 3893,
+          "line_no": 4751,
           "snippet": "\"path\": \"docs\\\\WORK_TODOS_GAPS_AND_MISSING_AGENTS_RULES_FEB10_2026.md\","
         },
         {
           "kind": "stub",
-          "line_no": 1499,
+          "line_no": 1091,
+          "snippet": "\"path\": \"docs\\\\ENGINES_PHASE2_STUBS_MAR14_2026.md\","
+        },
+        {
+          "kind": "stub",
+          "line_no": 1093,
+          "snippet": "\"title\": \"Phase 2 Engine Stubs \\u2014 Mar 14, 2026\","
+        },
+        {
+          "kind": "stub",
+          "line_no": 1865,
           "snippet": "\"path\": \"docs\\\\MEMORY_STUBS_IMPLEMENTATION_FEB12_2026.md\","
         },
         {
           "kind": "stub",
-          "line_no": 1501,
+          "line_no": 1867,
           "snippet": "\"title\": \"Memory System Stubs Implementation\","
         },
         {
           "kind": "stub",
-          "line_no": 3407,
+          "line_no": 4223,
           "snippet": "\"path\": \"docs\\\\STUB_IMPLEMENTATIONS_FEB12_2026.md\","
         },
         {
           "kind": "stub",
-          "line_no": 3409,
+          "line_no": 4225,
           "snippet": "\"title\": \"Stub and Placeholder Implementations Completed - February 12, 2026\","
         }
       ],
-      "gap_count": 9
+      "gap_count": 11
     },
     {
       "path": "docs\\API_CATALOG_FEB04_2026.md",
@@ -111,7 +183,7 @@
       "gaps": [
         {
           "kind": "501",
-          "line_no": 318,
+          "line_no": 361,
           "snippet": "| `/api/sporebase/order` | POST | Submit SporeBase order intake (replaces previous 501 response) |"
         },
         {
@@ -208,6 +280,18 @@
           "kind": "501",
           "line_no": 34,
           "snippet": "| B0C6FY4JXF | be quiet! Dark Power Pro 13 1600W Power Supply \\| ATX 3.1 Compliant \\| 80 Plus Tit | BN501 | dev-boards |"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 14,
+          "snippet": "| **UI** | `/natureos/compound-analyser` embeds `CompoundSimEmbed` \u2192 same UX as `app/apps/compound-sim/page.tsx`: \u201cChemp"
         }
       ],
       "gap_count": 1
@@ -509,6 +593,23 @@
       "gap_count": 3
     },
     {
+      "path": "docs\\DEEP_AGENTS_V05_INTEGRATION_PLAN.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\DEEP_AGENTS_V05_INTEGRATION_PLAN.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 27,
+          "snippet": "| `TodoListMiddleware` | `agents/enums/task_status.py` (9 statuses) | **Medium** \u2014 Structured task tracking per agent |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 203,
+          "snippet": "| `TODO` | \u2014 | Pre-launch (no async task yet) |"
+        }
+      ],
+      "gap_count": 2
+    },
+    {
       "path": "docs\\DEVICE_JETSON16_CORTEX_ARCHITECTURE_MAR07_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\DEVICE_JETSON16_CORTEX_ARCHITECTURE_MAR07_2026.md",
       "gaps": [
@@ -790,6 +891,38 @@
       "gap_count": 2
     },
     {
+      "path": "docs\\FUSARIUM_OPERATOR_APPLICATION_AND_CROSS_SYSTEM_INTEGRATION_COMPLETE_APR09_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\FUSARIUM_OPERATOR_APPLICATION_AND_CROSS_SYSTEM_INTEGRATION_COMPLETE_APR09_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 33,
+          "snippet": "- Replaced placeholder Zeetachec network integration with a real MINDEX/MycoBrain-backed client in `mycosoft_mas/integra"
+        },
+        {
+          "kind": "stub",
+          "line_no": 34,
+          "snippet": "- Replaced stub TAC-O agent behaviors in:"
+        },
+        {
+          "kind": "stub",
+          "line_no": 52,
+          "snippet": "- Mounted the worldview maritime router and replaced placeholder reads with real DB queries:"
+        },
+        {
+          "kind": "stub",
+          "line_no": 59,
+          "snippet": "- Replaced placeholder ETL status with database-backed visibility in `mindex_api/routers/etl.py`."
+        },
+        {
+          "kind": "stub",
+          "line_no": 95,
+          "snippet": "- The implementation avoids mock data fallbacks in Fusarium paths and replaces placeholder flows with real integrations "
+        }
+      ],
+      "gap_count": 5
+    },
+    {
       "path": "docs\\GAPS_AND_SECURITY_AUDIT_MAR14_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\GAPS_AND_SECURITY_AUDIT_MAR14_2026.md",
       "gaps": [
@@ -872,6 +1005,113 @@
       "gap_count": 15
     },
     {
+      "path": "docs\\GAP_FILL_PLAN_ALL_PENDING_EDITS_APR10_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\GAP_FILL_PLAN_ALL_PENDING_EDITS_APR10_2026.md",
+      "gaps": [
+        {
+          "kind": "status_pending",
+          "line_no": 4,
+          "snippet": "Status: In Progress"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 249,
+          "snippet": "- [ ] MINDEX: resolve missing `/api/mindex/internal/state/live` route in production runtime."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 250,
+          "snippet": "- [ ] Verify `live_state_router` is present in runtime OpenAPI and returns 200 with telemetry/nlm/experience/merkle keys"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 251,
+          "snippet": "- [ ] MAS: validate `/api/myca/world/summary` includes `mindex_live` object after MINDEX route is live."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 252,
+          "snippet": "- [ ] End-to-end smoke: Jetson publish -> MINDEX ingest -> NatureOS fanout attempt -> Fusarium mirror row creation."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 256,
+          "snippet": "- [ ] Split workspace changes into shippable feature groups: `taco`, `fusarium`, `maritime`, `mqtt`, `search`, `docs`, `"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 257,
+          "snippet": "- [ ] Remove non-source artifacts from git consideration (`.poetry-cache/**`, `pytest_out*.txt`, temp files like `nul`)."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 258,
+          "snippet": "- [ ] Create per-repo commit batches with explicit scope and verification evidence."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 262,
+          "snippet": "- [ ] Add human-readable subscriber/operator JSON inspection workflow for MQTT -> MINDEX pipeline."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 263,
+          "snippet": "- [ ] Extend Jetson publisher from one-sensor payload to multi-sensor bundle schema."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 264,
+          "snippet": "- [ ] Confirm NatureOS auth contract (`X-Webhook-Secret` / `X-API-Key`) against active endpoint."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 265,
+          "snippet": "- [ ] Validate MYCA reads live NLM + self/world/fingerprint + Merkle provenance from runtime state endpoints."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 269,
+          "snippet": "- [ ] Run MINDEX targeted tests for telemetry/mycobrain/live-state paths."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 270,
+          "snippet": "- [ ] Run MAS targeted tests for mindex bridge and worldstate route composition."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 271,
+          "snippet": "- [ ] Deploy updated website integration routes if dependent UI surfaces are required."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 272,
+          "snippet": "- [ ] Update completion docs and registries for each finalized batch."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 276,
+          "snippet": "- [ ] Production MINDEX endpoint `/api/mindex/internal/state/live` returns 200 and expected schema."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 277,
+          "snippet": "- [ ] MAS world summary includes `mindex_live` field with non-empty payload."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 278,
+          "snippet": "- [ ] All pending edits are either committed in scoped batches or explicitly dropped as artifacts."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 279,
+          "snippet": "- [ ] Remaining backlog is documented with owner, repo, and acceptance criteria."
+        }
+      ],
+      "gap_count": 20
+    },
+    {
       "path": "docs\\GAP_PLAN_CHANGES_LOG_MAR07_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\GAP_PLAN_CHANGES_LOG_MAR07_2026.md",
       "gaps": [
@@ -887,6 +1127,33 @@
         }
       ],
       "gap_count": 2
+    },
+    {
+      "path": "docs\\GAP_SCAN_RECONCILIATION_APR06_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\GAP_SCAN_RECONCILIATION_APR06_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 20,
+          "snippet": "| TODO/FIXME-style hits (capped per repo) | 603 | Includes markdown/docs noise |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 56,
+          "snippet": "1. Treat **603 TODOs** as a **triage queue** \u2014 prioritize production `*.py` / `*.tsx` in `mycosoft_mas` and `WEBSITE/web"
+        },
+        {
+          "kind": "501",
+          "line_no": 22,
+          "snippet": "| 501 / not-implemented pattern hits | 136 | Includes comments and strings |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 21,
+          "snippet": "| Stub-pattern hits | 275 | Heuristic; not all are code stubs |"
+        }
+      ],
+      "gap_count": 4
     },
     {
       "path": "docs\\GPU_ENRICHMENT_STRATEGY_MAR14_2026.md",
@@ -993,6 +1260,30 @@
         }
       ],
       "gap_count": 6
+    },
+    {
+      "path": "docs\\GROUNDING_RAG_EXECUTION_STATUS_APR06_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\GROUNDING_RAG_EXECUTION_STATUS_APR06_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 24,
+          "snippet": "| **SpatialService / TemporalService** | Replace stubs with DB-backed calls where migrations are applied; wire `groundin"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\GROWTH_ANALYTICS_AGENTIC_COMPLETE_MAY03_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\GROWTH_ANALYTICS_AGENTIC_COMPLETE_MAY03_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 12,
+          "snippet": "| **Empty honesty** | When no rows: `has_instrument_data: false` and narrative stating no telemetry \u2014 **no placeholder c"
+        }
+      ],
+      "gap_count": 1
     },
     {
       "path": "docs\\INTEGRATION_COMPLETION_MATRIX_MAR19_2026.md",
@@ -1116,66 +1407,91 @@
       "gaps": [
         {
           "kind": "todo_fixme",
-          "line_no": 232,
-          "snippet": "- `docs/JETSON_BACKED_MYCORBRAIN_ARCHITECTURE_COMPLETE_MAR07_2026.md` \u2013 **Plan complete**: All seven todos done; deliver"
+          "line_no": 375,
+          "snippet": "- `docs/JETSON_BACKED_MYCORBRAIN_ARCHITECTURE_COMPLETE_MAR07_2026.md` ? **Plan complete**: All seven todos done; deliver"
         },
         {
           "kind": "todo_fixme",
-          "line_no": 385,
-          "snippet": "- `docs/GROUNDED_COGNITION_FULL_SPRINT_COMPLETE_FEB17_2026.md` \u2013 **Full sprint complete**: All 18 tasks \u2013 MINDEX migrati"
+          "line_no": 528,
+          "snippet": "- `docs/GROUNDED_COGNITION_FULL_SPRINT_COMPLETE_FEB17_2026.md` ? **Full sprint complete**: All 18 tasks ? MINDEX migrati"
         },
         {
           "kind": "501",
-          "line_no": 372,
-          "snippet": "- `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` \u2013 **Execution complete**: Memory layers (procedural/episodic/seman"
+          "line_no": 5,
+          "snippet": "- `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` \u2014 **Cross-repo inventory**: VMs, Cursor subagents, MAS"
+        },
+        {
+          "kind": "501",
+          "line_no": 515,
+          "snippet": "- `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` ? **Execution complete**: Memory layers (procedural/episodic/seman"
         },
         {
           "kind": "stub",
-          "line_no": 74,
-          "snippet": "- `docs/GAPS_AND_SECURITY_AUDIT_MAR14_2026.md` \u2013 **Implementation gaps and security issues**: Unfinished stubs (search s"
+          "line_no": 67,
+          "snippet": "- `docs/ALL_LIFE_ANCESTRY_EXPANSION_MAY02_2026.md` \u2014 All-life ancestry expansion (MINDEX, BFF, ETL stubs, n8n, follow-up"
         },
         {
           "kind": "stub",
-          "line_no": 87,
-          "snippet": "- `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` \u2013 **World view search suggestions and MINDEX/SEARCH/MYCA/NATUR"
+          "line_no": 73,
+          "snippet": "## AWS + MVT tile pipeline \u2014 IAM, bake, stub (Apr 17, 2026)"
         },
         {
           "kind": "stub",
-          "line_no": 124,
-          "snippet": "- `docs/CORE_PLATFORM_HARDENING_PLAN_MAR11_2026.md` \u2013 **Core platform hardening plan**: Simulated MINDEX router removal;"
+          "line_no": 80,
+          "snippet": "- `services/crep_tile_render_stub/main.py` \u2014 **FastAPI stub** on :8230; `CREP_TILE_STUB_PROFILE=earth2` (249) or `densit"
         },
         {
           "kind": "stub",
-          "line_no": 126,
-          "snippet": "- `docs/INTEGRATION_TEST_MATRIX_MAR11_2026.md` \u2013 **Integration test matrix**: VM reachability smoke, regression guardrai"
+          "line_no": 92,
+          "snippet": "- `docs/MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md` \u2014 **MAS**: subsystem index snapshot (routers/harness/myca_os/mindex/"
         },
         {
           "kind": "stub",
-          "line_no": 251,
-          "snippet": "- `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` \u2013 **Large items scaffolding**: Design stubs for Jobs 18\u201323 (control pl"
+          "line_no": 217,
+          "snippet": "- `docs/GAPS_AND_SECURITY_AUDIT_MAR14_2026.md` ? **Implementation gaps and security issues**: Unfinished stubs (search s"
         },
         {
           "kind": "stub",
-          "line_no": 372,
-          "snippet": "- `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` \u2013 **Execution complete**: Memory layers (procedural/episodic/seman"
+          "line_no": 230,
+          "snippet": "- `docs/WORLD_VIEW_SEARCH_SUGGESTIONS_PLAN_MAR14_2026.md` ? **World view search suggestions and MINDEX/SEARCH/MYCA/NATUR"
         },
         {
           "kind": "stub",
-          "line_no": 454,
-          "snippet": "- `docs/GROUNDED_COGNITION_V0_FEB17_2026.md` \u2013 **Grounded Cognition Phase 1 complete**: Experience Packets, GroundingGat"
+          "line_no": 267,
+          "snippet": "- `docs/CORE_PLATFORM_HARDENING_PLAN_MAR11_2026.md` ? **Core platform hardening plan**: Simulated MINDEX router removal;"
         },
         {
           "kind": "stub",
-          "line_no": 502,
-          "snippet": "- `docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md` \u2013 **Linter and analyzer fixes auto-applied**: `editor.codeActionsOnSave"
+          "line_no": 269,
+          "snippet": "- `docs/INTEGRATION_TEST_MATRIX_MAR11_2026.md` ? **Integration test matrix**: VM reachability smoke, regression guardrai"
         },
         {
           "kind": "stub",
-          "line_no": 537,
+          "line_no": 394,
+          "snippet": "- `docs/GAP_PLAN_LARGE_SCAFFOLDING_MAR05_2026.md` ? **Large items scaffolding**: Design stubs for Jobs 18?23 (control pl"
+        },
+        {
+          "kind": "stub",
+          "line_no": 515,
+          "snippet": "- `docs/SYSTEM_GAPS_EXECUTION_COMPLETE_FEB28_2026.md` ? **Execution complete**: Memory layers (procedural/episodic/seman"
+        },
+        {
+          "kind": "stub",
+          "line_no": 597,
+          "snippet": "- `docs/GROUNDED_COGNITION_V0_FEB17_2026.md` ? **Grounded Cognition Phase 1 complete**: Experience Packets, GroundingGat"
+        },
+        {
+          "kind": "stub",
+          "line_no": 645,
+          "snippet": "- `docs/AUTO_APPLY_ANALYZER_FIXES_FEB09_2026.md` ? **Linter and analyzer fixes auto-applied**: `editor.codeActionsOnSave"
+        },
+        {
+          "kind": "stub",
+          "line_no": 680,
           "snippet": "## Stub and Placeholder Implementations (Feb 12, 2026)"
         }
       ],
-      "gap_count": 12
+      "gap_count": 17
     },
     {
       "path": "docs\\MASTER_SPREADSHEET_AUTOMATION_MAR07_2026.md",
@@ -1188,6 +1504,98 @@
         }
       ],
       "gap_count": 1
+    },
+    {
+      "path": "docs\\MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MAS_FULL_INDEX_AND_GAP_AUDIT_APR17_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 37,
+          "snippet": "> Priority here is \u201cblocks/weakens MYCA autonomous operation today\u201d rather than cosmetic TODOs."
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 43,
+          "snippet": "3. **MINDEX full-sync still has TODO with `db = None` placeholder (async DB not initialized in that path)**."
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 44,
+          "snippet": "4. **MYCA OS gateway metrics endpoint still has TODO to fetch MINDEX metrics (`/api/mindex/metrics`)**."
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 48,
+          "snippet": "5. **NLM training pipeline contains placeholder dataset/metrics behavior and TODO for real data source wiring (MINDEX/Qd"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 51,
+          "snippet": "8. **Dashboard backend/UI has unfinished pieces (`MonitoringDashboard` stub + TODO for time filtering)**."
+        },
+        {
+          "kind": "501",
+          "line_no": 56,
+          "snippet": "10. **Provider abstraction includes expected `NotImplementedError` contracts that require concrete provider support (e.g"
+        },
+        {
+          "kind": "stub",
+          "line_no": 41,
+          "snippet": "1. **Harness NLM path still returns stubbed envelope/fallback behavior when full NLM path is unavailable** (`nlm_interfa"
+        },
+        {
+          "kind": "stub",
+          "line_no": 42,
+          "snippet": "2. **Turbo-quant path is intentionally placeholder (zlib telemetry stand-in), not production quant transport**."
+        },
+        {
+          "kind": "stub",
+          "line_no": 43,
+          "snippet": "3. **MINDEX full-sync still has TODO with `db = None` placeholder (async DB not initialized in that path)**."
+        },
+        {
+          "kind": "stub",
+          "line_no": 48,
+          "snippet": "5. **NLM training pipeline contains placeholder dataset/metrics behavior and TODO for real data source wiring (MINDEX/Qd"
+        },
+        {
+          "kind": "stub",
+          "line_no": 49,
+          "snippet": "6. **`integrations/clients/mindex_client.py` is explicitly documented as a \u201cminimal stub\u201d client**."
+        },
+        {
+          "kind": "stub",
+          "line_no": 50,
+          "snippet": "7. **UCP commerce adapter remains stub/no-op when live UCP endpoint is not configured**."
+        },
+        {
+          "kind": "stub",
+          "line_no": 51,
+          "snippet": "8. **Dashboard backend/UI has unfinished pieces (`MonitoringDashboard` stub + TODO for time filtering)**."
+        },
+        {
+          "kind": "stub",
+          "line_no": 64,
+          "snippet": "- Replace turbo-quant placeholder with real transport (or disable path entirely in prod to avoid false confidence)."
+        },
+        {
+          "kind": "stub",
+          "line_no": 69,
+          "snippet": "- Replace NLM trainer placeholders with actual data connectors and measurable training outputs."
+        },
+        {
+          "kind": "stub",
+          "line_no": 70,
+          "snippet": "- Upgrade stub MINDEX/UCP clients to full production clients or hard-fail with explicit capability flags."
+        },
+        {
+          "kind": "stub",
+          "line_no": 94,
+          "snippet": "- The **remaining critical work** is mostly in placeholder/stub zones for NLM execution fidelity, quant transport, MINDE"
+        }
+      ],
+      "gap_count": 17
     },
     {
       "path": "docs\\MICA_MERKLE_LEDGER_INTEGRATION_MAR09_2026.md",
@@ -1381,6 +1789,207 @@
       "gap_count": 18
     },
     {
+      "path": "docs\\MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_HARNESS_INTEGRATION_PATCH_APR17_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 21,
+          "snippet": "| `turbo_quant.py` | Placeholder compressor (zlib) + NDA flag \u2014 swap under NDA delivery |"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_MAS_HARNESS_COMPLETE_APR17_2026.md",
+      "gaps": [
+        {
+          "kind": "501",
+          "line_no": 60,
+          "snippet": "- MINDEX `POST /api/harness/execution` returns 404/501 until implemented on MINDEX VM \u2014 harness logs and skips gracefull"
+        },
+        {
+          "kind": "stub",
+          "line_no": 11,
+          "snippet": "| Package | `mycosoft_mas.harness` \u2014 models, router, engine, planner, evaluator, optimization, Nemotron (`httpx` \u2192 OpenA"
+        },
+        {
+          "kind": "stub",
+          "line_no": 30,
+          "snippet": "| `HARNESS_ENABLE_TURBO_QUANT` | Placeholder compression telemetry on Nemotron path |"
+        }
+      ],
+      "gap_count": 3
+    },
+    {
+      "path": "docs\\MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_READINESS_EXECUTION_PLAN_APR17_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 79,
+          "snippet": "- Implement TODO for `/api/mindex/metrics` pull."
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 193,
+          "snippet": "- [ ] WS-A A1 complete + tests"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 194,
+          "snippet": "- [ ] WS-A A2 complete + tests"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 195,
+          "snippet": "- [ ] WS-B B1 complete + tests"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 196,
+          "snippet": "- [ ] WS-B B2 complete + tests"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 199,
+          "snippet": "- [ ] WS-C C1 complete + tests"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 200,
+          "snippet": "- [ ] WS-C C2 complete + tests"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 201,
+          "snippet": "- [ ] WS-D core-path hardening complete"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 204,
+          "snippet": "- [ ] All gates in Section 1 satisfied"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 205,
+          "snippet": "- [ ] Staging soak completed with no P0/P1 incidents"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 206,
+          "snippet": "- [ ] Production canary + full rollout completed"
+        },
+        {
+          "kind": "stub",
+          "line_no": 13,
+          "snippet": "1. Harness NLM path runs real model-backed inference in production mode (no stub fallback for normal operation)."
+        },
+        {
+          "kind": "stub",
+          "line_no": 14,
+          "snippet": "2. Turbo-quant path is either real transport or fully disabled in prod (no placeholder pretending to be production)."
+        },
+        {
+          "kind": "stub",
+          "line_no": 15,
+          "snippet": "3. MINDEX full-sync path initializes DB client/pool and performs an end-to-end sync without `db = None` placeholders."
+        },
+        {
+          "kind": "stub",
+          "line_no": 17,
+          "snippet": "5. NLM trainer uses real connectors (MINDEX/Qdrant or configured equivalents) and emits non-placeholder datasets/metrics"
+        },
+        {
+          "kind": "stub",
+          "line_no": 18,
+          "snippet": "6. Stub-only integration clients used by production flows are replaced or hard-failed behind capability flags."
+        },
+        {
+          "kind": "stub",
+          "line_no": 27,
+          "snippet": "### A1. Replace harness NLM stub-first behavior"
+        },
+        {
+          "kind": "stub",
+          "line_no": 34,
+          "snippet": "- Add explicit runtime modes: `stub|local|remote` (env-driven)."
+        },
+        {
+          "kind": "stub",
+          "line_no": 37,
+          "snippet": "- Keep `stub` allowed only for tests/dev; in prod, fail fast if model unavailable."
+        },
+        {
+          "kind": "stub",
+          "line_no": 40,
+          "snippet": "- `HarnessResult.structured` includes real model metadata (`model_id`, `inference_ms`, `confidence`) not `frame_stub`."
+        },
+        {
+          "kind": "stub",
+          "line_no": 43,
+          "snippet": "### A2. Turbo-quant placeholder removal"
+        },
+        {
+          "kind": "stub",
+          "line_no": 54,
+          "snippet": "- No ambiguous placeholder wording in runtime path."
+        },
+        {
+          "kind": "stub",
+          "line_no": 66,
+          "snippet": "- Replace `db = None` placeholder with real async DB/pool bootstrap."
+        },
+        {
+          "kind": "stub",
+          "line_no": 91,
+          "snippet": "### C1. Remove placeholder dataset/metrics in trainer"
+        },
+        {
+          "kind": "stub",
+          "line_no": 98,
+          "snippet": "- Replace placeholder IDs/records with source-derived records."
+        },
+        {
+          "kind": "stub",
+          "line_no": 102,
+          "snippet": "- Trainer output contains source lineage + non-placeholder sample IDs."
+        },
+        {
+          "kind": "stub",
+          "line_no": 105,
+          "snippet": "### C2. Upgrade stub clients on production path"
+        },
+        {
+          "kind": "stub",
+          "line_no": 111,
+          "snippet": "- Replace minimal stub client with full request/response client (typed errors)."
+        },
+        {
+          "kind": "stub",
+          "line_no": 112,
+          "snippet": "- Keep stubs only behind explicit `*_ALLOW_STUB=true` dev flags."
+        },
+        {
+          "kind": "stub",
+          "line_no": 116,
+          "snippet": "- Health endpoints expose capability status (`enabled`, `configured`, `stub_mode`)."
+        },
+        {
+          "kind": "stub",
+          "line_no": 117,
+          "snippet": "- Production profile rejects stub-mode calls for critical flows."
+        },
+        {
+          "kind": "stub",
+          "line_no": 184,
+          "snippet": "- Disable new modes via env flags (`HARNESS_NLM_MODE=stub`, `HARNESS_TURBO_QUANT_MODE=disabled`)."
+        }
+      ],
+      "gap_count": 32
+    },
+    {
       "path": "docs\\MYCA_RUNTIME_HARDENING_COMPLETE_MAR06_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCA_RUNTIME_HARDENING_COMPLETE_MAR06_2026.md",
       "gaps": [
@@ -1558,6 +2167,65 @@
           "kind": "stub",
           "line_no": 37,
           "snippet": "## Not Yet Implemented"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "docs\\MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md",
+      "gaps": [
+        {
+          "kind": "todo_fixme",
+          "line_no": 123,
+          "snippet": "| TODO/FIXME-style hits (workspace) | 695 |"
+        },
+        {
+          "kind": "todo_fixme",
+          "line_no": 155,
+          "snippet": "| Low | 80+ TODOs across Python | code-auditor triage |"
+        },
+        {
+          "kind": "501",
+          "line_no": 85,
+          "snippet": "## 7. Website BFF \u2014 explicit HTTP 501 (configuration gaps, not necessarily bugs)"
+        },
+        {
+          "kind": "501",
+          "line_no": 87,
+          "snippet": "Many Next.js BFF routes return **501** when API keys are unset or when the HTTP contract marks a path as not implemented"
+        },
+        {
+          "kind": "501",
+          "line_no": 125,
+          "snippet": "| \u201c501 / NotImplemented\u201d pattern hits | 143 |"
+        },
+        {
+          "kind": "501",
+          "line_no": 135,
+          "snippet": "| website | 40 | Mix of real BFF 501 + string matches |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 124,
+          "snippet": "| Stub-pattern hits | 281 |"
+        },
+        {
+          "kind": "stub",
+          "line_no": 152,
+          "snippet": "| Medium | Financial / research / WiFiSense stubs | Stub-implementer + registry |"
+        }
+      ],
+      "gap_count": 8
+    },
+    {
+      "path": "docs\\NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\NATUREOS_APP_BIOLOGY_SIMULATOR_MAY01_2026.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 5,
+          "snippet": "The **Biology Simulator** is the **program landing**: vision and roadmap for simulating life across scales (viruses \u2192 or"
         }
       ],
       "gap_count": 1
@@ -2317,6 +2985,75 @@
       "gap_count": 5
     },
     {
+      "path": "docs\\TACO_CURSOR_IMPLEMENTATION_PLAN.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\TACO_CURSOR_IMPLEMENTATION_PLAN.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 1110,
+          "snippet": "- [ ] All new files have imports and are registered in their parent module's `__init__.py`"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 1111,
+          "snippet": "- [ ] All new agents are registered in `agent_manager.py` and `cluster_manager.py`"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 1112,
+          "snippet": "- [ ] All new API routers are included in the FastAPI app"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 1113,
+          "snippet": "- [ ] All new database tables have proper indexes"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 1114,
+          "snippet": "- [ ] All new ETL sources are registered in the scheduler"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 1115,
+          "snippet": "- [ ] All new MDP message types are documented"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 1116,
+          "snippet": "- [ ] All new Cursor agents/rules are properly scoped with globs"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 1117,
+          "snippet": "- [ ] Tests pass for all new code"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 1118,
+          "snippet": "- [ ] No secrets or CUI data in any committed files"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 1119,
+          "snippet": "- [ ] Merkle hashing is applied to all stored observations"
+        }
+      ],
+      "gap_count": 10
+    },
+    {
+      "path": "docs\\TACO_NIST_800_171_MAPPING_APR08_2026.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\TACO_NIST_800_171_MAPPING_APR08_2026.md",
+      "gaps": [
+        {
+          "kind": "501",
+          "line_no": 206,
+          "snippet": "| Not implemented | TBD |"
+        }
+      ],
+      "gap_count": 1
+    },
+    {
       "path": "docs\\UNIFI_SCAN_RESULTS_MAR07_2026.md",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\UNIFI_SCAN_RESULTS_MAR07_2026.md",
       "gaps": [
@@ -2495,17 +3232,89 @@
       "gap_count": 18
     },
     {
+      "path": "docs\\zeetachec_mycosoft_taco_plan.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\docs\\zeetachec_mycosoft_taco_plan.md",
+      "gaps": [
+        {
+          "kind": "unchecked",
+          "line_no": 602,
+          "snippet": "- [ ] Morgan and Alejandro alignment call \u2014 confirm teaming structure, IP position, solution approach"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 603,
+          "snippet": "- [ ] Draft teaming agreement or LOI (Letter of Intent)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 604,
+          "snippet": "- [ ] Confirm both companies' SAM.gov registrations are current"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 605,
+          "snippet": "- [ ] Verify Mycosoft SPRS score; if none, begin self-assessment immediately"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 606,
+          "snippet": "- [ ] Download all CSO documents and DD254s from SAM.gov"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 609,
+          "snippet": "- [ ] Draft 5-page solution brief (Alejandro leads structure; Morgan provides AI/Cyber sections)"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 610,
+          "snippet": "- [ ] Pages 2 and 4 (Technical Approach + Cybersecurity): Morgan drafts Mycosoft content"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 611,
+          "snippet": "- [ ] Pages 1, 3, 5: Alejandro drafts Zeetachec content with Morgan review"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 612,
+          "snippet": "- [ ] Internal technical review of solution brief"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 615,
+          "snippet": "- [ ] Final solution brief polish and formatting"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 616,
+          "snippet": "- [ ] Both parties sign teaming agreement"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 617,
+          "snippet": "- [ ] Prepare submission email to both POCs"
+        },
+        {
+          "kind": "unchecked",
+          "line_no": 618,
+          "snippet": "- [ ] Submit by April 17, 2:00 PM EDT (11:00 AM PDT)"
+        }
+      ],
+      "gap_count": 13
+    },
+    {
       "path": "mycosoft_mas\\core\\routers\\device_registry_api.py",
       "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\mycosoft_mas\\core\\routers\\device_registry_api.py",
       "gaps": [
         {
           "kind": "stub",
-          "line_no": 396,
+          "line_no": 488,
           "snippet": "Device need not exist; will be created as placeholder if missing."
         },
         {
           "kind": "stub",
-          "line_no": 404,
+          "line_no": 496,
           "snippet": "\"device_name\": \"FCI-Placeholder\","
         }
       ],
@@ -2517,8 +3326,20 @@
       "gaps": [
         {
           "kind": "stub",
-          "line_no": 164,
+          "line_no": 199,
           "snippet": "\"note\": \"Regional filtering of CREP/earthlive entities not yet implemented; full state returned.\","
+        }
+      ],
+      "gap_count": 1
+    },
+    {
+      "path": "mycosoft_mas\\harness\\README.md",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\mycosoft_mas\\harness\\README.md",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 3,
+          "snippet": "Integrates Nemotron (OpenAI-compatible HTTP, aligned with `get_backend_for_role(MYCA_CORE)` + env overrides), PersonaPle"
         }
       ],
       "gap_count": 1
@@ -2571,18 +3392,75 @@
         }
       ],
       "gap_count": 5
+    },
+    {
+      "path": "services\\crep_tile_render_stub\\main.py",
+      "absolute": "C:\\Users\\admin2\\Desktop\\MYCOSOFT\\CODE\\MAS\\mycosoft-mas\\services\\crep_tile_render_stub\\main.py",
+      "gaps": [
+        {
+          "kind": "stub",
+          "line_no": 2,
+          "snippet": "CREP GPU tile render stub \u2014 :8230 on 192.168.0.249 (Earth-2) and 192.168.0.241 (Voice)."
+        },
+        {
+          "kind": "stub",
+          "line_no": 9,
+          "snippet": "249: earth2-temperature, earth2-precip, earth2-wind  \u2192  CREP_TILE_STUB_PROFILE=earth2"
+        },
+        {
+          "kind": "stub",
+          "line_no": 10,
+          "snippet": "241: inat-density, signal-coverage                   \u2192  CREP_TILE_STUB_PROFILE=density"
+        },
+        {
+          "kind": "stub",
+          "line_no": 16,
+          "snippet": "set CREP_TILE_STUB_PROFILE=earth2"
+        },
+        {
+          "kind": "stub",
+          "line_no": 17,
+          "snippet": "uvicorn services.crep_tile_render_stub.main:app --host 0.0.0.0 --port 8230"
+        },
+        {
+          "kind": "stub",
+          "line_no": 27,
+          "snippet": "_PROFILE = (os.environ.get(\"CREP_TILE_STUB_PROFILE\", \"\") or \"\").strip().lower()"
+        },
+        {
+          "kind": "stub",
+          "line_no": 44,
+          "snippet": "app = FastAPI(title=\"crep-tile-stub\", version=\"0.2.0\")"
+        },
+        {
+          "kind": "stub",
+          "line_no": 53,
+          "snippet": "\"service\": \"crep-tile-stub\","
+        },
+        {
+          "kind": "stub",
+          "line_no": 65,
+          "snippet": "detail=\"unknown layer for this host \u2014 check CREP_TILE_STUB_PROFILE (earth2 vs density)\","
+        },
+        {
+          "kind": "stub",
+          "line_no": 71,
+          "snippet": "\"X-CREP-Tile-Stub\": \"1\","
+        }
+      ],
+      "gap_count": 10
     }
   ],
   "suggested_plans": [
     {
       "title": "Complete indexed work",
-      "description": "84 indexed files have TODO/FIXME/501/pending work. Prioritize docs and code referenced in MASTER_DOCUMENT_INDEX.",
+      "description": "103 indexed files have TODO/FIXME/501/pending work. Prioritize docs and code referenced in MASTER_DOCUMENT_INDEX.",
       "priority": "high"
     }
   ],
   "summary": {
-    "index_gaps_total": 395,
-    "files_with_gaps": 84,
+    "index_gaps_total": 544,
+    "files_with_gaps": 103,
     "files_excluded_as_meta_docs": 8
   },
   "source": "cursor_index_scan",

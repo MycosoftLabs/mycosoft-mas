@@ -43,6 +43,20 @@
 | `docs/P3_MAY01_IMPLEMENTATION_QUEUE_MAY02_2026.md` | Six May 1 plan shells — ordered backlog for future sprints. |
 | `docs/CREP_AGENT_KEY_SCOPE_CONTRACT_DRAFT_MAY02_2026.md` | Agent API key `scope` → `CREPDashboardClient` gating (draft). |
 
+## Platform audit — full inventory + gaps (May 2, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCOSOFT_PLATFORM_AUDIT_INVENTORY_AND_GAPS_MAY02_2026.md` | VMs, services health snapshot, Cursor subagents, website apps, BFF Appendix A (`501` by config), MINDEX/NatureOS/MycoBrain map, gap-scan summary, Prometheus follow-up. |
+| `docs/PROMETHEUS_MAS_VM188_RUNBOOK_MAY03_2026.md` | Prometheus **9090** on MAS 188: diagnose, firewall, verify; `scripts/diagnose_prometheus_mas188.py`. |
+
+## MAY03 — May01 MVP slices + waypoints closure (May 3, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md` | Execution log: completion set, verification commands, manifest. |
+| `docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md` | CREP waypoints: Supabase schema + CRUD + client migration from localStorage. |
+| `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md` | Chemputer MVP — MINDEX-only compound plans. |
+| `docs/AEROSOL_VIRUS_RADIATION_FEEDS_COMPLETE_MAY03_2026.md` | Environmental feeds MVP — OpenAQ / Safecast / explicit virus deferral. |
+
 ---
 
 ## AWS + MVT tile pipeline (Apr 17, 2026)

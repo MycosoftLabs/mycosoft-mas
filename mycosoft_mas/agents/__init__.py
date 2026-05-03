@@ -122,6 +122,10 @@ _safe_import("mycosoft_mas.avani.agents.micah_agent", "MicahAgent")
 # Earth Search — planetary-scale unified search (March 2026)
 _safe_import(".earth_search_agent", "EarthSearchAgent")
 
+# NatureOS lab MVP — Chemputer + growth telemetry (May 03, 2026)
+_safe_import(".lab.chemputer_agent", "ChemputerAgent")
+_safe_import(".lab.growth_analytics_agent", "GrowthAnalyticsAgent")
+
 # OpenViking — edge device context database management (March 2026)
 _safe_import(".openviking_agent", "OpenVikingAgent")
 

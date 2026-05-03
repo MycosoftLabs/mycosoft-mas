@@ -40,6 +40,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import socket
 import sys
 import tempfile
@@ -86,6 +87,7 @@ class SSHMCPServer:
         self._default_user = os.getenv("SSH_DEFAULT_USER", "mycosoft")
         self._ssh_key_path = os.getenv("SSH_KEY_PATH", "")
         self._ssh_password = os.getenv("SSH_PASSWORD", os.getenv("VM_PASSWORD", ""))
+        self._load_password_from_credentials_file_if_needed()
         self._timeout = int(os.getenv("SSH_TIMEOUT", "30"))
         self._audit_log_path = os.getenv(
             "SSH_AUDIT_LOG",
@@ -93,6 +95,29 @@ class SSHMCPServer:
         )
         self._paramiko = None
         self._tools = self._define_tools()
+
+    def _load_password_from_credentials_file_if_needed(self) -> None:
+        """If VM_PASSWORD is unset, parse MYCO_SOFT_CREDENTIALS_FILE or repo .credentials.local."""
+        if self._ssh_password:
+            return
+        candidates: List[Path] = []
+        env_path = os.getenv("MYCO_SOFT_CREDENTIALS_FILE", "").strip()
+        if env_path:
+            candidates.append(Path(env_path).expanduser())
+        # .../mycosoft-mas/mycosoft_mas/mcp/ssh_server.py -> repo root is parents[2]
+        here = Path(__file__).resolve()
+        candidates.append(here.parents[2] / ".credentials.local")
+        candidates.append(Path.cwd() / ".credentials.local")
+        for cred in candidates:
+            if not cred.is_file():
+                continue
+            text = cred.read_text(encoding="utf-8", errors="replace")
+            for line in text.splitlines():
+                for key in ("VM_PASSWORD", "VM_SSH_PASSWORD"):
+                    m = re.match(rf"^\s*{key}\s*=\s*(.+)\s*$", line)
+                    if m:
+                        self._ssh_password = m.group(1).strip().strip('"').strip("'")
+                        return
 
     async def initialize(self):
         """Lazy import paramiko."""
@@ -260,20 +285,19 @@ class SSHMCPServer:
     # ------------------------------------------------------------------
 
     def _connect(self, ip: str, user: str) -> "paramiko.SSHClient":
-        """Create an SSH connection."""
-        ssh = self._paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(self._paramiko.AutoAddPolicy())
+        """Create an SSH connection.
 
-        connect_kwargs = {
+        If an SSH key exists locally but the VM rejects it, fall back to VM password
+        (env MYCO_SOFT_CREDENTIALS_FILE / .credentials.local / VM_PASSWORD) instead of failing outright.
+        """
+        connect_base = {
             "hostname": ip,
             "username": user,
             "timeout": self._timeout,
         }
 
-        # Try key-based auth first, then password
         key_path = self._ssh_key_path
         if not key_path:
-            # Try common key locations
             for candidate in [
                 Path.home() / ".ssh" / "id_ed25519",
                 Path.home() / ".ssh" / "id_rsa",
@@ -283,16 +307,45 @@ class SSHMCPServer:
                     key_path = str(candidate)
                     break
 
-        if key_path and Path(key_path).exists():
-            connect_kwargs["key_filename"] = key_path
-        elif self._ssh_password:
-            connect_kwargs["password"] = self._ssh_password
-        else:
-            # Let paramiko try the SSH agent
-            connect_kwargs["allow_agent"] = True
+        auth_errors: List[str] = []
 
-        ssh.connect(**connect_kwargs)
-        return ssh
+        def try_connect(**extra: Any) -> Optional["paramiko.SSHClient"]:
+            ssh = self._paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(self._paramiko.AutoAddPolicy())
+            try:
+                ssh.connect(
+                    **connect_base,
+                    **extra,
+                )
+                return ssh
+            except Exception as exc:
+                auth_errors.append(f"{sorted(extra.keys())}: {exc}")
+                ssh.close()
+                return None
+
+        key_only = {"allow_agent": False, "look_for_keys": False}
+        if key_path and Path(key_path).exists():
+            ssh = try_connect(key_filename=key_path, **key_only)
+            if ssh is not None:
+                return ssh
+
+        if self._ssh_password:
+            ssh = try_connect(
+                password=self._ssh_password,
+                allow_agent=False,
+                look_for_keys=False,
+            )
+            if ssh is not None:
+                return ssh
+
+        ssh = try_connect(allow_agent=True, look_for_keys=True)
+        if ssh is not None:
+            return ssh
+
+        raise self._paramiko.AuthenticationException(
+            "SSH authentication failed for %s@%s — tried key, password, agent. Details: %s"
+            % (user, ip, "; ".join(auth_errors) if auth_errors else "no methods")
+        )
 
     def _audit(self, action: str, host: str, detail: str):
         """Write to audit log."""
