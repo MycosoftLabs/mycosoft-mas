@@ -43,6 +43,7 @@ from mycosoft_mas.core.routers import fci_websocket as fci_websocket_router
 from mycosoft_mas.core.routers.agent_registry_api import get_agent_registry
 from mycosoft_mas.core.routers.agent_registry_api import router as agent_registry_router
 from mycosoft_mas.core.routers.agent_runner_api import router as agent_runner_router
+from mycosoft_mas.core.routers.agents import api_agents_alias
 from mycosoft_mas.core.routers.agents import router as agents_router
 from mycosoft_mas.core.routers.alert_api import router as alert_router
 from mycosoft_mas.core.routers.api_keys import router as api_keys_router
@@ -58,6 +59,7 @@ from mycosoft_mas.core.routers.documents import router as documents_router
 from mycosoft_mas.core.routers.earth_search_api import router as earth_search_router
 from mycosoft_mas.core.routers.ethics_api import router as ethics_router
 from mycosoft_mas.core.routers.ethics_training_api import router as ethics_training_router
+from mycosoft_mas.core.routers.eagle_eye_api import router as eagle_eye_router
 from mycosoft_mas.core.routers.event_ledger_api import router as event_ledger_router
 from mycosoft_mas.core.routers.evolution_api import router as evolution_router
 from mycosoft_mas.core.routers.fleet_api import router as fleet_router
@@ -77,6 +79,7 @@ from mycosoft_mas.core.routers.nlq_api import router as nlq_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.orchestrator_api import router as orchestrator_api_router
 from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
+from mycosoft_mas.core.routers.petri_sim_v2_api import router as petri_sim_v2_router
 from mycosoft_mas.core.routers.plasticity_api import plasticity_router
 from mycosoft_mas.core.routers.platform_api import router as platform_router
 from mycosoft_mas.core.routers.presence_api import router as presence_router
@@ -737,6 +740,7 @@ app.include_router(agent_registry_router)
 app.include_router(orchestrator_api_router)
 app.include_router(agent_runner_router)
 app.include_router(agents_router)
+app.include_router(api_agents_alias)
 app.include_router(gap_api_router)
 app.include_router(coding_router)
 app.include_router(integrations_router)
@@ -746,6 +750,7 @@ app.include_router(documents_router)
 app.include_router(api_keys_router, tags=["api-keys"])
 app.include_router(evolution_router)
 app.include_router(petri_sim_router)
+app.include_router(petri_sim_v2_router)
 app.include_router(plasticity_router, tags=["plasticity", "myca2"])
 
 # Scientific platform routers
@@ -759,6 +764,7 @@ app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
 app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(fusarium_router, prefix="/api/fusarium", tags=["fusarium"])
 app.include_router(fusarium_platform_router, prefix="/api/fusarium", tags=["fusarium-platform"])
+app.include_router(eagle_eye_router, prefix="/api/eagle-eye", tags=["eagle-eye"])
 app.include_router(redteam_router, tags=["redteam"])
 app.include_router(ethics_router)
 app.include_router(ethics_training_router)

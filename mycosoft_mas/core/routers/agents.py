@@ -1,6 +1,6 @@
 import logging
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional, Sequence
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -8,6 +8,118 @@ from ..security import get_current_user
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 logger = logging.getLogger(__name__)
+
+# Register static paths before /{agent_id} (May 02, 2026 — MYCA Alive P1D activity visibility)
+
+api_agents_alias = APIRouter(prefix="/api/agents", tags=["agents-activity"])
+
+
+def _agent_activity_payload(limit: int, since: Optional[int]) -> Dict[str, Any]:
+    """Shared body for /agents/activity and /api/agents/activity."""
+    from mycosoft_mas.myca.event_ledger.agent_activity_ledger import read_recent_lines
+
+    events = read_recent_lines(max_lines=max(1, min(limit, 2000)))
+    if since is not None:
+        events = [e for e in events if isinstance(e, dict) and e.get("ts", 0) >= since]
+    return {
+        "count": len(events),
+        "events": events,
+        "ledger": "myca/event_ledger/agent_activity.jsonl",
+        "since": since,
+    }
+
+
+@router.get("/activity")
+async def get_agent_activity_ledger(
+    limit: int = 200,
+    since: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    Recent JSONL activity from myca/event_ledger/agent_activity.jsonl.
+
+    `since` is optional Unix timestamp — only events with ts >= since are returned
+    (MYCA Alive: /api/agents/activity?since=... for 24h windows).
+
+    Intentionally no Auth0 dependency so NatureOS BFF and topology can read activity;
+    data is non-secret operational metadata only.
+    """
+    return _agent_activity_payload(limit, since)
+
+
+@api_agents_alias.get("/activity")
+async def get_api_agents_activity_ledger(
+    limit: int = 200,
+    since: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Alias: BFFs and docs expect /api/agents/activity (same payload as /agents/activity)."""
+    return _agent_activity_payload(limit, since)
+
+
+def _heartbeat_stale_payload_for_agents(agents: Sequence[Any], stale_after_seconds: int) -> Dict[str, Any]:
+    """Registered agents with no recent heartbeat (MYCA Alive P1D)."""
+    now = datetime.now(timezone.utc)
+    try:
+        cutoff = now - timedelta(seconds=max(60, stale_after_seconds))
+    except Exception:
+        cutoff = now - timedelta(hours=24)
+
+    def _aware(dt: Optional[datetime]) -> Optional[datetime]:
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+
+    rows: List[Dict[str, Any]] = []
+    stale_count = 0
+    for a in agents:
+        lh = _aware(a.last_heartbeat)
+        stale = lh is None or lh < cutoff
+        if stale:
+            stale_count += 1
+        cat = getattr(a.category, "value", a.category)
+        rows.append(
+            {
+                "id": str(a.id),
+                "name": a.name,
+                "category": cat,
+                "last_heartbeat": a.last_heartbeat.isoformat() if a.last_heartbeat else None,
+                "stale": stale,
+            }
+        )
+
+    return {
+        "stale_after_seconds": stale_after_seconds,
+        "total_registered": len(rows),
+        "stale_count": stale_count,
+        "agents": rows,
+        "as_of": now.isoformat(),
+    }
+
+
+@router.get("/heartbeat/summary")
+async def get_agent_heartbeat_stale_summary(
+    stale_after_seconds: int = 86400,
+) -> Dict[str, Any]:
+    """
+    Per-agent registry heartbeat with `stale` if last_heartbeat is older than `stale_after_seconds`
+    (default 24h). Drives red indicators when combined with the JSONL activity ledger.
+    No Auth0: operational metadata only.
+    """
+    from mycosoft_mas.registry.agent_registry import get_agent_registry
+
+    reg = await get_agent_registry()
+    return _heartbeat_stale_payload_for_agents(reg.get_all_agents(), stale_after_seconds)
+
+
+@api_agents_alias.get("/heartbeat/summary")
+async def get_api_agents_heartbeat_stale_summary(
+    stale_after_seconds: int = 86400,
+) -> Dict[str, Any]:
+    from mycosoft_mas.registry.agent_registry import get_agent_registry
+
+    reg = await get_agent_registry()
+    return _heartbeat_stale_payload_for_agents(reg.get_all_agents(), stale_after_seconds)
 
 
 @router.get("/")
@@ -17,7 +129,7 @@ async def get_agents(current_user: Dict = Depends(get_current_user)) -> List[Dic
         from mycosoft_mas.registry.agent_registry import AgentRegistry
 
         registry = AgentRegistry()
-        agents = registry.list_agents()
+        agents = registry.get_all_agents()
 
         # Convert to dict format for API response
         return [
@@ -156,7 +268,7 @@ async def get_anomalies(
         registry = AgentRegistry()
 
         # Get agents that might have anomaly detection capabilities
-        all_agents = registry.list_agents()
+        all_agents = registry.get_all_agents()
         anomaly_agents = [
             agent
             for agent in all_agents
