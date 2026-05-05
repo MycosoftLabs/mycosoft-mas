@@ -1,0 +1,71 @@
+{
+  "name": "MINDEX: Full pipeline health (May 03, 2026)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 6 }]
+        }
+      },
+      "id": "sched-6h",
+      "name": "Every 6 hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/api/mindex/health/all",
+        "options": { "timeout": 30000 }
+      },
+      "id": "mindex-health-all",
+      "name": "MINDEX health/all",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 220]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/health",
+        "options": { "timeout": 30000 }
+      },
+      "id": "mas-health",
+      "name": "MAS health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ok: true, note: 'Wire MAS agent tasks (data-synthesis, data-qa) when task endpoint is stable.', ts: new Date().toISOString() } }];"
+      },
+      "id": "doc-next",
+      "name": "Document next wiring",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 300]
+    }
+  ],
+  "connections": {
+    "Every 6 hours": {
+      "main": [
+        [
+          { "node": "MINDEX health/all", "type": "main", "index": 0 },
+          { "node": "MAS health", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "MINDEX health/all": {
+      "main": [[{ "node": "Document next wiring", "type": "main", "index": 0 }]]
+    },
+    "MAS health": {
+      "main": [[{ "node": "Document next wiring", "type": "main", "index": 1 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1", "timezone": "America/Los_Angeles" },
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "mindex" }, { "name": "pipeline" }]
+}

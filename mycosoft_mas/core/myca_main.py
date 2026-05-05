@@ -54,8 +54,10 @@ from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.conversation_memory_api import router as conversation_memory_router
 from mycosoft_mas.core.routers.csuite_api import router as csuite_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
+from mycosoft_mas.core.routers.compliance_api import router as compliance_api_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
 from mycosoft_mas.core.routers.documents import router as documents_router
+from mycosoft_mas.core.routers.incidents_api import router as incidents_api_router
 from mycosoft_mas.core.routers.earth_search_api import router as earth_search_router
 from mycosoft_mas.core.routers.ethics_api import router as ethics_router
 from mycosoft_mas.core.routers.ethics_training_api import router as ethics_training_router
@@ -72,6 +74,7 @@ from mycosoft_mas.core.routers.fusarium_platform_api import router as fusarium_p
 from mycosoft_mas.core.routers.gap_api import router as gap_api_router
 from mycosoft_mas.core.routers.guardian_api import router as guardian_router
 from mycosoft_mas.core.routers.ingest_api import router as ingest_router
+from mycosoft_mas.core.routers.meshtastic_api import router as meshtastic_api_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.investigation_api import router as investigation_router
 from mycosoft_mas.core.routers.iot_analytics_api import router as iot_analytics_router
@@ -819,6 +822,8 @@ if IDENTITY_API_AVAILABLE and identity_router is not None:
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
+app.include_router(incidents_api_router)
+app.include_router(compliance_api_router)
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)
 app.include_router(csuite_router, tags=["csuite"])
 # CFO MCP API (Meridian adapter — finance discovery, delegation, reporting)
@@ -830,6 +835,7 @@ app.include_router(deploy_router)
 # Master Spreadsheet Sync API (n8n, Zapier)
 app.include_router(spreadsheet_sync_router)
 app.include_router(ingest_router)
+app.include_router(meshtastic_api_router, tags=["meshtastic"])
 app.include_router(investigation_router, tags=["investigation"])
 # IoT Alert Service API
 app.include_router(alert_router, tags=["iot-alerts"])
@@ -1784,6 +1790,46 @@ async def _mas_background_startup() -> None:
             )
     except Exception as exc:
         logger.warning("Deep Agents orchestrator init failed: %s", exc)
+
+    # SOC: LAN discovery + red team L1 (Postgres-backed; no-op without MINDEX_DATABASE_URL)
+    if os.getenv("MINDEX_DATABASE_URL") or os.getenv("DATABASE_URL"):
+        try:
+            from mycosoft_mas.services.network_discovery import start_network_discovery_background
+
+            start_network_discovery_background()
+            logger.info("✓ Network discovery background scheduled (soc_ops.device_inventory)")
+        except Exception as exc:
+            logger.warning("Network discovery start failed: %s", exc)
+        try:
+            from mycosoft_mas.redteam.layer1_safe import start_redteam_layer1_background
+
+            start_redteam_layer1_background()
+            logger.info("✓ Red team Layer 1 background scheduled (safe health/TLS checks)")
+        except Exception as exc:
+            logger.warning("Red team L1 start failed: %s", exc)
+        try:
+            from mycosoft_mas.soc.incident_source_poller import (
+                start_incident_source_poller_background,
+            )
+
+            start_incident_source_poller_background()
+            logger.info("✓ Incident source poller scheduled (diagnostics + UniFi + optional threat intel)")
+        except Exception as exc:
+            logger.warning("Incident source poller start failed: %s", exc)
+        try:
+            from mycosoft_mas.redteam.layer2_scoped import start_redteam_layer2_background
+
+            start_redteam_layer2_background()
+            logger.info("✓ Red team Layer 2 background scheduled (scoped sandbox checks)")
+        except Exception as exc:
+            logger.warning("Red team L2 start failed: %s", exc)
+        try:
+            from mycosoft_mas.redteam.layer3_ai import start_redteam_layer3_background
+
+            start_redteam_layer3_background()
+            logger.info("✓ Red team Layer 3 background scheduled (sandbox AI planner)")
+        except Exception as exc:
+            logger.warning("Red team L3 start failed: %s", exc)
 
 
 @app.on_event("startup")

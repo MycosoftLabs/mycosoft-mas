@@ -62,6 +62,7 @@ typer = "^0.15.0"
 click = ">=8.1.0,<8.2"
 docker = "^7.0.0"
 paho-mqtt = "^2.1.0"
+meshtastic = "^2.6.0"
 # Agent Payments deps — install separately via:
 #   uv add ampersend-sdk==0.0.13 google-adk crewai x402
 #   npm install -g @ampersend_ai/ampersend-sdk@0.0.14  (CLI)

@@ -11,6 +11,14 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (May 3, 2026)
+
+- **Security SOC (real `/security` stack)** — Postgres-backed SOC on MINDEX (`soc_ops.*`): incidents router `/api/incidents/*`, Redis stream `security:events`, incident source poller, network discovery → `device_inventory`, red team L1–L3 (`redteam/*`, `GET /api/redteam/soc-runs`, `soc-findings`), compliance control collector + doc engine. Website: `/security/redteam` SOC tab, `/security/compliance` MAS bundle tab, network/incidents pages wired to MAS BFF. Docs: `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md`, `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md`, `docs/REDTEAM_THREE_LAYER_MAY03_2026.md`, `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md`.
+
+- **Agent100 (Worldview validation harness)** — Internal “100 paying customer personas” fleet for production Worldview v1 validation: package `mycosoft_mas/agent100/` (Worldview HTTP client, JSONL treasury, fleet RPM supervisor, 20 archetype classes, `configs/agents_matrix.yaml` × 100 agents), scripts `scripts/agent100/{kill_all,spawn,provision_payments,reconcile,report}.py`, data under `data/agent100/`. Supabase tables: `migrations/agent100_tables.sql` (`agent100_agents`, `agent100_calls`, `agent100_charges`, `agent100_feedback`, `agent100_events`). Docs: `docs/AGENT100_PREFLIGHT_MAY03_2026.md`, `docs/WORLDVIEW_100_AGENT_CUSTOMER_VALIDATION_MAY03_2026.md`, `docs/WORLDVIEW_VALIDATION_TEST_REPORT_MAY03_2026.md`. Admin dashboard route deferred until explicitly approved (website).
+
+- **Meshtastic mesh (MQTT → MINDEX → SSE)** — MINDEX `meshtastic.*` schema (`migrations/0037_meshtastic_mesh.sql`), internal router `mindex_api/routers/meshtastic_internal.py`. MAS: `scripts/mqtt_meshtastic_bridge.py` (optional systemd `deploy/systemd/meshtastic-mqtt-bridge.service`), Redis stream `mesh:packets`, REST+SSE `mycosoft_mas/core/routers/meshtastic_api.py` (`/api/meshtastic/*`), agent `meshtastic_agent.py`. Website: same-origin proxies `GET /api/meshtastic/{nodes,packets,observers,routes,stats,stream}`; NatureOS UI `/natureos/meshtastic/*` (live, map, nodes, packets, observers, analytics, audio-lab) + device subnav “Mesh”. CREP map layers and completion doc remain on the integration plan.
+
 ## Recent Updates (May 1, 2026)
 
 - **NatureOS website IA (cloud console)** — Ten ordered Apps in `WEBSITE/website/components/dashboard/nav.tsx` with canonical routes under `/natureos/*` (Nature Statistics, Fungi Compute, Earth Simulator, Virtual Petri Dish, Biology Simulator landing, Compound Analyser, Aerosol, Ancestry Database, Growth Analytics, Tools hub). Legacy paths redirect via `WEBSITE/website/next.config.js`. New website BFF routes: `GET /api/natureos/aerosol/{pollen,spores,dust,virus,chemicals,radiation}` (MINDEX proxies + explicit pending layers). Docs: `docs/NATUREOS_REORGANIZATION_MAY01_2026.md` + `docs/NATUREOS_APP_*_MAY01_2026.md`; API catalog rows under Website endpoints for aerosol BFF.
@@ -257,6 +265,8 @@ This new API provides heartbeat-based registration for remote MycoBrain devices.
 - Heartbeats include: device_id, host, port, status, connection_type
 - Connection types: `tailscale`, `cloudflare`, `lan`
 - Devices auto-detected via Tailscale IP or manual configuration
+
+**Device role strings (May 3, 2026):** Heartbeat `device_role` is a free-form string; documented values include `mushroom1`, `sporebase`, `hyphae1`, `myconode`, `psathyrella`, `alarm`, `gateway`, `mycodrone` (generic UAV path), `agaric_mini`, `agaric_standard`, `agaric_heavy`, `standalone`. Canonical table: `docs/DEVICES_REGISTRY_MAY03_2026.md`. Website catalog for Earth Simulator merge: `WEBSITE/website/lib/devices/catalog.ts`.
 
 ### n8n Workflows API (Feb 18, 2026)
 

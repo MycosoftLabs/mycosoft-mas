@@ -88,6 +88,7 @@ _safe_import(".security.export_control_agent", "ExportControlAgent")
 
 # Network Agents
 _safe_import(".network_monitor_agent", "NetworkMonitorAgent")
+_safe_import(".meshtastic_agent", "MeshtasticAgent")
 
 # Integrations
 _safe_import(".integrations.camera_integration", "CameraIntegration")

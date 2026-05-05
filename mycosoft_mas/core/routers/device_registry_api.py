@@ -11,6 +11,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, Body, HTTPException, Query
@@ -175,7 +176,10 @@ class DeviceHeartbeat(BaseModel):
     device_name: str = Field(default="MycoBrain", description="Human-friendly device name")
     device_role: str = Field(
         default="standalone",
-        description="Device role: mushroom1, sporebase, hyphae1, alarm, gateway, mycodrone, standalone",
+        description=(
+            "Device role: mushroom1, sporebase, hyphae1, myconode, psathyrella, alarm, gateway, "
+            "mycodrone (generic airframe), agaric_mini, agaric_standard, agaric_heavy, standalone"
+        ),
     )
     device_display_name: Optional[str] = Field(
         default=None, description="UI display name (e.g. 'Mushroom 1', 'SporeBase Alpha')"
@@ -194,6 +198,58 @@ class DeviceHeartbeat(BaseModel):
         default="serial", description="serial, lora, bluetooth, wifi, gateway"
     )
     extra: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
+
+def _soc_pg_for_inventory() -> bool:
+    return bool(os.getenv("MINDEX_DATABASE_URL") or os.getenv("DATABASE_URL"))
+
+
+def _host_to_ipv4(host: str) -> Optional[str]:
+    h = (host or "").strip()
+    if not h:
+        return None
+    if h.startswith("http://") or h.startswith("https://"):
+        parsed = urlparse(h)
+        return parsed.hostname
+    return h.split(":")[0].strip() or None
+
+
+async def _persist_heartbeat_to_device_inventory(hb: DeviceHeartbeat) -> None:
+    """Mirror heartbeats into soc_ops.device_inventory for SOC /security network."""
+    if not _soc_pg_for_inventory():
+        return
+    ip = _host_to_ipv4(hb.host)
+    if not ip:
+        return
+    mac = None
+    extra = hb.extra or {}
+    if isinstance(extra.get("mac"), str) and extra.get("mac").strip():
+        mac = extra["mac"].strip().lower()
+    try:
+        from mycosoft_mas.soc import repository as soc_repo
+
+        caps: Dict[str, Any] = {
+            "device_role": hb.device_role,
+            "ingestion_source": hb.ingestion_source,
+            "connection_type": hb.connection_type,
+            "capabilities": hb.capabilities,
+            "sensors": hb.sensors,
+        }
+        dump = hb.model_dump() if hasattr(hb, "model_dump") else hb.dict()
+        await soc_repo.upsert_device_inventory(
+            mac=mac,
+            ip=ip,
+            hostname=hb.device_name,
+            board_type=hb.board_type,
+            device_id=hb.device_id,
+            source="heartbeat",
+            classified_as=hb.device_role,
+            status="online",
+            capabilities=caps,
+            raw={"heartbeat": dump},
+        )
+    except Exception as e:
+        logger.warning("device_inventory upsert from heartbeat failed: %s", e)
 
 
 class DeviceInfo(BaseModel):
@@ -350,7 +406,9 @@ async def heartbeat_device(heartbeat: DeviceHeartbeat):
     Devices not seen within TTL (2 minutes) are marked offline.
     Use POST /api/devices/register as a legacy alias; both behave identically.
     """
-    return _upsert_device_heartbeat(heartbeat)
+    result = _upsert_device_heartbeat(heartbeat)
+    await _persist_heartbeat_to_device_inventory(heartbeat)
+    return result
 
 
 @router.post("/register")
@@ -358,7 +416,9 @@ async def register_device(heartbeat: DeviceHeartbeat):
     """
     Legacy alias for /heartbeat. Use POST /api/devices/heartbeat as canonical.
     """
-    return _upsert_device_heartbeat(heartbeat)
+    result = _upsert_device_heartbeat(heartbeat)
+    await _persist_heartbeat_to_device_inventory(heartbeat)
+    return result
 
 
 async def _list_devices_impl(
@@ -393,6 +453,31 @@ async def list_devices(
     Returns devices with their current status based on last heartbeat.
     """
     return await _list_devices_impl(status=status, include_offline=include_offline)
+
+
+@router.get("/inventory")
+async def list_device_inventory(
+    limit: int = Query(500, ge=1, le=5000, description="Max rows from soc_ops.device_inventory"),
+):
+    """
+    LAN / SOC device inventory (Postgres). Used by security network monitor.
+    In-memory MycoBrain registry remains on GET /api/devices/; this is the reconciled inventory.
+    """
+    if not _soc_pg_for_inventory():
+        return {
+            "items": [],
+            "count": 0,
+            "source": "postgres_not_configured",
+            "hint": "Set MINDEX_DATABASE_URL and apply migration 030_soc_security_platform_may03_2026.sql",
+        }
+    try:
+        from mycosoft_mas.soc import repository as soc_repo
+
+        items = await soc_repo.list_device_inventory(limit=limit)
+        return {"items": items, "count": len(items), "source": "postgres"}
+    except Exception as e:
+        logger.exception("list_device_inventory failed: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
 
 @router.get("/crep")

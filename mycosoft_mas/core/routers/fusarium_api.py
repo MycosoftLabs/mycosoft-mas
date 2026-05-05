@@ -211,12 +211,40 @@ async def get_active_threats(
 
 @router.post("/threats/report")
 async def report_threat(threat: Dict[str, Any]):
-    # Persist externally once incident write endpoint is available.
-    return {
+    """Persist FUSARIUM / tactical threat reports as SOC incidents when Postgres is configured."""
+    out: Dict[str, Any] = {
         "status": "received",
         "threat": threat,
         "timestamp": datetime.utcnow().isoformat(),
     }
+    if os.getenv("MINDEX_DATABASE_URL") or os.getenv("DATABASE_URL"):
+        try:
+            from mycosoft_mas.soc import repository as soc_repo
+
+            title = str(threat.get("title") or threat.get("label") or "FUSARIUM threat report")[:500]
+            desc = str(threat.get("description") or threat.get("summary") or "")[:8000]
+            sev = str(threat.get("severity") or "medium").lower()
+            if sev not in ("info", "low", "medium", "high", "critical"):
+                sev = "medium"
+            row = await soc_repo.create_incident(
+                title=title,
+                description=desc,
+                severity=sev,
+                status="open",
+                source="fusarium",
+                kind=str(threat.get("category") or "anomaly"),
+                source_ip=threat.get("source_ip"),
+                host=threat.get("host"),
+                details={"fusarium": threat},
+                tags=["fusarium"],
+                timeline=[{"event": "report_received", "at": datetime.utcnow().isoformat()}],
+            )
+            out["incident_id"] = row.get("id")
+            out["status"] = "persisted"
+        except Exception as exc:
+            logger.exception("FUSARIUM threat incident persist failed: %s", exc)
+            out["persist_error"] = str(exc)
+    return out
 
 
 @router.get("/maritime/threat-panel")

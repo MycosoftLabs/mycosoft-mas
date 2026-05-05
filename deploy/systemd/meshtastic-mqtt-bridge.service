@@ -1,0 +1,16 @@
+[Unit]
+Description=Mycosoft Meshtastic MQTT bridge (msh/# → MINDEX + Redis mesh:packets)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mycosoft
+WorkingDirectory=/home/mycosoft/mycosoft/mas
+EnvironmentFile=-/home/mycosoft/mycosoft/mas/.env
+ExecStart=/home/mycosoft/.local/bin/poetry run python scripts/mqtt_meshtastic_bridge.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

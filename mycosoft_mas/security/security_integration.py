@@ -7,6 +7,7 @@ SOC integration, incident management, and MINDEX cryptography.
 
 import hashlib
 import logging
+import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -72,6 +73,90 @@ class SecurityIncident:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
+def _soc_pg_ready() -> bool:
+    return bool(os.getenv("MINDEX_DATABASE_URL") or os.getenv("DATABASE_URL"))
+
+
+def _severity_level_to_str(sev: SeverityLevel) -> str:
+    return sev.name.lower()
+
+
+def _str_to_severity_level(s: str) -> SeverityLevel:
+    key = (s or "medium").lower()
+    for member in SeverityLevel:
+        if member.name.lower() == key:
+            return member
+    return SeverityLevel.MEDIUM
+
+
+def _kind_to_category(kind: Optional[str]) -> ThreatCategory:
+    if not kind:
+        return ThreatCategory.OTHER
+    try:
+        return ThreatCategory(kind)
+    except ValueError:
+        return ThreatCategory.OTHER
+
+
+def _incident_status_to_db(status: IncidentStatus) -> str:
+    return {
+        IncidentStatus.NEW: "open",
+        IncidentStatus.ACKNOWLEDGED: "acknowledged",
+        IncidentStatus.INVESTIGATING: "investigating",
+        IncidentStatus.CONTAINED: "contained",
+        IncidentStatus.RESOLVED: "resolved",
+        IncidentStatus.CLOSED: "closed",
+    }.get(status, "open")
+
+
+def _db_status_to_incident_status(s: str) -> IncidentStatus:
+    m = {
+        "open": IncidentStatus.NEW,
+        "acknowledged": IncidentStatus.ACKNOWLEDGED,
+        "investigating": IncidentStatus.INVESTIGATING,
+        "contained": IncidentStatus.CONTAINED,
+        "resolved": IncidentStatus.RESOLVED,
+        "closed": IncidentStatus.CLOSED,
+    }
+    return m.get((s or "open").lower(), IncidentStatus.NEW)
+
+
+def _parse_ts(val: Any) -> datetime:
+    if not val:
+        return datetime.now()
+    try:
+        raw = str(val).replace("Z", "+00:00")
+        return datetime.fromisoformat(raw)
+    except Exception:
+        return datetime.now()
+
+
+def _repo_incident_dict_to_security_incident(d: Dict[str, Any]) -> SecurityIncident:
+    sev = _str_to_severity_level(str(d.get("severity", "medium")))
+    cat = _kind_to_category(d.get("kind"))
+    st = _db_status_to_incident_status(str(d.get("status", "open")))
+    details = d.get("details") if isinstance(d.get("details"), dict) else {}
+    affected = list(details.get("affected_systems", [])) if isinstance(details, dict) else []
+    ack = _parse_ts(d["ack_at"]) if d.get("ack_at") else None
+    res = _parse_ts(d["resolved_at"]) if d.get("resolved_at") else None
+    return SecurityIncident(
+        incident_id=str(d["id"]),
+        title=d.get("title") or "",
+        description=d.get("description") or "",
+        severity=sev,
+        category=cat,
+        status=st,
+        created_at=_parse_ts(d.get("created_at")),
+        updated_at=_parse_ts(d.get("updated_at")),
+        acknowledged_at=ack,
+        resolved_at=res,
+        assigned_to=d.get("assigned_to"),
+        source_ip=d.get("source_ip"),
+        affected_systems=affected,
+        metadata=details if isinstance(details, dict) else {},
+    )
+
+
 @dataclass
 class AuditLogEntry:
     """An audit log entry."""
@@ -115,6 +200,41 @@ class SOCIntegration:
         affected_systems: Optional[List[str]] = None,
     ) -> SecurityIncident:
         """Create a new security incident."""
+        if _soc_pg_ready():
+            try:
+                from mycosoft_mas.soc import repository as soc_repo
+
+                row = await soc_repo.create_incident(
+                    title=title,
+                    description=description,
+                    severity=_severity_level_to_str(severity),
+                    status="open",
+                    source="soc-integration",
+                    kind=category.value,
+                    source_ip=source_ip,
+                    host=None,
+                    details={"affected_systems": affected_systems or []},
+                    tags=[],
+                    timeline=[],
+                )
+                incident = _repo_incident_dict_to_security_incident(row)
+                self.incidents[incident.incident_id] = incident
+                await self.log_action(
+                    action="incident_created",
+                    actor="soc-integration",
+                    resource=incident.incident_id,
+                    result="success",
+                    details={"severity": severity.name, "category": category.value, "store": "postgres"},
+                )
+                if severity in (SeverityLevel.CRITICAL, SeverityLevel.HIGH) and self.voice_announcer:
+                    self.voice_announcer(
+                        f"Security Alert: {severity.name} severity incident - {title}"
+                    )
+                logger.info("Created incident (postgres): %s - %s", incident.incident_id, title)
+                return incident
+            except Exception as exc:
+                logger.warning("SOC Postgres create_incident failed, falling back to memory: %s", exc)
+
         incident_id = hashlib.md5(f"{title}{datetime.now().isoformat()}".encode()).hexdigest()[:12]
 
         incident = SecurityIncident(
@@ -153,6 +273,39 @@ class SOCIntegration:
         action_taken: Optional[str] = None,
     ) -> Optional[SecurityIncident]:
         """Update an incident."""
+        if _soc_pg_ready():
+            try:
+                from mycosoft_mas.soc import repository as soc_repo
+
+                st_db = _incident_status_to_db(status) if status else None
+                timeline_append = (
+                    {"action": "note", "text": action_taken, "at": datetime.now().isoformat()}
+                    if action_taken
+                    else None
+                )
+                row = await soc_repo.update_incident(
+                    incident_id=incident_id,
+                    status=st_db,
+                    assigned_to=assigned_to,
+                    timeline_append=timeline_append,
+                )
+                if row:
+                    incident = _repo_incident_dict_to_security_incident(row)
+                    self.incidents[incident.incident_id] = incident
+                    await self.log_action(
+                        action="incident_updated",
+                        actor="soc-integration",
+                        resource=incident_id,
+                        result="success",
+                        details={
+                            "status": incident.status.value if incident.status else None,
+                            "store": "postgres",
+                        },
+                    )
+                    return incident
+            except Exception as exc:
+                logger.warning("SOC Postgres update_incident failed: %s", exc)
+
         if incident_id not in self.incidents:
             return None
 
@@ -186,16 +339,34 @@ class SOCIntegration:
         self, severity_filter: Optional[SeverityLevel] = None
     ) -> List[SecurityIncident]:
         """Get all active (non-closed) incidents."""
-        active = [
+        if _soc_pg_ready():
+            try:
+                from mycosoft_mas.soc import repository as soc_repo
+
+                rows = await soc_repo.list_incidents(limit=300, offset=0)
+                active: List[SecurityIncident] = []
+                for row in rows:
+                    inc = _repo_incident_dict_to_security_incident(row)
+                    if inc.status not in (IncidentStatus.RESOLVED, IncidentStatus.CLOSED):
+                        if severity_filter and inc.severity != severity_filter:
+                            continue
+                        active.append(inc)
+                for inc in active:
+                    self.incidents[inc.incident_id] = inc
+                return sorted(active, key=lambda x: x.severity.value)
+            except Exception as exc:
+                logger.warning("SOC Postgres get_active_incidents failed, using memory: %s", exc)
+
+        active_mem = [
             i
             for i in self.incidents.values()
             if i.status not in (IncidentStatus.RESOLVED, IncidentStatus.CLOSED)
         ]
 
         if severity_filter:
-            active = [i for i in active if i.severity == severity_filter]
+            active_mem = [i for i in active_mem if i.severity == severity_filter]
 
-        return sorted(active, key=lambda x: x.severity.value)
+        return sorted(active_mem, key=lambda x: x.severity.value)
 
     async def log_action(
         self,

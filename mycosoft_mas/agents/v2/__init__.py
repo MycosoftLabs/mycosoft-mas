@@ -77,6 +77,44 @@ except Exception as e:
     _log.warning("v2 data_agents unavailable: %s", e)
     MindexAgent = ETLAgent = SearchAgent = RouteMonitorAgent = NLMAgent = None  # type: ignore[misc, assignment]
 
+AnchorRouterAgent = DataSynthesisAgent = DataQAAgent = ChemistrySynthesisAgent = DeviceDistributionAgent = SequenceToolsAgent = None  # type: ignore[misc, assignment]
+try:
+    from .mindex_pipeline_agents import AnchorRouterAgent as _AnchorRouterAgent
+
+    AnchorRouterAgent = _AnchorRouterAgent
+except Exception as e:
+    _log.warning("v2 AnchorRouterAgent unavailable: %s", e)
+try:
+    from .mindex_pipeline_agents import DataSynthesisAgent as _DataSynthesisAgent
+
+    DataSynthesisAgent = _DataSynthesisAgent
+except Exception as e:
+    _log.warning("v2 DataSynthesisAgent unavailable: %s", e)
+try:
+    from .mindex_pipeline_agents import DataQAAgent as _DataQAAgent
+
+    DataQAAgent = _DataQAAgent
+except Exception as e:
+    _log.warning("v2 DataQAAgent unavailable: %s", e)
+try:
+    from .mindex_pipeline_agents import ChemistrySynthesisAgent as _ChemistrySynthesisAgent
+
+    ChemistrySynthesisAgent = _ChemistrySynthesisAgent
+except Exception as e:
+    _log.warning("v2 ChemistrySynthesisAgent unavailable: %s", e)
+try:
+    from .mindex_pipeline_agents import DeviceDistributionAgent as _DeviceDistributionAgent
+
+    DeviceDistributionAgent = _DeviceDistributionAgent
+except Exception as e:
+    _log.warning("v2 DeviceDistributionAgent unavailable: %s", e)
+try:
+    from .mindex_pipeline_agents import SequenceToolsAgent as _SequenceToolsAgent
+
+    SequenceToolsAgent = _SequenceToolsAgent
+except Exception as e:
+    _log.warning("v2 SequenceToolsAgent unavailable: %s", e)
+
 try:
     from .integration_agents import (
         AnthropicAgent,
@@ -178,6 +216,10 @@ __all__ = [
     "SearchAgent",
     "RouteMonitorAgent",
     "NLMAgent",
+    "AnchorRouterAgent",
+    "DataSynthesisAgent",
+    "DataQAAgent",
+    "ChemistrySynthesisAgent",
     # Integration
     "N8NAgent",
     "ElevenLabsAgent",
@@ -260,6 +302,18 @@ def _build_registry():
                 "nlm-agent": NLMAgent,
             }
         )
+    if AnchorRouterAgent is not None:
+        reg["anchor-router-agent"] = AnchorRouterAgent
+    if DataSynthesisAgent is not None:
+        reg["data-synthesis-agent"] = DataSynthesisAgent
+    if DataQAAgent is not None:
+        reg["data-qa-agent"] = DataQAAgent
+    if ChemistrySynthesisAgent is not None:
+        reg["chemistry-synthesis-agent"] = ChemistrySynthesisAgent
+    if DeviceDistributionAgent is not None:
+        reg["device-distribution-agent"] = DeviceDistributionAgent
+    if SequenceToolsAgent is not None:
+        reg["sequence-tools-agent"] = SequenceToolsAgent
     if N8NAgent is not None:
         reg.update(
             {

@@ -14,13 +14,14 @@ NO MOCK DATA - Real security testing with SOC integration
 
 import asyncio
 import logging
+import os
 import secrets
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.core.persistence import redteam_store
@@ -567,13 +568,58 @@ async def run_exfil_test(sim_id: str, request: ExfilTestRequest):
 
 @router.get("/health")
 async def health():
-    """Red team API health check"""
-    return {
+    """Red team API health check + Postgres SOC run summary when configured."""
+    payload: Dict[str, Any] = {
         "status": "healthy",
         "service": "redteam",
         "active_simulations": len(redteam_store.list_all(status="running")),
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "postgres_soc": False,
+        "recent_soc_runs": 0,
+        "latest_soc_run": None,
     }
+    if os.getenv("MINDEX_DATABASE_URL") or os.getenv("DATABASE_URL"):
+        try:
+            from mycosoft_mas.soc import repository as soc_repo
+
+            runs = await soc_repo.list_redteam_runs(12)
+            payload["postgres_soc"] = True
+            payload["recent_soc_runs"] = len(runs)
+            payload["latest_soc_run"] = runs[0] if runs else None
+        except Exception as e:  # noqa: BLE001
+            payload["soc_error"] = str(e)[:240]
+    return payload
+
+
+@router.get("/soc-runs")
+async def list_soc_redteam_runs(limit: int = Query(40, ge=1, le=200)):
+    """Postgres-backed L1/L2/L3 red team runs (MAS VM)."""
+    if not (os.getenv("MINDEX_DATABASE_URL") or os.getenv("DATABASE_URL")):
+        raise HTTPException(status_code=503, detail="MINDEX_DATABASE_URL not configured")
+    try:
+        from mycosoft_mas.soc import repository as soc_repo
+
+        return {"runs": await soc_repo.list_redteam_runs(limit)}
+    except Exception as e:
+        logger.exception("soc-runs: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
+
+
+@router.get("/soc-findings")
+async def list_soc_redteam_findings(
+    run_id: Optional[str] = Query(None, description="Filter by run UUID"),
+    limit: int = Query(100, ge=1, le=500),
+):
+    """Postgres-backed findings for SOC triage."""
+    if not (os.getenv("MINDEX_DATABASE_URL") or os.getenv("DATABASE_URL")):
+        raise HTTPException(status_code=503, detail="MINDEX_DATABASE_URL not configured")
+    try:
+        from mycosoft_mas.soc import repository as soc_repo
+
+        return {"findings": await soc_repo.list_redteam_findings(run_id=run_id, limit=limit)}
+    except Exception as e:
+        logger.exception("soc-findings: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
 
 @router.post("/authorize")

@@ -2,7 +2,24 @@
 
 ## GitHub sync + verification + next plan (May 3, 2026)
 
+- `docs/DEPLOY_PREP_LAST_4_DAYS_MAY04_2026.md` — **Pre-deploy (May 04)**: repo sync vs `origin/main`, large uncommitted deltas (website / MAS / MINDEX), migration + VM order (189 → 188 → 187 + Cloudflare).
+
+- `docs/MYCOMESH_FIRST_GATEWAY_RELAY_AND_PARITY_MAY03_2026.md` — **MYCOmesh / Meshtastic**: first MQTT gateway + RF relays checklist, MycoBrain vs Meshtastic LoRa distinction, MINDEX/MAS/Redis verification, CoreScope-style parity scope.
+- `docs/AGARIC_DEVICE_REGISTRY_DEPLOY_HANDOFF_MAY04_2026.md` — **Deploy handoff** for another agent: push website + MAS, Sandbox 187 Docker + NAS mount + Cloudflare, MAS 188 restart, verification matrix.
+- `docs/AGENT100_PREFLIGHT_MAY03_2026.md` — **Agent100** Worldview validation preflight (treasury caps, kill switch, rate limits, env).
+- `docs/WORLDVIEW_100_AGENT_CUSTOMER_VALIDATION_MAY03_2026.md` — **Agent100** program map (`mycosoft_mas/agent100/`, `scripts/agent100/`, Supabase SQL).
+- `docs/WORLDVIEW_VALIDATION_TEST_REPORT_MAY03_2026.md` — **Agent100** test report template (post–wave3).
 - `docs/GITHUB_SYNC_VERIFY_AND_NEXT_PLAN_MAY03_2026.md` — **Pre-merge checklist**: credential hygiene notes, pytest/lint results, Prometheus + MAS health probes, backlog scrub for legacy literals, prioritized next steps.
+- `docs/MINDEX_APP_OVERHAUL_PROGRESS_MAY03_2026.md` — **MINDEX App overhaul (increment)**: website `health/all` wiring, env templates (MAS + MINDEX VM + website), MAS v2 pipeline agents (anchor / synthesis / QA / chemistry), MINDEX `network` router + migration 0031 pointer; remaining phases listed.
+
+## Security SOC — real systems rebuild (May 3, 2026)
+
+- `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md` — **Plan delivery**: Postgres `soc_ops` schema, mock removal on `/security`, incidents + Redis `security:events`, network discovery → `device_inventory`, red team L1–L3 + UI SOC tab, compliance doc engine + website MAS tab; verify/deploy checklist.
+- `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md` — UniFi / ARP / MQTT / HTTP / Jetson reconciler and inventory APIs.
+- `docs/REDTEAM_THREE_LAYER_MAY03_2026.md` — L1 SAFE, L2 scoped nmap, L3 Claude planner; `soc-runs` / `soc-findings` APIs.
+- `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md` — Perplexity → Claude → OpenAI pipeline; versioned SSP/POA&M in Postgres.
+- `docs/SECURITY_REAL_SYSTEMS_REBUILD_COMPLETE_MAY03_2026.md` — **Completion record** for the security real-systems rebuild (verify + deploy follow-ups).
+- `docs/SECURITY_REAL_SYSTEMS_DEPLOY_HANDOFF_MAY04_2026.md` — **Deploy handoff** for another agent: 189 → 188 → 187 + Cloudflare, verify curls.
 
 ## Platform audit — inventory + gaps (May 2, 2026)
 
@@ -17,6 +34,8 @@
 
 ## MAY03 — May01 shells MVP closure + waypoints (May 3, 2026)
 
+- `docs/AGARIC_DEVICE_AND_DEVICE_TRACKER_MAY03_2026.md` — **Agaric** `/devices/agaric`, portal + nav, Earth Simulator catalog merge, MAS `device_role` doc, `device-tracker` subagent, verification notes.
+- `docs/DEVICES_REGISTRY_MAY03_2026.md` — **Master device roster** (human); keep in sync with `WEBSITE/website/lib/devices/catalog.ts` and `@device-tracker`.
 - `docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md` — Session log: paths touched, verification curls, manifest refresh.
 - `docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md` — CREP waypoints Supabase migrations, API, `WaypointSystem` sync.
 - `docs/ANCESTRY_ALL_SPECIES_EXPANSION_COMPLETE_MAY03_2026.md` — Ancestry explorer kingdom + pagination MVP.
@@ -100,6 +119,9 @@
 
 ## Fluid Search — Full AI interface milestone 1 (Apr 17, 2026)
 - `../WEBSITE/website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md` — **Website**: context contract, unified POST, MAS `search_context`, intention merge, MYCA threading, single narrative policy, tests path.
+
+## Fluid Search — total rebuild (May 03, 2026)
+- `../WEBSITE/website/docs/SEARCH_TOTAL_REBUILD_MAY03_2026.md` — **Website**: MagneticGrid, SSE `/api/search/stream`, blended intent `POST /api/search/route`, `useStreamingSearch`, SuggestionChipsPanel, connector `lib/search/connectors/_framework.ts`, `earthMindexFirstConnector`, FastActionRadial FAB, Playwright `e2e/widgets` + `SEARCH_SUGGESTION_MATRIX`.
 
 ## Eagle Eye — backend integration + Track A review (Apr 17, 2026)
 - `docs/EAGLE_EYE_SYSTEM_WIDE_COMPLETE_APR17_2026.md` — **MAS/WEBSITE/MINDEX**: Track B summary, verification, follow-ups.

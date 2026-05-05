@@ -21,6 +21,48 @@ This document catalogs all API endpoints across the Mycosoft ecosystem. The regi
 
 ## MAS API Endpoints
 
+### Agent100 harness (May 3, 2026) — no new MAS HTTP routes
+
+| Surface | Type | Description |
+|---------|------|-------------|
+| `mycosoft_mas/agent100/*` | Python package | Calls production **Website** Worldview (`AGENT100_WORLDBASE_URL`); optional Supabase `agent100_*` tables via service role. |
+| `scripts/agent100/spawn.py` | CLI | Runs harness agents; writes `data/agent100/calls.jsonl`. |
+| `scripts/agent100/kill_all.py` | CLI | Sets `data/agent100/STATE.json` halted; terminates listed PIDs. |
+
+### SOC — Incidents, red team Postgres, compliance (May 3, 2026)
+
+**Routers:** `mycosoft_mas/core/routers/incidents_api.py`, `mycosoft_mas/core/routers/redteam_api.py`, compliance router (see `myca_main.py` includes). **Persistence:** MINDEX Postgres schema `soc_ops` (migrations in MINDEX repo). **Stream:** `mycosoft_mas/soc/security_events_stream.py` → Redis `security:events` (env `SOC_SECURITY_EVENTS_STREAM`). **Pollers:** `mycosoft_mas/soc/incident_source_poller.py`; **L2/L3:** `mycosoft_mas/redteam/layer2_scoped.py`, `layer3_ai.py`.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/incidents/health` | GET | `{ ok, postgres_configured }` |
+| `/api/incidents` | GET | List incidents; query `status`, `severity`, `limit`, `offset` |
+| `/api/incidents` | POST | Create incident (body `IncidentCreate`) |
+| `/api/incidents/{id}` | GET | Fetch one incident |
+| `/api/incidents/{id}` | PATCH | Patch status / assignment / timeline |
+| `/api/redteam/health` | GET | Red team health + optional `postgres_soc`, `recent_soc_runs`, `latest_soc_run` |
+| `/api/redteam/soc-runs` | GET | Query `limit` — list `soc_ops.redteam_runs` |
+| `/api/redteam/soc-findings` | GET | Query `run_id`, `limit` — list `soc_ops.redteam_findings` |
+| `/api/compliance/*` | GET/POST | Controls, docs, regenerate (when router mounted; requires DB) |
+
+**Website (admin BFF):** `GET /api/security/redteam?action=soc-runs|soc-findings`; compliance bundle via `GET /api/security?action=mas-compliance-bundle` and POST regenerate per implementation.
+
+### Meshtastic mesh API (`/api/meshtastic/*`) — May 3, 2026
+
+**Router:** `mycosoft_mas/core/routers/meshtastic_api.py` — proxies list/read to MINDEX internal `GET /api/mindex/internal/meshtastic/*` with service token; SSE tails Redis stream `mesh:packets` (populated by `scripts/mqtt_meshtastic_bridge.py`).
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/meshtastic/nodes` | GET | Mesh nodes (`items`, pagination) |
+| `/api/meshtastic/packets` | GET | Recent packets; query `limit`, `offset`, optional `since` |
+| `/api/meshtastic/observers` | GET | Gateways / observers |
+| `/api/meshtastic/routes` | GET | Aggregated route stats |
+| `/api/meshtastic/stats` | GET | Dashboard counters (nodes, packets 1m/60m, observers online) |
+| `/api/meshtastic/stream` | GET | **SSE** `event: packet` — JSON packet envelope |
+| `/api/meshtastic/ingest/lora` | POST | MycoBrain / Yagi path: decoded frame → MINDEX ingest |
+
+**Website (Next.js BFF, same origin):** `GET /api/meshtastic/{nodes,packets,observers,routes,stats,stream}` — forwards to `MAS_API_URL` / `NEXT_PUBLIC_MAS_API_URL` (default `http://192.168.0.188:8001`).
+
 ### OpenViking Edge Memory API (Mar 19, 2026)
 
 | Endpoint | Method | Description |
@@ -684,6 +726,8 @@ Canonical store: schema `eagle` (`video_sources`, `video_events`, `object_tracks
 | `/api/mindex/telemetry/samples` | GET | MINDEX samples proxy (verified flags) |
 | `/api/mindex/research/search` | GET | MINDEX research search proxy |
 | `/api/search/unified` | GET, POST | Fluid Search: parallel MINDEX/Earth/MAS buckets + single AI narrative (`resolveUnifiedAiNarrative`). **POST** body: `q`, optional `types`, `limit`, `ai`, `lat`, `lng`, `fluidContext` (same shape as `FluidSearchContext`); route forwards to GET with `x-fluid-search-context` header (base64 JSON). See `website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md`. |
+| `/api/search/route` | POST | **May 03 2026**: Blended `IntentPlan` (`computeBlendedIntent`) — Nemotron/heuristic/Exa hint merge; body `query`, optional `partialWord`, `sessionId`, `userContext`. |
+| `/api/search/stream` | GET (SSE) | **May 03 2026**: `event: route` (IntentPlan), `event: widget-data` (unified snapshot from POST `/api/search/unified` with same query params + optional `fluidB64`), `event: ingest`, `event: done` / `stream-error`. Query: `q`, `types`, `limit`, `ai`, `lat`, `lng`, `fluidB64`, `sessionId`, `partialWord`. |
 | `/api/search/ai` | POST | MYCA search answers; Fluid Search calls with `integrated`, `context`, `sessionId`, `userId`, `conversationId`, `history` when narrative is not taken from MAS `focus`. |
 
 ---

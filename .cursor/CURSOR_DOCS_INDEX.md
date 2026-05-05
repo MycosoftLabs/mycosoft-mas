@@ -52,11 +52,27 @@
 ## MAY03 — May01 MVP slices + waypoints closure (May 3, 2026)
 | Doc | Purpose |
 |-----|---------|
+| `../WEBSITE/website/docs/SEARCH_TOTAL_REBUILD_MAY03_2026.md` | **Fluid Search total rebuild**: SSE stream, intent route, magnetic canvas, FAB radial, connector framework, widget Playwright matrix. |
 | `docs/GITHUB_SYNC_VERIFY_AND_NEXT_PLAN_MAY03_2026.md` | **Merge-to-main log**: cred hygiene notes, pytest/lint evidence, per-repo push table, history-scrub note for mycobrain, next test/deploy steps. |
 | `docs/MAY03_SESSION_EXECUTION_LOG_MAY03_2026.md` | Execution log: completion set, verification commands, manifest. |
 | `docs/CREP_WAYPOINTS_SUPABASE_COMPLETE_MAY03_2026.md` | CREP waypoints: Supabase schema + CRUD + client migration from localStorage. |
 | `docs/COMPOUND_ANALYSER_CHEMPUTER_AGENT_COMPLETE_MAY03_2026.md` | Chemputer MVP — MINDEX-only compound plans. |
 | `docs/AEROSOL_VIRUS_RADIATION_FEEDS_COMPLETE_MAY03_2026.md` | Environmental feeds MVP — OpenAQ / Safecast / explicit virus deferral. |
+| `docs/AGENT100_PREFLIGHT_MAY03_2026.md` | **Agent100** preflight: caps, kill switch, WAF, rate limits, env matrix. |
+| `docs/WORLDVIEW_100_AGENT_CUSTOMER_VALIDATION_MAY03_2026.md` | **Agent100** scope: 100 internal personas, harness paths, wave sequence. |
+| `docs/WORLDVIEW_VALIDATION_TEST_REPORT_MAY03_2026.md` | **Agent100** test report template (fill after waves). |
+| `docs/SECURITY_REAL_SYSTEMS_REBUILD_MAY03_2026.md` | **Security SOC** — Postgres incidents, discovery, red team L1–L3, compliance engine, `/security` UI; deploy checklist. |
+| `docs/REDTEAM_THREE_LAYER_MAY03_2026.md` | Red team L1/L2/L3 loops, `soc-runs` / `soc-findings`, env kill switches. |
+| `docs/COMPLIANCE_DOC_ENGINE_MAY03_2026.md` | NIST 800-171 doc pipeline (Perplexity → Claude → OpenAI) + website compliance tab. |
+| `docs/NETWORK_AUTO_DISCOVERY_MAY03_2026.md` | LAN inventory reconciler (UniFi, ARP, MQTT, Jetson) → `device_inventory`. |
+| `docs/SECURITY_REAL_SYSTEMS_REBUILD_COMPLETE_MAY03_2026.md` | **Completion** — security rebuild shipped; verify + optional MAS authorize hardening. |
+| `docs/SECURITY_REAL_SYSTEMS_DEPLOY_HANDOFF_MAY04_2026.md` | **Deploy handoff** — 189 → 188 → 187 + CF; another agent runs this. |
+
+## Devices + Earth Simulator roster (May 3, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/DEVICES_REGISTRY_MAY03_2026.md` | **Vital** — full Mycosoft device-type table: roles, pages, firmware paths, status; pairs with `lib/devices/catalog.ts`. |
+| `docs/AGARIC_DEVICE_AND_DEVICE_TRACKER_MAY03_2026.md` | Agaric page + API merge + `device-tracker` subagent completion summary. |
 
 ---
 
