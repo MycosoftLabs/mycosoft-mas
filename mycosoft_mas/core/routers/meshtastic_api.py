@@ -23,8 +23,15 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/meshtastic", tags=["meshtastic"])
 
-MINDEX_API_URL = os.environ.get("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
 REDIS_URL = os.environ.get("REDIS_URL", "redis://192.168.0.189:6379/0")
+
+
+def _mindex_meshtastic_base() -> str:
+    """Resolve internal meshtastic base. ``MINDEX_API_URL`` may be origin-only or include ``/api/mindex`` (Fusarium style)."""
+    u = (os.environ.get("MINDEX_API_URL") or "http://192.168.0.189:8000").rstrip("/")
+    if u.endswith("/api/mindex"):
+        return f"{u}/internal/meshtastic"
+    return f"{u}/api/mindex/internal/meshtastic"
 
 
 def _internal_token() -> str:
@@ -50,7 +57,7 @@ async def _mindex_get(path: str, params: Optional[Dict[str, Any]] = None) -> Any
     token = _internal_token()
     if not token:
         raise HTTPException(status_code=503, detail="MINDEX internal token not configured")
-    url = f"{MINDEX_API_URL}/api/mindex/internal/meshtastic{path}"
+    url = f"{_mindex_meshtastic_base()}{path}"
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=_mindex_headers(), params=params or {})
         if r.status_code >= 400:
@@ -158,7 +165,7 @@ async def _mindex_post(path: str, body: Dict[str, Any]) -> Any:
     token = _internal_token()
     if not token:
         raise HTTPException(status_code=503, detail="MINDEX internal token not configured")
-    url = f"{MINDEX_API_URL}/api/mindex/internal/meshtastic{path}"
+    url = f"{_mindex_meshtastic_base()}{path}"
     hdr = dict(_mindex_headers())
     hdr["Content-Type"] = "application/json"
     async with httpx.AsyncClient(timeout=30.0) as client:
