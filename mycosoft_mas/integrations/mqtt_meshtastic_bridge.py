@@ -8,7 +8,9 @@ Environment:
   MESHTASTIC_MQTT_PORT (default ``8883`` if TLS else ``1883``)
   MESHTASTIC_MQTT_TLS: ``1``/``true`` to use TLS (default true when port 8883)
   MESHTASTIC_MQTT_USERNAME / MESHTASTIC_MQTT_PASSWORD (optional; public broker often uses apps)
-  MINDEX_API_URL, MINDEX_INTERNAL_SECRET or MINDEX_INTERNAL_TOKEN
+  MINDEX_API_URL — origin only (``http://host:8000``) **or** Fusarium-style suffix ``.../api/mindex``
+    (internal ingest URL is normalized the same way as ``meshtastic_api._mindex_meshtastic_base``).
+  MINDEX_INTERNAL_SECRET or MINDEX_INTERNAL_TOKEN
   REDIS_URL (default ``redis://192.168.0.189:6379/0``)
 """
 
@@ -56,8 +58,12 @@ class MqttMeshtasticBridge:
             logger.warning("Redis unavailable (%s); mesh:packets stream disabled", exc)
             return None
 
-    def _mindex_url(self) -> str:
-        return os.environ.get("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
+    def _mindex_internal_meshtastic_base(self) -> str:
+        """Match ``meshtastic_api._mindex_meshtastic_base``: avoid ``/api/mindex/api/mindex/...`` when env includes suffix."""
+        u = (os.environ.get("MINDEX_API_URL") or "http://192.168.0.189:8000").rstrip("/")
+        if u.endswith("/api/mindex"):
+            return f"{u}/internal/meshtastic"
+        return f"{u}/api/mindex/internal/meshtastic"
 
     def _internal_token(self) -> str:
         secret = (os.environ.get("MINDEX_INTERNAL_SECRET") or "").strip()
@@ -79,7 +85,7 @@ class MqttMeshtasticBridge:
         if not token:
             logger.warning("MINDEX internal token unset; skip %s", path)
             return
-        url = f"{self._mindex_url()}/api/mindex/internal/meshtastic{path}"
+        url = f"{self._mindex_internal_meshtastic_base()}{path}"
         r = self._http.post(url, headers=self._headers(), json=body)
         r.raise_for_status()
 

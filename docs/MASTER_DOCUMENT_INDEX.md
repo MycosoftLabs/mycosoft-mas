@@ -3,6 +3,7 @@
 ## Meshtastic MAS / MINDEX chain (May 5, 2026)
 
 - `docs/MESHTASTIC_MAS_MINDEX_CHAIN_VERIFY_MAY05_2026.md` — **URL normalization** on MAS (`MINDEX_API_URL` with `/api/mindex`), **migration 0037** on MINDEX VM 189 (`meshtastic.*` tables), verification curls and Redis probe script pointers.
+- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY05_2026.md` — **May 05 closeout**: MQTT bridge ingest URL parity with MAS, VM **196** bridge active / **188** no dup bridge, operator backlog for radios + Mosquitto unit name check.
 
 ## GitHub sync + verification + next plan (May 3, 2026)
 
