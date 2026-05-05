@@ -121,6 +121,9 @@ sudo install -d /etc/mycosoft
 sudo mv /tmp/meshtastic-bridge.env /etc/mycosoft/meshtastic-bridge.env
 sudo chmod 600 /etc/mycosoft/meshtastic-bridge.env
 cd {repo}
+if [ ! -d .git ]; then echo "No git repo at {repo} — clone mycosoft-mas first."; exit 1; fi
+git fetch origin && git reset --hard origin/main
+if [ ! -f scripts/vm/mqtt-meshtastic-bridge.service ]; then echo "Missing scripts/vm/mqtt-meshtastic-bridge.service after pull"; exit 1; fi
 rm -rf .venv
 python3 -m venv .venv
 . .venv/bin/activate
@@ -136,7 +139,8 @@ sudo systemctl is-active mqtt-meshtastic-bridge || true
 journalctl -u mqtt-meshtastic-bridge -n 40 --no-pager
 """
     rc, out = ssh196(script.strip(), timeout=600)
-    print(out[-12000:] if len(out) > 12000 else out)
+    safe = out.encode("utf-8", errors="replace").decode("ascii", errors="replace")
+    print(safe[-12000:] if len(safe) > 12000 else safe)
     if rc != 0:
         print(f"remote script exit {rc}")
         return rc
