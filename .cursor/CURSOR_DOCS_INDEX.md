@@ -168,6 +168,7 @@
 |-----|---------|
 | `docs/MQTT_LAN_WSS_DEPLOYMENT_AND_JETSON_HANDOFF_APR08_2026.md` | **Broker endpoints**: LAN `mqtt://192.168.0.196:1883`, public WSS; Jetson bootstrap script. |
 | `docs/MQTT_MAS_MINDEX_BRIDGE_APR13_2026.md` | **Bridge service**: Subscribe `mycobrain/#` → MAS device heartbeats + MINDEX `/telemetry/envelope`; CREP/device network visibility. |
+| `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY03_2026.md` | **Meshtastic `msh/#` → MINDEX + Redis** on broker **196**; website NatureOS map activity overlay; systemd/env templates; deploy MAS for `/api/meshtastic` if missing. |
 
 ## Network Topology and UniFi (Mar 7, 2026)
 | Doc | Purpose |

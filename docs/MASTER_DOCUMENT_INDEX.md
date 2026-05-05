@@ -2,6 +2,7 @@
 
 ## GitHub sync + verification + next plan (May 3, 2026)
 
+- `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY03_2026.md` — **Meshtastic TennMesh-style**: website map activity overlay (packet-derived positions), systemd/env templates for `mqtt_meshtastic_bridge` on broker VM **196**, SSH smoke script, operator checklist for Mosquitto/LilyGO; live MAS `/api/meshtastic` deploy note when OpenAPI lacks routes.
 - `docs/DEPLOY_PREP_LAST_4_DAYS_MAY04_2026.md` — **Pre-deploy (May 04)**: repo sync vs `origin/main`, large uncommitted deltas (website / MAS / MINDEX), migration + VM order (189 → 188 → 187 + Cloudflare).
 
 - `docs/MYCOMESH_FIRST_GATEWAY_RELAY_AND_PARITY_MAY03_2026.md` — **MYCOmesh / Meshtastic**: first MQTT gateway + RF relays checklist, MycoBrain vs Meshtastic LoRa distinction, MINDEX/MAS/Redis verification, CoreScope-style parity scope.

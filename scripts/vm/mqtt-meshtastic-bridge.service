@@ -1,0 +1,22 @@
+# Deploy on MQTT broker VM (192.168.0.196) only — install to /etc/systemd/system/
+# after copying env file to /etc/mycosoft/meshtastic-bridge.env (chmod 600).
+#
+# sudo systemctl daemon-reload
+# sudo systemctl enable --now mqtt-meshtastic-bridge
+
+[Unit]
+Description=Mycosoft MQTT Meshtastic bridge (msh/# → MINDEX + Redis mesh:packets)
+After=network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
+
+[Service]
+Type=simple
+User=mycosoft
+WorkingDirectory=/home/mycosoft/mycosoft-mas
+EnvironmentFile=-/etc/mycosoft/meshtastic-bridge.env
+ExecStart=/home/mycosoft/mycosoft-mas/.venv/bin/python -m mycosoft_mas.integrations.mqtt_meshtastic_bridge
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
