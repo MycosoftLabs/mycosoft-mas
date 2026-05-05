@@ -1,5 +1,7 @@
 # Security real systems rebuild — Deploy handoff — May 04, 2026
 
+**Read this file first** before other deploy notes for this initiative: it fixes order (189 → 188 → 187 + Cloudflare) and points at the skills (`deploy-mindex`, `deploy-mas-service`, `deploy-website-sandbox`).
+
 **Audience:** Deploy agent (`@deploy-pipeline`, `infrastructure-ops`, or scripted SSH).  
 **Purpose:** Ship the **SOC Postgres + MAS APIs + `/security` UI** work already merged to GitHub. **Do not edit** `.cursor/plans/security_real_systems_rebuild_*.plan.md`.
 
