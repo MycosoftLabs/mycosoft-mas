@@ -3,7 +3,7 @@ NLM Trainer - Training pipeline for Nature Learning Model
 
 This module handles:
 1. Data preparation from Mycosoft knowledge bases
-2. Fine-tuning base models on nature/mycology data
+2. Preparing grounded sensory-world training data for NLM
 3. Continuous learning from new data streams
 4. Model evaluation and validation
 """
@@ -38,8 +38,9 @@ class NLMTrainer:
     def __init__(
         self,
         model_path: Optional[str] = None,
-        base_model: str = "llama3",
+        base_model: str = "nlm-sensory-world-model",
         training_data_path: Optional[str] = None,
+        training_config: Optional[Dict[str, Any]] = None,
     ):
         nlm_home = _default_nlm_home()
         self.model_path = Path(model_path or os.getenv("NLM_MODEL_DIR", nlm_home / "models"))
@@ -61,6 +62,8 @@ class NLMTrainer:
             "weight_decay": 0.01,
             "gradient_accumulation_steps": 4,
         }
+        if training_config:
+            self.config.update({k: v for k, v in training_config.items() if v is not None})
 
         # Data categories for NLM
         self.data_categories = [
@@ -76,7 +79,7 @@ class NLMTrainer:
             "conservation_status",
         ]
 
-    async def prepare_training_data(self) -> Dict[str, int]:
+    async def prepare_training_data(self, categories: Optional[List[str]] = None) -> Dict[str, int]:
         """
         Prepare training data from various Mycosoft knowledge sources.
 
@@ -85,7 +88,9 @@ class NLMTrainer:
         """
         stats = {}
 
-        for category in self.data_categories:
+        selected_categories = categories or self.data_categories
+
+        for category in selected_categories:
             category_path = self.training_data_path / category
             category_path.mkdir(exist_ok=True)
 
@@ -156,17 +161,22 @@ class NLMTrainer:
         """
         logger.info("Starting NLM training...")
 
-        # Prepare data if needed
-        await self.prepare_training_data()
+        # Prepare data if needed. This MAS-side trainer is the control-plane
+        # adapter; GPU execution is owned by the NLM engine worker.
+        data_stats = await self.prepare_training_data(categories=categories)
+        selected_categories = categories or self.data_categories
+        sample_count = sum(data_stats.values())
 
-        # Training would use transformers/peft in production
-        # For now, log the intent
         training_run = {
             "run_id": f"nlm_train_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            "engine": "Nature Learning Model",
             "base_model": self.base_model,
             "config": self.config,
-            "categories": categories or self.data_categories,
-            "status": "initialized",
+            "categories": selected_categories,
+            "data_stats": data_stats,
+            "sample_count": sample_count,
+            "status": "data_prepared",
+            "engine_status": "awaiting_nlm_engine_worker",
             "started_at": datetime.now().isoformat(),
         }
 

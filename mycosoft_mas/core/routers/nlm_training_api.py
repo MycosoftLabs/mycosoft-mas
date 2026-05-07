@@ -44,6 +44,18 @@ MINDEX_API_URL = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000")
 NLM_HOME = Path(os.getenv("NLM_HOME", Path.home() / ".mycosoft" / "nlm"))
 NLM_MODEL_DIR = os.getenv("NLM_MODEL_DIR", str(NLM_HOME / "models"))
 NLM_CHECKPOINT_DIR = os.getenv("NLM_CHECKPOINT_DIR", str(NLM_HOME / "models" / "checkpoints"))
+DEFAULT_NLM_CATEGORIES = [
+    "species_taxonomy",
+    "mycology_research",
+    "environmental_sensors",
+    "genetic_sequences",
+    "ecological_interactions",
+    "geographic_distribution",
+    "cultivation_protocols",
+    "compound_chemistry",
+    "medical_applications",
+    "conservation_status",
+]
 
 
 # ── Request models ───────────────────────────────────────────────────────────
@@ -190,22 +202,24 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
             )
 
     run_id = f"nlm_train_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
+    categories = req.categories or DEFAULT_NLM_CATEGORIES
+    config = {
+        "learning_rate": req.learning_rate,
+        "batch_size": req.batch_size,
+        "epochs": req.epochs,
+        "warmup_steps": req.warmup_steps,
+        "weight_decay": req.weight_decay,
+        "dropout": req.dropout,
+        "optimizer": req.optimizer,
+        "scheduler": req.scheduler,
+        "grad_clip": req.grad_clip,
+        "categories": categories,
+    }
 
     run = {
         "run_id": run_id,
         "status": "training",
-        "config": {
-            "learning_rate": req.learning_rate,
-            "batch_size": req.batch_size,
-            "epochs": req.epochs,
-            "warmup_steps": req.warmup_steps,
-            "weight_decay": req.weight_decay,
-            "dropout": req.dropout,
-            "optimizer": req.optimizer,
-            "scheduler": req.scheduler,
-            "grad_clip": req.grad_clip,
-            "categories": req.categories,
-        },
+        "config": config,
         "current_epoch": 0,
         "total_epochs": req.epochs,
         "metrics": {
@@ -228,7 +242,7 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
     try:
         from mycosoft_mas.nlm.trainer import NLMTrainer
 
-        trainer = NLMTrainer()
+        trainer = NLMTrainer(training_config=config)
         # Start training asynchronously
         asyncio.create_task(_run_training(trainer, run_id, req))
         logger.info(f"Training run {run_id} started")
@@ -241,7 +255,7 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
         "status": "started",
         "run_id": run_id,
         "config": run["config"],
-        "message": f"Training started on GPU node {GPU_NODE_IP}",
+        "message": f"NLM training run accepted by MAS; GPU execution target is {GPU_NODE_IP}",
     }
 
 
@@ -259,6 +273,8 @@ async def _run_training(trainer, run_id: str, req: StartTrainingRequest):
                 run["status"] = "completed"
                 run["completed_at"] = datetime.now().isoformat()
                 run["result"] = result
+                run["metrics"]["samples_processed"] = result.get("sample_count", 0)
+                run["engine_status"] = result.get("engine_status")
                 break
 
     except Exception as e:
