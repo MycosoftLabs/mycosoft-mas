@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+DEFAULT_NLM_HOME = Path(os.getenv("NLM_HOME", Path.home() / ".mycosoft" / "nlm"))
 
 
 @dataclass
@@ -105,9 +106,9 @@ class DataConfig:
     """Configuration for NLM training data."""
 
     # Data paths
-    training_data_dir: str = "/data/nlm/training"
-    validation_data_dir: str = "/data/nlm/validation"
-    test_data_dir: str = "/data/nlm/test"
+    training_data_dir: str = str(DEFAULT_NLM_HOME / "data" / "training")
+    validation_data_dir: str = str(DEFAULT_NLM_HOME / "data" / "validation")
+    test_data_dir: str = str(DEFAULT_NLM_HOME / "data" / "test")
 
     # Data sources for ingestion
     mindex_url: str = "http://192.168.0.189:8000"
@@ -188,10 +189,10 @@ class NLMConfig:
     model_description: str = "Domain-specific LLM for mycology and natural sciences"
 
     # Paths
-    model_dir: str = "/models/nlm"
-    checkpoint_dir: str = "/models/nlm/checkpoints"
-    export_dir: str = "/models/nlm/exports"
-    logs_dir: str = "/logs/nlm"
+    model_dir: str = str(DEFAULT_NLM_HOME / "models")
+    checkpoint_dir: str = str(DEFAULT_NLM_HOME / "models" / "checkpoints")
+    export_dir: str = str(DEFAULT_NLM_HOME / "models" / "exports")
+    logs_dir: str = str(DEFAULT_NLM_HOME / "logs")
 
     # Sub-configurations
     architecture: ModelArchitectureConfig = field(default_factory=ModelArchitectureConfig)

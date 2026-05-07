@@ -10,11 +10,17 @@ This module handles:
 
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+
+def _default_nlm_home() -> Path:
+    """Return a writable default NLM runtime directory."""
+    return Path(os.getenv("NLM_HOME", Path.home() / ".mycosoft" / "nlm"))
 
 
 class NLMTrainer:
@@ -31,13 +37,16 @@ class NLMTrainer:
 
     def __init__(
         self,
-        model_path: str = "/models/nlm",
+        model_path: Optional[str] = None,
         base_model: str = "llama3",
-        training_data_path: str = "/data/nlm_training",
+        training_data_path: Optional[str] = None,
     ):
-        self.model_path = Path(model_path)
+        nlm_home = _default_nlm_home()
+        self.model_path = Path(model_path or os.getenv("NLM_MODEL_DIR", nlm_home / "models"))
         self.base_model = base_model
-        self.training_data_path = Path(training_data_path)
+        self.training_data_path = Path(
+            training_data_path or os.getenv("NLM_TRAINING_DATA_DIR", nlm_home / "training")
+        )
         self.model_path.mkdir(parents=True, exist_ok=True)
         self.training_data_path.mkdir(parents=True, exist_ok=True)
 

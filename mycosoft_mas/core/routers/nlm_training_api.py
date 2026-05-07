@@ -41,8 +41,9 @@ GPU_NODE_IP = (
     os.getenv("GPU_TRAINING_IP") or os.getenv("GPU_VOICE_IP") or os.getenv("GPU_NODE_IP") or "192.168.0.241"
 )
 MINDEX_API_URL = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000")
-NLM_MODEL_DIR = os.getenv("NLM_MODEL_DIR", "/models/nlm")
-NLM_CHECKPOINT_DIR = os.getenv("NLM_CHECKPOINT_DIR", "/models/nlm/checkpoints")
+NLM_HOME = Path(os.getenv("NLM_HOME", Path.home() / ".mycosoft" / "nlm"))
+NLM_MODEL_DIR = os.getenv("NLM_MODEL_DIR", str(NLM_HOME / "models"))
+NLM_CHECKPOINT_DIR = os.getenv("NLM_CHECKPOINT_DIR", str(NLM_HOME / "models" / "checkpoints"))
 
 
 # ── Request models ───────────────────────────────────────────────────────────
