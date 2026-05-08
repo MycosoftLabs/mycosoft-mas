@@ -540,6 +540,116 @@ async def list_devices_crep(
     }
 
 
+@router.get("/unified-network")
+async def list_unified_network_devices(
+    include_offline_mycobrain: bool = Query(
+        False,
+        description="Include MycoBrain rows past heartbeat TTL (offline)",
+    ),
+    include_meshtastic: bool = Query(
+        True,
+        description="Include MINDEX meshtastic.nodes (MQTT/LAN-ingested mesh radios)",
+    ),
+    include_observers: bool = Query(
+        True,
+        description="Include MINDEX meshtastic.observers",
+    ),
+    mesh_node_limit: int = Query(2000, ge=1, le=2000),
+):
+    """
+    Single merge of in-memory MycoBrain heartbeats with MINDEX Meshtastic inventory.
+
+    New Meshtastic nodes appear in MINDEX automatically when the MQTT bridge ingests
+    traffic; MycoBrain devices appear when they heartbeat to POST /api/devices/heartbeat.
+    MYCA and dashboards should poll this instead of stitching /api/devices + /api/meshtastic/nodes.
+    """
+    mb = await _list_devices_impl(status=None, include_offline=include_offline_mycobrain)
+    mycobrain_devices: List[Dict[str, Any]] = mb.get("devices") or []
+
+    mesh_payload: Dict[str, Any] = {"items": [], "error": None}
+    obs_payload: Dict[str, Any] = {"items": [], "error": None}
+
+    try:
+        from mycosoft_mas.core.routers.meshtastic_api import _mindex_get
+    except Exception as e:
+        logger.warning("unified-network: meshtastic client import failed: %s", e)
+        err = f"import:{e}"
+        mesh_payload["error"] = err
+        obs_payload["error"] = err
+        _mindex_get = None  # type: ignore[assignment]
+
+    if _mindex_get is not None:
+        if include_meshtastic:
+            try:
+                mesh_payload = await _mindex_get(
+                    "/nodes", {"limit": mesh_node_limit, "offset": 0}
+                )
+            except HTTPException as e:
+                mesh_payload = {"items": [], "error": str(e.detail), "limit": mesh_node_limit}
+            except Exception as e:
+                logger.warning("unified-network: meshtastic /nodes failed: %s", e)
+                mesh_payload = {"items": [], "error": str(e), "limit": mesh_node_limit}
+        if include_observers:
+            try:
+                obs_payload = await _mindex_get("/observers")
+            except HTTPException as e:
+                obs_payload = {"items": [], "error": str(e.detail)}
+            except Exception as e:
+                logger.warning("unified-network: meshtastic /observers failed: %s", e)
+                obs_payload = {"items": [], "error": str(e)}
+
+    mesh_items = mesh_payload.get("items") if isinstance(mesh_payload, dict) else []
+    if not isinstance(mesh_items, list):
+        mesh_items = []
+
+    obs_items = obs_payload.get("items") if isinstance(obs_payload, dict) else []
+    if not isinstance(obs_items, list):
+        obs_items = []
+
+    unified: List[Dict[str, Any]] = []
+    for d in mycobrain_devices:
+        did = str(d.get("device_id") or "")
+        unified.append(
+            {
+                "network_source": "mycobrain",
+                "unified_id": f"mycobrain:{did}",
+                "device": d,
+            }
+        )
+    for row in mesh_items:
+        nid = str(row.get("node_id") or "")
+        unified.append(
+            {
+                "network_source": "meshtastic_node",
+                "unified_id": f"meshtastic:{nid}",
+                "meshtastic_node": row,
+            }
+        )
+    for row in obs_items:
+        oid = str(row.get("observer_id") or row.get("node_id") or "")
+        unified.append(
+            {
+                "network_source": "meshtastic_observer",
+                "unified_id": f"meshtastic_observer:{oid}",
+                "meshtastic_observer": row,
+            }
+        )
+
+    return {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "counts": {
+            "mycobrain": len(mycobrain_devices),
+            "meshtastic_nodes": len(mesh_items),
+            "meshtastic_observers": len(obs_items),
+            "unified_total": len(unified),
+        },
+        "mycobrain": mb,
+        "meshtastic_nodes": mesh_payload,
+        "meshtastic_observers": obs_payload,
+        "unified": unified,
+    }
+
+
 @router.get("/{device_id}")
 async def get_device(device_id: str):
     """Get information about a specific device."""

@@ -3,6 +3,10 @@
 Copy MINDEX internal token from VM 189 (mindex-api container env) into Sandbox 187
 website .env as MINDEX_INTERNAL_TOKEN (single value = first of MINDEX_INTERNAL_TOKENS).
 
+Optional: --mas-188 merges the same token into MAS VM ``/home/mycosoft/mycosoft/mas/.env``
+(required for ``/api/meshtastic/*`` and other MINDEX-internal proxies) and restarts
+``mas-orchestrator``. Use ``--also-sandbox`` with ``--mas-188`` to update 187 as well.
+
 Optional: --dev-local copies the same value into a local file (default:
 WEBSITE/website/.env.local relative to the repo tree) for `npm run dev:next-only`.
 
@@ -11,6 +15,7 @@ Does not print secret values. Uses .credentials.local for SSH.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import re
@@ -19,6 +24,8 @@ from pathlib import Path
 
 MINDEX_HOST = os.environ.get("MINDEX_VM_IP", "192.168.0.189")
 SANDBOX_HOST = os.environ.get("SANDBOX_VM_IP", "192.168.0.187")
+MAS_HOST = os.environ.get("MAS_VM_IP", "192.168.0.188")
+MAS_REMOTE_ENV = "/home/mycosoft/mycosoft/mas/.env"
 VM_USER = os.environ.get("VM_SSH_USER", "mycosoft")
 REMOTE_ENVS = (
     "/opt/mycosoft/website/.env",
@@ -95,6 +102,16 @@ def main() -> int:
         action="store_true",
         help="Do not update Sandbox 187; only --dev-local or fetch token for inspection.",
     )
+    ap.add_argument(
+        "--mas-188",
+        action="store_true",
+        help=f"Merge MINDEX_INTERNAL_TOKEN into MAS VM {MAS_REMOTE_ENV} and restart mas-orchestrator.",
+    )
+    ap.add_argument(
+        "--also-sandbox",
+        action="store_true",
+        help="With --mas-188, also update Sandbox 187 env files (default script behavior).",
+    )
     args = ap.parse_args()
 
     load_credentials()
@@ -124,6 +141,42 @@ def main() -> int:
         print("ERROR: could not resolve MINDEX internal token from mindex-api", file=sys.stderr)
         return 1
 
+    if args.mas_188:
+        c188 = paramiko.SSHClient()
+        c188.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        c188.connect(MAS_HOST, username=VM_USER, password=pw, timeout=45)
+        try:
+            sftp = c188.open_sftp()
+            try:
+                with sftp.file(MAS_REMOTE_ENV, "r") as rf:
+                    raw_mas = rf.read().decode("utf-8", errors="replace")
+            except FileNotFoundError:
+                raw_mas = ""
+            new_mas = merge_env(raw_mas, "MINDEX_INTERNAL_TOKEN", token)
+            with sftp.file(MAS_REMOTE_ENV, "w") as wf:
+                wf.write(new_mas.encode("utf-8"))
+            print(f"OK: wrote MINDEX_INTERNAL_TOKEN to {MAS_HOST}:{MAS_REMOTE_ENV} ({len(new_mas)} bytes)")
+        finally:
+            c188.close()
+        sudo_stdin = base64.b64encode(pw.encode()).decode("ascii")
+        c188b = paramiko.SSHClient()
+        c188b.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        c188b.connect(MAS_HOST, username=VM_USER, password=pw, timeout=45)
+        try:
+            restart_cmd = (
+                f"echo {sudo_stdin} | base64 -d | sudo -S systemctl restart mas-orchestrator && "
+                "sleep 6 && systemctl is-active mas-orchestrator"
+            )
+            _, stdout, stderr = c188b.exec_command(restart_cmd, timeout=120)
+            out = stdout.read().decode(errors="replace").strip()
+            err = stderr.read().decode(errors="replace").strip()
+            if out:
+                print(f"OK: mas-orchestrator {out}")
+            if err and "[sudo]" not in err:
+                print(err, file=sys.stderr)
+        finally:
+            c188b.close()
+
     did_local = False
     if args.dev_local or args.dev_local_path is not None:
         # mycosoft-mas repo root -> CODE is parents[2] (…/CODE/MAS/mycosoft-mas)
@@ -147,9 +200,12 @@ def main() -> int:
         did_local = True
 
     if args.skip_sandbox:
-        if not did_local:
-            print("ERROR: --skip-sandbox with no --dev-local: nothing to update", file=sys.stderr)
+        if not did_local and not args.mas_188:
+            print("ERROR: --skip-sandbox with no --dev-local or --mas-188: nothing to update", file=sys.stderr)
             return 1
+        return 0
+
+    if args.mas_188 and not args.also_sandbox:
         return 0
 
     c187 = paramiko.SSHClient()

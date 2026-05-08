@@ -528,6 +528,7 @@ This API provides heartbeat-based registration and management for remote MycoBra
 | `/api/devices/register` | POST | Legacy alias for `/heartbeat`; both behave identically |
 | `/api/devices` | GET | List all network-registered devices (supports `status`, `include_offline` params) |
 | `/api/devices/crep` | GET | List devices as CREP UnifiedEntity batch for unified entity aggregation (Mar 10, 2026) |
+| `/api/devices/unified-network` | GET | **MYCA / dashboards:** merge MycoBrain registry (`GET /api/devices`) with MINDEX Meshtastic nodes + observers (`/api/meshtastic/*`); query `include_meshtastic`, `include_observers`, `include_offline_mycobrain`, `mesh_node_limit` (May 06, 2026) |
 | `/api/devices/{device_id}` | GET | Get specific device info |
 | `/api/devices/{device_id}` | DELETE | Unregister device from registry |
 | `/api/devices/{device_id}/fci-summary` | POST | Store FCI summary in device extra (bridge from Mycorrhizae/FCI) |

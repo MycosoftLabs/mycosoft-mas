@@ -1,7 +1,8 @@
 # Master Document Index
 
-## Meshtastic MAS / MINDEX chain (May 5, 2026)
+## Meshtastic MAS / MINDEX chain (May 6, 2026)
 
+- `docs/MESHTASTIC_TENNMESH_OPERATOR_CLOSEOUT_MAY06_2026.md` — **May 06 operator closeout**: VM **196** Mosquitto Docker config (**no `acl_file`** — passwd-only auth), broker smoke commands, MAS/MINDEX/Redis verification from LAN, hardware checklist (fill with real COM/firmware), localhost Next proxy, **`scripts/meshtastic_gateway_registry_ping.py`** optional gateway heartbeat.
 - `docs/MESHTASTIC_MAS_MINDEX_CHAIN_VERIFY_MAY05_2026.md` — **URL normalization** on MAS (`MINDEX_API_URL` with `/api/mindex`), **migration 0037** on MINDEX VM 189 (`meshtastic.*` tables), verification curls and Redis probe script pointers.
 - `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY05_2026.md` — **May 05 closeout**: MQTT bridge ingest URL parity with MAS, VM **196** bridge active / **188** no dup bridge, operator backlog for radios + Mosquitto unit name check.
 - `docs/MESHTASTIC_MQTT_ENABLE_DEVICE_CRASH_WORKAROUNDS_MAY05_2026.md` — **ESP32/app crashes when enabling MQTT**: Wi-Fi-before-MQTT, **TLS off** on port **1883**, CLI workaround and recovery (`mqtt.enabled false`), upstream firmware issue pointers.
