@@ -112,3 +112,8 @@ docker-compose.override.yml
 **/.hypothesis 
 !docs/MYCA_Master_Ideas_Concepts_Resources.md
 !docs/IDEA_STATUS_TRACKER_FEB26_2026.md
+
+# Runtime Python packages named "data" must stay in the image. The broad
+# data/ ignores above are for generated repo artifacts, not package modules.
+!mycosoft_mas/fusarium/data/
+!mycosoft_mas/fusarium/data/**
