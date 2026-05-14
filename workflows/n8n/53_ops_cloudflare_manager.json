@@ -1,0 +1,193 @@
+{
+  "name": "Ops: Cloudflare Manager",
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "Cloudflare Control Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ops/cloudflare/manage",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "route",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.action }}",
+        "rules": {
+          "rules": [
+            { "value2": "purge_cache" },
+            { "value2": "dns_update" },
+            { "value2": "firewall_rule" },
+            { "value2": "analytics" },
+            { "value2": "ssl_status" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "purge_cache",
+      "name": "Purge Cache",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloudflare.com/client/v4/zones/{{ $json.zone_id }}/purge_cache",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "purge_everything", "value": "={{ $json.purge_all ? 'true' : 'false' }}" },
+            { "name": "files", "value": "={{ JSON.stringify($json.urls || []) }}" }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "dns_update",
+      "name": "Update DNS Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 250],
+      "parameters": {
+        "method": "PUT",
+        "url": "https://api.cloudflare.com/client/v4/zones/{{ $json.zone_id }}/dns_records/{{ $json.record_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "type", "value": "={{ $json.record_type || 'A' }}" },
+            { "name": "name", "value": "={{ $json.record_name }}" },
+            { "name": "content", "value": "={{ $json.record_value }}" },
+            { "name": "proxied", "value": "={{ $json.proxied !== false ? 'true' : 'false' }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "firewall",
+      "name": "Manage Firewall Rule",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloudflare.com/client/v4/zones/{{ $json.zone_id }}/firewall/rules",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "filter", "value": "={{ JSON.stringify($json.filter) }}" },
+            { "name": "action", "value": "={{ $json.fw_action || 'block' }}" },
+            { "name": "description", "value": "={{ $json.description || 'Auto-managed rule' }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "analytics",
+      "name": "Get Analytics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 550],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.cloudflare.com/client/v4/zones/{{ $json.zone_id }}/analytics/dashboard",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "qs": {
+          "since": "={{ $json.since || '-1440' }}",
+          "until": "={{ $json.until || '0' }}"
+        }
+      }
+    },
+    {
+      "id": "ssl_status",
+      "name": "Check SSL Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [800, 700],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.cloudflare.com/client/v4/zones/{{ $json.zone_id }}/ssl/verification",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      }
+    },
+    {
+      "id": "format_response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1100, 400],
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nreturn [{\n  json: {\n    status: 'success',\n    action: result.action || 'completed',\n    result: result.result || result,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "audit",
+      "name": "Audit Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1350, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/audit/log",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "cloudflare_operation" },
+            { "name": "details", "value": "={{ JSON.stringify($json) }}" },
+            { "name": "source", "value": "n8n-cloudflare-manager" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1600, 400],
+      "parameters": {
+        "respondWith": "json"
+      }
+    }
+  ],
+  "connections": {
+    "Cloudflare Control Webhook": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Route Action": {
+      "main": [
+        [{ "node": "Purge Cache", "type": "main", "index": 0 }],
+        [{ "node": "Update DNS Record", "type": "main", "index": 0 }],
+        [{ "node": "Manage Firewall Rule", "type": "main", "index": 0 }],
+        [{ "node": "Get Analytics", "type": "main", "index": 0 }],
+        [{ "node": "Check SSL Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "Purge Cache": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Update DNS Record": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Manage Firewall Rule": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Get Analytics": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Check SSL Status": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Audit Log", "type": "main", "index": 0 }]] },
+    "Audit Log": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["ops", "cloudflare", "dns", "cdn", "security"]
+}

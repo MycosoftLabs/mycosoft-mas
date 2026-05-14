@@ -1,0 +1,80 @@
+{
+  "name": "PersonaPlex Voice Gateway",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "personaplex/voice",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "personaplex-webhook",
+      "name": "PersonaPlex Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "webhookId": "personaplex-voice-gateway"
+    },
+    {
+      "parameters": {
+        "jsCode": "// PersonaPlex Voice Gateway - Route voice/text to MYCA\nconst input = $input.first().json;\nconst startTime = Date.now();\n\n// Extract voice/text data\nconst transcript = input.transcript || input.message || input.text || '';\nconst audioData = input.audio_base64 || null;\nconst sessionId = input.session_id || `pp_${Date.now()}`;\nconst voiceId = input.voice_id || 'NATURAL_F2';\nconst modality = input.modality || (audioData ? 'voice' : 'text');\n\n// Conversation context\nconst context = {\n  session_id: sessionId,\n  voice_id: voiceId,\n  modality: modality,\n  has_audio: !!audioData,\n  timestamp: new Date().toISOString(),\n  latency_start: startTime\n};\n\nreturn {\n  json: {\n    transcript: transcript,\n    audio_base64: audioData,\n    session_id: sessionId,\n    voice_id: voiceId,\n    modality: modality,\n    context: context,\n    route_to: 'myca_orchestrator'\n  }\n};"
+      },
+      "id": "parse-voice-input",
+      "name": "Parse Voice Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/voice/orchestrator/chat",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "message", "value": "={{ $json.transcript }}" },
+            { "name": "session_id", "value": "={{ $json.session_id }}" },
+            { "name": "source", "value": "personaplex" },
+            { "name": "modality", "value": "={{ $json.modality }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      },
+      "id": "call-myca-orchestrator",
+      "name": "Call MYCA Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process MYCA response for PersonaPlex\nconst mycaResponse = $input.first().json;\nconst context = $('Parse Voice Input').first().json.context;\nconst latency = Date.now() - context.latency_start;\n\nconst responseText = mycaResponse.response_text || mycaResponse.response || '';\nconst agentName = mycaResponse.agent_name || 'MYCA';\nconst actionsTaken = mycaResponse.actions_taken || [];\n\n// Log actions for debugging\nconst actionLog = actionsTaken.map(a => `${a.type}: ${JSON.stringify(a.detail)}`).join(', ');\n\nreturn {\n  json: {\n    status: 'success',\n    session_id: context.session_id,\n    response_text: responseText,\n    agent_name: agentName,\n    voice_id: context.voice_id,\n    modality: context.modality,\n    latency_ms: latency,\n    actions_taken: actionsTaken,\n    action_log: actionLog,\n    conversation_id: mycaResponse.conversation_id,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [980, 300]
+    }
+  ],
+  "connections": {
+    "PersonaPlex Webhook": { "main": [[{ "node": "Parse Voice Input", "type": "main", "index": 0 }]] },
+    "Parse Voice Input": { "main": [[{ "node": "Call MYCA Orchestrator", "type": "main", "index": 0 }]] },
+    "Call MYCA Orchestrator": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "PersonaPlex" }, { "name": "Voice" }]
+}

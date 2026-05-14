@@ -21,16 +21,21 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.agents.clusters.taco.ocean_predictor_agent import OceanPredictorAgent
 from mycosoft_mas.agents.clusters.taco.signal_classifier_agent import SignalClassifierAgent
+from mycosoft_mas.core.auth.internal_service import require_internal_service_token
 from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
 
 logger = logging.getLogger("VoiceCommandAPI")
 
-router = APIRouter(prefix="/voice", tags=["voice"])
+router = APIRouter(
+    prefix="/voice",
+    tags=["voice"],
+    dependencies=[Depends(require_internal_service_token)],
+)
 sensor_network_client = MaritimeSensorNetworkClient()
 signal_classifier_agent = SignalClassifierAgent(config={})
 ocean_predictor_agent = OceanPredictorAgent(config={})

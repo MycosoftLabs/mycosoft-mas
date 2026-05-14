@@ -18,7 +18,7 @@ except ImportError:
 # Configuration
 MAS_VM_IP = "192.168.0.188"
 MAS_VM_USER = "mycosoft"
-GEMINI_KEY = "AIzaSyA1XciZWVlg-P0EI5D3tCQzqHkoW877LoY"
+GEMINI_KEY = os.getenv("GEMINI_API_KEY", "")
 MAS_VM_PASS = os.environ.get("VM_PASSWORD")
 
 if not MAS_VM_PASS:

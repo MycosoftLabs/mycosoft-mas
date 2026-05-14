@@ -1,0 +1,152 @@
+{
+  "name": "Native: DevTools",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "dev-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific dev tool integration\nconst input = $input.item.json;\nconst integrationName = input.integration.integration;\nreturn [{ json: { ...input, routing_node: integrationName } }];"
+      },
+      "id": "dev-router",
+      "name": "Dev Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "github", "name": "=github", "value": "={{ $json.routing_node === 'github' }}", "type": "boolean" },
+            { "id": "gitlab", "name": "=gitlab", "value": "={{ $json.routing_node === 'gitlab' }}", "type": "boolean" },
+            { "id": "jira", "name": "=jira", "value": "={{ $json.routing_node === 'jira' }}", "type": "boolean" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dev-flags",
+      "name": "Prepare Switch",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "dataType": "boolean",
+        "value1": "={{ $json.github }}",
+        "rules": {
+          "rules": [
+            { "value2": true, "output": 0 },
+            { "value2": "={{ $json.gitlab }}", "output": 1 },
+            { "value2": "={{ $json.jira }}", "output": 2 }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "dev-switch",
+      "name": "Switch: DevTools",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "resource": "issue",
+        "operation": "create",
+        "owner": "={{ $json.command.params.owner || 'mycosoft' }}",
+        "repository": "={{ $json.command.params.repo || 'sandbox' }}",
+        "title": "={{ $json.command.params.title || 'MYCA issue' }}",
+        "body": "={{ $json.command.params.body || 'Created by MYCA router' }}"
+      },
+      "id": "github-node",
+      "name": "GitHub Issue",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [1120, 80],
+      "credentials": {
+        "githubApi": { "name": "GitHub" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "resource": "issue",
+        "projectId": "={{ $json.command.params.project_id || 1 }}",
+        "title": "={{ $json.command.params.title || 'MYCA issue' }}",
+        "description": "={{ $json.command.params.body || 'Created by MYCA router' }}"
+      },
+      "id": "gitlab-node",
+      "name": "GitLab Issue",
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1.1,
+      "position": [1120, 260],
+      "credentials": {
+        "gitlabApi": { "name": "GitLab" }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "issue",
+        "operation": "create",
+        "summary": "={{ $json.command.params.summary || 'MYCA issue' }}",
+        "description": "={{ $json.command.params.body || 'Created by MYCA router' }}",
+        "project": "={{ $json.command.params.project_key || 'OPS' }}"
+      },
+      "id": "jira-node",
+      "name": "Jira Issue",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 3,
+      "position": [1120, 440],
+      "credentials": {
+        "jiraApi": { "name": "Jira" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;return [{json:{error:true,message:`Integration ${input.integration.integration} not implemented in devtools native handler`,request_id:input.request_id}}];"
+      },
+      "id": "dev-fallback",
+      "name": "DevTools Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:input.integration.integration,action:input.command.action,result:result,timestamp:new Date().toISOString()}}];"
+      },
+      "id": "format-dev",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": { "main": [[{ "node": "Dev Router", "type": "main", "index": 0 }]] },
+    "Dev Router": { "main": [[{ "node": "Prepare Switch", "type": "main", "index": 0 }]] },
+    "Prepare Switch": { "main": [[{ "node": "Switch: DevTools", "type": "main", "index": 0 }]] },
+    "Switch: DevTools": {
+      "main": [
+        [{ "node": "GitHub Issue", "type": "main", "index": 0 }],
+        [{ "node": "GitLab Issue", "type": "main", "index": 0 }],
+        [{ "node": "Jira Issue", "type": "main", "index": 0 }],
+        [{ "node": "DevTools Fallback", "type": "main", "index": 0 }]
+      ]
+    },
+    "GitHub Issue": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "GitLab Issue": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Jira Issue": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "DevTools Fallback": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "id": "myca-native", "name": "MYCA Native" }],
+  "triggerCount": 0,
+  "versionId": "1"
+}

@@ -1,0 +1,67 @@
+{
+  "name": "MINDEX: Device distribution snapshot (May 03, 2026)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 6 }]
+        }
+      },
+      "id": "sched-6h",
+      "name": "Every 6 hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/devices",
+        "options": { "timeout": 30000 }
+      },
+      "id": "mas-devices",
+      "name": "MAS devices",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 240]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/api/mindex/network/nodes",
+        "options": { "timeout": 30000 }
+      },
+      "id": "mindex-nodes",
+      "name": "MINDEX network nodes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 380]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ok: true, note: 'device-distribution-agent: correlate responses in MAS when posting suggestions is enabled.', ts: new Date().toISOString() } }];"
+      },
+      "id": "merge-note",
+      "name": "Merge note",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 300]
+    }
+  ],
+  "connections": {
+    "Every 6 hours": {
+      "main": [
+        [
+          { "node": "MAS devices", "type": "main", "index": 0 },
+          { "node": "MINDEX network nodes", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "MAS devices": { "main": [[{ "node": "Merge note", "type": "main", "index": 0 }]] },
+    "MINDEX network nodes": { "main": [[{ "node": "Merge note", "type": "main", "index": 1 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1", "timezone": "America/Los_Angeles" },
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "mindex" }, { "name": "devices" }]
+}

@@ -14,9 +14,12 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Optional, Set
+from typing import Any, Optional, Set
 
+import aiohttp
 from aiohttp import web
+
+from mycosoft_mas.core.myca_identity import resolve_aiohttp_identity
 
 logger = logging.getLogger("myca.os.gateway")
 
@@ -278,16 +281,25 @@ async def handle_message_post(request: web.Request) -> web.Response:
     content = body.get("content", body.get("message", ""))
     if not content:
         return web.json_response({"error": "content required"}, status=400)
+    identity = resolve_aiohttp_identity(request.headers)
 
     msg = {
         "source": body.get("source", "api"),
         "sender": body.get("sender", "api"),
         "sender_id": body.get("sender_id"),
         "content": content,
-        "is_morgan": body.get("is_morgan", False),
+        "is_morgan": identity.is_creator,
+        "verified_is_morgan": identity.is_creator,
+        "runtime_context": identity.runtime_context(),
     }
     asyncio.create_task(os_ref._handle_message(msg))
-    return web.json_response({"status": "accepted", "content": content[:100]})
+    return web.json_response(
+        {
+            "status": "accepted",
+            "content": content[:100],
+            "runtime_context": identity.runtime_context(),
+        }
+    )
 
 
 async def handle_shell_post(request: web.Request) -> web.Response:
@@ -342,7 +354,44 @@ async def handle_sessions(request: web.Request) -> web.Response:
     """GET /sessions — Active conversation sessions (placeholder)."""
     if not _is_authorized_request(request):
         return _auth_error()
-    return web.json_response({"sessions": []})
+    os_ref = request.app.get("myca_os")
+    if not os_ref:
+        return web.json_response({"sessions": [], "count": 0, "error": "no_os"})
+    sessions: list[dict[str, Any]] = []
+    try:
+        ctx = getattr(os_ref, "ctx", None)
+        state = getattr(ctx, "state", "unknown")
+        sessions.append(
+            {
+                "id": "myca-os",
+                "type": "daemon",
+                "state": getattr(state, "value", str(state)),
+                "messages_processed_today": getattr(ctx, "messages_processed_today", 0),
+                "tasks_completed_today": getattr(ctx, "tasks_completed_today", 0),
+                "last_morgan_contact": str(getattr(ctx, "last_morgan_contact", "")),
+            }
+        )
+        executive = getattr(os_ref, "executive", None)
+        for idx, task in enumerate(getattr(executive, "_task_queue", [])[-25:]):
+            priority = getattr(task, "priority", "")
+            sessions.append(
+                {
+                    "id": getattr(task, "id", None)
+                    or getattr(task, "db_id", None)
+                    or f"task-{idx}",
+                    "type": "task",
+                    "title": getattr(task, "title", ""),
+                    "status": getattr(task, "status", ""),
+                    "priority": getattr(priority, "value", priority),
+                    "source": getattr(task, "source", ""),
+                }
+            )
+        return web.json_response({"sessions": sessions, "count": len(sessions)})
+    except Exception as e:
+        return web.json_response(
+            {"sessions": sessions, "count": len(sessions), "error": str(e)},
+            status=500,
+        )
 
 
 async def handle_skills(request: web.Request) -> web.Response:
@@ -642,8 +691,60 @@ async def handle_investor_draft(request: web.Request) -> web.Response:
     content = tpl_path.read_text()
     content = content.replace("[YYYY-MM-DD]", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
     content = content.replace("[Quarter/Period]", str(period))
-    # TODO: Fetch metrics from MINDEX when /api/mindex/metrics available
-    return web.json_response({"draft": content, "period": period})
+    metrics = await _fetch_investor_metrics(request.app.get("myca_os"))
+    metrics_block = _format_investor_metrics(metrics)
+    content = content.replace("[Metrics]", metrics_block)
+    content = content.replace("{{metrics}}", metrics_block)
+    return web.json_response({"draft": content, "period": period, "metrics": metrics})
+
+
+async def _fetch_investor_metrics(os_ref: Any) -> dict[str, Any]:
+    bridge = getattr(os_ref, "mindex_bridge", None) if os_ref else None
+    if bridge and hasattr(bridge, "get_live_integration_state"):
+        try:
+            state = await bridge.get_live_integration_state()
+            return {"available": True, "source": "mindex_bridge", "state": state}
+        except Exception as e:
+            logger.warning("Investor metrics via MINDEX bridge failed: %s", e)
+
+    base = (os.getenv("MINDEX_API_URL") or os.getenv("MINDEX_URL") or "").rstrip("/")
+    if not base:
+        return {"available": False, "source": "none", "reason": "MINDEX URL not configured"}
+
+    headers = {}
+    if os.getenv("MINDEX_INTERNAL_TOKEN"):
+        headers["X-Internal-Token"] = os.getenv("MINDEX_INTERNAL_TOKEN", "")
+    if os.getenv("MINDEX_API_KEY"):
+        headers["X-API-Key"] = os.getenv("MINDEX_API_KEY", "")
+
+    for path in ("/api/mindex/metrics", "/metrics/investor", "/api/mindex/state/live"):
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=8)) as session:
+                async with session.get(f"{base}{path}", headers=headers or None) as resp:
+                    if resp.status == 200:
+                        return {
+                            "available": True,
+                            "source": f"{base}{path}",
+                            "state": await resp.json(),
+                        }
+        except Exception as e:
+            logger.debug("Investor metrics candidate failed: %s", e)
+    return {"available": False, "source": base, "reason": "No metrics endpoint responded"}
+
+
+def _format_investor_metrics(metrics: dict[str, Any]) -> str:
+    if not metrics.get("available"):
+        return f"_Metrics unavailable: {metrics.get('reason', 'MINDEX did not respond')}._"
+    state = metrics.get("state") or {}
+    if not isinstance(state, dict):
+        return str(state)
+    lines = []
+    for key in ("revenue", "runway", "active_projects", "agent_count", "mindex_records", "uptime"):
+        if key in state:
+            lines.append(f"- {key.replace('_', ' ').title()}: {state[key]}")
+    if not lines:
+        lines = [f"- {k.replace('_', ' ').title()}: {v}" for k, v in list(state.items())[:10]]
+    return "\n".join(lines) if lines else "_Metrics endpoint returned no investor fields._"
 
 
 async def handle_standup_prompt(request: web.Request) -> web.Response:

@@ -1,0 +1,154 @@
+{
+  "name": "Voice Event Notifications Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice/events/notify",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-event",
+      "name": "Event Notification Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.priority }}",
+              "operation": "equals",
+              "value2": "critical"
+            }
+          ]
+        }
+      },
+      "id": "check-priority",
+      "name": "Is Critical?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://personaplex-bridge:8999/api/interrupt",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=URGENT: {{ $json.message }}"
+            },
+            {
+              "name": "interrupt",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "critical-announce",
+      "name": "Critical Announce",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://personaplex-bridge:8999/api/queue",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "priority",
+              "value": "={{ $json.priority }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "queue-announce",
+      "name": "Queue Announce",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/memory/store",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "=Event: {{ $json.event_type }} - {{ $json.message }}"
+            },
+            {
+              "name": "memory_type",
+              "value": "history"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $json.user_id || 'system' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-event",
+      "name": "Log Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "notified"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-response",
+      "name": "Set Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1150, 300]
+    }
+  ],
+  "connections": {
+    "Event Notification Webhook": {
+      "main": [[{"node": "Is Critical?", "type": "main", "index": 0}]]
+    },
+    "Is Critical?": {
+      "main": [
+        [{"node": "Critical Announce", "type": "main", "index": 0}],
+        [{"node": "Queue Announce", "type": "main", "index": 0}]
+      ]
+    },
+    "Critical Announce": {
+      "main": [[{"node": "Log Event", "type": "main", "index": 0}]]
+    },
+    "Queue Announce": {
+      "main": [[{"node": "Log Event", "type": "main", "index": 0}]]
+    },
+    "Log Event": {
+      "main": [[{"node": "Set Response", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["voice", "events", "notifications", "myca"]
+}

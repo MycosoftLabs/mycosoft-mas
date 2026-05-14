@@ -25,7 +25,7 @@ import httpx
 
 # Configuration
 N8N_URL = os.getenv("N8N_URL", "http://localhost:5678")
-N8N_API_KEY = os.getenv("N8N_API_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1YTYxMTEyYS00YWViLTQwYTItYTUwNC1iZDY3YWZhOGU1NWIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzY5NTM4NzM0LCJleHAiOjE3NzIwOTI4MDB9.I1mgswouNspryGfJfIiVz-tOhW0iBQg5f0OfJbwxWvw")
+N8N_API_KEY = os.getenv("N8N_API_KEY", "")
 WORKFLOWS_DIR = Path(__file__).parent.parent / "n8n" / "workflows"
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')

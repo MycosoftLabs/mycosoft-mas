@@ -97,7 +97,7 @@ def deploy_mas():
         "cd /home/mycosoft/mycosoft/mas && docker build -t mycosoft/mas-agent:latest --no-cache .",
         "docker stop myca-orchestrator-new || true",
         "docker rm myca-orchestrator-new || true",
-        "docker run -d --name myca-orchestrator-new --restart unless-stopped -p 8001:8000 -v /home/mycosoft/data:/app/data -e GEMINI_API_KEY=AIzaSyA1XciZWVlg-P0EI5D3tCQzqHkoW877LoY mycosoft/mas-agent:latest",
+        "docker run -d --name myca-orchestrator-new --restart unless-stopped -p 8001:8000 -v /home/mycosoft/data:/app/data -e GEMINI_API_KEY=${GEMINI_API_KEY} mycosoft/mas-agent:latest",
     ]
     
     success, outputs = ssh_execute(MAS_VM, commands, "Deploying MAS")

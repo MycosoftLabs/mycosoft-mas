@@ -1,0 +1,158 @@
+{
+  "name": "Business: Financial Reconciliation",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Daily at 6 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 6 * * *" }] }
+      }
+    },
+    {
+      "id": "webhook",
+      "name": "Manual Reconciliation",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "business/finance/reconcile",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "fetch_stripe",
+      "name": "Fetch Stripe Transactions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/finance/stripe/transactions",
+        "qs": { "period": "yesterday" },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "fetch_internal",
+      "name": "Fetch Internal Ledger",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/finance/ledger/transactions",
+        "qs": { "period": "yesterday" },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "fetch_expenses",
+      "name": "Fetch Infrastructure Costs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 600],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/finance/expenses/daily",
+        "qs": { "date": "={{ new Date(Date.now() - 86400000).toISOString().split('T')[0] }}" },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "reconcile",
+      "name": "Reconcile All Sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [800, 400],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst stripe = items[0]?.json?.transactions || [];\nconst ledger = items[1]?.json?.transactions || [];\nconst expenses = items[2]?.json || {};\n\nconst yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];\n\n// Reconcile stripe vs internal ledger\nconst stripeTotal = stripe.reduce((sum, t) => sum + (t.amount || 0), 0) / 100; // cents to dollars\nconst ledgerTotal = ledger.reduce((sum, t) => sum + (t.amount || 0), 0);\nconst discrepancy = Math.abs(stripeTotal - ledgerTotal);\n\n// Track unmatched transactions\nconst stripeIds = new Set(stripe.map(t => t.id));\nconst ledgerStripeIds = new Set(ledger.filter(t => t.stripe_id).map(t => t.stripe_id));\nconst unmatchedStripe = [...stripeIds].filter(id => !ledgerStripeIds.has(id));\nconst unmatchedLedger = ledger.filter(t => t.stripe_id && !stripeIds.has(t.stripe_id));\n\n// Expense tracking\nconst dailyExpenses = {\n  infrastructure: expenses.infrastructure || 0,\n  api_costs: expenses.api_costs || 0,\n  services: expenses.services || 0,\n  total: (expenses.infrastructure || 0) + (expenses.api_costs || 0) + (expenses.services || 0)\n};\n\n// Monthly projection\nconst dayOfMonth = new Date().getDate();\nconst projectedMonthly = dailyExpenses.total * 30;\n\nconst report = {\n  date: yesterday,\n  timestamp: new Date().toISOString(),\n  revenue: {\n    stripe_total: stripeTotal,\n    ledger_total: ledgerTotal,\n    discrepancy: discrepancy,\n    matched: discrepancy < 1.0,\n    unmatched_stripe: unmatchedStripe.length,\n    unmatched_ledger: unmatchedLedger.length\n  },\n  expenses: dailyExpenses,\n  net: stripeTotal - dailyExpenses.total,\n  projected_monthly_expenses: projectedMonthly,\n  has_issues: discrepancy > 1.0 || unmatchedStripe.length > 0 || unmatchedLedger.length > 0,\n  issues: []\n};\n\nif (discrepancy > 1.0) {\n  report.issues.push(`Revenue discrepancy: $${discrepancy.toFixed(2)} between Stripe and ledger`);\n}\nif (unmatchedStripe.length > 0) {\n  report.issues.push(`${unmatchedStripe.length} Stripe transactions not in internal ledger`);\n}\nif (projectedMonthly > 500) {\n  report.issues.push(`Monthly expense projection: $${projectedMonthly.toFixed(2)} (review recommended)`);\n}\n\nreturn [{ json: report }];"
+      }
+    },
+    {
+      "id": "check_issues",
+      "name": "Has Issues?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "parameters": {
+        "conditions": { "boolean": [{ "value1": "={{ $json.has_issues }}", "value2": true }] }
+      }
+    },
+    {
+      "id": "alert",
+      "name": "Finance Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "medium" },
+            { "name": "title", "value": "Financial Reconciliation Issues" },
+            { "name": "message", "value": "={{ $json.issues.join('\\n') }}" },
+            { "name": "channels", "value": "[\"email\"]" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "store_report",
+      "name": "Store Financial Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/finance/reports/store",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "type", "value": "daily_reconciliation" },
+            { "name": "report", "value": "={{ JSON.stringify($json) }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1550, 500],
+      "parameters": { "respondWith": "json" }
+    }
+  ],
+  "connections": {
+    "Daily at 6 AM": { "main": [[
+      { "node": "Fetch Stripe Transactions", "type": "main", "index": 0 },
+      { "node": "Fetch Internal Ledger", "type": "main", "index": 0 },
+      { "node": "Fetch Infrastructure Costs", "type": "main", "index": 0 }
+    ]] },
+    "Manual Reconciliation": { "main": [[
+      { "node": "Fetch Stripe Transactions", "type": "main", "index": 0 },
+      { "node": "Fetch Internal Ledger", "type": "main", "index": 0 },
+      { "node": "Fetch Infrastructure Costs", "type": "main", "index": 0 }
+    ]] },
+    "Fetch Stripe Transactions": { "main": [[{ "node": "Reconcile All Sources", "type": "main", "index": 0 }]] },
+    "Fetch Internal Ledger": { "main": [[{ "node": "Reconcile All Sources", "type": "main", "index": 0 }]] },
+    "Fetch Infrastructure Costs": { "main": [[{ "node": "Reconcile All Sources", "type": "main", "index": 0 }]] },
+    "Reconcile All Sources": { "main": [[{ "node": "Has Issues?", "type": "main", "index": 0 }]] },
+    "Has Issues?": {
+      "main": [
+        [{ "node": "Finance Alert", "type": "main", "index": 0 }],
+        [{ "node": "Store Financial Report", "type": "main", "index": 0 }]
+      ]
+    },
+    "Finance Alert": { "main": [[{ "node": "Store Financial Report", "type": "main", "index": 0 }]] },
+    "Store Financial Report": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["business", "finance", "reconciliation", "daily"]
+}

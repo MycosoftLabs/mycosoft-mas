@@ -1,0 +1,120 @@
+{
+  "name": "MYCA - Signal to MAS",
+  "nodes": [
+    {
+      "id": "signal-webhook-trigger",
+      "name": "Signal Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "path": "myca/signal",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "id": "parse-signal-message",
+      "name": "Parse Signal Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "values": [
+          {
+            "name": "sender_phone",
+            "type": "string",
+            "value": "={{ $node[\"Signal Webhook Trigger\"].json.body.sender }}"
+          },
+          {
+            "name": "message_text",
+            "type": "string",
+            "value": "={{ $node[\"Signal Webhook Trigger\"].json.body.text }}"
+          },
+          {
+            "name": "timestamp",
+            "type": "number",
+            "value": "={{ $node[\"Signal Webhook Trigger\"].json.body.timestamp }}"
+          },
+          {
+            "name": "session_id",
+            "type": "string",
+            "value": "=signal_{{ $node[\"Signal Webhook Trigger\"].json.body.sender }}_{{ Date.now() }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "http-post-signal-mas",
+      "name": "HTTP POST to MAS Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 100],
+      "parameters": {
+        "url": "http://localhost:8001/voice/orchestrator/chat",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyType": "json",
+        "body": {
+          "message": "={{ $node[\"Parse Signal Message\"].json.message_text }}",
+          "session_id": "={{ $node[\"Parse Signal Message\"].json.session_id }}",
+          "platform": "signal",
+          "sender": "={{ $node[\"Parse Signal Message\"].json.sender_phone }}",
+          "timestamp": "={{ $node[\"Parse Signal Message\"].json.timestamp }}"
+        }
+      }
+    },
+    {
+      "id": "format-signal-response",
+      "name": "Format Signal Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "values": [
+          {
+            "name": "response_text",
+            "type": "string",
+            "value": "={{ $node[\"HTTP POST to MAS Orchestrator\"].json.response || \"No response received\" }}"
+          },
+          {
+            "name": "recipient",
+            "type": "string",
+            "value": "={{ $node[\"Parse Signal Message\"].json.sender_phone }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "signal-send-message",
+      "name": "Signal Send Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 100],
+      "parameters": {
+        "url": "http://localhost:8089/v2/send",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyType": "json",
+        "body": {
+          "recipient": "={{ $node[\"Format Signal Response\"].json.recipient }}",
+          "message": "={{ $node[\"Format Signal Response\"].json.response_text }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Signal Webhook Trigger": [{"node": ["Parse Signal Message"], "type": "main", "index": [0, 0]}],
+    "Parse Signal Message": [{"node": ["HTTP POST to Signal MAS"], "type": "main", "index": [0, 0]}],
+    "HTTP POST to Signal MAS": [{"node": ["Format Signal Response"], "type": "main", "index": [0, 0]}],
+    "Format Signal Response": [{"node": ["Signal Send Message"], "type": "main", "index": [0, 0]}]
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{"name": "MYCA"}, {"name": "Signal"}, {"name": "Integration"}]
+}

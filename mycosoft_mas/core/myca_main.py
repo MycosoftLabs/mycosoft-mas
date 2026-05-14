@@ -16,8 +16,7 @@ try:
 
     _env_path = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
     if os.path.exists(_env_path):
-        # Prefer repo .env over inherited empty vars (e.g. EARTH2_API_URL for remote Legion proxy).
-        load_dotenv(_env_path, override=True)
+        load_dotenv(_env_path)
 except ImportError:
     pass
 
@@ -25,25 +24,33 @@ import subprocess
 import threading
 import time
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from mycosoft_mas import __version__
+from mycosoft_mas.core.myca_identity import (
+    audit_security_event,
+    build_identity_security_prompt,
+    detect_identity_claim,
+    is_privileged_intent,
+    is_untrusted_privileged_request,
+    resolve_fastapi_identity,
+    verification_boundary_response,
+)
 from mycosoft_mas.core.rate_limit import RateLimitMiddleware
 
 # FCI (Fungal Computer Interface) routers
-from mycosoft_mas.core.routers import fci as fci_router
-from mycosoft_mas.core.routers import fci_websocket as fci_websocket_router
+from mycosoft_mas.core.routers.fci_api import router as fci_router
+from mycosoft_mas.core.routers.fci_websocket import router as fci_websocket_router
 from mycosoft_mas.core.routers.agent_registry_api import get_agent_registry
 from mycosoft_mas.core.routers.agent_registry_api import router as agent_registry_router
 from mycosoft_mas.core.routers.agent_runner_api import router as agent_runner_router
-from mycosoft_mas.core.routers.agents import api_agents_alias
 from mycosoft_mas.core.routers.agents import router as agents_router
 from mycosoft_mas.core.routers.alert_api import router as alert_router
 from mycosoft_mas.core.routers.api_keys import router as api_keys_router
@@ -54,18 +61,11 @@ from mycosoft_mas.core.routers.coding_api import router as coding_router
 from mycosoft_mas.core.routers.conversation_memory_api import router as conversation_memory_router
 from mycosoft_mas.core.routers.csuite_api import router as csuite_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
-from mycosoft_mas.core.routers.compliance_api import router as compliance_api_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
 from mycosoft_mas.core.routers.documents import router as documents_router
-from mycosoft_mas.core.routers.incidents_api import router as incidents_api_router
 from mycosoft_mas.core.routers.earth_search_api import router as earth_search_router
 from mycosoft_mas.core.routers.ethics_api import router as ethics_router
 from mycosoft_mas.core.routers.ethics_training_api import router as ethics_training_router
-from mycosoft_mas.core.routers.eagle_eye_api import router as eagle_eye_router
-from mycosoft_mas.core.routers.environmental_feeds_mvp_api import (
-    router as environmental_feeds_mvp_router,
-)
-from mycosoft_mas.core.routers.natureos_lab_mvp_api import router as natureos_lab_mvp_router
 from mycosoft_mas.core.routers.event_ledger_api import router as event_ledger_router
 from mycosoft_mas.core.routers.evolution_api import router as evolution_router
 from mycosoft_mas.core.routers.fleet_api import router as fleet_router
@@ -74,7 +74,6 @@ from mycosoft_mas.core.routers.fusarium_platform_api import router as fusarium_p
 from mycosoft_mas.core.routers.gap_api import router as gap_api_router
 from mycosoft_mas.core.routers.guardian_api import router as guardian_router
 from mycosoft_mas.core.routers.ingest_api import router as ingest_router
-from mycosoft_mas.core.routers.meshtastic_api import router as meshtastic_api_router
 from mycosoft_mas.core.routers.integrations import router as integrations_router
 from mycosoft_mas.core.routers.investigation_api import router as investigation_router
 from mycosoft_mas.core.routers.iot_analytics_api import router as iot_analytics_router
@@ -86,7 +85,6 @@ from mycosoft_mas.core.routers.nlq_api import router as nlq_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.orchestrator_api import router as orchestrator_api_router
 from mycosoft_mas.core.routers.petri_sim_api import router as petri_sim_router
-from mycosoft_mas.core.routers.petri_sim_v2_api import router as petri_sim_v2_router
 from mycosoft_mas.core.routers.plasticity_api import plasticity_router
 from mycosoft_mas.core.routers.platform_api import router as platform_router
 from mycosoft_mas.core.routers.presence_api import router as presence_router
@@ -101,6 +99,7 @@ from mycosoft_mas.core.routers.scientific_experiments_api import (
 )
 from mycosoft_mas.core.routers.scientific_ws import router as scientific_ws_router
 from mycosoft_mas.core.routers.search_orchestrator_api import router as search_orchestrator_router
+from mycosoft_mas.core.routers.search_memory_api import router as search_memory_router
 from mycosoft_mas.core.routers.security_audit_api import router as security_router
 from mycosoft_mas.core.routers.sporebase_api import router as sporebase_router
 from mycosoft_mas.core.routers.spreadsheet_sync_api import router as spreadsheet_sync_router
@@ -747,7 +746,6 @@ app.include_router(agent_registry_router)
 app.include_router(orchestrator_api_router)
 app.include_router(agent_runner_router)
 app.include_router(agents_router)
-app.include_router(api_agents_alias)
 app.include_router(gap_api_router)
 app.include_router(coding_router)
 app.include_router(integrations_router)
@@ -757,7 +755,6 @@ app.include_router(documents_router)
 app.include_router(api_keys_router, tags=["api-keys"])
 app.include_router(evolution_router)
 app.include_router(petri_sim_router)
-app.include_router(petri_sim_v2_router)
 app.include_router(plasticity_router, tags=["plasticity", "myca2"])
 
 # Scientific platform routers
@@ -771,9 +768,6 @@ app.include_router(autonomous_router, prefix="/autonomous", tags=["autonomous"])
 app.include_router(bio_router, prefix="/bio", tags=["bio-compute"])
 app.include_router(fusarium_router, prefix="/api/fusarium", tags=["fusarium"])
 app.include_router(fusarium_platform_router, prefix="/api/fusarium", tags=["fusarium-platform"])
-app.include_router(eagle_eye_router, prefix="/api/eagle-eye", tags=["eagle-eye"])
-app.include_router(natureos_lab_mvp_router, tags=["natureos-lab-mvp"])
-app.include_router(environmental_feeds_mvp_router, tags=["natureos-environmental-feeds"])
 app.include_router(redteam_router, tags=["redteam"])
 app.include_router(ethics_router)
 app.include_router(ethics_training_router)
@@ -790,26 +784,7 @@ if OPENVIKING_API_AVAILABLE:
     app.include_router(openviking_router, tags=["openviking", "edge-memory"])
 app.include_router(nlq_router, tags=["nlq"])
 app.include_router(search_orchestrator_router, tags=["search"])
-
-# MYCA Harness — Nemotron / PersonaPlex / MINDEX search-in-LLM / optional NLM (mounted by default; opt-out)
-def _mount_harness_api() -> bool:
-    if os.environ.get("HARNESS_API_DISABLED", "").strip().lower() in ("1", "true", "yes", "on"):
-        return False
-    # Legacy explicit off
-    if os.environ.get("HARNESS_API_ENABLED", "").strip().lower() in ("0", "false", "no", "off"):
-        return False
-    return True
-
-
-if _mount_harness_api():
-    try:
-        from mycosoft_mas.harness.api import router as harness_api_router
-
-        app.include_router(harness_api_router)
-    except ImportError as e:
-        import logging as _logging
-
-        _logging.getLogger(__name__).warning("Harness API import failed (set HARNESS_API_DISABLED=1 to silence): %s", e)
+app.include_router(search_memory_router, tags=["search-memory"])
 app.include_router(earth_search_router, tags=["earth-search"])
 if IOT_ENVELOPE_AVAILABLE and iot_router is not None:
     app.include_router(iot_router, tags=["iot"])
@@ -822,8 +797,6 @@ if IDENTITY_API_AVAILABLE and identity_router is not None:
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
-app.include_router(incidents_api_router)
-app.include_router(compliance_api_router)
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)
 app.include_router(csuite_router, tags=["csuite"])
 # CFO MCP API (Meridian adapter — finance discovery, delegation, reporting)
@@ -835,7 +808,6 @@ app.include_router(deploy_router)
 # Master Spreadsheet Sync API (n8n, Zapier)
 app.include_router(spreadsheet_sync_router)
 app.include_router(ingest_router)
-app.include_router(meshtastic_api_router, tags=["meshtastic"])
 app.include_router(investigation_router, tags=["investigation"])
 # IoT Alert Service API
 app.include_router(alert_router, tags=["iot-alerts"])
@@ -1179,8 +1151,104 @@ async def health() -> dict[str, Any]:
     result["version"] = __version__
     result["git_sha"] = await _resolve_git_sha()
     result.setdefault("services", {})["api"] = "ok"
+    result["myca_route_mounts"] = _myca_route_mounts()
+    result["myca_deploy_readiness"] = await _myca_deploy_readiness_summary()
     result.setdefault("agents", [])
     return result
+
+
+def _myca_route_mounts() -> dict[str, bool]:
+    paths = {getattr(route, "path", "") for route in app.routes}
+    return {
+        "consciousness_chat": "/api/myca/chat" in paths,
+        "grounding_status": "/api/myca/grounding/status" in paths,
+        "conversation_memory": "/memory/conversations" in paths,
+        "search_memory": "/api/search/memory/start" in paths,
+        "voice_orchestrator": "/voice/orchestrator/chat" in paths
+        or "/voice/orchestrator/chat" in paths,
+    }
+
+
+@app.get("/myca/route-mounts")
+async def myca_route_mounts() -> dict[str, Any]:
+    mounts = _myca_route_mounts()
+    return {
+        "status": "ok" if all(mounts.values()) else "degraded",
+        "mounts": mounts,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+async def _myca_deploy_readiness_summary() -> dict[str, Any]:
+    import hashlib
+    import os
+    import subprocess
+    import sys
+    import urllib.request
+
+    token = (
+        os.getenv("MYCA_INTERNAL_SERVICE_TOKEN")
+        or os.getenv("MAS_INTERNAL_SERVICE_TOKEN")
+        or os.getenv("MYCA_MAS_SERVICE_TOKEN")
+        or ""
+    )
+    token_status = {
+        "configured": bool(token),
+        "fingerprint": hashlib.sha256(token.encode("utf-8")).hexdigest()[:16] if token else None,
+        "header": "X-MYCA-Service-Token",
+    }
+
+    n8n_base = (os.getenv("N8N_URL") or os.getenv("N8N_WEBHOOK_URL") or "http://localhost:5678").rstrip("/")
+    try:
+        with urllib.request.urlopen(f"{n8n_base}/healthz", timeout=3) as response:
+            n8n = {"ok": 200 <= response.status < 300, "url": n8n_base, "status_code": response.status}
+    except Exception as exc:
+        n8n = {"ok": False, "url": n8n_base, "error": exc.__class__.__name__}
+
+    workflow_drift = {"ok": False, "error": "not_checked"}
+    checker_path = Path(__file__).resolve().parents[2] / "scripts" / "check_myca_workflow_drift.py"
+    if checker_path.exists():
+        try:
+            proc = subprocess.run(
+                [sys.executable, str(checker_path)],
+                cwd=str(checker_path.parents[1]),
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            workflow_drift = {"ok": proc.returncode == 0}
+        except Exception as exc:
+            workflow_drift = {"ok": False, "error": exc.__class__.__name__}
+
+    channel_env = {
+        "slack": bool(os.getenv("SLACK_BOT_TOKEN") or os.getenv("SLACK_TOKEN")),
+        "discord": bool(os.getenv("DISCORD_TOKEN") or os.getenv("DISCORD_BOT_TOKEN")),
+        "signal": bool(os.getenv("SIGNAL_PHONE_NUMBER") or os.getenv("SIGNAL_CLI_NUMBER")),
+        "whatsapp": bool(os.getenv("WHATSAPP_ACCESS_TOKEN") or os.getenv("TWILIO_AUTH_TOKEN")),
+        "asana": bool(os.getenv("ASANA_ACCESS_TOKEN") or os.getenv("ASANA_TOKEN")),
+        "email": bool(os.getenv("SMTP_HOST") and os.getenv("SMTP_USER") and os.getenv("SMTP_PASSWORD")),
+    }
+    return {
+        "internal_service_token": token_status,
+        "n8n": n8n,
+        "workflow_drift": workflow_drift,
+        "channels_configured": channel_env,
+    }
+
+
+@app.get("/myca/deploy-readiness")
+async def myca_deploy_readiness() -> dict[str, Any]:
+    summary = await _myca_deploy_readiness_summary()
+    ok = (
+        bool(summary["internal_service_token"]["configured"])
+        and bool(summary["workflow_drift"]["ok"])
+        and bool(summary["n8n"]["ok"])
+    )
+    return {
+        "status": "ok" if ok else "degraded",
+        "readiness": summary,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @app.get("/live")
@@ -1269,12 +1337,28 @@ class VoiceChatResponse(BaseModel):
     agent_name: str
     response_text: str
     matched_agents: list[dict[str, Any]] = Field(default_factory=list)
+    runtime_context: dict[str, Any] = Field(default_factory=dict)
 
 
 @app.post("/voice/orchestrator/chat", response_model=VoiceChatResponse)
-async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatResponse:
+async def voice_orchestrator_chat(
+    payload: VoiceChatRequest, request: Request
+) -> VoiceChatResponse:
     if not payload.message or not payload.message.strip():
         raise HTTPException(status_code=400, detail="Message is required")
+    identity = await resolve_fastapi_identity(request)
+    claimed = detect_identity_claim(payload.message)
+    if claimed or is_privileged_intent(payload.message):
+        audit_security_event(
+            route="/voice/orchestrator/chat",
+            identity=identity,
+            action="myca_main_voice_chat",
+            decision="allowed" if identity.is_superuser else "guest_boundary",
+            claimed_role_phrase=claimed,
+            source_ip=request.client.host if request.client else None,
+            session_id=payload.session_id,
+            details={"actor_ignored_for_auth": payload.actor},
+        )
 
     resolve_n8n_webhook_url()
     # if not webhook_url:
@@ -1289,9 +1373,10 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
 
     agent_name = primary.display_name if primary else "MYCA"
     conversation_id = payload.conversation_id or payload.session_id or str(uuid4())
+    secured_message = build_identity_security_prompt(identity, payload.message)
     request_payload = {
-        "message": payload.message,
-        "actor": payload.actor,
+        "message": secured_message,
+        "actor": identity.user_id,
         "conversation_id": conversation_id,
         "session_id": payload.session_id,
         "primary_agent": agent_name,
@@ -1305,19 +1390,23 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
             }
             for a in matches[:5]
         ],
+        "runtime_context": identity.runtime_context(),
         "timestamp": datetime.utcnow().isoformat(),
     }
 
     response_text = None
-    try:
-        client = get_n8n_client()
-        result = await client.trigger_workflow(N8N_VOICE_WEBHOOK, request_payload)
-        response_text = extract_response_text(result)
-    except Exception as exc:
-        # Log but don't fail - use MYCA fallback
-        import logging
+    if is_untrusted_privileged_request(payload.message, identity):
+        response_text = verification_boundary_response(identity)
+    else:
+        try:
+            client = get_n8n_client()
+            result = await client.trigger_workflow(N8N_VOICE_WEBHOOK, request_payload)
+            response_text = extract_response_text(result)
+        except Exception as exc:
+            # Log but don't fail - use MYCA fallback
+            import logging
 
-        logging.warning(f"N8N workflow failed, using MYCA fallback: {exc}")
+            logging.warning(f"N8N workflow failed, using MYCA fallback: {exc}")
 
     # Use MYCA identity-aware fallback if n8n failed or returned nothing
     if not response_text:
@@ -1353,7 +1442,7 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
                 payload.message,
                 minimal_payload,
                 session_id=payload.session_id,
-                user_id=payload.actor,
+                user_id=identity.user_id,
             )
         )
     except Exception:
@@ -1373,6 +1462,7 @@ async def voice_orchestrator_chat(payload: VoiceChatRequest) -> VoiceChatRespons
             }
             for a in matches[:5]
         ],
+        runtime_context=identity.runtime_context(),
     )
 
 
@@ -1791,46 +1881,6 @@ async def _mas_background_startup() -> None:
     except Exception as exc:
         logger.warning("Deep Agents orchestrator init failed: %s", exc)
 
-    # SOC: LAN discovery + red team L1 (Postgres-backed; no-op without MINDEX_DATABASE_URL)
-    if os.getenv("MINDEX_DATABASE_URL") or os.getenv("DATABASE_URL"):
-        try:
-            from mycosoft_mas.services.network_discovery import start_network_discovery_background
-
-            start_network_discovery_background()
-            logger.info("✓ Network discovery background scheduled (soc_ops.device_inventory)")
-        except Exception as exc:
-            logger.warning("Network discovery start failed: %s", exc)
-        try:
-            from mycosoft_mas.redteam.layer1_safe import start_redteam_layer1_background
-
-            start_redteam_layer1_background()
-            logger.info("✓ Red team Layer 1 background scheduled (safe health/TLS checks)")
-        except Exception as exc:
-            logger.warning("Red team L1 start failed: %s", exc)
-        try:
-            from mycosoft_mas.soc.incident_source_poller import (
-                start_incident_source_poller_background,
-            )
-
-            start_incident_source_poller_background()
-            logger.info("✓ Incident source poller scheduled (diagnostics + UniFi + optional threat intel)")
-        except Exception as exc:
-            logger.warning("Incident source poller start failed: %s", exc)
-        try:
-            from mycosoft_mas.redteam.layer2_scoped import start_redteam_layer2_background
-
-            start_redteam_layer2_background()
-            logger.info("✓ Red team Layer 2 background scheduled (scoped sandbox checks)")
-        except Exception as exc:
-            logger.warning("Red team L2 start failed: %s", exc)
-        try:
-            from mycosoft_mas.redteam.layer3_ai import start_redteam_layer3_background
-
-            start_redteam_layer3_background()
-            logger.info("✓ Red team Layer 3 background scheduled (sandbox AI planner)")
-        except Exception as exc:
-            logger.warning("Red team L3 start failed: %s", exc)
-
 
 @app.on_event("startup")
 async def startup_event():
@@ -1909,5 +1959,3 @@ async def shutdown_event():
         logger.info("Deep Agents orchestrator stopped")
     except Exception as exc:
         logger.warning("Deep Agents orchestrator stop error: %s", exc)
-
-

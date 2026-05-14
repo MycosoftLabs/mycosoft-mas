@@ -1,0 +1,129 @@
+{
+  "name": "Native: Finance",
+  "nodes": [
+    { "parameters": {}, "id": "fin-trigger", "name": "Execute Workflow Trigger", "type": "n8n-nodes-base.executeWorkflowTrigger", "typeVersion": 1, "position": [240, 300] },
+    {
+      "parameters": { "jsCode": "// Route to specific finance integration\nconst input = $input.item.json;\nconst integrationName = input.integration.integration;\nreturn [{ json: { ...input, routing_node: integrationName } }];" },
+      "id": "fin-router",
+      "name": "Finance Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "stripe", "name": "=stripe", "value": "={{ $json.routing_node === 'stripe' }}", "type": "boolean" },
+            { "id": "quickbooks", "name": "=quickbooks", "value": "={{ $json.routing_node === 'quickbooks' }}", "type": "boolean" },
+            { "id": "coingecko", "name": "=coingecko", "value": "={{ $json.routing_node === 'coingecko' }}", "type": "boolean" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fin-flags",
+      "name": "Prepare Switch",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "dataType": "boolean",
+        "value1": "={{ $json.stripe }}",
+        "rules": {
+          "rules": [
+            { "value2": true, "output": 0 },
+            { "value2": "={{ $json.quickbooks }}", "output": 1 },
+            { "value2": "={{ $json.coingecko }}", "output": 2 }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "fin-switch",
+      "name": "Switch: Finance",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "resource": "charge",
+        "operation": "getAll",
+        "additionalFields": { "limit": "={{ $json.command.params.limit || 5 }}" }
+      },
+      "id": "stripe-node",
+      "name": "Stripe List Charges",
+      "type": "n8n-nodes-base.stripe",
+      "typeVersion": 2,
+      "position": [1120, 80],
+      "credentials": { "stripeApi": { "name": "Stripe API" } }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "resource": "invoice",
+        "options": { "limit": "={{ $json.command.params.limit || 5 }}" }
+      },
+      "id": "qb-node",
+      "name": "QuickBooks Invoices",
+      "type": "n8n-nodes-base.quickBooksOnline",
+      "typeVersion": 1,
+      "position": [1120, 260],
+      "credentials": { "quickBooksApi": { "name": "QuickBooks" } }
+    },
+    {
+      "parameters": {
+        "resource": "simple",
+        "operation": "get",
+        "id": "={{ $json.command.params.coin_id || 'bitcoin' }}"
+      },
+      "id": "coingecko-node",
+      "name": "CoinGecko Price",
+      "type": "n8n-nodes-base.coinGecko",
+      "typeVersion": 1,
+      "position": [1120, 440]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;return [{json:{error:true,message:`Integration ${input.integration.integration} not implemented in finance native handler`,request_id:input.request_id}}];"
+      },
+      "id": "fin-fallback",
+      "name": "Finance Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:input.integration.integration,action:input.command.action,result:result,timestamp:new Date().toISOString()}}];"
+      },
+      "id": "format-fin",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": { "main": [[{ "node": "Finance Router", "type": "main", "index": 0 }]] },
+    "Finance Router": { "main": [[{ "node": "Prepare Switch", "type": "main", "index": 0 }]] },
+    "Prepare Switch": { "main": [[{ "node": "Switch: Finance", "type": "main", "index": 0 }]] },
+    "Switch: Finance": {
+      "main": [
+        [{ "node": "Stripe List Charges", "type": "main", "index": 0 }],
+        [{ "node": "QuickBooks Invoices", "type": "main", "index": 0 }],
+        [{ "node": "CoinGecko Price", "type": "main", "index": 0 }],
+        [{ "node": "Finance Fallback", "type": "main", "index": 0 }]
+      ]
+    },
+    "Stripe List Charges": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "QuickBooks Invoices": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "CoinGecko Price": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Finance Fallback": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "id": "myca-native", "name": "MYCA Native" }],
+  "triggerCount": 0,
+  "versionId": "1"
+}

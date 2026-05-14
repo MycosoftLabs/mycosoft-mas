@@ -1,10 +1,14 @@
 """Test Gemini API directly from Python."""
 import asyncio
+import os
 import httpx
+import os
 import json
+import os
 import time
+import os
 
-API_KEY = "AIzaSyA1XciZWVlg-P0EI5D3tCQzqHkoW877LoY"
+API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 async def test_gemini_streaming():
     """Test Gemini streaming directly."""

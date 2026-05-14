@@ -1,0 +1,53 @@
+{
+  "name": "MYCA Send Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca-send-email",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Email Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "myca-send-email"
+    },
+    {
+      "parameters": {
+        "fromEmail": "schedule@mycosoft.org",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "text": "={{ $json.body }}",
+        "options": {
+          "replyTo": "myca@mycosoft.org"
+        }
+      },
+      "id": "gmail-send",
+      "name": "Send via Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [500, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "myca-gmail",
+          "name": "MYCA Gmail (schedule@mycosoft.org)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Email Webhook": {
+      "main": [[{"node": "Send via Gmail", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {"name": "myca"},
+    {"name": "email"},
+    {"name": "autonomous"}
+  ]
+}

@@ -11,14 +11,19 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.core.auth.internal_service import require_internal_service_token
 from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
 
 logger = logging.getLogger("SecurityAuditAPI")
 
-router = APIRouter(prefix="/api/security", tags=["security"])
+router = APIRouter(
+    prefix="/api/security",
+    tags=["security"],
+    dependencies=[Depends(require_internal_service_token)],
+)
 
 # Integrity service import
 try:

@@ -14,7 +14,7 @@ ssh.connect(VM_HOST, username=VM_USER, password=VM_PASS, timeout=30)
 print('=== ADDING SUPABASE ENV VARS TO DOCKER-COMPOSE ===')
 
 # The sed command to add Supabase vars after NODE_ENV line
-sed_cmd = '''sed -i '/NODE_ENV: production/a\\      # Supabase Authentication\\n      NEXT_PUBLIC_SUPABASE_URL: https://hnevnsxnhfibhbsipqvz.supabase.co\\n      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuZXZuc3huaGZpYmhic2lwcXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2NzQ1NzEsImV4cCI6MjA4NDI1MDU3MX0.ooL4ZtASkUR4aQqpN4KfUPNcEwpbPLoGfGUkEoc4g7w' /opt/mycosoft/docker-compose.yml'''
+sed_cmd = '''sed -i '/NODE_ENV: production/a\\      # Supabase Authentication\\n      NEXT_PUBLIC_SUPABASE_URL: https://hnevnsxnhfibhbsipqvz.supabase.co\\n      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${N8N_API_KEY}' /opt/mycosoft/docker-compose.yml'''
 
 print('\n[1] Adding Supabase vars to docker-compose.yml...')
 _, out, err = ssh.exec_command(f'echo "{VM_PASS}" | sudo -S {sed_cmd} 2>&1')

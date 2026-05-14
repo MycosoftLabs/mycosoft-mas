@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -26,10 +26,15 @@ from mycosoft_mas.llm.backend_selection import MYCA_CORE, get_backend_for_role
 from mycosoft_mas.llm.error_sanitizer import sanitize_for_log, sanitize_for_user
 from mycosoft_mas.llm.tool_pipeline import create_tool_manager_for_skill
 from mycosoft_mas.myca.event_ledger import get_ledger
+from mycosoft_mas.core.auth.internal_service import require_internal_service_token
 
 logger = logging.getLogger("BrainAPI")
 
-router = APIRouter(prefix="/voice/brain", tags=["brain"])
+router = APIRouter(
+    prefix="/voice/brain",
+    tags=["brain"],
+    dependencies=[Depends(require_internal_service_token)],
+)
 
 
 # ============================================================================
