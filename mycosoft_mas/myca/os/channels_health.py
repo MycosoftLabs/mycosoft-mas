@@ -114,7 +114,7 @@ async def _validate_signal() -> dict[str, Any]:
 
 
 async def _validate_discord() -> dict[str, Any]:
-    if not _env_any("MYCA_DISCORD_TOKEN", "DISCORD_BOT_TOKEN"):
+    if not _env_any("MYCA_DISCORD_TOKEN", "DISCORD_BOT_TOKEN", "DISCORD_TOKEN"):
         return {
             "channel": "discord",
             "status": "missing_credential",
@@ -142,6 +142,13 @@ async def _validate_discord() -> dict[str, Any]:
 
 
 async def _validate_whatsapp() -> dict[str, Any]:
+    if not _env_any("WHATSAPP_ACCESS_TOKEN", "WHATSAPP_API_KEY", "TWILIO_AUTH_TOKEN", "EVOLUTION_API_KEY"):
+        return {
+            "channel": "whatsapp",
+            "status": "missing_credential",
+            "message": "WhatsApp/Evolution credential not set.",
+            "pass": False,
+        }
     try:
         from mycosoft_mas.integrations.whatsapp_client import WhatsAppClient
 
@@ -167,6 +174,24 @@ async def _validate_whatsapp() -> dict[str, Any]:
         return {"channel": "whatsapp", "status": "error", "message": str(e), "pass": False}
 
 
+async def _validate_email() -> dict[str, Any]:
+    smtp_configured = bool(_env_any("SMTP_HOST", "MYCA_SMTP_HOST") and _env_any("SMTP_USER", "MYCA_SMTP_USER"))
+    imap_configured = bool(_env_any("IMAP_HOST", "MYCA_IMAP_HOST") and _env_any("IMAP_USER", "MYCA_IMAP_USER"))
+    if not smtp_configured and not imap_configured:
+        return {
+            "channel": "email",
+            "status": "missing_credential",
+            "message": "SMTP/IMAP credentials not set.",
+            "pass": False,
+        }
+    return {
+        "channel": "email",
+        "status": "configured",
+        "message": "Email env present; live send/read is not performed by verifier.",
+        "pass": True,
+    }
+
+
 async def get_all_channel_status() -> dict[str, Any]:
     """Return per-channel status for all MYCA channels."""
     tasks = [
@@ -175,6 +200,7 @@ async def get_all_channel_status() -> dict[str, Any]:
         _validate_signal(),
         _validate_discord(),
         _validate_whatsapp(),
+        _validate_email(),
     ]
     raw = await asyncio.gather(*tasks, return_exceptions=True)
 

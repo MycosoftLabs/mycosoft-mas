@@ -25,7 +25,11 @@ services:
       WEBSITE_API_URL: ${WEBSITE_API_URL:-https://mycosoft.vercel.app/api}
       NOTION_API_KEY: ${NOTION_API_KEY:-}
       NOTION_DATABASE_ID: ${NOTION_DATABASE_ID:-}
-      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://host.docker.internal:5678}
+      N8N_URL: ${N8N_URL:-http://n8n:5678}
+      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://n8n:5678}
+      N8N_API_KEY: ${N8N_API_KEY:-}
+      MYCA_INTERNAL_SERVICE_TOKEN: ${MYCA_INTERNAL_SERVICE_TOKEN:-}
+      MAS_INTERNAL_SERVICE_TOKEN: ${MAS_INTERNAL_SERVICE_TOKEN:-}
       TTS_URL: ${TTS_URL:-http://elevenlabs-proxy:8000}
       WHISPER_URL: ${WHISPER_URL:-http://whisper:8000}
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
@@ -198,6 +202,37 @@ services:
       timeout: 10s
       retries: 10
       start_period: 60s
+    networks:
+      - mas-network
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: myca-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: ${N8N_BASIC_AUTH_ACTIVE:-true}
+      N8N_BASIC_AUTH_USER: ${N8N_USER:-admin}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_PASSWORD:-changeme}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-local-development-change-me}
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: all
+      EXECUTIONS_DATA_PRUNE: "true"
+      N8N_LOG_LEVEL: ${N8N_LOG_LEVEL:-info}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/import:ro
+      - ./n8n/registry:/registry:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
     networks:
       - mas-network
 

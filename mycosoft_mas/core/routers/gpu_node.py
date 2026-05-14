@@ -14,6 +14,7 @@ from typing import Dict, Literal, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
 from mycosoft_mas.integrations.gpu_node_client import (
     GPUNodeClient,
     check_gpu_node,
@@ -29,6 +30,19 @@ router = APIRouter(prefix="/api/gpu-node", tags=["gpu-node"])
 def _node_client(node: Literal["voice", "earth2"] = "voice") -> GPUNodeClient:
     key = GPUNodeClient.NODE_EARTH2 if node == "earth2" else GPUNodeClient.NODE_VOICE
     return get_gpu_client(key)
+
+
+async def _require_gpu_avani(route: str, description: str, metadata: Dict[str, object]) -> Dict[str, object]:
+    try:
+        return await require_avani_for_route(
+            route=route,
+            source_agent="gpu_node_api",
+            action_type="system_config",
+            description=description,
+            metadata=metadata,
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
 
 # Request/Response models
@@ -184,6 +198,7 @@ async def check_container_running(
 @router.post("/deploy/container")
 async def deploy_container(request: DeployContainerRequest):
     """Deploy a custom container to the selected Legion host."""
+    avani = await _require_gpu_avani("/api/gpu-node/deploy/container", f"Deploy GPU container {request.name}.", request.model_dump())
     client = _node_client(request.target_node)
 
     if not await client.is_reachable():
@@ -207,12 +222,14 @@ async def deploy_container(request: DeployContainerRequest):
         "container": request.name,
         "port": request.port,
         "endpoint": f"http://{client.IP}:{request.port}",
+        "avani": avani,
     }
 
 
 @router.post("/deploy/service")
 async def deploy_known_service(request: DeployServiceRequest):
     """Deploy a known GPU service (moshi-voice, earth2-inference, personaplex-bridge)."""
+    avani = await _require_gpu_avani("/api/gpu-node/deploy/service", f"Deploy GPU service {request.service_name}.", request.model_dump())
     result = await deploy_gpu_service(request.service_name)
 
     if not result.get("success"):
@@ -230,6 +247,7 @@ async def deploy_known_service(request: DeployServiceRequest):
         "service": request.service_name,
         "endpoint": f"http://{client.IP}:{port}",
         "health": result.get("health"),
+        "avani": avani,
     }
 
 
@@ -240,6 +258,7 @@ async def deploy_personaplex_split_architecture(request: DeployPersonaPlexSplitR
     Use when RTX 5090 machine serves heavy Moshi inference and gpu01
     handles interface/logic bridge at port 8999.
     """
+    avani = await _require_gpu_avani("/api/gpu-node/deploy/personaplex-split", "Deploy PersonaPlex split GPU architecture.", request.model_dump())
     result = await deploy_personaplex_split(
         inference_host=request.inference_host,
         inference_port=request.inference_port,
@@ -247,7 +266,7 @@ async def deploy_personaplex_split_architecture(request: DeployPersonaPlexSplitR
     )
     if not result.get("success"):
         raise HTTPException(status_code=500, detail=result.get("error", "Split deployment failed"))
-    return result
+    return {**result, "avani": avani}
 
 
 @router.delete("/containers/{name}")
@@ -256,13 +275,14 @@ async def stop_container(
     node: Literal["voice", "earth2"] = Query("voice", description="Which Legion hosts the container."),
 ):
     """Stop and remove a container."""
+    avani = await _require_gpu_avani("/api/gpu-node/containers/{name}", f"Stop/remove GPU container {name}.", {"name": name, "node": node})
     client = _node_client(node)
 
     if not await client.is_reachable():
         raise HTTPException(status_code=503, detail="GPU node not reachable")
 
     success = await client.stop_container(name)
-    return {"success": success, "node": node, "container": name, "action": "stopped"}
+    return {"success": success, "node": node, "container": name, "action": "stopped", "avani": avani}
 
 
 @router.get("/services")

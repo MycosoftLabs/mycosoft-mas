@@ -1,0 +1,209 @@
+{
+  "name": "MYCA - Asana to MAS",
+  "nodes": [
+    {
+      "id": "asana-webhook-trigger",
+      "name": "Asana Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [50, 100],
+      "parameters": {
+        "path": "myca/asana",
+        "httpMethod": "POST"
+      }
+    },
+    {
+      "id": "parse-asana-task",
+      "name": "Parse Asana Task",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [250, 100],
+      "parameters": {
+        "values": [
+          {
+            "name": "task_id",
+            "type": "string",
+            "value": "={{ $node[\"Asana Webhook Trigger\"].json.body.data.id }}"
+          },
+          {
+            "name": "task_name",
+            "type": "string",
+            "value": "={{ $node[\"Asana Webhook Trigger\"].json.body.data.name }}"
+          },
+          {
+            "name": "task_description",
+            "type": "string",
+            "value": "={{ $node[\"Asana Webhook Trigger\"].json.body.data.notes }}"
+          },
+          {
+            "name": "assignee_name",
+            "type": "string",
+            "value": "={{ $node[\"Asana Webhook Trigger\"].json.body.data.assignee.name }}"
+          },
+          {
+            "name": "project_name",
+            "type": "string",
+            "value": "={{ $node[\"Asana Webhook Trigger\"].json.body.data.projects[0].name }}"
+          },
+          {
+            "name": "session_id",
+            "type": "string",
+            "value": "=asana_{{ $node[\"Asana Webhook Trigger\"].json.body.data.id }}_{{ Date.now() }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "http-post-asana-mas",
+      "name": "HTTP POST to MAS Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 100],
+      "parameters": {
+        "url": "http://localhost:8001/voice/orchestrator/chat",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "bodyType": "json",
+        "body": {
+          "message": "Asana Task: {{ $node[\"Parse Asana Task\"].json.task_name }} ({{ $node[\"Parse Asana Task\"].json.task_description }})",
+          "session_id": "={{ $node[\"Parse Asana Task\"].json.session_id }}",
+          "platform": "asana",
+          "assignee": "={{ $node[\"Parse Asana Task\"].json.assignee_name }}",
+          "project": "={{ $node[\"Parse Asana Task\"].json.project_name }}"
+        }
+      }
+    },
+    {
+      "id": "switch-routing-node",
+      "name": "Route by Assignee",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [650, 100],
+      "parameters": {
+        "mode": "expression",
+        "cases": [
+          {
+            "condition": "=contains($node[\"Parse Asana Task\"].json.assignee_name, 'Morgan')",
+            "output": 1
+          },
+          {
+            "condition": "=contains($node[\"Parse Asana Task\"].json.assignee_name, 'RJ')",
+            "output": 2
+          },
+          {
+            "condition": "=contains($node[\"Parse Asana Task\"].json.assignee_name, 'Garret')",
+            "output": 3
+          }
+        ],
+        "fallbackOutput": 4
+      }
+    },
+    {
+      "id": "format-morgan-response",
+      "name": "Format Morgan Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 50],
+      "parameters": {
+        "values": [
+          {
+            "name": "response_text",
+            "type": "string",
+            "value": "={{ $node[\"HTTP POST to MAS Orchestrator\"].json.response }} [Strategic/Budget/Hiring/Legal - Routed to Morgan]"
+          }
+        ]
+      }
+    },
+    {
+      "id": "format-rj-response",
+      "name": "Format RJ Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 150],
+      "parameters": {
+        "values": [
+          {
+            "name": "response_text",
+            "type": "string",
+            "value": "={{ $node[\"HTTP POST to MAS Orchestrator\"].json.response }} [Operations/Processes/Team - Routed to RJ]"
+          }
+        ]
+      }
+    },
+    {
+      "id": "format-garret-response",
+      "name": "Format Garret Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 250],
+      "parameters": {
+        "values": [
+          {
+            "name": "response_text",
+            "type": "string",
+            "value": "={{ $node[\"HTTP POST to MAS Orchestrator\"].json.response }} [Infrastructure/Architecture/Code - Routed to Garret]"
+          }
+        ]
+      }
+    },
+    {
+      "id": "format-default-response",
+      "name": "Format Default Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [850, 350],
+      "parameters": {
+        "values": [
+          {
+            "name": "response_text",
+            "type": "string",
+            "value": "={{ $node[\"HTTP POST to MAS Orchestrator\"].json.response }}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "asana-add-comment",
+      "name": "Asana Add Comment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1050, 150],
+      "parameters": {
+        "url": "=https://app.asana.com/api/1.0/tasks/{{ $node[\"Parse Asana Task\"].json.task_id }}/stories",
+        "method": "POST",
+        "headers": {
+          "Authorization": "=Bearer {{ env[\"ASANA_API_TOKEN\"] }}",
+          "Content-Type": "application/json"
+        },
+        "bodyType": "json",
+        "body": {
+          "data": {
+            "text": "={{ $node[\"Format Morgan Response\"].json.response_text || $node[\"Format RJ Response\"].json.response_text || $node[\"Format Garret Response\"].json.response_text || $node[\"Format Default Response\"].json.response_text }}"
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Asana Webhook Trigger": [{"node": ["Parse Asana Task"], "type": "main", "index": [0, 0]}],
+    "Parse Asana Task": [{"node": ["HTTP POST to MAS Orchestrator"], "type": "main", "index": [0, 0]}],
+    "HTTP POST to MAS Orchestrator": [{"node": ["Switch Routing Node"], "type": "main", "index": [0, 0]}],
+    "Switch Routing Node": [
+      {"node": ["Format Morgan Response"], "type": "main", "index": [1, 0]},
+      {"node": ["Format RJ Response"], "type": "main", "index": [2, 0]},
+      {"node": ["Format Garret Response"], "type": "main", "index": [3, 0]},
+      {"node": ["Format Default Response"], "type": "main", "index": [4, 0]}
+    ],
+    "Format Morgan Response": [{"node": ["Asana Add Comment"], "type": "main", "index": [0, 0]}],
+    "Format RJ Response": [{"node": ["Asana Add Comment"], "type": "main", "index": [0, 0]}],
+    "Format Garret Response": [{"node": ["Asana Add Comment"], "type": "main", "index": [0, 0]}],
+    "Format Default Response": [{"node": ["Asana Add Comment"], "type": "main", "index": [0, 0]}]
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{"name": "MYCA"}, {"name": "Asana"}, {"name": "Integration"}]
+}

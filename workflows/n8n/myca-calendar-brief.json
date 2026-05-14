@@ -1,0 +1,129 @@
+{
+  "name": "MYCA Calendar Brief",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "hour": 8,
+            "minute": 0
+          }
+        ]
+      },
+      "id": "cron-8am",
+      "name": "Cron: Daily 8AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+        "method": "GET",
+        "responseFormat": "json",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.GCAL_TOKEN}}"
+            }
+          ]
+        },
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "timeMin",
+              "value": "{{$now.startOf('day').toISO()}}"
+            },
+            {
+              "name": "timeMax",
+              "value": "{{$now.endOf('day').toISO()}}"
+            },
+            {
+              "name": "singleEvents",
+              "value": "true"
+            },
+            {
+              "name": "orderBy",
+              "value": "startTime"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000
+        }
+      },
+      "id": "calendar-events",
+      "name": "Calendar Events Today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calendar API returns { items: [...] }; HTTP node gives one item with full response\nconst cal = $input.item.json;\nconst items = (cal && cal.items) ? cal.items : [];\nconst lines = [];\nlines.push(`Good morning. Your calendar brief for ${new Date().toLocaleDateString()}:`);\nlines.push('');\nif (items.length === 0) {\n  lines.push('No events scheduled for today.');\n} else {\n  lines.push(`You have ${items.length} event(s) today:`);\n  for (const e of items.slice(0, 15)) {\n    const start = (e.start && (e.start.dateTime || e.start.date)) || '?';\n    const summary = e.summary || 'Untitled';\n    lines.push(`- ${summary} @ ${start}`);\n  }\n}\nreturn [{ json: { content: lines.join('\\n'), source: 'calendar', sender: 'n8n' } }];"
+      },
+      "id": "format-brief",
+      "name": "Format Brief",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MYCA_GATEWAY_URL || 'http://192.168.0.191:8100' }}/message",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.content, source: $json.source || 'calendar', sender: $json.sender || 'n8n', is_morgan: true }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "post-gateway",
+      "name": "POST to MYCA Gateway",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [940, 300]
+    }
+  ],
+  "connections": {
+    "Cron: Daily 8AM": {
+      "main": [
+        [
+          {
+            "node": "Calendar Events Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar Events Today": {
+      "main": [
+        [
+          {
+            "node": "Format Brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Brief": {
+      "main": [
+        [
+          {
+            "node": "POST to MYCA Gateway",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "myca-calendar-brief"
+}

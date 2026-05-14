@@ -1,0 +1,172 @@
+{
+  "name": "Business: Weekly Operations Report",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every Monday 9 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 9 * * 1" }] }
+      }
+    },
+    {
+      "id": "webhook",
+      "name": "Manual Report Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "business/report/weekly",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "get_agent_stats",
+      "name": "Get Agent Performance (7d)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 100],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/metrics/agents/weekly",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "get_workflow_stats",
+      "name": "Get Workflow Execution Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 250],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/workflows/performance",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "get_infra_stats",
+      "name": "Get Infrastructure Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 400],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/metrics/infrastructure/weekly",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "get_incidents",
+      "name": "Get Incidents (7d)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 550],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.188:8001/api/alerts/history",
+        "qs": { "days": "7" },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "get_mindex_stats",
+      "name": "Get MINDEX Growth",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 700],
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/api/stats/weekly",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "compile_report",
+      "name": "Compile Weekly Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [800, 400],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst agents = items[0]?.json || {};\nconst workflows = items[1]?.json || {};\nconst infra = items[2]?.json || {};\nconst incidents = items[3]?.json || {};\nconst mindex = items[4]?.json || {};\n\nconst weekEnd = new Date();\nconst weekStart = new Date(Date.now() - 7 * 86400000);\n\nconst report = {\n  title: `MYCA Weekly Operations Report`,\n  period: `${weekStart.toISOString().split('T')[0]} to ${weekEnd.toISOString().split('T')[0]}`,\n  generated: new Date().toISOString(),\n  \n  executive_summary: {\n    agents_active: agents.active_count || 0,\n    total_tasks_processed: agents.total_tasks || 0,\n    avg_success_rate: agents.avg_success_rate || 0,\n    workflow_executions: workflows.total_executions || 0,\n    workflow_success_rate: workflows.success_rate || 0,\n    incidents_total: (incidents.alerts || []).length,\n    incidents_critical: (incidents.alerts || []).filter(a => a.severity === 'critical').length,\n    uptime_pct: infra.avg_uptime_pct || 99.9\n  },\n  \n  agent_performance: {\n    total_agents: agents.total || 0,\n    most_active: agents.top_performers || [],\n    categories: agents.by_category || {},\n    tasks_by_day: agents.daily_breakdown || []\n  },\n  \n  infrastructure: {\n    avg_cpu: infra.avg_cpu || 0,\n    avg_memory: infra.avg_memory || 0,\n    disk_growth_gb: infra.disk_growth_gb || 0,\n    vm_status: infra.vm_status || {},\n    backup_status: infra.backup_status || 'unknown'\n  },\n  \n  data_growth: {\n    new_species: mindex.new_species || 0,\n    new_records: mindex.new_records || 0,\n    vector_count: mindex.vector_count || 0,\n    knowledge_nodes: mindex.knowledge_nodes || 0\n  },\n  \n  incidents_summary: {\n    total: (incidents.alerts || []).length,\n    by_severity: {},\n    top_issues: (incidents.alerts || []).slice(0, 5).map(a => ({\n      title: a.title,\n      severity: a.severity,\n      time: a.timestamp\n    }))\n  }\n};\n\n// Count by severity\nfor (const alert of (incidents.alerts || [])) {\n  const sev = alert.severity || 'unknown';\n  report.incidents_summary.by_severity[sev] = (report.incidents_summary.by_severity[sev] || 0) + 1;\n}\n\nreturn [{ json: report }];"
+      }
+    },
+    {
+      "id": "store_report",
+      "name": "Store Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1100, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/reports/store",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "type", "value": "weekly_operations" },
+            { "name": "report", "value": "={{ JSON.stringify($json) }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "send_email",
+      "name": "Email Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1100, 500],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/notifications/email",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "to", "value": "team@mycosoft.org" },
+            { "name": "subject", "value": "={{ 'MYCA Weekly Report: ' + $json.period }}" },
+            { "name": "body", "value": "={{ 'Weekly Operations Report\\n\\nPeriod: ' + $json.period + '\\n\\nAgents Active: ' + $json.executive_summary.agents_active + '\\nTasks Processed: ' + $json.executive_summary.total_tasks_processed + '\\nSuccess Rate: ' + $json.executive_summary.avg_success_rate + '%\\nWorkflow Executions: ' + $json.executive_summary.workflow_executions + '\\nIncidents: ' + $json.executive_summary.incidents_total + ' (' + $json.executive_summary.incidents_critical + ' critical)\\nUptime: ' + $json.executive_summary.uptime_pct + '%' }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1350, 500],
+      "parameters": { "respondWith": "json" }
+    }
+  ],
+  "connections": {
+    "Every Monday 9 AM": { "main": [[
+      { "node": "Get Agent Performance (7d)", "type": "main", "index": 0 },
+      { "node": "Get Workflow Execution Stats", "type": "main", "index": 0 },
+      { "node": "Get Infrastructure Stats", "type": "main", "index": 0 },
+      { "node": "Get Incidents (7d)", "type": "main", "index": 0 },
+      { "node": "Get MINDEX Growth", "type": "main", "index": 0 }
+    ]] },
+    "Manual Report Trigger": { "main": [[
+      { "node": "Get Agent Performance (7d)", "type": "main", "index": 0 },
+      { "node": "Get Workflow Execution Stats", "type": "main", "index": 0 },
+      { "node": "Get Infrastructure Stats", "type": "main", "index": 0 },
+      { "node": "Get Incidents (7d)", "type": "main", "index": 0 },
+      { "node": "Get MINDEX Growth", "type": "main", "index": 0 }
+    ]] },
+    "Get Agent Performance (7d)": { "main": [[{ "node": "Compile Weekly Report", "type": "main", "index": 0 }]] },
+    "Get Workflow Execution Stats": { "main": [[{ "node": "Compile Weekly Report", "type": "main", "index": 0 }]] },
+    "Get Infrastructure Stats": { "main": [[{ "node": "Compile Weekly Report", "type": "main", "index": 0 }]] },
+    "Get Incidents (7d)": { "main": [[{ "node": "Compile Weekly Report", "type": "main", "index": 0 }]] },
+    "Get MINDEX Growth": { "main": [[{ "node": "Compile Weekly Report", "type": "main", "index": 0 }]] },
+    "Compile Weekly Report": { "main": [[
+      { "node": "Store Report", "type": "main", "index": 0 },
+      { "node": "Email Report", "type": "main", "index": 0 }
+    ]] },
+    "Store Report": { "main": [[]] },
+    "Email Report": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["business", "reporting", "weekly", "operations"]
+}

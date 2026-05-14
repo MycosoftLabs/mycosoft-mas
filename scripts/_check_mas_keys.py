@@ -24,7 +24,7 @@ def run(cmd, timeout=20):
 
 # Step 1: Test Gemini API directly from the VM with the actual key
 print("=== Direct Gemini API test from VM ===")
-gemini_key = "AIzaSyA1XciZWVlg-P0EI5D3tCQzqHkoW877LoY"
+gemini_key = os.getenv("GEMINI_API_KEY", "")
 out = run(
     f"curl -s -w '\\n---STATUS:%{{http_code}}---' "
     f"'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}' "

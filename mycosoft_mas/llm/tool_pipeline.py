@@ -58,6 +58,35 @@ def _get_event_ledger():
     return _event_ledger
 
 
+async def _require_avani_preflight(
+    *,
+    source_agent: str,
+    action_type: str,
+    description: str,
+    risk_tier: str,
+    ecological_impact: float = 0.0,
+    reversibility: float = 1.0,
+    metadata: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Fail-closed AVANI preflight for action-capable MYCA tools."""
+    from mycosoft_mas.avani.enforcement import AvaniActionPreflight, require_action_preflight
+    from mycosoft_mas.core.routers import avani_router
+
+    await avani_router.ensure_runtime_restored()
+    return await require_action_preflight(
+        avani_router.get_governor(),
+        AvaniActionPreflight(
+            source_agent=source_agent,
+            action_type=action_type,
+            description=description,
+            risk_tier=risk_tier,
+            ecological_impact=ecological_impact,
+            reversibility=reversibility,
+            metadata=metadata or {},
+        ),
+    )
+
+
 class ToolStatus(Enum):
     """Status of a tool execution."""
 
@@ -795,6 +824,15 @@ class ToolExecutor:
         if not workflow_name:
             return {"status": "error", "message": "workflow_name is required"}
         try:
+            avani_decision = await _require_avani_preflight(
+                source_agent="myca_tool_pipeline",
+                action_type="execute_workflow",
+                description=f"Execute n8n workflow '{workflow_name}' from MYCA tool pipeline.",
+                risk_tier=str(args.get("risk_tier") or "high"),
+                ecological_impact=float(args.get("ecological_impact") or 0.0),
+                reversibility=float(args.get("reversibility") or 0.6),
+                metadata={"workflow_name": workflow_name, "parameters": parameters or {}},
+            )
             from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
 
             agent = N8NWorkflowAgent(agent_id="n8n-llm", name="N8N Workflow", config={})
@@ -802,6 +840,8 @@ class ToolExecutor:
             if parameters:
                 task["data"] = parameters
             result = await agent.process_task(task)
+            if isinstance(result, dict):
+                result.setdefault("avani", avani_decision)
             return result
         except Exception as e:
             logger.exception("execute_workflow tool failed: %s", e)
@@ -817,6 +857,15 @@ class ToolExecutor:
         if not description:
             return {"status": "error", "message": "description (or query) is required"}
         try:
+            avani_decision = await _require_avani_preflight(
+                source_agent="myca_tool_pipeline",
+                action_type="generate_workflow",
+                description=f"Generate and sync n8n workflow: {description[:500]}",
+                risk_tier=str(args.get("risk_tier") or "medium"),
+                ecological_impact=float(args.get("ecological_impact") or 0.0),
+                reversibility=float(args.get("reversibility") or 0.9),
+                metadata={"name": name, "tags": tags or []},
+            )
             from mycosoft_mas.agents.workflow_generator_agent import generate_save_and_sync_workflow
 
             out = await generate_save_and_sync_workflow(
@@ -830,6 +879,7 @@ class ToolExecutor:
                 "name": out.get("name"),
                 "file_path": out.get("file_path"),
                 "sync": out.get("sync"),
+                "avani": avani_decision,
             }
         except Exception as e:
             logger.exception("generate_workflow tool failed: %s", e)
@@ -851,13 +901,30 @@ class ToolExecutor:
             "attachments": args.get("attachments") or None,
         }
         try:
+            avani_decision = await _require_avani_preflight(
+                source_agent="myca_tool_pipeline",
+                action_type="omnichannel_send",
+                description=f"Send outbound {platform} message from MYCA tool pipeline.",
+                risk_tier=str(args.get("risk_tier") or "medium"),
+                ecological_impact=0.0,
+                reversibility=0.7,
+                metadata={
+                    "platform": platform,
+                    "channel_id": payload.get("channel_id"),
+                    "recipient": payload.get("recipient"),
+                    "text_length": len(text),
+                },
+            )
             async with httpx.AsyncClient(timeout=30) as client:
                 response = await client.post(
                     f"{self.mas_url}/api/omnichannel/send",
                     json=payload,
                 )
                 if response.status_code == 200:
-                    return response.json()
+                    result = response.json()
+                    if isinstance(result, dict):
+                        result.setdefault("avani", avani_decision)
+                    return result
                 return {
                     "status": "error",
                     "message": f"Omnichannel send failed: {response.status_code}",

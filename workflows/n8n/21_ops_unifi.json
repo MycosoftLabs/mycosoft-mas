@@ -1,0 +1,118 @@
+{
+  "name": "Ops: UniFi Control",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "unifi-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse UniFi command\nconst input = $input.item.json;\nconst command = input.command || {};\nconst action = command.action;\n\n// Map actions to UniFi API endpoints\nconst actionMap = {\n  'topology': { method: 'GET', endpoint: '/stat/device', risk: 'read' },\n  'clients': { method: 'GET', endpoint: '/stat/sta', risk: 'read' },\n  'networks': { method: 'GET', endpoint: '/list/networkconf', risk: 'read' },\n  'traffic': { method: 'GET', endpoint: '/stat/report/daily.site', risk: 'read' },\n  'device_list': { method: 'GET', endpoint: '/stat/device-basic', risk: 'read' },\n  'health': { method: 'GET', endpoint: '/stat/health', risk: 'read' }\n};\n\nconst actionConfig = actionMap[action];\n\nif (!actionConfig) {\n  return [{\n    json: {\n      error: true,\n      message: `Unknown UniFi action: ${action}`,\n      request_id: command.request_id\n    }\n  }];\n}\n\nconst params = command.params || {};\nconst site = params.site || 'default';\nconst baseUrl = input.integration.base_url || 'https://unifi.mycosoft.local:8443';\n\nreturn [{\n  json: {\n    error: false,\n    method: actionConfig.method,\n    endpoint: `/api/s/${site}${actionConfig.endpoint}`,\n    risk: actionConfig.risk,\n    action: action,\n    request_id: command.request_id,\n    base_url: baseUrl\n  }\n}];"
+      },
+      "id": "parse-unifi",
+      "name": "Parse UniFi Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "check-valid-unifi",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "method": "={{ $json.method }}",
+        "url": "={{ $json.base_url }}{{ $json.endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "unifi-api-call",
+      "name": "Call UniFi API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 200],
+      "credentials": {
+        "httpBasicAuth": {
+          "name": "UniFi Controller"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format UniFi response with proper status code checking (Bug 7 fix)\nconst request = $('Parse UniFi Command').item.json;\nconst response = $input.item.json;\n\n// Check for HTTP errors\nconst statusCode = $input.item.statusCode || response.statusCode || 200;\nconst isError = statusCode >= 400;\n\n// Check for UniFi-specific error indicators\nconst hasUnifiError = response.meta?.rc === 'error' || response.errors;\n\nconst success = !isError && !hasUnifiError;\n\nif (!success) {\n  return [{\n    json: {\n      success: false,\n      error: true,\n      request_id: request.request_id,\n      integration: 'unifi',\n      action: request.action,\n      status_code: statusCode,\n      message: response.meta?.msg || response.errors || response.message || `HTTP ${statusCode} error`,\n      data: response,\n      timestamp: new Date().toISOString()\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n    error: false,\n    request_id: request.request_id,\n    integration: 'unifi',\n    action: request.action,\n    status_code: statusCode,\n    data: response.data || response,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "format-unifi-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return error\nconst error = $input.item.json;\nreturn [{ json: error }];"
+      },
+      "id": "return-unifi-error",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 400]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{"node": "Parse UniFi Command", "type": "main", "index": 0}]]
+    },
+    "Parse UniFi Command": {
+      "main": [[{"node": "Valid?", "type": "main", "index": 0}]]
+    },
+    "Valid?": {
+      "main": [
+        [{"node": "Call UniFi API", "type": "main", "index": 0}],
+        [{"node": "Return Error", "type": "main", "index": 0}]
+      ]
+    },
+    "Call UniFi API": {
+      "main": [[{"node": "Format Response", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [{
+    "id": "myca-ops",
+    "name": "MYCA Ops"
+  }],
+  "triggerCount": 0,
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "versionId": "1"
+}

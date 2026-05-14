@@ -1,0 +1,118 @@
+{
+  "name": "Ops: Synthetic Uptime Monitor",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every 2 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "minutes", "minutesInterval": 2 }]
+        }
+      }
+    },
+    {
+      "id": "define_endpoints",
+      "name": "Define Endpoints to Monitor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "parameters": {
+        "jsCode": "const endpoints = [\n  { name: 'MAS Orchestrator', url: 'http://192.168.0.188:8001/health', vm: '188', critical: true },\n  { name: 'MAS n8n', url: 'http://192.168.0.188:5678/healthz', vm: '188', critical: true },\n  { name: 'MINDEX API', url: 'http://192.168.0.189:8000/health', vm: '189', critical: true },\n  { name: 'Qdrant', url: 'http://192.168.0.189:6333/healthz', vm: '189', critical: true },\n  { name: 'Website', url: 'http://192.168.0.187:3000', vm: '187', critical: true },\n  { name: 'MycoBrain', url: 'http://192.168.0.187:8003/health', vm: '187', critical: false },\n  { name: 'Ollama', url: 'http://192.168.0.188:11434/api/tags', vm: '188', critical: false },\n  { name: 'MYCA n8n', url: 'http://192.168.0.191:5679/healthz', vm: '191', critical: false }\n];\n\nreturn endpoints.map(e => ({ json: e }));"
+      }
+    },
+    {
+      "id": "probe",
+      "name": "HTTP Probe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [750, 300],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "options": {
+          "timeout": 10000,
+          "redirect": { "redirect": { "followRedirects": true } }
+        }
+      }
+    },
+    {
+      "id": "evaluate",
+      "name": "Evaluate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1000, 300],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst now = new Date().toISOString();\nconst results = [];\nconst failures = [];\n\nfor (const item of items) {\n  const endpoint = item.json;\n  const statusCode = endpoint.statusCode || endpoint.status_code || 0;\n  const isUp = statusCode >= 200 && statusCode < 500;\n  const responseTime = endpoint.responseTime || endpoint.response_time_ms || 0;\n  \n  const result = {\n    name: endpoint.name || 'unknown',\n    url: endpoint.url || '',\n    vm: endpoint.vm || '',\n    status: isUp ? 'up' : 'down',\n    status_code: statusCode,\n    response_time_ms: responseTime,\n    critical: endpoint.critical || false,\n    timestamp: now\n  };\n  \n  results.push(result);\n  \n  if (!isUp) {\n    failures.push(result);\n  }\n}\n\nconst summary = {\n  total: results.length,\n  up: results.filter(r => r.status === 'up').length,\n  down: results.filter(r => r.status === 'down').length,\n  critical_down: failures.filter(f => f.critical).length,\n  avg_response_ms: Math.round(results.reduce((s, r) => s + r.response_time_ms, 0) / results.length),\n  results: results,\n  failures: failures,\n  timestamp: now\n};\n\nreturn [{ json: summary }];"
+      }
+    },
+    {
+      "id": "check_failures",
+      "name": "Any Failures?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "parameters": {
+        "conditions": {
+          "boolean": [{ "value1": "={{ $json.down > 0 }}", "value2": true }]
+        }
+      }
+    },
+    {
+      "id": "alert_down",
+      "name": "Send Downtime Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "={{ $json.critical_down > 0 ? 'critical' : 'high' }}" },
+            { "name": "title", "value": "Service Downtime Detected" },
+            { "name": "message", "value": "={{ $json.failures.map(f => f.name + ' (' + f.vm + ')').join(', ') + ' — ' + $json.down + '/' + $json.total + ' services down' }}" },
+            { "name": "channels", "value": "[\"slack\"]" },
+            { "name": "data", "value": "={{ JSON.stringify($json.failures) }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "store_metrics",
+      "name": "Store Uptime Metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/metrics/store",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "source", "value": "synthetic-uptime-monitor" },
+            { "name": "metrics", "value": "={{ JSON.stringify({ up: $json.up, down: $json.down, total: $json.total, avg_response_ms: $json.avg_response_ms }) }}" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 2 Minutes": { "main": [[{ "node": "Define Endpoints to Monitor", "type": "main", "index": 0 }]] },
+    "Define Endpoints to Monitor": { "main": [[{ "node": "HTTP Probe", "type": "main", "index": 0 }]] },
+    "HTTP Probe": { "main": [[{ "node": "Evaluate Results", "type": "main", "index": 0 }]] },
+    "Evaluate Results": { "main": [[{ "node": "Any Failures?", "type": "main", "index": 0 }]] },
+    "Any Failures?": {
+      "main": [
+        [{ "node": "Send Downtime Alert", "type": "main", "index": 0 }],
+        [{ "node": "Store Uptime Metrics", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Downtime Alert": { "main": [[{ "node": "Store Uptime Metrics", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["ops", "monitoring", "uptime", "synthetic", "critical"]
+}

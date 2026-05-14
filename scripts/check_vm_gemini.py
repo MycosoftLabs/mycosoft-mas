@@ -13,7 +13,7 @@ print(env if env else 'No GEMINI env vars found')
 
 # Check if we can reach Gemini from VM
 stdin, stdout, stderr = client.exec_command(
-    'curl -s -o /dev/null -w "%{http_code}" "https://generativelanguage.googleapis.com/v1beta/models" -H "x-goog-api-key: AIzaSyA1XciZWVlg-P0EI5D3tCQzqHkoW877LoY"',
+    'curl -s -o /dev/null -w "%{http_code}" "https://generativelanguage.googleapis.com/v1beta/models" -H "x-goog-api-key: ${GEMINI_API_KEY}"',
     timeout=30
 )
 code = stdout.read().decode().strip()
@@ -23,7 +23,7 @@ print(f'HTTP Status: {code}')
 # Test actual generation
 print('\n=== TESTING GEMINI GENERATION ===')
 stdin, stdout, stderr = client.exec_command(
-    '''curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" -H 'Content-Type: application/json' -H 'X-goog-api-key: AIzaSyA1XciZWVlg-P0EI5D3tCQzqHkoW877LoY' -X POST -d '{"contents": [{"parts": [{"text": "Say hello in 10 words"}]}]}' | head -c 500''',
+    '''curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" -H 'Content-Type: application/json' -H 'X-goog-api-key: ${GEMINI_API_KEY}' -X POST -d '{"contents": [{"parts": [{"text": "Say hello in 10 words"}]}]}' | head -c 500''',
     timeout=60
 )
 result = stdout.read().decode()

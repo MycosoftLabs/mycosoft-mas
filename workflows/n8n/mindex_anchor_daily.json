@@ -1,0 +1,47 @@
+{
+  "name": "MINDEX: Anchor daily smoke (May 03, 2026)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 24 }]
+        }
+      },
+      "id": "sched-daily",
+      "name": "Daily",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/api/mindex/health/all",
+        "options": { "timeout": 30000 }
+      },
+      "id": "health-all",
+      "name": "MINDEX health/all",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { note: 'Invoke anchor-router-agent via MAS task API when POST contract is finalized.', ts: new Date().toISOString() } }];"
+      },
+      "id": "anchor-placeholder",
+      "name": "Anchor router placeholder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 300]
+    }
+  ],
+  "connections": {
+    "Daily": { "main": [[{ "node": "MINDEX health/all", "type": "main", "index": 0 }]] },
+    "MINDEX health/all": { "main": [[{ "node": "Anchor router placeholder", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1", "timezone": "America/Los_Angeles" },
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "mindex" }, { "name": "anchor" }]
+}

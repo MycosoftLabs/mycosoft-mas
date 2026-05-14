@@ -17,7 +17,7 @@ import requests
 
 # Configuration - adjust if your tunnel is on a different port
 N8N_URL = os.getenv("N8N_URL", "http://localhost:15679")
-API_KEY = os.getenv("N8N_API_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMzhhODMzNi03YzRiLTQzNDctYmQwZS00MzIzMTFlOGJhNDgiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiY2MzN2M2OGUtYzVkNS00Mjc2LTkzNDgtMzVmNGU4YjQxNTgxIiwiaWF0IjoxNzcyNTkwOTA2fQ.I_jFZVAkLi-Tqzdvf9A2ictI6CPlfyIVdMTT-g06nng")
+API_KEY = os.getenv("N8N_API_KEY", "")
 
 HEADERS = {
     "X-N8N-API-KEY": API_KEY,

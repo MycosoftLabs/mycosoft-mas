@@ -1,0 +1,154 @@
+{
+  "name": "Voice Infrastructure Control Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice/infra/control",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-infra",
+      "name": "Infra Control Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.target_type }}",
+              "value2": "container"
+            }
+          ]
+        }
+      },
+      "id": "route-target",
+      "name": "Route Target",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/docker/{{ $json.action }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "container_name",
+              "value": "={{ $json.target_name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "docker-action",
+      "name": "Docker Action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 150]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/proxmox/{{ $json.action }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "vm_id",
+              "value": "={{ $json.target_name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "proxmox-action",
+      "name": "Proxmox Action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/services/{{ $json.action }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "service_name",
+              "value": "={{ $json.target_name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "service-action",
+      "name": "Service Action",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 450]
+    },
+    {
+      "parameters": {
+        "url": "http://personaplex-bridge:8999/api/announce",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.target_type }} {{ $json.target_name }} {{ $json.action }} completed. Status: {{ $json.status }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "announce-result",
+      "name": "Announce Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, action: $('Infra Control Webhook').item.json.action, target: $('Infra Control Webhook').item.json.target_name, result: $json }) }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1150, 300]
+    }
+  ],
+  "connections": {
+    "Infra Control Webhook": {
+      "main": [[{"node": "Route Target", "type": "main", "index": 0}]]
+    },
+    "Route Target": {
+      "main": [
+        [{"node": "Docker Action", "type": "main", "index": 0}],
+        [{"node": "Proxmox Action", "type": "main", "index": 0}],
+        [{"node": "Service Action", "type": "main", "index": 0}]
+      ]
+    },
+    "Docker Action": {
+      "main": [[{"node": "Announce Result", "type": "main", "index": 0}]]
+    },
+    "Proxmox Action": {
+      "main": [[{"node": "Announce Result", "type": "main", "index": 0}]]
+    },
+    "Service Action": {
+      "main": [[{"node": "Announce Result", "type": "main", "index": 0}]]
+    },
+    "Announce Result": {
+      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["voice", "infrastructure", "docker", "proxmox", "myca"]
+}

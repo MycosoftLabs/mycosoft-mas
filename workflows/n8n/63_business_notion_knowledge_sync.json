@@ -1,0 +1,134 @@
+{
+  "name": "Business: Notion Knowledge Base Sync",
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Every 2 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "hours", "hoursInterval": 2 }] }
+      }
+    },
+    {
+      "id": "webhook",
+      "name": "Manual Sync Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "business/notion/sync",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "fetch_notion_updates",
+      "name": "Fetch Recent Notion Updates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [500, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/integrations/notion/search",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "filter", "value": "recently_edited" },
+            { "name": "since_hours", "value": "2" },
+            { "name": "page_size", "value": "50" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "process_pages",
+      "name": "Process Updated Pages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [750, 300],
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nconst pages = result.results || result.pages || [];\nconst pageList = Array.isArray(pages) ? pages : [];\n\nconst processedPages = [];\nfor (const page of pageList) {\n  const title = page.properties?.title?.title?.[0]?.text?.content ||\n                page.properties?.Name?.title?.[0]?.text?.content ||\n                page.title || 'Untitled';\n  \n  processedPages.push({\n    page_id: page.id,\n    title: title,\n    url: page.url,\n    last_edited: page.last_edited_time,\n    created: page.created_time,\n    type: page.object || 'page',\n    parent_type: page.parent?.type || 'workspace'\n  });\n}\n\nreturn [{\n  json: {\n    pages: processedPages,\n    count: processedPages.length,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "sync_to_knowledge",
+      "name": "Sync to Knowledge Graph",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1000, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/memory/knowledge/sync-notion",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "pages", "value": "={{ JSON.stringify($json.pages) }}" }
+          ]
+        },
+        "options": { "timeout": 60000 }
+      }
+    },
+    {
+      "id": "vectorize",
+      "name": "Update Vector Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1000, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/memory/vectors/embed-notion",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "page_ids", "value": "={{ JSON.stringify($json.pages.map(p => p.page_id)) }}" }
+          ]
+        },
+        "options": { "timeout": 120000 }
+      }
+    },
+    {
+      "id": "log_sync",
+      "name": "Log Sync Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/audit/log",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "notion_knowledge_sync" },
+            { "name": "details", "value": "={{ JSON.stringify({ pages_synced: $json.count || 0 }) }}" },
+            { "name": "source", "value": "n8n-notion-sync" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1500, 400],
+      "parameters": { "respondWith": "json" }
+    }
+  ],
+  "connections": {
+    "Every 2 Hours": { "main": [[{ "node": "Fetch Recent Notion Updates", "type": "main", "index": 0 }]] },
+    "Manual Sync Trigger": { "main": [[{ "node": "Fetch Recent Notion Updates", "type": "main", "index": 0 }]] },
+    "Fetch Recent Notion Updates": { "main": [[{ "node": "Process Updated Pages", "type": "main", "index": 0 }]] },
+    "Process Updated Pages": { "main": [[
+      { "node": "Sync to Knowledge Graph", "type": "main", "index": 0 },
+      { "node": "Update Vector Embeddings", "type": "main", "index": 0 }
+    ]] },
+    "Sync to Knowledge Graph": { "main": [[{ "node": "Log Sync Results", "type": "main", "index": 0 }]] },
+    "Update Vector Embeddings": { "main": [[{ "node": "Log Sync Results", "type": "main", "index": 0 }]] },
+    "Log Sync Results": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["business", "notion", "knowledge", "sync", "vectors"]
+}

@@ -42,12 +42,17 @@ except ImportError:
     INTEGRITY_AVAILABLE = False
     hash_and_record = None
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from mycosoft_mas.core.auth.internal_service import require_internal_service_token
 
 logger = logging.getLogger("MemoryAPI")
 
-router = APIRouter(prefix="/api/memory", tags=["memory"])
+router = APIRouter(
+    prefix="/api/memory",
+    tags=["memory"],
+    dependencies=[Depends(require_internal_service_token)],
+)
 
 
 # ============================================================================

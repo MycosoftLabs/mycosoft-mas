@@ -1,0 +1,157 @@
+{
+  "name": "Ops: Backup & Disaster Recovery",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Daily Backup Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "webhook",
+      "name": "Manual Backup Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ops/backup/trigger",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "determine_scope",
+      "name": "Determine Backup Scope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [500, 400],
+      "parameters": {
+        "jsCode": "// Determine what to back up based on trigger\nconst input = $input.first().json;\nconst scope = input.scope || 'full';\nconst now = new Date().toISOString();\n\nconst targets = [];\n\nif (scope === 'full' || scope === 'postgres') {\n  targets.push({\n    type: 'postgres',\n    host: '192.168.0.189',\n    port: 5432,\n    databases: ['myca_memory', 'mindex', 'mycosoft'],\n    method: 'pg_dump',\n    destination: '/mnt/mycosoft-nas/backups/postgres'\n  });\n}\n\nif (scope === 'full' || scope === 'redis') {\n  targets.push({\n    type: 'redis',\n    host: '192.168.0.189',\n    port: 6379,\n    method: 'rdb_snapshot',\n    destination: '/mnt/mycosoft-nas/backups/redis'\n  });\n}\n\nif (scope === 'full' || scope === 'qdrant') {\n  targets.push({\n    type: 'qdrant',\n    host: '192.168.0.189',\n    port: 6333,\n    method: 'snapshot',\n    destination: '/mnt/mycosoft-nas/backups/qdrant'\n  });\n}\n\nif (scope === 'full' || scope === 'n8n') {\n  targets.push({\n    type: 'n8n_workflows',\n    host: '192.168.0.188',\n    port: 5678,\n    method: 'api_export',\n    destination: '/mnt/mycosoft-nas/backups/n8n'\n  });\n}\n\nif (scope === 'full' || scope === 'configs') {\n  targets.push({\n    type: 'config_files',\n    paths: [\n      '/home/mycosoft/mycosoft/mas/config/',\n      '/home/mycosoft/mycosoft/mas/.env.local'\n    ],\n    method: 'tar_gz',\n    destination: '/mnt/mycosoft-nas/backups/configs'\n  });\n}\n\nreturn targets.map(t => ({\n  json: { ...t, timestamp: now, backup_id: `backup_${Date.now()}` }\n}));"
+      }
+    },
+    {
+      "id": "backup_postgres",
+      "name": "Backup PostgreSQL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [750, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/infrastructure/backup",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "target", "value": "={{ $json.type }}" },
+            { "name": "host", "value": "={{ $json.host }}" },
+            { "name": "databases", "value": "={{ JSON.stringify($json.databases || []) }}" },
+            { "name": "destination", "value": "={{ $json.destination }}" },
+            { "name": "backup_id", "value": "={{ $json.backup_id }}" }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      }
+    },
+    {
+      "id": "verify_backup",
+      "name": "Verify Backup Integrity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1000, 200],
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nconst backup = {\n  backup_id: result.backup_id || 'unknown',\n  type: result.target || result.type,\n  status: result.status || 'unknown',\n  size_bytes: result.size_bytes || 0,\n  checksum: result.checksum || '',\n  verified: result.status === 'success',\n  timestamp: new Date().toISOString()\n};\n\nreturn [{ json: backup }];"
+      }
+    },
+    {
+      "id": "cleanup_old",
+      "name": "Cleanup Old Backups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/infrastructure/backup/cleanup",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "retention_days", "value": "30" },
+            { "name": "keep_monthly", "value": "true" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "log_result",
+      "name": "Log to Audit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/audit/log",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "action", "value": "backup_completed" },
+            { "name": "details", "value": "={{ JSON.stringify($json) }}" },
+            { "name": "source", "value": "n8n-backup-dr" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "notify_failure",
+      "name": "Alert on Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1250, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/alerts/send",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "severity", "value": "critical" },
+            { "name": "title", "value": "Backup Failed" },
+            { "name": "message", "value": "={{ 'Backup failed for ' + $json.type + ': ' + ($json.error || 'unknown error') }}" },
+            { "name": "channels", "value": "[\"slack\", \"email\"]" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1750, 400],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'completed', backup_id: $json.backup_id }) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Daily Backup Schedule": { "main": [[{ "node": "Determine Backup Scope", "type": "main", "index": 0 }]] },
+    "Manual Backup Trigger": { "main": [[{ "node": "Determine Backup Scope", "type": "main", "index": 0 }]] },
+    "Determine Backup Scope": { "main": [[{ "node": "Backup PostgreSQL", "type": "main", "index": 0 }]] },
+    "Backup PostgreSQL": { "main": [[{ "node": "Verify Backup Integrity", "type": "main", "index": 0 }]] },
+    "Verify Backup Integrity": { "main": [[{ "node": "Cleanup Old Backups", "type": "main", "index": 0 }]] },
+    "Cleanup Old Backups": { "main": [[{ "node": "Log to Audit", "type": "main", "index": 0 }]] },
+    "Log to Audit": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": ["ops", "backup", "disaster-recovery", "critical"]
+}

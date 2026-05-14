@@ -17,6 +17,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
 from mycosoft_mas.security.safety_gates import SafetyGates
 
 logger = logging.getLogger(__name__)
@@ -207,6 +208,16 @@ async def sandbox_execute(req: SandboxExecuteRequest, request: Request) -> Dict[
     Execute tool in sandbox via Gateway.
     Proxies to orchestrator's gateway control plane.
     """
+    try:
+        avani = await require_avani_for_route(
+            route="/api/n8n/sandbox/execute",
+            source_agent="n8n_bridge_api",
+            action_type="tool_execution",
+            description=f"Execute sandbox tool {req.tool_name}.",
+            metadata=req.model_dump(),
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     session_id = req.session_id or str(uuid.uuid4())
     gateway = getattr(request.app.state, "gateway", None)
     if not gateway:
@@ -228,6 +239,7 @@ async def sandbox_execute(req: SandboxExecuteRequest, request: Request) -> Dict[
             "sandbox_id": result.sandbox_id,
             "duration_ms": result.duration_ms,
             "session_id": session_id,
+            "avani": avani,
         }
     except Exception as e:
         logger.error("Sandbox execute error: %s", e)
@@ -385,13 +397,23 @@ async def safety_request_confirmation(req: SafetyRequestConfirmationRequest) -> 
     Create a confirmation request for destructive action.
     Returns {request_id}. n8n should then send Slack DM to approver_id and poll /safety/pending or await.
     """
+    try:
+        avani = await require_avani_for_route(
+            route="/api/n8n/safety/request-confirmation",
+            source_agent="n8n_bridge_api",
+            action_type="workflow",
+            description=f"Request safety confirmation for {req.action}.",
+            metadata=req.model_dump(),
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     gates = _get_safety_gates()
     request_id = await gates.request_confirmation(
         action=req.action,
         context=req.context,
         approver_id=req.approver_id,
     )
-    return {"request_id": request_id}
+    return {"request_id": request_id, "avani": avani}
 
 
 @router.post("/safety/submit-confirmation")
@@ -399,9 +421,19 @@ async def safety_submit_confirmation(req: SafetySubmitConfirmationRequest) -> Di
     """
     Approve or deny a pending confirmation. Called by n8n when leadership responds.
     """
+    try:
+        avani = await require_avani_for_route(
+            route="/api/n8n/safety/submit-confirmation",
+            source_agent="n8n_bridge_api",
+            action_type="workflow",
+            description=f"Submit safety confirmation {req.request_id}.",
+            metadata=req.model_dump(),
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     gates = _get_safety_gates()
     ok = await gates.submit_confirmation(req.request_id, req.approved)
-    return {"success": ok}
+    return {"success": ok, "avani": avani}
 
 
 @router.get("/safety/pending")

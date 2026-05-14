@@ -1,0 +1,86 @@
+{
+  "name": "Evolution Webhook Listener",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "evolution/webhook",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-evolution",
+      "name": "Webhook: POST /evolution/webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 260],
+      "webhookId": "evolution-webhook-listener"
+    },
+    {
+      "parameters": {
+        "url": "={{ ($env.MAS_API_URL || 'http://192.168.0.188:8001') + '/api/evolution/evaluate' }}",
+        "method": "POST",
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ $json.body }}"
+      },
+      "id": "mas-evaluate",
+      "name": "Send Evaluation to MAS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 260]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ $json }}"
+      },
+      "id": "respond-ok",
+      "name": "Return 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [760, 260]
+    }
+  ],
+  "connections": {
+    "Webhook: POST /evolution/webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Evaluation to MAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Evaluation to MAS": {
+      "main": [
+        [
+          {
+            "node": "Return 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2026-02-10T00:00:00.000Z",
+      "updatedAt": "2026-02-10T00:00:00.000Z",
+      "id": "myca-evolution",
+      "name": "MYCA Evolution"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-02-10T00:00:00.000Z",
+  "versionId": "1"
+}

@@ -19,11 +19,16 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from mycosoft_mas.core.auth.internal_service import require_internal_service_token
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/myca/intention", tags=["myca-intention"])
+router = APIRouter(
+    prefix="/api/myca/intention",
+    tags=["myca-intention"],
+    dependencies=[Depends(require_internal_service_token)],
+)
 
 # In-memory fallback when Redis unavailable
 _intention_store: Dict[str, List[Dict[str, Any]]] = {}

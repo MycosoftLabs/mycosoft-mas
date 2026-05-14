@@ -850,7 +850,15 @@ class MycaOS:
         sender = msg.get("sender", "unknown")
         sender_id = msg.get("sender_id")
         content = msg.get("content", "")
-        is_morgan = msg.get("is_morgan", False)
+        runtime_context = msg.get("runtime_context") or {}
+        verified_is_morgan = bool(
+            msg.get("verified_is_morgan")
+            or runtime_context.get("is_creator")
+            or runtime_context.get("is_superuser")
+        )
+        is_morgan = bool(msg.get("is_morgan", False)) and source not in {"api", "http", "website"}
+        if source in {"api", "http", "website"}:
+            is_morgan = verified_is_morgan
         staff_directory = load_staff_directory()
         person_id = msg.get("person_id") or resolve_person_id(
             staff_directory,
@@ -859,7 +867,7 @@ class MycaOS:
             email=sender if "@" in sender else None,
             fallback_name=sender,
         )
-        if person_id == "morgan":
+        if person_id == "morgan" and source not in {"api", "http", "website"}:
             is_morgan = True
         if person_id:
             msg["person_id"] = person_id

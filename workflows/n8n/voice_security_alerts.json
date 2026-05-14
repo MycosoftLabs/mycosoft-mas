@@ -1,0 +1,139 @@
+{
+  "name": "Voice Security Alerts Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice/security/alert",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-security",
+      "name": "Security Alert Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/agents/security/analyze",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "threat_data",
+              "value": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "analyze-threat",
+      "name": "Analyze Threat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.severity }}",
+              "operation": "largerEqual",
+              "value2": 7
+            }
+          ]
+        }
+      },
+      "id": "check-severity",
+      "name": "High Severity?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://personaplex-bridge:8999/api/interrupt",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=SECURITY ALERT: {{ $json.threat_description }}. Severity: {{ $json.severity }}. Recommended action: {{ $json.recommended_action }}"
+            },
+            {
+              "name": "interrupt",
+              "value": "true"
+            },
+            {
+              "name": "confirmation_required",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "critical-alert",
+      "name": "Critical Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/soc/log-incident",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "incident_data",
+              "value": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-soc",
+      "name": "Log to SOC",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ logged: true, incident_id: $json.incident_id }) }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1300, 300]
+    }
+  ],
+  "connections": {
+    "Security Alert Webhook": {
+      "main": [[{"node": "Analyze Threat", "type": "main", "index": 0}]]
+    },
+    "Analyze Threat": {
+      "main": [[{"node": "High Severity?", "type": "main", "index": 0}]]
+    },
+    "High Severity?": {
+      "main": [
+        [{"node": "Critical Alert", "type": "main", "index": 0}],
+        [{"node": "Log to SOC", "type": "main", "index": 0}]
+      ]
+    },
+    "Critical Alert": {
+      "main": [[{"node": "Log to SOC", "type": "main", "index": 0}]]
+    },
+    "Log to SOC": {
+      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["voice", "security", "soc", "alerts", "myca"]
+}

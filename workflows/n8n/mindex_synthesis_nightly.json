@@ -1,0 +1,54 @@
+{
+  "name": "MINDEX: Synthesis nightly (May 03, 2026)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 24 }]
+        }
+      },
+      "id": "sched-nightly",
+      "name": "Nightly",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/api/mindex/compounds",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "limit", "value": "5" },
+            { "name": "offset", "value": "0" }
+          ]
+        },
+        "options": { "timeout": 60000 }
+      },
+      "id": "compounds-sample",
+      "name": "Compounds sample",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { note: 'Wire data-synthesis-agent export_compound_slice when MAS executor credentials are in n8n.', ts: new Date().toISOString() } }];"
+      },
+      "id": "synth-note",
+      "name": "Synthesis note",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 300]
+    }
+  ],
+  "connections": {
+    "Nightly": { "main": [[{ "node": "Compounds sample", "type": "main", "index": 0 }]] },
+    "Compounds sample": { "main": [[{ "node": "Synthesis note", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1", "timezone": "America/Los_Angeles" },
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": [{ "name": "mindex" }, { "name": "synthesis" }]
+}

@@ -22,12 +22,14 @@ Created: March 9, 2026
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import IntEnum
 from typing import Any, Dict, List, Optional
 
+from mycosoft_mas.avani.audit.ledger import AvaniAuditLedger
 from mycosoft_mas.avani.constitution.red_lines import check_red_line_violation
 from mycosoft_mas.avani.season_engine.seasons import (
     SeasonEngine,
@@ -111,8 +113,13 @@ class AvaniGovernor:
     unless Avani and Micah reach a state of homeostasis.
     """
 
-    def __init__(self, season_engine: Optional[SeasonEngine] = None) -> None:
+    def __init__(
+        self,
+        season_engine: Optional[SeasonEngine] = None,
+        audit_ledger: Optional[AvaniAuditLedger] = None,
+    ) -> None:
         self.season_engine = season_engine or SeasonEngine()
+        self.audit_ledger = audit_ledger
         self.vision_filter = VisionFilter()
         self._decision_log: List[Dict] = []
 
@@ -136,7 +143,7 @@ class AvaniGovernor:
                 stage_failed="vision",
                 vision_result=vision_result,
             )
-            self._log_decision(proposal, decision)
+            await self._log_decision(proposal, decision)
             return decision
 
         # Stage 2: Red Line Check
@@ -155,7 +162,7 @@ class AvaniGovernor:
                 vision_result=vision_result,
                 throttle_pct=0,
             )
-            self._log_decision(proposal, decision)
+            await self._log_decision(proposal, decision)
             return decision
 
         # Stage 3: Seasonal Check
@@ -171,7 +178,7 @@ class AvaniGovernor:
                 vision_result=vision_result,
                 throttle_pct=0,
             )
-            self._log_decision(proposal, decision)
+            await self._log_decision(proposal, decision)
             return decision
 
         # Stage 4: Ecological Carrying Capacity
@@ -188,7 +195,7 @@ class AvaniGovernor:
                 stage_failed="ecological",
                 vision_result=vision_result,
             )
-            self._log_decision(proposal, decision)
+            await self._log_decision(proposal, decision)
             return decision
 
         # Stage 5: Risk Tier Authorization
@@ -204,7 +211,7 @@ class AvaniGovernor:
                 stage_failed="risk_tier",
                 vision_result=vision_result,
             )
-            self._log_decision(proposal, decision)
+            await self._log_decision(proposal, decision)
             return decision
 
         # All checks passed — approved with seasonal throttle
@@ -224,7 +231,7 @@ class AvaniGovernor:
             throttle_pct=throttle,
             vision_result=vision_result,
         )
-        self._log_decision(proposal, decision)
+        await self._log_decision(proposal, decision)
         return decision
 
     def _evaluate_ecological_capacity(self, proposal: Proposal) -> float:
@@ -242,7 +249,7 @@ class AvaniGovernor:
         capacity = eco * (1.0 - impact * (1.0 - reversibility))
         return max(0.0, min(1.0, capacity))
 
-    def _log_decision(self, proposal: Proposal, decision: GovernorDecision) -> None:
+    async def _log_decision(self, proposal: Proposal, decision: GovernorDecision) -> None:
         """Record decision for audit purposes."""
         entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -255,6 +262,25 @@ class AvaniGovernor:
             "season": self.season_engine.current_season.value,
         }
         self._decision_log.append(entry)
+        if self.audit_ledger:
+            audit_entry = await self.audit_ledger.append(
+                event_kind="proposal_evaluation",
+                source=proposal.source_agent,
+                action_type=proposal.action_type,
+                decision=decision.to_dict(),
+                season=self.season_engine.current_season.value,
+                metadata={
+                    "risk_tier": proposal.risk_tier.name,
+                    "ecological_impact": proposal.ecological_impact,
+                    "reversibility": proposal.reversibility,
+                    "proposal_metadata": proposal.metadata,
+                    "description_hash": hashlib.sha256(
+                        proposal.description.encode("utf-8")
+                    ).hexdigest(),
+                },
+            )
+            entry["audit_trail_id"] = audit_entry.event_id
+            entry["entry_hash"] = audit_entry.entry_hash
         logger.info(
             "Governor decision: %s for %s/%s — %s",
             "APPROVED" if decision.approved else "DENIED",

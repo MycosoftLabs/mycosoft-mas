@@ -1,0 +1,150 @@
+{
+  "name": "NLM Model Hub",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nlm/models",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "nlm-webhook",
+      "name": "NLM Hub Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "webhookId": "nlm-model-hub"
+    },
+    {
+      "parameters": {
+        "jsCode": "// NLM Model Hub - Neural Language Model Coordination\nconst input = $input.first().json;\nconst action = input.action || 'list';\nconst model = input.model || null;\nconst prompt = input.prompt || '';\nconst params = input.params || {};\n\n// Available NLM Models and Apps\nconst models = {\n  // Local Models\n  local: {\n    moshi_7b: { type: 'voice', gpu: 'RTX 5090', endpoint: 'http://localhost:8998', status: 'active' },\n    llama3_8b: { type: 'text', gpu: 'RTX 5090', endpoint: 'http://localhost:11434', status: 'active' },\n    whisper_large: { type: 'stt', gpu: 'RTX 5090', endpoint: 'http://localhost:8080', status: 'active' },\n    coqui_tts: { type: 'tts', gpu: 'RTX 5090', endpoint: 'http://localhost:5002', status: 'active' }\n  },\n  // Cloud Models\n  cloud: {\n    gemini_pro: { type: 'text', provider: 'google', api: 'generativelanguage.googleapis.com' },\n    gemini_flash: { type: 'text', provider: 'google', api: 'generativelanguage.googleapis.com' },\n    gpt4_turbo: { type: 'text', provider: 'openai', api: 'api.openai.com' },\n    claude_opus: { type: 'text', provider: 'anthropic', api: 'api.anthropic.com' },\n    elevenlabs: { type: 'tts', provider: 'elevenlabs', api: 'api.elevenlabs.io' }\n  },\n  // Specialized Models\n  specialized: {\n    alphafold: { type: 'protein', provider: 'deepmind', purpose: 'protein structure prediction' },\n    esm2: { type: 'protein', provider: 'meta', purpose: 'protein embeddings' },\n    colabfold: { type: 'protein', provider: 'community', purpose: 'fast folding' },\n    rosettafold: { type: 'protein', provider: 'baker_lab', purpose: 'structure prediction' },\n    fungal_bert: { type: 'mycology', provider: 'mycosoft', purpose: 'fungal text understanding' },\n    species_vit: { type: 'vision', provider: 'mycosoft', purpose: 'species identification' }\n  }\n};\n\n// Protocols\nconst protocols = {\n  text_generation: ['greedy', 'beam_search', 'sampling', 'nucleus', 'contrastive'],\n  embedding: ['mean_pooling', 'cls_token', 'weighted'],\n  voice: ['streaming', 'batch', 'real_time', 'duplex'],\n  protein: ['monomer', 'complex', 'multimer', 'template_free']\n};\n\n// Tools\nconst tools = {\n  prompt_engineering: ['template_builder', 'few_shot_manager', 'chain_of_thought', 'tree_of_thought'],\n  evaluation: ['perplexity', 'bleu', 'rouge', 'bert_score', 'human_eval'],\n  optimization: ['quantization', 'pruning', 'distillation', 'lora', 'qlora'],\n  deployment: ['onnx_export', 'tensorrt', 'vllm', 'triton', 'tgi']\n};\n\nreturn {\n  json: {\n    action: action,\n    model: model,\n    prompt: prompt,\n    params: params,\n    models: models,\n    protocols: protocols,\n    tools: tools,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-nlm-request",
+      "name": "Parse NLM Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            { "outputKey": "list", "value": "={{ $json.action === 'list' }}" },
+            { "outputKey": "generate", "value": "={{ $json.action === 'generate' }}" },
+            { "outputKey": "embed", "value": "={{ $json.action === 'embed' }}" },
+            { "outputKey": "transcribe", "value": "={{ $json.action === 'transcribe' }}" },
+            { "outputKey": "synthesize", "value": "={{ $json.action === 'synthesize' }}" }
+          ]
+        }
+      },
+      "id": "route-nlm-action",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// List available models\nconst request = $input.first().json;\n\nreturn {\n  json: {\n    action: 'list',\n    result: {\n      local_models: Object.keys(request.models.local),\n      cloud_models: Object.keys(request.models.cloud),\n      specialized_models: Object.keys(request.models.specialized),\n      protocols: request.protocols,\n      tools: request.tools\n    }\n  }\n};"
+      },
+      "id": "list-models",
+      "name": "List Models",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 150]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.models.local.llama3_8b.endpoint }}/api/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "llama3.2:3b" },
+            { "name": "prompt", "value": "={{ $json.prompt }}" },
+            { "name": "stream", "value": "false" }
+          ]
+        },
+        "options": { "timeout": 60000 }
+      },
+      "id": "generate-text",
+      "name": "Generate Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 250]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate embeddings\nconst request = $input.first().json;\n\nreturn {\n  json: {\n    action: 'embed',\n    result: {\n      model: 'text-embedding-ada-002',\n      dimensions: 1536,\n      text: request.prompt.slice(0, 50) + '...',\n      embedding_preview: [0.023, -0.041, 0.087, 0.012, -0.056],\n      status: 'computed'\n    }\n  }\n};"
+      },
+      "id": "generate-embeddings",
+      "name": "Generate Embeddings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 350]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transcribe audio\nconst request = $input.first().json;\n\nreturn {\n  json: {\n    action: 'transcribe',\n    result: {\n      model: 'whisper-large-v3',\n      language: 'en',\n      transcript: '[Transcription would appear here]',\n      confidence: 0.95,\n      duration_seconds: 0\n    }\n  }\n};"
+      },
+      "id": "transcribe-audio",
+      "name": "Transcribe Audio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 450]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Synthesize speech\nconst request = $input.first().json;\n\nreturn {\n  json: {\n    action: 'synthesize',\n    result: {\n      model: 'moshi-7b',\n      voice: 'NATURAL_F2',\n      text: request.prompt.slice(0, 100),\n      audio_url: 'http://localhost:8998/audio/output.wav',\n      duration_estimate_ms: request.prompt.length * 50\n    }\n  }\n};"
+      },
+      "id": "synthesize-speech",
+      "name": "Synthesize Speech",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [760, 550]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format NLM response\nconst result = $input.first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    action: result.action,\n    result: result.result || result,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-nlm-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-nlm",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "NLM Hub Webhook": { "main": [[{ "node": "Parse NLM Request", "type": "main", "index": 0 }]] },
+    "Parse NLM Request": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Route Action": {
+      "main": [
+        [{ "node": "List Models", "type": "main", "index": 0 }],
+        [{ "node": "Generate Text", "type": "main", "index": 0 }],
+        [{ "node": "Generate Embeddings", "type": "main", "index": 0 }],
+        [{ "node": "Transcribe Audio", "type": "main", "index": 0 }],
+        [{ "node": "Synthesize Speech", "type": "main", "index": 0 }]
+      ]
+    },
+    "List Models": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Generate Text": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Generate Embeddings": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Transcribe Audio": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Synthesize Speech": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "NLM" }, { "name": "Models" }, { "name": "AI" }]
+}

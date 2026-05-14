@@ -1,0 +1,150 @@
+{"name": "Earth-2 Spore Alert System",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "hours", "hoursInterval": 1 }
+          ]
+        }
+      },
+      "id": "hourly-check",
+      "name": "Hourly Spore Check",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [100, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "earth2/spore-alert",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "spore-webhook",
+      "name": "Spore Alert Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 500],
+      "webhookId": "earth2-spore-alert"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Earth-2 Spore Alert System - February 4, 2026\n// Combines weather forecasts with spore dispersal models\n\nconst spore_config = {\n  species_of_interest: [\n    'Fusarium graminearum',\n    'Alternaria alternata',\n    'Aspergillus flavus',\n    'Puccinia triticina'\n  ],\n  alert_thresholds: {\n    concentration_high: 1000,\n    concentration_critical: 5000,\n    dispersal_distance_km: 50,\n    wind_speed_threshold: 15\n  },\n  monitoring_regions: [\n    { name: 'Midwest', lat: 41.5, lon: -93.0, radius_km: 500 },\n    { name: 'Southeast', lat: 33.5, lon: -84.0, radius_km: 400 },\n    { name: 'Pacific_NW', lat: 47.0, lon: -122.0, radius_km: 300 }\n  ]\n};\n\nreturn {\n  json: {\n    trigger: 'spore_check',\n    timestamp: new Date().toISOString(),\n    config: spore_config,\n    execution_id: $execution.id\n  }\n};"
+      },
+      "id": "prepare-config",
+      "name": "Prepare Spore Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/earth2/spore-dispersal",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ species: $json.config.species_of_interest[0], origin_lat: 41.5, origin_lon: -93.0, origin_concentration: 10000, forecast_hours: 48 }) }}"
+      },
+      "id": "run-dispersal",
+      "name": "Run Spore Dispersal Model",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [560, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process spore dispersal results\nconst result = $input.first().json;\nconst config = $('Prepare Spore Config').first().json.config;\n\nconst alerts = [];\nconst thresholds = config.alert_thresholds;\n\n// Check if any predictions exceed thresholds\nif (result.affected_area_km2 && result.affected_area_km2 > 1000) {\n  alerts.push({\n    type: 'spore_dispersal',\n    severity: 'high',\n    species: result.species,\n    message: `Large spore dispersal predicted: ${result.affected_area_km2} km2 affected`,\n    region: result.regions\n  });\n}\n\nconst summary = {\n  run_id: result.run_id,\n  species: result.species,\n  peak_concentration: result.peak_concentration,\n  affected_area_km2: result.affected_area_km2,\n  timestamp: new Date().toISOString()\n};\n\nreturn {\n  json: {\n    summary: summary,\n    alerts: alerts,\n    raw_result: result\n  }\n};"
+      },
+      "id": "process-dispersal",
+      "name": "Process Dispersal Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/mindex/events/batch",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ events: [{ event_type: 'spore_dispersal_forecast', entity_id: $json.summary.run_id, collector: 'n8n_spore_alert', data: $json.summary }] }) }}"
+      },
+      "id": "store-mindex",
+      "name": "Store to MINDEX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            { "value1": "={{ $json.alerts.length }}", "operation": "isNotEmpty" }
+          ]
+        }
+      },
+      "id": "check-alerts",
+      "name": "Has Alerts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1000, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/notifications/send",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ type: 'spore_alert', severity: 'critical', channel: 'all', message: 'Spore dispersal alert', alerts: $json.alerts }) }}"
+      },
+      "id": "send-notification",
+      "name": "Send Spore Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1220, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.188:8001/api/earth2/layers",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ layer_type: 'spore_dispersal', run_id: $json.summary.run_id, species: $json.summary.species }) }}"
+      },
+      "id": "update-viz",
+      "name": "Update Visualization Layer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1220, 600]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, summary: $json.summary, alerts_count: $json.alerts.length }) }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1440, 500]
+    }
+  ],
+  "connections": {
+    "Hourly Spore Check": { "main": [[{ "node": "Prepare Spore Config", "type": "main", "index": 0 }]] },
+    "Spore Alert Webhook": { "main": [[{ "node": "Prepare Spore Config", "type": "main", "index": 0 }]] },
+    "Prepare Spore Config": { "main": [[{ "node": "Run Spore Dispersal Model", "type": "main", "index": 0 }]] },
+    "Run Spore Dispersal Model": { "main": [[{ "node": "Process Dispersal Results", "type": "main", "index": 0 }]] },
+    "Process Dispersal Results": { "main": [[{ "node": "Store to MINDEX", "type": "main", "index": 0 }, { "node": "Has Alerts?", "type": "main", "index": 0 }]] },
+    "Has Alerts?": { "main": [[{ "node": "Send Spore Alert", "type": "main", "index": 0 }], [{ "node": "Update Visualization Layer", "type": "main", "index": 0 }]] },
+    "Store to MINDEX": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Send Spore Alert": { "main": [[{ "node": "Update Visualization Layer", "type": "main", "index": 0 }]] },
+    "Update Visualization Layer": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateId": "earth2-spore-alert-feb2026"
+  }
+}

@@ -12,6 +12,7 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
 from mycosoft_mas.llm.tool_pipeline import ToolCall, ToolStatus, get_tool_manager, get_tool_registry
 
 logger = logging.getLogger(__name__)
@@ -72,11 +73,23 @@ async def get_tool(tool_name: str):
 @router.post("/execute")
 async def execute_tool(request: ToolExecutionRequest):
     """Execute a single tool."""
+    try:
+        avani = await require_avani_for_route(
+            route="/tools/execute",
+            source_agent="tools_api",
+            action_type="tool_execution",
+            description=f"Execute MYCA tool {request.tool_name}.",
+            metadata={"tool_name": request.tool_name, "arguments": request.arguments},
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     manager = get_tool_manager()
 
     tool_call = ToolCall(id=str(uuid4()), name=request.tool_name, arguments=request.arguments)
 
     result = await manager.executor.execute(tool_call)
+    if isinstance(result.result, dict):
+        result.result.setdefault("avani", avani)
 
     return ToolExecutionResponse(
         id=result.id,
@@ -95,9 +108,33 @@ async def execute_batch(request: BatchToolRequest):
 
     manager = get_tool_manager()
 
-    tool_calls = [
-        ToolCall(id=str(uuid4()), name=t.tool_name, arguments=t.arguments) for t in request.tools
-    ]
+    approved_calls = []
+    preflight_results = []
+    for t in request.tools:
+        try:
+            avani = await require_avani_for_route(
+                route="/tools/execute/batch",
+                source_agent="tools_api",
+                action_type="tool_execution",
+                description=f"Execute MYCA batch tool {t.tool_name}.",
+                metadata={"tool_name": t.tool_name, "arguments": t.arguments},
+            )
+            tool_call = ToolCall(id=str(uuid4()), name=t.tool_name, arguments=t.arguments)
+            approved_calls.append((tool_call, avani))
+        except AvaniActionDenied as exc:
+            preflight_results.append(
+                {
+                    "id": str(uuid4()),
+                    "tool_name": t.tool_name,
+                    "status": "failed",
+                    "result": None,
+                    "error": "AVANI preflight denied",
+                    "latency_ms": None,
+                    "avani": exc.decision,
+                }
+            )
+
+    tool_calls = [tc for tc, _ in approved_calls]
 
     if request.parallel:
         # Execute in parallel
@@ -109,8 +146,9 @@ async def execute_batch(request: BatchToolRequest):
             result = await manager.executor.execute(tc)
             results.append(result)
 
+    avani_by_id = {tc.id: avani for tc, avani in approved_calls}
     return {
-        "results": [
+        "results": preflight_results + [
             ToolExecutionResponse(
                 id=r.id,
                 tool_name=r.name,
@@ -119,6 +157,7 @@ async def execute_batch(request: BatchToolRequest):
                 error=r.error,
                 latency_ms=r.latency_ms,
             ).model_dump()
+            | {"avani": avani_by_id.get(r.id)}
             for r in results
         ],
         "count": len(results),

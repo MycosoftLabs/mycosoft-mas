@@ -1,0 +1,83 @@
+{
+  "name": "MINDEX All-Life Ingest (health + ETL command doc)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "sched-daily",
+      "name": "Daily (tune to weekly in n8n UI if preferred)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://192.168.0.189:8000/health",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "mindex-health",
+      "name": "MINDEX 189 /health (smoke)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ETL runs on a host with MINDEX ETL venv (typically MAS 188 with repo checkout, or 189 if co-located).\n// Run after migration + rate limits: python -m mindex_etl.jobs.run_all_kingdoms\n// Add an Execute Command, SSH, or MAS API node here when a secure runner URL exists.\nreturn { json: { note: 'Wire to run_all_kingdoms; see mindex/mindex_etl/jobs/run_all_kingdoms.py' } };"
+      },
+      "id": "doc-etl",
+      "name": "ETL: document run_all_kingdoms",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 300]
+    }
+  ],
+  "connections": {
+    "Daily (tune to weekly in n8n UI if preferred)": {
+      "main": [
+        [
+          {
+            "node": "MINDEX 189 /health (smoke)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MINDEX 189 /health (smoke)": {
+      "main": [
+        [
+          {
+            "node": "ETL: document run_all_kingdoms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Los_Angeles"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    { "name": "mindex" },
+    { "name": "all-life" },
+    { "name": "etl" }
+  ]
+}

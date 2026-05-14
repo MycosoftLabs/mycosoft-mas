@@ -1,0 +1,208 @@
+{
+  "name": "MycoBrain Optical/Acoustic Modem Control",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mycobrain-modem",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "mycobrain-modem"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "modem-type",
+              "leftValue": "={{ $json.modem_type }}",
+              "rightValue": "optical",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-type",
+      "name": "Check Modem Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "=http://mycobrain:8003/devices/{{ $json.device_id }}/command",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "command",
+              "value": "={{ JSON.stringify({ cmd: \"optical.tx.start\", profile: $json.profile, payload: $json.payload, rate_hz: $json.rate_hz || 10, repeat: $json.repeat || 1 }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "optical-tx",
+      "name": "Optical TX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "url": "=http://mycobrain:8003/devices/{{ $json.device_id }}/command",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "command",
+              "value": "={{ JSON.stringify({ cmd: \"acoustic.tx.start\", profile: $json.profile, payload: $json.payload, symbol_ms: $json.symbol_ms || 100, f0: $json.f0 || 1000, f1: $json.f1 || 2000, repeat: $json.repeat || 1 }) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "acoustic-tx",
+      "name": "Acoustic TX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://mindex:8000/api/mindex/telemetry",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "source",
+              "value": "mycobrain-modem"
+            },
+            {
+              "name": "device_id",
+              "value": "={{ $('Webhook').item.json.device_id }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "name": "data",
+              "value": "={{ { modem_type: $('Webhook').item.json.modem_type, profile: $('Webhook').item.json.profile, payload_length: $('Webhook').item.json.payload?.length || 0, status: \"transmitted\" } }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "log-to-mindex",
+      "name": "Log to MINDEX",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, device_id: $('Webhook').item.json.device_id, modem_type: $('Webhook').item.json.modem_type, response: $json } }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check Modem Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Modem Type": {
+      "main": [
+        [
+          {
+            "node": "Optical TX",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Acoustic TX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Optical TX": {
+      "main": [
+        [
+          {
+            "node": "Log to MINDEX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acoustic TX": {
+      "main": [
+        [
+          {
+            "node": "Log to MINDEX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to MINDEX": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-30T09:00:00.000Z",
+  "versionId": "1"
+}

@@ -26,7 +26,12 @@ This document describes the **real** AVANI/NLM runtime: telemetry translation, o
    - Environment: `MINDEX_API_URL` (default `http://localhost:8000`), `MINDEX_API_KEY` (optional, for X-API-Key when MINDEX has API keys configured).
    - Response: translate endpoint returns the NMF dict and, when persist was requested, a `persist` key with either MINDEX’s success payload (`embedding_id`, `ts`) or `{ "success": false, "error": "..." }`.
 
-4. **Trainer data sources** (MAS repo: `mycosoft_mas/nlm/training/trainer.py`):
+4. **AVANI governance and Worldview release** (May 14 update):
+   - NMF and WorldState-derived context should pass through AVANI before becoming MYCA recommendations or customer-facing Worldview output.
+   - AVANI records grounding/worldview decisions in the durable audit ledger and returns `audit_trail_id`, `confidence`, `degraded`, `provenance`, and `avani_verdict`.
+   - MINDEX Worldview responses preserve their existing `data` payload and attach governance under `meta.avani`.
+
+5. **Trainer data sources** (MAS repo: `mycosoft_mas/nlm/training/trainer.py`):
    - **Real only:** Trainer uses `MINDEXClient` to fetch training data from MINDEX (e.g. telemetry, research, genetics). No mock metrics or fake categories.
    - When no training runtime is configured or a category has no real source, the trainer reports **degraded** state with clear provenance (no silent fallback to fake data).
 

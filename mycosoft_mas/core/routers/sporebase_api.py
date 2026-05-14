@@ -15,6 +15,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/sporebase", tags=["sporebase"])
@@ -25,6 +27,19 @@ _sample_results: Dict[str, Dict[str, Any]] = {}
 _calibrations: Dict[str, Dict[str, Any]] = {}
 _telemetry_store: Dict[str, List[Dict[str, Any]]] = {}
 _orders: Dict[str, Dict[str, Any]] = {}
+
+
+async def _require_sporebase_avani(route: str, description: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        return await require_avani_for_route(
+            route=route,
+            source_agent="sporebase_api",
+            action_type="device_control",
+            description=description,
+            metadata=metadata,
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
 
 def _get_sporebase_devices() -> List[Dict[str, Any]]:
@@ -131,6 +146,11 @@ async def get_device_telemetry(
 @router.post("/devices/{device_id}/command")
 async def send_device_command(device_id: str, body: CommandBody):
     """Send command to a SporeBase device (forwarded to MycoBrain service)."""
+    avani = await _require_sporebase_avani(
+        "/api/sporebase/devices/{device_id}/command",
+        f"Send SporeBase command {body.command} to {device_id}.",
+        {"device_id": device_id, **body.model_dump()},
+    )
     try:
         import httpx
 
@@ -162,7 +182,10 @@ async def send_device_command(device_id: str, body: CommandBody):
             )
             if r.status_code != 200:
                 raise HTTPException(status_code=r.status_code, detail=r.text)
-            return r.json()
+            result = r.json()
+            if isinstance(result, dict):
+                result.setdefault("avani", avani)
+            return result
     except HTTPException:
         raise
     except Exception as e:
@@ -246,6 +269,11 @@ async def get_calibration(calibration_id: str):
 @router.post("/calibration/{calibration_id}")
 async def update_calibration(calibration_id: str, body: CalibrationCreate):
     """Create or update a calibration record."""
+    avani = await _require_sporebase_avani(
+        "/api/sporebase/calibration/{calibration_id}",
+        f"Update SporeBase calibration {calibration_id}.",
+        {"calibration_id": calibration_id, **body.model_dump()},
+    )
     now = datetime.now(timezone.utc).isoformat()
     _calibrations[calibration_id] = {
         "id": calibration_id,
@@ -255,12 +283,17 @@ async def update_calibration(calibration_id: str, body: CalibrationCreate):
         "performed_at": body.performed_at or now,
         "updated_at": now,
     }
-    return {"id": calibration_id, "status": "created", "updated_at": now}
+    return {"id": calibration_id, "status": "created", "updated_at": now, "avani": avani}
 
 
 @router.post("/order")
 async def sporebase_order(body: Dict[str, Any]):
     """Capture SporeBase pre-order requests for downstream fulfillment."""
+    avani = await _require_sporebase_avani(
+        "/api/sporebase/order",
+        "Capture SporeBase order.",
+        {"tier": body.get("tier"), "organization": body.get("organization")},
+    )
     email = (body.get("email") or body.get("contact_email") or "").strip().lower()
     tier = (body.get("tier") or "").strip().lower()
     if not email or "@" not in email:
@@ -281,4 +314,4 @@ async def sporebase_order(body: Dict[str, Any]):
         "submitted_at": now,
         "source": "sporebase_api",
     }
-    return {"id": order_id, "status": "submitted", "submitted_at": now}
+    return {"id": order_id, "status": "submitted", "submitted_at": now, "avani": avani}

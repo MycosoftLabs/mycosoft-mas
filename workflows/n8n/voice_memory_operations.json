@@ -1,0 +1,178 @@
+{
+  "name": "Voice Memory Operations Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice/memory/operation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-memory",
+      "name": "Memory Operation Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.operation }}",
+              "value2": "store"
+            }
+          ]
+        }
+      },
+      "id": "route-operation",
+      "name": "Route Operation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/memory/store",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "name": "memory_type",
+              "value": "={{ $json.memory_type || 'fact' }}"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $json.user_id }}"
+            },
+            {
+              "name": "tags",
+              "value": "={{ $json.tags }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "store-memory",
+      "name": "Store Memory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 150]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/memory/recall",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.query }}"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $json.user_id }}"
+            },
+            {
+              "name": "limit",
+              "value": "={{ $json.limit || 5 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "recall-memory",
+      "name": "Recall Memory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/memory/forget",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "memory_id",
+              "value": "={{ $json.memory_id }}"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $json.user_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "forget-memory",
+      "name": "Forget Memory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 450]
+    },
+    {
+      "parameters": {
+        "url": "http://personaplex-bridge:8999/api/announce",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.response_message || 'Memory operation completed.' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "announce-result",
+      "name": "Announce Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, result: $json }) }}"
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1150, 300]
+    }
+  ],
+  "connections": {
+    "Memory Operation Webhook": {
+      "main": [[{"node": "Route Operation", "type": "main", "index": 0}]]
+    },
+    "Route Operation": {
+      "main": [
+        [{"node": "Store Memory", "type": "main", "index": 0}],
+        [{"node": "Recall Memory", "type": "main", "index": 0}],
+        [{"node": "Forget Memory", "type": "main", "index": 0}]
+      ]
+    },
+    "Store Memory": {
+      "main": [[{"node": "Announce Result", "type": "main", "index": 0}]]
+    },
+    "Recall Memory": {
+      "main": [[{"node": "Announce Result", "type": "main", "index": 0}]]
+    },
+    "Forget Memory": {
+      "main": [[{"node": "Announce Result", "type": "main", "index": 0}]]
+    },
+    "Announce Result": {
+      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": ["voice", "memory", "storage", "recall", "myca"]
+}

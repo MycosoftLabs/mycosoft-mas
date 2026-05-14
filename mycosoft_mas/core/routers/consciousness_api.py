@@ -16,16 +16,30 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 import aiohttp
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 from mycosoft_mas.consciousness import get_consciousness
+from mycosoft_mas.core.auth.internal_service import require_internal_service_token
+from mycosoft_mas.core.myca_identity import (
+    audit_security_event,
+    build_identity_security_prompt,
+    detect_identity_claim,
+    is_privileged_intent,
+    is_untrusted_privileged_request,
+    resolve_fastapi_identity,
+    verification_boundary_response,
+)
 from mycosoft_mas.llm.error_sanitizer import sanitize_for_log, sanitize_for_user
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/myca", tags=["myca", "consciousness"])
+router = APIRouter(
+    prefix="/api/myca",
+    tags=["myca", "consciousness"],
+    dependencies=[Depends(require_internal_service_token)],
+)
 
 
 # =============================================================================
@@ -51,6 +65,7 @@ class ChatResponse(BaseModel):
     emotional_state: Optional[Dict[str, Any]] = None
     thoughts_processed: int = 0
     timestamp: str
+    runtime_context: Optional[Dict[str, Any]] = None
 
 
 class VoiceRequest(BaseModel):
@@ -136,12 +151,33 @@ async def ping():
 
 
 @router.post("/chat-simple")
-async def chat_simple(request: ChatRequest):
+async def chat_simple(request: ChatRequest, fastapi_request: Request):
     """
     Simplified chat that bypasses the full consciousness pipeline.
     Used for testing when LLM APIs are unavailable.
     """
     consciousness = get_consciousness()
+    identity = await resolve_fastapi_identity(fastapi_request)
+    claimed = detect_identity_claim(request.message)
+    if claimed or is_privileged_intent(request.message):
+        audit_security_event(
+            route="/api/myca/chat-simple",
+            identity=identity,
+            action="consciousness_chat_simple",
+            decision="allowed" if identity.is_superuser else "guest_boundary",
+            claimed_role_phrase=claimed,
+            source_ip=fastapi_request.client.host if fastapi_request.client else None,
+            session_id=request.session_id,
+        )
+    if is_untrusted_privileged_request(request.message, identity):
+        return ChatResponse(
+            message=verification_boundary_response(identity),
+            session_id=request.session_id,
+            emotional_state={"dominant": "careful", "valence": 0.2},
+            thoughts_processed=0,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            runtime_context=identity.runtime_context(),
+        )
 
     # Quick consciousness check
     state = "conscious" if consciousness.is_conscious else "dormant"
@@ -165,7 +201,7 @@ async def chat_simple(request: ChatRequest):
             "Note: My full LLM capabilities may be limited due to API issues."
         )
     elif any(word in msg for word in ["hello", "hi", "hey"]):
-        response = "Hello Morgan! How may I assist you today?"
+        response = "Hello. How may I assist you today?"
     else:
         response = (
             f"I received your message: '{request.message[:100]}'. "
@@ -179,6 +215,7 @@ async def chat_simple(request: ChatRequest):
         emotional_state={"dominant": "curiosity", "valence": 0.6},
         thoughts_processed=1,
         timestamp=datetime.now(timezone.utc).isoformat(),
+        runtime_context=identity.runtime_context(),
     )
 
 
@@ -188,7 +225,7 @@ async def chat_simple(request: ChatRequest):
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, fastapi_request: Request):
     """
     Chat with MYCA.
 
@@ -201,6 +238,28 @@ async def chat(request: ChatRequest):
     logger = logging.getLogger(__name__)
 
     consciousness = get_consciousness()
+    identity = await resolve_fastapi_identity(fastapi_request)
+    claimed = detect_identity_claim(request.message)
+    if claimed or is_privileged_intent(request.message):
+        audit_security_event(
+            route="/api/myca/chat",
+            identity=identity,
+            action="consciousness_chat",
+            decision="allowed" if identity.is_superuser else "guest_boundary",
+            claimed_role_phrase=claimed,
+            source_ip=fastapi_request.client.host if fastapi_request.client else None,
+            session_id=request.session_id,
+            details={"body_user_id": request.user_id},
+        )
+    if is_untrusted_privileged_request(request.message, identity):
+        return ChatResponse(
+            message=verification_boundary_response(identity),
+            session_id=request.session_id,
+            emotional_state={"dominant": "careful", "valence": 0.2},
+            thoughts_processed=0,
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            runtime_context=identity.runtime_context(),
+        )
 
     # Ensure MYCA is awake
     if not consciousness.is_conscious:
@@ -215,11 +274,15 @@ async def chat(request: ChatRequest):
 
         async def collect_response():
             async for chunk in consciousness.process_input(
-                content=request.message,
+                content=build_identity_security_prompt(identity, request.message),
                 source="text",
-                context=request.context,
+                context={
+                    **(request.context or {}),
+                    "runtime_context": identity.runtime_context(),
+                    "body_user_id_ignored_for_auth": request.user_id,
+                },
                 session_id=request.session_id,
-                user_id=request.user_id,
+                user_id=identity.user_id,
             ):
                 response_parts.append(chunk)
 
@@ -260,17 +323,43 @@ async def chat(request: ChatRequest):
         emotional_state=consciousness.emotions.to_dict() if consciousness.emotions else None,
         thoughts_processed=consciousness.metrics.thoughts_processed if consciousness.metrics else 1,
         timestamp=datetime.now(timezone.utc).isoformat(),
+        runtime_context=identity.runtime_context(),
     )
 
 
 @router.post("/chat/stream")
-async def chat_stream(request: ChatRequest):
+async def chat_stream(request: ChatRequest, fastapi_request: Request):
     """
     Stream a chat response from MYCA.
 
     Returns Server-Sent Events for real-time streaming.
     """
     consciousness = get_consciousness()
+    identity = await resolve_fastapi_identity(fastapi_request)
+    claimed = detect_identity_claim(request.message)
+    if claimed or is_privileged_intent(request.message):
+        audit_security_event(
+            route="/api/myca/chat/stream",
+            identity=identity,
+            action="consciousness_chat_stream",
+            decision="allowed" if identity.is_superuser else "guest_boundary",
+            claimed_role_phrase=claimed,
+            source_ip=fastapi_request.client.host if fastapi_request.client else None,
+            session_id=request.session_id,
+        )
+    if is_untrusted_privileged_request(request.message, identity):
+        async def denied():
+            yield {"event": "message", "data": verification_boundary_response(identity)}
+            yield {
+                "event": "done",
+                "data": {
+                    "thoughts_processed": 0,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "runtime_context": identity.runtime_context(),
+                },
+            }
+
+        return EventSourceResponse(denied())
 
     # Ensure MYCA is awake
     if not consciousness.is_conscious:
@@ -279,11 +368,11 @@ async def chat_stream(request: ChatRequest):
     async def generate():
         try:
             async for chunk in consciousness.process_input(
-                content=request.message,
+                content=build_identity_security_prompt(identity, request.message),
                 source="text",
-                context=request.context,
+                context={**(request.context or {}), "runtime_context": identity.runtime_context()},
                 session_id=request.session_id,
-                user_id=request.user_id,
+                user_id=identity.user_id,
             ):
                 yield {"event": "message", "data": chunk}
 
@@ -355,13 +444,33 @@ async def chat_websocket(websocket: WebSocket):
 
 
 @router.post("/voice/process")
-async def process_voice(request: VoiceRequest):
+async def process_voice(request: VoiceRequest, fastapi_request: Request):
     """
     Process voice input through MYCA's consciousness.
 
     Voice goes through the same consciousness pipeline as text.
     """
     consciousness = get_consciousness()
+    identity = await resolve_fastapi_identity(fastapi_request)
+    claimed = detect_identity_claim(request.transcript)
+    if claimed or is_privileged_intent(request.transcript):
+        audit_security_event(
+            route="/api/myca/voice/process",
+            identity=identity,
+            action="consciousness_voice",
+            decision="allowed" if identity.is_superuser else "guest_boundary",
+            claimed_role_phrase=claimed,
+            source_ip=fastapi_request.client.host if fastapi_request.client else None,
+            session_id=request.session_id,
+        )
+    if is_untrusted_privileged_request(request.transcript, identity):
+        return {
+            "response": verification_boundary_response(identity),
+            "session_id": request.session_id,
+            "emotional_state": {"dominant": "careful", "valence": 0.2},
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "runtime_context": identity.runtime_context(),
+        }
 
     # Ensure MYCA is awake
     if not consciousness.is_conscious:
@@ -370,10 +479,10 @@ async def process_voice(request: VoiceRequest):
     # Process through consciousness (same path as text!)
     response_parts = []
     async for chunk in consciousness.process_input(
-        content=request.transcript,
+        content=build_identity_security_prompt(identity, request.transcript),
         source="voice",
         session_id=request.session_id,
-        user_id=request.user_id,
+        user_id=identity.user_id,
     ):
         response_parts.append(chunk)
 
@@ -384,17 +493,25 @@ async def process_voice(request: VoiceRequest):
         "session_id": request.session_id,
         "emotional_state": consciousness.emotions.to_dict() if consciousness.emotions else None,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "runtime_context": identity.runtime_context(),
     }
 
 
 @router.post("/voice/stream")
-async def voice_stream(request: VoiceRequest):
+async def voice_stream(request: VoiceRequest, fastapi_request: Request):
     """
     Stream voice response through SSE.
 
     For real-time voice feedback.
     """
     consciousness = get_consciousness()
+    identity = await resolve_fastapi_identity(fastapi_request)
+    if is_untrusted_privileged_request(request.transcript, identity):
+        async def denied():
+            yield {"event": "message", "data": verification_boundary_response(identity)}
+            yield {"event": "done", "data": {"timestamp": datetime.now(timezone.utc).isoformat()}}
+
+        return EventSourceResponse(denied())
 
     if not consciousness.is_conscious:
         await consciousness.awaken()
@@ -402,10 +519,10 @@ async def voice_stream(request: VoiceRequest):
     async def generate():
         try:
             async for chunk in consciousness.process_input(
-                content=request.transcript,
+                content=build_identity_security_prompt(identity, request.transcript),
                 source="voice",
                 session_id=request.session_id,
-                user_id=request.user_id,
+                user_id=identity.user_id,
             ):
                 yield {"event": "message", "data": chunk}
 

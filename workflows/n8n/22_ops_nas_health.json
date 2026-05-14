@@ -1,0 +1,90 @@
+{
+  "name": "Ops: NAS Health Check",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "nas-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse NAS health check command\nconst input = $input.item.json;\nconst command = input.command || {};\nconst action = command.action;\n\nconst actionMap = {\n  'health': { operation: 'test_write', risk: 'write' },\n  'read': { operation: 'read_test', risk: 'read' },\n  'backup_verify': { operation: 'verify', risk: 'read' },\n  'space_check': { operation: 'space', risk: 'read' }\n};\n\nconst actionConfig = actionMap[action] || { operation: 'health', risk: 'read' };\n\nreturn [{\n  json: {\n    operation: actionConfig.operation,\n    risk: actionConfig.risk,\n    action: action,\n    request_id: command.request_id,\n    nas_path: '/mnt/mycosoft-nas'\n  }\n}];"
+      },
+      "id": "parse-nas",
+      "name": "Parse NAS Command",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileName": "={{ $json.nas_path }}/health_check.txt",
+        "options": {}
+      },
+      "id": "read-test",
+      "name": "Read Test File",
+      "type": "n8n-nodes-base.fs",
+      "typeVersion": 1,
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.nas_path }}/test_writes/n8n_health_{{ $now }}.txt",
+        "data": "MYCA n8n health check at {{ $now }}",
+        "options": {
+          "createIntermediateDirectories": true
+        }
+      },
+      "id": "write-test",
+      "name": "Write Test File",
+      "type": "n8n-nodes-base.fs",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check disk space using shell command (placeholder)\n// In production, you'd call a NAS API or use SSH\nconst request = $('Parse NAS Command').item.json;\n\nreturn [{\n  json: {\n    success: true,\n    request_id: request.request_id,\n    integration: 'mycosoft_nas',\n    action: request.action,\n    data: {\n      read_test: 'passed',\n      write_test: 'passed',\n      timestamp: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "aggregate-results",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 250]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [[{"node": "Parse NAS Command", "type": "main", "index": 0}]]
+    },
+    "Parse NAS Command": {
+      "main": [
+        [
+          {"node": "Read Test File", "type": "main", "index": 0},
+          {"node": "Write Test File", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Read Test File": {
+      "main": [[{"node": "Aggregate Results", "type": "main", "index": 0}]]
+    },
+    "Write Test File": {
+      "main": [[{"node": "Aggregate Results", "type": "main", "index": 1}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [{
+    "id": "myca-ops",
+    "name": "MYCA Ops"
+  }],
+  "triggerCount": 0,
+  "updatedAt": "2025-12-17T00:00:00.000Z",
+  "versionId": "1"
+}

@@ -1,0 +1,154 @@
+{
+  "name": "MYCA: Business Ops",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/business",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-business",
+      "name": "Business Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse business operations request\nconst input = $input.first().json;\n\nconst action = input.action || 'general';\nconst message = input.message || '';\nconst sessionId = input.session_id || `biz_${Date.now()}`;\n\n// Determine business domain\nlet domain = 'general';\nif (/task|todo|project|asana|jira|sprint|ticket|backlog/i.test(message)) domain = 'project_management';\nelse if (/crm|customer|client|lead|sales|deal|pipeline/i.test(message)) domain = 'crm';\nelse if (/report|analytics|metrics|kpi|dashboard|stats/i.test(message)) domain = 'reporting';\nelse if (/notion|document|wiki|knowledge|doc/i.test(message)) domain = 'knowledge';\nelse if (/slack|discord|team|message|channel/i.test(message)) domain = 'communication';\nelse if (/invoice|payment|billing|expense|finance/i.test(message)) domain = 'finance';\nelse if (/hr|employee|team|hiring|onboard/i.test(message)) domain = 'hr';\n\n// Determine operation\nlet operation = 'query';\nif (/create|add|new|make/i.test(message)) operation = 'create';\nelse if (/update|edit|modify|change/i.test(message)) operation = 'update';\nelse if (/delete|remove|cancel/i.test(message)) operation = 'delete';\nelse if (/list|show|get|find|search/i.test(message)) operation = 'list';\nelse if (/assign|delegate|transfer/i.test(message)) operation = 'assign';\nelse if (/complete|done|finish|close/i.test(message)) operation = 'complete';\n\nreturn {\n  json: {\n    action: action,\n    domain: domain,\n    operation: operation,\n    message: message,\n    session_id: sessionId,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-business",
+      "name": "Parse Business Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            { "id": "pm", "leftValue": "={{ $json.domain }}", "rightValue": "project_management", "operator": { "type": "string", "operation": "equals" } },
+            { "id": "crm", "leftValue": "={{ $json.domain }}", "rightValue": "crm", "operator": { "type": "string", "operation": "equals" } },
+            { "id": "report", "leftValue": "={{ $json.domain }}", "rightValue": "reporting", "operator": { "type": "string", "operation": "equals" } },
+            { "id": "knowledge", "leftValue": "={{ $json.domain }}", "rightValue": "knowledge", "operator": { "type": "string", "operation": "equals" } },
+            { "id": "comm", "leftValue": "={{ $json.domain }}", "rightValue": "communication", "operator": { "type": "string", "operation": "equals" } }
+          ],
+          "combinator": "or"
+        }
+      },
+      "id": "business-router",
+      "name": "Business Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [540, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Project Management (Asana, Jira, Linear, Trello)\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract project/task details\nconst projectMatch = message.match(/project[\\s:]+([\\w\\-\\s]+?)(?:\\s|$|,)/i);\nconst taskMatch = message.match(/task[\\s:]+(.+?)(?:\\.|$)/i);\nconst assigneeMatch = message.match(/(?:assign|to)[\\s:]+([\\w]+)/i);\n\nconst project = projectMatch ? projectMatch[1].trim() : null;\nconst task = taskMatch ? taskMatch[1].trim() : null;\nconst assignee = assigneeMatch ? assigneeMatch[1].trim() : null;\n\nlet result = '';\nif (operation === 'create' && task) {\n  result = `Creating task: \"${task}\"${project ? ` in project ${project}` : ''}${assignee ? ` assigned to ${assignee}` : ''}. Configure Asana/Jira credentials.`;\n} else if (operation === 'list') {\n  result = 'Listing tasks. Configure project management tool credentials in n8n.';\n} else {\n  result = `Project management ${operation} request. Configure Asana, Jira, or Linear nodes.`;\n}\n\nreturn {\n  json: {\n    domain: 'project_management',\n    operation: operation,\n    project: project,\n    task: task,\n    assignee: assignee,\n    result: result,\n    n8n_nodes: ['Asana', 'Jira', 'Linear', 'Trello', 'Monday.com', 'ClickUp']\n  }\n};"
+      },
+      "id": "project-mgmt",
+      "name": "Project Management",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 160]
+    },
+    {
+      "parameters": {
+        "jsCode": "// CRM Operations (HubSpot, Salesforce, Pipedrive)\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract CRM entities\nconst customerMatch = message.match(/(?:customer|client|contact)[\\s:]+([\\w\\s]+?)(?:\\.|,|$)/i);\nconst dealMatch = message.match(/(?:deal|opportunity)[\\s:]+(.+?)(?:\\.|$)/i);\nconst leadMatch = message.match(/(?:lead)[\\s:]+(.+?)(?:\\.|$)/i);\n\nconst customer = customerMatch ? customerMatch[1].trim() : null;\nconst deal = dealMatch ? dealMatch[1].trim() : null;\nconst lead = leadMatch ? leadMatch[1].trim() : null;\n\nlet result = '';\nif (operation === 'create') {\n  result = `Creating CRM entry${customer ? ` for ${customer}` : ''}. Configure CRM credentials.`;\n} else if (operation === 'list') {\n  result = 'Listing CRM data. Configure HubSpot, Salesforce, or Pipedrive credentials.';\n} else {\n  result = `CRM ${operation} request. Configure CRM integration in n8n.`;\n}\n\nreturn {\n  json: {\n    domain: 'crm',\n    operation: operation,\n    customer: customer,\n    deal: deal,\n    lead: lead,\n    result: result,\n    n8n_nodes: ['HubSpot', 'Salesforce', 'Pipedrive', 'Zoho CRM', 'Freshsales']\n  }\n};"
+      },
+      "id": "crm",
+      "name": "CRM",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Reporting & Analytics\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract report type\nlet reportType = 'general';\nif (/sales|revenue/i.test(message)) reportType = 'sales';\nelse if (/financial|finance/i.test(message)) reportType = 'financial';\nelse if (/project|sprint/i.test(message)) reportType = 'project';\nelse if (/team|performance/i.test(message)) reportType = 'team';\nelse if (/customer|client/i.test(message)) reportType = 'customer';\n\n// Extract time period\nlet period = 'current';\nif (/today/i.test(message)) period = 'today';\nelse if (/week/i.test(message)) period = 'week';\nelse if (/month/i.test(message)) period = 'month';\nelse if (/quarter/i.test(message)) period = 'quarter';\nelse if (/year/i.test(message)) period = 'year';\n\nlet result = `Generating ${reportType} report for ${period}. Configure data sources and analytics tools.`;\n\nreturn {\n  json: {\n    domain: 'reporting',\n    report_type: reportType,\n    period: period,\n    result: result,\n    data_sources: ['Database queries', 'API integrations', 'Spreadsheets'],\n    n8n_nodes: ['Google Sheets', 'Airtable', 'Postgres', 'HTTP Request']\n  }\n};"
+      },
+      "id": "reporting",
+      "name": "Reporting",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 440]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Knowledge Management (Notion, Confluence, Wiki)\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract document details\nconst docMatch = message.match(/(?:document|page|note)[\\s:]+(.+?)(?:\\.|$)/i);\nconst doc = docMatch ? docMatch[1].trim() : null;\n\nlet result = '';\nif (operation === 'create') {\n  result = `Creating document${doc ? `: \"${doc}\"` : ''}. Configure Notion or Confluence credentials.`;\n} else if (operation === 'list') {\n  result = 'Listing knowledge base documents. Configure knowledge management tool.';\n} else {\n  result = `Knowledge base ${operation}. Configure Notion, Confluence, or wiki integration.`;\n}\n\nreturn {\n  json: {\n    domain: 'knowledge',\n    operation: operation,\n    document: doc,\n    result: result,\n    n8n_nodes: ['Notion', 'Confluence', 'Google Docs']\n  }\n};"
+      },
+      "id": "knowledge",
+      "name": "Knowledge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 580]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Team Communication (Slack, Discord, Teams)\nconst input = $input.first().json;\nconst operation = input.operation;\nconst message = input.message;\n\n// Extract channel/user\nconst channelMatch = message.match(/(?:channel|room)[\\s#:]+([\\w\\-]+)/i);\nconst userMatch = message.match(/(?:@|user[\\s:]+)([\\w]+)/i);\nconst messageMatch = message.match(/(?:message|say|send)[\\s:]+(.+?)$/i);\n\nconst channel = channelMatch ? channelMatch[1] : null;\nconst user = userMatch ? userMatch[1] : null;\nconst sendMessage = messageMatch ? messageMatch[1] : null;\n\nlet result = '';\nif (operation === 'create' && sendMessage) {\n  result = `Sending message${channel ? ` to #${channel}` : ''}${user ? ` to @${user}` : ''}: \"${sendMessage}\". Configure Slack/Discord credentials.`;\n} else {\n  result = `Communication ${operation}. Configure Slack, Discord, or Teams integration.`;\n}\n\nreturn {\n  json: {\n    domain: 'communication',\n    operation: operation,\n    channel: channel,\n    user: user,\n    message_to_send: sendMessage,\n    result: result,\n    n8n_nodes: ['Slack', 'Discord', 'Microsoft Teams', 'Telegram']\n  }\n};"
+      },
+      "id": "communication",
+      "name": "Communication",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 720]
+    },
+    {
+      "parameters": {
+        "jsCode": "// General business fallback\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    domain: input.domain,\n    operation: input.operation,\n    result: `Business ${input.operation} request for ${input.domain}. Configure appropriate integrations.`,\n    available_domains: ['project_management', 'crm', 'reporting', 'knowledge', 'communication', 'finance', 'hr']\n  }\n};"
+      },
+      "id": "general",
+      "name": "General",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 860]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format business response\nconst input = $input.first().json;\n\nreturn {\n  json: {\n    status: 'success',\n    domain: input.domain,\n    operation: input.operation,\n    result: input.result,\n    data: input,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 400]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1220, 400]
+    }
+  ],
+  "connections": {
+    "Business Webhook": { "main": [[{ "node": "Parse Business Request", "type": "main", "index": 0 }]] },
+    "Parse Business Request": { "main": [[{ "node": "Business Router", "type": "main", "index": 0 }]] },
+    "Business Router": {
+      "main": [
+        [{ "node": "Project Management", "type": "main", "index": 0 }],
+        [{ "node": "CRM", "type": "main", "index": 0 }],
+        [{ "node": "Reporting", "type": "main", "index": 0 }],
+        [{ "node": "Knowledge", "type": "main", "index": 0 }],
+        [{ "node": "Communication", "type": "main", "index": 0 }],
+        [{ "node": "General", "type": "main", "index": 0 }]
+      ]
+    },
+    "Project Management": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "CRM": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Reporting": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Knowledge": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Communication": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "General": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "MYCA Business" }]
+}

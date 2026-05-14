@@ -1,0 +1,157 @@
+{
+  "name": "Voice Skill Learning Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "voice/skill/learn",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-skill-learn",
+      "name": "Voice Skill Learn Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.skill_description }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "validate-request",
+      "name": "Validate Request",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/llm/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "=Generate a detailed skill definition for learning: {{ $json.skill_description }}\n\nProvide JSON with:\n- name: short skill name\n- description: detailed description\n- category: coding/infrastructure/business/scientific/automation/general\n- execution_steps: array of steps\n- required_tools: tools needed\n- prompt_template: template for execution"
+            },
+            {
+              "name": "max_tokens",
+              "value": "1000"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "llm-generate-skill",
+      "name": "LLM Generate Skill",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 250]
+    },
+    {
+      "parameters": {
+        "url": "http://myca-brain:8001/api/skills/register",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "skill_data",
+              "value": "={{ $json.response }}"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $('Voice Skill Learn Webhook').item.json.user_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "register-skill",
+      "name": "Register Skill",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "url": "http://personaplex-bridge:8999/api/announce",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=I've learned how to {{ $('Voice Skill Learn Webhook').item.json.skill_description }}. This skill is now available."
+            },
+            {
+              "name": "priority",
+              "value": "high"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "announce-completion",
+      "name": "Announce Completion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, skill_id: $json.skill_id, message: 'Skill learned successfully' }) }}"
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 250]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: 'Missing skill_description' }) }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "respond-error",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [650, 400]
+    }
+  ],
+  "connections": {
+    "Voice Skill Learn Webhook": {
+      "main": [[{"node": "Validate Request", "type": "main", "index": 0}]]
+    },
+    "Validate Request": {
+      "main": [
+        [{"node": "LLM Generate Skill", "type": "main", "index": 0}],
+        [{"node": "Respond Error", "type": "main", "index": 0}]
+      ]
+    },
+    "LLM Generate Skill": {
+      "main": [[{"node": "Register Skill", "type": "main", "index": 0}]]
+    },
+    "Register Skill": {
+      "main": [[{"node": "Announce Completion", "type": "main", "index": 0}]]
+    },
+    "Announce Completion": {
+      "main": [[{"node": "Respond Success", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["voice", "skill-learning", "myca"]
+}

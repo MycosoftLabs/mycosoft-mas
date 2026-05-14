@@ -338,7 +338,7 @@ def build_static_index(
         csr_indptr = np.zeros(2, dtype=dtype)
         csr_packed = np.zeros((0, 2), dtype=dtype)
 
-    build_time = (time.time() - t0) * 1000
+    build_time = max((time.time() - t0) * 1000, 0.001)
 
     index = STATICIndex(
         start_mask=start_mask,

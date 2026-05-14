@@ -10,6 +10,8 @@ Provides WebSocket endpoints for:
 (c) 2026 Mycosoft Labs - February 9, 2026
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import math

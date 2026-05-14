@@ -26,7 +26,7 @@ def run(cmd, timeout=30):
     return (out + err).strip(), rc
 
 # Read existing .env and replace GEMINI_API_KEY
-NEW_KEY = "AIzaSyBH0m35MF2Qj2y5L17xVBlZwwr2jG9jvyw"
+NEW_KEY = os.getenv("GEMINI_API_KEY", "")
 out, _ = run(f"cat {ENV_PATH}")
 lines = out.splitlines()
 

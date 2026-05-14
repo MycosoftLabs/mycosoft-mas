@@ -25,6 +25,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/nlm/training", tags=["nlm-training"])
@@ -56,6 +58,19 @@ DEFAULT_NLM_CATEGORIES = [
     "medical_applications",
     "conservation_status",
 ]
+
+
+async def _require_nlm_avani(route: str, description: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        return await require_avani_for_route(
+            route=route,
+            source_agent="nlm_training_api",
+            action_type="nlm_training",
+            description=description,
+            metadata=metadata,
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
 
 # ── Request models ───────────────────────────────────────────────────────────
@@ -193,6 +208,12 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
     """
     global _active_run_id
 
+    avani = await _require_nlm_avani(
+        "/api/nlm/training/start",
+        "Start NLM training run.",
+        req.model_dump(),
+    )
+
     if _active_run_id:
         active = _get_active_run()
         if active and active.get("status") in ("training", "paused"):
@@ -255,6 +276,7 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
         "status": "started",
         "run_id": run_id,
         "config": run["config"],
+        "avani": avani,
         "message": f"NLM training run accepted by MAS; GPU execution target is {GPU_NODE_IP}",
     }
 
@@ -298,6 +320,11 @@ async def stop_training(req: RunIdRequest) -> Dict[str, Any]:
     run_id = req.run_id or _active_run_id
     if not run_id:
         raise HTTPException(status_code=404, detail="No active training run")
+    avani = await _require_nlm_avani(
+        "/api/nlm/training/stop",
+        f"Stop NLM training run {run_id}.",
+        {"run_id": run_id},
+    )
 
     for run in _training_runs:
         if run["run_id"] == run_id:
@@ -311,7 +338,7 @@ async def stop_training(req: RunIdRequest) -> Dict[str, Any]:
         _active_run_id = None
 
     logger.info(f"Training run {run_id} stopped")
-    return {"status": "stopped", "run_id": run_id}
+    return {"status": "stopped", "run_id": run_id, "avani": avani}
 
 
 @router.post("/pause")
@@ -320,6 +347,11 @@ async def pause_training(req: RunIdRequest) -> Dict[str, Any]:
     run_id = req.run_id or _active_run_id
     if not run_id:
         raise HTTPException(status_code=404, detail="No active training run")
+    avani = await _require_nlm_avani(
+        "/api/nlm/training/pause",
+        f"Pause NLM training run {run_id}.",
+        {"run_id": run_id},
+    )
 
     for run in _training_runs:
         if run["run_id"] == run_id:
@@ -332,7 +364,7 @@ async def pause_training(req: RunIdRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
     logger.info(f"Training run {run_id} paused")
-    return {"status": "paused", "run_id": run_id}
+    return {"status": "paused", "run_id": run_id, "avani": avani}
 
 
 @router.post("/resume")
@@ -341,6 +373,11 @@ async def resume_training(req: RunIdRequest) -> Dict[str, Any]:
     run_id = req.run_id or _active_run_id
     if not run_id:
         raise HTTPException(status_code=404, detail="No active training run")
+    avani = await _require_nlm_avani(
+        "/api/nlm/training/resume",
+        f"Resume NLM training run {run_id}.",
+        {"run_id": run_id},
+    )
 
     for run in _training_runs:
         if run["run_id"] == run_id:
@@ -353,7 +390,7 @@ async def resume_training(req: RunIdRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
 
     logger.info(f"Training run {run_id} resumed")
-    return {"status": "training", "run_id": run_id}
+    return {"status": "training", "run_id": run_id, "avani": avani}
 
 
 @router.post("/checkpoint")
@@ -368,6 +405,11 @@ async def save_checkpoint(req: CheckpointRequest) -> Dict[str, Any]:
 
     if not run:
         raise HTTPException(status_code=404, detail="No active training run to checkpoint")
+    avani = await _require_nlm_avani(
+        "/api/nlm/training/checkpoint",
+        f"Save NLM checkpoint for run {run_id}.",
+        req.model_dump(),
+    )
 
     checkpoint_id = f"ckpt_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:4]}"
 
@@ -388,7 +430,7 @@ async def save_checkpoint(req: CheckpointRequest) -> Dict[str, Any]:
     _checkpoints.append(checkpoint)
 
     logger.info(f"Checkpoint {checkpoint_id} saved for run {run_id}")
-    return {"status": "saved", "checkpoint": checkpoint}
+    return {"status": "saved", "checkpoint": checkpoint, "avani": avani}
 
 
 @router.post("/load")
@@ -402,11 +444,17 @@ async def load_checkpoint(req: LoadCheckpointRequest) -> Dict[str, Any]:
 
     if not checkpoint:
         raise HTTPException(status_code=404, detail=f"Checkpoint {req.checkpoint_id} not found")
+    avani = await _require_nlm_avani(
+        "/api/nlm/training/load",
+        f"Load NLM checkpoint {req.checkpoint_id}.",
+        req.model_dump(),
+    )
 
     logger.info(f"Loading checkpoint {req.checkpoint_id}")
     return {
         "status": "loaded",
         "checkpoint": checkpoint,
+        "avani": avani,
         "message": f"Checkpoint from epoch {checkpoint.get('epoch', '?')} loaded",
     }
 
@@ -429,6 +477,11 @@ async def apply_mutation(req: MutateRequest) -> Dict[str, Any]:
 
     if req.mutation_type not in ("prune", "grow", "rewire", "perturb"):
         raise HTTPException(status_code=400, detail=f"Invalid mutation type: {req.mutation_type}")
+    avani = await _require_nlm_avani(
+        "/api/nlm/training/mutate",
+        f"Apply live NLM mutation {req.mutation_type} to run {run_id}.",
+        req.model_dump(),
+    )
 
     mutation_id = f"mut_{datetime.now().strftime('%H%M%S')}_{uuid.uuid4().hex[:4]}"
 
@@ -448,12 +501,17 @@ async def apply_mutation(req: MutateRequest) -> Dict[str, Any]:
     active["mutations"].append(mutation)
 
     logger.info(f"Mutation {req.mutation_type} applied to run {run_id}")
-    return {"status": "applied", "mutation": mutation}
+    return {"status": "applied", "mutation": mutation, "avani": avani}
 
 
 @router.post("/export")
 async def export_model(req: ExportRequest) -> Dict[str, Any]:
     """Export a trained model in the specified format."""
+    avani = await _require_nlm_avani(
+        "/api/nlm/training/export",
+        f"Export NLM model as {req.format}.",
+        req.model_dump(),
+    )
     try:
         from mycosoft_mas.nlm.trainer import NLMTrainer
 
@@ -465,6 +523,7 @@ async def export_model(req: ExportRequest) -> Dict[str, Any]:
             "status": "exported",
             "path": result,
             "format": req.format,
+            "avani": avani,
             "message": f"Model exported to {output_path}",
         }
     except Exception as e:

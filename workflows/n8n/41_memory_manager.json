@@ -1,0 +1,166 @@
+{
+  "name": "Memory Manager - MYCA",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "myca/memory",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "memory-webhook",
+      "name": "Memory Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [100, 300],
+      "webhookId": "myca-memory-manager"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Memory Manager - Handle read/write/search operations\nconst input = $input.first().json;\nconst operation = input.operation || 'read';\nconst scope = input.scope || 'conversation';\nconst namespace = input.namespace || 'default';\nconst key = input.key || null;\nconst value = input.value || null;\nconst query = input.query || null;\nconst limit = input.limit || 10;\n\n// Validate scope\nconst validScopes = ['conversation', 'session', 'user', 'system', 'agent', 'workflow', 'semantic', 'vector'];\nif (!validScopes.includes(scope)) {\n  return { json: { error: true, message: `Invalid scope: ${scope}` } };\n}\n\nreturn {\n  json: {\n    operation: operation,\n    scope: scope,\n    namespace: namespace,\n    key: key,\n    value: value,\n    query: query,\n    limit: limit,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "parse-memory-request",
+      "name": "Parse Memory Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [320, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            { "outputKey": "write", "value": "={{ $json.operation === 'write' }}" },
+            { "outputKey": "read", "value": "={{ $json.operation === 'read' }}" },
+            { "outputKey": "search", "value": "={{ $json.operation === 'search' }}" },
+            { "outputKey": "delete", "value": "={{ $json.operation === 'delete' }}" }
+          ]
+        }
+      },
+      "id": "route-operation",
+      "name": "Route Operation",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [540, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/memory/write",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "scope", "value": "={{ $json.scope }}" },
+            { "name": "namespace", "value": "={{ $json.namespace }}" },
+            { "name": "key", "value": "={{ $json.key }}" },
+            { "name": "value", "value": "={{ $json.value }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "memory-write",
+      "name": "Memory Write",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 200]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/memory/read",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "scope", "value": "={{ $json.scope }}" },
+            { "name": "namespace", "value": "={{ $json.namespace }}" },
+            { "name": "key", "value": "={{ $json.key }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "memory-read",
+      "name": "Memory Read",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/memory/search",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "query", "value": "={{ $json.query }}" },
+            { "name": "scope", "value": "={{ $json.scope }}" },
+            { "name": "limit", "value": "={{ $json.limit }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "memory-search",
+      "name": "Memory Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.0.188:8001/api/memory/delete",
+        "method": "DELETE",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "scope", "value": "={{ $json.scope }}" },
+            { "name": "namespace", "value": "={{ $json.namespace }}" },
+            { "name": "key", "value": "={{ $json.key }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "memory-delete",
+      "name": "Memory Delete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [760, 500]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format memory response\nconst result = $input.first().json;\nreturn {\n  json: {\n    status: result.error ? 'error' : 'success',\n    operation: $('Parse Memory Request').first().json.operation,\n    scope: $('Parse Memory Request').first().json.scope,\n    result: result,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-memory-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [980, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-memory",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Memory Webhook": { "main": [[{ "node": "Parse Memory Request", "type": "main", "index": 0 }]] },
+    "Parse Memory Request": { "main": [[{ "node": "Route Operation", "type": "main", "index": 0 }]] },
+    "Route Operation": {
+      "main": [
+        [{ "node": "Memory Write", "type": "main", "index": 0 }],
+        [{ "node": "Memory Read", "type": "main", "index": 0 }],
+        [{ "node": "Memory Search", "type": "main", "index": 0 }],
+        [{ "node": "Memory Delete", "type": "main", "index": 0 }]
+      ]
+    },
+    "Memory Write": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Memory Read": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Memory Search": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Memory Delete": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "Memory" }, { "name": "MYCA" }]
+}

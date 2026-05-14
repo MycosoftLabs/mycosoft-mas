@@ -1,0 +1,173 @@
+{
+  "name": "Native: DataStorage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "native/datastorage",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 140],
+      "webhookId": "native-datastorage"
+    },
+    {
+      "parameters": {},
+      "id": "data-trigger",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route to specific data/storage integration\nconst trigger = $('Execute Workflow Trigger').item?.json || $('Webhook').item?.json || $input.first().json;\nconst input = trigger.command ? trigger : (trigger.body || trigger);\nconst integrationName = (input.integration && input.integration.integration) || input.integration || input.routing_node;\nreturn [{ json: { ...input, routing_node: integrationName } }];"
+      },
+      "id": "data-router",
+      "name": "Data Router",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "postgres", "name": "=postgres", "value": "={{ $json.routing_node === 'postgres' }}", "type": "boolean" },
+            { "id": "mongodb", "name": "=mongodb", "value": "={{ $json.routing_node === 'mongodb' }}", "type": "boolean" },
+            { "id": "s3", "name": "=s3", "value": "={{ ['aws_s3','gcs'].includes($json.routing_node) }}", "type": "boolean" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "data-flags",
+      "name": "Prepare Switch",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "dataType": "boolean",
+        "value1": "={{ $json.postgres }}",
+        "rules": {
+          "rules": [
+            { "value2": true, "output": 0 },
+            { "value2": "={{ $json.mongodb }}", "output": 1 },
+            { "value2": "={{ $json.s3 }}", "output": 2 }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "data-switch",
+      "name": "Switch: Data",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.command.params.query || 'SELECT 1' }}",
+        "additionalFields": {}
+      },
+      "id": "postgres-node",
+      "name": "Postgres Query",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [1120, 80],
+      "credentials": {
+        "postgres": { "name": "Postgres" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "find",
+        "collection": "={{ $json.command.params.collection || 'items' }}",
+        "query": "={{ $json.command.params.filter || '{}' }}"
+      },
+      "id": "mongo-node",
+      "name": "MongoDB Find",
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 2,
+      "position": [1120, 260],
+      "credentials": {
+        "mongoDb": { "name": "MongoDB" }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "resource": "bucket",
+        "bucketName": "={{ $json.command.params.bucket || 'myca-bucket' }}"
+      },
+      "id": "s3-node",
+      "name": "Object Storage List",
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 1.1,
+      "position": [1120, 440],
+      "credentials": {
+        "aws": { "name": "AWS S3" }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Execute Workflow Trigger').item.json;return [{json:{error:true,message:`Integration ${input.integration.integration} not implemented in data native handler`,request_id:input.request_id}}];"
+      },
+      "id": "data-fallback",
+      "name": "Data Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 520]
+    },
+    {
+      "parameters": {
+        "jsCode": "const trigger = $('Execute Workflow Trigger').item?.json || $('Webhook').item?.json || $input.first().json;const input = trigger.command ? trigger : (trigger.body || trigger);const result = $input.item.json;return [{json:{success:!result.error,request_id:input.request_id,integration:(input.integration && input.integration.integration) || input.integration || input.routing_node,action:(input.command || {}).action,result:result,timestamp:new Date().toISOString()}}];"
+      },
+      "id": "format-data",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1760, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Data Router", "type": "main", "index": 0 }]] },
+    "Execute Workflow Trigger": { "main": [[{ "node": "Data Router", "type": "main", "index": 0 }]] },
+    "Data Router": { "main": [[{ "node": "Prepare Switch", "type": "main", "index": 0 }]] },
+    "Prepare Switch": { "main": [[{ "node": "Switch: Data", "type": "main", "index": 0 }]] },
+    "Switch: Data": {
+      "main": [
+        [{ "node": "Postgres Query", "type": "main", "index": 0 }],
+        [{ "node": "MongoDB Find", "type": "main", "index": 0 }],
+        [{ "node": "Object Storage List", "type": "main", "index": 0 }],
+        [{ "node": "Data Fallback", "type": "main", "index": 0 }]
+      ]
+    },
+    "Postgres Query": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "MongoDB Find": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Object Storage List": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Data Fallback": { "main": [[{ "node": "Format Response", "type": "main", "index": 0 }]] },
+    "Format Response": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "id": "myca-native", "name": "MYCA Native" }],
+  "triggerCount": 0,
+  "versionId": "1"
+}

@@ -15,9 +15,24 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+async def _require_earth2_avani(route: str, description: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        return await require_avani_for_route(
+            route=route,
+            source_agent="earth2_api",
+            action_type="earth_sim_command",
+            description=description,
+            metadata=payload,
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
 
 def _earth2_remote_url() -> str:
@@ -386,6 +401,7 @@ async def submit_forecast(
     Uses the Atlas model to generate global or regional forecasts
     for up to 15 days in advance.
     """
+    avani = await _require_earth2_avani("/api/earth2/forecast", "Run Earth2 forecast.", request.model_dump())
     from mycosoft_mas.earth2 import ForecastParams, SpatialExtent, TimeRange, get_earth2_service
 
     service = get_earth2_service()
@@ -423,12 +439,13 @@ async def submit_forecast(
     # Run forecast
     result = await service.run_forecast(params)
 
-    return ModelRunResponse(
+    response = ModelRunResponse(
         run_id=result.run_id,
         status=result.status,
         model=result.model,
         message=f"Forecast completed with {len(result.outputs)} outputs",
     )
+    return {**response.model_dump(), "avani": avani}
 
 
 @router.get("/forecast/{run_id}")
@@ -470,6 +487,7 @@ async def submit_nowcast(request: NowcastRequest) -> ModelRunResponse:
     Uses the StormScope model to generate high-resolution
     radar and satellite predictions for 0-6 hours.
     """
+    avani = await _require_earth2_avani("/api/earth2/nowcast", "Run Earth2 nowcast.", request.model_dump())
     from mycosoft_mas.earth2 import NowcastParams, SpatialExtent, get_earth2_service
 
     service = get_earth2_service()
@@ -505,12 +523,13 @@ async def submit_nowcast(request: NowcastRequest) -> ModelRunResponse:
 
     result = await service.run_nowcast(params)
 
-    return ModelRunResponse(
+    response = ModelRunResponse(
         run_id=result.run_id,
         status=result.status,
         model=result.model,
         message=f"Nowcast completed with {len(result.outputs)} outputs",
     )
+    return {**response.model_dump(), "avani": avani}
 
 
 # ============================================================================
@@ -526,6 +545,7 @@ async def submit_downscale(request: DownscaleRequest) -> ModelRunResponse:
     Uses the CorrDiff model to convert coarse forecasts
     into high-resolution regional products (500x faster).
     """
+    avani = await _require_earth2_avani("/api/earth2/downscale", "Run Earth2 downscale.", request.model_dump())
     from mycosoft_mas.earth2 import (
         DownscaleParams,
         SpatialExtent,
@@ -555,12 +575,13 @@ async def submit_downscale(request: DownscaleRequest) -> ModelRunResponse:
 
     result = await service.run_downscale(params)
 
-    return ModelRunResponse(
+    response = ModelRunResponse(
         run_id=result.run_id,
         status=result.status,
         model=result.model,
         message=f"Downscaling completed ({result.speedup_factor}x speedup)",
     )
+    return {**response.model_dump(), "avani": avani}
 
 
 # ============================================================================
@@ -576,6 +597,7 @@ async def submit_spore_dispersal(request: SporeDispersalRequest) -> ModelRunResp
     Combines Earth-2 weather forecasts with MINDEX spore data
     to generate dispersion forecasts and risk zones.
     """
+    avani = await _require_earth2_avani("/api/earth2/spore-dispersal", "Run Earth2 spore dispersal forecast.", request.model_dump())
     from mycosoft_mas.earth2 import (
         SpatialExtent,
         SporeDispersalParams,
@@ -627,12 +649,13 @@ async def submit_spore_dispersal(request: SporeDispersalRequest) -> ModelRunResp
 
     result = await service.run_spore_dispersal(params)
 
-    return ModelRunResponse(
+    response = ModelRunResponse(
         run_id=result.run_id,
         status=result.status,
         model="spore_dispersal",
         message=f"Dispersal forecast completed, {len(result.risk_zones)} risk zones identified",
     )
+    return {**response.model_dump(), "avani": avani}
 
 
 # ============================================================================
