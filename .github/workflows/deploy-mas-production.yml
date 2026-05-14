@@ -65,6 +65,9 @@ jobs:
     needs: build
     environment: production
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Set image for deploy (GHCR uses lowercase)
         run: echo "IMAGE_FULL=${{ env.REGISTRY }}/$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]'):mas-latest" >> "$GITHUB_ENV"
@@ -73,6 +76,7 @@ jobs:
         env:
           IMAGE_FULL: ${{ env.IMAGE_FULL }}
           GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VM_SSH_PASSWORD: ${{ secrets.VM_SSH_PASSWORD }}
         shell: bash
         run: |
@@ -93,8 +97,9 @@ jobs:
           ENV_FILE_OPT=""
           [ -f "$MAS_DIR/.env" ] && ENV_FILE_OPT="--env-file $MAS_DIR/.env"
 
-          if [ -n "${GHCR_PULL_TOKEN:-}" ]; then
-            echo "$GHCR_PULL_TOKEN" | docker login ghcr.io -u mycosoft --password-stdin >/dev/null
+          PULL_TOKEN="${GHCR_PULL_TOKEN:-${GITHUB_TOKEN:-}}"
+          if [ -n "$PULL_TOKEN" ]; then
+            echo "$PULL_TOKEN" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin >/dev/null
           fi
 
           echo "=== Pulling image ==="
