@@ -1105,8 +1105,12 @@ try:
     from mycosoft_mas.core.routers.avani_router import router as avani_router
 
     app.include_router(avani_router, tags=["avani"])
-except ImportError:
-    pass
+except ImportError as exc:
+    import logging
+
+    logging.getLogger(__name__).exception("AVANI router failed to import")
+    if os.getenv("AVANI_OPTIONAL", "").lower() not in {"1", "true", "yes"}:
+        raise RuntimeError("AVANI router is required; set AVANI_OPTIONAL=true to boot without it") from exc
 
 
 # ---------------------------------------------------------------------------

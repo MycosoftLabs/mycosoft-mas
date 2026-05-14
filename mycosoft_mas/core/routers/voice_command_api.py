@@ -41,6 +41,34 @@ signal_classifier_agent = SignalClassifierAgent(config={})
 ocean_predictor_agent = OceanPredictorAgent(config={})
 
 
+async def _require_voice_avani_preflight(
+    *,
+    action_type: str,
+    description: str,
+    risk_tier: str,
+    params: Dict[str, Any],
+    ecological_impact: float = 0.0,
+    reversibility: float = 1.0,
+) -> Dict[str, Any]:
+    """Fail-closed AVANI preflight for TAC-O voice actions."""
+    from mycosoft_mas.avani.enforcement import AvaniActionPreflight, require_action_preflight
+    from mycosoft_mas.core.routers import avani_router
+
+    await avani_router.ensure_runtime_restored()
+    return await require_action_preflight(
+        avani_router.get_governor(),
+        AvaniActionPreflight(
+            source_agent="voice_command_api",
+            action_type=action_type,
+            description=description,
+            risk_tier=risk_tier,
+            ecological_impact=ecological_impact,
+            reversibility=reversibility,
+            metadata={"params": params},
+        ),
+    )
+
+
 # ============================================================================
 # Request/Response Models
 # ============================================================================
@@ -315,16 +343,52 @@ async def taco_voice_command(command: dict):
             sensor_id = params.get("sensor_id")
             if not sensor_id:
                 raise HTTPException(status_code=400, detail="sensor_id_required")
+            from mycosoft_mas.avani.worldview import review_device_action
+
+            device_review = review_device_action(
+                device_id=sensor_id,
+                action="deploy",
+                operator_id=command.get("operator_id") or command.get("user_id") or "voice_operator",
+                telemetry=params.get("telemetry"),
+                ecological_impact=float(params.get("ecological_impact") or 0.4),
+                reversibility=float(params.get("reversibility") or 0.7),
+                rollback_plan=params.get("rollback_plan"),
+            )
+            if not device_review.approved:
+                return {
+                    "status": "denied",
+                    "intent": intent,
+                    "params": params,
+                    "avani": device_review.to_dict(),
+                    "speak": "Deploy command requires AVANI review before execution",
+                }
+            avani_decision = await _require_voice_avani_preflight(
+                action_type="device_control",
+                description=f"Deploy maritime sensor {sensor_id} from TAC-O voice command.",
+                risk_tier=params.get("risk_tier", "high"),
+                params={**params, "sensor_id": sensor_id},
+                ecological_impact=float(params.get("ecological_impact") or 0.4),
+                reversibility=float(params.get("reversibility") or 0.7),
+            )
             result = await sensor_network_client.send_command(sensor_id, "deploy", params)
             return {
                 "status": "routed",
                 "intent": intent,
                 "params": params,
                 "result": result,
+                "avani": {**avani_decision, "device_review": device_review.to_dict()},
                 "speak": f"Deploy command sent for sensor {sensor_id}",
             }
 
         if intent == "classify_contact":
+            avani_decision = await _require_voice_avani_preflight(
+                action_type="grounding",
+                description="Classify TAC-O acoustic contact before operator-facing recommendation.",
+                risk_tier=params.get("risk_tier", "medium"),
+                params=params,
+                ecological_impact=float(params.get("ecological_impact") or 0.2),
+                reversibility=1.0,
+            )
             result = await signal_classifier_agent.process_task(
                 {"type": "classify_acoustic", "sensor_data": params.get("sensor_data", params)}
             )
@@ -333,6 +397,7 @@ async def taco_voice_command(command: dict):
                 "intent": intent,
                 "params": params,
                 "result": result.get("result"),
+                "avani": avani_decision,
                 "speak": "Contact classification completed" if result.get("status") == "success" else "Contact classification failed",
             }
 

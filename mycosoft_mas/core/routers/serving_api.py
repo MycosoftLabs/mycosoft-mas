@@ -25,6 +25,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
 from mycosoft_mas.serving.bundle_manager import get_bundle_manager
 from mycosoft_mas.serving.profile_manager import get_profile_manager
 from mycosoft_mas.serving.promotion import PromotionError, get_promotion_engine
@@ -47,6 +48,19 @@ from mycosoft_mas.serving.schemas import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/serving", tags=["serving"])
+
+
+async def _require_serving_avani(route: str, description: str, metadata: dict) -> dict:
+    try:
+        return await require_avani_for_route(
+            route=route,
+            source_agent="serving_api",
+            action_type="model_promotion",
+            description=description,
+            metadata=metadata,
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -76,6 +90,7 @@ async def health():
 @router.post("/profiles", response_model=ServingProfile)
 async def create_profile(request: ServingProfileCreate):
     """Create a new serving profile."""
+    await _require_serving_avani("/api/serving/profiles", "Create serving profile.", request.model_dump())
     pm = get_profile_manager()
     return pm.create_profile(request)
 
@@ -108,10 +123,15 @@ async def list_profiles(
 @router.post("/profiles/{profile_id}/status")
 async def update_profile_status(profile_id: UUID, new_status: str):
     """Transition a profile to a new status."""
+    avani = await _require_serving_avani(
+        "/api/serving/profiles",
+        f"Update serving profile {profile_id} status to {new_status}.",
+        {"profile_id": str(profile_id), "new_status": new_status},
+    )
     pm = get_profile_manager()
     try:
         profile = pm.update_status(profile_id, new_status)
-        return {"status": "ok", "profile": profile}
+        return {"status": "ok", "profile": profile, "avani": avani}
     except KeyError:
         raise HTTPException(status_code=404, detail="Profile not found")
     except ValueError as e:
@@ -126,6 +146,7 @@ async def update_profile_status(profile_id: UUID, new_status: str):
 @router.post("/bundles", response_model=DeploymentBundle)
 async def create_bundle(request: DeploymentBundleCreate):
     """Create a new deployment bundle."""
+    await _require_serving_avani("/api/serving/bundles", "Create serving deployment bundle.", request.model_dump())
     bm = get_bundle_manager()
     try:
         return bm.create_bundle(request)
@@ -194,6 +215,11 @@ async def run_serving_eval(
     if not profile:
         raise HTTPException(status_code=404, detail="Serving profile not found")
 
+    await _require_serving_avani(
+        "/api/serving/bundles/{bundle_id}/eval",
+        f"Run serving eval {eval_suite} for bundle {bundle_id}.",
+        {"bundle_id": str(bundle_id), "eval_suite": eval_suite},
+    )
     suite = ServingEvalSuite()
     return await suite.run_eval(bundle, profile, eval_suite)
 
@@ -213,6 +239,11 @@ async def list_bundle_evals(bundle_id: UUID):
 @router.post("/bundles/{bundle_id}/promote", response_model=BundlePromotionResponse)
 async def promote_bundle(bundle_id: UUID, target_state: RolloutState, reason: str = ""):
     """Promote a deployment bundle to a new rollout state."""
+    await _require_serving_avani(
+        "/api/serving/bundles/{bundle_id}/promote",
+        f"Promote serving bundle {bundle_id} to {target_state}.",
+        {"bundle_id": str(bundle_id), "target_state": str(target_state), "reason": reason},
+    )
     engine = get_promotion_engine()
     try:
         return engine.promote(
@@ -234,6 +265,7 @@ async def promote_bundle(bundle_id: UUID, target_state: RolloutState, reason: st
 @router.post("/calibrate", response_model=CalibrationResponse)
 async def trigger_calibration(request: CalibrationRequest):
     """Trigger KVTC calibration for a model build."""
+    await _require_serving_avani("/api/serving/calibrate", "Trigger serving calibration.", request.model_dump())
     from mycosoft_mas.nlm.calibration import run_calibration_pipeline
 
     try:

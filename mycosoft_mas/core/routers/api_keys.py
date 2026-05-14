@@ -264,3 +264,19 @@ def require_api_key_scoped(scope: str):
         return record
 
     return Depends(_dep)
+
+
+def require_api_key_scoped_any(scopes_any: List[str]):
+    """Dependency that requires API key with at least one accepted scope."""
+
+    async def _dep(request: Request) -> Dict[str, Any]:
+        record = await require_api_key(request)
+        scopes = record.get("scopes") or []
+        if not any(scope in scopes for scope in scopes_any):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"One of scopes {scopes_any!r} required",
+            )
+        return record
+
+    return Depends(_dep)

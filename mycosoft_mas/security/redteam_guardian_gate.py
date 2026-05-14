@@ -69,8 +69,30 @@ async def check_redteam_authority(
     """
     risk_tier = SIMULATION_RISK_MAP.get(simulation_type, RiskTier.MEDIUM)
 
+    try:
+        from mycosoft_mas.avani.enforcement import AvaniActionPreflight, require_action_preflight
+        from mycosoft_mas.core.routers import avani_router
+
+        await avani_router.ensure_runtime_restored()
+        avani_decision = await require_action_preflight(
+            avani_router.get_governor(),
+            AvaniActionPreflight(
+                source_agent="redteam_guardian_gate",
+                action_type="red_team",
+                description=justification or f"Red-team simulation: {simulation_type}",
+                route=f"/api/redteam/{simulation_type}",
+                risk_tier=risk_tier.value,
+                ecological_impact=0.0,
+                reversibility=0.4 if risk_tier.value in {"high", "critical"} else 0.7,
+                metadata={"simulation_type": simulation_type, "target": target},
+            ),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("AVANI denied red-team preflight: %s", exc)
+        return False, f"AVANI denied red-team preflight: {exc}", None
+
     if risk_tier not in REQUIRES_GUARDIAN_APPROVAL:
-        return True, "Low-risk simulation; no Guardian approval required", "low_risk"
+        return True, f"Low-risk simulation approved by AVANI: {avani_decision.get('reason')}", "low_risk"
 
     engine = _get_authority()
     action = f"redteam:{simulation_type}"
@@ -91,7 +113,7 @@ async def check_redteam_authority(
     result = await engine.authorize(request)
 
     if result.decision == AuthorityDecision.GRANTED:
-        return True, result.reason, "guardian"
+        return True, f"{result.reason} AVANI: {avani_decision.get('reason')}", "guardian"
     if result.decision == AuthorityDecision.ESCALATED:
         return False, f"Escalated for human approval: {result.reason}", None
     return False, f"Denied: {result.reason}", None

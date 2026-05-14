@@ -94,12 +94,19 @@ the source of truth.
 
 ---
 
-## Phase 2 (Planned)
+## Current Runtime Status (Updated 2026-05-14)
+
+- Durable constitutional audit trail is implemented with SHA256-chained append-only entries.
+- MINDEX/Postgres is the primary audit store; JSONL is an explicit degraded fallback.
+- Season state persists across restarts.
+- Worldview release review is available through AVANI so customer-facing Worldview responses can carry governance metadata and audit references.
+
+## Remaining Phase 2 Work
 
 - Heartbeat monitor (founder presence detection)
-- Constitutional audit trail (SHA256-chained JSONL)
 - Moral teaching layer
 - Micah maturity ladder
+- Full platform-wide enforcement across every MYCA action-capable route
 
 ---
 

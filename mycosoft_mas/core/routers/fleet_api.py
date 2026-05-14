@@ -20,6 +20,7 @@ import redis.asyncio as redis
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
 from mycosoft_mas.core.routers import device_registry_api
 
 logger = logging.getLogger(__name__)
@@ -243,6 +244,16 @@ async def add_devices_to_group(group_id: str, device_ids: List[str]) -> Dict[str
 
 @router.post("/bulk/commands")
 async def bulk_command(payload: BulkCommandRequest) -> Dict[str, Any]:
+    try:
+        avani = await require_avani_for_route(
+            route="/api/iot/fleet/bulk/commands",
+            source_agent="fleet_api",
+            action_type="device_control",
+            description=f"Send fleet command {payload.command} to {len(payload.device_ids)} devices.",
+            metadata=payload.model_dump(),
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     results = []
     failures = []
     for device_id in payload.device_ids:
@@ -265,12 +276,23 @@ async def bulk_command(payload: BulkCommandRequest) -> Dict[str, Any]:
         "failed": len(failures),
         "results": results,
         "failures": failures,
+        "avani": avani,
         "timestamp": _now_iso(),
     }
 
 
 @router.post("/firmware/deploy")
 async def deploy_firmware(payload: FirmwareDeployRequest) -> Dict[str, Any]:
+    try:
+        avani = await require_avani_for_route(
+            route="/api/iot/fleet/firmware/deploy",
+            source_agent="fleet_api",
+            action_type="device_control",
+            description=f"Deploy firmware {payload.firmware_version} to {len(payload.device_ids)} devices.",
+            metadata=payload.model_dump(),
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     results = []
     failures = []
     for device_id in payload.device_ids:
@@ -294,12 +316,23 @@ async def deploy_firmware(payload: FirmwareDeployRequest) -> Dict[str, Any]:
         "failed": len(failures),
         "results": results,
         "failures": failures,
+        "avani": avani,
         "timestamp": _now_iso(),
     }
 
 
 @router.post("/provisioning")
 async def create_provisioning_token(payload: ProvisionRequest) -> Dict[str, Any]:
+    try:
+        avani = await require_avani_for_route(
+            route="/api/iot/fleet/provisioning",
+            source_agent="fleet_api",
+            action_type="device_control",
+            description=f"Create provisioning token for device role {payload.device_role}.",
+            metadata=payload.model_dump(),
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     token = str(uuid4())
     redis_client = await _get_redis()
     record = {
@@ -311,7 +344,7 @@ async def create_provisioning_token(payload: ProvisionRequest) -> Dict[str, Any]
         "created_at": _now_iso(),
     }
     await redis_client.set(_provision_key(token), json.dumps(record), ex=payload.ttl_seconds)
-    return {"status": "created", "token": token, "expires_in": payload.ttl_seconds}
+    return {"status": "created", "token": token, "expires_in": payload.ttl_seconds, "avani": avani}
 
 
 @router.get("/provisioning/{token}")

@@ -24,6 +24,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
+
 from mycosoft_mas.core.persistence import redteam_store
 
 logger = logging.getLogger(__name__)
@@ -632,6 +634,16 @@ async def request_authorization(description: str = "Red team simulation"):
     - Approval workflow for sensitive tests
     - SSO for identity verification
     """
+    try:
+        avani = await require_avani_for_route(
+            route="/api/redteam/authorize",
+            source_agent="redteam_api",
+            action_type="red_team",
+            description=f"Generate red-team authorization token: {description}",
+            metadata={"description": description},
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     token = generate_auth_token()
     logger.info(f"[RedTeam] Authorization token generated for: {description}")
 
@@ -641,6 +653,7 @@ async def request_authorization(description: str = "Red team simulation"):
         "expires_in_seconds": 3600,
         "message": "Use this token in simulation requests. Token expires in 1 hour.",
         "warning": "All activities will be logged and audited.",
+        "avani": avani,
     }
 
 
@@ -661,6 +674,16 @@ async def start_simulation(
             status_code=403,
             detail="Invalid or missing authorization code. Request authorization first.",
         )
+    try:
+        avani = await require_avani_for_route(
+            route="/api/redteam/simulate",
+            source_agent="redteam_api",
+            action_type="red_team",
+            description=request.description or f"Start red-team simulation {request.simulation_type.value}.",
+            metadata=request.model_dump(),
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
     # Create simulation record
     sim_id = generate_simulation_id()
@@ -676,6 +699,7 @@ async def start_simulation(
         "findings": [],
         "metrics": {},
         "recommendations": [],
+        "avani": avani,
     }
     redteam_store.save(simulation)
 
@@ -888,12 +912,23 @@ async def cancel_simulation(sim_id: str):
         SimulationStatus.AUTHORIZED.value,
     ]:
         raise HTTPException(status_code=400, detail="Simulation cannot be cancelled")
+    try:
+        avani = await require_avani_for_route(
+            route="/api/redteam/simulation/{sim_id}/cancel",
+            source_agent="redteam_api",
+            action_type="red_team",
+            description=f"Cancel red-team simulation {sim_id}.",
+            metadata={"simulation_id": sim_id, "simulation": simulation},
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
     simulation["status"] = SimulationStatus.CANCELLED.value
     simulation["completed_at"] = datetime.now(timezone.utc).isoformat()
+    simulation["avani_cancel"] = avani
     redteam_store.save(simulation)
 
-    return {"success": True, "message": f"Simulation {sim_id} cancelled"}
+    return {"success": True, "message": f"Simulation {sim_id} cancelled", "avani": avani}
 
 
 @router.get("/attack-vectors")

@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
 from mycosoft_mas.core.n8n_workflow_engine import (
     N8NWorkflowEngine,
     WorkflowCategory,
@@ -42,6 +43,18 @@ def get_workflow_scheduler() -> WorkflowScheduler:
     if _scheduler is None:
         _scheduler = get_scheduler()
     return _scheduler
+
+
+async def _require_workflow_avani(route: str, description: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        return await require_avani_for_route(
+            route=route,
+            source_agent="n8n_workflows_api",
+            description=description,
+            metadata=metadata,
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
 
 # Pydantic Models
@@ -141,6 +154,11 @@ async def sync_both_local_and_cloud(request: SyncRequest):
     local_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
     local_key = os.getenv("N8N_API_KEY", "")
     results = {"local": None, "errors": []}
+    avani = await _require_workflow_avani(
+        "/workflows/sync-both",
+        "Sync local workflows to local n8n.",
+        request.model_dump(),
+    )
     try:
         engine_local = N8NWorkflowEngine(base_url=local_url, api_key=local_key)
         try:
@@ -151,7 +169,7 @@ async def sync_both_local_and_cloud(request: SyncRequest):
     except Exception as e:
         logger.warning(f"Sync to local failed: {e}")
         results["errors"].append({"target": "local", "error": str(e)})
-    return {"status": "synced", "results": results, "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "synced", "results": results, "avani": avani, "timestamp": datetime.utcnow().isoformat()}
 
 
 @router.post("/execute")
@@ -161,6 +179,11 @@ async def execute_workflow(request: WorkflowExecuteRequest):
 
     start = time.perf_counter()
     try:
+        avani = await _require_workflow_avani(
+            "/workflows/execute",
+            f"Execute n8n workflow {request.workflow_name}.",
+            request.model_dump(),
+        )
         from mycosoft_mas.agents.workflow.n8n_workflow_agent import N8NWorkflowAgent
 
         agent = N8NWorkflowAgent(
@@ -194,8 +217,9 @@ async def execute_workflow(request: WorkflowExecuteRequest):
                 "status": "success",
                 "result": result.get("result"),
                 "message": "Workflow executed.",
+                "avani": avani,
             }
-        return {"status": status, "result": result, "message": result.get("message", str(result))}
+        return {"status": status, "result": result, "message": result.get("message", str(result)), "avani": avani}
     except Exception as e:
         duration = time.perf_counter() - start
         try:
@@ -251,8 +275,9 @@ async def create_workflow(request: WorkflowCreateRequest):
     """Create a new workflow"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/create", f"Create n8n workflow {request.name}.", request.model_dump())
         result = engine.create_workflow(request.dict())
-        return {"status": "created", "workflow": result}
+        return {"status": "created", "workflow": result, "avani": avani}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -262,9 +287,10 @@ async def update_workflow(workflow_id: str, request: WorkflowUpdateRequest):
     """Update a workflow"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/{workflow_id}", f"Update n8n workflow {workflow_id}.", {"workflow_id": workflow_id, **request.model_dump(exclude_none=True)})
         data = {k: v for k, v in request.dict().items() if v is not None}
         result = engine.update_workflow(workflow_id, data)
-        return {"status": "updated", "workflow": result}
+        return {"status": "updated", "workflow": result, "avani": avani}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -274,8 +300,9 @@ async def delete_workflow(workflow_id: str, archive_first: bool = True):
     """Delete a workflow"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/{workflow_id}", f"Delete n8n workflow {workflow_id}.", {"workflow_id": workflow_id, "archive_first": archive_first})
         engine.delete_workflow(workflow_id, archive_first=archive_first)
-        return {"status": "deleted", "workflow_id": workflow_id}
+        return {"status": "deleted", "workflow_id": workflow_id, "avani": avani}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -288,8 +315,9 @@ async def activate_workflow(workflow_id: str):
     """Activate a workflow"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/{workflow_id}/activate", f"Activate n8n workflow {workflow_id}.", {"workflow_id": workflow_id})
         result = engine.activate_workflow(workflow_id)
-        return {"status": "activated", "workflow": result}
+        return {"status": "activated", "workflow": result, "avani": avani}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -299,8 +327,9 @@ async def deactivate_workflow(workflow_id: str):
     """Deactivate a workflow"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/{workflow_id}/deactivate", f"Deactivate n8n workflow {workflow_id}.", {"workflow_id": workflow_id})
         result = engine.deactivate_workflow(workflow_id)
-        return {"status": "deactivated", "workflow": result}
+        return {"status": "deactivated", "workflow": result, "avani": avani}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -313,8 +342,9 @@ async def archive_workflow(workflow_id: str, reason: str = "manual"):
     """Archive a workflow version"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/{workflow_id}/archive", f"Archive n8n workflow {workflow_id}.", {"workflow_id": workflow_id, "reason": reason})
         version = engine.archive_workflow(workflow_id, reason=reason)
-        return {"status": "archived", "version": version.version, "file": version.file_path}
+        return {"status": "archived", "version": version.version, "file": version.file_path, "avani": avani}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -337,8 +367,9 @@ async def restore_workflow(workflow_id: str, version: Optional[int] = None):
     """Restore a workflow from archive"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/{workflow_id}/restore", f"Restore n8n workflow {workflow_id}.", {"workflow_id": workflow_id, "version": version})
         result = engine.restore_workflow(workflow_id, version=version)
-        return {"status": "restored", "workflow": result}
+        return {"status": "restored", "workflow": result, "avani": avani}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
@@ -352,8 +383,9 @@ async def restore_workflow(workflow_id: str, version: Optional[int] = None):
 async def sync_workflows(request: SyncRequest, background_tasks: BackgroundTasks):
     """Sync all local workflows to n8n"""
     engine = get_workflow_engine()
+    avani = await _require_workflow_avani("/workflows/sync", "Sync local workflows to n8n.", request.model_dump())
     result = engine.sync_all_local_workflows(activate_core=request.activate_core)
-    return {"status": "synced", "result": result.to_dict()}
+    return {"status": "synced", "result": result.to_dict(), "avani": avani}
 
 
 @router.post("/export-all")
@@ -361,8 +393,9 @@ async def export_all_workflows():
     """Export all workflows from n8n to local files"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/export-all", "Export all workflows from n8n.", {})
         paths = engine.export_all_workflows()
-        return {"status": "exported", "count": len(paths), "files": [str(p) for p in paths]}
+        return {"status": "exported", "count": len(paths), "files": [str(p) for p in paths], "avani": avani}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -372,8 +405,9 @@ async def export_workflow(workflow_id: str):
     """Export a single workflow to local file"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/{workflow_id}/export", f"Export n8n workflow {workflow_id}.", {"workflow_id": workflow_id})
         path = engine.export_workflow(workflow_id)
-        return {"status": "exported", "file": str(path)}
+        return {"status": "exported", "file": str(path), "avani": avani}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -383,8 +417,9 @@ async def clone_workflow(workflow_id: str, request: WorkflowCloneRequest):
     """Clone a workflow with a new name"""
     engine = get_workflow_engine()
     try:
+        avani = await _require_workflow_avani("/workflows/{workflow_id}/clone", f"Clone n8n workflow {workflow_id}.", {"workflow_id": workflow_id, **request.model_dump()})
         result = engine.clone_workflow(workflow_id, request.new_name)
-        return {"status": "cloned", "workflow": result}
+        return {"status": "cloned", "workflow": result, "avani": avani}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -436,21 +471,23 @@ async def get_execution_stats(workflow_id: str):
 async def start_scheduler(config: SchedulerConfig, background_tasks: BackgroundTasks):
     """Start the 24/7 workflow scheduler"""
     scheduler = get_workflow_scheduler()
+    avani = await _require_workflow_avani("/workflows/scheduler/start", "Start n8n workflow scheduler.", config.model_dump())
     background_tasks.add_task(
         scheduler.start,
         sync_interval=config.sync_interval,
         health_interval=config.health_interval,
         archive_interval=config.archive_interval,
     )
-    return {"status": "starting", "config": config.dict()}
+    return {"status": "starting", "config": config.dict(), "avani": avani}
 
 
 @router.post("/scheduler/stop")
 async def stop_scheduler():
     """Stop the workflow scheduler"""
     scheduler = get_workflow_scheduler()
+    avani = await _require_workflow_avani("/workflows/scheduler/stop", "Stop n8n workflow scheduler.", {})
     await scheduler.stop()
-    return {"status": "stopped"}
+    return {"status": "stopped", "avani": avani}
 
 
 @router.get("/scheduler/status")

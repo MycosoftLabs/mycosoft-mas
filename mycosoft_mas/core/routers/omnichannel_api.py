@@ -21,9 +21,24 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/omnichannel", tags=["omnichannel"])
+
+
+async def _require_omni_avani(route: str, description: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        return await require_avani_for_route(
+            route=route,
+            source_agent="omnichannel_api",
+            action_type="omnichannel_send",
+            description=description,
+            metadata=metadata,
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
 
 def _env_any(*names: str) -> str:
@@ -142,6 +157,11 @@ async def omnichannel_send(req: OmnichannelSendRequest) -> Dict[str, Any]:
     """Route message to the correct platform connector."""
     platform = req.platform.lower()
     text = req.text or ""
+    avani = await _require_omni_avani(
+        "/api/omnichannel/send",
+        f"Send outbound {platform} message.",
+        {"platform": platform, "recipient": req.recipient, "channel_id": req.channel_id, "text_length": len(text)},
+    )
 
     if platform == "slack":
         ch = req.channel_id or req.recipient
@@ -149,7 +169,7 @@ async def omnichannel_send(req: OmnichannelSendRequest) -> Dict[str, Any]:
             raise HTTPException(400, "channel_id or recipient required for slack")
         client = _get_slack_client()
         result = await client.post_message(ch, text, thread_ts=req.thread_id)
-        return {"success": result is not None, "platform": "slack", "result": result}
+        return {"success": result is not None, "platform": "slack", "result": result, "avani": avani}
 
     if platform == "discord":
         ch = req.channel_id or req.recipient
@@ -157,7 +177,7 @@ async def omnichannel_send(req: OmnichannelSendRequest) -> Dict[str, Any]:
             raise HTTPException(400, "channel_id or recipient required for discord")
         client = _get_discord_client()
         result = await client.send_message(ch, text, thread_id=req.thread_id)
-        return {"success": result is not None, "platform": "discord", "result": result}
+        return {"success": result is not None, "platform": "discord", "result": result, "avani": avani}
 
     if platform == "whatsapp":
         rec = req.recipient
@@ -165,7 +185,7 @@ async def omnichannel_send(req: OmnichannelSendRequest) -> Dict[str, Any]:
             raise HTTPException(400, "recipient (phone) required for whatsapp")
         client = _get_whatsapp_client()
         result = await client.send_message(rec, text)
-        return {"success": result is not None, "platform": "whatsapp", "result": result}
+        return {"success": result is not None, "platform": "whatsapp", "result": result, "avani": avani}
 
     if platform == "signal":
         rec = req.recipient
@@ -173,7 +193,7 @@ async def omnichannel_send(req: OmnichannelSendRequest) -> Dict[str, Any]:
             raise HTTPException(400, "recipient (phone) required for signal")
         client = _get_signal_client()
         result = await client.send_message(rec, text, attachments=req.attachments)
-        return {"success": result is not None, "platform": "signal", "result": result}
+        return {"success": result is not None, "platform": "signal", "result": result, "avani": avani}
 
     if platform == "email":
         rec = req.recipient
@@ -184,7 +204,7 @@ async def omnichannel_send(req: OmnichannelSendRequest) -> Dict[str, Any]:
             raise HTTPException(503, "Google Workspace client not available")
         subject = req.subject or "Message from MYCA"
         result = await gw.send_email(rec, subject, text, html=True)
-        return {"success": bool(result), "platform": "email", "result": result}
+        return {"success": bool(result), "platform": "email", "result": result, "avani": avani}
 
     if platform == "asana":
         task_gid = req.recipient or req.channel_id
@@ -192,7 +212,7 @@ async def omnichannel_send(req: OmnichannelSendRequest) -> Dict[str, Any]:
             raise HTTPException(400, "recipient (task_gid) required for asana")
         client = _get_asana_client()
         result = await client.add_comment(task_gid, text)
-        return {"success": result is not None, "platform": "asana", "result": result}
+        return {"success": result is not None, "platform": "asana", "result": result, "avani": avani}
 
     raise HTTPException(400, f"Unsupported platform: {platform}")
 
@@ -215,6 +235,11 @@ class OmnichannelForwardRequest(BaseModel):
 @router.post("/forward")
 async def omnichannel_forward(req: OmnichannelForwardRequest) -> Dict[str, Any]:
     """Forward normalized payload to n8n intent orchestrator webhook."""
+    avani = await _require_omni_avani(
+        "/api/omnichannel/forward",
+        f"Forward {req.platform_source} message to n8n intent orchestrator.",
+        req.model_dump(exclude_none=True),
+    )
     base = os.getenv("N8N_WEBHOOK_BASE") or os.getenv("N8N_BASE_URL", "http://192.168.0.191:5678")
     url = f"{base.rstrip('/')}/webhook/myca/intent/orchestrator"
     try:
@@ -223,7 +248,7 @@ async def omnichannel_forward(req: OmnichannelForwardRequest) -> Dict[str, Any]:
         async with httpx.AsyncClient(timeout=30) as client:
             r = await client.post(url, json=req.model_dump(exclude_none=True))
             r.raise_for_status()
-            return {"success": True, "forwarded_to": url, "response": r.json()}
+            return {"success": True, "forwarded_to": url, "response": r.json(), "avani": avani}
     except Exception as e:
         logger.warning("Forward to n8n failed: %s", e)
         raise HTTPException(503, f"Could not forward to intent orchestrator: {e}")

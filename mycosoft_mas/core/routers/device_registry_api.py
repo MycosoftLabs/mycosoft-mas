@@ -17,6 +17,8 @@ import httpx
 from fastapi import APIRouter, Body, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
+from mycosoft_mas.avani.worldview import review_device_action
 from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
 
 logger = logging.getLogger("DeviceRegistry")
@@ -682,6 +684,16 @@ async def upsert_fci_summary(device_id: str, payload: FCISummaryPayload = Body(.
     Data is stored in device extra under fci_summary for unified device_id.
     Device need not exist; will be created as placeholder if missing.
     """
+    try:
+        avani = await require_avani_for_route(
+            route="/api/devices/{device_id}/fci-summary",
+            source_agent="device_registry_api",
+            action_type="grounding",
+            description=f"Store FCI summary for device {device_id}.",
+            metadata={"device_id": device_id, "payload": payload.model_dump()},
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     _cleanup_expired_devices()
     now = datetime.now(timezone.utc)
     ts = payload.timestamp or now.isoformat()
@@ -705,12 +717,22 @@ async def upsert_fci_summary(device_id: str, payload: FCISummaryPayload = Body(.
     device["last_seen"] = now.isoformat()
     _device_last_seen[device_id] = now
     logger.info("FCI summary stored for device %s", device_id)
-    return {"status": "ok", "device_id": device_id, "timestamp": now.isoformat()}
+    return {"status": "ok", "device_id": device_id, "timestamp": now.isoformat(), "avani": avani}
 
 
 @router.delete("/{device_id}")
 async def unregister_device(device_id: str):
     """Unregister a device."""
+    try:
+        avani = await require_avani_for_route(
+            route="/api/devices/{device_id}",
+            source_agent="device_registry_api",
+            action_type="device_control",
+            description=f"Unregister device {device_id}.",
+            metadata={"device_id": device_id},
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
     if device_id not in _device_registry:
         raise HTTPException(status_code=404, detail=f"Device not found: {device_id}")
 
@@ -724,6 +746,7 @@ async def unregister_device(device_id: str):
         "status": "unregistered",
         "device_id": device_id,
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "avani": avani,
     }
 
 
@@ -752,6 +775,39 @@ async def send_device_command(
 
     if device_status == "offline":
         raise HTTPException(status_code=503, detail=f"Device {device_id} is offline")
+
+    device_review = review_device_action(
+        device_id=device_id,
+        action=cmd.command,
+        operator_id=str(cmd.params.get("operator_id") or cmd.params.get("requested_by") or "device_registry_api"),
+        telemetry={
+            "status": device_status,
+            "last_seen": device.get("last_seen"),
+            "confidence": 0.9 if device_status == "online" else 0.45,
+        },
+        ecological_impact=float(cmd.params.get("ecological_impact") or 0.3),
+        reversibility=float(cmd.params.get("reversibility") or 0.6),
+        rollback_plan=cmd.params.get("rollback_plan"),
+    )
+    if not device_review.approved:
+        raise HTTPException(status_code=403, detail=device_review.to_dict())
+    try:
+        avani = await require_avani_for_route(
+            route="/api/devices/{device_id}/command",
+            source_agent="device_registry_api",
+            action_type="device_control",
+            description=f"Send command {cmd.command} to device {device_id}.",
+            ecological_impact=device_review.ecological_risk,
+            reversibility=device_review.reversibility,
+            metadata={
+                "device_id": device_id,
+                "command": cmd.command,
+                "params": cmd.params,
+                "device_review": device_review.to_dict(),
+            },
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
     # Publish to Mycorrhizae so gateways can forward (optional, non-blocking)
     if use_mycorrhizae:
@@ -819,6 +875,7 @@ async def send_device_command(
                 "mdp_path_id": path_id,
                 "command": cmd.command,
                 "response": response.json(),
+                "avani": {**avani, "device_review": device_review.to_dict()},
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 

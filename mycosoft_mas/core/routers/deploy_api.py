@@ -17,6 +17,8 @@ from uuid import uuid4
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.avani.enforcement import AvaniActionDenied, require_avani_for_route
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/deploy", tags=["deploy"])
@@ -193,6 +195,16 @@ async def trigger_deploy(
     """
     if req.target not in ("mas", "website", "mindex"):
         raise HTTPException(400, f"Invalid target: {req.target}")
+    try:
+        avani = await require_avani_for_route(
+            route="/api/deploy/trigger",
+            source_agent="deploy_api",
+            action_type="system_config",
+            description=f"Queue deployment to {req.target}.",
+            metadata=req.model_dump(),
+        )
+    except AvaniActionDenied as exc:
+        raise HTTPException(status_code=403, detail=exc.decision) from exc
 
     job_id = str(uuid4())[:12]
     _deploy_jobs[job_id] = {
@@ -205,6 +217,7 @@ async def trigger_deploy(
         "completed_at": None,
         "output": None,
         "error": None,
+        "avani": avani,
     }
 
     if req.target == "website":
@@ -244,6 +257,16 @@ async def receive_autonomous_fix(
     # Optionally trigger deploy (code fix is assumed already pushed by Cursor/agent)
     job_id = None
     if deploy_target in ("mas", "website", "mindex"):
+        try:
+            avani = await require_avani_for_route(
+                route="/api/deploy/autonomous-fix",
+                source_agent="deploy_api",
+                action_type="system_config",
+                description=f"Queue autonomous-fix deployment to {deploy_target}.",
+                metadata={"error_id": error_id, "payload": data},
+            )
+        except AvaniActionDenied as exc:
+            raise HTTPException(status_code=403, detail=exc.decision) from exc
         job_id = str(uuid4())[:12]
         _deploy_jobs[job_id] = {
             "job_id": job_id,
@@ -251,6 +274,7 @@ async def receive_autonomous_fix(
             "target": deploy_target,
             "reason": "autonomous_fix",
             "error_id": error_id,
+            "avani": avani,
         }
         if deploy_target == "website":
             background_tasks.add_task(_run_deploy_website, job_id)
