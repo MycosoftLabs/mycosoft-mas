@@ -60,191 +60,80 @@ jobs:
           network: host
 
   deploy:
-    name: Deploy to MAS VM (188)
-    runs-on: ubuntu-latest
+    name: Deploy on MAS VM (self-hosted)
+    runs-on: [self-hosted, mas-vm]
     needs: build
     environment: production
+    timeout-minutes: 20
     steps:
       - name: Set image for deploy (GHCR uses lowercase)
-        run: echo "IMAGE_FULL=${{ env.REGISTRY }}/$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]'):mas-latest" >> $GITHUB_ENV
+        run: echo "IMAGE_FULL=${{ env.REGISTRY }}/$(echo '${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]'):mas-latest" >> "$GITHUB_ENV"
 
-      - name: Deploy to MAS VM (primary attempt)
-        id: deploy_primary
-        continue-on-error: true
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Deploy MAS container locally
         env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
           IMAGE_FULL: ${{ env.IMAGE_FULL }}
           GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
           VM_SSH_PASSWORD: ${{ secrets.VM_SSH_PASSWORD }}
-        with:
-          host: ${{ secrets.MAS_HOST }}
-          username: mycosoft
-          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
-          timeout: 120s
-          command_timeout: 10m
-          envs: IMAGE_FULL,GHCR_PULL_TOKEN,VM_SSH_PASSWORD
-          script: |
-            set -euo pipefail
-            exec 9>/tmp/deploy-mas-production.lock
-            flock -n 9 || { echo "Another MAS deploy is already running"; exit 1; }
-            sudo_pw() {
-              if [ -n "${VM_SSH_PASSWORD:-}" ]; then
-                printf '%s\n' "$VM_SSH_PASSWORD" | sudo -S -p '' "$@"
-              else
-                sudo -n "$@"
-              fi
-            }
+        shell: bash
+        run: |
+          set -euo pipefail
+          exec 9>/tmp/deploy-mas-production.lock
+          flock -n 9 || { echo "Another MAS deploy is already running"; exit 1; }
 
-            rollback_image=""
-            if docker ps -a --format '{{.Names}}' | grep -qx myca-orchestrator-new; then
-              rollback_image="$(docker inspect -f '{{.Config.Image}}' myca-orchestrator-new || true)"
-            elif docker ps -a --format '{{.Names}}' | grep -qx myca-orchestrator; then
-              rollback_image="$(docker inspect -f '{{.Config.Image}}' myca-orchestrator || true)"
+          sudo_pw() {
+            if [ -n "${VM_SSH_PASSWORD:-}" ]; then
+              printf '%s\n' "$VM_SSH_PASSWORD" | sudo -S -p '' "$@"
+            else
+              sudo -n "$@"
             fi
+          }
 
-            if [ -n "$GHCR_PULL_TOKEN" ]; then
-              echo "$GHCR_PULL_TOKEN" | docker login ghcr.io -u mycosoft --password-stdin
-            fi
-            echo "=== Pulling image ==="
-            docker pull "$IMAGE_FULL"
-            echo "=== Replacing container ==="
-            sudo_pw systemctl stop mas-orchestrator.service || true
-            docker rm -f myca-orchestrator myca-orchestrator-old myca-orchestrator-new 2>/dev/null || true
-            if ss -ltnp 'sport = :8001' 2>/dev/null | grep -q uvicorn; then
-              pkill -f '/home/mycosoft/mycosoft/mas/venv/bin/uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8001' || true
-              sleep 2
-            fi
-            MAS_DIR="/home/mycosoft/mycosoft/mas"
-            [ -d "/opt/mycosoft/mas" ] && MAS_DIR="/opt/mycosoft/mas"
-            ENV_FILE_OPT=""
-            [ -f "$MAS_DIR/.env" ] && ENV_FILE_OPT="--env-file $MAS_DIR/.env"
-            docker run -d --name myca-orchestrator-new --network host \
-              --health-cmd 'curl -f http://localhost:8001/health || exit 1' \
-              --health-interval 30s --health-timeout 30s --health-start-period 20s --health-retries 3 \
-              -v /var/run/docker.sock:/var/run/docker.sock \
-              $ENV_FILE_OPT \
-              -e MINDEX_API_URL=http://192.168.0.189:8000 \
-              --restart unless-stopped \
-              "$IMAGE_FULL" \
-              uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8001
-            echo "=== Waiting for health ==="
-            sleep 15
-            for i in 1 2 3 4 5 6 7 8 9 10; do
-              if curl -sf http://localhost:8001/health >/dev/null; then
-                echo "Health check passed"
-                break
-              fi
-              echo "Attempt $i: waiting 5s..."
-              sleep 5
-            done
-            if ! curl -sf http://localhost:8001/health >/dev/null; then
-              echo "Deploy health check failed. Attempting rollback..."
-              docker rm -f myca-orchestrator-new 2>/dev/null || true
-              if [ -n "${rollback_image}" ]; then
-                docker run -d --name myca-orchestrator-new --network host \
-                  --health-cmd 'curl -f http://localhost:8001/health || exit 1' \
-                  --health-interval 30s --health-timeout 30s --health-start-period 20s --health-retries 3 \
-                  -v /var/run/docker.sock:/var/run/docker.sock \
-                  $ENV_FILE_OPT \
-                  -e MINDEX_API_URL=http://192.168.0.189:8000 \
-                  --restart unless-stopped \
-                  "${rollback_image}" \
-                  uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8001
-                sleep 15
-                curl -sf http://localhost:8001/health >/dev/null || true
-              fi
-              sudo_pw systemctl start mas-orchestrator.service || true
-              exit 1
-            fi
-            sudo_pw systemctl disable mas-orchestrator.service >/dev/null 2>&1 || true
+          MAS_DIR="/home/mycosoft/mycosoft/mas"
+          [ -d "/opt/mycosoft/mas" ] && MAS_DIR="/opt/mycosoft/mas"
+          ENV_FILE_OPT=""
+          [ -f "$MAS_DIR/.env" ] && ENV_FILE_OPT="--env-file $MAS_DIR/.env"
 
-      - name: Deploy to MAS VM (retry on transient SSH failure)
-        if: steps.deploy_primary.outcome == 'failure'
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-          IMAGE_FULL: ${{ env.IMAGE_FULL }}
-          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
-          VM_SSH_PASSWORD: ${{ secrets.VM_SSH_PASSWORD }}
-        with:
-          host: ${{ secrets.MAS_HOST }}
-          username: mycosoft
-          key: ${{ secrets.VM_SSH_PRIVATE_KEY }}
-          timeout: 120s
-          command_timeout: 10m
-          envs: IMAGE_FULL,GHCR_PULL_TOKEN,VM_SSH_PASSWORD
-          script: |
-            set -euo pipefail
-            exec 9>/tmp/deploy-mas-production.lock
-            flock -n 9 || { echo "Another MAS deploy is already running"; exit 1; }
-            sudo_pw() {
-              if [ -n "${VM_SSH_PASSWORD:-}" ]; then
-                printf '%s\n' "$VM_SSH_PASSWORD" | sudo -S -p '' "$@"
-              else
-                sudo -n "$@"
-              fi
-            }
+          if [ -n "${GHCR_PULL_TOKEN:-}" ]; then
+            echo "$GHCR_PULL_TOKEN" | docker login ghcr.io -u mycosoft --password-stdin >/dev/null
+          fi
 
-            rollback_image=""
-            if docker ps -a --format '{{.Names}}' | grep -qx myca-orchestrator-new; then
-              rollback_image="$(docker inspect -f '{{.Config.Image}}' myca-orchestrator-new || true)"
-            elif docker ps -a --format '{{.Names}}' | grep -qx myca-orchestrator; then
-              rollback_image="$(docker inspect -f '{{.Config.Image}}' myca-orchestrator || true)"
-            fi
+          echo "=== Pulling image ==="
+          docker pull "$IMAGE_FULL"
 
-            if [ -n "$GHCR_PULL_TOKEN" ]; then
-              echo "$GHCR_PULL_TOKEN" | docker login ghcr.io -u mycosoft --password-stdin
+          echo "=== Replacing MAS container ==="
+          sudo_pw systemctl stop mas-orchestrator.service || true
+          docker rm -f myca-orchestrator myca-orchestrator-old myca-orchestrator-new 2>/dev/null || true
+          if ss -ltnp 'sport = :8001' 2>/dev/null | grep -q uvicorn; then
+            pkill -f '/home/mycosoft/mycosoft/mas/venv/bin/uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8001' || true
+            sleep 2
+          fi
+
+          docker run -d --name myca-orchestrator-new --network host \
+            --health-cmd 'curl -f http://localhost:8001/health || exit 1' \
+            --health-interval 30s --health-timeout 30s --health-start-period 20s --health-retries 3 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            $ENV_FILE_OPT \
+            -e MINDEX_API_URL=http://192.168.0.189:8000 \
+            --restart unless-stopped \
+            "$IMAGE_FULL" \
+            uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8001
+
+          echo "=== Waiting for health ==="
+          sleep 15
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            if curl -sf http://localhost:8001/health >/dev/null; then
+              sudo_pw systemctl disable mas-orchestrator.service >/dev/null 2>&1 || true
+              docker inspect -f 'Container: {{.Name}} {{.Config.Image}} {{.State.Status}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}} network={{.HostConfig.NetworkMode}}' myca-orchestrator-new
+              curl -sf http://localhost:8001/myca/deploy-readiness
+              exit 0
             fi
-            echo "=== Pulling image ==="
-            docker pull "$IMAGE_FULL"
-            echo "=== Replacing container ==="
-            sudo_pw systemctl stop mas-orchestrator.service || true
-            docker rm -f myca-orchestrator myca-orchestrator-old myca-orchestrator-new 2>/dev/null || true
-            if ss -ltnp 'sport = :8001' 2>/dev/null | grep -q uvicorn; then
-              pkill -f '/home/mycosoft/mycosoft/mas/venv/bin/uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8001' || true
-              sleep 2
-            fi
-            MAS_DIR="/home/mycosoft/mycosoft/mas"
-            [ -d "/opt/mycosoft/mas" ] && MAS_DIR="/opt/mycosoft/mas"
-            ENV_FILE_OPT=""
-            [ -f "$MAS_DIR/.env" ] && ENV_FILE_OPT="--env-file $MAS_DIR/.env"
-            docker run -d --name myca-orchestrator-new --network host \
-              --health-cmd 'curl -f http://localhost:8001/health || exit 1' \
-              --health-interval 30s --health-timeout 30s --health-start-period 20s --health-retries 3 \
-              -v /var/run/docker.sock:/var/run/docker.sock \
-              $ENV_FILE_OPT \
-              -e MINDEX_API_URL=http://192.168.0.189:8000 \
-              --restart unless-stopped \
-              "$IMAGE_FULL" \
-              uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8001
-            echo "=== Waiting for health ==="
-            sleep 15
-            for i in 1 2 3 4 5 6 7 8 9 10; do
-              if curl -sf http://localhost:8001/health >/dev/null; then
-                echo "Health check passed"
-                break
-              fi
-              echo "Attempt $i: waiting 5s..."
-              sleep 5
-            done
-            if ! curl -sf http://localhost:8001/health >/dev/null; then
-              echo "Deploy health check failed. Attempting rollback..."
-              docker rm -f myca-orchestrator-new 2>/dev/null || true
-              if [ -n "${rollback_image}" ]; then
-                docker run -d --name myca-orchestrator-new --network host \
-                  --health-cmd 'curl -f http://localhost:8001/health || exit 1' \
-                  --health-interval 30s --health-timeout 30s --health-start-period 20s --health-retries 3 \
-                  -v /var/run/docker.sock:/var/run/docker.sock \
-                  $ENV_FILE_OPT \
-                  -e MINDEX_API_URL=http://192.168.0.189:8000 \
-                  --restart unless-stopped \
-                  "${rollback_image}" \
-                  uvicorn mycosoft_mas.core.myca_main:app --host 0.0.0.0 --port 8001
-                sleep 15
-                curl -sf http://localhost:8001/health >/dev/null || true
-              fi
-              sudo_pw systemctl start mas-orchestrator.service || true
-              exit 1
-            fi
-            sudo_pw systemctl disable mas-orchestrator.service >/dev/null 2>&1 || true
+            echo "Attempt $i: waiting 5s..."
+            sleep 5
+          done
+
+          echo "Deploy health check failed. Attempting rollback to systemd..." >&2
+          docker logs --tail 160 myca-orchestrator-new >&2 || true
+          docker rm -f myca-orchestrator-new 2>/dev/null || true
+          sudo_pw systemctl enable mas-orchestrator.service >/dev/null 2>&1 || true
+          sudo_pw systemctl start mas-orchestrator.service || true
+          exit 1
