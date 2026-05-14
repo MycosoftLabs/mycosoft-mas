@@ -29,11 +29,12 @@ from pathlib import Path
 from typing import Any, Optional
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from mycosoft_mas import __version__
+from mycosoft_mas.core.auth.internal_service import require_internal_service_token
 from mycosoft_mas.core.myca_identity import (
     audit_security_event,
     build_identity_security_prompt,
@@ -1340,7 +1341,11 @@ class VoiceChatResponse(BaseModel):
     runtime_context: dict[str, Any] = Field(default_factory=dict)
 
 
-@app.post("/voice/orchestrator/chat", response_model=VoiceChatResponse)
+@app.post(
+    "/voice/orchestrator/chat",
+    response_model=VoiceChatResponse,
+    dependencies=[Depends(require_internal_service_token)],
+)
 async def voice_orchestrator_chat(
     payload: VoiceChatRequest, request: Request
 ) -> VoiceChatResponse:
