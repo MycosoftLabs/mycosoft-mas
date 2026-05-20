@@ -202,8 +202,8 @@ class BridgeSession:
     user_id: Optional[str]
     persona: str
     voice: str
-    voice_prompt: str = DEFAULT_VOICE_PROMPT
     created_at: str
+    voice_prompt: str = DEFAULT_VOICE_PROMPT
     enable_mas_events: bool = True
     transcript_history: List[dict] = field(default_factory=list)
     loaded_history: List[dict] = field(default_factory=list)
@@ -1051,18 +1051,18 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                                                 last_myca = n
                                                 await clone_to_mas_memory(s, "myca", n)
                                             acc_myca = ""
-                        elif kind == 0:
-                            s.is_tts_playing = False
-                            if not s.moshi_handshake_sent:
-                                s.moshi_handshake_sent = True
-                                await websocket.send_bytes(b"\x00")
-                                await websocket.send_json({
-                                    "type": "moshi_ready",
-                                    "session_id": session_id,
-                                    "voice": s.voice,
-                                    "voice_prompt": s.voice_prompt,
-                                })
-                                logger.info(f"[{session_id[:8]}] Moshi CUDA handshake forwarded to browser")
+                                    elif kind == 0:
+                                        s.is_tts_playing = False
+                                        if not s.moshi_handshake_sent:
+                                            s.moshi_handshake_sent = True
+                                            await websocket.send_bytes(b"\x00")
+                                            await websocket.send_json({
+                                                "type": "moshi_ready",
+                                                "session_id": session_id,
+                                                "voice": s.voice,
+                                                "voice_prompt": s.voice_prompt,
+                                            })
+                                            logger.info(f"[{session_id[:8]}] Moshi CUDA handshake forwarded to browser")
                                 elif msg.type == aiohttp.WSMsgType.TEXT:
                                     await websocket.send_text(msg.data)
                         except Exception as e:
