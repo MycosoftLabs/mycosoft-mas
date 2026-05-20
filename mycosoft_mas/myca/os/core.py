@@ -137,6 +137,7 @@ class MycaOS:
         self._world_model: Optional["WorldModel"] = None
         self._personal_agency = None
         self._autonomous_self = None
+        self._coordination_bridge = None
         self._loop: Optional[asyncio.AbstractEventLoop] = None
 
     # ── Subsystem accessors (lazy-load) ──────────────────────────
@@ -164,6 +165,14 @@ class MycaOS:
 
             self._executive = ExecutiveSystem(self)
         return self._executive
+
+    @property
+    def coordination_bridge(self):
+        if self._coordination_bridge is None:
+            from mycosoft_mas.myca.os.coordination_bridge import CoordinationBridge
+
+            self._coordination_bridge = CoordinationBridge(self)
+        return self._coordination_bridge
 
     @property
     def mas_bridge(self) -> "MASBridge":
@@ -336,6 +345,9 @@ class MycaOS:
             logger.info("[7/7] Initializing file manager...")
             await self.file_manager.initialize()
 
+            logger.info("[7/8] Initializing desktop coordination bridge...")
+            await self.coordination_bridge.initialize()
+
             logger.info("[7b/8] Initializing worldview model...")
             await self.world_model.initialize_sensors()
             self.world_model.start_write_queue()
@@ -413,6 +425,7 @@ class MycaOS:
         tasks = [
             self._message_loop(),
             self._heartbeat_loop(),
+            self._coordination_loop(),
             self._task_loop(),
             self._intention_loop(),
             self._reflection_loop(),
@@ -503,6 +516,7 @@ class MycaOS:
             self._browser_cdp,
             self._n8n_bridge,
             self._world_model,
+            self._coordination_bridge,
         ]:
             if subsystem and hasattr(subsystem, "cleanup"):
                 try:
@@ -612,6 +626,16 @@ class MycaOS:
                 logger.error(f"Heartbeat error: {e}")
 
             self._notify_watchdog()
+            await asyncio.sleep(self.HEARTBEAT_INTERVAL)
+
+    async def _coordination_loop(self):
+        """Poll desktop coordination inbox and publish MYCA status."""
+        while self._running:
+            try:
+                await self.coordination_bridge.poll_cycle()
+            except Exception as e:
+                logger.error(f"Coordination loop error: {e}")
+                self.ctx.errors_today += 1
             await asyncio.sleep(self.HEARTBEAT_INTERVAL)
 
     @staticmethod
@@ -850,7 +874,15 @@ class MycaOS:
         sender = msg.get("sender", "unknown")
         sender_id = msg.get("sender_id")
         content = msg.get("content", "")
-        is_morgan = msg.get("is_morgan", False)
+        runtime_context = msg.get("runtime_context") or {}
+        verified_is_morgan = bool(
+            msg.get("verified_is_morgan")
+            or runtime_context.get("is_creator")
+            or runtime_context.get("is_superuser")
+        )
+        is_morgan = bool(msg.get("is_morgan", False)) and source not in {"api", "http", "website"}
+        if source in {"api", "http", "website"}:
+            is_morgan = verified_is_morgan
         staff_directory = load_staff_directory()
         person_id = msg.get("person_id") or resolve_person_id(
             staff_directory,
@@ -859,7 +891,7 @@ class MycaOS:
             email=sender if "@" in sender else None,
             fallback_name=sender,
         )
-        if person_id == "morgan":
+        if person_id == "morgan" and source not in {"api", "http", "website"}:
             is_morgan = True
         if person_id:
             msg["person_id"] = person_id

@@ -12,6 +12,9 @@ on:
       - "mycosoft_mas/llm/tool_pipeline.py"
       - "services/personaplex-local/**"
       - "scripts/myca_skill_lint.py"
+      - "scripts/check_myca_workflow_drift.py"
+      - "n8n/workflows/**"
+      - "workflows/n8n/**"
       - ".github/workflows/myca-ci.yml"
   pull_request:
     paths:
@@ -24,6 +27,9 @@ on:
       - "mycosoft_mas/llm/tool_pipeline.py"
       - "services/personaplex-local/**"
       - "scripts/myca_skill_lint.py"
+      - "scripts/check_myca_workflow_drift.py"
+      - "n8n/workflows/**"
+      - "workflows/n8n/**"
       - ".github/workflows/myca-ci.yml"
   workflow_dispatch:
 
@@ -46,6 +52,9 @@ jobs:
 
       - name: Lint MYCA skill permissions
         run: poetry run python scripts/myca_skill_lint.py --strict
+
+      - name: Check workflow drift
+        run: poetry run python scripts/check_myca_workflow_drift.py
 
       - name: Run MYCA evaluations
         run: poetry run python -m mycosoft_mas.myca.evals.run_evals --verbose --report myca-evals.json

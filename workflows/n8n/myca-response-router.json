@@ -58,6 +58,10 @@
         "mode": "expression",
         "cases": [
           {
+            "condition": "=lower($node[\"Parse Routing Request\"].json.platform_source) === \"internal\"",
+            "output": 0
+          },
+          {
             "condition": "=lower($node[\"Parse Routing Request\"].json.platform_source) === \"discord\"",
             "output": 1
           },
@@ -241,6 +245,30 @@
       }
     },
     {
+      "id": "post-desktop-coordination",
+      "name": "Post Desktop Coordination Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 480],
+      "parameters": {
+        "url": "={{ ($env.MAS_API_URL || 'http://192.168.0.188:8001') + '/api/coordination/message' }}",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json",
+          "X-MYCA-Service-Token": "={{ $env.MYCA_INTERNAL_SERVICE_TOKEN || '' }}"
+        },
+        "bodyType": "json",
+        "body": {
+          "from_agent": "myca",
+          "to": "all",
+          "subject": "=MYCA internal response: {{ $node[\"Parse Routing Request\"].json.request_id }}",
+          "body": "={{ $node[\"Parse Routing Request\"].json.response_text }}",
+          "priority": "normal",
+          "tags": ["omnichannel", "internal", "response-router"]
+        }
+      }
+    },
+    {
       "id": "error-handler-retry",
       "name": "Error Handler Retry",
       "type": "n8n-nodes-base.errorHandler",
@@ -294,6 +322,7 @@
     "Webhook Response Router": [{"node": ["Parse Routing Request"], "type": "main", "index": [0, 0]}],
     "Parse Routing Request": [{"node": ["Switch by Platform"], "type": "main", "index": [0, 0]}],
     "Switch by Platform": [
+      {"node": ["Post Desktop Coordination Summary"], "type": "main", "index": [0, 0]},
       {"node": ["Format Discord Response"], "type": "main", "index": [1, 0]},
       {"node": ["Format Slack Response"], "type": "main", "index": [2, 0]},
       {"node": ["Format Email Response"], "type": "main", "index": [3, 0]},
@@ -306,6 +335,7 @@
     "Format Email Response": [{"node": ["Send Email Message"], "type": "main", "index": [0, 0]}],
     "Format Signal Response": [{"node": ["Send Signal Message"], "type": "main", "index": [0, 0]}],
     "Format WhatsApp Response": [{"node": ["Send WhatsApp Message"], "type": "main", "index": [0, 0]}],
+    "Post Desktop Coordination Summary": [{"node": ["Error Handler Retry"], "type": "main", "index": [0, 0]}],
     "Send Discord Messages": [{"node": ["Error Handler Retry"], "type": "main", "index": [0, 0]}],
     "Send Slack Message": [{"node": ["Error Handler Retry"], "type": "main", "index": [0, 0]}],
     "Send Email Message": [{"node": ["Error Handler Retry"], "type": "main", "index": [0, 0]}],

@@ -1,5 +1,12 @@
 # Master Document Index
 
+## MYCA + MAS Coordination (May 19, 2026)
+- `docs/MYCA_MAS_COORDINATION_MASTER_MAY19_2026.md` ? **Canonical MYCA/MAS entry point**: document hierarchy, extended integration matrix (desktop MCP, A2A, WebMCP, omnichannel, AI Studio), work stream registry, claim verification policy, external tool matrix, MAS coordination API endpoints (`/api/myca/capabilities`, `/api/coordination/*`, `/api/mcp/tools`, `/api/myca/openapi`). Read this first for all MYCA coordination work.
+
+## Voice-to-Voice MYCA on /test-voice (May 19, 2026)
+- `docs/VOICE_TOPOLOGY_LOCKED_MAY19_2026.md` — **Locked topology**: Voice Legion 241 vs local GPU; env contracts.
+- `docs/VOICE_TO_VOICE_VERIFICATION_MAY19_2026.md` — **Verification gates**: script results, diagnostics 0–5, browser smoke.
+
 ## Meshtastic MAS / MINDEX chain (May 6, 2026)
 
 - `docs/MESHTASTIC_TENNMESH_OPERATOR_CLOSEOUT_MAY06_2026.md` — **May 06 operator closeout**: VM **196** Mosquitto Docker config (**no `acl_file`** — passwd-only auth), broker smoke commands, MAS/MINDEX/Redis verification from LAN, hardware checklist (fill with real COM/firmware), localhost Next proxy, **`scripts/meshtastic_gateway_registry_ping.py`** optional gateway heartbeat.

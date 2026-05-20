@@ -1,6 +1,3 @@
-# LFS: fetchexclude = * prevents Cursor from downloading (avoids 1.74TB bug).
-# concurrenttransfers = 1 is minimum safe value so PUSH works (0 breaks push with HTTP 500).
-# See: docs/PERSONAPLEX_LFS_INCIDENT_AND_PREVENTION_FEB06_2026.md, docs/GIT_CRISIS_AND_COMPREHENSIVE_FIX_FEB10_2026.md
+# Voice Legion - LFS fetch allowed for PersonaPlex weights (Apr 2026).
 [lfs]
-	fetchexclude = *
 	concurrenttransfers = 1

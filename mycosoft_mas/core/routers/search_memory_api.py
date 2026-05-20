@@ -16,10 +16,16 @@ API endpoints for managing search sessions with memory integration:
 
 import logging
 from typing import Any, Dict, List, Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
+
+from mycosoft_mas.core.myca_identity import (
+    audit_security_event,
+    resolve_fastapi_identity,
+    resolve_target_user_id,
+)
 
 logger = logging.getLogger("SearchMemoryAPI")
 
@@ -169,13 +175,37 @@ class StatsResponse(BaseModel):
 # ============================================================================
 
 
+async def _require_session_owner(search_memory: Any, session_uuid: UUID, request: Request) -> Any:
+    identity = await resolve_fastapi_identity(request)
+    session = search_memory._active_sessions.get(session_uuid) or await search_memory._load_session(
+        session_uuid
+    )
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if identity.is_superuser or session.user_id == identity.user_id:
+        return session
+    if not identity.is_authenticated and session.user_id.startswith("anonymous:"):
+        return session
+    audit_security_event(
+        route="/api/search/memory",
+        identity=identity,
+        action="search_session_cross_access",
+        decision="denied",
+        source_ip=request.client.host if request.client else None,
+        session_id=str(session_uuid),
+        details={"session_user_id": session.user_id},
+    )
+    raise HTTPException(status_code=403, detail="Search session access denied")
+
+
 @router.post("/start", response_model=StartSessionResponse)
-async def start_session(request: StartSessionRequest):
+async def start_session(request: StartSessionRequest, fastapi_request: Request):
     """Start a new search session for a user."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
 
         search_memory = await get_search_memory()
+        identity = await resolve_fastapi_identity(fastapi_request)
 
         voice_uuid = None
         if request.voice_session_id:
@@ -184,14 +214,23 @@ async def start_session(request: StartSessionRequest):
             except ValueError:
                 pass
 
+        anonymous_session_key = request.voice_session_id or str(uuid4())
+        target_user_id = resolve_target_user_id(
+            requested_user_id=request.user_id,
+            identity=identity,
+            route="/api/search/memory/start",
+            source_ip=fastapi_request.client.host if fastapi_request.client else None,
+            session_id=anonymous_session_key,
+        )
+        metadata = {**(request.metadata or {}), "auth_trust_level": identity.auth_trust_level}
         session = await search_memory.start_session(
-            user_id=request.user_id, voice_session_id=voice_uuid, metadata=request.metadata
+            user_id=target_user_id, voice_session_id=voice_uuid, metadata=metadata
         )
 
         # Check if this was an existing session
         existing = len(session.queries) > 0 or len(session.focused_species) > 0
 
-        logger.info(f"Started search session {session.id} for user {request.user_id}")
+        logger.info(f"Started search session {session.id} for user {target_user_id}")
 
         return StartSessionResponse(
             session_id=str(session.id),
@@ -206,7 +245,7 @@ async def start_session(request: StartSessionRequest):
 
 
 @router.post("/query", response_model=QueryResponse)
-async def add_query(request: AddQueryRequest):
+async def add_query(request: AddQueryRequest, fastapi_request: Request):
     """Record a search query in the session."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
@@ -214,6 +253,8 @@ async def add_query(request: AddQueryRequest):
         search_memory = await get_search_memory()
 
         session_uuid = UUID(request.session_id)
+
+        await _require_session_owner(search_memory, session_uuid, fastapi_request)
 
         query = await search_memory.add_query(
             session_id=session_uuid,
@@ -241,7 +282,7 @@ async def add_query(request: AddQueryRequest):
 
 
 @router.post("/query-insight")
-async def update_query_insight(request: QueryInsightRequest):
+async def update_query_insight(request: QueryInsightRequest, fastapi_request: Request):
     """Record insights and associations for an existing query in the search path."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
@@ -251,6 +292,7 @@ async def update_query_insight(request: QueryInsightRequest):
         session_uuid = UUID(request.session_id)
         query_uuid = UUID(request.query_id)
 
+        await _require_session_owner(search_memory, session_uuid, fastapi_request)
         success = await search_memory.update_query_insight(
             session_id=session_uuid,
             query_id=query_uuid,
@@ -271,7 +313,7 @@ async def update_query_insight(request: QueryInsightRequest):
 
 
 @router.post("/focus")
-async def record_focus(request: FocusRequest):
+async def record_focus(request: FocusRequest, fastapi_request: Request):
     """Record focusing on a species/topic."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
@@ -280,6 +322,7 @@ async def record_focus(request: FocusRequest):
 
         session_uuid = UUID(request.session_id)
 
+        await _require_session_owner(search_memory, session_uuid, fastapi_request)
         success = await search_memory.record_focus(
             session_id=session_uuid, species_id=request.species_id, topic=request.topic
         )
@@ -302,7 +345,7 @@ async def record_focus(request: FocusRequest):
 
 
 @router.post("/click")
-async def record_click(request: ClickRequest):
+async def record_click(request: ClickRequest, fastapi_request: Request):
     """Record clicking a search result."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
@@ -311,10 +354,7 @@ async def record_click(request: ClickRequest):
 
         session_uuid = UUID(request.session_id)
 
-        # Get session directly from manager
-        session = search_memory._active_sessions.get(session_uuid)
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found")
+        session = await _require_session_owner(search_memory, session_uuid, fastapi_request)
 
         session.record_click(request.result_id)
 
@@ -328,7 +368,7 @@ async def record_click(request: ClickRequest):
 
 
 @router.post("/ai", response_model=AITurnResponse)
-async def add_ai_turn(request: AITurnRequest):
+async def add_ai_turn(request: AITurnRequest, fastapi_request: Request):
     """Record an AI conversation turn."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
@@ -337,6 +377,7 @@ async def add_ai_turn(request: AITurnRequest):
 
         session_uuid = UUID(request.session_id)
 
+        await _require_session_owner(search_memory, session_uuid, fastapi_request)
         message = await search_memory.add_ai_turn(
             session_id=session_uuid, role=request.role, content=request.content, topic=request.topic
         )
@@ -356,7 +397,7 @@ async def add_ai_turn(request: AITurnRequest):
 
 
 @router.get("/context/{session_id}", response_model=SessionContextResponse)
-async def get_session_context(session_id: str):
+async def get_session_context(session_id: str, request: Request):
     """Get the current context for a search session."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
@@ -365,6 +406,7 @@ async def get_session_context(session_id: str):
 
         session_uuid = UUID(session_id)
 
+        await _require_session_owner(search_memory, session_uuid, request)
         context = await search_memory.get_session_context(session_uuid)
 
         if "error" in context:
@@ -393,7 +435,7 @@ async def get_session_context(session_id: str):
 
 
 @router.post("/end/{session_id}", response_model=EndSessionResponse)
-async def end_session(session_id: str):
+async def end_session(session_id: str, request: Request):
     """End a search session and get summary."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
@@ -402,6 +444,7 @@ async def end_session(session_id: str):
 
         session_uuid = UUID(session_id)
 
+        await _require_session_owner(search_memory, session_uuid, request)
         summary = await search_memory.end_session(session_uuid)
 
         if not summary:
@@ -428,6 +471,7 @@ async def end_session(session_id: str):
 
 @router.get("/history", response_model=SearchHistoryResponse)
 async def get_search_history(
+    request: Request,
     user_id: str = Query(..., description="User identifier"),
     limit: int = Query(10, ge=1, le=50, description="Number of sessions to return"),
 ):
@@ -436,11 +480,20 @@ async def get_search_history(
         from mycosoft_mas.memory.search_memory import get_search_memory
 
         search_memory = await get_search_memory()
+        identity = await resolve_fastapi_identity(request)
+        resolved_user_id = resolve_target_user_id(
+            requested_user_id=user_id,
+            identity=identity,
+            route="/api/search/memory/history",
+            source_ip=request.client.host if request.client else None,
+        )
 
-        sessions = await search_memory.get_user_search_history(user_id, limit)
+        sessions = await search_memory.get_user_search_history(resolved_user_id, limit)
 
         return SearchHistoryResponse(
-            user_id=user_id, sessions=[s.to_dict() for s in sessions], total_count=len(sessions)
+            user_id=resolved_user_id,
+            sessions=[s.to_dict() for s in sessions],
+            total_count=len(sessions),
         )
 
     except Exception as e:
@@ -449,21 +502,28 @@ async def get_search_history(
 
 
 @router.post("/enrich")
-async def enrich_mindex(request: EnrichRequest):
+async def enrich_mindex(request: EnrichRequest, fastapi_request: Request):
     """Enrich MINDEX with search data."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
 
         search_memory = await get_search_memory()
+        identity = await resolve_fastapi_identity(fastapi_request)
+        resolved_user_id = resolve_target_user_id(
+            requested_user_id=request.user_id,
+            identity=identity,
+            route="/api/search/memory/enrich",
+            source_ip=fastapi_request.client.host if fastapi_request.client else None,
+        )
 
         success = await search_memory.enrich_to_mindex(
-            query=request.query, user_id=request.user_id, taxon_ids=request.taxon_ids
+            query=request.query, user_id=resolved_user_id, taxon_ids=request.taxon_ids
         )
 
         return {
             "success": success,
             "query": request.query,
-            "user_id": request.user_id,
+            "user_id": resolved_user_id,
             "taxon_count": len(request.taxon_ids) if request.taxon_ids else 0,
         }
 
@@ -490,15 +550,22 @@ async def get_stats():
 
 
 @router.get("/active/{user_id}")
-async def get_active_session(user_id: str):
+async def get_active_session(user_id: str, request: Request):
     """Get the active search session for a user if one exists."""
     try:
         from mycosoft_mas.memory.search_memory import get_search_memory
 
         search_memory = await get_search_memory()
+        identity = await resolve_fastapi_identity(request)
+        resolved_user_id = resolve_target_user_id(
+            requested_user_id=user_id,
+            identity=identity,
+            route="/api/search/memory/active",
+            source_ip=request.client.host if request.client else None,
+        )
 
         # Check if user has active session
-        session_id = search_memory._user_sessions.get(user_id)
+        session_id = search_memory._user_sessions.get(resolved_user_id)
         if not session_id:
             return {"active": False, "session_id": None}
 
@@ -509,7 +576,7 @@ async def get_active_session(user_id: str):
         return {
             "active": True,
             "session_id": str(session_id),
-            "user_id": user_id,
+            "user_id": resolved_user_id,
             "query_count": session.query_count,
             "focused_species": session.focused_species,
             "duration_seconds": session.duration.total_seconds(),
@@ -522,6 +589,7 @@ async def get_active_session(user_id: str):
 
 @router.post("/widget-interaction")
 async def record_widget_interaction(
+    request: Request,
     session_id: str = Query(..., description="Session ID"),
     widget: str = Query(..., description="Widget type"),
     species_id: Optional[str] = Query(None, description="Species being viewed"),
@@ -533,10 +601,7 @@ async def record_widget_interaction(
         search_memory = await get_search_memory()
 
         session_uuid = UUID(session_id)
-        session = search_memory._active_sessions.get(session_uuid)
-
-        if not session:
-            raise HTTPException(status_code=404, detail="Session not found")
+        session = await _require_session_owner(search_memory, session_uuid, request)
 
         try:
             topic = SearchTopic(widget)

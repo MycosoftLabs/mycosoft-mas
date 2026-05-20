@@ -121,6 +121,12 @@ VOICE_COMMAND_URL = f"{MAS_ORCHESTRATOR_URL}/voice/command"
 # MYCA Brain Integration
 MYCA_BRAIN_ENABLED = os.getenv("MYCA_BRAIN_ENABLED", "true").lower() == "true"
 MYCA_BRAIN_URL = f"{MAS_ORCHESTRATOR_URL}/voice/brain"
+SERVICE_TOKEN = (
+    os.getenv("MYCA_INTERNAL_SERVICE_TOKEN")
+    or os.getenv("MAS_INTERNAL_SERVICE_TOKEN")
+    or os.getenv("MYCA_MAS_SERVICE_TOKEN")
+    or ""
+).strip()
 
 # Temperature settings
 TEXT_TEMPERATURE = float(os.getenv("TEXT_TEMPERATURE", "0.4"))
@@ -368,6 +374,7 @@ async def route_voice_command(text: str, session_id: str = None, user_id: str = 
                 "user_id": user_id,
                 "source": "personaplex"
             },
+            headers=_mas_service_headers(),
             timeout=5.0
         )
         
@@ -627,7 +634,7 @@ async def _send_to_mas(session: BridgeSession, speaker: str, text: str):
             "speaker": speaker,
             "text": text,
             "source": "personaplex"
-        })
+        }, headers=_mas_service_headers(session))
     except Exception:
         pass
 
@@ -656,6 +663,7 @@ async def query_mas_brain(session: BridgeSession, user_text: str) -> Optional[di
                     "return_metadata": True
                 }
             },
+            headers=_mas_service_headers(session),
             timeout=30.0  # Allow time for MAS to process (increased for slower MAS responses)
         )
         
@@ -677,6 +685,19 @@ async def query_mas_brain(session: BridgeSession, user_text: str) -> Optional[di
 
 # Track WebSocket connections for sending MAS events
 voice_websockets: Dict[str, WebSocket] = {}
+
+
+def _mas_service_headers(session: Optional[BridgeSession] = None) -> Dict[str, str]:
+    headers: Dict[str, str] = {}
+    if SERVICE_TOKEN:
+        headers["X-MYCA-Service-Token"] = SERVICE_TOKEN
+        headers["X-MYCOSOFT-Service-Token"] = SERVICE_TOKEN
+    if session:
+        headers["X-MYCA-Verified-User-Id"] = session.user_id or "voice_user"
+        headers["X-MYCA-Verified-Email"] = ""
+        headers["X-MYCA-Verified-Role"] = "user"
+        headers["X-MYCA-Auth-Trust-Level"] = "service"
+    return headers
 
 
 async def send_mas_event_to_frontend(session_id: str, event_type: str, data: dict):

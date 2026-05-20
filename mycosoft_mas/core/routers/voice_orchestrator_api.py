@@ -25,9 +25,20 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.core.myca_identity import (
+    ANONYMOUS_IDENTITY,
+    MycaIdentity,
+    audit_security_event,
+    build_identity_security_prompt,
+    detect_identity_claim,
+    is_privileged_intent,
+    is_untrusted_privileged_request,
+    resolve_fastapi_identity,
+    verification_boundary_response,
+)
 from mycosoft_mas.deep_agents.domain_hooks import schedule_domain_task
 
 logger = logging.getLogger("VoiceOrchestrator")
@@ -130,6 +141,9 @@ class VoiceOrchestratorResponse(BaseModel):
         None, description="Memory statistics for debug panel"
     )
     injection: Optional[InjectionInfo] = Field(None, description="Feedback injection info")
+    runtime_context: Dict[str, Any] = Field(
+        default_factory=dict, description="Authoritative server-resolved MYCA auth context"
+    )
 
 
 # ============================================================================
@@ -327,7 +341,11 @@ class MYCAOrchestrator:
             except Exception as e:
                 logger.warning(f"Failed to persist turn: {e}")
 
-    async def process(self, request: VoiceOrchestratorRequest) -> VoiceOrchestratorResponse:
+    async def process(
+        self,
+        request: VoiceOrchestratorRequest,
+        identity: MycaIdentity = ANONYMOUS_IDENTITY,
+    ) -> VoiceOrchestratorResponse:
         """
         Process a voice/chat request.
 
@@ -345,9 +363,45 @@ class MYCAOrchestrator:
         # Ensure conversation context
         conv_id = request.conversation_id or str(uuid4())
         session_id = request.session_id or str(uuid4())
-        user_id = request.user_id or "morgan"
+        user_id = identity.user_id
 
         self._log_voice_turn(request, conv_id, session_id)
+
+        claimed = detect_identity_claim(message)
+        if claimed or is_privileged_intent(message):
+            audit_security_event(
+                route="/voice/orchestrator/chat",
+                identity=identity,
+                action="voice_orchestrator_request",
+                decision="allowed" if identity.is_superuser else "guest_boundary",
+                claimed_role_phrase=claimed,
+                session_id=session_id,
+                details={"source": request.source, "body_user_id": request.user_id},
+            )
+        if is_untrusted_privileged_request(message, identity):
+            boundary = verification_boundary_response(identity)
+            return VoiceOrchestratorResponse(
+                response_text=boundary,
+                response=boundary,
+                actions_taken=[
+                    ActionTaken(
+                        type="security_boundary",
+                        detail={
+                            "reason": "unverified_privileged_or_identity_claim",
+                            "claimed_role_phrase": claimed,
+                        },
+                    )
+                ],
+                session_context=SessionContext(
+                    conversation_id=conv_id,
+                    turn_count=0,
+                    active_agents=[],
+                    memory_namespace=f"conversation:{conv_id}",
+                    history_loaded_from_db=False,
+                ),
+                memory_stats=MemoryStats(reads=0, writes=0, context_injected=False, turns_in_session=0),
+                runtime_context=identity.runtime_context(),
+            )
 
         # PHASE 2: Load history from DB if this is a new conversation context
         # but we have an existing conversation_id (resuming conversation)
@@ -365,18 +419,18 @@ class MYCAOrchestrator:
         conv_context = self._conversations[conv_id]
         conv_context["turn_count"] += 1
 
-        # Load user profile if user_id provided
-        if request.user_id:
+        # Load user profile only for verified identities.
+        if identity.is_authenticated:
             coordinator = await self._get_memory_coordinator()
             if coordinator:
                 try:
-                    profile = await coordinator.get_user_profile(request.user_id)
+                    profile = await coordinator.get_user_profile(user_id)
                     if profile.preferences:
                         actions_taken.append(
                             ActionTaken(
                                 type="user_profile_loaded",
                                 detail={
-                                    "user_id": request.user_id,
+                                    "user_id": user_id,
                                     "preference_count": len(profile.preferences),
                                 },
                             )
@@ -392,7 +446,12 @@ class MYCAOrchestrator:
                     session_id=conv_id,
                     role="user",
                     content=message,
-                    metadata={"modality": request.modality, "source": request.source},
+                    metadata={
+                        "modality": request.modality,
+                        "source": request.source,
+                        "auth_trust_level": identity.auth_trust_level,
+                        "user_id": user_id,
+                    },
                 )
                 actions_taken.append(
                     ActionTaken(
@@ -425,6 +484,7 @@ class MYCAOrchestrator:
             user_id=user_id,
             intent=intent,
             actions_taken=actions_taken,
+            identity=identity,
         )
 
         # Store assistant response in memory coordinator
@@ -527,6 +587,7 @@ class MYCAOrchestrator:
             tool_calls=tool_calls,
             agents_invoked=agents_invoked,
             memory_stats=memory_stats,
+            runtime_context=identity.runtime_context(),
         )
 
     def _analyze_intent(self, message: str) -> Dict[str, Any]:
@@ -566,6 +627,7 @@ class MYCAOrchestrator:
         user_id: str,
         intent: Dict[str, Any],
         actions_taken: List[ActionTaken],
+        identity: MycaIdentity,
     ) -> str:
         """Generate a response using available services with memory integration."""
 
@@ -579,10 +641,11 @@ class MYCAOrchestrator:
                 result = await n8n.execute_workflow_async(
                     workflow_id="myca-brain-v2",
                     payload={
-                        "message": message,
+                        "message": build_identity_security_prompt(identity, message),
                         "conversation_id": conv_id,
                         "history": history,
                         "source": "voice-orchestrator",
+                        "runtime_context": identity.runtime_context(),
                     },
                 )
 
@@ -619,7 +682,7 @@ class MYCAOrchestrator:
                 tools = tool_manager.get_tool_definitions_for_llm(filter_by_permissions=True)
 
             response = await brain.get_response(
-                message=message,
+                message=build_identity_security_prompt(identity, message),
                 session_id=session_id,
                 conversation_id=conv_id,
                 user_id=user_id,
@@ -641,7 +704,7 @@ class MYCAOrchestrator:
             logger.warning(f"Memory brain failed: {e}")
 
         # Final fallback to local responses
-        return self._get_local_response(message, intent)
+        return self._get_local_response(message, intent, identity)
 
     def _log_voice_turn(
         self, request: VoiceOrchestratorRequest, conv_id: str, session_id: str
@@ -660,6 +723,7 @@ class MYCAOrchestrator:
                     "conversation_id": conv_id,
                     "session_id": session_id,
                     "user_id": request.user_id,
+                    "body_user_id_ignored_for_auth": True,
                     "source": request.source,
                     "modality": request.modality,
                 },
@@ -667,7 +731,9 @@ class MYCAOrchestrator:
         except Exception as e:
             logger.debug(f"Voice turn ledger logging failed: {e}")
 
-    def _get_local_response(self, message: str, intent: Dict[str, Any]) -> str:
+    def _get_local_response(
+        self, message: str, intent: Dict[str, Any], identity: MycaIdentity
+    ) -> str:
         """Generate local response based on intent."""
         message_lower = message.lower()
 
@@ -686,6 +752,8 @@ class MYCAOrchestrator:
         # Creator questions
         creator_patterns = ["morgan", "who created", "founder", "your creator", "who made you"]
         if any(p in message_lower for p in creator_patterns):
+            if detect_identity_claim(message) and not identity.is_creator:
+                return verification_boundary_response(identity)
             return "Morgan is the founder of Mycosoft and my creator. His vision is to merge AI with the natural intelligence found in fungal networks."
 
         # Agents
@@ -701,7 +769,9 @@ class MYCAOrchestrator:
         # Memory
         memory_patterns = ["memory", "remember", "knowledge"]
         if any(p in message_lower for p in memory_patterns):
-            return "My memory system has multiple tiers: short-term in Redis, long-term in PostgreSQL, semantic embeddings in Qdrant, and the MINDEX knowledge graph. I can remember our conversations across sessions."
+            if not identity.is_authenticated:
+                return "My memory system can keep conversation-local context for guests, but global or cross-session memory requires a verified account."
+            return "My memory system has multiple tiers: short-term in Redis, long-term in PostgreSQL, semantic embeddings in Qdrant, and the MINDEX knowledge graph."
 
         # Capabilities
         capability_patterns = ["what can you", "can you help", "capabilities"]
@@ -739,11 +809,12 @@ def get_orchestrator() -> MYCAOrchestrator:
 
 
 @router.post("/chat", response_model=VoiceOrchestratorResponse)
-async def voice_chat(request: VoiceOrchestratorRequest):
+async def voice_chat(request: VoiceOrchestratorRequest, fastapi_request: Request):
     """Main MYCA voice/chat interface."""
     try:
+        identity = await resolve_fastapi_identity(fastapi_request)
         orchestrator = get_orchestrator()
-        response = await orchestrator.process(request)
+        response = await orchestrator.process(request, identity=identity)
         return response
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

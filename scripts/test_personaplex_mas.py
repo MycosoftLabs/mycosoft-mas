@@ -7,12 +7,48 @@ This script tests the full-duplex voice system with MAS tool integration.
 import asyncio
 import aiohttp
 import json
+import os
 import sys
 
 # Configuration
 MOSHI_URL = "http://localhost:8998"
 BRIDGE_URL = "http://localhost:8999"
 MAS_URL = "http://192.168.0.188:8001"
+def _load_service_token() -> str:
+    mas_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for path in (
+        os.path.join(mas_root, ".credentials.local"),
+        os.path.join(mas_root, ".env"),
+        r"D:\Users\admin2\Desktop\MYCOSOFT\CODE\WEBSITE\website\.env.local",
+    ):
+        if not os.path.isfile(path):
+            continue
+        with open(path, encoding="utf-8", errors="ignore") as handle:
+            for line in handle:
+                for key in (
+                    "MYCA_INTERNAL_SERVICE_TOKEN",
+                    "MAS_INTERNAL_SERVICE_TOKEN",
+                    "MYCA_MAS_SERVICE_TOKEN",
+                ):
+                    if line.strip().startswith(f"{key}="):
+                        return line.split("=", 1)[1].strip().strip('"').strip("'")
+    return (
+        os.getenv("MYCA_INTERNAL_SERVICE_TOKEN")
+        or os.getenv("MAS_INTERNAL_SERVICE_TOKEN")
+        or os.getenv("MYCA_MAS_SERVICE_TOKEN")
+        or ""
+    )
+
+
+SERVICE_TOKEN = _load_service_token()
+
+
+def service_headers() -> dict[str, str]:
+    headers: dict[str, str] = {}
+    if SERVICE_TOKEN:
+        headers["X-MYCA-Service-Token"] = SERVICE_TOKEN
+        headers["X-MYCOSOFT-Service-Token"] = SERVICE_TOKEN
+    return headers
 
 async def test_moshi_health():
     """Test Moshi server health."""
@@ -23,6 +59,9 @@ async def test_moshi_health():
                 if resp.status == 200:
                     data = await resp.json()
                     print(f"   âœ“ Moshi server healthy: {data.get('version', 'unknown')}")
+                    return True
+                if resp.status == 426:
+                    print("   âœ“ Moshi server running (websocket upgrade required)")
                     return True
                 else:
                     print(f"   âœ— Moshi returned status {resp.status}")
@@ -83,6 +122,7 @@ async def test_voice_tools():
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 f"{MAS_URL}/api/voice/tools/devices/mushroom1/status",
+                headers=service_headers(),
                 timeout=aiohttp.ClientTimeout(total=5)
             ) as resp:
                 if resp.status == 200:
@@ -99,6 +139,7 @@ async def test_voice_tools():
             async with session.post(
                 f"{MAS_URL}/api/voice/tools/execute",
                 json={"tool_name": "agent_list", "query": "list agents"},
+                headers=service_headers(),
                 timeout=aiohttp.ClientTimeout(total=5)
             ) as resp:
                 if resp.status == 200:
@@ -124,6 +165,7 @@ async def test_voice_chat():
                     "actor": "user",
                     "conversation_id": "test-session"
                 },
+                headers=service_headers(),
                 timeout=aiohttp.ClientTimeout(total=10)
             ) as resp:
                 if resp.status == 200:
