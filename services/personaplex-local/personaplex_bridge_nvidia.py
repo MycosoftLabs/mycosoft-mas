@@ -42,6 +42,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional, List, Dict, Set
 from urllib.parse import urlencode
+from uuid import uuid4
 
 import aiohttp
 import httpx
