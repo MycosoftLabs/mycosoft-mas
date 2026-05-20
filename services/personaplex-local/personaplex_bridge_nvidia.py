@@ -1015,8 +1015,18 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                     timeout=aiohttp.ClientTimeout(total=None, sock_connect=15, sock_read=300),
                     headers=headers,
                 ) as moshi:
-                    # Moshi WebSocket connected — wait for Moshi 0x00 before forwarding handshake to browser.
+                    # Moshi WebSocket connected — CUDA graphs compiled during ws_connect; signal browser.
                     logger.info(f"[{session_id[:8]}] Moshi WebSocket connected, full-duplex active")
+                    if not s.moshi_handshake_sent:
+                        s.moshi_handshake_sent = True
+                        await websocket.send_bytes(b"\x00")
+                        await websocket.send_json({
+                            "type": "moshi_ready",
+                            "session_id": session_id,
+                            "voice": s.voice,
+                            "voice_prompt": s.voice_prompt,
+                        })
+                        logger.info(f"[{session_id[:8]}] Moshi handshake forwarded to browser")
 
                     if s.loaded_history:
                         await websocket.send_json({
