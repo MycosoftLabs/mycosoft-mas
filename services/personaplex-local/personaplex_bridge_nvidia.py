@@ -41,7 +41,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional, List, Dict, Set
-from uuid import uuid4
+from urllib.parse import urlencode
 
 import aiohttp
 import httpx
@@ -107,6 +107,11 @@ MOSHI_HOST = os.getenv("MOSHI_HOST", "localhost")
 MOSHI_PORT = int(os.getenv("MOSHI_PORT", "8998"))
 MOSHI_WS_URL = f"ws://{MOSHI_HOST}:{MOSHI_PORT}/api/chat"
 
+
+def build_moshi_ws_url(voice_prompt: str) -> str:
+    """Short voice_prompt query only — avoid long text_prompt URLs that hang Moshi."""
+    return f"{MOSHI_WS_URL}?{urlencode({'voice_prompt': voice_prompt or DEFAULT_VOICE_PROMPT})}"
+
 # MAS Configuration
 MAS_ORCHESTRATOR_URL = os.getenv("MAS_ORCHESTRATOR_URL", "http://192.168.0.188:8001").rstrip("/")
 MAS_TIMEOUT = float(os.getenv("MAS_TIMEOUT", "10"))
@@ -133,6 +138,14 @@ TEXT_TEMPERATURE = float(os.getenv("TEXT_TEMPERATURE", "0.4"))
 AUDIO_TEMPERATURE = float(os.getenv("AUDIO_TEMPERATURE", "0.6"))
 
 DEFAULT_VOICE_PROMPT = os.getenv("VOICE_PROMPT", "NATF2.pt")
+VOICE_PROMPT_MAP = {
+    "myca": os.getenv("VOICE_PROMPT_MYCA", DEFAULT_VOICE_PROMPT),
+    "moshika": os.getenv("VOICE_PROMPT_MOSHIKA", DEFAULT_VOICE_PROMPT),
+}
+
+
+def resolve_voice_prompt(voice_id: str) -> str:
+    return VOICE_PROMPT_MAP.get((voice_id or "myca").lower(), DEFAULT_VOICE_PROMPT)
 
 # Database configuration for VoiceSessionStore (MINDEX VM)
 # Set MINDEX_DB_PASSWORD in MAS .env to enable voice session persistence
@@ -189,6 +202,7 @@ class BridgeSession:
     user_id: Optional[str]
     persona: str
     voice: str
+    voice_prompt: str = DEFAULT_VOICE_PROMPT
     created_at: str
     enable_mas_events: bool = True
     transcript_history: List[dict] = field(default_factory=list)
@@ -199,6 +213,7 @@ class BridgeSession:
     duplex_session: Optional[Any] = None  # DuplexSession when available
     is_tts_playing: bool = False
     moshi_ws: Optional[Any] = None  # Reference to Moshi WebSocket for stop signal
+    moshi_handshake_sent: bool = False
     
     def to_dict(self):
         return {
@@ -496,7 +511,7 @@ async def create_db_session(session: BridgeSession) -> None:
                 mode="personaplex",
                 persona=session.persona,
                 user_id=session.user_id,
-                voice_prompt=DEFAULT_VOICE_PROMPT,
+                voice_prompt=session.voice_prompt or DEFAULT_VOICE_PROMPT,
                 metadata={"version": "8.2.0", "bridge": "nvidia", "crep_enabled": True}
             )
         except Exception as e:
@@ -833,6 +848,7 @@ async def create_session(body: SessionCreate = None):
         user_id=body.user_id,
         persona=body.persona,
         voice=body.voice,
+        voice_prompt=resolve_voice_prompt(body.voice),
         created_at=datetime.now(timezone.utc).isoformat(),
         enable_mas_events=body.enable_mas_events,
         loaded_history=loaded_history
@@ -938,12 +954,14 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
         if conv_id and conv_id != session_id:
             loaded_history = await load_conversation_history(conv_id)
         
+        voice_id = websocket.query_params.get("voice") or "moshika"
         s = BridgeSession(
             session_id=session_id,
             conversation_id=conv_id,
             user_id=user_id,
             persona="myca",
-            voice="myca",
+            voice=voice_id,
+            voice_prompt=resolve_voice_prompt(voice_id),
             created_at=datetime.now(timezone.utc).isoformat(),
             loaded_history=loaded_history
         )
@@ -965,18 +983,17 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
         sessions[session_id] = s
         await create_db_session(s)
     
-    # Signal frontend "Connected!" immediately so test-voice shows "Speak naturally..."
-    # without blocking on Moshi. Moshi may take 60-180s to accept (CUDA graph compile).
-    # We connect to Moshi in background; audio will flow once Moshi is ready.
-    await websocket.send_bytes(b"\x00")
-    logger.info(f"[{session_id[:8]}] Frontend signaled ready (0x00 sent)")
-    
-    # Connect to Moshi's /api/chat with NO URL parameters.
-    # Passing text_prompt as a URL param produces a 6000+ char URL which causes
-    # Moshi's aiohttp server to silently hang after the WS upgrade (never sends handshake).
-    # The MYCA persona and memory context are injected by MAS through the conversation
-    # system — no need to pass them to Moshi's URL.
-    moshi_url = MOSHI_WS_URL
+    # Tell browser bridge is up; Moshi CUDA handshake (0x00) forwarded only after Moshi sends it.
+    await websocket.send_json({
+        "type": "bridge_ready",
+        "session_id": session_id,
+        "moshi_pending": True,
+        "voice": s.voice,
+        "voice_prompt": s.voice_prompt,
+    })
+    logger.info(f"[{session_id[:8]}] bridge_ready sent (voice={s.voice}, prompt={s.voice_prompt})")
+
+    moshi_url = build_moshi_ws_url(s.voice_prompt)
     logger.info(f"[{session_id[:8]}] Connecting to Moshi (history: {len(s.loaded_history)} turns)")
     
     audio_sent = 0
@@ -997,7 +1014,7 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                     timeout=aiohttp.ClientTimeout(total=None, sock_connect=15, sock_read=300),
                     headers=headers,
                 ) as moshi:
-                    # Moshi WebSocket connected. (0x00 already sent to frontend above.)
+                    # Moshi WebSocket connected — wait for Moshi 0x00 before forwarding handshake to browser.
                     logger.info(f"[{session_id[:8]}] Moshi WebSocket connected, full-duplex active")
 
                     if s.loaded_history:
@@ -1034,8 +1051,18 @@ async def ws_bridge(websocket: WebSocket, session_id: str):
                                                 last_myca = n
                                                 await clone_to_mas_memory(s, "myca", n)
                                             acc_myca = ""
-                                    elif kind == 0:
-                                        s.is_tts_playing = False
+                        elif kind == 0:
+                            s.is_tts_playing = False
+                            if not s.moshi_handshake_sent:
+                                s.moshi_handshake_sent = True
+                                await websocket.send_bytes(b"\x00")
+                                await websocket.send_json({
+                                    "type": "moshi_ready",
+                                    "session_id": session_id,
+                                    "voice": s.voice,
+                                    "voice_prompt": s.voice_prompt,
+                                })
+                                logger.info(f"[{session_id[:8]}] Moshi CUDA handshake forwarded to browser")
                                 elif msg.type == aiohttp.WSMsgType.TEXT:
                                     await websocket.send_text(msg.data)
                         except Exception as e:

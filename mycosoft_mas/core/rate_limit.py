@@ -77,6 +77,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         "/docs",
         "/openapi.json",
         "/redoc",
+        "/api/memory/health",
+        "/voice/brain/status",
     }
     EXEMPT_PREFIXES = (
         "/api/voice/v9/",
@@ -93,6 +95,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Skip if rate limiting is disabled
         if os.getenv("DISABLE_RATE_LIMIT", "false").lower() == "true":
+            return await call_next(request)
+
+        # Internal service token (voice stack, website BFF, bridge) — never rate limit
+        internal = os.getenv("MYCA_INTERNAL_SERVICE_TOKEN") or os.getenv("MAS_INTERNAL_SERVICE_TOKEN")
+        req_token = request.headers.get("X-MYCA-Service-Token") or request.headers.get(
+            "X-MYCOSOFT-Service-Token"
+        )
+        if internal and req_token and req_token == internal:
             return await call_next(request)
 
         # Get client identifier (IP address or API key)
