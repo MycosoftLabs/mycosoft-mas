@@ -58,6 +58,7 @@ from mycosoft_mas.core.routers.alert_api import router as alert_router
 from mycosoft_mas.core.routers.api_keys import router as api_keys_router
 from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
 from mycosoft_mas.core.routers.bio_api import router as bio_router
+from mycosoft_mas.core.routers.bluesight_api import router as bluesight_router
 from mycosoft_mas.core.routers.cfo_mcp_api import router as cfo_mcp_router
 from mycosoft_mas.core.routers.coordination_api import router as coordination_router
 from mycosoft_mas.core.routers.coding_api import router as coding_router
@@ -92,6 +93,7 @@ from mycosoft_mas.core.routers.memory_api import router as memory_router
 from mycosoft_mas.core.routers.memory_integration_api import router as memory_integration_router
 from mycosoft_mas.core.routers.merkle_ledger_api import router as merkle_ledger_router
 from mycosoft_mas.core.routers.network_api import router as network_api_router
+from mycosoft_mas.core.routers.natureos_petri_api import router as natureos_petri_router
 from mycosoft_mas.core.routers.nlq_api import router as nlq_router
 from mycosoft_mas.core.routers.notifications_api import router as notifications_router
 from mycosoft_mas.core.routers.orchestrator_api import router as orchestrator_api_router
@@ -560,9 +562,24 @@ def extract_response_text(payload: object) -> str | None:
     return None
 
 
+def extract_user_message_for_fallback(message: str) -> str:
+    """Use only the user's words for pattern fallbacks — ignore injected chat directives."""
+    text = (message or "").strip()
+    if not text:
+        return text
+    marker = "[user message]"
+    lower = text.lower()
+    idx = lower.rfind(marker)
+    if idx >= 0:
+        user_part = text[idx + len(marker) :].strip().lstrip(":").strip()
+        if user_part:
+            return user_part
+    return text
+
+
 def generate_myca_fallback_response(message: str) -> str:
-    """Generate a MYCA identity-aware fallback response with comprehensive Mycosoft knowledge."""
-    message_lower = message.lower().strip()
+    """Generate a user-facing MYCA fallback — never expose internal infrastructure."""
+    message_lower = extract_user_message_for_fallback(message).lower().strip()
 
     # IDENTITY - MYCA must always know who she is
     name_patterns = [
@@ -583,7 +600,7 @@ def generate_myca_fallback_response(message: str) -> str:
         "hey",
         "hello",
     ]:
-        return "Hello! I'm MYCA, your AI companion here at Mycosoft. I'm running on our RTX 5090 with full-duplex voice through PersonaPlex. Ready to talk about our work, science, or help with any tasks. What's on your mind?"
+        return "Hello! I'm MYCA, your AI companion at Mycosoft. What can I help you with today?"
 
     # MYCOSOFT - Company and Mission
     mycosoft_patterns = [
@@ -647,12 +664,12 @@ def generate_myca_fallback_response(message: str) -> str:
         "real-time",
     ]
     if any(p in message_lower for p in voice_patterns):
-        return "I'm speaking through PersonaPlex, powered by NVIDIA's Moshi 7B model running on our RTX 5090. It's a full-duplex voice system - meaning we can interrupt each other naturally, just like a real conversation. The audio runs at 30 milliseconds per step, well under the 80ms target for real-time interaction."
+        return "I can speak with you in real time through Mycosoft's voice interface — natural, full-duplex conversation when you use voice mode. In text chat, just type what you need and I'll help."
 
-    # MEMORY - Knowledge System
-    memory_patterns = ["memory", "remember", "knowledge", "mindex", "database"]
+    # MEMORY - user-facing only (never Redis/Postgres/Qdrant/VM details)
+    memory_patterns = ["memory", "remember", "recall", "memorize"]
     if any(p in message_lower for p in memory_patterns):
-        return "My memory system has multiple tiers: short-term conversation context in Redis, long-term facts in PostgreSQL, semantic embeddings in Qdrant for similarity search, and the MINDEX knowledge graph for structured fungal data. I can remember our conversations, learn your preferences, and recall facts from across sessions."
+        return "I keep context within our conversation, and when you're signed in I can carry preferences and facts across sessions. I also draw on MINDEX for species, compounds, and observations. What would you like me to find or remember?"
 
     # CAPABILITIES
     capability_patterns = [
@@ -664,7 +681,7 @@ def generate_myca_fallback_response(message: str) -> str:
         "your abilities",
     ]
     if any(p in message_lower for p in capability_patterns):
-        return "I can coordinate our 227+ agents, monitor infrastructure, execute n8n workflows, query our databases, analyze biological signals, run simulations, manage deployments, and have natural conversations about science and technology. I have access to Proxmox VMs, Docker containers, the UniFi network, and all Mycosoft APIs. What would you like me to do?"
+        return "I can help with mycology research, species and compound lookup, device and sensor data, scientific questions, and coordinating specialized agents across Mycosoft. What would you like to do?"
 
     # PLANS - Future and Goals
     plan_patterns = ["plans", "future", "roadmap", "what are we building", "next steps", "goals"]
@@ -674,7 +691,7 @@ def generate_myca_fallback_response(message: str) -> str:
     # INTEGRATIONS
     integration_patterns = ["n8n", "workflow", "integrations", "apis", "systems"]
     if any(p in message_lower for p in integration_patterns):
-        return "I'm integrated with 46+ n8n workflows for automation, Google AI Studio for LLM reasoning, ElevenLabs for text-to-speech, the MINDEX API for fungal data, Proxmox for VM management, UniFi for network control, and various scientific computing services. All orchestrated through my single-brain architecture."
+        return "I'm connected to MINDEX for scientific data, NatureOS for devices and tools, CREP for environmental intelligence, and automation across Mycosoft. Tell me what you're trying to accomplish."
 
     # MORGAN / CREATOR
     creator_patterns = ["morgan", "who created", "founder", "your creator", "who made you"]
@@ -682,12 +699,16 @@ def generate_myca_fallback_response(message: str) -> str:
         return "Morgan is the founder of Mycosoft and my creator. He designed me to be the central intelligence coordinating all of Mycosoft's AI agents and biological computing research. His vision is to merge artificial intelligence with the natural intelligence found in fungal networks."
 
     # STATUS
-    status_patterns = ["status", "how are you", "are you there", "you working", "systems"]
+    status_patterns = ["status", "how are you", "are you there", "you working"]
     if any(p in message_lower for p in status_patterns):
-        return "All systems operational. I'm running on the MAS VM at 192.168.0.188, with PersonaPlex voice on the RTX 5090 locally. Redis memory is connected, 227 agents are registered, and I'm ready for action. What would you like to check on?"
+        return "I'm here and ready to help. What would you like to explore — species, compounds, devices, or something else?"
+
+    # Short probes (e.g. "test") — respond naturally, not with architecture
+    if message_lower in {"test", "testing", "ping", "hello?", "are you there?"}:
+        return "I'm here — what would you like to try?"
 
     # DEFAULT - Always identify as MYCA with helpful context
-    return "I'm MYCA, the AI orchestrator for Mycosoft's Multi-Agent System. I'm here to help with mycology research, infrastructure management, agent coordination, or just to chat about our work. What's on your mind?"
+    return "I'm MYCA, Mycosoft's AI assistant. I can help with mycology, research data, devices, and scientific questions. What's on your mind?"
 
 
 _n8n_client: N8NClient | None = None
@@ -769,6 +790,8 @@ app.include_router(api_keys_router, tags=["api-keys"])
 app.include_router(evolution_router)
 app.include_router(petri_sim_router)
 app.include_router(petri_sim_v2_router)
+app.include_router(bluesight_router)
+app.include_router(natureos_petri_router)
 app.include_router(plasticity_router, tags=["plasticity", "myca2"])
 
 # Scientific platform routers

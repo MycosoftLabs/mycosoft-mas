@@ -734,8 +734,10 @@ class MYCAOrchestrator:
     def _get_local_response(
         self, message: str, intent: Dict[str, Any], identity: MycaIdentity
     ) -> str:
-        """Generate local response based on intent."""
-        message_lower = message.lower()
+        """Generate local response based on intent — user-facing only, no infrastructure leaks."""
+        from mycosoft_mas.core.myca_main import extract_user_message_for_fallback
+
+        message_lower = extract_user_message_for_fallback(message).lower()
 
         # Identity questions
         identity_patterns = [
@@ -747,7 +749,7 @@ class MYCAOrchestrator:
             "tell me about yourself",
         ]
         if any(p in message_lower for p in identity_patterns):
-            return "I'm MYCA, the Multi-Agent System Coordinator for Mycosoft. I was created by Morgan to orchestrate our AI agents and biological computing research. I'm speaking through PersonaPlex on our RTX 5090."
+            return "I'm MYCA, the Multi-Agent System Coordinator for Mycosoft. I was created by Morgan to help with mycology research, scientific data, and coordinating our agent network."
 
         # Creator questions
         creator_patterns = ["morgan", "who created", "founder", "your creator", "who made you"]
@@ -759,29 +761,32 @@ class MYCAOrchestrator:
         # Agents
         agent_patterns = ["agents", "how many agents", "agent system"]
         if any(p in message_lower for p in agent_patterns):
-            return "I coordinate 227 specialized AI agents across 14 categories including Core orchestration, Financial operations, Mycology research, and Scientific computing."
+            return "I coordinate specialized AI agents across mycology research, scientific computing, data, devices, and more."
 
         # Voice system
         voice_patterns = ["personaplex", "voice", "moshi", "how do you speak"]
         if any(p in message_lower for p in voice_patterns):
-            return "I'm speaking through PersonaPlex, powered by NVIDIA's Moshi 7B model running on our RTX 5090. It's a full-duplex voice system for natural conversation."
+            return "I can speak with you in real time through Mycosoft's voice interface when you use voice mode. In text chat, just type what you need."
 
-        # Memory
-        memory_patterns = ["memory", "remember", "knowledge"]
+        # Memory — user-facing only
+        memory_patterns = ["memory", "remember", "recall", "memorize"]
         if any(p in message_lower for p in memory_patterns):
             if not identity.is_authenticated:
-                return "My memory system can keep conversation-local context for guests, but global or cross-session memory requires a verified account."
-            return "My memory system has multiple tiers: short-term in Redis, long-term in PostgreSQL, semantic embeddings in Qdrant, and the MINDEX knowledge graph."
+                return "I can keep context within this conversation. Sign in if you want me to remember preferences across sessions."
+            return "I keep context in our conversation and, when you're signed in, can carry preferences and facts across sessions. I also draw on MINDEX for species and research data."
 
         # Capabilities
         capability_patterns = ["what can you", "can you help", "capabilities"]
         if any(p in message_lower for p in capability_patterns):
-            return "I can coordinate our 227+ agents, monitor infrastructure, execute n8n workflows, query databases, analyze biological signals, run simulations, and manage deployments. What would you like me to do?"
+            return "I can help with mycology research, species and compound lookup, device data, scientific questions, and coordinating specialized agents. What would you like to do?"
 
         # Status
         status_patterns = ["status", "how are you", "are you there"]
         if any(p in message_lower for p in status_patterns):
-            return "All systems operational. I'm running on the MAS VM at 192.168.0.188 with PersonaPlex voice. Ready for action."
+            return "I'm here and ready to help. What would you like to explore?"
+
+        if message_lower.strip() in {"test", "testing", "ping"}:
+            return "I'm here — what would you like to try?"
 
         # Confirmation needed
         if intent["requires_confirmation"]:
