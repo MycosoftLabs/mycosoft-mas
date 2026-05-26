@@ -39,8 +39,8 @@ print('\n=== Step 2: Check Dockerfile location ===')
 stdin, stdout, stderr = ssh.exec_command('ls -la /home/mycosoft/mycosoft/mas/Dockerfile* 2>&1', timeout=10)
 print(stdout.read().decode())
 
-print('\n=== Step 3: Stop the current container ===')
-stdin, stdout, stderr = ssh.exec_command('docker stop myca-orchestrator-new', timeout=30)
+print('\n=== Step 3: Stop and remove the current container ===')
+stdin, stdout, stderr = ssh.exec_command('docker rm -f myca-orchestrator-new', timeout=60)
 print(f'OUT: {stdout.read().decode()}')
 print(f'ERR: {stderr.read().decode()}')
 
@@ -53,11 +53,7 @@ stdin, stdout, stderr = ssh.exec_command(cmd, timeout=1800)  # 30 min timeout fo
 output = stdout.read().decode()
 print(output[-3000:] if len(output) > 3000 else output)  # Last 3000 chars
 
-print('\n=== Step 5: Remove old container ===')
-stdin, stdout, stderr = ssh.exec_command('docker rm myca-orchestrator-new', timeout=30)
-print(f'OUT: {stdout.read().decode()}')
-
-print('\n=== Step 6: Start new container ===')
+print('\n=== Step 5: Start new container ===')
 # Optional: mount SSH key for container -> 187 (coding API)
 key_on_188 = '/home/mycosoft/.ssh/mas_to_sandbox'
 stdin, stdout, stderr = ssh.exec_command(f'test -f {key_on_188} && echo exists', timeout=5)
