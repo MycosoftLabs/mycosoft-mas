@@ -155,7 +155,12 @@ class TaskManager:
 
         # --- Optional heavier service surface (do not auto-boot in __init__) ---
         self.app = FastAPI(title="MAS Task Manager")
-        self.docker_client = docker.from_env() if docker else None
+        self.docker_client = None
+        if docker:
+            try:
+                self.docker_client = docker.from_env()
+            except Exception as exc:
+                logger.warning("Docker client unavailable (running without Docker): %s", exc)
 
         # Prometheus metrics (safe under repeated instantiation/imports)
         self.process_count = get_gauge("mas_process_count", "Number of running processes")
