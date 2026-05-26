@@ -6,6 +6,26 @@
 
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
+## Earth Simulator + MYCA deploy verification (May 26, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/EARTH_SIMULATOR_MYCA_DEPLOY_VERIFY_MAY26_2026.md` | **Verification & completion** — production deploy `b87e20f6`, MAS/MINDEX/Sandbox probes, MYCA→MAS analysis routing, gaps (191, Redis, named devices). |
+
+## GPU topology — dev PC local-dev-only (May 24, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/GPU_TOPOLOGY_CONSOLIDATED_MAY24_2026.md` | **Canonical** — dev PC 241 = Cursor/3010 only; GPU host 249 = PersonaPlex/Nemotron; LAN firewall blocks + VM env redirect away from 241. |
+
+## Earth Simulator fungi-first Phase 1 (May 23, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/EARTH_SIM_FUNGI_PHASE1_COMPLETE_MAY23_2026.md` | Completion record for MINDEX-first fungi overlays, canonical FCI cell scoring, deployment ranking API, timing budgets, and health/confidence checks. |
+
+## Earth Simulator govtab Phase 1 extension (May 23, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/EARTH_SIM_GOVTAB_PHASE1_EXTENSION_COMPLETE_MAY23_2026.md` | Completion record for startup/default-profile stabilization, AM/ECM exclusivity fixes, MINDEX-first civic viewport unification across all required providers, right-tab API wiring, and staged performance budgets. |
+
 ## MYCA Alive (May 2, 2026)
 | Doc | Purpose |
 |-----|---------|

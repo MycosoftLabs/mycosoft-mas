@@ -1,5 +1,9 @@
 # Master Document Index
 
+## Earth Simulator + MYCA Deploy Verification (May 26, 2026)
+
+- `docs/EARTH_SIMULATOR_MYCA_DEPLOY_VERIFY_MAY26_2026.md` — **Verification & completion record**: production deploy `b87e20f6`, Instant Deploy run 26442627512, MINDEX civic/fungal on 189, MAS MYCA chat/devices/memory routes, viewport-intel + viewport-ai-summary smoke tests, MYCA VM 191 gap, Redis/memory follow-ups, re-run scripts.
+
 ## MYCA + MAS Coordination (May 19, 2026)
 - `docs/MYCA_MAS_COORDINATION_MASTER_MAY19_2026.md` ? **Canonical MYCA/MAS entry point**: document hierarchy, extended integration matrix (desktop MCP, A2A, WebMCP, omnichannel, AI Studio), work stream registry, claim verification policy, external tool matrix, MAS coordination API endpoints (`/api/myca/capabilities`, `/api/coordination/*`, `/api/mcp/tools`, `/api/myca/openapi`). Read this first for all MYCA coordination work.
 
