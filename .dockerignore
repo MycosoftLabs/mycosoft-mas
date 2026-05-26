@@ -90,6 +90,8 @@ docker-compose.override.yml
 **/logs
 **/output
 **/data
+!mycosoft_mas/fusarium/data/**
+!mycosoft_mas/fusarium/data/*.py
 **/docs
 **/tests
 **/*.pyc
