@@ -14,6 +14,9 @@ from typing import Any, Dict, List, Optional, Tuple
 logger = logging.getLogger(__name__)
 
 DEFAULT_STORAGE_PATH = Path(__file__).resolve().parents[2] / "data" / "petri_simulations.json"
+BLUESIGHT_OBSERVATIONS_PATH = (
+    Path(__file__).resolve().parents[2] / "data" / "bluesight_observations.jsonl"
+)
 
 
 def _serialize_obj(obj: Any) -> Any:
@@ -136,6 +139,42 @@ def log_petri_agent_action(
 def get_petri_audit_trail(limit: int = 50) -> List[Dict[str, Any]]:
     """Return recent audit entries (newest first)."""
     return list(reversed(_audit_log[-limit:]))
+
+
+def append_bluesight_observation_event(event: Dict[str, Any]) -> None:
+    """Persist BlueSight observation events as append-only JSONL."""
+    BLUESIGHT_OBSERVATIONS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "recorded_at": datetime.utcnow().isoformat(),
+        "event": _serialize_obj(event),
+    }
+    try:
+        with open(BLUESIGHT_OBSERVATIONS_PATH, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, separators=(",", ":")))
+            handle.write("\n")
+    except Exception as exc:
+        logger.warning("Failed to append BlueSight event: %s", exc)
+
+
+def load_recent_bluesight_events(limit: int = 100) -> List[Dict[str, Any]]:
+    """Load recent BlueSight observation records from JSONL storage."""
+    if not BLUESIGHT_OBSERVATIONS_PATH.exists():
+        return []
+    rows: List[Dict[str, Any]] = []
+    try:
+        with open(BLUESIGHT_OBSERVATIONS_PATH, encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+    except Exception as exc:
+        logger.warning("Failed reading BlueSight events: %s", exc)
+        return []
+    return rows[-max(1, limit) :]
 
 
 async def notify_nlm_petri_outcome(
