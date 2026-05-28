@@ -727,6 +727,113 @@ async def unregister_device(device_id: str):
     }
 
 
+def _device_base_url(device: Dict[str, Any]) -> str:
+    """Resolve HTTP base URL for a registered device (legacy :8003 or agent :8787)."""
+    extra = device.get("extra") or {}
+    agent_url = extra.get("agent_url")
+    if isinstance(agent_url, str) and agent_url.strip():
+        return agent_url.rstrip("/")
+
+    host = device.get("host", "")
+    port = int(device.get("port") or 8003)
+
+    if host.startswith("http://") or host.startswith("https://"):
+        return host.rstrip("/")
+    if device.get("connection_type") == "cloudflare":
+        return f"https://{host}"
+    return f"http://{host}:{port}"
+
+
+def _is_agent_api(device: Dict[str, Any]) -> bool:
+    extra = device.get("extra") or {}
+    if extra.get("api_kind") == "agent":
+        return True
+    if isinstance(extra.get("agent_url"), str) and ":8787" in extra["agent_url"]:
+        return True
+    return int(device.get("port") or 8003) == 8787
+
+
+async def _fetch_agent_telemetry(client: httpx.AsyncClient, base_url: str) -> Dict[str, Any]:
+    """Fetch telemetry from unified agent (:8787) — canonical or legacy /api paths."""
+    for path in ("/telemetry/latest", "/api/sensor", "/api/status"):
+        try:
+            r = await client.get(f"{base_url}{path}")
+            if r.status_code != 200:
+                continue
+            body = r.json()
+            if path == "/api/status":
+                reading = body.get("lastSensorReading")
+                if reading:
+                    return {"source": path, "reading": reading, "status": body}
+                continue
+            if path == "/api/sensor":
+                reading = body.get("reading")
+                if reading:
+                    return {"source": path, "reading": reading}
+                continue
+            return body
+        except Exception:
+            continue
+    raise HTTPException(status_code=503, detail="Agent telemetry endpoints unreachable")
+
+
+async def _post_agent_command(
+    client: httpx.AsyncClient,
+    base_url: str,
+    cmd: "DeviceCommand",
+    path_id: str,
+) -> Dict[str, Any]:
+    """POST command to agent API (8787) or legacy MycoBrain service (8003)."""
+    operator_cmd = (cmd.command or "").strip()
+    if operator_cmd.startswith("beep "):
+        operator_cmd = "bump"
+    elif operator_cmd in ("led rgb 0 0 0", "led pattern off"):
+        operator_cmd = "led off"
+
+    # Jetson field agents (recovery-operator) expose plain-text /api/cmd only.
+    try:
+        r = await client.post(
+            f"{base_url}/api/cmd",
+            json={"cmd": operator_cmd},
+        )
+        if r.status_code == 200:
+            body = r.json()
+            if isinstance(body, dict) and body.get("ok") is False:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"Agent rejected command: {body.get('error', body)}",
+                )
+            return body
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
+    payload = {"command": {"cmd": cmd.command, **cmd.params}}
+    mdp_payload = {
+        "target": "side_a",
+        "cmd": cmd.command,
+        "params": cmd.params or {},
+        "ack_requested": True,
+        "timeout_ms": int((cmd.timeout or 5) * 1000),
+    }
+    for path, body in (
+        ("/command", mdp_payload),
+        (f"/devices/{path_id}/command", payload),
+        ("/api/command", payload),
+    ):
+        try:
+            r = await client.post(f"{base_url}{path}", json=body)
+            if r.status_code == 200:
+                result = r.json()
+                if isinstance(result, dict) and result.get("ok") is False:
+                    continue
+                return result
+        except Exception:
+            continue
+    raise HTTPException(status_code=503, detail="Agent command endpoints unreachable")
+
+
 @router.post("/{device_id}/command")
 async def send_device_command(
     device_id: str,
@@ -767,22 +874,40 @@ async def send_device_command(
             logger.debug("Mycorrhizae publish skipped: %s", e)
 
     # Build target URL for direct device call
-    host = device["host"]
-    port = device["port"]
-
-    # Determine protocol (https for cloudflare, http for tailscale/lan)
-    if host.startswith("http://") or host.startswith("https://"):
-        base_url = host.rstrip("/")
-    elif device.get("connection_type") == "cloudflare":
-        base_url = f"https://{host}"
-    else:
-        base_url = f"http://{host}:{port}"
+    base_url = _device_base_url(device)
+    is_agent = _is_agent_api(device)
 
     h_forward = _mycobrain_service_forward_headers()
 
     # Forward command to device
     try:
         async with httpx.AsyncClient(timeout=cmd.timeout) as client:
+            if is_agent:
+                path_id = str(
+                    (device.get("extra") or {}).get("mdp_device_id") or device_id
+                )
+                result = await _post_agent_command(client, base_url, cmd, path_id)
+                schedule_domain_task(
+                    domain="device",
+                    task=f"Device command executed: {cmd.command} on {device_id}",
+                    context={
+                        "device_id": device_id,
+                        "command": cmd.command,
+                        "params": cmd.params,
+                        "connection_type": device.get("connection_type"),
+                        "mdp_path_id": path_id,
+                        "api_kind": "agent",
+                    },
+                )
+                return {
+                    "status": "ok",
+                    "device_id": device_id,
+                    "mdp_path_id": path_id,
+                    "command": cmd.command,
+                    "response": result,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+
             path_id = await _resolve_mycobrain_mdp_http_id(device_id, device, base_url, client)
             response = await client.post(
                 f"{base_url}/devices/{path_id}/command",
@@ -853,20 +978,22 @@ async def get_device_telemetry(device_id: str):
         raise HTTPException(status_code=503, detail=f"Device {device_id} is offline")
 
     # Build target URL
-    host = device["host"]
-    port = device["port"]
-
-    if host.startswith("http://") or host.startswith("https://"):
-        base_url = host.rstrip("/")
-    elif device.get("connection_type") == "cloudflare":
-        base_url = f"https://{host}"
-    else:
-        base_url = f"http://{host}:{port}"
+    base_url = _device_base_url(device)
+    is_agent = _is_agent_api(device)
 
     h_forward = _mycobrain_service_forward_headers()
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
+            if is_agent:
+                body = await _fetch_agent_telemetry(client, base_url)
+                path_id = str(
+                    (device.get("extra") or {}).get("mdp_device_id") or device_id
+                )
+                if isinstance(body, dict):
+                    body["mdp_path_id"] = path_id
+                return body
+
             path_id = await _resolve_mycobrain_mdp_http_id(device_id, device, base_url, client)
             response = await client.get(
                 f"{base_url}/devices/{path_id}/telemetry",
