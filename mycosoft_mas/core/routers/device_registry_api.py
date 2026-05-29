@@ -650,6 +650,147 @@ async def list_unified_network_devices(
     }
 
 
+@router.get("/firmware-audit")
+async def firmware_audit(
+    device_id: Optional[str] = Query(None, description="Audit one device; omit for full registry"),
+):
+    """
+    Firmware compatibility audit for registry devices.
+
+    Probes agent :8787 /api/status and edge OpenClaw :18789 when reachable.
+    """
+    from mycosoft_mas.devices.firmware_audit import audit_device, audit_registry
+
+    _cleanup_expired_devices()
+    if device_id:
+        if device_id not in _device_registry:
+            raise HTTPException(status_code=404, detail=f"Device not found: {device_id}")
+        entry = await audit_device(device_id, _device_registry[device_id])
+        return {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "device": entry.to_dict(),
+        }
+    payload = await audit_registry(_device_registry)
+    payload["timestamp"] = datetime.now(timezone.utc).isoformat()
+    return payload
+
+
+class AgentTaskRequest(BaseModel):
+    message: str = Field(..., description="Natural language or operator instruction for edge agent")
+    task_type: str = Field(
+        default="chat",
+        description="chat | diagnostics | firmware_update | operator",
+    )
+    params: Dict[str, Any] = Field(default_factory=dict)
+    user_subject: str = Field(default="mycosoft-console")
+
+
+@router.post("/{device_id}/agent/task")
+async def device_agent_task(device_id: str, body: AgentTaskRequest = Body(...)):
+    """
+    Relay a task to edge OpenClaw/NemoClaw (:18789) or the field agent (:8787).
+
+    Browser never calls LAN :18789 directly — MAS resolves host from registry.
+    """
+    from mycosoft_mas.devices.firmware_audit import _resolve_openclaw_url
+    from mycosoft_mas.edge.opclaw_client import OpenClawClient
+
+    _cleanup_expired_devices()
+    if device_id not in _device_registry:
+        raise HTTPException(status_code=404, detail=f"Device not found: {device_id}")
+
+    device = _device_registry[device_id]
+    base_url = _device_base_url(device)
+    extra = device.get("extra") or {}
+    openclaw_url = _resolve_openclaw_url(device, base_url if _is_agent_api(device) else None)
+
+    task_payload = {
+        "device_id": device_id,
+        "task_type": body.task_type,
+        "message": body.message,
+        "params": body.params,
+        "user_subject": body.user_subject,
+        "source": "mas-device-relay",
+    }
+
+    audit_entry = {
+        "device_id": device_id,
+        "task_type": body.task_type,
+        "message": body.message[:500],
+        "user_subject": body.user_subject,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    logger.info("Agent task relay: %s", audit_entry)
+
+    errors: List[str] = []
+
+    if openclaw_url:
+        try:
+            client = OpenClawClient(openclaw_url, timeout_seconds=30.0)
+            result = await client.run_task(task_payload)
+            return {
+                "status": "ok",
+                "relay": "openclaw",
+                "openclaw_url": openclaw_url,
+                "device_id": device_id,
+                "result": result,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        except Exception as exc:
+            errors.append(f"openclaw:{exc}")
+            logger.warning("OpenClaw relay failed for %s: %s", device_id, exc)
+
+    if _is_agent_api(device):
+        agent_paths = ("/agent/task", "/openclaw/action", "/api/cmd")
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for path in agent_paths:
+                try:
+                    if path == "/api/cmd":
+                        cmd = body.params.get("cmd") or body.message
+                        r = await client.post(
+                            f"{base_url}{path}",
+                            json={"cmd": str(cmd)},
+                        )
+                    elif path == "/openclaw/action":
+                        r = await client.post(
+                            f"{base_url}{path}",
+                            json={
+                                "action": body.task_type,
+                                "params": {**body.params, "message": body.message},
+                                "request_id": f"mas-{device_id}-{int(datetime.now(timezone.utc).timestamp())}",
+                                "user_subject": body.user_subject,
+                            },
+                        )
+                    else:
+                        r = await client.post(f"{base_url}{path}", json=task_payload)
+                    if r.status_code < 400:
+                        try:
+                            result = r.json()
+                        except Exception:
+                            result = {"raw": r.text[:2000]}
+                        return {
+                            "status": "ok",
+                            "relay": f"agent{path}",
+                            "agent_url": base_url,
+                            "device_id": device_id,
+                            "result": result,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                except Exception as exc:
+                    errors.append(f"{path}:{exc}")
+
+    raise HTTPException(
+        status_code=503,
+        detail={
+            "error": "Agent relay unreachable",
+            "device_id": device_id,
+            "openclaw_url": openclaw_url,
+            "agent_url": base_url,
+            "errors": errors,
+        },
+    )
+
+
 @router.get("/{device_id}")
 async def get_device(device_id: str):
     """Get information about a specific device."""
