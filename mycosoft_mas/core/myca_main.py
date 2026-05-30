@@ -67,6 +67,7 @@ from mycosoft_mas.core.routers.csuite_api import router as csuite_router
 from mycosoft_mas.core.routers.deploy_api import router as deploy_router
 from mycosoft_mas.core.routers.compliance_api import router as compliance_api_router
 from mycosoft_mas.core.routers.device_registry_api import router as device_registry_router
+from mycosoft_mas.core.routers.firmware_flash_api import router as firmware_flash_router
 from mycosoft_mas.core.routers.documents import router as documents_router
 from mycosoft_mas.core.routers.incidents_api import router as incidents_api_router
 from mycosoft_mas.core.routers.earth_search_api import router as earth_search_router
@@ -857,6 +858,7 @@ if IDENTITY_API_AVAILABLE and identity_router is not None:
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
+app.include_router(firmware_flash_router, tags=["firmware"])
 app.include_router(incidents_api_router)
 app.include_router(compliance_api_router)
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)

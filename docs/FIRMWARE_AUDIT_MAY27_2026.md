@@ -1,14 +1,14 @@
 # Firmware Audit — May 27, 2026
 
-**Date:** 2026-05-29 00:26 UTC
-**Status:** Complete (automated probe)
+**Date:** May 29, 2026 (updated after COM4 registration)
+**Status:** Complete (automated probe + bench COM4 on MAS registry)
 **Canonical Side A target:** `side-a-mdp-2.1.0`
 
 ## Version diff (vs canonical)
 
 | Device | Observed firmware | Target | Tier | Action |
 |--------|-------------------|--------|------|--------|
-| Local serial (COM7 via :8003) | *(no USB connected)* | `side-a-mdp-2.1.0` | unknown | Connect COM7 and re-probe; flash with `mycobrain/scripts/flash-mycobrain-production.ps1` |
+| Local bench **COM4** (`mycobrain-COM4` on MAS) | **`mycobrain.sideA.bsec2`** (BSEC2 DeviceManager; esptool flash read May 29) | `side-a-mdp-2.1.0` standalone MDP | incompatible → target compatible after flash | Flash via `POST localhost:8003/flash` with `standalone` artifact; MAC `10:b4:1d:e3:3b:c4` |
 | Mushroom 1 (123) | `recovery-operator-bsec2-v0.7` | `side-a-mdp-2.1.0` (env mushroom1) | incompatible | Flash Side A + Side B from Jetson USB; OpenClaw :18789 reachable |
 | Hyphae 1 (228) | `recovery-operator-bsec2-v0.7` | `side-a-mdp-2.1.0` (env hyphae1) | incompatible | Same as Mushroom 1 |
 

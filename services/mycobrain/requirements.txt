@@ -5,3 +5,4 @@ pyserial>=3.5
 pydantic>=2.0.0
 python-multipart>=0.0.6
 httpx>=0.26.0
+esptool>=4.7.0

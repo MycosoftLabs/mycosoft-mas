@@ -1,0 +1,18 @@
+{
+  "date": "2026-05-29",
+  "host": "192.168.0.228",
+  "script": "scripts/hyphae_pi_flash.py --probe-only",
+  "credential_source": "MAS .credentials.local (VM_PASSWORD via JETSON_SSH_PASSWORD fallback)",
+  "jetson_ssh_keys_present": {
+    "JETSON_SSH_USER": false,
+    "JETSON_SSH_PASSWORD": false,
+    "note": "Add JETSON_SSH_USER=jetson and JETSON_SSH_PASSWORD to .credentials.local if Hyphae Pi password differs from VM_PASSWORD"
+  },
+  "users_tried_order": ["jetson", "pi", "mycosoft"],
+  "ssh_success": false,
+  "ssh_error": "Authentication failed for all users (jetson, pi, mycosoft)",
+  "port_22_reachable": true,
+  "commands": null,
+  "flash_attempted": false,
+  "mushroom1_123_flash": false
+}

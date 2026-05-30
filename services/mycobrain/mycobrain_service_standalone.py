@@ -8,6 +8,7 @@ import logging
 import threading
 import asyncio
 import httpx
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from fastapi import FastAPI, HTTPException, Query, Body, Depends
@@ -76,10 +77,13 @@ def _post_telemetry_ingest(url: str, payload: dict, headers: dict) -> None:
 app = FastAPI(title="MycoBrain Service", version="2.2.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
+_serial_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="mycobrain-serial")
+
 # Global state
 devices: Dict[str, Dict] = {}
 serial_connections: Dict[str, Any] = {}
 telemetry_cache: Dict[str, Dict] = {}
+_flash_in_progress = threading.Event()
 
 # Known ESP32/MycoBrain USB VIDs (Espressif, USB Serial adapters)
 MYCOBRAIN_VIDS = {0x303A, 0x10C4, 0x1A86, 0x2341, 0x2A03, 0x046B}  # Espressif, Silabs, CH340, Arduino, USB Serial
@@ -232,6 +236,14 @@ def _disconnect_device_sync(device_id: str) -> None:
         del devices[device_id]
     logger.info(f"Auto-disconnected {device_id} (port unplugged)")
 
+
+def _release_port_sync(port_hint: str) -> None:
+    """Close serial handle so esptool can exclusive-open the port (Windows)."""
+    port_norm = port_hint.replace("-", "/") if port_hint.startswith("COM-") else port_hint
+    device_id = f"mycobrain-{port_norm.replace('/', '-').replace(':', '-')}"
+    _disconnect_device_sync(device_id)
+    time.sleep(0.75)
+
 @app.post("/devices/connect/{port:path}")
 async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depends(verify_api_key)):
     import serial
@@ -342,7 +354,10 @@ async def send_command(device_id: str, command: str = Query(None), body: dict = 
         raise HTTPException(status_code=400, detail="No command provided")
     
     try:
-        response = send_serial_command(device_id, cmd)
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(
+            _serial_executor, lambda: send_serial_command(device_id, cmd)
+        )
         return {
             "status": "ok",
             "device_id": device_id,
@@ -473,6 +488,81 @@ def parse_sensor_line(line: str, sensor_type: str) -> dict:
     except Exception:
         pass
     return data
+
+class FlashRequest(BaseModel):
+    profile: str
+    version: Optional[str] = None
+    artifact_url: Optional[str] = None
+    artifact_path: Optional[str] = None
+    port: Optional[str] = None
+    confirm: bool = False
+    dry_run: bool = True
+    sha256: Optional[str] = None
+
+
+@app.post("/flash")
+async def flash_device(body: FlashRequest = Body(...), api_key: str = Depends(verify_api_key)):
+    """
+    Host-side esptool flash for allowlisted serial port (Phase 0 COM4).
+    Destructive write requires confirm=true AND APPROVE_FLASH=true in service env.
+    """
+    import sys
+    from pathlib import Path
+
+    svc_dir = Path(__file__).resolve().parent
+    if str(svc_dir) not in sys.path:
+        sys.path.insert(0, str(svc_dir))
+    import flash_executor
+
+    port_hint = body.port or os.getenv("MYCOBRAIN_SERIAL_PORT", "COM4")
+    device_id = f"mycobrain-{port_hint.replace('/', '-').replace(':', '-')}"
+    had_connection = device_id in serial_connections
+    _flash_in_progress.set()
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, lambda: _release_port_sync(port_hint))
+
+    try:
+        result = await loop.run_in_executor(
+            None,
+            lambda: flash_executor.create_flash_job(
+                profile=body.profile,
+                version=body.version,
+                artifact_url=body.artifact_url,
+                artifact_path=body.artifact_path,
+                port=body.port,
+                confirm=body.confirm,
+                dry_run=body.dry_run,
+                sha256_expected=body.sha256,
+            ),
+        )
+        return result
+    finally:
+        _flash_in_progress.clear()
+        if had_connection and not body.dry_run:
+            port_norm = port_hint.replace("-", "/") if port_hint.startswith("COM-") else port_hint
+            await loop.run_in_executor(None, lambda p=port_norm: _try_connect_port_sync(p))
+
+
+@app.get("/flash/jobs/{job_id}")
+async def get_flash_job(job_id: str):
+    import flash_executor
+
+    job = flash_executor.get_flash_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    return job
+
+
+@app.get("/flash/jobs")
+async def list_flash_jobs(limit: int = Query(20, ge=1, le=100)):
+    import flash_executor
+
+    return {
+        "jobs": flash_executor.list_flash_jobs(limit=limit),
+        "esptool_available": flash_executor.esptool_available(),
+        "timestamp": datetime.now().isoformat(),
+    }
+
 
 @app.post("/clear-locks")
 async def clear_locks(api_key: str = Depends(verify_api_key)):
@@ -647,6 +737,9 @@ async def port_watcher_loop():
     logger.info(f"Port watcher started (interval: {PORT_WATCH_INTERVAL}s)")
     while True:
         try:
+            if _flash_in_progress.is_set():
+                await asyncio.sleep(PORT_WATCH_INTERVAL)
+                continue
             real_ports = await loop.run_in_executor(None, _get_mycobrain_port_names)
             # Disconnect devices whose port was unplugged
             for device_id in list(devices.keys()):

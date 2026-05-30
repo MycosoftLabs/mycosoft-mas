@@ -1,0 +1,27 @@
+﻿{
+    "service_health":  {
+                           "ok":  true,
+                           "body":  "{\"status\":\"ok\",\"service\":\"mycobrain\",\"version\":\"2.2.0\",\"devices_connected\":0,\"timestamp\":\"2026-05-29T15:22:56.779443\"}",
+                           "status":  200
+                       },
+    "service_ports":  {
+                          "ok":  true,
+                          "body":  "{\"ports\":[{\"device\":\"COM4\",\"description\":\"USB Serial Device (COM4)\",\"hwid\":\"USB VID:PID=303A:1001 SER=10:B4:1D:E3:3B:C4\",\"vid\":12346,\"pid\":4097,\"likely_mycobrain\":true}],\"count\":1,\"timestamp\":\"2026-05-29T15:22:56.796447\"}",
+                          "status":  200
+                      },
+    "flash_jobs_list":  {
+                            "ok":  true,
+                            "body":  "{\"jobs\":[],\"esptool_available\":true,\"timestamp\":\"2026-05-29T15:22:56.827726\"}",
+                            "status":  200
+                        },
+    "service_flash_dry_run":  {
+                                  "ok":  true,
+                                  "body":  "{\"job_id\":\"flash-8b3821f5e4f6\",\"state\":\"dry_run_ok\",\"profile\":\"standalone\",\"version\":\"side-a-mdp-2.1.0\",\"port\":\"COM4\",\"dry_run\":true,\"confirm\":false,\"created_at\":\"2026-05-29T22:22:57.604298+00:00\",\"updated_at\":\"2026-05-29T22:22:57.604298+00:00\",\"progress_pct\":100,\"log_tail\":[],\"artifact\":\"D:\\\\Users\\\\admin2\\\\Desktop\\\\MYCOSOFT\\\\CODE\\\\MAS\\\\mycosoft-mas\\\\data\\\\firmware_artifacts\\\\side-a-mdp-2.1.0\\\\side-a-mdp-2.1.0_standalone_merged.bin\",\"artifact_sha256\":\"bd91b3fdfe5d2c2921e1b5fa3a7b68887fc2c8f9be9f",
+                                  "status":  200
+                              },
+    "service_flash_live":  {
+                               "ok":  true,
+                               "body":  "{\"job_id\":\"flash-0a46b4372881\",\"state\":\"success\",\"profile\":\"standalone\",\"version\":\"side-a-mdp-2.1.0\",\"port\":\"COM4\",\"dry_run\":false,\"confirm\":true,\"created_at\":\"2026-05-29T22:22:59.176958+00:00\",\"updated_at\":\"2026-05-29T22:23:06.739042+00:00\",\"progress_pct\":100,\"log_tail\":[\"Chip type:          ESP32-S3 (QFN56) (revision v0.2)\",\"Features:           Wi-Fi, BT 5 (LE), Dual Core + LP Core, 240MHz, Embedded PSRAM 8MB (AP_3v3)\",\"Crystal frequency:  40MHz\",\"USB mode:           USB-Serial/JTAG\",\"MAC:    ",
+                               "status":  200
+                           }
+}

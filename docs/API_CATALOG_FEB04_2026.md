@@ -622,6 +622,16 @@ Manages mycosoft-gpu01 compute node (192.168.0.190): status, containers, deploy 
 
 ## MINDEX API Endpoints
 
+### Earth Simulator civic + fungi overlays (May 23, 2026)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/mindex/civic/viewport-intel` | GET | Unified viewport-scoped civic intelligence (Google Civic, Data.gov, LegiScan, CivicEngine, U.S. Vote Foundation) with overlap cleanup, lineage, confidence, and timing metadata. |
+| `/api/mindex/fungal-overlays/cells` | GET | Viewport fungal cell overlays by layer (`mycelium`, `am`, `ecm`, `rare`, `protected`, `uncertainty`, `fci`) with adaptive payload limits. |
+| `/api/mindex/fungal-overlays/samples` | GET | Viewport fungal sample markers with adaptive limits for startup/zoom performance budgets. |
+| `/api/mindex/fungal-overlays/deployment/land` | GET | FCI deployment ranking (land path) for Mushroom 1 candidate zones from fungal/environmental context. |
+| `/api/mindex/fungal-overlays/health` | GET | Fungal overlay health/confidence/freshness snapshot for Earth Simulator diagnostics. |
+
 ### Core APIs
 
 | Endpoint | Method | Description |
@@ -726,6 +736,7 @@ Canonical store: schema `eagle` (`video_sources`, `video_events`, `object_tracks
 | `/api/mindex/telemetry` | GET, POST | MINDEX telemetry proxy + envelope ingest |
 | `/api/mindex/telemetry/samples` | GET | MINDEX samples proxy (verified flags) |
 | `/api/mindex/research/search` | GET | MINDEX research search proxy |
+| `/api/crep/viewport-intel` | GET | Website proxy route for MINDEX-first unified civic viewport intelligence (right-tab contract). |
 | `/api/search/unified` | GET, POST | Fluid Search: parallel MINDEX/Earth/MAS buckets + single AI narrative (`resolveUnifiedAiNarrative`). **POST** body: `q`, optional `types`, `limit`, `ai`, `lat`, `lng`, `fluidContext` (same shape as `FluidSearchContext`); route forwards to GET with `x-fluid-search-context` header (base64 JSON). See `website/docs/FLUID_SEARCH_FULL_AI_INTERFACE_MILESTONE1_APR17_2026.md`. |
 | `/api/search/route` | POST | **May 03 2026**: Blended `IntentPlan` (`computeBlendedIntent`) — Nemotron/heuristic/Exa hint merge; body `query`, optional `partialWord`, `sessionId`, `userContext`. |
 | `/api/search/stream` | GET (SSE) | **May 03 2026**: `event: route` (IntentPlan), `event: widget-data` (unified snapshot from POST `/api/search/unified` with same query params + optional `fluidB64`), `event: ingest`, `event: done` / `stream-error`. Query: `q`, `types`, `limit`, `ai`, `lat`, `lng`, `fluidB64`, `sessionId`, `partialWord`. |
