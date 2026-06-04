@@ -1,5 +1,18 @@
 # Master Document Index
 
+## MINDEX SINE acoustic Library (June 4, 2026)
+
+- `docs/MINDEX_SINE_ACOUSTIC_INTEGRATION_JUN04_2026.md` — **MAS cross-repo note**: VM 189 deploy complete (`mindex` `a0e391a`), env/BFF surfaces, endpoints; no MAS code changes; website = Codex, MycoBrain = other agent.
+- `MINDEX/mindex/docs/MINDEX_SINE_ACOUSTIC_VM_DEPLOY_COMPLETE_JUN04_2026.md` — **MINDEX repo completion**: DB host fix, git push, migrations, verify matrix, API table, limits.
+
+## MycoBrain decentralized mesh P0 (May 29, 2026)
+
+- `mycobrain/docs/MYCOBRAIN_DECENTRALIZED_MESH_ARCHITECTURE_MAY29_2026.md` — P0–P4 mesh topology, data/control plane, envelope contract
+- `mycobrain/docs/MYCOBRAIN_INTER_BOARD_UART_PIN_MAP_MAY29_2026.md` — Side A/B UART pins (8/9 ↔ 18/19)
+- `mycobrain/docs/MYCOBRAIN_DECENTRALIZED_MESH_COMPLETE_MAY29_2026.md` — **P0 completion**: firmware 2.2.0/2.1.0, flash, tests, verification matrix
+- `mycobrain/docs/MYCOBRAIN_MESH_ENV_AND_VERIFY_MAY29_2026.md` — Build/env/bench verification steps
+- `docs/MYCOBRAIN_MESH_BRIDGE_COMPLETE_MAY29_2026.md` — MAS `envelope_bridge`, tests, service hooks
+
 ## Earth Simulator + MYCA Deploy Verification (May 26, 2026)
 
 - `docs/EARTH_SIMULATOR_MYCA_DEPLOY_VERIFY_MAY26_2026.md` — **Verification & completion record**: production deploy `b87e20f6`, Instant Deploy run 26442627512, MINDEX civic/fungal on 189, MAS MYCA chat/devices/memory routes, viewport-intel + viewport-ai-summary smoke tests, MYCA VM 191 gap, Redis/memory follow-ups, re-run scripts.
