@@ -5,6 +5,10 @@ from mycosoft_mas.integrations.asana_client import AsanaClient
 from mycosoft_mas.integrations.chemspider_client import ChemSpiderClient
 from mycosoft_mas.integrations.elevenlabs_client import ElevenLabsClient
 from mycosoft_mas.integrations.inaturalist_client import INaturalistClient, INaturalistConfig
+from mycosoft_mas.integrations.mindex_library_client import (
+    MindexLibraryClient,
+    get_mindex_library_client,
+)
 from mycosoft_mas.integrations.mycorrhizae_client import MycorrhizaeClient
 from mycosoft_mas.integrations.natureos_client import NATUREOSClient
 from mycosoft_mas.integrations.ncbi_client import NCBIClient
@@ -254,6 +258,8 @@ __all__ = [
     "AsanaClient",
     "SlackClient",
     "NATUREOSClient",
+    "MindexLibraryClient",
+    "get_mindex_library_client",
     "MycorrhizaeClient",
     "A2AClient",
     "SupabaseClient",

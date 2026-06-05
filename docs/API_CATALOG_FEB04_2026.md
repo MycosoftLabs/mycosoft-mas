@@ -892,3 +892,27 @@ Most endpoints require authentication via:
 | `/api/mas/myca2-psilo/session/[id]/stop` | POST |
 | `/api/mas/myca2-psilo/session/[id]/kill` | POST |
 | `/api/mas/myca2-psilo/session/[id]/edge` | POST |
+
+---
+
+## MINDEX Library proxy (MAS — Jun 4, 2026)
+
+### MAS (`/api/mas/mindex/library/*`)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/mas/mindex/library/health` | GET | MINDEX library catalog reachability |
+| `/api/mas/mindex/library/catalog` | GET | Library category counts |
+| `/api/mas/mindex/library/blobs` | GET | List acoustic blobs |
+| `/api/mas/mindex/library/blobs/{id}` | GET | Blob detail + annotations |
+| `/api/mas/mindex/library/blobs/{id}/classify` | POST | SINE classify (library path) |
+| `/api/mas/mindex/library/blobs/{id}/analyze` | POST | Full SINE analysis run |
+| `/api/mas/mindex/library/sine/human-tags` | GET | Training-eligible human labels |
+| `/api/mas/mindex/library/blobs/{id}/wave-annotation` | POST | Persist wave region |
+| `/api/mas/mindex/library/blobs/{id}/human-identification` | POST | Human sound label |
+
+### MAS NLM (`/api/nlm/*` additions)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/nlm/nmf/persist` | POST | Forward NMF packet to MINDEX `/nlm/nmf` |

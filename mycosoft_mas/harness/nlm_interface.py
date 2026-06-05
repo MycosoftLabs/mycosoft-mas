@@ -34,21 +34,67 @@ class NlmInterface:
             except Exception as e:
                 logger.warning("NLMWorldModel init skipped: %s", e)
 
+    async def build_frame_async(
+        self,
+        raw_data: dict[str, Any],
+        lat: float,
+        lon: float,
+        alt: float,
+        *,
+        classify_library: bool = False,
+    ) -> Any:
+        """Async frame build with optional MINDEX library_blob_id resolution."""
+        library_blob_id = raw_data.get("library_blob_id")
+        waveform_refs = None
+        library_extras: dict[str, Any] = {}
+
+        if library_blob_id:
+            try:
+                from mycosoft_mas.nlm.library_frames import (
+                    build_library_frame_extras,
+                    waveform_refs_to_nlm,
+                )
+
+                library_extras = await build_library_frame_extras(
+                    str(library_blob_id),
+                    classify=classify_library,
+                )
+                waveform_refs = waveform_refs_to_nlm(library_extras.get("waveform_refs") or [])
+            except Exception as e:
+                logger.warning("library_blob_id resolution failed: %s", e)
+
+        frame = self.build_frame(
+            raw_data,
+            lat,
+            lon,
+            alt,
+            waveform_refs=waveform_refs,
+        )
+        if library_extras and isinstance(frame, dict):
+            frame.update(library_extras)
+        return frame
+
     def build_frame(
         self,
         raw_data: dict[str, Any],
         lat: float,
         lon: float,
         alt: float,
+        waveform_refs: Any = None,
     ) -> Any:
         """Return RootedNatureFrame when NLM installed; else a geo-tagged envelope stub."""
         if self._builder is None:
-            return {
+            out: dict[str, Any] = {
                 "stub": True,
                 "geo": {"lat": lat, "lon": lon, "alt": alt},
                 "raw_data": raw_data,
                 "note": "Install NLM package and set HARNESS_NLM_ENABLED=1",
             }
+            if raw_data.get("library_blob_id"):
+                out["library_blob_id"] = raw_data["library_blob_id"]
+            if waveform_refs:
+                out["waveform_refs"] = waveform_refs
+            return out
         try:
             from nlm.core.protocols import DeviceEnvelope
 
@@ -60,6 +106,11 @@ class NlmInterface:
                     "altitude_m": alt,
                 }
             )
+            if waveform_refs is not None:
+                try:
+                    return self._builder.build(envelope, waveform_refs=waveform_refs)
+                except TypeError:
+                    pass
             return self._builder.build(envelope)
         except Exception as e:
             logger.warning("build_frame fallback stub: %s", e)

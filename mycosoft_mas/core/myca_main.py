@@ -409,6 +409,17 @@ try:
 except ImportError:
     NLM_TRAINING_API_AVAILABLE = False
 
+# MINDEX Library proxy (agents / n8n)
+try:
+    from mycosoft_mas.core.routers.mindex_library_proxy_api import (
+        router as mindex_library_proxy_router,
+    )
+
+    MINDEX_LIBRARY_PROXY_AVAILABLE = True
+except ImportError:
+    mindex_library_proxy_router = None
+    MINDEX_LIBRARY_PROXY_AVAILABLE = False
+
 # EarthLIVE API - packetized environmental data (weather, seismic, satellite)
 try:
     from mycosoft_mas.core.routers.earthlive_api import router as earthlive_router
@@ -1045,6 +1056,13 @@ except NameError:
 try:
     if NLM_TRAINING_API_AVAILABLE:
         app.include_router(nlm_training_router, tags=["nlm-training"])
+except NameError:
+    pass
+
+# MINDEX Library + SINE proxy for agents and n8n
+try:
+    if MINDEX_LIBRARY_PROXY_AVAILABLE and mindex_library_proxy_router:
+        app.include_router(mindex_library_proxy_router, tags=["mindex-library"])
 except NameError:
     pass
 

@@ -45,6 +45,7 @@ NLM_HOME = Path(os.getenv("NLM_HOME", Path.home() / ".mycosoft" / "nlm"))
 NLM_MODEL_DIR = os.getenv("NLM_MODEL_DIR", str(NLM_HOME / "models"))
 NLM_CHECKPOINT_DIR = os.getenv("NLM_CHECKPOINT_DIR", str(NLM_HOME / "models" / "checkpoints"))
 DEFAULT_NLM_CATEGORIES = [
+    "acoustic_library",
     "species_taxonomy",
     "mycology_research",
     "environmental_sensors",
@@ -262,10 +263,21 @@ async def start_training(req: StartTrainingRequest) -> Dict[str, Any]:
 async def _run_training(trainer, run_id: str, req: StartTrainingRequest):
     """Background task that runs the actual training loop."""
     try:
+        categories = req.categories or DEFAULT_NLM_CATEGORIES
+        data_stats = await trainer.prepare_training_data(categories=categories)
+
+        for run in _training_runs:
+            if run["run_id"] == run_id:
+                run["data_stats"] = data_stats
+                run["metrics"]["samples_processed"] = sum(data_stats.values())
+                run["updated_at"] = datetime.now().isoformat()
+                break
+
         result = await trainer.train(
             resume_from=req.resume_from,
-            categories=req.categories,
+            categories=categories,
         )
+        result["data_stats"] = data_stats
 
         # Update run with result
         for run in _training_runs:

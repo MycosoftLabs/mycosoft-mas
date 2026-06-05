@@ -32,6 +32,26 @@ class NLMBridge:
         payload = observation.model_dump() if hasattr(observation, "model_dump") else dict(observation)
         return await self._post("/nlm/classify/acoustic", payload)
 
+    async def classify_library_blob(
+        self,
+        blob_id: str,
+        detectors: list[str] | None = None,
+    ) -> Dict[str, Any]:
+        """SINE classify on a MINDEX library acoustic blob (library path, not /nlm/*)."""
+        params: Dict[str, Any] = {}
+        if detectors:
+            params["detectors"] = ",".join(detectors)
+        path = f"/library/blobs/{blob_id}/classify"
+        async with httpx.AsyncClient(timeout=self.timeout_s) as client:
+            response = await client.post(
+                f"{self.base_url}{path}",
+                params=params or None,
+                headers=self._headers(),
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data if isinstance(data, dict) else {"result": data}
+
     async def predict_sonar(self, environment: Dict[str, Any]) -> Dict[str, Any]:
         return await self._post("/nlm/predict/sonar-performance", environment)
 

@@ -19,6 +19,7 @@ Endpoints:
 """
 
 import logging
+import os
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -28,6 +29,20 @@ from pydantic import BaseModel, Field
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/nlm", tags=["nlm"])
+
+
+def _nlm_upstream_url() -> str:
+    """
+    NLM inference worker base URL.
+
+    Defaults to MAS orchestrator (self) so agents can call /api/nlm/* on 188:8001
+    without a separate NLM service. Override with NLM_INFERENCE_URL or NLM_API_URL.
+    """
+    return (
+        os.getenv("NLM_INFERENCE_URL")
+        or os.getenv("NLM_API_URL")
+        or os.getenv("MAS_API_URL", "http://192.168.0.188:8001")
+    ).rstrip("/")
 
 
 # ============================================================================
@@ -140,6 +155,22 @@ class NatureEmbeddingResponse(BaseModel):
     vector: List[float]
     anomaly_score: float
     vector_size: int
+
+
+class NMFPersistRequest(BaseModel):
+    """Persist a Nature Message Frame packet to MINDEX."""
+
+    packet: Dict[str, Any] = Field(..., description="Full NMF JSON from NLM translate")
+    source_id: str = Field(
+        default="",
+        max_length=128,
+        description="library_blob_id or device id when known",
+    )
+    library_blob_id: Optional[str] = Field(
+        default=None,
+        description="When set, used as source_id for MINDEX nlm.nature_embeddings",
+    )
+    anomaly_score: float = Field(default=0.0, ge=0.0)
 
 
 # ============================================================================
@@ -576,7 +607,7 @@ async def api_predict_fruiting(req: FruitingPredictRequest) -> Dict[str, Any]:
 
         import httpx
 
-        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        nlm_url = _nlm_upstream_url()
         if nlm_url:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -629,7 +660,7 @@ async def api_query_knowledge(req: KnowledgeQueryRequest) -> Dict[str, Any]:
 
         import httpx
 
-        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        nlm_url = _nlm_upstream_url()
         if nlm_url:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -692,7 +723,7 @@ async def api_predict_sensors(req: SensorPredictRequest) -> Dict[str, Any]:
 
         import httpx
 
-        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        nlm_url = _nlm_upstream_url()
         if nlm_url:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.post(
@@ -730,7 +761,7 @@ async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[st
 
         import httpx
 
-        nlm_url = os.getenv("NLM_API_URL", "http://localhost:8200")
+        nlm_url = _nlm_upstream_url()
         if nlm_url:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.post(
@@ -779,3 +810,26 @@ async def api_environmental_process(req: EnvironmentalProcessRequest) -> Dict[st
     except Exception as e:
         logger.error(f"Environmental process failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/nmf/persist")
+async def persist_nmf(req: NMFPersistRequest) -> Dict[str, Any]:
+    """
+    Forward Nature Message Frame packet to MINDEX POST /api/mindex/nlm/nmf.
+
+    When library_blob_id is provided it becomes source_id for training lineage.
+    """
+    source_id = req.library_blob_id or req.source_id
+    try:
+        from mycosoft_mas.integrations.mindex_library_client import MindexLibraryClient
+
+        client = MindexLibraryClient()
+        result = await client.persist_nmf(
+            packet=req.packet,
+            source_id=source_id,
+            anomaly_score=req.anomaly_score,
+        )
+        return {"status": "persisted", "source_id": source_id, **result}
+    except Exception as e:
+        logger.error("NMF persist to MINDEX failed: %s", e)
+        raise HTTPException(status_code=502, detail=str(e)) from e
