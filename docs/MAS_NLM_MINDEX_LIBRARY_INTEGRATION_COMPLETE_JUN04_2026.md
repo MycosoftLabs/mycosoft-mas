@@ -87,8 +87,19 @@ curl -sf -X POST http://192.168.0.188:8001/api/nlm/nmf/persist -H "Content-Type:
 
 ---
 
+## Post-deploy token fix (June 5, 2026)
+
+Production **188:8001** returned **401** on `/api/mas/mindex/library/health` until `MINDEX_INTERNAL_TOKEN` in `/home/mycosoft/mycosoft/mas/.env` was synced from **189** and `mas-orchestrator` was restarted.
+
+**Details:** `docs/MAS_NLM_LIBRARY_TOKEN_FIX_COMPLETE_JUN05_2026.md`  
+**Automation:** `scripts/ensure_mas_mindex_env_188.py`  
+**Verified:** library health, blobs, sine human-tags → **200**; MINDEX **189** health → **db ok**.
+
+---
+
 ## Lessons learned
 
 - Website hot path stays on 189; MAS proxy is for **agents and n8n**, not UI.
 - Removed placeholder mock rows from `NLMTrainer._fetch_category_data`; non-wired categories return empty JSONL.
 - `NLM_API_URL` default now prefers MAS self (`188:8001`) via `_nlm_upstream_url()`.
+- After deploy, confirm **systemd vs Docker** on 188 and sync `MINDEX_INTERNAL_TOKEN` to the active listener (see Jun 5 token fix doc).

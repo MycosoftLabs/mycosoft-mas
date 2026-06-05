@@ -11,6 +11,11 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (June 4, 2026)
+
+- **MAS NLM ↔ MINDEX Library** — `MindexLibraryClient`, `/api/mas/mindex/library/*` proxy on orchestrator **188:8001**, `acoustic_library` training from Library + SINE human-tags, `POST /api/nlm/nmf/persist`. Env: `MINDEX_API_URL`, `MINDEX_INTERNAL_TOKEN`. Docs: `docs/MAS_NLM_MINDEX_LIBRARY_INTEGRATION_COMPLETE_JUN04_2026.md`, Codex: `docs/codex-handoffs/MAS_NLM_LIBRARY_CODEX_HANDOFF_JUN04_2026.md`. Commit `acab46159` on `feature/com4-hyphae-ota-local-may29-2026`.
+- **MAS 188 MINDEX token sync (June 5, 2026)** — systemd `mas-orchestrator` `.env` synced from **189**; library proxy **401→200**. `scripts/ensure_mas_mindex_env_188.py`. Doc: `docs/MAS_NLM_LIBRARY_TOKEN_FIX_COMPLETE_JUN05_2026.md`.
+
 ## Recent Updates (May 3, 2026)
 
 - **Earth Simulator Phase 1 extension (govtab + startup stabilization, May 23, 2026)** — Earth Simulator startup/default profile locked to infrastructure + events + imagery + species-fungi + ECM (AM/ECM mutual exclusivity enforced), fungi render startup sequencing hardened, and right-tab government viewport intelligence moved to a **MINDEX-first unified civic pipeline**. New MINDEX civic/fungi routes and website proxy contract:

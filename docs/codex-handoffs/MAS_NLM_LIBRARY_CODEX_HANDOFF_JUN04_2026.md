@@ -37,16 +37,35 @@ MAS_API_URL=http://192.168.0.188:8001
 
 Optional: `MINDEX_API_KEY` if internal token unavailable.
 
+**Token on 188 verified (2026-06-05):** systemd `mas-orchestrator` + `/home/mycosoft/mycosoft/mas/.env` synced from **189**; library proxy curls return **200**. See `docs/MAS_NLM_LIBRARY_TOKEN_FIX_COMPLETE_JUN05_2026.md`. Re-sync: `python scripts/ensure_mas_mindex_env_188.py`.
+
 ---
 
 ## Deploy (MAS only)
 
+**Pushed:** `acab46159` on `feature/com4-hyphae-ota-local-may29-2026` (2026-06-05).
+
+**Runtime on 188 (canonical as of 2026-06-05):** `systemctl` service **`mas-orchestrator`** (uvicorn on **8001**), env from `/home/mycosoft/mycosoft/mas/.env`. Docker `myca-orchestrator-new` may exist but is not the active listener unless systemd is stopped.
+
 ```bash
 ssh mycosoft@192.168.0.188
-cd /home/mycosoft/mycosoft/mas   # or canonical MAS path on VM
-git pull origin main
+cd /home/mycosoft/mycosoft/mas
+git fetch origin && git checkout feature/com4-hyphae-ota-local-may29-2026 && git pull
+# From dev PC (recommended after pull or token rotation):
+# python scripts/ensure_mas_mindex_env_188.py
 sudo systemctl restart mas-orchestrator
-curl -sf http://127.0.0.1:8001/health
+curl -sf http://127.0.0.1:8001/health | jq .git_sha
+```
+
+Docker path (only if systemd is disabled and port 8001 is free):
+
+```bash
+docker build -t mycosoft/mas-agent:latest .
+docker rm -f myca-orchestrator-new
+docker run -d --name myca-orchestrator-new --restart unless-stopped -p 8001:8000 \
+  -e MINDEX_API_URL=http://192.168.0.189:8000 \
+  -e MINDEX_INTERNAL_TOKEN="$TOK" \
+  mycosoft/mas-agent:latest
 ```
 
 No website rebuild. No Cloudflare purge for this change.
@@ -92,4 +111,4 @@ curl -sf -X POST http://192.168.0.188:8001/api/nlm/training/start \
 
 ## Git state
 
-MAS changes are local until committed/pushed. After push, deploy 188 only.
+Integration + token-fix docs and `scripts/ensure_mas_mindex_env_188.py` on `feature/com4-hyphae-ota-local-may29-2026`. VM **188** env fix applied in place (no code redeploy required for token sync).
