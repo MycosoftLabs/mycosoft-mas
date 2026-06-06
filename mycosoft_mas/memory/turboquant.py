@@ -116,7 +116,7 @@ def _gaussian_levels(bits: int) -> np.ndarray:
     """
     k = 1 << bits
     # midpoints of equal-probability bins under the standard normal
-    from math import erf, sqrt
+    from math import sqrt
 
     def _ppf(p: float) -> float:
         # rational approximation of the normal inverse CDF (Acklam)
