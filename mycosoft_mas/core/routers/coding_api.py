@@ -16,6 +16,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+
+from mycosoft_mas.core.internal_auth import require_internal_token
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -115,7 +117,7 @@ async def get_security_reviewer():
 
 
 # Endpoints
-@router.post("/request", response_model=CodeChangeResponse)
+@router.post("/request", response_model=CodeChangeResponse, dependencies=[Depends(require_internal_token)])
 async def request_code_change(
     request: CodeChangeRequest, code_service=Depends(get_code_service)
 ) -> CodeChangeResponse:
@@ -188,7 +190,7 @@ async def get_service_stats(code_service=Depends(get_code_service)) -> ServiceSt
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/approve/{change_id}")
+@router.post("/approve/{change_id}", dependencies=[Depends(require_internal_token)])
 async def manual_approval(
     change_id: str, request: ManualApprovalRequest, code_service=Depends(get_code_service)
 ) -> Dict[str, Any]:
@@ -231,7 +233,7 @@ async def manual_approval(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/cancel/{change_id}")
+@router.post("/cancel/{change_id}", dependencies=[Depends(require_internal_token)])
 async def cancel_change(change_id: str, code_service=Depends(get_code_service)) -> Dict[str, Any]:
     """Cancel a pending code change request."""
     try:
@@ -246,7 +248,7 @@ async def cancel_change(change_id: str, code_service=Depends(get_code_service)) 
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/halt")
+@router.post("/halt", dependencies=[Depends(require_internal_token)])
 async def emergency_halt(code_service=Depends(get_code_service)) -> Dict[str, Any]:
     """
     Emergency halt all pending code changes.
@@ -262,7 +264,7 @@ async def emergency_halt(code_service=Depends(get_code_service)) -> Dict[str, An
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/security/scan", response_model=SecurityScanResponse)
+@router.post("/security/scan", response_model=SecurityScanResponse, dependencies=[Depends(require_internal_token)])
 async def security_scan(
     request: SecurityScanRequest, security_reviewer=Depends(get_security_reviewer)
 ) -> SecurityScanResponse:

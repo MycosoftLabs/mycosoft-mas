@@ -12,9 +12,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from mycosoft_mas.core.internal_auth import require_internal_token
 from mycosoft_mas.core.routers import device_registry_api as registry
 
 logger = logging.getLogger("FirmwareFlash")
@@ -135,7 +136,7 @@ async def firmware_health():
     }
 
 
-@router.post("/{device_id}/firmware/flash")
+@router.post("/{device_id}/firmware/flash", dependencies=[Depends(require_internal_token)])
 async def start_firmware_flash(device_id: str, body: FirmwareFlashRequest):
     """Create a firmware flash job. COM4 → local :8003; Hyphae Pi → OpenClaw or SSH sidecar."""
     registry._cleanup_expired_devices()

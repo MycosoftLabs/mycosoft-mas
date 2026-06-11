@@ -5,7 +5,9 @@ REST endpoints for autonomous experiments and hypothesis generation
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
+
+from mycosoft_mas.core.internal_auth import require_internal_token
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -38,7 +40,7 @@ async def list_experiments(status: Optional[str] = None):
     return {"experiments": [e.dict() for e in experiments]}
 
 
-@router.post("/experiments")
+@router.post("/experiments", dependencies=[Depends(require_internal_token)])
 async def create_experiment(data: CreateExperimentRequest):
     experiment = await experiment_engine.create_experiment(data.hypothesis, data.parameters)
     return experiment.dict()
@@ -52,7 +54,7 @@ async def get_experiment(experiment_id: str):
     return experiment.dict()
 
 
-@router.post("/experiments/{experiment_id}/start")
+@router.post("/experiments/{experiment_id}/start", dependencies=[Depends(require_internal_token)])
 async def start_experiment(experiment_id: str):
     try:
         experiment = await experiment_engine.start_experiment(experiment_id)
@@ -61,7 +63,7 @@ async def start_experiment(experiment_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("/experiments/{experiment_id}/pause")
+@router.post("/experiments/{experiment_id}/pause", dependencies=[Depends(require_internal_token)])
 async def pause_experiment(experiment_id: str):
     try:
         experiment = await experiment_engine.pause_experiment(experiment_id)
@@ -70,7 +72,7 @@ async def pause_experiment(experiment_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("/experiments/{experiment_id}/resume")
+@router.post("/experiments/{experiment_id}/resume", dependencies=[Depends(require_internal_token)])
 async def resume_experiment(experiment_id: str):
     try:
         experiment = await experiment_engine.resume_experiment(experiment_id)
@@ -79,7 +81,7 @@ async def resume_experiment(experiment_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("/experiments/{experiment_id}/abort")
+@router.post("/experiments/{experiment_id}/abort", dependencies=[Depends(require_internal_token)])
 async def abort_experiment(experiment_id: str, reason: str = Body(...)):
     try:
         experiment = await experiment_engine.abort_experiment(experiment_id, reason)
@@ -106,7 +108,7 @@ async def suggest_adaptations(experiment_id: str):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("/experiments/{experiment_id}/adapt")
+@router.post("/experiments/{experiment_id}/adapt", dependencies=[Depends(require_internal_token)])
 async def apply_adaptation(experiment_id: str, data: AdaptationRequest):
     from datetime import datetime
 
@@ -142,19 +144,19 @@ class CreateAgendaRequest(BaseModel):
     priority: str = "high"
 
 
-@router.post("/hypotheses/generate")
+@router.post("/hypotheses/generate", dependencies=[Depends(require_internal_token)])
 async def generate_hypotheses(data: GenerateHypothesesRequest):
     hypotheses = await hypothesis_engine.generate_from_context(data.context, data.count)
     return {"hypotheses": [h.dict() for h in hypotheses]}
 
 
-@router.post("/hypotheses/from-data")
+@router.post("/hypotheses/from-data", dependencies=[Depends(require_internal_token)])
 async def generate_from_data(data_id: str = Body(...), analysis_type: str = Body(...)):
     hypotheses = await hypothesis_engine.generate_from_data(data_id, analysis_type)
     return {"hypotheses": [h.dict() for h in hypotheses]}
 
 
-@router.post("/hypotheses/from-literature")
+@router.post("/hypotheses/from-literature", dependencies=[Depends(require_internal_token)])
 async def generate_from_literature(
     query: str = Body(...), sources: Optional[List[str]] = Body(None)
 ):
@@ -162,7 +164,7 @@ async def generate_from_literature(
     return {"hypotheses": [h.dict() for h in hypotheses]}
 
 
-@router.post("/hypotheses/{hypothesis_id}/refine")
+@router.post("/hypotheses/{hypothesis_id}/refine", dependencies=[Depends(require_internal_token)])
 async def refine_hypothesis(hypothesis_id: str, data: RefineHypothesisRequest):
     try:
         hypothesis = await hypothesis_engine.refine_hypothesis(hypothesis_id, data.feedback)
@@ -171,7 +173,7 @@ async def refine_hypothesis(hypothesis_id: str, data: RefineHypothesisRequest):
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("/hypotheses/{hypothesis_id}/validate")
+@router.post("/hypotheses/{hypothesis_id}/validate", dependencies=[Depends(require_internal_token)])
 async def validate_hypothesis(hypothesis_id: str):
     try:
         validation = await hypothesis_engine.validate_hypothesis(hypothesis_id)
@@ -192,7 +194,7 @@ async def search_literature(q: str, limit: int = 20):
     return {"results": [r.dict() for r in results]}
 
 
-@router.post("/literature/analyze")
+@router.post("/literature/analyze", dependencies=[Depends(require_internal_token)])
 async def analyze_paper(doi: str = Body(...)):
     analysis = await hypothesis_engine.analyze_paper(doi)
     return analysis
@@ -211,7 +213,7 @@ async def find_knowledge_gaps(domain: str):
     return {"gaps": gaps}
 
 
-@router.post("/agenda")
+@router.post("/agenda", dependencies=[Depends(require_internal_token)])
 async def create_agenda(data: CreateAgendaRequest):
     agenda = await hypothesis_engine.create_agenda(data.goals, data.priority)
     return agenda.dict()

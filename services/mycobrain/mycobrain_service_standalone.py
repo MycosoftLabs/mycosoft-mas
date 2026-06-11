@@ -8,21 +8,35 @@ import logging
 import threading
 import asyncio
 import httpx
+import re
+import struct
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Optional, Dict, Any, List
-from fastapi import FastAPI, HTTPException, Query, Body, Depends
+import secrets
+from fastapi import FastAPI, Header, HTTPException, Query, Body, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Annotated
 
-# Import authentication (optional - graceful fallback if not available)
+# Import authentication. Fail CLOSED when MYCOBRAIN_API_KEY is configured:
+# the old silent "no-auth" fallback left /flash and /devices/*/command open
+# (security audit JUN09_2026, finding M-7).
 try:
     from auth import verify_api_key
     AUTH_ENABLED = True
 except ImportError:
     AUTH_ENABLED = False
-    def verify_api_key():
+
+    def verify_api_key(x_api_key: str = Header(default=None, alias="X-API-Key")):
+        expected = os.environ.get("MYCOBRAIN_API_KEY", "").strip()
+        if expected:
+            if not x_api_key or not secrets.compare_digest(x_api_key, expected):
+                raise HTTPException(status_code=401, detail="Invalid or missing X-API-Key")
+            return x_api_key
+        logging.getLogger("mycobrain").warning(
+            "MYCOBRAIN_API_KEY unset - device control endpoints UNAUTHENTICATED"
+        )
         return "no-auth"
 
 # Import Tailscale utilities (optional)
@@ -56,10 +70,20 @@ DEVICE_LOCATION = os.getenv("MYCOBRAIN_DEVICE_LOCATION", "Unknown")
 PUBLIC_HOST = os.getenv("MYCOBRAIN_PUBLIC_HOST")  # Optional: explicit host/URL
 HEARTBEAT_INTERVAL = int(os.getenv("MYCOBRAIN_HEARTBEAT_INTERVAL", "30"))  # seconds
 HEARTBEAT_ENABLED = os.getenv("MYCOBRAIN_HEARTBEAT_ENABLED", "true").lower() == "true"
+ACTUATORS_ENABLED = os.getenv("MYCOBRAIN_ENABLE_ACTUATORS", "true").lower() in ("1", "true", "yes")
+# Stable registry/portal id when USB port changes (e.g. COM3 hardware, COM4 UI id)
+MYCOBRAIN_REGISTRY_ID = os.getenv("MYCOBRAIN_REGISTRY_ID", "").strip()
 
 # Telemetry ingest bridge: push to website ingest API for Supabase/Device Manager
 TELEMETRY_INGEST_URL = os.getenv("TELEMETRY_INGEST_URL", "")  # e.g. http://localhost:3010/api/devices/ingest
 TELEMETRY_INGEST_API_KEY = os.getenv("TELEMETRY_INGEST_API_KEY", "")
+MYCOBRAIN_MINDEX_ENVELOPE = os.getenv("MYCOBRAIN_MINDEX_ENVELOPE", "true").lower() in ("1", "true", "yes")
+
+try:
+    from envelope_bridge import extract_mindex_envelope, publish_envelope_async
+except ImportError:
+    extract_mindex_envelope = None  # type: ignore
+    publish_envelope_async = None  # type: ignore
 
 
 def _post_telemetry_ingest(url: str, payload: dict, headers: dict) -> None:
@@ -84,11 +108,390 @@ devices: Dict[str, Dict] = {}
 serial_connections: Dict[str, Any] = {}
 telemetry_cache: Dict[str, Dict] = {}
 _flash_in_progress = threading.Event()
+_serial_locks: Dict[str, threading.Lock] = {}
+_mdp_seq = 1
+_mdp_seq_lock = threading.Lock()
+
+# Side-A MDP firmware frame format (firmware/common_mdp/include/mdp_codec.h).
+MDP_MAGIC = 0xA15A
+MDP_VERSION = 0x01
+MDP_TELEMETRY = 0x01
+MDP_COMMAND = 0x02
+MDP_ACK = 0x03
+MDP_EVENT = 0x05
+MDP_HELLO = 0x06
+EP_SIDE_A = 0xA1
+EP_GATEWAY = 0xC0
+ACK_REQUESTED = 0x01
 
 # Known ESP32/MycoBrain USB VIDs (Espressif, USB Serial adapters)
 MYCOBRAIN_VIDS = {0x303A, 0x10C4, 0x1A86, 0x2341, 0x2A03, 0x046B}  # Espressif, Silabs, CH340, Arduino, USB Serial
 ALLOWED_PORTS_RAW = os.getenv("MYCOBRAIN_ALLOWED_PORTS", "").strip()
 ALLOWED_PORTS = {p.strip() for p in ALLOWED_PORTS_RAW.split(",") if p.strip()}
+
+
+def _device_lock(device_id: str) -> threading.Lock:
+    if device_id not in _serial_locks:
+        _serial_locks[device_id] = threading.Lock()
+    return _serial_locks[device_id]
+
+
+def _attach_registry_identity(device: Dict[str, Any]) -> None:
+    """Attach stable portal/registry id for UI and MAS heartbeat when port differs."""
+    serial_id = str(device.get("device_id") or "")
+    registry_id = MYCOBRAIN_REGISTRY_ID or serial_id
+    device["registry_id"] = registry_id
+    device["portal_device_id"] = registry_id
+    device["serial_device_id"] = serial_id
+    if DEVICE_ROLE:
+        device["device_role"] = DEVICE_ROLE
+
+
+def _resolve_device_id(requested_id: str) -> str:
+    """Map portal ids (e.g. mycobrain-COM4) to the connected serial device (e.g. COM3)."""
+    requested = (requested_id or "").strip()
+    if not requested:
+        return requested_id
+    if requested in devices or requested in serial_connections:
+        return requested
+    requested_lower = requested.lower()
+    for serial_id, device in devices.items():
+        registry_id = str(
+            device.get("registry_id") or device.get("portal_device_id") or serial_id
+        )
+        if registry_id.lower() == requested_lower:
+            return serial_id
+    if MYCOBRAIN_REGISTRY_ID and requested_lower == MYCOBRAIN_REGISTRY_ID.lower():
+        if len(devices) == 1:
+            return next(iter(devices.keys()))
+        for serial_id, device in devices.items():
+            role = str(device.get("device_role") or DEVICE_ROLE or "").lower()
+            if role == "psathyrella":
+                return serial_id
+    return requested_id
+
+
+def _registry_device_id(serial_device_id: str) -> str:
+    device = devices.get(serial_device_id) or {}
+    return str(device.get("registry_id") or device.get("portal_device_id") or serial_device_id)
+
+
+def _next_mdp_seq() -> int:
+    global _mdp_seq
+    with _mdp_seq_lock:
+        seq = _mdp_seq
+        _mdp_seq = (_mdp_seq + 1) & 0xFFFFFFFF
+        if _mdp_seq == 0:
+            _mdp_seq = 1
+    return seq
+
+
+def _crc16_ccitt_false(data: bytes) -> int:
+    crc = 0xFFFF
+    for byte in data:
+        crc ^= byte << 8
+        for _ in range(8):
+            if crc & 0x8000:
+                crc = ((crc << 1) ^ 0x1021) & 0xFFFF
+            else:
+                crc = (crc << 1) & 0xFFFF
+    return crc
+
+
+def _mdp_cobs_encode(data: bytes) -> bytes:
+    out = bytearray([0])
+    code_index = 0
+    code = 1
+    for byte in data:
+        if byte == 0:
+            out[code_index] = code
+            code_index = len(out)
+            out.append(0)
+            code = 1
+        else:
+            out.append(byte)
+            code += 1
+            if code == 0xFF:
+                out[code_index] = code
+                code_index = len(out)
+                out.append(0)
+                code = 1
+    out[code_index] = code
+    return bytes(out)
+
+
+def _mdp_cobs_decode(data: bytes) -> bytes:
+    out = bytearray()
+    read_index = 0
+    while read_index < len(data):
+        code = data[read_index]
+        if code == 0:
+            raise ValueError("invalid COBS code byte")
+        read_index += 1
+        for _ in range(1, code):
+            if read_index >= len(data):
+                raise ValueError("truncated COBS frame")
+            out.append(data[read_index])
+            read_index += 1
+        if code != 0xFF and read_index < len(data):
+            out.append(0)
+    return bytes(out)
+
+
+def _encode_mdp_command(cmd: str, params: Optional[Dict[str, Any]] = None) -> bytes:
+    payload = json.dumps({"cmd": cmd, "params": params or {}}, separators=(",", ":")).encode("utf-8")
+    seq = _next_mdp_seq()
+    header = struct.pack(
+        "<HBBIIBBBB",
+        MDP_MAGIC,
+        MDP_VERSION,
+        MDP_COMMAND,
+        seq,
+        0,
+        ACK_REQUESTED,
+        EP_GATEWAY,
+        EP_SIDE_A,
+        0,
+    )
+    frame = header + payload
+    crc = _crc16_ccitt_false(frame)
+    return _mdp_cobs_encode(frame + struct.pack("<H", crc)) + b"\0"
+
+
+def _decode_mdp_frame(encoded: bytes) -> Optional[Dict[str, Any]]:
+    try:
+        decoded = _mdp_cobs_decode(encoded)
+        if len(decoded) < 18:
+            return None
+        magic, version, msg_type, seq, ack, flags, src, dst, rsv = struct.unpack("<HBBIIBBBB", decoded[:16])
+        if magic != MDP_MAGIC or version != MDP_VERSION:
+            return None
+        got_crc = struct.unpack("<H", decoded[-2:])[0]
+        expected_crc = _crc16_ccitt_false(decoded[:-2])
+        if got_crc != expected_crc:
+            return None
+        payload_raw = decoded[16:-2]
+        payload: Any
+        try:
+            payload = json.loads(payload_raw.decode("utf-8", errors="replace"))
+        except Exception:
+            payload = payload_raw.decode("utf-8", errors="replace")
+        return {
+            "msg_type": msg_type,
+            "seq": seq,
+            "ack": ack,
+            "flags": flags,
+            "src": src,
+            "dst": dst,
+            "payload": payload,
+        }
+    except Exception:
+        return None
+
+
+def _extract_mdp_frames(raw: bytes) -> List[Dict[str, Any]]:
+    frames: List[Dict[str, Any]] = []
+    for chunk in raw.split(b"\0"):
+        if not chunk:
+            continue
+        frame = _decode_mdp_frame(chunk)
+        if frame:
+            frames.append(frame)
+    return frames
+
+
+def _extract_visible_text(raw: bytes) -> str:
+    try:
+        return raw.decode("utf-8", errors="ignore").strip()
+    except Exception:
+        return ""
+
+
+def _mdp_payload_lines(frames: List[Dict[str, Any]], registry_id: Optional[str] = None) -> str:
+    lines = []
+    reg_id = registry_id or MYCOBRAIN_REGISTRY_ID or "mycobrain-local"
+    for frame in frames:
+        payload = frame.get("payload")
+        if isinstance(payload, (dict, list)):
+            lines.append(json.dumps(payload, separators=(",", ":")))
+            if (
+                MYCOBRAIN_MINDEX_ENVELOPE
+                and publish_envelope_async
+                and extract_mindex_envelope
+                and frame.get("msg_type") == MDP_TELEMETRY
+                and isinstance(payload, dict)
+            ):
+                env = extract_mindex_envelope(payload, reg_id)
+                if env:
+                    publish_envelope_async(env)
+        elif payload is not None:
+            lines.append(str(payload))
+    return "\n".join(lines)
+
+
+def _stop_buzzer_device(serial_device_id: str, timeout: float = 2.0) -> str:
+    """Stop buzzer; legacy MDP firmware ignored value=0 and kept PWM on."""
+    if serial_device_id not in serial_connections:
+        raise ValueError(f"Device {serial_device_id} not connected")
+    ser = serial_connections[serial_device_id]
+    with _device_lock(serial_device_id):
+        mdp = _cli_command_to_mdp("buzzer off")
+        if mdp:
+            mdp_cmd, mdp_params = mdp
+            response = _send_mdp_command_sync(ser, mdp_cmd, mdp_params, timeout, serial_device_id)
+            # side-a-mdp before timed-off fix: value=0 still calls ledcWriteTone(freq)
+            if mdp_params.get("id") == "buzzer" and mdp_params.get("value") == 0:
+                if "buzzer_stopped" not in response:
+                    _send_mdp_command_sync(ser, "estop", {}, timeout, serial_device_id)
+                    time.sleep(0.08)
+                    _send_mdp_command_sync(ser, "clear_estop", {}, timeout, serial_device_id)
+                    return "buzzer_stopped"
+            return response.strip() if response else ""
+        ser.reset_input_buffer()
+        ser.write(b"buzzer off\r\n")
+        ser.flush()
+        time.sleep(0.3)
+        return _extract_visible_text(ser.read(ser.in_waiting or 0)).strip()
+
+
+def _schedule_buzzer_off(serial_device_id: str, delay_s: float) -> None:
+    """Safety net when firmware lacks timed buzzer stop (pre-2.2.1 MDP builds)."""
+    def _off() -> None:
+        try:
+            time.sleep(max(0.05, delay_s))
+            if serial_device_id in serial_connections:
+                _stop_buzzer_device(serial_device_id, timeout=2.0)
+        except Exception as ex:
+            logger.debug("scheduled buzzer off failed for %s: %s", serial_device_id, ex)
+
+    threading.Thread(target=_off, daemon=True, name=f"buzzer-off-{serial_device_id}").start()
+
+
+def _maybe_schedule_buzzer_off_after_beep(serial_device_id: str, command: str, mdp: Optional[tuple[str, Dict[str, Any]]]) -> None:
+    if not mdp:
+        return
+    mdp_cmd, mdp_params = mdp
+    if mdp_cmd != "output_control" or not isinstance(mdp_params, dict):
+        return
+    if mdp_params.get("id") != "buzzer" or mdp_params.get("value") != 1:
+        return
+    try:
+        dur_ms = int(mdp_params.get("duration_ms") or 200)
+    except (TypeError, ValueError):
+        dur_ms = 200
+    dur_ms = max(20, min(5000, dur_ms))
+    _schedule_buzzer_off(serial_device_id, (dur_ms + 200) / 1000.0)
+
+
+def _cli_command_to_mdp(command: str) -> Optional[tuple[str, Dict[str, Any]]]:
+    cmd = command.strip()
+    lower = cmd.lower()
+
+    if lower in {"sensors", "sensor read", "read_sensors", "get-sensors", "get sensors"}:
+        return "read_sensors", {}
+    if lower in {"ping", "health"}:
+        return "health", {}
+    if lower in {"hello", "info", "get_version", "version"}:
+        return "hello", {}
+
+    if lower in {"buzzer off", "beep off", "tone off", "speaker off"}:
+        return "output_control", {"id": "buzzer", "value": 0}
+
+    if lower in {"led off", "neopixel off", "neopixel-off", "led mode off"}:
+        return "output_control", {"id": "neopixel", "value": 0}
+
+    if lower.startswith("led rgb"):
+        parts = cmd.split()
+        if len(parts) >= 5:
+            try:
+                r, g, b = int(parts[2]), int(parts[3]), int(parts[4])
+                return "output_control", {"id": "neopixel", "value": 1, "r": r, "g": g, "b": b}
+            except ValueError:
+                pass
+
+    if lower.startswith("beep "):
+        parts = cmd.split()
+        if len(parts) >= 3:
+            try:
+                freq = int(parts[1])
+                dur = int(parts[2])
+                return "output_control", {
+                    "id": "buzzer",
+                    "value": 1,
+                    "freq": freq,
+                    "duration_ms": dur,
+                }
+            except ValueError:
+                pass
+
+    return None
+
+
+def _normalize_cli_command(command: str) -> str:
+    cmd = command.strip()
+    lower = cmd.lower()
+
+    # Some legacy firmware builds treat bare "i2c" as "set pins to 0/0".
+    if lower == "i2c":
+        return "scan"
+    if lower.startswith("i2c ") and not lower.startswith("i2c scan"):
+        return "__blocked_i2c_reconfig__"
+
+    if lower in {"led off", "neopixel off", "neopixel-off"}:
+        return "led mode off"
+
+    if not ACTUATORS_ENABLED:
+        if lower.startswith("led ") or lower.startswith("neopixel ") or lower in {"rainbow", "neopixel-rainbow"}:
+            return "__blocked_led_command__"
+        if lower in {"morgio", "coin", "power", "1up", "bump", "buzzer beep", "beep"} or lower.startswith("beep "):
+            return "__blocked_buzzer_command__"
+        if lower.startswith("buzzer ") and lower not in {"buzzer off"}:
+            return "__blocked_buzzer_command__"
+
+    return cmd
+
+
+def _send_mdp_command_sync(
+    ser, mdp_cmd: str, params: Optional[Dict[str, Any]], timeout: float, serial_device_id: str = ""
+) -> str:
+    ser.reset_input_buffer()
+    ser.write(_encode_mdp_command(mdp_cmd, params))
+    ser.flush()
+
+    raw = bytearray()
+    end_time = time.time() + timeout
+    saw_telemetry = False
+    idle_deadline: Optional[float] = None
+    want_telemetry = mdp_cmd == "read_sensors"
+    while time.time() < end_time:
+        waiting = getattr(ser, "in_waiting", 0)
+        if waiting > 0:
+            raw.extend(ser.read(waiting))
+            frames = _extract_mdp_frames(bytes(raw))
+            if frames:
+                if any(f.get("msg_type") == MDP_TELEMETRY for f in frames):
+                    saw_telemetry = True
+                    idle_deadline = time.time() + 0.4
+                elif not want_telemetry and any(
+                    f.get("msg_type") in {MDP_ACK, MDP_HELLO, MDP_EVENT} for f in frames
+                ):
+                    break
+        elif saw_telemetry and idle_deadline is not None and time.time() >= idle_deadline:
+            break
+        time.sleep(0.05)
+
+    frames = _extract_mdp_frames(bytes(raw))
+    if want_telemetry:
+        telemetry_frames = [f for f in frames if f.get("msg_type") == MDP_TELEMETRY]
+        if telemetry_frames:
+            frames = telemetry_frames
+    payload_lines = _mdp_payload_lines_for_device(frames, serial_device_id)
+    visible = _extract_visible_text(bytes(raw))
+    return payload_lines or visible
+
+
+def _mdp_payload_lines_for_device(frames: List[Dict[str, Any]], serial_device_id: str) -> str:
+    return _mdp_payload_lines(frames, _registry_device_id(serial_device_id))
 
 def is_likely_mycobrain_port(p) -> bool:
     """Return True only for real USB serial devices (MycoBrain/ESP32), NOT virtual ACPI ports."""
@@ -111,26 +514,63 @@ def send_serial_command(device_id: str, command: str, timeout: float = 2.0) -> s
     ser = serial_connections[device_id]
     if not ser.is_open:
         raise ValueError("Serial connection closed")
+
+    command = _normalize_cli_command(command)
+    cmd_lower_stripped = command.strip().lower()
+    if cmd_lower_stripped in {"buzzer off", "beep off", "tone off", "speaker off"}:
+        return _stop_buzzer_device(device_id, timeout=timeout)
+    if command == "__blocked_i2c_reconfig__":
+        return "I2C pin reconfiguration is disabled in the local bridge because this COM4 firmware build mis-parses i2c pin arguments. Use scan/status/probe only."
+    if command == "__blocked_buzzer_command__":
+        return "Actuator commands are disabled (MYCOBRAIN_ENABLE_ACTUATORS=false). Set env true for local dev."
+    if command == "__blocked_led_command__":
+        return "LED commands are disabled (MYCOBRAIN_ENABLE_ACTUATORS=false). Set env true for local dev."
     
-    ser.reset_input_buffer()
-    cmd_bytes = (command + "\r\n").encode('utf-8')
-    logger.info(f"Sending to {device_id}: {command}")
-    ser.write(cmd_bytes)
-    
-    time.sleep(0.5)
-    response = ""
-    end_time = time.time() + timeout
-    while time.time() < end_time:
-        if ser.in_waiting > 0:
-            response += ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
-            time.sleep(0.1)
-        else:
-            if response:
-                break
-            time.sleep(0.1)
-    
-    logger.info(f"Response from {device_id}: {response[:100]}...")
-    return response.strip()
+    with _device_lock(device_id):
+        mdp = _cli_command_to_mdp(command)
+        if mdp:
+            try:
+                mdp_cmd, mdp_params = mdp
+                logger.info(f"Sending MDP to {device_id}: {mdp_cmd} {mdp_params}")
+                response = _send_mdp_command_sync(ser, mdp_cmd, mdp_params, timeout, device_id)
+                logger.info(f"MDP response from {device_id}: {response[:120]}...")
+                if response:
+                    _maybe_schedule_buzzer_off_after_beep(device_id, command, mdp)
+                    return response.strip()
+            except Exception as ex:
+                logger.warning("MDP command failed for %s (%s), falling back to CLI: %s", device_id, command, ex)
+
+        ser.reset_input_buffer()
+        cmd_bytes = (command + "\r\n").encode('utf-8')
+        logger.info(f"Sending CLI to {device_id}: {command}")
+        try:
+            ser.write(cmd_bytes)
+        except Exception as write_err:
+            logger.warning("Serial write failed for %s (%s): %s", device_id, command, write_err)
+            return f"Serial write failed: {write_err}"
+
+        time.sleep(0.5)
+        raw = bytearray()
+        response = ""
+        end_time = time.time() + timeout
+        while time.time() < end_time:
+            if ser.in_waiting > 0:
+                raw.extend(ser.read(ser.in_waiting))
+                frames = _extract_mdp_frames(bytes(raw))
+                if frames:
+                    response = _mdp_payload_lines_for_device(frames, device_id)
+                    break
+                time.sleep(0.1)
+            else:
+                if raw:
+                    break
+                time.sleep(0.1)
+
+        if not response:
+            response = _extract_visible_text(bytes(raw))
+
+        logger.info(f"Response from {device_id}: {response[:100]}...")
+        return response.strip()
 
 @app.get("/health")
 async def health():
@@ -151,6 +591,7 @@ async def list_devices():
                 devices[device_id]["status"] = "connected" if ser.is_open else "disconnected"
             except Exception:
                 devices[device_id]["status"] = "error"
+        _attach_registry_identity(devices[device_id])
     return {"devices": list(devices.values()), "count": len(devices), "timestamp": datetime.now().isoformat()}
 
 @app.get("/ports")
@@ -193,14 +634,14 @@ def _try_connect_port_sync(port: str) -> bool:
     if device_id in serial_connections and serial_connections[device_id].is_open:
         return True
     try:
-        ser = serial.Serial(port, 115200, timeout=2)
+        ser = serial.Serial(port, 115200, timeout=2, write_timeout=1.0)
         time.sleep(0.5)
         ser.reset_input_buffer()
         ser.reset_output_buffer()
         serial_connections[device_id] = ser
         device_info = {"firmware": "unknown", "board": "MycoBrain ESP32-S3", "raw_status": ""}
         try:
-            response = send_serial_command(device_id, "status", timeout=1.0)
+            response = send_serial_command(device_id, "status", timeout=0.5)
             if "ESP32-S3" in response:
                 device_info["board"] = "ESP32-S3"
             if "Arduino-ESP32 core:" in response:
@@ -218,6 +659,12 @@ def _try_connect_port_sync(port: str) -> bool:
             "info": device_info,
             "protocol": "MDP v1"
         }
+        _attach_registry_identity(devices[device_id])
+        try:
+            from sensor_identity import refresh_device_identity
+            refresh_device_identity(devices[device_id])
+        except Exception as exc:
+            logger.debug("sensor identity refresh on connect failed: %s", exc)
         logger.info(f"Auto-connected {device_id}")
         return True
     except Exception as e:
@@ -279,7 +726,7 @@ async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depen
         del serial_connections[device_id]
     
     try:
-        ser = serial.Serial(port, baudrate, timeout=2)
+        ser = serial.Serial(port, baudrate, timeout=2, write_timeout=1.0)
         time.sleep(1)
         ser.reset_input_buffer()
         ser.reset_output_buffer()
@@ -288,7 +735,7 @@ async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depen
         
         device_info = {"firmware": "unknown", "board": "MycoBrain ESP32-S3"}
         try:
-            response = send_serial_command(device_id, "status", timeout=1.0)
+            response = send_serial_command(device_id, "status", timeout=0.5)
             if "ESP32-S3" in response:
                 device_info["board"] = "ESP32-S3"
             if "Arduino-ESP32 core:" in response:
@@ -307,8 +754,15 @@ async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depen
             "info": device_info,
             "protocol": "MDP v1"
         }
+        _attach_registry_identity(devices[device_id])
         
-        return {"status": "connected", "device_id": device_id, "port": port, "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "connected",
+            "device_id": _registry_device_id(device_id),
+            "serial_device_id": device_id,
+            "port": port,
+            "timestamp": datetime.now().isoformat(),
+        }
         
     except Exception as e:
         error_msg = str(e)
@@ -319,22 +773,24 @@ async def connect_device(port: str, baudrate: int = 115200, api_key: str = Depen
 
 @app.post("/devices/{device_id}/disconnect")
 async def disconnect_device(device_id: str, api_key: str = Depends(verify_api_key)):
-    if device_id not in devices:
+    serial_id = _resolve_device_id(device_id)
+    if serial_id not in devices:
         raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     
     try:
-        if device_id in serial_connections:
-            serial_connections[device_id].close()
-            del serial_connections[device_id]
-        del devices[device_id]
-        return {"status": "disconnected", "device_id": device_id}
+        if serial_id in serial_connections:
+            serial_connections[serial_id].close()
+            del serial_connections[serial_id]
+        del devices[serial_id]
+        return {"status": "disconnected", "device_id": _registry_device_id(serial_id), "serial_device_id": serial_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/devices/{device_id}/command")
 async def send_command(device_id: str, command: str = Query(None), body: dict = Body(default=None), api_key: str = Depends(verify_api_key)):
     """Send a command to the device - supports both query param and JSON body"""
-    if device_id not in devices:
+    serial_id = _resolve_device_id(device_id)
+    if serial_id not in devices:
         raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     
     cmd = command
@@ -352,15 +808,19 @@ async def send_command(device_id: str, command: str = Query(None), body: dict = 
     
     if not cmd:
         raise HTTPException(status_code=400, detail="No command provided")
+
+    cmd_lower = str(cmd).strip().lower()
+    serial_timeout = 8.0 if "read_sensors" in cmd_lower or cmd_lower in {"sensors", "sensor read"} else 2.5
     
     try:
         loop = asyncio.get_running_loop()
         response = await loop.run_in_executor(
-            _serial_executor, lambda: send_serial_command(device_id, cmd)
+            _serial_executor, lambda: send_serial_command(serial_id, cmd, timeout=serial_timeout)
         )
         return {
             "status": "ok",
-            "device_id": device_id,
+            "device_id": _registry_device_id(serial_id),
+            "serial_device_id": serial_id,
             "command": cmd,
             "response": response,
             "timestamp": datetime.now().isoformat()
@@ -373,21 +833,23 @@ def map_command(cmd_type: str, params: dict) -> str:
     mappings = {
         # System commands - both formats
         "status": lambda p: "status",
-        "ping": lambda p: "status",
-        "info": lambda p: "status",
+        "ping": lambda p: "ping",
+        "info": lambda p: "info",
         
         # LED commands
         "neopixel-set": lambda p: f"led rgb {p.get('r', 0)} {p.get('g', 255)} {p.get('b', 0)}",
-        "neopixel-rainbow": lambda p: "led mode state",
-        "neopixel-off": lambda p: "led rgb 0 0 0",
+        "neopixel-rainbow": lambda p: "led pattern rainbow",
+        "neopixel-off": lambda p: "led off",
         "led-set": lambda p: f"led rgb {p.get('r', 0)} {p.get('g', 255)} {p.get('b', 0)}",
         "set_led": lambda p: f"led rgb {p.get('r', 0)} {p.get('g', 0)} {p.get('b', 0)}",
+        "set_neopixel": lambda p: f"led rgb {p.get('r', 0)} {p.get('g', 0)} {p.get('b', 0)}",
         
         # Buzzer/sound commands
-        "buzzer-beep": lambda p: "coin",
+        "buzzer-beep": lambda p: f"beep {p.get('frequency', 1000)} {p.get('duration', p.get('duration_ms', 200))}",
         "buzzer-melody": lambda p: "morgio",
-        "buzzer-tone": lambda p: "coin",
-        "beep": lambda p: "coin",
+        "buzzer-tone": lambda p: f"beep {p.get('frequency', 1000)} {p.get('duration', p.get('duration_ms', 200))}",
+        "set_buzzer": lambda p: f"beep {p.get('frequency', 1000)} {p.get('duration', p.get('duration_ms', 200))}",
+        "beep": lambda p: f"beep {p.get('frequency', 1000)} {p.get('duration', p.get('duration_ms', 200))}",
         "play_sound": lambda p: p.get('sound', 'coin'),
         
         # Sensor commands
@@ -395,7 +857,9 @@ def map_command(cmd_type: str, params: dict) -> str:
         "read-bme2": lambda p: "probe env",
         "scan-i2c": lambda p: "scan",
         "i2c-scan": lambda p: "scan",
-        "get-sensors": lambda p: "status",
+        "get-sensors": lambda p: "read_sensors",
+        "read_sensors": lambda p: "read_sensors",
+        "read-sensors": lambda p: "read_sensors",
         
         # Live mode
         "live-on": lambda p: "live on",
@@ -410,21 +874,48 @@ def map_command(cmd_type: str, params: dict) -> str:
 
 @app.get("/devices/{device_id}/telemetry")
 async def get_telemetry(device_id: str):
-    if device_id not in serial_connections:
+    serial_id = _resolve_device_id(device_id)
+    if serial_id not in serial_connections:
         raise HTTPException(status_code=400, detail=f"Device {device_id} not connected")
     
     try:
-        response = send_serial_command(device_id, "status", timeout=2.0)
-        
-        telemetry = {"raw": response}
-        
-        for line in response.split('\n'):
-            if "AMB addr=0x77" in line:
-                telemetry["bme1"] = parse_sensor_line(line, "amb")
-            elif "ENV addr=0x76" in line:
-                telemetry["bme2"] = parse_sensor_line(line, "env")
-        
-        telemetry_cache[device_id] = telemetry
+        telemetry: Dict[str, Any]
+        raw_status = ""
+        read_response = send_serial_command(serial_id, "read_sensors", timeout=10.0)
+        raw_status = read_response
+        parsed = _telemetry_from_read_sensors_response(read_response)
+        if parsed:
+            telemetry = parsed
+        else:
+            response = send_serial_command(serial_id, "status", timeout=2.0)
+            raw_status = response
+            telemetry = {"raw": response}
+            for line in response.split('\n'):
+                if "AMB addr=0x77" in line or ("AMB:" in line and "addr=0x77" in line):
+                    telemetry["bme1"] = parse_sensor_line(line, "amb")
+                    telemetry["bme1"]["i2c_address"] = 0x77
+                elif "ENV addr=0x76" in line or ("ENV:" in line and "addr=0x76" in line):
+                    telemetry["bme2"] = parse_sensor_line(line, "env")
+                    telemetry["bme2"]["i2c_address"] = 0x76
+                elif line.strip().startswith("AMB:"):
+                    telemetry.setdefault("bme1", {"type": "amb", "i2c_address": 0x77})
+                    if "present=NO" in line:
+                        telemetry["bme1"]["status"] = "not_detected"
+                elif line.strip().startswith("ENV:"):
+                    telemetry.setdefault("bme2", {"type": "env", "i2c_address": 0x76})
+                    if "present=NO" in line:
+                        telemetry["bme2"]["status"] = "not_detected"
+
+        telemetry_cache[serial_id] = telemetry
+
+        try:
+            from sensor_identity import refresh_device_identity, attach_sensor_ids_to_readings
+
+            refresh_device_identity(devices.get(serial_id, {"device_id": serial_id, "info": {"raw_status": raw_status[:500]}}), telemetry)
+            board_id = devices[serial_id].get("board_id")
+        except Exception as exc:
+            logger.debug("sensor identity refresh on telemetry failed: %s", exc)
+            board_id = None
 
         # Push to ingest API for Supabase / Device Manager (fire-and-forget)
         if TELEMETRY_INGEST_URL:
@@ -433,14 +924,20 @@ async def get_telemetry(device_id: str):
                 if "bme1" in telemetry and isinstance(telemetry["bme1"], dict):
                     r = telemetry["bme1"].copy()
                     r["sensor_type"] = r.get("type", "amb")
+                    r["sensor_slot"] = "bme688_a"
                     readings.append(r)
                 if "bme2" in telemetry and isinstance(telemetry["bme2"], dict):
                     r = telemetry["bme2"].copy()
                     r["sensor_type"] = r.get("type", "env")
+                    r["sensor_slot"] = "bme688_b"
                     readings.append(r)
+                registry_id = _registry_device_id(serial_id)
+                if board_id and readings:
+                    readings = attach_sensor_ids_to_readings(board_id, registry_id, readings)
                 if readings:
                     ingest_payload = {
-                        "deviceId": device_id,
+                        "deviceId": registry_id,
+                        "boardId": board_id,
                         "deviceType": "mycobrain",
                         "timestamp": datetime.now().isoformat(),
                         "readings": readings,
@@ -459,12 +956,178 @@ async def get_telemetry(device_id: str):
 
         return {
             "status": "ok",
-            "device_id": device_id,
+            "device_id": _registry_device_id(serial_id),
+            "serial_device_id": serial_id,
+            "board_id": devices.get(serial_id, {}).get("board_id"),
+            "sensor_instances": devices.get(serial_id, {}).get("sensor_instances", []),
             "telemetry": telemetry,
             "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+def _bme_slot_from_envelope_pack(pack: Any) -> Optional[Dict[str, Any]]:
+    """Map MDP pack[] to bme688_a fields when firmware ids are garbled (use unit + id hints)."""
+    if not isinstance(pack, list):
+        return None
+    slot: Dict[str, Any] = {}
+    eco2: Optional[float] = None
+    bvoc: Optional[float] = None
+
+    def _num(val: Any) -> Optional[float]:
+        try:
+            f = float(val)
+            return f if f == f else None  # NaN guard
+        except (TypeError, ValueError):
+            return None
+
+    for item in pack:
+        if not isinstance(item, dict):
+            continue
+        unit = str(item.get("u") or "").strip()
+        pid = str(item.get("id") or "").lower()
+        val = _num(item.get("v"))
+        if val is None:
+            continue
+        if unit == "C" or pid.endswith(".tc") or "temp" in pid:
+            slot["temperature_c"] = val
+        elif unit == "%" or pid.endswith(".rh") or "humid" in pid:
+            slot["humidity_pct"] = val
+        elif unit == "hPa" or pid.endswith(".p") or "press" in pid:
+            slot["pressure_hpa"] = val
+        elif unit == "Ohm" or pid.endswith(".gas") or "gas" in pid:
+            slot["gas_ohm"] = val
+        elif unit == "IAQ" or pid.endswith(".iaq"):
+            slot["iaq"] = val
+        elif unit == "ppm":
+            if "eco2" in pid or "co2" in pid:
+                eco2 = val
+            elif "bvoc" in pid or "voc" in pid:
+                bvoc = val
+            elif eco2 is None:
+                eco2 = val
+            elif bvoc is None:
+                bvoc = val
+    if eco2 is not None:
+        slot["co2_equivalent"] = eco2
+    if bvoc is not None:
+        slot["voc_equivalent"] = bvoc
+    return slot if slot else None
+
+
+def _slot_dict_to_bme_reading(slot: dict, sensor_type: str, i2c_address: int) -> dict:
+    """Map firmware bme688.a/b JSON to legacy bme1/bme2 + ingest fields."""
+    data: Dict[str, Any] = {"type": sensor_type, "i2c_address": i2c_address}
+    for src, dst in (
+        ("temperature_c", "temperature"),
+        ("humidity_pct", "humidity"),
+        ("pressure_hpa", "pressure"),
+        ("gas_ohm", "gas_resistance"),
+        ("iaq", "iaq"),
+        ("co2_equivalent", "co2_equivalent"),
+        ("voc_equivalent", "voc_equivalent"),
+    ):
+        val = slot.get(src)
+        if val is not None:
+            try:
+                data[dst] = float(val)
+            except (TypeError, ValueError):
+                data[dst] = val
+    return data
+
+
+def _bme_slot_from_envelope_regex(response: str) -> Optional[Dict[str, Any]]:
+    """When MDP JSON is truncated on the wire, extract BME readings by unit from raw text."""
+    if "mycosoft.envelope.v1" not in response:
+        return None
+
+    def _unit_value(unit: str) -> Optional[float]:
+        match = re.search(
+            rf'"v"\s*:\s*([-+0-9.eE]+)\s*,\s*"u"\s*:\s*"{re.escape(unit)}"',
+            response,
+            re.IGNORECASE,
+        )
+        if not match:
+            return None
+        try:
+            return float(match.group(1))
+        except ValueError:
+            return None
+
+    slot: Dict[str, Any] = {}
+    for key, unit in (
+        ("temperature_c", "C"),
+        ("humidity_pct", "%"),
+        ("pressure_hpa", "hPa"),
+        ("gas_ohm", "Ohm"),
+        ("iaq", "IAQ"),
+    ):
+        val = _unit_value(unit)
+        if val is not None:
+            slot[key] = val
+    ppm_matches = list(
+        re.finditer(r'"v"\s*:\s*([-+0-9.eE]+)\s*,\s*"u"\s*:\s*"ppm"', response, re.IGNORECASE)
+    )
+    if ppm_matches:
+        try:
+            slot["co2_equivalent"] = float(ppm_matches[0].group(1))
+        except ValueError:
+            pass
+        if len(ppm_matches) > 1:
+            try:
+                slot["voc_equivalent"] = float(ppm_matches[1].group(1))
+            except ValueError:
+                pass
+    return slot if slot else None
+
+
+def _telemetry_from_read_sensors_response(response: str) -> Optional[Dict[str, Any]]:
+    """Parse MDP read_sensors / telemetry JSON (bme688.a/b) from mixed serial text."""
+    if not response:
+        return None
+    if "mycosoft.envelope.v1" in response:
+        slot_a = _bme_slot_from_envelope_regex(response)
+        if slot_a:
+            telemetry: Dict[str, Any] = {"raw": response, "schema": "mycosoft.envelope.v1"}
+            telemetry["bme688"] = {"a": slot_a}
+            telemetry["bme1"] = _slot_dict_to_bme_reading(slot_a, "amb", 0x77)
+            return telemetry
+    for line in response.splitlines():
+        chunk = line.strip()
+        if not chunk.startswith("{"):
+            continue
+        try:
+            obj = json.loads(chunk)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(obj, dict):
+            continue
+        if obj.get("schema") == "mycosoft.envelope.v1" and MYCOBRAIN_MINDEX_ENVELOPE:
+            reg_id = MYCOBRAIN_REGISTRY_ID or "mycobrain-local"
+            if extract_mindex_envelope and publish_envelope_async:
+                env = extract_mindex_envelope(obj, reg_id)
+                if env:
+                    publish_envelope_async(env)
+            telemetry: Dict[str, Any] = {"raw": response, "envelope": obj, "schema": "mycosoft.envelope.v1"}
+            slot_a = _bme_slot_from_envelope_pack(obj.get("pack"))
+            if slot_a:
+                telemetry["bme688"] = {"a": slot_a}
+                telemetry["bme1"] = _slot_dict_to_bme_reading(slot_a, "amb", 0x77)
+            return telemetry
+        bme = obj.get("bme688")
+        if not isinstance(bme, dict):
+            continue
+        telemetry: Dict[str, Any] = {"raw": response, "bme688": bme}
+        a = bme.get("a")
+        if isinstance(a, dict):
+            telemetry["bme1"] = _slot_dict_to_bme_reading(a, "amb", 0x77)
+        b = bme.get("b")
+        if isinstance(b, dict):
+            telemetry["bme2"] = _slot_dict_to_bme_reading(b, "env", 0x76)
+        if telemetry.get("bme1") or telemetry.get("bme2"):
+            return telemetry
+    return None
+
 
 def parse_sensor_line(line: str, sensor_type: str) -> dict:
     """Parse sensor data from status output line"""
@@ -488,6 +1151,28 @@ def parse_sensor_line(line: str, sensor_type: str) -> dict:
     except Exception:
         pass
     return data
+
+@app.get("/devices/{device_id}/sensors")
+async def get_device_sensors(device_id: str):
+    serial_id = _resolve_device_id(device_id)
+    if serial_id not in devices:
+        raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
+    device = devices[serial_id]
+    try:
+        from sensor_identity import refresh_device_identity
+
+        cached = telemetry_cache.get(serial_id)
+        refresh_device_identity(device, cached if isinstance(cached, dict) else None)
+    except Exception as exc:
+        logger.debug("sensor identity refresh on /sensors failed: %s", exc)
+    return {
+        "status": "ok",
+        "device_id": _registry_device_id(serial_id),
+        "serial_device_id": serial_id,
+        "board_id": device.get("board_id"),
+        "sensor_instances": device.get("sensor_instances", []),
+        "timestamp": datetime.now().isoformat(),
+    }
 
 class FlashRequest(BaseModel):
     profile: str
@@ -627,10 +1312,23 @@ async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port
         sensors, capabilities = get_manifest_for_role(device_role)
         if not sensors and not capabilities:
             sensors, capabilities = get_default_manifest()
+
+        device_board_id = device.get("board_id")
+        sensor_instances = device.get("sensor_instances") or []
+        if not sensor_instances:
+            try:
+                from sensor_identity import refresh_device_identity
+
+                refresh_device_identity(device)
+                device_board_id = device.get("board_id")
+                sensor_instances = device.get("sensor_instances") or []
+            except Exception as exc:
+                logger.debug("sensor identity refresh before heartbeat failed: %s", exc)
         
         # Build heartbeat payload (serial ingestion; same format for future LoRa/BT/WiFi gateways)
+        registry_id = _registry_device_id(device_id)
         payload = {
-            "device_id": device_id,
+            "device_id": registry_id,
             "device_name": DEVICE_NAME,
             "device_role": device_role,
             "device_display_name": device_display_name,
@@ -643,10 +1341,16 @@ async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port
             "location": DEVICE_LOCATION,
             "connection_type": connection_type,
             "ingestion_source": "serial",
+            "board_id": device_board_id,
+            "portal_device_id": registry_id,
+            "sensor_instances": sensor_instances,
             "extra": {
                 "protocol": device.get("protocol", "MDP v1"),
                 "port_name": device.get("port", ""),
+                "serial_device_id": device_id,
                 "service_version": "2.2.0",
+                "board_id": device_board_id,
+                "sensor_instances": sensor_instances,
                 # All MDP serial ids on this process (same host:port in MAS); used for multi-board gateways
                 "mdp_device_ids_on_host": list(devices.keys()),
             }

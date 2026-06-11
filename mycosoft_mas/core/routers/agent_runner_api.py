@@ -5,7 +5,9 @@ REST endpoints for controlling the continuous agent runner.
 
 from typing import Any, Dict
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+
+from mycosoft_mas.core.internal_auth import require_internal_token
 
 from ..agent_runner import get_agent_runner
 
@@ -19,7 +21,7 @@ async def get_runner_status() -> Dict[str, Any]:
     return await runner.get_status()
 
 
-@router.post("/start")
+@router.post("/start", dependencies=[Depends(require_internal_token)])
 async def start_runner() -> Dict[str, Any]:
     """Start the 24/7 agent runner."""
     runner = get_agent_runner()
@@ -32,7 +34,7 @@ async def start_runner() -> Dict[str, Any]:
     return {"status": "started", "message": "24/7 agent runner started"}
 
 
-@router.post("/stop")
+@router.post("/stop", dependencies=[Depends(require_internal_token)])
 async def stop_runner() -> Dict[str, Any]:
     """Stop the 24/7 agent runner."""
     runner = get_agent_runner()
@@ -114,7 +116,7 @@ async def get_notifications(limit: int = 50) -> Dict[str, Any]:
     }
 
 
-@router.post("/wisdom/compile")
+@router.post("/wisdom/compile", dependencies=[Depends(require_internal_token)])
 async def compile_wisdom() -> Dict[str, Any]:
     """Compile accumulated insights into wisdom."""
     runner = get_agent_runner()
@@ -125,7 +127,7 @@ async def compile_wisdom() -> Dict[str, Any]:
     }
 
 
-@router.post("/notify")
+@router.post("/notify", dependencies=[Depends(require_internal_token)])
 async def send_notification(payload: Dict[str, Any]) -> Dict[str, Any]:
     """Send a custom notification to admin."""
     runner = get_agent_runner()

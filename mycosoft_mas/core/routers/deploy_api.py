@@ -14,12 +14,20 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+
+from mycosoft_mas.core.internal_auth import require_internal_token
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/deploy", tags=["deploy"])
+# Internal token required: deploy triggers run subprocesses on the VM
+# (security audit JUN09_2026, finding M-1).
+router = APIRouter(
+    prefix="/api/deploy",
+    tags=["deploy"],
+    dependencies=[Depends(require_internal_token)],
+)
 
 # In-memory job status (for /status endpoint)
 _deploy_jobs: Dict[str, Dict[str, Any]] = {}
