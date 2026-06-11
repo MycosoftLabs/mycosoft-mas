@@ -11,6 +11,11 @@ The System Registry is a PostgreSQL-backed service that tracks all components of
 - **Devices**: MycoBrain IoT devices
 - **Code Files**: Source code index across repositories
 
+## Recent Updates (June 11, 2026)
+
+- **Backend security hardening deployed** — Shared `mycosoft_mas/core/internal_auth.require_internal_token` (env `MAS_INTERNAL_TOKEN`, header `X-MAS-Internal-Token`, fail-closed in production) now gates MAS infra routers: `deploy_api`, `firmware_flash_api`, `autonomous_api` (POSTs), `coding_api`, `agent_runner_api`. MINDEX `require_api_key` is fail-closed in production and accepts `X-Internal-Token`. MycoBrain 8003 auth fail-closed when `MYCOBRAIN_API_KEY` set. Revoked-password literals stripped from MAS/MINDEX scripts; `_jetson_mqtt.env` untracked; platform-infra Postgres/Redis/Qdrant bound to 127.0.0.1. Deployed + verified on 188 (deploy/trigger 401 w/o token) and 189 (nlm classify 401 w/o token, 200 with). Docs: `docs/SECURITY_AUDIT_ALL_SYSTEMS_JUN09_2026.md`, `docs/SECURITY_HARDENING_DEPLOYED_JUN11_2026.md`. Commits: mycosoft-mas `0936fc40c`, mindex `918b9d1`+`a1183a3`.
+- **SINE backend schema provisioned** — `sine.*` evidence/registry tables (`model_artifact, prototype, model_output, prototype_match, fusion_evidence, sound_transcript`) applied on MINDEX 189; ESC-50 metadata CSV reconstructed. Endpoints honest (`model_unavailable`). Remaining: torch in mindex-api container + P0 ESC-50 model artifact (decision pending). See `docs/SECURITY_HARDENING_DEPLOYED_JUN11_2026.md` Part 2.
+
 ## Recent Updates (June 4, 2026)
 
 - **MAS NLM ↔ MINDEX Library** — `MindexLibraryClient`, `/api/mas/mindex/library/*` proxy on orchestrator **188:8001**, `acoustic_library` training from Library + SINE human-tags, `POST /api/nlm/nmf/persist`. Env: `MINDEX_API_URL`, `MINDEX_INTERNAL_TOKEN`. Docs: `docs/MAS_NLM_MINDEX_LIBRARY_INTEGRATION_COMPLETE_JUN04_2026.md`, Codex: `docs/codex-handoffs/MAS_NLM_LIBRARY_CODEX_HANDOFF_JUN04_2026.md`. Commit `acab46159` on `feature/com4-hyphae-ota-local-may29-2026`.
