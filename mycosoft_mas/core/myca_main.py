@@ -58,6 +58,7 @@ from mycosoft_mas.core.routers.alert_api import router as alert_router
 from mycosoft_mas.core.routers.api_keys import router as api_keys_router
 from mycosoft_mas.core.routers.autonomous_api import router as autonomous_router
 from mycosoft_mas.core.routers.bio_api import router as bio_router
+from mycosoft_mas.core.routers.biobank_events_api import router as biobank_events_router
 from mycosoft_mas.core.routers.bluesight_api import router as bluesight_router
 from mycosoft_mas.core.routers.cfo_mcp_api import router as cfo_mcp_router
 from mycosoft_mas.core.routers.coordination_api import router as coordination_router
@@ -784,6 +785,7 @@ app.include_router(gap_api_router)
 app.include_router(coding_router)
 app.include_router(integrations_router)
 app.include_router(notifications_router)
+app.include_router(biobank_events_router)
 app.include_router(infrastructure_router)
 app.include_router(documents_router)
 app.include_router(api_keys_router, tags=["api-keys"])
