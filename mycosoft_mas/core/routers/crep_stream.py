@@ -227,6 +227,19 @@ async def get_crep_stream_status():
     }
 
 
+@router.get("/status")
+async def get_crep_status():
+    """Backward-compatible CREP status for website /api/crep/status proxy."""
+    subscription_active = manager._subscription_active
+    return {
+        "status": "online" if subscription_active else "degraded",
+        "active_connections": len(manager.active_connections),
+        "subscription_active": subscription_active,
+        "channel": Channel.CREP_LIVE.value,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
 # ============================================================================
 # CREP MARITIME SENSOR DATA SOURCES — TAC-O
 # ============================================================================
