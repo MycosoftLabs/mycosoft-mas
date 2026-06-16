@@ -24,6 +24,7 @@ from .overpass_collector import OverpassCollector
 from .quality_scorer import calculate_quality_score
 from .usgs_collector import USGSCollector
 from .usgs_water_collector import USGSWaterCollector
+from .transit_rt_collector import TransitRTCollector
 
 __all__ = [
     "BaseCollector",
@@ -47,4 +48,5 @@ __all__ = [
     "NOAA_COOPSCollector",
     "USGSWaterCollector",
     "FIRMSCollector",
+    "TransitRTCollector",
 ]

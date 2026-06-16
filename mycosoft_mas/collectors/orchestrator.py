@@ -6,6 +6,7 @@ Manages and coordinates all data collectors.
 
 import asyncio
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -230,7 +231,9 @@ class IngestionOrchestrator:
             "collectors": {
                 name: {
                     **collector.get_status(),
-                    "circuit_state": self.circuit_breakers[name].state.value,
+                    "circuit_state": getattr(
+                        self.circuit_breakers[name].state, "value", self.circuit_breakers[name].state
+                    ),
                 }
                 for name, collector in self.collectors.items()
             },
@@ -298,5 +301,11 @@ async def start_default_collectors() -> None:
     orch.register(NOAA_COOPSCollector())
     orch.register(USGSWaterCollector())
     orch.register(FIRMSCollector())
+
+    if os.getenv("TRANSIT_RT_COLLECTOR_ENABLED", "").strip().lower() in ("1", "true", "yes"):
+        from .transit_rt_collector import TransitRTCollector
+
+        orch.register(TransitRTCollector())
+        logger.info("Registered flag-gated collector: transit_rt")
 
     await orch.start()
