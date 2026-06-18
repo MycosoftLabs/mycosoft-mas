@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 # MINDEX API Configuration
 MINDEX_URL = os.environ.get("MINDEX_API_URL", "http://192.168.0.189:8001")
-MINDEX_API_KEY = os.environ.get("MINDEX_API_KEY", "local-dev-key")
+MINDEX_API_KEY = os.environ.get("MINDEX_API_KEY")
 MINDEX_TIMEOUT = 8  # seconds
 
 
@@ -39,12 +39,16 @@ class MINDEXClient:
         timeout: int = MINDEX_TIMEOUT,
     ):
         self.base_url = base_url or MINDEX_URL
-        self.api_key = api_key or MINDEX_API_KEY
+        self.api_key = api_key if api_key is not None else MINDEX_API_KEY
+        if not self.api_key:
+            logger.error("MINDEX_API_KEY is unset; MINDEX client requests will fail closed")
         self.timeout = timeout
         self._session: Optional[aiohttp.ClientSession] = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create HTTP session."""
+        if not self.api_key:
+            raise RuntimeError("MINDEX_API_KEY is required")
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(
                 headers={
@@ -68,10 +72,10 @@ class MINDEXClient:
         json: Optional[Dict] = None,
     ) -> Optional[Dict]:
         """Make request to MINDEX API."""
-        session = await self._get_session()
         url = f"{self.base_url}{endpoint}"
 
         try:
+            session = await self._get_session()
             async with session.request(
                 method,
                 url,
@@ -84,6 +88,9 @@ class MINDEXClient:
                 else:
                     logger.warning(f"MINDEX API error: {response.status} from {endpoint}")
                     return None
+        except RuntimeError as e:
+            logger.error(f"MINDEX request blocked: {e}")
+            return None
         except asyncio.TimeoutError:
             logger.warning(f"MINDEX request timeout: {endpoint}")
             return None
