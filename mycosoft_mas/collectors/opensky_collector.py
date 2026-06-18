@@ -79,7 +79,10 @@ class OpenSkyCollector(BaseCollector):
                 data = await resp.json()
 
                 events = []
-                states = data.get("states", [])
+                states = data.get("states", []) or []
+                max_aircraft = int(os.getenv("OPENSKY_MAX_AIRCRAFT", "500"))
+                if len(states) > max_aircraft:
+                    states = states[:max_aircraft]
 
                 for state in states:
                     if state[5] is None or state[6] is None:

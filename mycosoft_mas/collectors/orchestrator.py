@@ -203,6 +203,11 @@ class IngestionOrchestrator:
         collector = self.collectors[name]
         breaker = self.circuit_breakers[name]
 
+        stagger_sec = float(os.getenv("COLLECTOR_STAGGER_SEC", "2"))
+        if stagger_sec > 0:
+            keys = list(self.collectors.keys())
+            await asyncio.sleep(keys.index(name) * stagger_sec)
+
         while self._running and not collector._stop_event.is_set():
             try:
                 events = await breaker.call(collector.run_once)

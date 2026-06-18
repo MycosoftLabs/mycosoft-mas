@@ -1712,51 +1712,57 @@ async def _mas_background_startup() -> None:
     import logging
 
     logger = logging.getLogger("MAS_Startup")
-
-    # Ensure consciousness is initialized for /api/myca/world endpoints.
-    try:
-        from mycosoft_mas.consciousness import get_consciousness
-
-        consciousness = get_consciousness()
-        if not consciousness.is_conscious:
-            await consciousness.awaken()
-        logger.info("✓ MYCA consciousness is active")
-    except Exception as exc:
-        logger.warning("Consciousness awaken failed during startup: %s", exc)
-
-    # Get agent registry - this loads all 42+ agents and marks them active
-    registry = get_agent_registry()
-    all_agents = registry.list_all()
-    active_agents = registry.list_active()
-
-    logger.info("🚀 MAS Orchestrator starting (background)...")
-    logger.info(f"✓ Agent registry loaded: {len(all_agents)} total agents")
-    logger.info(f"✓ Active agents (24/7): {len(active_agents)}")
-    logger.info("✓ All agents are idle and ready to process tasks")
-
-    # Log category breakdown
-    from mycosoft_mas.core.agent_registry import AgentCategory
-
-    for category in AgentCategory:
-        cat_agents = registry.list_by_category(category)
-        if cat_agents:
-            logger.info(f"  - {category.value}: {len(cat_agents)} agents")
-
-    # Auto-load active core agents into 24/7 runner
-    try:
-        from mycosoft_mas.core.runner_agent_loader import restart_runner_with_core_agents
-
-        runner_result = await restart_runner_with_core_agents()
-        runner_info = runner_result.get("runner", {})
-        load_info = runner_result.get("load", {})
-        logger.info(
-            "✓ Runner loaded: agents=%s (native=%s, fallback=%s)",
-            runner_info.get("agents", 0),
-            load_info.get("native_loaded", 0),
-            load_info.get("fallback_loaded", 0),
+    ingestion_only = os.getenv("MAS_INGESTION_ONLY_STARTUP", "0") == "1"
+    if ingestion_only:
+        logger.warning(
+            "MAS_INGESTION_ONLY_STARTUP=1 — skipping consciousness, runner, and heavy init"
         )
-    except Exception as exc:
-        logger.warning(f"Runner auto-load failed on startup: {exc}")
+
+    if not ingestion_only:
+        # Ensure consciousness is initialized for /api/myca/world endpoints.
+        try:
+            from mycosoft_mas.consciousness import get_consciousness
+
+            consciousness = get_consciousness()
+            if not consciousness.is_conscious:
+                await consciousness.awaken()
+            logger.info("✓ MYCA consciousness is active")
+        except Exception as exc:
+            logger.warning("Consciousness awaken failed during startup: %s", exc)
+
+        # Get agent registry - this loads all 42+ agents and marks them active
+        registry = get_agent_registry()
+        all_agents = registry.list_all()
+        active_agents = registry.list_active()
+
+        logger.info("🚀 MAS Orchestrator starting (background)...")
+        logger.info(f"✓ Agent registry loaded: {len(all_agents)} total agents")
+        logger.info(f"✓ Active agents (24/7): {len(active_agents)}")
+        logger.info("✓ All agents are idle and ready to process tasks")
+
+        # Log category breakdown
+        from mycosoft_mas.core.agent_registry import AgentCategory
+
+        for category in AgentCategory:
+            cat_agents = registry.list_by_category(category)
+            if cat_agents:
+                logger.info(f"  - {category.value}: {len(cat_agents)} agents")
+
+        # Auto-load active core agents into 24/7 runner
+        try:
+            from mycosoft_mas.core.runner_agent_loader import restart_runner_with_core_agents
+
+            runner_result = await restart_runner_with_core_agents()
+            runner_info = runner_result.get("runner", {})
+            load_info = runner_result.get("load", {})
+            logger.info(
+                "✓ Runner loaded: agents=%s (native=%s, fallback=%s)",
+                runner_info.get("agents", 0),
+                load_info.get("native_loaded", 0),
+                load_info.get("fallback_loaded", 0),
+            )
+        except Exception as exc:
+            logger.warning(f"Runner auto-load failed on startup: {exc}")
 
     # Start ingestion collectors (OpenSky, USGS, NORAD, AIS, NOAA)
     try:
@@ -1766,6 +1772,10 @@ async def _mas_background_startup() -> None:
         logger.info("✓ Ingestion collectors started (OpenSky, USGS, NORAD, AIS, NOAA)")
     except Exception as exc:
         logger.warning("Ingestion collectors failed to start: %s", exc)
+
+    if ingestion_only:
+        logger.info("✓ MAS ingestion-only startup complete")
+        return
 
     # Start MycoBrain → MINDEX telemetry pipeline (polls every 60s)
     try:

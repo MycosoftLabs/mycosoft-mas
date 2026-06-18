@@ -258,7 +258,15 @@ class BaseCollector(ABC):
             vel = props.get("velocity")
             if vel is not None and "speed" not in props:
                 props["speed"] = float(vel) * 1.94384
-            props.setdefault("icao24", source_id)
+            props.setdefault("icao24", str(source_id)[:6])
+            heading = props.get("heading")
+            if heading is True or heading is False or heading is None:
+                props.pop("heading", None)
+            elif heading is not None:
+                try:
+                    props["heading"] = float(heading)
+                except (TypeError, ValueError):
+                    props.pop("heading", None)
 
         if event.entity_type == "vessel":
             props.setdefault("mmsi", source_id)
