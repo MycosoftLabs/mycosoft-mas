@@ -175,7 +175,7 @@ services:
       MINDEX_DB_PASSWORD: mindex
       MINDEX_DB_NAME: mindex
       API_PREFIX: /api/mindex
-      API_KEYS: '["local-dev-key"]'
+      API_KEYS: ${API_KEYS:?API_KEYS must be set}
     depends_on:
       mindex-postgres:
         condition: service_healthy

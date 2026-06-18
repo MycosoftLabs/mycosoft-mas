@@ -65,7 +65,7 @@ docker run -d --name mindex-api \
   -e MINDEX_DB_PASSWORD=mindex \
   -e MINDEX_DB_NAME=mindex \
   -e API_PREFIX=/api/mindex \
-  -e 'API_KEYS=["local-dev-key", "sandbox-key"]' \
+  -e API_KEYS="${API_KEYS:?API_KEYS must be set}" \
   mindex-services-mindex-api:latest
 """)
 

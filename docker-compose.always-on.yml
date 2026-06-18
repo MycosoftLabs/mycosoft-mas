@@ -53,7 +53,7 @@ services:
 
       # API
       API_PREFIX: /api/mindex
-      API_KEYS: '["local-dev-key"]'
+      API_KEYS: ${API_KEYS:?API_KEYS must be set}
 
       # Pagination defaults (safe for website browsing)
       DEFAULT_PAGE_SIZE: 100
@@ -146,7 +146,7 @@ services:
       # MINDEX API
       MINDEX_API_BASE_URL: http://mindex-api:8000
       MINDEX_API_URL: http://mindex-api:8000
-      MINDEX_API_KEY: local-dev-key
+      MINDEX_API_KEY: ${MINDEX_API_KEY:?MINDEX_API_KEY must be set}
       # MAS & MycoBrain - Direct container access via shared network
       MYCOBRAIN_SERVICE_URL: http://192.168.0.172:8765
       MAS_API_URL: http://mycosoft-mas-mas-orchestrator-1:8000

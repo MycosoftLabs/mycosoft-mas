@@ -66,7 +66,7 @@ services:
       MINDEX_DB_PASSWORD: mindex
       MINDEX_DB_NAME: mindex
       API_PREFIX: /api/mindex
-      API_KEYS: '["local-dev-key", "sandbox-key"]'
+      API_KEYS: ${API_KEYS:?API_KEYS must be set}
       DEFAULT_PAGE_SIZE: "100"
       MAX_PAGE_SIZE: "1000"
     depends_on:

@@ -50,7 +50,7 @@ services:
       MINDEX_DB_PASSWORD: mindex
       MINDEX_DB_NAME: mindex
       API_PREFIX: /api/mindex
-      API_KEYS: '["local-dev-key"]'
+      API_KEYS: ${API_KEYS:?API_KEYS must be set}
       DEFAULT_PAGE_SIZE: "100"
       MAX_PAGE_SIZE: "1000"
     depends_on:
@@ -100,7 +100,7 @@ services:
       # MINDEX API - Critical for website data
       MINDEX_API_BASE_URL: http://mindex-api:8000
       MINDEX_API_URL: http://mindex-api:8000
-      MINDEX_API_KEY: local-dev-key
+      MINDEX_API_KEY: ${MINDEX_API_KEY:?MINDEX_API_KEY must be set}
       # MAS & MycoBrain
       MYCOBRAIN_SERVICE_URL: http://mycobrain:8003
       MAS_API_URL: http://mas-orchestrator:8000
