@@ -314,6 +314,15 @@ except ImportError:
     worldstate_router = None
     WORLDSTATE_API_AVAILABLE = False
 
+# CREP collector management API - Worldview ingestion status/control
+try:
+    from mycosoft_mas.core.routers.crep_collectors_api import router as crep_collectors_router
+
+    CREP_COLLECTORS_API_AVAILABLE = True
+except ImportError:
+    crep_collectors_router = None
+    CREP_COLLECTORS_API_AVAILABLE = False
+
 # MYCA Reflection API - reflection history and logging
 try:
     from mycosoft_mas.core.routers.reflection_api import router as reflection_router
@@ -990,6 +999,10 @@ if GROUNDING_API_AVAILABLE and grounding_router is not None:
 # MYCA Worldstate API - canonical WorldState read-only awareness
 if WORLDSTATE_API_AVAILABLE and worldstate_router is not None:
     app.include_router(worldstate_router, tags=["worldstate", "myca"])
+
+# CREP collector management API - Worldview ingestion status/control
+if CREP_COLLECTORS_API_AVAILABLE and crep_collectors_router is not None:
+    app.include_router(crep_collectors_router, tags=["crep", "collectors"])
 
 # MYCA Reflection API - reflection history and logging
 if REFLECTION_API_AVAILABLE and reflection_router is not None:
@@ -1763,14 +1776,18 @@ async def _mas_background_startup() -> None:
     except Exception as exc:
         logger.warning("Telemetry pipeline failed to start: %s", exc)
 
-    # Start WorkflowAutoMonitor (n8n health + drift detection + auto-sync)
-    if get_workflow_auto_monitor is not None:
+    # Start WorkflowAutoMonitor (n8n health + drift detection + auto-sync).
+    # Keep it opt-in so invalid n8n credentials cannot block MAS API recovery.
+    workflow_auto_monitor_enabled = os.getenv("WORKFLOW_AUTO_MONITOR_ENABLED", "0") == "1"
+    if get_workflow_auto_monitor is not None and workflow_auto_monitor_enabled:
         try:
             monitor = get_workflow_auto_monitor()
             await monitor.start()
             logger.info("✓ WorkflowAutoMonitor started (health 60s, drift 15m)")
         except Exception as exc:
             logger.warning("WorkflowAutoMonitor failed to start: %s", exc)
+    elif get_workflow_auto_monitor is not None:
+        logger.info("WorkflowAutoMonitor disabled; set WORKFLOW_AUTO_MONITOR_ENABLED=1 to enable")
 
     # Initialize Gateway Control Plane and Sandbox Manager
     try:
