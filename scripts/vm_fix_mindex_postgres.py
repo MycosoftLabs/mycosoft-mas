@@ -50,9 +50,9 @@ def main() -> None:
 
     print("\n[4] Smoke: MINDEX health + DB-backed endpoints")
     checks = [
-        ("health", "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/mindex/health || true"),
-        ("devices_latest", "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/mindex/telemetry/devices/latest -H 'X-API-Key: local-dev-key' || true"),
-        ("mycobrain_devices_list", "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/mindex/mycobrain/devices -H 'X-API-Key: local-dev-key' || true"),
+        ("health", "set -a; . /home/mycosoft/mindex/.env; set +a; curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/mindex/health || true"),
+        ("devices_latest", "set -a; . /home/mycosoft/mindex/.env; set +a; curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/mindex/telemetry/devices/latest -H 'X-API-Key: $MINDEX_API_KEY' || true"),
+        ("mycobrain_devices_list", "set -a; . /home/mycosoft/mindex/.env; set +a; curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/mindex/mycobrain/devices -H 'X-API-Key: $MINDEX_API_KEY' || true"),
     ]
     for name, cmd in checks:
         print(f" - {name}: {run(ssh, cmd)}")
