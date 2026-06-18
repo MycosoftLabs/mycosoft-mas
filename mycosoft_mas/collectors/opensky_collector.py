@@ -7,6 +7,7 @@ Collects aircraft data from OpenSky Network.
 import asyncio
 import logging
 import os
+import time
 import uuid
 from datetime import datetime
 from typing import List, Optional
@@ -34,18 +35,66 @@ class OpenSkyCollector(BaseCollector):
         super().__init__()
         self.username = username or os.getenv("OPENSKY_USERNAME")
         self.password = password or os.getenv("OPENSKY_PASSWORD")
+        # OAuth2 client-credentials (OpenSky deprecated basic auth) — takes precedence.
+        self.client_id = os.getenv("OPENSKY_CLIENT_ID")
+        self.client_secret = os.getenv("OPENSKY_CLIENT_SECRET")
+        self._oauth_token: Optional[str] = None
+        self._oauth_expires_at: float = 0.0
         self.base_url = "https://opensky-network.org/api"
         self._session: Optional[aiohttp.ClientSession] = None
+        # Env-tunable so ops can stay within OpenSky's daily credit budget without a redeploy.
+        self.poll_interval_seconds = int(
+            os.getenv("OPENSKY_POLL_SECONDS", str(self.poll_interval_seconds))
+        )
 
         # Bounding box for queries (can be configured)
         self.bbox: Optional[tuple] = None  # (lamin, lamax, lomin, lomax)
 
     async def initialize(self) -> None:
+        # OAuth2 client-credentials takes precedence; only fall back to legacy basic
+        # auth when no OAuth creds are configured (OpenSky deprecated basic auth).
         auth = None
-        if self.username and self.password:
+        if not (self.client_id and self.client_secret) and self.username and self.password:
             auth = aiohttp.BasicAuth(self.username, self.password)
 
         self._session = aiohttp.ClientSession(auth=auth)
+
+    async def _get_oauth_bearer(self) -> Optional[str]:
+        """Fetch + cache an OpenSky OAuth2 client-credentials bearer token."""
+        if not (self.client_id and self.client_secret):
+            return None
+        now = time.time()
+        if self._oauth_token and now < self._oauth_expires_at:
+            return self._oauth_token
+        token_url = (
+            "https://auth.opensky-network.org/auth/realms/"
+            "opensky-network/protocol/openid-connect/token"
+        )
+        try:
+            async with self._session.post(
+                token_url,
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                },
+                timeout=15,
+            ) as resp:
+                if resp.status != 200:
+                    logger.error("OpenSky OAuth token HTTP %s", resp.status)
+                    return None
+                payload = await resp.json()
+        except Exception as exc:
+            logger.error("OpenSky OAuth token error: %s", exc)
+            return None
+        token = payload.get("access_token")
+        if not token:
+            return None
+        ttl = float(payload.get("expires_in") or 1800)
+        self._oauth_token = token
+        # Refresh 60s early to avoid edge-of-expiry 401s.
+        self._oauth_expires_at = now + max(60.0, ttl - 60.0)
+        return token
 
     async def cleanup(self) -> None:
         if self._session:
@@ -65,8 +114,15 @@ class OpenSkyCollector(BaseCollector):
             params["lomin"] = self.bbox[2]
             params["lomax"] = self.bbox[3]
 
+        headers = {"Accept": "application/json"}
+        bearer = await self._get_oauth_bearer()
+        if bearer:
+            headers["Authorization"] = f"Bearer {bearer}"
+
         try:
-            async with self._session.get(url, params=params, timeout=30) as resp:
+            async with self._session.get(
+                url, params=params, headers=headers, timeout=30
+            ) as resp:
                 if resp.status == 429:
                     logger.warning("OpenSky rate limited")
                     await asyncio.sleep(60)
