@@ -54,6 +54,7 @@ class NORADCollector(BaseCollector):
             async with self._session.post(
                 f"{self.base_url}/ajaxauth/login",
                 data={"identity": self.username, "password": self.password},
+                timeout=30,
             ) as resp:
                 if resp.status == 200:
                     self._authenticated = True

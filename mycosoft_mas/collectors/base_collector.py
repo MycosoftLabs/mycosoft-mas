@@ -5,6 +5,7 @@ Abstract base class for all data collectors.
 """
 
 import asyncio
+import json
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -15,6 +16,65 @@ from hashlib import sha1
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+# MINDEX earth/ingest layer names (transport.aircraft, transport.vessels, etc.)
+ENTITY_LAYER_MAP: Dict[str, str] = {
+    "aircraft": "aircraft",
+    "vessel": "vessels",
+    "satellite": "satellites",
+    "earthquake": "earthquakes",
+}
+
+EARTH_INGEST_BATCH_SIZE = 200
+
+MOVER_UPSERT_SQL: Dict[str, str] = {
+    "aircraft": """
+        INSERT INTO transport.aircraft (source, source_id, callsign, icao24,
+            location, heading, altitude_ft, ground_speed_kts, observed_at, properties)
+        VALUES ($1, $2, $3, $4,
+            ST_SetSRID(ST_MakePoint($5, $6), 4326)::geography,
+            $7, $8, $9, COALESCE($10::timestamptz, NOW()), $11::jsonb)
+        ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO UPDATE SET
+            callsign = EXCLUDED.callsign,
+            icao24 = EXCLUDED.icao24,
+            location = EXCLUDED.location,
+            heading = EXCLUDED.heading,
+            altitude_ft = EXCLUDED.altitude_ft,
+            ground_speed_kts = EXCLUDED.ground_speed_kts,
+            observed_at = EXCLUDED.observed_at,
+            properties = EXCLUDED.properties
+    """,
+    "vessels": """
+        INSERT INTO transport.vessels (source, source_id, name, mmsi,
+            location, speed_knots, heading, observed_at, properties)
+        VALUES ($1, $2, $3, $4,
+            ST_SetSRID(ST_MakePoint($5, $6), 4326)::geography,
+            $7, $8, COALESCE($9::timestamptz, NOW()), $10::jsonb)
+        ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO UPDATE SET
+            name = EXCLUDED.name,
+            mmsi = EXCLUDED.mmsi,
+            location = EXCLUDED.location,
+            speed_knots = EXCLUDED.speed_knots,
+            heading = EXCLUDED.heading,
+            observed_at = EXCLUDED.observed_at,
+            properties = EXCLUDED.properties
+    """,
+    "satellites": """
+        INSERT INTO space.satellites (source, source_id, name, norad_id,
+            orbit_type, location, altitude_km, observed_at, properties)
+        VALUES ($1, $2, $3, $4,
+            $5, ST_SetSRID(ST_MakePoint($6, $7), 4326)::geography,
+            $8, COALESCE($9::timestamptz, NOW()), $10::jsonb)
+        ON CONFLICT (source, source_id) WHERE source_id IS NOT NULL DO UPDATE SET
+            name = EXCLUDED.name,
+            norad_id = EXCLUDED.norad_id,
+            orbit_type = EXCLUDED.orbit_type,
+            location = EXCLUDED.location,
+            altitude_km = EXCLUDED.altitude_km,
+            observed_at = EXCLUDED.observed_at,
+            properties = EXCLUDED.properties
+    """,
+}
 
 
 class CollectorStatus(Enum):
@@ -181,62 +241,237 @@ class BaseCollector(ABC):
             s2_cell=self._compute_s2_cell(event.lat, event.lng),
         )
 
+    def _event_to_ingest_payload(self, event: TimelineEvent) -> Dict[str, Any]:
+        """Map TimelineEvent to MINDEX IngestEntity JSON."""
+        props = dict(event.properties or {})
+        source_id = str(props.get("icao24") or props.get("mmsi") or props.get("norad_id") or event.id)
+        name = (
+            props.get("callsign")
+            or props.get("name")
+            or props.get("icao24")
+            or f"{event.entity_type}:{source_id}"
+        )
+
+        if event.entity_type == "aircraft":
+            if event.altitude is not None:
+                props.setdefault("altitude", event.altitude * 3.28084)
+            vel = props.get("velocity")
+            if vel is not None and "speed" not in props:
+                props["speed"] = float(vel) * 1.94384
+            props.setdefault("icao24", source_id)
+
+        if event.entity_type == "vessel":
+            props.setdefault("mmsi", source_id)
+
+        if event.entity_type == "satellite":
+            props.setdefault("norad_id", source_id)
+            if event.altitude is not None:
+                props.setdefault("altitude_km", event.altitude / 1000.0)
+
+        ts = event.timestamp
+        occurred_at = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
+
+        return {
+            "source": event.source,
+            "source_id": source_id,
+            "name": str(name).strip() or source_id,
+            "entity_type": event.entity_type,
+            "lat": event.lat,
+            "lng": event.lng,
+            "occurred_at": occurred_at,
+            "properties": props,
+        }
+
+    def _mover_database_url(self) -> Optional[str]:
+        return os.getenv("DATABASE_URL") or os.getenv("MINDEX_DATABASE_URL")
+
+    def _mover_ingest_mode(self) -> str:
+        """direct = asyncpg to Postgres; api = MINDEX earth/ingest; auto = direct then api."""
+        return os.getenv("MOVER_INGEST_MODE", "auto").strip().lower()
+
+    async def _ingest_mover_direct(
+        self, by_layer: Dict[str, List[Dict[str, Any]]]
+    ) -> int:
+        """Write MOVER layers directly to Postgres (same DB as MAS DATABASE_URL)."""
+        import asyncpg
+
+        dsn = self._mover_database_url()
+        if not dsn:
+            return 0
+
+        inserted = 0
+        conn = await asyncpg.connect(dsn=dsn, timeout=30)
+        try:
+            for layer, entities in by_layer.items():
+                sql = MOVER_UPSERT_SQL.get(layer)
+                if not sql:
+                    continue
+                for ent in entities:
+                    props = ent.get("properties") or {}
+                    try:
+                        if layer == "aircraft":
+                            await conn.execute(
+                                sql,
+                                ent["source"],
+                                ent.get("source_id"),
+                                ent.get("name"),
+                                props.get("icao24"),
+                                ent["lng"],
+                                ent["lat"],
+                                props.get("heading"),
+                                props.get("altitude"),
+                                props.get("speed"),
+                                ent.get("occurred_at"),
+                                json.dumps(props),
+                            )
+                        elif layer == "vessels":
+                            await conn.execute(
+                                sql,
+                                ent["source"],
+                                ent.get("source_id"),
+                                ent.get("name"),
+                                props.get("mmsi"),
+                                ent["lng"],
+                                ent["lat"],
+                                props.get("speed"),
+                                props.get("heading"),
+                                ent.get("occurred_at"),
+                                json.dumps(props),
+                            )
+                        elif layer == "satellites":
+                            await conn.execute(
+                                sql,
+                                ent["source"],
+                                ent.get("source_id"),
+                                ent.get("name"),
+                                props.get("norad_id"),
+                                props.get("orbit_type"),
+                                ent["lng"],
+                                ent["lat"],
+                                props.get("altitude_km"),
+                                ent.get("occurred_at"),
+                                json.dumps(props),
+                            )
+                        inserted += 1
+                    except Exception as exc:
+                        logger.warning(
+                            "%s direct ingest %s/%s failed: %s",
+                            self.name,
+                            layer,
+                            ent.get("source_id"),
+                            exc,
+                        )
+        finally:
+            await conn.close()
+
+        if inserted:
+            logger.info("%s direct DB ingest: %s rows", self.name, inserted)
+        return inserted
+
+    async def _ingest_mover_api(
+        self, by_layer: Dict[str, List[Dict[str, Any]]]
+    ) -> int:
+        import httpx
+
+        base = os.getenv("MINDEX_API_URL", "http://192.168.0.189:8000").rstrip("/")
+        token = os.getenv("MINDEX_INTERNAL_TOKEN", os.getenv("MAS_INTERNAL_TOKEN", ""))
+        headers: Dict[str, str] = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        if token:
+            headers["X-Internal-Token"] = token
+
+        total_inserted = 0
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            for layer, entities in by_layer.items():
+                url = f"{base}/api/mindex/earth/ingest"
+                for offset in range(0, len(entities), EARTH_INGEST_BATCH_SIZE):
+                    chunk = entities[offset : offset + EARTH_INGEST_BATCH_SIZE]
+                    resp = await client.post(
+                        url,
+                        json={"layer": layer, "entities": chunk},
+                        headers=headers,
+                    )
+                    if resp.status_code not in (200, 201):
+                        logger.error(
+                            "%s earth ingest %s HTTP %s: %s",
+                            self.name,
+                            layer,
+                            resp.status_code,
+                            resp.text[:400],
+                        )
+                        continue
+                    data = resp.json()
+                    inserted = int(data.get("inserted", 0))
+                    errors = int(data.get("errors", 0))
+                    if errors:
+                        logger.warning(
+                            "%s earth ingest %s: inserted=%s errors=%s",
+                            self.name,
+                            layer,
+                            inserted,
+                            errors,
+                        )
+                    else:
+                        logger.info(
+                            "%s earth ingest %s: inserted=%s", self.name, layer, inserted
+                        )
+                    total_inserted += inserted
+        return total_inserted
+
     async def ingest(self, events: List[TimelineEvent]) -> int:
         """
-        Ingest events into MINDEX.
+        Ingest MOVER events into MINDEX Postgres (direct asyncpg) with API fallback.
 
         Args:
             events: List of timeline events
 
         Returns:
-            Number of events ingested
+            Number of entities inserted/updated
         """
         if not events:
             return 0
 
-        try:
-            import json
-            import uuid
-
-            import asyncpg
-
-            if self._pool is None:
-                self._pool = await asyncpg.create_pool(
-                    os.getenv(
-                        "MINDEX_DATABASE_URL", "postgresql://mindex:mindex@localhost:5432/mindex"
-                    ),
-                    min_size=1,
-                    max_size=5,
+        by_layer: Dict[str, List[Dict[str, Any]]] = {}
+        for event in events:
+            layer = ENTITY_LAYER_MAP.get(event.entity_type)
+            if not layer:
+                logger.warning(
+                    "%s: no earth ingest layer for entity_type=%s", self.name, event.entity_type
                 )
+                continue
+            try:
+                payload = self._event_to_ingest_payload(event)
+            except Exception as exc:
+                logger.warning(
+                    "%s: payload mapping failed for %s: %s",
+                    self.name,
+                    event.entity_type,
+                    exc,
+                )
+                continue
+            by_layer.setdefault(layer, []).append(payload)
 
-            async with self._pool.acquire() as conn:
-                for event in events:
-                    await conn.execute(
-                        """
-                        INSERT INTO mindex.timeline_entries 
-                        (id, entity_type, timestamp, geom, properties, source, quality_score)
-                        VALUES ($1, $2, $3, ST_SetSRID(ST_Point($4, $5), 4326), $6, $7, $8)
-                        ON CONFLICT (id) DO UPDATE SET
-                            timestamp = EXCLUDED.timestamp,
-                            geom = EXCLUDED.geom,
-                            properties = EXCLUDED.properties
-                    """,
-                        uuid.UUID(event.id),
-                        event.entity_type,
-                        event.timestamp,
-                        event.lng,
-                        event.lat,
-                        json.dumps(event.properties),
-                        event.source,
-                        event.quality_score,
-                    )
+        if not by_layer:
+            return 0
 
-            self.stats.total_events += len(events)
-            return len(events)
+        mode = self._mover_ingest_mode()
+        total_inserted = 0
+        try:
+            if mode in ("direct", "auto") and self._mover_database_url():
+                total_inserted = await self._ingest_mover_direct(by_layer)
+            if mode == "api" or (mode == "auto" and total_inserted == 0):
+                api_inserted = await self._ingest_mover_api(by_layer)
+                if api_inserted:
+                    total_inserted = api_inserted
+
+            self.stats.total_events += total_inserted
+            return total_inserted
 
         except Exception as e:
             logger.error(f"{self.name} ingest error: {e}")
-            return 0
+            return total_inserted
 
     async def run_once(self) -> List[TimelineEvent]:
         """Run a single fetch-transform-ingest cycle."""
@@ -324,7 +559,7 @@ class BaseCollector(ABC):
         return {
             "name": self.name,
             "entity_type": self.entity_type,
-            "status": self.status.value,
+            "status": getattr(self.status, "value", self.status),
             "poll_interval": self.poll_interval_seconds,
             "stats": {
                 "total_fetches": self.stats.total_fetches,
