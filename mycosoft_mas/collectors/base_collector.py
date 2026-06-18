@@ -306,7 +306,8 @@ class BaseCollector(ABC):
                 sql = MOVER_UPSERT_SQL.get(layer)
                 if not sql:
                     continue
-                for ent in entities:
+                batch = entities[:EARTH_INGEST_BATCH_SIZE]
+                for idx, ent in enumerate(batch):
                     props = ent.get("properties") or {}
                     try:
                         if layer == "aircraft":
@@ -353,6 +354,8 @@ class BaseCollector(ABC):
                                 json.dumps(props),
                             )
                         inserted += 1
+                        if idx % 50 == 49:
+                            await asyncio.sleep(0)
                     except Exception as exc:
                         logger.warning(
                             "%s direct ingest %s/%s failed: %s",
