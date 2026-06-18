@@ -40,6 +40,23 @@ class HealthChecker:
         self._db_pool = None
         self._redis = None
 
+    async def _bounded_check(
+        self,
+        name: str,
+        check_coro,
+        timeout: float = 6.0,
+        optional: bool = False,
+    ) -> ComponentHealth:
+        """Run one health check with a hard timeout so /health never hangs."""
+        try:
+            return await asyncio.wait_for(check_coro, timeout=timeout)
+        except asyncio.TimeoutError:
+            status = HealthStatus.DEGRADED if optional else HealthStatus.UNHEALTHY
+            return ComponentHealth(name=name, status=status, message="health check timed out")
+        except Exception as e:
+            status = HealthStatus.DEGRADED if optional else HealthStatus.UNHEALTHY
+            return ComponentHealth(name=name, status=status, message=str(e))
+
     async def check_database(self) -> ComponentHealth:
         """Check PostgreSQL connection."""
         import time
@@ -173,10 +190,10 @@ class HealthChecker:
     async def check_all(self) -> Dict[str, Any]:
         """Run all health checks."""
         checks = await asyncio.gather(
-            self.check_database(),
-            self.check_redis(),
-            self.check_collectors(),
-            self.check_crep(),
+            self._bounded_check("postgresql", self.check_database(), timeout=6),
+            self._bounded_check("redis", self.check_redis(), timeout=6, optional=True),
+            self._bounded_check("collectors", self.check_collectors(), timeout=6, optional=True),
+            self._bounded_check("crep", self.check_crep(), timeout=6, optional=True),
             return_exceptions=True,
         )
 
