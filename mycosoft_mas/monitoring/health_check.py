@@ -118,6 +118,12 @@ class HealthChecker:
 
     async def check_collectors(self) -> ComponentHealth:
         """Check collector status."""
+        if os.getenv("MAS_SKIP_BACKGROUND_STARTUP", "").strip() in ("1", "true", "yes"):
+            return ComponentHealth(
+                name="collectors",
+                status=HealthStatus.DEGRADED,
+                message="Collectors skipped (MAS_SKIP_BACKGROUND_STARTUP)",
+            )
         try:
             from mycosoft_mas.collectors import get_orchestrator
 
@@ -162,7 +168,8 @@ class HealthChecker:
         try:
             import httpx
 
-            async with httpx.AsyncClient(timeout=5) as client:
+            crep_timeout = float(os.getenv("HEALTH_CREP_HTTP_TIMEOUT_SEC", "1"))
+            async with httpx.AsyncClient(timeout=crep_timeout) as client:
                 r = await client.get(health_url)
                 latency = (time.time() - start) * 1000
 
@@ -189,11 +196,16 @@ class HealthChecker:
 
     async def check_all(self) -> Dict[str, Any]:
         """Run all health checks."""
+        db_timeout = float(os.getenv("HEALTH_DB_TIMEOUT_SEC", "1"))
+        redis_timeout = float(os.getenv("HEALTH_REDIS_TIMEOUT_SEC", "1"))
+        optional_timeout = float(os.getenv("HEALTH_OPTIONAL_TIMEOUT_SEC", "1"))
         checks = await asyncio.gather(
-            self._bounded_check("postgresql", self.check_database(), timeout=6),
-            self._bounded_check("redis", self.check_redis(), timeout=6, optional=True),
-            self._bounded_check("collectors", self.check_collectors(), timeout=6, optional=True),
-            self._bounded_check("crep", self.check_crep(), timeout=6, optional=True),
+            self._bounded_check("postgresql", self.check_database(), timeout=db_timeout),
+            self._bounded_check("redis", self.check_redis(), timeout=redis_timeout, optional=True),
+            self._bounded_check(
+                "collectors", self.check_collectors(), timeout=optional_timeout, optional=True
+            ),
+            self._bounded_check("crep", self.check_crep(), timeout=optional_timeout, optional=True),
             return_exceptions=True,
         )
 

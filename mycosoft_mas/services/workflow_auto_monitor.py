@@ -131,6 +131,8 @@ class WorkflowAutoMonitor:
     async def _drift_loop(self) -> None:
         local_url = os.getenv("N8N_URL", "http://192.168.0.188:5678")
         local_key = os.getenv("N8N_API_KEY", "")
+        if os.getenv("WORKFLOW_AUTO_MONITOR_DRIFT_ON_STARTUP", "0") != "1":
+            await asyncio.sleep(self.drift_interval)
         while self._running:
             try:
                 repo = _repo_checksums()
