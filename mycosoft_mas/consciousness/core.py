@@ -258,7 +258,9 @@ class MYCAConsciousness:
         try:
             from mycosoft_mas.memory.coordinator import get_memory_coordinator
 
-            self._memory_coordinator = await get_memory_coordinator()
+            self._memory_coordinator = await asyncio.wait_for(
+                get_memory_coordinator(), timeout=15
+            )
         except Exception as e:
             logger.warning(f"Could not connect to memory coordinator: {e}")
 

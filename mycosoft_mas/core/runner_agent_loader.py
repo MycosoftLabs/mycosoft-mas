@@ -170,7 +170,7 @@ async def restart_runner_with_core_agents() -> Dict[str, Any]:
         await runner.stop()
         await asyncio.sleep(0.1)
 
-    agents, load_result = load_core_runner_agents()
+    agents, load_result = await asyncio.to_thread(load_core_runner_agents)
     await runner.start(agents)
     status = await runner.get_status()
     return {

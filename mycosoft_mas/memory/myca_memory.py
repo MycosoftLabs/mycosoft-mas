@@ -211,7 +211,13 @@ class PostgresBackend(MemoryBackend):
         try:
             import asyncpg
 
-            self._pool = await asyncpg.create_pool(self._database_url, min_size=1, max_size=2)
+            self._pool = await asyncpg.create_pool(
+                self._database_url,
+                min_size=1,
+                max_size=2,
+                timeout=5,
+                command_timeout=10,
+            )
             logger.info("PostgreSQL memory backend initialized")
         except Exception as e:
             logger.error(f"Failed to initialize PostgreSQL backend: {e}")
@@ -413,8 +419,19 @@ class QdrantSemanticIndex:
         api_key = os.getenv("QDRANT_API_KEY")
         try:
             if url:
-                return QdrantClient(url=url, api_key=api_key, timeout=30.0)
-            return QdrantClient(host=host, port=port, api_key=api_key, timeout=30.0)
+                return QdrantClient(
+                    url=url,
+                    api_key=api_key,
+                    timeout=5.0,
+                    check_compatibility=False,
+                )
+            return QdrantClient(
+                host=host,
+                port=port,
+                api_key=api_key,
+                timeout=5.0,
+                check_compatibility=False,
+            )
         except Exception as e:
             logger.warning(f"Qdrant client init failed: {e}")
             return None

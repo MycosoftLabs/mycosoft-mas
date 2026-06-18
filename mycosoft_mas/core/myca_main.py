@@ -1859,7 +1859,7 @@ async def _mas_background_startup() -> None:
         from mycosoft_mas.core.agent_heartbeat_service import get_heartbeat_service
 
         heartbeat_svc = get_heartbeat_service()
-        await heartbeat_svc.start()
+        await asyncio.wait_for(heartbeat_svc.start(), timeout=10)
         logger.info("✓ Agent heartbeat service started (publishing to Redis every 15s)")
     except Exception as exc:
         logger.warning(f"Heartbeat service failed to start: {exc}")
@@ -1869,7 +1869,7 @@ async def _mas_background_startup() -> None:
         from mycosoft_mas.core.agent_supervisor import get_supervisor
 
         supervisor = get_supervisor()
-        await supervisor.start()
+        await asyncio.wait_for(supervisor.start(), timeout=10)
         logger.info("✓ Agent supervisor started (monitoring agent health every 30s)")
     except Exception as exc:
         logger.warning(f"Agent supervisor failed to start: {exc}")
@@ -1946,6 +1946,13 @@ async def startup_event():
         return
     logger.info("MAS Orchestrator HTTP stack ready — scheduling background initialization")
     app.state.mas_startup_task = asyncio.create_task(_mas_background_startup())
+
+    def _log_background_startup_result(task: asyncio.Task) -> None:
+        # Surface a mid-init crash instead of letting the detached task fail silently.
+        if not task.cancelled() and task.exception() is not None:
+            logger.error("MAS background startup crashed: %s", task.exception())
+
+    app.state.mas_startup_task.add_done_callback(_log_background_startup_result)
 
 
 @app.on_event("shutdown")
