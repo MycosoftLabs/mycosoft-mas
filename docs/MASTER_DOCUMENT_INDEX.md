@@ -1,5 +1,38 @@
 # Master Document Index
 
+## Earth Simulator P0–P2 (June 20, 2026)
+
+- `docs/EARTH_SIMULATOR_PUBLIC_CAPABILITIES_JUN20_2026.md` — **Capabilities reference**: provenance table, P0–P2 fix summary, experiment briefs, verification commands.
+- `docs/EARTH_SIMULATOR_SCIENCE_AGENT_PACKET_JUN20_2026.json` — **Science agent packet**: endpoints, sample bboxes, hypothesis templates for autonomous research agents.
+
+## Worldview API readiness (June 17–19, 2026)
+
+- `docs/INGESTION_PIPELINE_CURSOR_HANDOFF_JUN19_2026.md` — **Cursor → Claude handoff (Jun 19)**: full MAS 188 / MINDEX 189 ingestion work — root causes, commits, VM deploy, `MINDEX_INTERNAL_TOKEN` 401 fix, ops scripts, env state, verification, Claude next steps (OpenSky OAuth2, AIS on 187).
+- `docs/WEBSITE_BLUEGREEN_DEPLOY_ABORT_ENV_JUN19_2026.md` — **Earth Sim deploy abort (Jun 19)**: prod VM `.env` line 167 malformed bare token; blue-green keep-blue OK; live site 200; Claude fixing cutover script + `.env`.
+- `docs/CLAUDE_CODE_WEBSITE_HANDOFF_JUN18_2026.md` — **Claude Code website handoff (Jun 18)**: live sandbox/MAS/MINDEX health, Worldview/search/earth-sim route matrix, Supabase metering, env vars, known gaps, deploy checklist.
+- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` — **Worldview API readiness handoff**: current website gateway, MINDEX Worldview zone, MAS Worldstate/collector architecture, endpoint inventory, P0/P1 blockers, exact implementation sequence, and verification commands.
+
+## Investor data room — NotebookLM hub (June 15, 2026)
+
+- `docs/INVESTOR_DATA_ROOM_NOTEBOOKLM_INDEX_JUN15_2026.md` — **NotebookLM / data room TOC**: links primary data story to architecture, MINDEX/ETL, CREP, Worldview, NLM/grounding, devices, MYCA, AWS Jun 15 waves, validation, upload bundles, and external (Perplexity) inputs.
+
+## Section 9 Gap Remediation (June 15, 2026)
+
+- `docs/SECTION_9_GAP_REMEDIATION_COMPLETE_JUN15_2026.md` — **Plan complete**: AWS GPU Wave 0, SSE BFF, 501 cleanup, NVIDIA/AWS GPU lanes, NatureOS Defense v2, device registry, terminology updates.
+- `docs/WEBSOCKET_SSE_BFF_JUN15_2026.md` — Website `/api/stream/*` proxies and client migration.
+- `docs/MAS_MINDEX_501_CLEANUP_JUN15_2026.md` — MAS/MINDEX proxy fixes and 503 reclassification.
+- `docs/AWS_GPU_MIGRATION_WAVE0_JUN15_2026.md` — AWS IAM, budgets, `scripts/aws/`.
+- `docs/AWS_GPU_PRODUCTION_LANE_JUN15_2026.md` — `GPU_VOICE_PROVIDER` production switch.
+- `docs/NVIDIA_DEV_VOICE_TEST_JUN15_2026.md` — NVIDIA dev platform PersonaPlex test lane.
+- `docs/NATUREOS_DEFENSE_V2_JUN15_2026.md` — `/natureos/defense/*` operator shell.
+- `docs/WAVE5_DEVICE_REGISTRY_JUN15_2026.md` — Agaric + Psathyrella in production.
+- `docs/AWS_SCALE_UP_PREP_JUN15_2026.md` — AWS scale-up Wave 1 prep (GPU, NAS, MQTT, Earth2, NLM).
+- `docs/AWS_W1_NAS_BACKUP_COMPLETE_JUN15_2026.md` — **W1 complete**: KMS + SSE-KMS NAS→S3 pilot sync.
+- `docs/AWS_W5_WORLDVIEW_METERING_COMPLETE_JUN15_2026.md` — **W5 complete**: Worldview v1 local metering smoke (401/catalog/health).
+- `docs/AWS_W6_COLLECTORS_COMPLETE_JUN15_2026.md` — **W6 complete**: MAS 188 collectors + CREP gateway fix (no website deploy).
+- `docs/AWS_CREDITS_AND_REVENUE_JUN15_2026.md` — Credits maximization + Worldview revenue.
+- `WEBSITE/website/docs/MYCOSOFT_DATA_STORY_INVESTORS_CUSTOMERS_JUN15_2026 (1).md` — Investor data story; Section 9 gaps updated.
+
 ## Earth Simulator + MYCA Deploy Verification (May 26, 2026)
 
 - `docs/EARTH_SIMULATOR_MYCA_DEPLOY_VERIFY_MAY26_2026.md` — **Verification & completion record**: production deploy `b87e20f6`, Instant Deploy run 26442627512, MINDEX civic/fungal on 189, MAS MYCA chat/devices/memory routes, viewport-intel + viewport-ai-summary smoke tests, MYCA VM 191 gap, Redis/memory follow-ups, re-run scripts.
@@ -877,3 +910,7 @@
 - `docs/PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md` - Phase A execution log: MINDEX runtime recovery, live-state route activation, MAS runtime verification, and remaining blocker details (Apr 10, 2026).
 
 - docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md � Full architecture reference for Fusarium across frontend, middleware/BFF, backend, data, edge, and platform integrations (Apr 10, 2026).
+
+## Worldview API (June 17, 2026)
+- `docs/WORLDVIEW_FRONTEND_AGENT_HANDOFF_JUN17_2026.md` — Status update and Codex handoff for `/agent` page: pay, query, balance, v1 API contract, next steps (not deployed).
+- `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` — Backend readiness audit, blockers, implementation order, verification commands.

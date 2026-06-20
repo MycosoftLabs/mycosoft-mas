@@ -1,0 +1,93 @@
+{
+  "packetVersion": "2026-06-20",
+  "canonicalRoute": "/natureos/earth-simulator",
+  "productionUrl": "https://mycosoft.com/natureos/earth-simulator",
+  "capabilitiesDoc": "docs/EARTH_SIMULATOR_PUBLIC_CAPABILITIES_JUN20_2026.md",
+  "endpoints": [
+    {
+      "path": "/api/crep/unified",
+      "method": "GET",
+      "params": ["bbox", "limit", "refresh", "countsOnly", "stats", "type"],
+      "defaultLimits": {
+        "aircraft": 1500,
+        "vessels": 2500,
+        "satellites": 1200,
+        "fungal": 800,
+        "events": 500
+      }
+    },
+    {
+      "path": "/api/stream/entities",
+      "method": "GET",
+      "sse": true,
+      "upstream": "ws://192.168.0.188:8001/api/entities/stream"
+    },
+    {
+      "path": "/api/crep/services",
+      "method": "GET",
+      "notes": "CelesTrak probe 8s; client timeout 40s"
+    },
+    {
+      "path": "/api/crep/infra/viewport-stats",
+      "method": "GET",
+      "params": ["bbox"]
+    },
+    {
+      "path": "/api/crep/viewport-ai-summary",
+      "method": "POST"
+    },
+    {
+      "path": "/api/health",
+      "method": "GET"
+    },
+    {
+      "path": "/api/earth2/health",
+      "method": "GET"
+    }
+  ],
+  "sampleBboxes": [
+    {
+      "name": "continental_us",
+      "bbox": "52.0,24.0,-66.0,-125.0",
+      "format": "north,south,east,west"
+    },
+    {
+      "name": "san_diego_metro",
+      "bbox": "33.2,32.5,-116.8,-117.4",
+      "format": "north,south,east,west"
+    },
+    {
+      "name": "nyc_metro",
+      "bbox": "41.0,40.5,-73.5,-74.3",
+      "format": "north,south,east,west"
+    }
+  ],
+  "hypothesisTemplates": [
+    {
+      "id": "ES-01",
+      "title": "Fungal richness vs infrastructure density",
+      "prompt": "Given bbox {bbox}, compare fungal observation density with power-plant and data-center counts from viewport-stats.",
+      "endpoints": ["/api/crep/unified?bbox={bbox}", "/api/crep/infra/viewport-stats?bbox={bbox}"]
+    },
+    {
+      "id": "ES-02",
+      "title": "Maritime traffic under severe weather",
+      "prompt": "In bbox {bbox}, do vessel counts decrease inside active NWS warning polygons?",
+      "endpoints": ["/api/crep/unified?bbox={bbox}&type=vessels"]
+    },
+    {
+      "id": "ES-03",
+      "title": "MYCA viewport anomaly summary",
+      "prompt": "Summarize visible layers and anomalies for the current map viewport.",
+      "endpoints": ["POST /api/crep/viewport-ai-summary"]
+    }
+  ],
+  "layerLod": {
+    "aircraftMinZoom": 3.5,
+    "aircraftHintBelowZoom": "Zoom in for aircraft"
+  },
+  "validationArtifacts": {
+    "playwrightScript": "scripts/audit-earth-simulator-prod.mjs",
+    "localAuditOutput": "tmp/earth-simulator-audit/local-audit.json"
+  }
+}
