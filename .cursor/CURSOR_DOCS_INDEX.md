@@ -6,15 +6,52 @@
 
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
+## Earth Simulator P0–P2 (June 20, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/EARTH_SIMULATOR_PUBLIC_CAPABILITIES_JUN20_2026.md` | **Capabilities reference** — provenance, P0–P2 fixes, experiment briefs, verification. |
+| `docs/EARTH_SIMULATOR_SCIENCE_AGENT_PACKET_JUN20_2026.json` | **Science agent packet** — endpoints, bboxes, hypothesis templates. |
+
+## Worldview API readiness (June 17–18, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/CLAUDE_CODE_WEBSITE_HANDOFF_JUN18_2026.md` | **Claude Code handoff (Jun 18)** — live health matrix, MAS/MINDEX/Supabase status, Worldview v1 contract, search/earth-sim/OEI routes, env vars, gaps, deploy checklist. **Give this to Claude Code for all website work.** |
+| `docs/WORLDVIEW_FRONTEND_AGENT_HANDOFF_JUN17_2026.md` | **Codex handoff** — status, v1 public contract, payment flow, `/agent` page gaps, env vars, verification, deploy gates, prioritized frontend tasks. |
+| `docs/WORLDVIEW_API_PREPARATION_JUN17_2026.md` | **Backend readiness audit** — website gateway, MINDEX Worldview zone, MAS Worldstate/collectors, endpoint inventory, P0/P1 blockers, implementation order, verification commands. |
+
+## Investor data room — NotebookLM (June 15, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/INVESTOR_DATA_ROOM_NOTEBOOKLM_INDEX_JUN15_2026.md` | **Data room hub** — links data story to all architecture/source/data docs; NotebookLM upload order, bundles, prompts. |
+| `WEBSITE/website/docs/MYCOSOFT_DATA_STORY_INVESTORS_CUSTOMERS_JUN15_2026 (1).md` | **Primary narrative** — upload first for investor package. |
+
+## Section 9 Gap Remediation (June 15, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/SECTION_9_GAP_REMEDIATION_COMPLETE_JUN15_2026.md` | **Plan complete** — all 8 waves, verification checklist, operator follow-ups. |
+| `docs/WEBSOCKET_SSE_BFF_JUN15_2026.md` | Website SSE BFF proxies + client migration. |
+| `docs/NATUREOS_DEFENSE_V2_JUN15_2026.md` | NatureOS Defense v2 at `/natureos/defense/*`. |
+| `docs/AWS_GPU_MIGRATION_WAVE0_JUN15_2026.md` | AWS IAM, budgets, GPU scripts foundation. |
+| `docs/AWS_GPU_PRODUCTION_LANE_JUN15_2026.md` | `GPU_VOICE_PROVIDER` aws/nvidia-dev (legion retired). |
+| `docs/MAS_MINDEX_501_CLEANUP_JUN15_2026.md` | 501→fix/503 reclass + gap scanner. |
+| `docs/WAVE5_DEVICE_REGISTRY_JUN15_2026.md` | Agaric + Psathyrella in production registry. |
+| `docs/AWS_MYCOSOFT_SCALE_UP_MASTER_PLAN_JUN15_2026.md` | **Canonical AWS scale plan** — NAS library S3, MINDEX/Supabase backups, AWS-only GPU (Legions retired), Worldview metering, collectors, blue-green, execution waves W0–W8. |
+| `docs/AWS_SCALE_UP_PREP_JUN15_2026.md` | Phase map + operator checklist (points to master plan). |
+| `docs/AWS_W1_NAS_BACKUP_COMPLETE_JUN15_2026.md` | **W1 done** — KMS + encrypted NAS→S3 pilot. |
+| `docs/AWS_W5_WORLDVIEW_METERING_COMPLETE_JUN15_2026.md` | **W5 done** — Worldview auth/catalog local smoke. |
+| `docs/AWS_W6_COLLECTORS_COMPLETE_JUN15_2026.md` | **W6 done** — MAS 188 ingestion collectors enabled. |
+| `docs/AWS_CREDITS_AND_REVENUE_JUN15_2026.md` | Activate/BoostVC credits + Worldview monetization. |
+
 ## Earth Simulator + MYCA deploy verification (May 26, 2026)
 | Doc | Purpose |
 |-----|---------|
 | `docs/EARTH_SIMULATOR_MYCA_DEPLOY_VERIFY_MAY26_2026.md` | **Verification & completion** — production deploy `b87e20f6`, MAS/MINDEX/Sandbox probes, MYCA→MAS analysis routing, gaps (191, Redis, named devices). |
 
-## GPU topology — dev PC local-dev-only (May 24, 2026)
+## GPU topology — **superseded by AWS master plan** (Legions 241/249 decommissioned Jun 15, 2026)
 | Doc | Purpose |
 |-----|---------|
-| `docs/GPU_TOPOLOGY_CONSOLIDATED_MAY24_2026.md` | **Canonical** — dev PC 241 = Cursor/3010 only; GPU host 249 = PersonaPlex/Nemotron; LAN firewall blocks + VM env redirect away from 241. |
+| `docs/AWS_MYCOSOFT_SCALE_UP_MASTER_PLAN_JUN15_2026.md` | **Use this** — AWS-only GPU; 249 is dev PC, 241 sold. |
+| `docs/GPU_TOPOLOGY_CONSOLIDATED_MAY24_2026.md` | Historical — Legion LAN layout (obsolete). |
 
 ## Earth Simulator fungi-first Phase 1 (May 23, 2026)
 | Doc | Purpose |
