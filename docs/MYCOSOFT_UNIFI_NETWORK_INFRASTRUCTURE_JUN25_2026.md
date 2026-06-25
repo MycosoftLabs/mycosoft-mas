@@ -17,7 +17,9 @@
 | **MAS monitoring** | `GET /api/network/kev`, `/api/network/diagnostics` on `192.168.0.188:8001` |
 | **CISA KEV (Jun 2026)** | UniFi OS chain **PATCHED** (probe); Lantronix **not in inventory** |
 
-**Operator pending:** Confirm UniFi OS version ≥ 5.0.8 in UniFi UI; physical Lantronix audit; standardize UniFi API auth on API key (Mar 7 password scan failed).
+**Operator pending:** Confirm UniFi OS version ≥ 5.0.8 in UniFi UI; create **UNIFI_API_KEY** (SSO blocks password login); physical Lantronix closet audit.
+
+**Verified Jun 25, 2026:** MAS `1db70795` on 188; KEV/diagnostics HTTP 200; NAS `.105` SMB/NFS ports open; Lantronix NOT_IN_INVENTORY.
 
 ---
 
@@ -159,12 +161,12 @@ Test-NetConnection 192.168.0.105 -Port 445
 
 ## Documentation gaps (track here)
 
-- UniFi OS **exact version string** from UI (probe only confirms patched behavior)
+- UniFi OS **exact version string** from UI (KEV probe confirms **PATCHED** / 5.0.8+ behavior; `/api/system` has no version field)
+- **`UNIFI_API_KEY`** — not in any repo; SSO (`isSsoEnabled`) blocks password login (HTTP 499/403); create key in UniFi UI
 - AP/switch **firmware versions**
 - **WiFi SSID** names and guest policy (not in repo)
-- Successful **UniFi API inventory export** (password login failed Mar 7)
-- **NFS exports** on `.105` for Proxmox backups (`showmount` empty per Mar 13)
-- **Physical Lantronix** hardware audit
+- **NFS export list** on `.105` — TCP 2049 open; `showmount` needs `nfs-common` on Linux probe host
+- **Physical Lantronix** hardware audit (code + port 30718 scan: none found)
 
 ---
 
