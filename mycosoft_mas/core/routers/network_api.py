@@ -17,6 +17,7 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 from mycosoft_mas.services.network_diagnostics import (
+    run_cisa_kev_checks,
     run_connectivity_checks,
     run_dns_checks,
     run_full_diagnostics,
@@ -77,6 +78,23 @@ async def get_latency() -> Dict[str, Any]:
 async def get_connectivity() -> Dict[str, Any]:
     """Check HTTP connectivity to MAS, MINDEX, Sandbox."""
     return await run_connectivity_checks()
+
+
+@router.get("/kev")
+async def get_cisa_kev_checks(
+    unifi_host: Optional[str] = Query(None, description="UniFi gateway IP (default UNIFI_HOST or 192.168.0.1)"),
+    unifi_port: Optional[int] = Query(None, description="UniFi management port (default 443 for UDM)"),
+) -> Dict[str, Any]:
+    """
+    CISA Known Exploited Vulnerabilities exposure check (Jun 2026).
+
+    Runs Bishop Fox safe detector for UniFi OS CVE-2026-34908/09/10 chain and
+  reports Lantronix EDS5000 (CVE-2025-67038) inventory status.
+    """
+    return await run_cisa_kev_checks(
+        unifi_host=unifi_host or os.environ.get("UNIFI_HOST"),
+        unifi_port=unifi_port,
+    )
 
 
 @router.get("/diagnostics")

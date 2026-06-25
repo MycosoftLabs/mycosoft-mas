@@ -43,6 +43,14 @@ MYCOSOFT_VMS = {
     "mindex": "192.168.0.189",
 }
 
+# CISA KEV — Ubiquiti UniFi OS chain (SAB-064); Bishop Fox detector default 11443, UDM uses 443
+UNIFI_KEV_CVES = [
+    "CVE-2026-34908",
+    "CVE-2026-34909",
+    "CVE-2026-34910",
+]
+LANTRONIX_KEV_CVES = ["CVE-2025-67038"]
+
 
 @dataclass
 class DnsCheckResult:
@@ -508,11 +516,119 @@ async def run_full_diagnostics(
         except Exception as e:
             report.errors.append(f"Cloudflare DNS fetch failed: {e}")
 
-    # 6. Basic vulnerability indicators (no nmap - avoid heavy deps)
-    report.vulnerabilities = {
-        "checks_performed": ["dns_consistency", "connectivity"],
-        "open_port_scan": "skipped (requires nmap)",
-        "recommendation": "Run nmap or Suricata for full vulnerability assessment",
-    }
+    # 6. CISA KEV checks (UniFi OS chain + Lantronix inventory placeholder)
+    try:
+        kev = await run_cisa_kev_checks(unifi_host=unifi_host)
+        report.vulnerabilities = kev
+    except Exception as e:
+        report.errors.append(f"CISA KEV checks failed: {e}")
+        report.vulnerabilities = {
+            "checks_performed": ["dns_consistency", "connectivity"],
+            "cisa_kev": {"error": str(e)},
+            "recommendation": "Run scripts/security/probe_unifi_kev.py manually",
+        }
 
     return report
+
+
+async def run_cisa_kev_checks(
+    unifi_host: Optional[str] = None,
+    unifi_port: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+  Run non-destructive CISA KEV exposure checks for Mycosoft LAN assets.
+
+  - UniFi OS (CVE-2026-34908/09/10): Bishop Fox safe detector via subprocess.
+  - Lantronix EDS5000 (CVE-2025-67038): documents inventory status; no devices
+    found in codebase — physical audit required if serial gateways are deployed.
+  """
+    import json as _json
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    host = unifi_host or os.environ.get("UNIFI_HOST", "192.168.0.1")
+    port = unifi_port or int(os.environ.get("UNIFI_KEV_CHECK_PORT", "443"))
+    script = Path(__file__).resolve().parents[2] / "scripts" / "security" / "probe_unifi_kev.py"
+    unifi_result: Dict[str, Any] = {
+        "asset": "UniFi Dream Machine / UniFi OS gateway",
+        "host": host,
+        "port": port,
+        "cves": UNIFI_KEV_CVES,
+        "verdict": "SKIPPED",
+        "detail": "probe script not found",
+    }
+
+    if script.is_file():
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable,
+            str(script),
+            host,
+            str(port),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=60.0)
+        if stdout.strip():
+            try:
+                payload = _json.loads(stdout.decode())
+                detector = payload.get("detector", {})
+                unifi_result = {
+                    "asset": "UniFi Dream Machine / UniFi OS gateway",
+                    "host": host,
+                    "port": port,
+                    "cves": UNIFI_KEV_CVES,
+                    "verdict": detector.get("verdict", "ERROR"),
+                    "detail": detector.get("bypass", {}).get("detail"),
+                    "fingerprint": payload.get("fingerprint"),
+                    "remediation": payload.get("remediation"),
+                    "severity": "CRITICAL (CVSS 10.0)",
+                    "exploitation": "CISA KEV — actively exploited in the wild (Jun 2026)",
+                }
+            except _json.JSONDecodeError:
+                unifi_result["detail"] = stdout.decode()[:500]
+        elif stderr:
+            unifi_result["detail"] = stderr.decode()[:500]
+            unifi_result["verdict"] = "ERROR"
+
+    lantronix_result: Dict[str, Any] = {
+        "asset": "Lantronix EDS5000 serial-to-ethernet",
+        "cves": LANTRONIX_KEV_CVES,
+        "verdict": "NOT_IN_INVENTORY",
+        "detail": (
+            "No Lantronix EDS5000 references in Mycosoft repos; MycoBrain uses "
+            "USB/COM serial and ESP32 gateways, not Lantronix EDS5000. Physical "
+            "audit required if any EDS5008/5016/5032 devices exist on LAN."
+        ),
+        "affected_firmware": "2.1.0.0R3",
+        "patched_firmware": "2.2.0.0R1",
+        "severity": "CRITICAL (root command injection)",
+        "exploitation": "CISA KEV — actively exploited in the wild (Jun 2026)",
+    }
+
+    alerts: List[str] = []
+    if unifi_result.get("verdict") == "VULNERABLE":
+        alerts.append(
+            f"CRITICAL: UniFi gateway {host}:{port} vulnerable to unauthenticated RCE — patch to UniFi OS 5.0.8+ immediately"
+        )
+    if unifi_result.get("verdict") == "INCONCLUSIVE":
+        alerts.append(
+            f"Review UniFi gateway {host}:{port} version manually (detector inconclusive)"
+        )
+
+    return {
+        "checks_performed": [
+            "cisa_kev_unifi_os",
+            "cisa_kev_lantronix_inventory",
+            "dns_consistency",
+            "connectivity",
+        ],
+        "cisa_kev_catalog_date": "2026-06-24",
+        "unifi_os": unifi_result,
+        "lantronix_eds5000": lantronix_result,
+        "alerts": alerts,
+        "recommendation": (
+            "Re-run weekly via GET /api/network/kev or scripts/security/probe_unifi_kev.py; "
+            "monitor logs for /api/auth/validate-sso/ with %2f traversal (SAB-064)"
+        ),
+    }

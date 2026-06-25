@@ -1,5 +1,22 @@
 # Master Document Index
 
+## UniFi / NAS / CISA KEV (June 25, 2026)
+
+- `docs/MYCOSOFT_UNIFI_NETWORK_INFRASTRUCTURE_JUN25_2026.md` — **Canonical network consolidation**: UDM Pro Max `.1`, USW `.2`, NAS `.105`, API/mount matrix, verification commands.
+- `docs/UBIQUITI_CISA_KEV_REMEDIATION_JUN25_2026.md` — **CISA KEV remediation**: CVE-2026-34908/09/10 (UniFi PATCHED), CVE-2025-67038 (Lantronix not in inventory); `/api/network/kev` + probe scripts.
+
+## Platform recovery (June 23, 2026)
+
+- `docs/PLATFORM_RECOVERY_COMPLETE_JUN23_2026.md` — **Partial recovery**: investor v6 live, 187 untouched (HTTP-only), Legion retired, local dev env + MAS `/network` route (188 deploy blocked on SSH), MYCA 191/MQTT pending credentials.
+
+## Earth Sim Phase 7 website handoff (June 22, 2026)
+
+- `docs/EARTH_SIM_PHASE7_WEBSITE_HANDOFF_JUN22_2026.md` — **Claude website handoff**: Phases 0–7 MINDEX backend complete on VM 189, biology lock, API contracts, registry/BFF tasks for Earth Simulator, known bugs (weather SELECT, guild ETL 0 rows), MAS 188 down, credentials/SSH patterns, verification matrix.
+
+## Live audit & Claude handoff (June 21, 2026)
+
+- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` — **Live prod audit + Claude Code handoff**: page/API matrix, MAS 188 down (P0), MINDEX up, Earth Sim/device video status post PR #228, prioritized Claude tasks.
+
 ## Earth Simulator P0–P2 (June 20, 2026)
 
 - `docs/EARTH_SIMULATOR_PUBLIC_CAPABILITIES_JUN20_2026.md` — **Capabilities reference**: provenance table, P0–P2 fix summary, experiment briefs, verification commands.
@@ -910,6 +927,11 @@
 - `docs/PHASE_A_RUNTIME_STABILIZATION_MINDEX_MAS_APR10_2026.md` - Phase A execution log: MINDEX runtime recovery, live-state route activation, MAS runtime verification, and remaining blocker details (Apr 10, 2026).
 
 - docs/FUSARIUM_FULL_FRONTEND_MIDDLEWARE_BACKEND_ARCHITECTURE_APR10_2026.md � Full architecture reference for Fusarium across frontend, middleware/BFF, backend, data, edge, and platform integrations (Apr 10, 2026).
+
+## Earth Simulator + Worldview data acquisition (June 21, 2026)
+- `docs/EARTH_SIM_WORLDVIEW_DATA_ACQUISITION_PLAN_JUN21_2026.md` — Phased backend ingest plan: guild classification, broken connector fixes, 30+ new ETL sources, Worldview/Earth Sim/search exposure.
+- `docs/reports/DATA_ACQUISITION_CATALOG_JUN20_2026.md` (CODE root) — 55-dataset verified acquisition catalog with keys and endpoints.
+- `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` — Production audit Jun 21; MAS 188 unreachable.
 
 ## Worldview API (June 17, 2026)
 - `docs/WORLDVIEW_FRONTEND_AGENT_HANDOFF_JUN17_2026.md` — Status update and Codex handoff for `/agent` page: pay, query, balance, v1 API contract, next steps (not deployed).

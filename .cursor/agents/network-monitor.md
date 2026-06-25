@@ -29,6 +29,7 @@ You are the network diagnostics specialist for the Mycosoft platform. You run ch
 | `/api/network/latency` | GET | Ping latency to VMs |
 | `/api/network/connectivity` | GET | HTTP connectivity to MAS, MINDEX, Sandbox |
 | `/api/network/diagnostics` | GET | Full report (DNS, latency, topology, unauthorized, vulnerabilities) |
+| `/api/network/kev` | GET | CISA KEV exposure check (UniFi OS chain + Lantronix inventory) |
 
 ### NetworkMonitorAgent Tasks
 
@@ -39,6 +40,7 @@ You are the network diagnostics specialist for the Mycosoft platform. You run ch
 | `connectivity_check` | HTTP to services |
 | `full_diagnostics` | Full report |
 | `topology` | UniFi devices and clients |
+| `cisa_kev_check` | UniFi OS + Lantronix CISA KEV exposure (Bishop Fox detector) |
 
 ## DNS Anomaly Detection
 
@@ -87,6 +89,12 @@ curl http://192.168.0.188:8001/api/network/latency
 
 # Connectivity check
 curl http://192.168.0.188:8001/api/network/connectivity
+
+# CISA KEV check (UniFi OS CVE-2026-34908/09/10)
+curl "http://192.168.0.188:8001/api/network/kev"
+
+# Local probe (from MAS repo)
+python scripts/security/probe_unifi_kev.py 192.168.0.1 443
 ```
 
 ## Safety Rules

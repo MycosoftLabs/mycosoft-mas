@@ -6,6 +6,22 @@
 
 **Why Cursor doesn’t “see” all 2000+ docs automatically:** Cursor does not load every file in the workspace into context. Context window is limited; agents must use this index + manifest + semantic search to find and open relevant docs. **Notion** is a one-way sync target (docs pushed to Notion for humans); Cursor only sees **local files** in the workspace.
 
+## Earth Sim Phase 7 website handoff (June 22, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/EARTH_SIM_PHASE7_WEBSITE_HANDOFF_JUN22_2026.md` | **Claude Phase 7 handoff** — MINDEX 189 deploy complete, biology lock, API/BFF contracts, registry tasks, known bugs, MAS 188 down. **Give Claude this for Earth Sim + Worldview website wiring.** |
+
+## Live audit & Claude handoff (June 21, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/LIVE_AUDIT_AND_CLAUDE_HANDOFF_JUN21_2026.md` | **Live prod audit + Claude handoff** — mycosoft.com page/API matrix, MAS/MINDEX/Earth-2 status, device video fix (#228), P0–P2 Claude tasks. **Give this to Claude Code after Jun 21 deploy.** |
+
+## Earth Simulator + data acquisition (June 21, 2026)
+| Doc | Purpose |
+|-----|---------|
+| `docs/EARTH_SIM_WORLDVIEW_DATA_ACQUISITION_PLAN_JUN21_2026.md` | **Execution plan** — guild foundation (FungalTraits/FUNGuild), 7 ingest phases, fix OpenAQ/FIRMS/AirNow, expose to Earth Sim + Worldview + search. **Start here for backend science data.** |
+| `docs/reports/DATA_ACQUISITION_CATALOG_JUN20_2026.md` (CODE root) | **55-dataset catalog** — tiers A–E, verified endpoints/keys, per-experiment shopping list. |
+
 ## Earth Simulator P0–P2 (June 20, 2026)
 | Doc | Purpose |
 |-----|---------|
@@ -226,6 +242,12 @@
 | `docs/MQTT_LAN_WSS_DEPLOYMENT_AND_JETSON_HANDOFF_APR08_2026.md` | **Broker endpoints**: LAN `mqtt://192.168.0.196:1883`, public WSS; Jetson bootstrap script. |
 | `docs/MQTT_MAS_MINDEX_BRIDGE_APR13_2026.md` | **Bridge service**: Subscribe `mycobrain/#` → MAS device heartbeats + MINDEX `/telemetry/envelope`; CREP/device network visibility. |
 | `docs/MESHTASTIC_TENNMESH_INTEGRATION_COMPLETE_MAY03_2026.md` | **Meshtastic `msh/#` → MINDEX + Redis** on broker **196**; website NatureOS map activity overlay; systemd/env templates; deploy MAS for `/api/meshtastic` if missing. |
+
+## UniFi / NAS / Network (Jun 25, 2026) — canonical
+| Doc | Purpose |
+|-----|---------|
+| `docs/MYCOSOFT_UNIFI_NETWORK_INFRASTRUCTURE_JUN25_2026.md` | **Canonical consolidation**: UDM Pro Max `.1`, USW `.2`, NAS `.105`, API integration, mount matrix, CISA KEV status, verification commands. **Start here for network infra.** |
+| `docs/UBIQUITI_CISA_KEV_REMEDIATION_JUN25_2026.md` | **CISA KEV response**: CVE-2026-34908/09/10 + CVE-2025-67038; probe scripts; `/api/network/kev`. |
 
 ## Network Topology and UniFi (Mar 7, 2026)
 | Doc | Purpose |

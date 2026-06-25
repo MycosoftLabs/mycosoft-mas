@@ -17,6 +17,7 @@ from typing import Any, Dict, Optional
 
 from mycosoft_mas.agents.base_agent import BaseAgent
 from mycosoft_mas.services.network_diagnostics import (
+    run_cisa_kev_checks,
     run_connectivity_checks,
     run_dns_checks,
     run_full_diagnostics,
@@ -55,6 +56,7 @@ class NetworkMonitorAgent(BaseAgent):
             "network_connectivity_check",
             "network_full_diagnostics",
             "network_topology",
+            "network_cisa_kev_check",
         ]
         self._monitoring_interval = config.get("monitoring_interval", 300)  # 5 min
         self.metrics = {
@@ -72,6 +74,7 @@ class NetworkMonitorAgent(BaseAgent):
             "connectivity_check": self._handle_connectivity_check,
             "full_diagnostics": self._handle_full_diagnostics,
             "topology": self._handle_topology,
+            "cisa_kev_check": self._handle_cisa_kev_check,
         }
         handler = handlers.get(task_type)
         if handler:
@@ -148,6 +151,20 @@ class NetworkMonitorAgent(BaseAgent):
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
+    async def _handle_cisa_kev_check(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """Run CISA KEV exposure checks (UniFi OS + Lantronix inventory)."""
+        try:
+            result = await run_cisa_kev_checks(
+                unifi_host=task.get("unifi_host"),
+                unifi_port=task.get("unifi_port"),
+            )
+            alerts = result.get("alerts", [])
+            if alerts:
+                self.metrics["anomalies_detected"] += len(alerts)
+            return {"status": "success", "result": result, "alerts": alerts}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
     async def run_cycle(self) -> Dict[str, Any]:
         """Periodic cycle: run full diagnostics and optionally alert on anomalies."""
         try:
@@ -159,6 +176,8 @@ class NetworkMonitorAgent(BaseAgent):
                 anomalies.append(
                     f"High number of unknown/guest clients: {report.unauthorized['unknown_or_guest_clients']}"
                 )
+            if report.vulnerabilities and report.vulnerabilities.get("alerts"):
+                anomalies.extend(report.vulnerabilities["alerts"])
 
             return {
                 "tasks_processed": 1,
