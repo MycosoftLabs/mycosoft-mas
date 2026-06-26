@@ -1,4 +1,4 @@
-"""Maritime Sensor Network Integration Client — TAC-O Maritime Integration."""
+"""Maritime Sensor Network Integration Client — TAC-O / Psathyrella buoy integration."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ def _normalize_base(url: str, suffix: str = "") -> str:
 
 
 class MaritimeSensorNetworkClient:
-    """Integration client for contractor-agnostic maritime sensor networks."""
+    """Integration client for Mycosoft maritime sensor networks (Psathyrella buoy / TAC-O)."""
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         self.config = config or {}
@@ -144,10 +144,7 @@ class MaritimeSensorNetworkClient:
         return await self._post_json(f"{self.mindex_url}/taco/assessments", payload)
 
     async def send_command(self, sensor_id: str, command: str, params: Optional[Dict] = None):
-        """Send a command to a specific maritime sensor via the available bridge.
-
-        If no device command bridge is available, return an explicit unavailable state.
-        """
+        """Send a command to a specific maritime sensor via the available bridge."""
         envelope = self._build_message(sensor_id=sensor_id, data_type="command", payload={"command": command, "params": params or {}})
         logger.info("Sending maritime sensor command '%s' to sensor %s", command, sensor_id)
         try:
@@ -163,7 +160,3 @@ class MaritimeSensorNetworkClient:
                 "message": "MycoBrain command bridge does not currently expose a writable /command endpoint.",
                 "mdp_message": envelope,
             }
-
-
-# Backward-compatible alias for older imports.
-ZeetachecClient = MaritimeSensorNetworkClient

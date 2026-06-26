@@ -11,13 +11,13 @@
 
 | Data Type | CUI Category | Marking | Source |
 |---|---|---|---|
-| Raw acoustic sensor data | CTI (Critical Infrastructure) | CUI//SP-CTI | Zeeta Fuze |
-| Raw magnetic sensor data | CTI | CUI//SP-CTI | Zeeta Fuze |
+| Raw acoustic sensor data | CTI (Critical Infrastructure) | CUI//SP-CTI | MycoBrain acoustic sensor node |
+| Raw magnetic sensor data | CTI | CUI//SP-CTI | MycoBrain magnetic sensor node |
 | NLM classification results | OPSEC | CUI//SP-OPSEC | NLM Engine |
 | Tactical assessments | OPSEC | CUI//SP-OPSEC | MYCA Agents |
 | Sonar performance predictions | OPSEC | CUI//SP-OPSEC | NLM Engine |
 | Environmental baselines | Basic CUI | CUI | NOAA/HYCOM |
-| Training datasets (labeled) | CTI | CUI//SP-CTI | Zeetachec field data |
+| Training datasets (labeled) | CTI | CUI//SP-CTI | Mycosoft field collection |
 | System configuration | PRVCY | CUI//SP-PRVCY | System admin |
 
 ---
@@ -122,7 +122,7 @@
 
 ### Response
 1. Isolate affected system component
-2. Notify Zeetachec (prime contractor) within 1 hour
+2. Notify Mycosoft security lead and program manager within 1 hour
 3. Notify NUWC contracting officer within 72 hours (per DFARS 252.204-7012)
 4. Preserve forensic evidence in MINDEX audit trail
 5. Conduct root cause analysis
@@ -140,7 +140,7 @@
 | Role | CUI Access | Training Required |
 |---|---|---|
 | Morgan (CEO) | Full | CUI awareness, NIST 800-171 |
-| Zeetachec team (field) | Sensor data | CUI handling for field ops |
+| Mycosoft field team | Sensor data | CUI handling for field ops |
 | MYCA agents (automated) | All TAC-O CUI | Constrained by PolicyComplianceAgent |
 | Operators (NUWC) | Dashboard CUI | Operator CUI training |
 
@@ -149,8 +149,8 @@
 ## 9. System Components and CUI Flow
 
 ```
-Zeeta Fuze (CUI//SP-CTI) 
-  -> encrypted LoRa/RF -> Zeeta Buoy
+MycoBrain sensor node (CUI//SP-CTI) 
+  -> encrypted LoRa/RF -> SporeBase relay buoy
   -> MycoBrain (process in memory, encrypt for MDP)
   -> encrypted MDP -> Jetson (edge inference, no persist)
   -> encrypted stream -> MAS (CUI//SP-OPSEC classification)

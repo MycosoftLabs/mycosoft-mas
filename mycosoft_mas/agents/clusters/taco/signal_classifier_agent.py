@@ -18,7 +18,7 @@ from typing import Any, Dict, Optional
 import httpx
 
 from mycosoft_mas.agents.base_agent import BaseAgent
-from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
+from mycosoft_mas.integrations.maritime_sensor_client import MaritimeSensorNetworkClient
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class SignalClassifierAgent(BaseAgent):
         self.internal_token = os.getenv("MINDEX_INTERNAL_TOKEN", "").strip()
         self.api_key = os.getenv("MINDEX_API_KEY", "").strip()
         self.sensor_network_client = MaritimeSensorNetworkClient(
-            self.config.get("sensor_network_client") or self.config.get("zeetachec_client")
+            self.config.get("sensor_network_client")
         )
 
     async def process_task(self, task: Dict[str, Any]) -> Dict[str, Any]:

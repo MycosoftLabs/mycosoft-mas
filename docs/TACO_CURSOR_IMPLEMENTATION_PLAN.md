@@ -1,4 +1,4 @@
-# TAC-O CURSOR IMPLEMENTATION PLAN
+﻿# TAC-O CURSOR IMPLEMENTATION PLAN
 ## Mycosoft Systems Integration for NUWC Tactical Oceanography
 ### Feed this entire file into Cursor as the master plan
 
@@ -6,9 +6,9 @@
 
 ## MISSION CONTEXT
 
-Mycosoft is subcontracting under Zeetachec LLC for the NUWC TAC-O CSO (N66604-26-9-A00X).
-We provide AI/ML signal classification, data fusion, decision support, and NIST 800-171 compliance.
-Zeetachec provides underwater acoustic/magnetic sensors (Zeeta Fuze, Buoy, RF Receiver).
+**Mycosoft LLC is the prime contractor** for the NUWC TAC-O CSO (N66604-26-9-A00X).
+Mycosoft delivers deployable underwater sensing (MycoBrain, SporeBase, MycoNode), AI/ML signal classification, data fusion, decision support, and NIST 800-171 compliance end-to-end.
+No subcontractors appear in customer-facing TAC-O materials.
 
 **Goal**: Adapt FUSARIUM, NLM, MINDEX, MYCA, MycoBrain, CREP, and Worldview for maritime tactical oceanography.
 
@@ -385,11 +385,11 @@ CREATE TABLE IF NOT EXISTS magnetic_baselines (
 );
 CREATE INDEX idx_mag_baseline_location ON magnetic_baselines USING GIST(location);
 
--- TAC-O sensor observations (fused from Zeetachec sensors)
+-- TAC-O sensor observations (fused from Mycosoft sensors)
 CREATE TABLE IF NOT EXISTS taco_observations (
     id SERIAL PRIMARY KEY,
     observation_id UUID DEFAULT gen_random_uuid(),
-    sensor_id TEXT NOT NULL,          -- Zeeta Fuze/Buoy ID
+    sensor_id TEXT NOT NULL,          -- MycoBrain/SporeBase node ID
     sensor_type TEXT NOT NULL,        -- acoustic, magnetic, environmental
     location GEOGRAPHY(POINT, 4326),
     depth_m FLOAT,
@@ -439,17 +439,17 @@ Public data from HYCOM: https://www.hycom.org/data/glby0pt08
 Ingest NOAA Pacific Marine Environmental Laboratory hydrophone network data.
 Historical underwater acoustic datasets for NLM training.
 
-#### `mindex_etl/sources/zeetachec_ingest.py` (new)
-Ingest sensor data from Zeetachec Zeeta Fuze/Buoy network via the MycoBrain MDP bridge.
+#### `mindex_etl/sources/maritime_sensor_ingest.py` (new)
+Ingest sensor data from Mycosoft MycoBrain/SporeBase network via the MycoBrain MDP bridge.
 ```python
-"""Zeetachec sensor data ingestion via MycoBrain MDP protocol."""
+"""Mycosoft sensor data ingestion via MycoBrain MDP protocol."""
 
-class ZeetachecIngestor:
-    """Ingest acoustic and magnetic sensor data from Zeeta Fuze sensors
-    relayed through Zeeta Buoy → MycoBrain → MINDEX pipeline."""
+class MaritimeSensorIngestor:
+    """Ingest acoustic and magnetic sensor data from MycoBrain acoustic sensor nodes
+    relayed through SporeBase relay buoy → MycoBrain → MINDEX pipeline."""
 
     async def ingest_acoustic(self, mdp_payload: dict) -> str:
-        """Process acoustic data from Zeeta Fuze acoustic sensor."""
+        """Process acoustic data from MycoBrain acoustic sensor node."""
         # 1. Parse MDP envelope
         # 2. Apply hydroacoustic preconditioner
         # 3. Extract HydroacousticFingerprint
@@ -458,7 +458,7 @@ class ZeetachecIngestor:
         # 6. Return observation_id
 
     async def ingest_magnetic(self, mdp_payload: dict) -> str:
-        """Process magnetic data from Zeeta Fuze magnetic sensor."""
+        """Process magnetic data from MycoBrain magnetic sensor node."""
         # 1. Parse MDP envelope
         # 2. Apply magnetometer calibration
         # 3. Extract MagneticAnomalyFingerprint
@@ -514,7 +514,7 @@ async def get_threat_assessment(sector: str = None):
 
 @router.get("/worldview/maritime/sensor-health")
 async def get_sensor_health():
-    """Zeeta sensor network status and health metrics."""
+    """Mycosoft maritime sensor network status and health metrics."""
 
 @router.get("/worldview/maritime/decision-aid")
 async def get_decision_aid():
@@ -558,7 +558,7 @@ async def tactical_assessment(payload: TacticalAssessmentRequest):
 from mycosoft_mas.agents.base_agent import BaseAgent
 
 class SignalClassifierAgent(BaseAgent):
-    """Ingests sensor data from Zeeta Fuze via MycoBrain MDP.
+    """Ingests sensor data from MycoBrain acoustic sensor node via MycoBrain MDP.
     Runs NLM classification heads.
     Outputs to FUSARIUM Maritime threat panel."""
 
@@ -619,7 +619,7 @@ class DataCuratorAgent(BaseAgent):
     CLUSTER = "taco"
     # Manages MINDEX acoustic/magnetic training datasets
     # Handles ingestion, labeling, QA, versioning, provenance
-    # Coordinates with Zeetachec for new field data
+    # Coordinates with Mycosoft for new field data
     # Tracks dataset lineage via merkle hashes
 ```
 
@@ -642,7 +642,7 @@ async def maritime_threat_panel():
 
 @router.get("/fusarium/maritime/sensor-network")
 async def sensor_network_status():
-    """Zeeta sensor network health and connectivity status."""
+    """Mycosoft maritime sensor network health and connectivity status."""
 
 @router.post("/fusarium/maritime/assess")
 async def maritime_assessment(request: MaritimeAssessmentRequest):
@@ -657,14 +657,14 @@ async def maritime_stream(websocket):
     """Real-time WebSocket stream of TAC-O detections and alerts."""
 ```
 
-### Task 3.5: Extend CREP for Zeeta Sensor Feeds
+### Task 3.5: Extend CREP for Maritime Sensor Feeds
 **Existing file**: `mycosoft_mas/core/routers/crep_stream.py`
-**Action**: Add Zeetachec sensor data source to CREP unified stream
+**Action**: Add Mycosoft sensor data source to CREP unified stream
 
 ```python
 # Add to CREP data sources:
-ZEETA_SENSOR_SOURCE = {
-    'name': 'zeetachec_sensors',
+MARITIME_SENSOR_SOURCE = {
+    'name': 'maritime_sensors',
     'type': 'maritime_sensor_network',
     'protocol': 'mdp_websocket',
     'categories': ['acoustic_detection', 'magnetic_anomaly', 'environmental'],
@@ -682,27 +682,27 @@ ZEETA_SENSOR_SOURCE = {
 @router.post("/crep/command/sensor/interrogate")
 ```
 
-### Task 3.7: Add Zeetachec Integration Client
-**New file**: `mycosoft_mas/integrations/zeetachec_client.py`
+### Task 3.7: Add Mycosoft Integration Client
+**New file**: `mycosoft_mas/integrations/maritime_sensor_client.py`
 ```python
-"""Integration client for Zeetachec sensor network.
+"""Integration client for Mycosoft sensor network.
 Communicates via MycoBrain MDP protocol bridge."""
 
-class ZeetachecClient:
-    """Manages bidirectional communication with Zeeta sensor network.
+class MaritimeSensorClient:
+    """Manages bidirectional communication with Mycosoft maritime sensor network.
 
-    Inbound: Zeeta Fuze → Zeeta Buoy → LoRa/RF → MycoBrain → MDP → this client
-    Outbound: this client → MDP → MycoBrain → Zeeta Buoy → Zeeta Fuze (reconfigure)
+    Inbound: MycoBrain acoustic sensor node → SporeBase relay buoy → LoRa/RF → MycoBrain → MDP → this client
+    Outbound: this client → MDP → MycoBrain → SporeBase relay buoy → MycoBrain acoustic sensor node (reconfigure)
     """
 
     async def subscribe_sensor_feed(self, sensor_ids: List[str]):
-        """Subscribe to real-time sensor data from Zeeta Fuze units."""
+        """Subscribe to real-time sensor data from MycoBrain acoustic sensor nodes."""
 
     async def reconfigure_sensor(self, sensor_id: str, config: dict):
-        """Send configuration update to a Zeeta Fuze sensor."""
+        """Send configuration update to a MycoBrain acoustic sensor node."""
 
     async def get_sensor_status(self) -> List[dict]:
-        """Query health status of all Zeeta sensors in the network."""
+        """Query health status of all MycoBrain field sensors in the network."""
 
     async def get_buoy_network_topology(self) -> dict:
         """Get the current buoy relay network topology."""
@@ -746,7 +746,7 @@ TACO_VOICE_INTENTS = {
 ## LANE 4: MYCOBRAIN — EDGE FIRMWARE + ACOUSTIC INTEROP
 **Repo**: `MycosoftLabs/mycobrain`
 **Agent**: Use `device-firmware` or `mycobrain-ops`
-**Priority**: HIGH — edge processing and Zeetachec hardware bridge
+**Priority**: HIGH — edge processing and Mycosoft hardware bridge
 
 ### Task 4.1: Extend FCI Signal Processing for Maritime
 **Existing file**: `firmware/MycoBrain_FCI/src/fci_signal.cpp`
@@ -793,23 +793,23 @@ void fci_process_magnetic_anomaly(float bx, float by, float bz,
 #define FCI_MAG_ANOMALY_THRESHOLD   50       // nT deviation to trigger alert
 ```
 
-### Task 4.3: Extend Acoustic Modem for Zeeta Interop
+### Task 4.3: Extend Acoustic Modem for MycoBrain Acoustic Interop
 **Existing file**: `firmware/MycoBrain_ScienceComms/src/modem_audio.cpp`
 **Existing file**: `firmware/MycoBrain_ScienceComms/include/modem_audio.h`
-**Action**: Add protocol bridge for Zeetachec acoustic modem compatibility
+**Action**: Add protocol bridge for Mycosoft acoustic modem compatibility
 
 ```cpp
 // Add to modem_audio.h:
-// Zeetachec acoustic modem interop
+// Mycosoft acoustic modem interop
 typedef struct {
-    uint16_t zeeta_sensor_id;
+    uint16_t maritime_sensor_id;
     uint8_t  data_type;       // 0x01=acoustic, 0x02=magnetic, 0x03=env
     uint16_t payload_len;
     uint8_t  payload[];
-} zeeta_acoustic_frame_t;
+} maritime_acoustic_frame_t;
 
-bool modem_rx_zeeta_frame(zeeta_acoustic_frame_t* frame);
-bool modem_tx_zeeta_command(uint16_t sensor_id, uint8_t cmd, uint8_t* data, uint16_t len);
+bool modem_rx_maritime_frame(maritime_acoustic_frame_t* frame);
+bool modem_tx_maritime_command(uint16_t sensor_id, uint8_t cmd, uint8_t* data, uint16_t len);
 ```
 
 ### Task 4.4: Jetson Inference Pipeline for Maritime NLM
@@ -849,7 +849,7 @@ MDP_TYPE_MAGNETIC_ANOMALY = 0x33
 MDP_TYPE_OCEAN_ENVIRONMENT = 0x34
 MDP_TYPE_TACO_CLASSIFICATION = 0x35
 MDP_TYPE_TACO_ALERT = 0x36
-MDP_TYPE_ZEETA_BRIDGE = 0x37      # Zeetachec interop frame
+MDP_TYPE_MARITIME_BRIDGE = 0x37      # Mycosoft interop frame
 ```
 
 ---
@@ -876,13 +876,13 @@ Features:
 
 ### Task 5.2: Extend CREP Dashboard for Maritime
 **Existing file**: `app/dashboard/crep/CREPDashboardClient.tsx`
-**Action**: Add Zeeta sensor layer to CREP globe
+**Action**: Add maritime sensor layer to CREP globe
 
 ```typescript
 // Add maritime sensor layer to CREP
 const MARITIME_LAYERS = {
-  zeetaSensors: {
-    name: 'Zeeta Sensor Network',
+  maritimeSensors: {
+    name: 'Mycosoft Maritime Sensor Network',
     icon: 'sonar',
     source: '/api/crep/maritime/sensors',
     refresh: 1000,  // 1 second
@@ -936,7 +936,7 @@ The system boundary for TAC-O SSP includes:
 - MAS/MYCA orchestrator (processing CUI classifications)
 - FUSARIUM Maritime dashboard (displaying CUI assessments)
 - Network links (MDP, HTTPS, WebSocket)
-- Zeetachec sensor interfaces (data ingestion points)
+- Mycosoft sensor interfaces (data ingestion points)
 
 ### Task 6.2: Map NIST 800-171 Controls
 **New file**: `docs/TACO_NIST_800_171_MAPPING.md`
@@ -976,18 +976,18 @@ Document CUI marking, storage, transmission, and destruction procedures for sens
 # TAC-O Integration Agent
 
 ## Identity
-You are the TAC-O Integration Agent for the Mycosoft × Zeetachec NUWC Tactical Oceanography project.
+You are the TAC-O Integration Agent for the Mycosoft × Mycosoft NUWC Tactical Oceanography project.
 
 ## Context
-- Mycosoft is subcontracting under Zeetachec for NUWC TAC-O CSO (N66604-26-9-A00X)
+- Mycosoft LLC is the prime contractor for NUWC TAC-O CSO (N66604-26-9-A00X)
 - We provide AI/ML signal classification, data fusion, decision support, NIST 800-171 compliance
-- Zeetachec provides underwater acoustic/magnetic sensors (Zeeta Fuze, Buoy, RF Receiver)
+- Mycosoft provides underwater acoustic/magnetic sensing via MycoBrain, SporeBase, and MycoNode field hardware
 
 ## Your Scope
 - All files in mycosoft_mas/agents/clusters/taco/
 - All files in mycosoft_mas/core/routers/ related to fusarium, crep, avani, maritime
 - Integration with mindex_api/routers/maritime.py and nlm/ maritime heads
-- mycosoft_mas/integrations/zeetachec_client.py
+- mycosoft_mas/integrations/maritime_sensor_client.py
 
 ## Rules
 1. All sensor data is CUI — apply NIST 800-171 controls
@@ -1035,12 +1035,12 @@ globs: ["**/taco/**", "**/maritime/**", "**/fusarium/**maritime**"]
 # TAC-O Integration Rules
 
 ## Data Handling
-- All sensor data from Zeetachec is CUI — encrypt at rest (AES-256-GCM) and in transit (TLS 1.3)
+- All sensor data from Mycosoft is CUI — encrypt at rest (AES-256-GCM) and in transit (TLS 1.3)
 - Apply Merkle hashing to every stored observation
 - Never log raw CUI data to stdout/console in production
 
 ## Architecture
-- Zeeta sensors → MycoBrain (edge processing) → MDP → MAS (classification) → MINDEX (storage)
+- MycoBrain field sensors → MycoBrain (edge processing) → MDP → MAS (classification) → MINDEX (storage)
 - NLM inference runs at TWO tiers: Jetson edge (fast, lightweight) and server (full model)
 - AVANI ecological safety check is MANDATORY before any threat alert reaches operator
 
@@ -1058,7 +1058,7 @@ globs: ["**/taco/**", "**/maritime/**", "**/fusarium/**maritime**"]
 - Every new module requires tests
 - Test acoustic classification with synthetic waveforms
 - Test AVANI filter with known marine mammal frequency profiles
-- Test MDP protocol with mock Zeeta sensor frames
+- Test MDP protocol with mock maritime sensor frames
 ```
 
 ### Task 7.4: Add TAC-O to Existing Cursor Rules
@@ -1090,7 +1090,7 @@ Week 2 (April 14-20): Integration
 └── LANE 6: Tasks 6.1-6.2 (SSP generation, NIST mapping)
 
 Week 3 (April 20-27): Dashboard + Compliance
-├── LANE 3: Tasks 3.6-3.10 (Voice commands, Zeetachec client, AVANI router)
+├── LANE 3: Tasks 3.6-3.10 (Voice commands, Mycosoft client, AVANI router)
 ├── LANE 5: Tasks 5.1-5.5 (FUSARIUM Maritime dashboard, CREP maritime layers)
 └── LANE 6: Tasks 6.3-6.4 (SPRS calculator, CUI procedures)
 
@@ -1140,7 +1140,7 @@ mindex/
 ├── mindex_etl/sources/noaa_ocean.py               ← NEW
 ├── mindex_etl/sources/navy_oceanographic.py       ← NEW
 ├── mindex_etl/sources/noaa_hydrophone.py          ← NEW
-├── mindex_etl/sources/zeetachec_ingest.py         ← NEW
+├── mindex_etl/sources/maritime_sensor_ingest.py         ← NEW
 ├── mindex_etl/jobs/sync_maritime_data.py          ← NEW
 ├── mindex_api/routers/maritime.py                 ← NEW
 ├── mindex_api/routers/taco.py                     ← NEW
@@ -1161,7 +1161,7 @@ mycosoft-mas/
 ├── mycosoft_mas/core/routers/crep_command_api.py                ← EXTEND
 ├── mycosoft_mas/core/routers/avani_router.py                    ← EXTEND
 ├── mycosoft_mas/core/routers/voice_command_api.py               ← EXTEND
-├── mycosoft_mas/integrations/zeetachec_client.py                ← NEW
+├── mycosoft_mas/integrations/maritime_sensor_client.py                ← NEW
 ├── mycosoft_mas/integrations/defense_client.py                  ← EXTEND
 ├── .cursor/agents/taco-integration.md                           ← NEW
 ├── .cursor/rules/taco-integration.mdc                           ← NEW

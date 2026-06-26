@@ -1,8 +1,8 @@
-# TAC-O NIST 800-171 Rev. 2 Control Mapping
-## Zeetachec + Mycosoft NUWC Tactical Oceanography
+﻿# TAC-O NIST 800-171 Rev. 2 Control Mapping
+## Mycosoft LLC — NUWC Tactical Oceanography (100% Prime)
 **Date:** April 8, 2026
 **Status:** Self-Assessment In Progress
-**System Boundary:** FUSARIUM Maritime (MycoBrain, MINDEX, MAS/MYCA, Dashboard, Network Links, Zeetachec Interfaces)
+**System Boundary:** FUSARIUM Maritime (MycoBrain, MINDEX, MAS/MYCA, Dashboard, Network Links, Maritime Sensor Interfaces)
 
 ---
 
@@ -37,7 +37,7 @@ This document maps all 110 NIST SP 800-171 Rev. 2 security requirements to speci
 | 3.1.17 | Protect wireless access | Network | WPA3 encryption |
 | 3.1.18 | Control connection of mobile devices | Policy | Mobile device policy (documented) |
 | 3.1.19 | Encrypt CUI on mobile devices | Policy | N/A — no mobile CUI processing planned |
-| 3.1.20 | Verify and control connections to external systems | Integration clients | Zeetachec client validates connections |
+| 3.1.20 | Verify and control connections to external systems | Integration clients | Maritime sensor client validates connections |
 | 3.1.21 | Limit use of portable storage | Policy | USB storage policy for field equipment |
 | 3.1.22 | Control publicly accessible CUI | Dashboard | Auth required for all CUI displays |
 
@@ -130,7 +130,7 @@ This document maps all 110 NIST SP 800-171 Rev. 2 security requirements to speci
 
 | Control | Requirement | Implementation |
 |---|---|---|
-| 3.9.1 | Screen individuals before CUI access | Background checks (coordinated with Zeetachec) |
+| 3.9.1 | Screen individuals before CUI access | Background checks (coordinated with Mycosoft) |
 | 3.9.2 | Protect CUI during personnel actions | Access revocation procedures |
 
 ### 3.10 Physical Protection (6 controls)
@@ -218,4 +218,4 @@ This document maps all 110 NIST SP 800-171 Rev. 2 security requirements to speci
 | MINDEX Database | 189 | CUI storage, provenance | 3.1, 3.3, 3.8, 3.13, 3.14 |
 | FUSARIUM Dashboard | 187 | CUI display | 3.1, 3.5, 3.9, 3.13 |
 | Network Links | All | CUI transmission | 3.13 |
-| Zeetachec Interfaces | External | Data ingestion | 3.1, 3.13 |
+| Mycosoft Interfaces | External | Data ingestion | 3.1, 3.13 |

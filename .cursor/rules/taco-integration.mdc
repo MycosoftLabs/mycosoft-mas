@@ -1,18 +1,18 @@
 ---
-description: Rules for TAC-O maritime integration work (Zeetachec subcontract)
-globs: ["**/taco/**", "**/maritime/**", "**/fusarium/**maritime**", "**/zeetachec**"]
+description: Rules for TAC-O maritime integration work (Mycosoft prime / Psathyrella buoy)
+globs: ["**/taco/**", "**/maritime/**", "**/fusarium/**maritime**", "**/psathyrella**"]
 ---
 
 # TAC-O Integration Rules
 
 ## Data Handling
-- All sensor data from Zeetachec is CUI -- encrypt at rest (AES-256-GCM) and in transit (TLS 1.3)
+- All maritime sensor data is CUI -- encrypt at rest (AES-256-GCM) and in transit (TLS 1.3)
 - Apply Merkle hashing to every stored observation in MINDEX
 - Never log raw CUI data to stdout/console in production
 - Use environment variables for all credentials and API keys
 
 ## Architecture
-- Zeeta sensors -> MycoBrain (edge processing) -> MDP -> MAS (classification) -> MINDEX (storage)
+- Psathyrella buoy / maritime sensors -> MycoBrain (edge processing) -> MDP -> MAS (classification) -> MINDEX (storage)
 - NLM inference runs at TWO tiers: Jetson edge (fast, lightweight ONNX) and server (full model)
 - AVANI ecological safety check is MANDATORY before any threat alert reaches operator
 - Marine mammal filter score > 0.5 gates classification for human review
@@ -40,7 +40,7 @@ globs: ["**/taco/**", "**/maritime/**", "**/fusarium/**maritime**", "**/zeetache
 - Every new module requires tests
 - Test acoustic classification with synthetic waveforms
 - Test AVANI filter with known marine mammal frequency profiles
-- Test MDP protocol with mock Zeeta sensor frames
+- Test MDP protocol with mock Psathyrella / maritime sensor frames
 
 ## Database
 - Maritime tables: acoustic_signatures, ocean_environments, magnetic_baselines, taco_observations, taco_assessments

@@ -52,6 +52,7 @@ DEVICE_NAME = os.getenv("MYCOBRAIN_DEVICE_NAME", "Local MycoBrain")
 DEVICE_ROLE = os.getenv("MYCOBRAIN_DEVICE_ROLE", "standalone")  # mushroom1, sporebase, hyphae1, alarm, gateway, mycodrone, standalone
 DEVICE_DISPLAY_NAME = os.getenv("MYCOBRAIN_DEVICE_DISPLAY_NAME")  # Optional UI name, e.g. "Mushroom 1"
 DEVICE_LOCATION = os.getenv("MYCOBRAIN_DEVICE_LOCATION", "Unknown")
+REGISTRY_DEVICE_ID = os.getenv("MYCOBRAIN_REGISTRY_ID", "").strip()  # Stable portal id (e.g. mycobrain-COM4 on COM3)
 PUBLIC_HOST = os.getenv("MYCOBRAIN_PUBLIC_HOST")  # Optional: explicit host/URL
 HEARTBEAT_INTERVAL = int(os.getenv("MYCOBRAIN_HEARTBEAT_INTERVAL", "30"))  # seconds
 HEARTBEAT_ENABLED = os.getenv("MYCOBRAIN_HEARTBEAT_ENABLED", "true").lower() == "true"
@@ -85,6 +86,37 @@ telemetry_cache: Dict[str, Dict] = {}
 MYCOBRAIN_VIDS = {0x303A, 0x10C4, 0x1A86, 0x2341, 0x2A03, 0x046B}  # Espressif, Silabs, CH340, Arduino, USB Serial
 ALLOWED_PORTS_RAW = os.getenv("MYCOBRAIN_ALLOWED_PORTS", "").strip()
 ALLOWED_PORTS = {p.strip() for p in ALLOWED_PORTS_RAW.split(",") if p.strip()}
+MYCOBRAIN_REGISTRY_ID = os.getenv("MYCOBRAIN_REGISTRY_ID", "").strip()
+MYCOBRAIN_SERIAL_PORT = os.getenv("MYCOBRAIN_SERIAL_PORT", os.getenv("MYCOBRAIN_PORT", "COM7")).strip()
+MYCOBRAIN_DEVICE_ALIASES_RAW = os.getenv("MYCOBRAIN_DEVICE_ALIASES", "mycobrain-COM4=mycobrain-COM3")
+
+
+def _resolve_device_id(device_id: str) -> str:
+    """Map stable portal/registry id (e.g. mycobrain-COM4) to serial device id (e.g. mycobrain-COM3)."""
+    if not device_id:
+        return device_id
+    if MYCOBRAIN_REGISTRY_ID and device_id == MYCOBRAIN_REGISTRY_ID and MYCOBRAIN_SERIAL_PORT:
+        port_token = MYCOBRAIN_SERIAL_PORT.replace("/", "-").replace(":", "-").upper()
+        if not port_token.startswith("COM"):
+            port_token = f"COM{port_token}" if port_token.isdigit() else port_token
+        return f"mycobrain-{port_token}"
+    for pair in MYCOBRAIN_DEVICE_ALIASES_RAW.split(","):
+        if "=" not in pair:
+            continue
+        portal, serial = pair.split("=", 1)
+        if device_id.strip() == portal.strip():
+            return serial.strip()
+    return device_id
+
+
+def _attach_registry_identity(device: Dict[str, Any]) -> Dict[str, Any]:
+    """Expose portal vs serial ids on /devices rows."""
+    serial_id = device.get("device_id") or ""
+    registry_id = MYCOBRAIN_REGISTRY_ID or serial_id
+    device["serial_device_id"] = serial_id
+    device["registry_id"] = registry_id
+    device["portal_device_id"] = registry_id
+    return device
 
 def is_likely_mycobrain_port(p) -> bool:
     """Return True only for real USB serial devices (MycoBrain/ESP32), NOT virtual ACPI ports."""
@@ -147,7 +179,8 @@ async def list_devices():
                 devices[device_id]["status"] = "connected" if ser.is_open else "disconnected"
             except Exception:
                 devices[device_id]["status"] = "error"
-    return {"devices": list(devices.values()), "count": len(devices), "timestamp": datetime.now().isoformat()}
+    enriched = [_attach_registry_identity(dict(d)) for d in devices.values()]
+    return {"devices": enriched, "count": len(enriched), "timestamp": datetime.now().isoformat()}
 
 @app.get("/ports")
 async def scan_ports():
@@ -322,7 +355,8 @@ async def disconnect_device(device_id: str, api_key: str = Depends(verify_api_ke
 @app.post("/devices/{device_id}/command")
 async def send_command(device_id: str, command: str = Query(None), body: dict = Body(default=None), api_key: str = Depends(verify_api_key)):
     """Send a command to the device - supports both query param and JSON body"""
-    if device_id not in devices:
+    resolved_id = _resolve_device_id(device_id)
+    if resolved_id not in devices:
         raise HTTPException(status_code=404, detail=f"Device {device_id} not found")
     
     cmd = command
@@ -342,10 +376,11 @@ async def send_command(device_id: str, command: str = Query(None), body: dict = 
         raise HTTPException(status_code=400, detail="No command provided")
     
     try:
-        response = send_serial_command(device_id, cmd)
+        response = send_serial_command(resolved_id, cmd)
         return {
             "status": "ok",
             "device_id": device_id,
+            "serial_device_id": resolved_id,
             "command": cmd,
             "response": response,
             "timestamp": datetime.now().isoformat()
@@ -395,11 +430,12 @@ def map_command(cmd_type: str, params: dict) -> str:
 
 @app.get("/devices/{device_id}/telemetry")
 async def get_telemetry(device_id: str):
-    if device_id not in serial_connections:
+    resolved_id = _resolve_device_id(device_id)
+    if resolved_id not in serial_connections:
         raise HTTPException(status_code=400, detail=f"Device {device_id} not connected")
     
     try:
-        response = send_serial_command(device_id, "status", timeout=2.0)
+        response = send_serial_command(resolved_id, "status", timeout=2.0)
         
         telemetry = {"raw": response}
         
@@ -409,7 +445,7 @@ async def get_telemetry(device_id: str):
             elif "ENV addr=0x76" in line:
                 telemetry["bme2"] = parse_sensor_line(line, "env")
         
-        telemetry_cache[device_id] = telemetry
+        telemetry_cache[resolved_id] = telemetry
 
         # Push to ingest API for Supabase / Device Manager (fire-and-forget)
         if TELEMETRY_INGEST_URL:
@@ -425,7 +461,7 @@ async def get_telemetry(device_id: str):
                     readings.append(r)
                 if readings:
                     ingest_payload = {
-                        "deviceId": device_id,
+                        "deviceId": MYCOBRAIN_REGISTRY_ID or device_id,
                         "deviceType": "mycobrain",
                         "timestamp": datetime.now().isoformat(),
                         "readings": readings,
@@ -445,6 +481,7 @@ async def get_telemetry(device_id: str):
         return {
             "status": "ok",
             "device_id": device_id,
+            "serial_device_id": resolved_id,
             "telemetry": telemetry,
             "timestamp": datetime.now().isoformat()
         }
@@ -528,9 +565,14 @@ async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port
         raw_status = device.get("info", {}).get("raw_status", "")
         fw_role, fw_display_name = parse_device_role_from_status(raw_status)
         
-        # Priority: firmware-reported > env var > default
-        device_role = fw_role or DEVICE_ROLE
+        # Priority: explicit env role (field buoy) > firmware-reported > default
+        if DEVICE_ROLE and DEVICE_ROLE not in ("standalone", "gateway"):
+            device_role = DEVICE_ROLE
+        else:
+            device_role = fw_role or DEVICE_ROLE
         device_display_name = fw_display_name or DEVICE_DISPLAY_NAME  # None if not set
+
+        heartbeat_device_id = REGISTRY_DEVICE_ID or device_id
 
         # Use capability manifest for sensors/capabilities (canonical contract)
         from capability_manifest import get_manifest_for_role, get_default_manifest
@@ -540,7 +582,7 @@ async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port
         
         # Build heartbeat payload (serial ingestion; same format for future LoRa/BT/WiFi gateways)
         payload = {
-            "device_id": device_id,
+            "device_id": heartbeat_device_id,
             "device_name": DEVICE_NAME,
             "device_role": device_role,
             "device_display_name": device_display_name,
@@ -557,6 +599,9 @@ async def send_heartbeat(device_id: str, device: Dict[str, Any], host: str, port
                 "protocol": device.get("protocol", "MDP v1"),
                 "port_name": device.get("port", ""),
                 "service_version": "2.2.0",
+                "serial_device_id": device_id,
+                "mdp_device_id": device_id,
+                "portal_device_id": heartbeat_device_id,
                 # All MDP serial ids on this process (same host:port in MAS); used for multi-board gateways
                 "mdp_device_ids_on_host": list(devices.keys()),
             }

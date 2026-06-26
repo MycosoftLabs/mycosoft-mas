@@ -103,6 +103,7 @@ from mycosoft_mas.core.routers.petri_sim_v2_api import router as petri_sim_v2_ro
 from mycosoft_mas.core.routers.plasticity_api import plasticity_router
 from mycosoft_mas.core.routers.platform_api import router as platform_router
 from mycosoft_mas.core.routers.presence_api import router as presence_router
+from mycosoft_mas.core.routers.psathyrella_api import router as psathyrella_router
 from mycosoft_mas.core.routers.redteam_api import router as redteam_router
 
 # Scientific platform routers
@@ -868,6 +869,7 @@ if IDENTITY_API_AVAILABLE and identity_router is not None:
 app.include_router(telemetry_pipeline_router, tags=["telemetry-pipeline"])
 # Device Registry API for network MycoBrain devices
 app.include_router(device_registry_router, tags=["device-registry"])
+app.include_router(psathyrella_router, tags=["psathyrella"])
 app.include_router(incidents_api_router)
 app.include_router(compliance_api_router)
 # C-Suite Executive Assistant API (heartbeat, reporting, escalation)

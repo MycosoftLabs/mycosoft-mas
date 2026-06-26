@@ -1,8 +1,21 @@
+> ## ⚠️ SUPERSEDED — DO NOT USE FOR CUSTOMER-FACING OR PROPOSAL CONTENT
+>
+> **Status:** Obsolete as of June 25, 2026. This document described a Zeetachec (prime) + Mycosoft (sub) teaming structure that is **no longer active**.
+>
+> **Current position:** **Mycosoft LLC is 100% prime** on NUWC TAC-O (N66604-26-9-A00X). No subcontractors in customer-facing materials.
+>
+> **Use instead:**
+> - `docs/PSATHYRELLA_AUTONOMOUS_OPS_PLAN_JUN25_2026.md` — Mycosoft-prime TAC-O narrative and field architecture
+> - `docs/Mycosoft_TAC-O_Solution_Brief` — canonical prime solution brief (when published)
+>
+> Retained below for historical reference only.
+
 # Zeetachec + Mycosoft Joint Teaming Plan
 ## NUWC TAC-O CSO — N66604-26-9-A00X
 ### Tactical Oceanography Supporting Full-Spectrum Undersea Warfare
 
 **Date:** April 8, 2026
+**Superseded:** June 25, 2026
 **Deadline:** April 17, 2026 at 2:00 PM EDT (9 days)
 **Vehicle:** OTA Prototype under 10 U.S.C. § 4022
 **Ceiling:** Up to $80M (multiple awards, 5-year umbrella)
