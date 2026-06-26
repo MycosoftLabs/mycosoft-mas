@@ -19,7 +19,7 @@ from typing import Any, Dict, Optional, Set
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
-from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
+from mycosoft_mas.integrations.maritime_sensor_client import MaritimeSensorNetworkClient
 from mycosoft_mas.realtime.redis_pubsub import (
     Channel,
     PubSubMessage,

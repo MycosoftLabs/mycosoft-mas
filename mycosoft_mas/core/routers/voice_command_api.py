@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 
 from mycosoft_mas.agents.clusters.taco.ocean_predictor_agent import OceanPredictorAgent
 from mycosoft_mas.agents.clusters.taco.signal_classifier_agent import SignalClassifierAgent
-from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
+from mycosoft_mas.integrations.maritime_sensor_client import MaritimeSensorNetworkClient
 
 logger = logging.getLogger("VoiceCommandAPI")
 

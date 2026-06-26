@@ -21,7 +21,7 @@ from mycosoft_mas.agents.clusters.taco import (
     PolicyComplianceAgent,
     SignalClassifierAgent,
 )
-from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
+from mycosoft_mas.integrations.maritime_sensor_client import MaritimeSensorNetworkClient
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

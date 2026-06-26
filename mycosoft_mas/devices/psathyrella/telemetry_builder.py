@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import re
+import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -115,6 +117,96 @@ def _vision_url(device_id: str, source: str) -> Optional[str]:
     return configured or None
 
 
+def _parse_bme_from_status_text(text: str) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]], bool]:
+    """Parse MycoBrain `status` / telemetry raw text (matches website sensors route)."""
+    if not text:
+        return None, None, False
+
+    def _status_slot(label: str, default_address: str, default_label: str) -> Optional[Dict[str, Any]]:
+        match = re.search(
+            rf"{label}:\s+present=(YES|NO)\s+addr=([^\s]+)\s+begin=(OK|FAIL)\s+sub=(OK|FAIL)",
+            text,
+            re.I,
+        )
+        if not match:
+            return None
+        slot: Dict[str, Any] = {
+            "present": match.group(1).upper() == "YES",
+            "address": match.group(2) or default_address,
+            "label": default_label,
+        }
+        live = re.search(
+            rf"{label} addr={re.escape(default_address)}.*?T=([\d.]+)C RH=([\d.]+)% P=([\d.]+)hPa.*?Gas=(\d+)Ohm IAQ=([\d.]+) acc=(\d+).*?CO2eq=([\d.]+) VOC=([\d.]+)",
+            text,
+            re.I | re.S,
+        )
+        if live:
+            slot.update(
+                {
+                    "temperature": float(live.group(1)),
+                    "humidity": float(live.group(2)),
+                    "pressure": float(live.group(3)),
+                    "gas_resistance": float(live.group(4)),
+                    "iaq": float(live.group(5)),
+                    "iaq_accuracy": float(live.group(6)),
+                    "co2_equivalent": float(live.group(7)),
+                    "voc_equivalent": float(live.group(8)),
+                }
+            )
+        return _map_bme(slot, default_label=default_label, default_address=default_address)
+
+    bme_a = _status_slot("AMB", "0x77", "BME688 A - I2C-1 AMB")
+    bme_b = _status_slot("ENV", "0x76", "BME688 B - I2C-2 ENV")
+
+    # MDP JSON telemetry lines mixed into serial output
+    for line in text.splitlines():
+        trimmed = line.strip()
+        if not trimmed.startswith("{") and "{" in trimmed:
+            trimmed = trimmed[trimmed.index("{"):]
+        if not trimmed.startswith("{"):
+            continue
+        try:
+            record = json.loads(trimmed)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            continue
+        if not isinstance(record, dict):
+            continue
+        block = record.get("bme688")
+        if isinstance(block, dict):
+            if block.get("a"):
+                bme_a = _map_bme(
+                    block["a"] if isinstance(block["a"], dict) else None,
+                    default_label="BME688 A - I2C-1 AMB",
+                    default_address="0x77",
+                )
+            if block.get("b"):
+                bme_b = _map_bme(
+                    block["b"] if isinstance(block["b"], dict) else None,
+                    default_label="BME688 B - I2C-2 ENV",
+                    default_address="0x76",
+                )
+        if record.get("bme1"):
+            bme_a = _map_bme(
+                record["bme1"] if isinstance(record["bme1"], dict) else None,
+                default_label="BME688 A - I2C-1 AMB",
+                default_address="0x77",
+            )
+        if record.get("bme2"):
+            bme_b = _map_bme(
+                record["bme2"] if isinstance(record["bme2"], dict) else None,
+                default_label="BME688 B - I2C-2 ENV",
+                default_address="0x76",
+            )
+
+    sensors_ok = bool(
+        (bme_a and bme_a.get("present"))
+        or (bme_b and bme_b.get("present"))
+        or (bme_a and bme_a.get("temperature") is not None)
+        or (bme_b and bme_b.get("temperature") is not None)
+    )
+    return bme_a, bme_b, sensors_ok
+
+
 async def _fetch_bme_from_mycobrain(
     base_url: str,
     mdp_device_id: str,
@@ -122,11 +214,27 @@ async def _fetch_bme_from_mycobrain(
 ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]], Optional[str], bool]:
     """Return (bme_a, bme_b, timestamp_iso, ok)."""
     headers = headers or {}
+    base = base_url.rstrip("/")
     try:
         async with httpx.AsyncClient(timeout=12.0) as client:
+            # Prefer MycoBrain service telemetry (runs `status` on serial — works on COM3 firmware).
+            telemetry_res = await client.get(
+                f"{base}/devices/{mdp_device_id}/telemetry",
+                headers=headers,
+            )
+            if telemetry_res.status_code == 200:
+                payload = telemetry_res.json()
+                telemetry = payload.get("telemetry") if isinstance(payload.get("telemetry"), dict) else {}
+                raw = telemetry.get("raw") or payload.get("response") or ""
+                if isinstance(raw, str) and raw.strip():
+                    bme_a, bme_b, sensors_ok = _parse_bme_from_status_text(raw)
+                    ts = payload.get("timestamp") or datetime.now(timezone.utc).isoformat()
+                    if sensors_ok or bme_a or bme_b:
+                        return bme_a, bme_b, ts, sensors_ok
+
             response = await client.post(
-                f"{base_url.rstrip('/')}/devices/{mdp_device_id}/command",
-                json={"command": {"cmd": "read_sensors"}},
+                f"{base}/devices/{mdp_device_id}/command",
+                json={"command": "status"},
                 headers=headers,
             )
             if response.status_code != 200:
@@ -150,15 +258,9 @@ async def _fetch_bme_from_mycobrain(
                         bool(a or b),
                     )
             text = str(raw)
-            bme_a: Optional[Dict[str, Any]] = None
-            bme_b: Optional[Dict[str, Any]] = None
-            for line in text.splitlines():
-                if "AMB addr=0x77" in line or '"a"' in line:
-                    bme_a = _map_bme({"raw": line}, default_label="BME688 A - I2C-1 AMB", default_address="0x77")
-                if "ENV addr=0x76" in line or '"b"' in line:
-                    bme_b = _map_bme({"raw": line}, default_label="BME688 B - I2C-2 ENV", default_address="0x76")
+            bme_a, bme_b, sensors_ok = _parse_bme_from_status_text(text)
             ts = payload.get("timestamp") or datetime.now(timezone.utc).isoformat()
-            return bme_a, bme_b, ts, bool(bme_a or bme_b)
+            return bme_a, bme_b, ts, sensors_ok
     except Exception:
         return None, None, None, False
 

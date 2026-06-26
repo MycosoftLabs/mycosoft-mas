@@ -13,7 +13,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from mycosoft_mas.crep import get_crep_command_bus
-from mycosoft_mas.integrations.zeetachec_client import MaritimeSensorNetworkClient
+from mycosoft_mas.integrations.maritime_sensor_client import MaritimeSensorNetworkClient
 
 logger = logging.getLogger(__name__)
 
