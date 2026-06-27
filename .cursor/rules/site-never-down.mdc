@@ -1,0 +1,65 @@
+# Site Never Down — URGENT Policy (All Agents)
+
+## CRITICAL: Morgan policy — Jun 26, 2026
+
+When **any** site-down report arrives (GitHub Actions site monitor, production watchdog, Morgan message, Cloudflare error 1033, sandbox/prod unreachable):
+
+1. **Fix immediately** — do not wait for Morgan to SSH or run scripts manually.
+2. **Email Morgan** — ensure alert path fired (SMTP via GitHub secrets or document if secrets missing).
+3. **Never bypass blue/green proxy** on VM 187 — `mycosoft-website-proxy` MUST own host `:3000`.
+
+Site must **NEVER** stay down.
+
+---
+
+## Forbidden deploy patterns
+
+| Do NOT | Why |
+|--------|-----|
+| `docker run -p 3000:3000 mycosoft-website` without proxy | Bypasses nginx; wrong network; public outage |
+| Declare deploy success without HTTPS check | Origin can be up while Cloudflare/tunnel is broken |
+| Manual hotfix that stops proxy and binds app on `:3000` | Jun 26 outage root cause |
+
+---
+
+## Required deploy path (VM 187)
+
+1. Build or pull image (tag `mycosoft-always-on-mycosoft-website:latest` or GHCR production tag).
+2. `bash scripts/blue-green-bootstrap.sh` if `mycosoft-website-proxy` is missing or unhealthy.
+3. `IMAGE=... PUBLIC_HOST=sandbox.mycosoft.com|mycosoft.com bash scripts/blue-green-deploy.sh`
+4. Verify proxy: `curl -fsS http://127.0.0.1:3000/healthz`
+5. Verify public: `https://sandbox.mycosoft.com/` and/or `https://mycosoft.com/` → HTTP **200**
+6. Purge Cloudflare cache after successful cutover.
+
+Use `_rebuild_sandbox.py` or `scripts/group_release_deploy.py` — both enforce these guardrails.
+
+---
+
+## Monitoring & alerts
+
+| Workflow | Repo | Schedule | On failure |
+|----------|------|----------|------------|
+| `site-health-monitor.yml` | WEBSITE | Every 5 min | Email + GitHub issue + optional n8n webhook |
+| `production-watchdog.yml` | WEBSITE | Every 5 min | Email + Instant Deploy + GitHub issue |
+
+GitHub secrets required for email: `NOTIFY_EMAIL`, `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`.
+
+---
+
+## Agent protocol on site-down
+
+1. Load credentials; SSH VM 187.
+2. Check `docker ps` — proxy must be `mycosoft-website-proxy` on `:3000`.
+3. Run bootstrap + blue-green deploy if needed.
+4. Verify public URLs with curl.
+5. Purge Cloudflare.
+6. Document in dated outage doc if new root cause.
+
+---
+
+## Cross-references
+
+- `docs/SITE_OUTAGE_JUN26_2026.md`
+- `scripts/blue-green-bootstrap.sh`
+- `scripts/blue-green-deploy.sh`
+- `.github/workflows/site-health-monitor.yml`

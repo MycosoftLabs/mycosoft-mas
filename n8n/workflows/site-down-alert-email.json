@@ -1,0 +1,62 @@
+{
+  "name": "Site Down Alert — Email Morgan",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "site-down-alert",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-site-down",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "site-down-alert"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.N8N_ALERT_FROM || 'myca@mycosoft.org' }}",
+        "toEmail": "={{ $json.notify_email || $env.NOTIFY_EMAIL }}",
+        "subject": "=🔴 URGENT: Mycosoft site DOWN — {{ $json.source || 'monitor' }}",
+        "emailType": "text",
+        "message": "=Event: {{ $json.event || 'site_down' }}\nSource: {{ $json.source }}\nSummary: {{ $json.summary }}\nRun: {{ $json.run_url }}\n\nFix immediately — site must not stay down."
+      },
+      "id": "send-email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [480, 300],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_N8N_SMTP_CREDENTIAL_ID",
+          "name": "Mycosoft SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    { "name": "monitoring" },
+    { "name": "urgent" }
+  ]
+}
