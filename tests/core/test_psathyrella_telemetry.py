@@ -29,10 +29,10 @@ REQUIRED_TOP_LEVEL = {
 @pytest.mark.asyncio
 async def test_buoy_telemetry_envelope_shape(monkeypatch: pytest.MonkeyPatch) -> None:
     async def _fake_fetch(*_args, **_kwargs):
-        return None, None, None, False
+        return None, None, None, False, {}
 
     monkeypatch.setattr(
-        "mycosoft_mas.devices.psathyrella.telemetry_builder._fetch_bme_from_mycobrain",
+        "mycosoft_mas.devices.psathyrella.telemetry_builder._fetch_mycobrain_bundle",
         _fake_fetch,
     )
 
@@ -66,10 +66,10 @@ async def test_buoy_telemetry_maps_bme_when_present(monkeypatch: pytest.MonkeyPa
             "address": "0x77",
             "label": "BME688 A - I2C-1 AMB",
         }
-        return bme_a, None, "2026-06-25T12:00:00+00:00", True
+        return bme_a, None, "2026-06-25T12:00:00+00:00", True, {}
 
     monkeypatch.setattr(
-        "mycosoft_mas.devices.psathyrella.telemetry_builder._fetch_bme_from_mycobrain",
+        "mycosoft_mas.devices.psathyrella.telemetry_builder._fetch_mycobrain_bundle",
         _fake_fetch,
     )
 
@@ -78,6 +78,52 @@ async def test_buoy_telemetry_maps_bme_when_present(monkeypatch: pytest.MonkeyPa
     assert envelope["bme"]["a"]["temperature"] == 22.5
     assert envelope["bme"]["a"]["gasResistance"] == 125000.0
     assert envelope["bme"]["b"] is None
+
+
+@pytest.mark.asyncio
+async def test_buoy_telemetry_merges_mycobrain_payload(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def _fake_fetch(*_args, **_kwargs):
+        return None, None, "2026-06-26T12:00:00+00:00", False, {
+            "gps": {"lat": 32.57, "lon": -117.12, "satellites": 6},
+            "power": {"battery_v": 12.6, "battery_soc_pct": 78, "solar_input_w": 42.0},
+            "pose": {"heading_deg": 90, "speed_kn": 1.5, "depth_m": 3.0},
+            "comms": {
+                "links": {"wifi": {"connected": True, "rssi_dbm": -62}},
+                "hydrophone": {"level_db": -48.0, "peak_bearing_deg": 135},
+            },
+        }
+
+    monkeypatch.setattr(
+        "mycosoft_mas.devices.psathyrella.telemetry_builder._fetch_mycobrain_bundle",
+        _fake_fetch,
+    )
+
+    envelope = await build_buoy_telemetry(PSATHYRELLA_DEVICE_ID)
+    assert envelope["pose"]["lat"] == 32.57
+    assert envelope["pose"]["speedKn"] == 1.5
+    assert envelope["pose"]["gpsLock"] == "locked"
+    assert envelope["power"]["batteryVoltage"] == 12.6
+    assert envelope["power"]["batterySocPct"] == 78
+    assert envelope["comms"]["radios"][2]["kind"] == "wifi"
+    assert envelope["comms"]["radios"][2]["connected"] is True
+    assert envelope["comms"]["hydrophone"]["levelDb"] == -48.0
+
+
+def test_sine_ingest_metadata_tokens() -> None:
+    from mycosoft_mas.devices.psathyrella.sine_ingest import build_sine_ingest_metadata
+
+    hydro = build_sine_ingest_metadata(
+        device_id="psathyrella-buoy-com4",
+        sensor_type="hydrophone-lf",
+    )
+    assert "psathyrella" in hydro["source_id"]
+    assert hydro["acoustic_domain"] == "water"
+
+    mems = build_sine_ingest_metadata(
+        device_id="psathyrella-buoy-com4",
+        sensor_type="mems-air",
+    )
+    assert mems["acoustic_domain"] == "air"
 
 
 def test_psathyrella_api_telemetry_route(monkeypatch: pytest.MonkeyPatch) -> None:
