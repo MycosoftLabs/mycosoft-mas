@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
+import time
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, AsyncIterator, Dict, List, Literal, Optional
 
 import httpx
 import redis.asyncio as redis
@@ -28,6 +30,7 @@ from mycosoft_mas.devices.psathyrella.command_handler import (
 )
 from mycosoft_mas.devices.psathyrella.comms_bridge import get_psathyrella_comms_bridge
 from mycosoft_mas.devices.psathyrella.constants import PSATHYRELLA_DEVICE_ID
+from mycosoft_mas.devices.psathyrella.sine_ingest import ingest_acoustic_blob
 from mycosoft_mas.devices.psathyrella.telemetry_builder import build_buoy_telemetry
 
 logger = logging.getLogger(__name__)
@@ -91,7 +94,14 @@ class CameraPointRequest(BaseModel):
 
 
 class CommsUpdateRequest(BaseModel):
-    action: Literal["set_mode", "ingest_radio", "ingest_acoustic", "flush_store_forward", "set_backhaul"] = "set_mode"
+    action: Literal[
+        "set_mode",
+        "ingest_radio",
+        "ingest_acoustic",
+        "flush_store_forward",
+        "flush_mt",
+        "set_backhaul",
+    ] = "set_mode"
     radio_mode: str = "auto"
     bridge_enabled: Optional[bool] = None
     frame: Dict[str, Any] = Field(default_factory=dict)
@@ -260,6 +270,67 @@ def _vision_url_for(device_id: str, source: VisionSource) -> Optional[str]:
     if source == VisionSource.RADAR:
         return "/api/natureos/bluesight/observations/stream"
     return None
+
+
+def _chain_of_custody_for_contact(
+    device_id: str,
+    acoustic_payload: Dict[str, Any],
+    classification: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    """SHA-256 over canonical contact fields when real classification exists."""
+    if classification.get("status") != "ok":
+        return None
+    canonical = {
+        "deviceId": device_id,
+        "sensor": "hydrophone",
+        "capturedAtMs": acoustic_payload.get("captured_at_ms") or acoustic_payload.get("timestamp"),
+        "bearingDeg": acoustic_payload.get("bearing_deg") or acoustic_payload.get("bearingDeg"),
+        "rangeM": acoustic_payload.get("range_m") or acoustic_payload.get("rangeM"),
+        "classifiedAs": classification.get("label") or classification.get("classifiedAs"),
+        "modelId": classification.get("model_id") or classification.get("modelId"),
+        "modelVersion": classification.get("model_version") or classification.get("modelVersion"),
+    }
+    if not any(v is not None for v in canonical.values()):
+        return None
+    serialized = json.dumps(canonical, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+    return {"hash": digest, "merkleRoot": None, "avaniVerified": False}
+
+
+async def _stream_events(device_id: str, request: Request) -> AsyncIterator[str]:
+    """Multiplexed SSE: telemetry snapshots + keepalive (command_ack/contact when wired)."""
+    catalog_id = PSATHYRELLA_DEVICE_ID if device_id.startswith("psathyrella") else device_id
+    interval_s = float(os.getenv("PSATHYRELLA_STREAM_INTERVAL_S", "2.5"))
+    try:
+        while True:
+            if await request.is_disconnected():
+                break
+            at_ms = int(time.time() * 1000)
+            telemetry = await build_buoy_telemetry(catalog_id)
+            frame = {"type": "telemetry", "atMs": at_ms, "telemetry": telemetry}
+            yield f"event: telemetry\ndata: {json.dumps(frame, default=str)}\n\n"
+            await asyncio.sleep(interval_s)
+    except asyncio.CancelledError:
+        return
+
+
+@router.get("/{device_id}/stream")
+async def psathyrella_stream(device_id: str, request: Request) -> StreamingResponse:
+    """
+    Multiplexed SSE for GCS passthrough (§2.2 spec).
+
+    Emits ``telemetry`` events on the poll interval; ``command_ack`` / ``contact`` /
+    ``mission`` / ``alert`` events are published when async paths land.
+    """
+    return StreamingResponse(
+        _stream_events(device_id, request),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/telemetry")
@@ -465,7 +536,29 @@ async def update_comms(device_id: str, request: CommsUpdateRequest) -> Dict[str,
         classification: Dict[str, Any] = {"status": "pending", "reason": "classification_not_requested"}
         if request.classify_acoustic:
             classification = await _classify_acoustic(request.acoustic_payload)
+        chain = _chain_of_custody_for_contact(device_id, request.acoustic_payload, classification)
+        if chain:
+            request.acoustic_payload.setdefault("chainOfCustody", chain)
         persist = await _persist_taco_observation(device_id, request.acoustic_payload, classification)
+        sine_ingest: Dict[str, Any] = {"status": "skipped", "reason": "no_blob_uri"}
+        blob_uri = (
+            request.acoustic_payload.get("blob_uri")
+            or request.acoustic_payload.get("blobUri")
+            or request.acoustic_payload.get("abs_path")
+        )
+        if isinstance(blob_uri, str) and blob_uri.strip():
+            sensor_type = str(
+                request.acoustic_payload.get("sensor_type")
+                or request.acoustic_payload.get("sensorType")
+                or "hydrophone"
+            )
+            duration_s = float(request.acoustic_payload.get("duration_s") or request.acoustic_payload.get("durationS") or 0)
+            sine_ingest = await ingest_acoustic_blob(
+                device_id=device_id,
+                sensor_type=sensor_type,
+                blob_uri=blob_uri.strip(),
+                duration_s=duration_s,
+            )
         await _comms_bridge.publish_acoustic_event(
             device_id,
             {
@@ -474,6 +567,8 @@ async def update_comms(device_id: str, request: CommsUpdateRequest) -> Dict[str,
                 "translation": translation,
                 "classification": classification,
                 "observation_ingest": persist,
+                "sine_ingest": sine_ingest,
+                "chainOfCustody": chain,
                 "timestamp": queued.received_at,
             },
         )
@@ -484,7 +579,13 @@ async def update_comms(device_id: str, request: CommsUpdateRequest) -> Dict[str,
             "translation": translation,
             "classification": classification,
             "observation_ingest": persist,
+            "sine_ingest": sine_ingest,
+            "chainOfCustody": chain,
         }
+
+    if request.action == "flush_mt":
+        drained = _comms_bridge.flush_mt_queue(device_id, limit=request.flush_limit)
+        return {"status": "ok", "action": request.action, "frames": drained, "count": len(drained)}
 
     if request.action == "flush_store_forward":
         drained = _comms_bridge.flush_store_forward(device_id, limit=request.flush_limit)

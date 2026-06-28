@@ -17,6 +17,7 @@ from mycosoft_mas.devices.psathyrella.constants import (
 from mycosoft_mas.devices.psathyrella.mission_executor import get_mission_executor, load_mission_plan
 from mycosoft_mas.devices.psathyrella.runtime_state import (
     VALID_BEARERS,
+    derive_contact_state,
     get_autonomy_controller,
     get_runtime,
 )
@@ -136,7 +137,37 @@ async def handle_mdp_command(
             out["response"] = response
         return out
 
+    def _contact_state_now() -> str:
+        sat = bridge.get_satellite_state(catalog_id)
+        rf_connected = runtime.preferred_bearer in {"ble", "cellular", "wifi", "lora"} and bool(
+            device.get("status") == "online" or device
+        )
+        return derive_contact_state(
+            rf_connected=rf_connected,
+            sat_connected=bool(sat.get("connected")),
+            sat_last_contact_ms_ago=sat.get("lastContactMsAgo"),
+        )
+
+    def _maybe_queue_mt(payload: Dict[str, Any], *, ack_bearer: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        if _contact_state_now() != "dark":
+            return None
+        bridge.enqueue_mt_command(
+            catalog_id,
+            {"target": target, "cmd": cmd, "params": params, "clientCommandId": client_command_id},
+            bearer=bridge.select_bearer(catalog_id),
+            priority=0,
+        )
+        return _wrap(
+            {"ok": True, "cmd": cmd, "queued": True},
+            state="sent",
+            detail="queued for next pass",
+            ack_bearer=ack_bearer or bridge.select_bearer(catalog_id),
+        )
+
     if cmd == "nav.thrust_vector":
+        queued = _maybe_queue_mt({"heading": params.get("heading"), "magnitude": params.get("magnitude")})
+        if queued:
+            return queued
         heading = float(params.get("heading", 0))
         magnitude = float(params.get("magnitude", 0))
         yaw_rate = float(params.get("yaw_rate", 0))
@@ -312,8 +343,15 @@ async def handle_mdp_command(
 
 
 async def handle_legacy_operator_command(device_id: str, operator_cmd: str) -> Dict[str, Any]:
-    """Forward legacy operator strings (led, buzzer, hydrophone) to MycoBrain."""
+    """Forward legacy operator strings (led, buzzer, hydrophone, gps) to MycoBrain."""
     registry_id = resolve_registry_device_id(device_id)
+    normalized = operator_cmd.strip().lower()
+    if normalized.startswith("psa_gps_passthrough") or normalized.startswith("gps passthrough"):
+        return await device_registry_api.send_device_command(
+            device_id=registry_id,
+            cmd=device_registry_api.DeviceCommand(command="psa_gps_passthrough", timeout=8.0),
+            use_mycorrhizae=False,
+        )
     return await device_registry_api.send_device_command(
         device_id=registry_id,
         cmd=device_registry_api.DeviceCommand(command=operator_cmd.strip(), timeout=8.0),

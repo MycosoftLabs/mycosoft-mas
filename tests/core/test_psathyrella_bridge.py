@@ -12,6 +12,13 @@ def test_radio_acoustic_round_trip() -> None:
     assert translated["radio_frame"] == frame
 
 
+def test_set_bearer_updates_state() -> None:
+    bridge = PsathyrellaCommsBridge()
+    state = bridge.set_bearer("psathyrella-buoy-com4", "starlink")
+    assert state["preferred_bearer"] == "starlink"
+    assert state["satellite"]["bearer"] == "starlink"
+
+
 def test_store_forward_enqueue_and_flush() -> None:
     bridge = PsathyrellaCommsBridge()
 

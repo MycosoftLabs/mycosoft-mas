@@ -152,8 +152,26 @@ async def fetch_mission_plan(device_id: str) -> Optional[MissionPlanRecord]:
         return None
 
 
+def _point_in_polygon(lat: float, lon: float, polygon: List[List[float]]) -> bool:
+    """Ray-casting point-in-polygon for geofence [[lat,lon], ...]."""
+    if len(polygon) < 3:
+        return True
+    inside = False
+    j = len(polygon) - 1
+    for i in range(len(polygon)):
+        yi, xi = polygon[i][0], polygon[i][1]
+        yj, xj = polygon[j][0], polygon[j][1]
+        intersect = ((yi > lat) != (yj > lat)) and (
+            lon < (xj - xi) * (lat - yi) / (yj - yi + 1e-12) + xi
+        )
+        if intersect:
+            inside = not inside
+        j = i
+    return inside
+
+
 class PsathyrellaMissionExecutor:
-    """Minimal shadow executor — tracks active mission on MAS; edge is authoritative when dark."""
+    """Shadow behavior-tree executor on MAS; edge Jetson copy is authoritative when dark."""
 
     def __init__(self, device_id: str) -> None:
         self.device_id = device_id
@@ -161,23 +179,157 @@ class PsathyrellaMissionExecutor:
         self.active_task_id: Optional[str] = None
         self.phase: str = "idle"
         self.aborted: bool = False
+        self.geofence_breach: bool = False
+        self.comms_lost: bool = False
+        self.last_heartbeat_ms: Optional[int] = None
 
     def load(self, record: MissionPlanRecord) -> None:
         self.active_plan = record
         self.active_task_id = record.tasks[0].id if record.tasks else None
-        self.phase = "loaded"
+        self.phase = "executing" if record.tasks else "loaded"
         self.aborted = False
+        self.geofence_breach = False
+        self.comms_lost = False
 
     def abort(self) -> None:
         self.aborted = True
         self.phase = "aborted"
         self.active_task_id = None
 
+    def record_heartbeat(self, at_ms: Optional[int] = None) -> None:
+        self.last_heartbeat_ms = at_ms if at_ms is not None else int(datetime.now(timezone.utc).timestamp() * 1000)
+        if self.comms_lost:
+            self.comms_lost = False
+
+    def tick(
+        self,
+        *,
+        pose: Optional[Dict[str, Any]] = None,
+        heartbeat_timeout_s: int = 120,
+        now_ms: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        One behavior-tree evaluation step (~1 Hz on edge; shadow mirror on MAS).
+
+        Returns guidance hints and alert codes for SSE/telemetry consumers.
+        """
+        now = now_ms if now_ms is not None else int(datetime.now(timezone.utc).timestamp() * 1000)
+        alerts: List[Dict[str, Any]] = []
+        guidance: Dict[str, Any] = {"status": "idle", "mode_hint": "STATION_KEEP"}
+
+        if self.aborted or self.active_plan is None:
+            return {"phase": self.phase, "alerts": alerts, "guidance": guidance}
+
+        if self.last_heartbeat_ms is not None:
+            elapsed_s = (now - self.last_heartbeat_ms) / 1000.0
+            if elapsed_s > heartbeat_timeout_s:
+                self.comms_lost = True
+                policy = self.active_plan.comms_loss_policy
+                if policy == "rtl":
+                    guidance["mode_hint"] = "RTL"
+                elif policy == "hold":
+                    guidance["mode_hint"] = "STATION_KEEP"
+                else:
+                    guidance["mode_hint"] = "AUTO"
+                alerts.append({"code": "COMMS_LOST", "level": "warn", "policy": policy})
+
+        lat = _num_pose(pose, "lat")
+        lon = _num_pose(pose, "lon")
+        geofence = self.active_plan.geofence
+        if geofence and lat is not None and lon is not None:
+            if not _point_in_polygon(lat, lon, geofence):
+                self.geofence_breach = True
+                guidance["mode_hint"] = "RTL"
+                alerts.append({"code": "GEOFENCE_BREACH", "level": "crit"})
+
+        task = self._active_task()
+        if task is None:
+            self.phase = "complete"
+            guidance["status"] = "mission_complete"
+            return {"phase": self.phase, "alerts": alerts, "guidance": guidance, "activeTaskId": None}
+
+        guidance["activeTaskId"] = task.id
+        guidance["taskKind"] = task.kind
+        guidance["status"] = "executing"
+        self.phase = "executing"
+
+        if task.kind == "transit" and task.lat is not None and task.lon is not None:
+            guidance["mode_hint"] = "GUIDED"
+            guidance["target"] = {"lat": task.lat, "lon": task.lon}
+            if lat is not None and lon is not None:
+                dist_m = _haversine_m(lat, lon, task.lat, task.lon)
+                guidance["distanceM"] = round(dist_m, 1)
+                if dist_m <= float(task.radius_m or 15.0):
+                    self._advance_task()
+        elif task.kind == "loiter":
+            guidance["mode_hint"] = "STATION_KEEP"
+            if task.lat is not None and task.lon is not None:
+                guidance["target"] = {"lat": task.lat, "lon": task.lon, "loiterS": task.loiter_s}
+        elif task.kind == "station_keep":
+            guidance["mode_hint"] = "STATION_KEEP"
+        elif task.kind == "survey":
+            guidance["mode_hint"] = "AUTO"
+            guidance["surveyRadiusM"] = task.radius_m
+        elif task.kind == "track":
+            guidance["mode_hint"] = "SIGNAL_FOLLOW"
+        elif task.kind == "solar_reposition":
+            guidance["mode_hint"] = "STATION_KEEP"
+            guidance["solarReposition"] = True
+
+        return {
+            "phase": self.phase,
+            "missionId": self.active_plan.id,
+            "activeTaskId": self.active_task_id,
+            "alerts": alerts,
+            "guidance": guidance,
+            "commsLossPolicy": self.active_plan.comms_loss_policy,
+            "geofenceBreached": self.geofence_breach,
+        }
+
+    def _active_task(self) -> Optional[MissionTask]:
+        if not self.active_plan or not self.active_task_id:
+            return None
+        return next((t for t in self.active_plan.tasks if t.id == self.active_task_id), None)
+
+    def _advance_task(self) -> None:
+        if not self.active_plan or not self.active_task_id:
+            return
+        ids = [t.id for t in self.active_plan.tasks]
+        try:
+            idx = ids.index(self.active_task_id)
+        except ValueError:
+            self.active_task_id = None
+            return
+        if idx + 1 < len(ids):
+            self.active_task_id = ids[idx + 1]
+        else:
+            self.active_task_id = None
+            self.phase = "complete"
+
     @property
     def active_mission_id(self) -> Optional[str]:
         if self.aborted or self.active_plan is None:
             return None
         return self.active_plan.id
+
+
+def _num_pose(pose: Optional[Dict[str, Any]], key: str) -> Optional[float]:
+    if not pose:
+        return None
+    value = pose.get(key)
+    if isinstance(value, (int, float)):
+        return float(value)
+    return None
+
+
+def _haversine_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    from math import asin, cos, radians, sin, sqrt
+
+    r = 6371000.0
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    return 2 * r * asin(sqrt(a))
 
 
 _executors: Dict[str, PsathyrellaMissionExecutor] = {}

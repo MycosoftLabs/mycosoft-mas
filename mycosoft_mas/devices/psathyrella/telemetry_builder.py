@@ -18,6 +18,7 @@ from mycosoft_mas.devices.psathyrella.constants import (
     resolve_mdp_device_id,
     resolve_registry_device_id,
 )
+from mycosoft_mas.devices.psathyrella.gps_nmea import merge_nmea_from_text
 from mycosoft_mas.devices.psathyrella.runtime_state import (
     derive_contact_state,
     get_runtime,
@@ -271,6 +272,9 @@ def _collect_merged_payload(raw_text: str, telemetry_block: Dict[str, Any]) -> D
             merged = _deep_merge(merged, record)
     for record in _iter_json_records(raw_text):
         merged = _deep_merge(merged, record)
+    nmea_gps = merge_nmea_from_text(raw_text)
+    if nmea_gps:
+        merged = _deep_merge(merged, {"gps": nmea_gps})
     return merged
 
 
@@ -673,6 +677,16 @@ def _extract_power_from_registry(raw_telemetry: Dict[str, Any]) -> Dict[str, Any
     }
 
 
+def _registry_last_contact_ms(registry_id: str) -> Optional[int]:
+    """Ms since last device-registry heartbeat (RF proxy when radios not reporting)."""
+    from mycosoft_mas.core.routers import device_registry_api
+
+    last_seen = device_registry_api._device_last_seen.get(registry_id)  # noqa: SLF001
+    if not last_seen:
+        return None
+    return max(0, int((datetime.now(timezone.utc) - last_seen).total_seconds() * 1000))
+
+
 async def build_buoy_telemetry(
     device_id: str,
     *,
@@ -776,6 +790,9 @@ async def build_buoy_telemetry(
         satellite_state=satellite_state,
     )
     rf_up = any(r.get("connected") for r in comms.get("radios", []) if r.get("kind") in {"ble", "cellular", "wifi", "lora"})
+    registry_rf_ms = _registry_last_contact_ms(registry_id)
+    if not rf_up and registry_rf_ms is not None and registry_rf_ms < DEVICE_STALE_SECONDS * 1000:
+        rf_up = True
     sat = comms.get("satellite") or {}
     contact_state = derive_contact_state(
         rf_connected=rf_up,
@@ -783,9 +800,21 @@ async def build_buoy_telemetry(
         sat_last_contact_ms_ago=_num(sat.get("lastContactMsAgo")),
     )
     contact_ms = last_contact_ms_ago(
-        last_update_ms if rf_up else None,
+        registry_rf_ms if rf_up else last_update_ms,
         _num(sat.get("lastContactMsAgo")),
     )
+
+    executor = None
+    try:
+        from mycosoft_mas.devices.psathyrella.mission_executor import get_mission_executor
+
+        executor = get_mission_executor(catalog_id)
+        executor.record_heartbeat()
+        mission_tick = executor.tick(pose=pose)
+        if mission_tick.get("alerts"):
+            runtime.mode = str(mission_tick.get("guidance", {}).get("mode_hint") or runtime.mode)
+    except Exception:
+        mission_tick = None
     lidar = _extract_scope(
         mycobrain_payload,
         "lidar",

@@ -145,19 +145,97 @@ class PsathyrellaCommsBridge:
         count = 0
         while queue and count < limit:
             item = queue.popleft()
-            drained.append(
-                {
-                    "frame_id": item.frame_id,
-                    "device_id": item.device_id,
-                    "direction": item.direction,
-                    "payload": item.payload,
-                    "bearer": item.bearer,
-                    "priority": item.priority,
-                    "received_at": item.received_at,
-                }
-            )
+            drained.append(self._frame_to_dict(item))
             count += 1
         return drained
+
+    def enqueue_mt_command(
+        self,
+        device_id: str,
+        payload: Dict[str, Any],
+        *,
+        bearer: str = "iridium",
+        priority: int = 0,
+    ) -> BridgeFrame:
+        """Ground→buoy mobile-terminated queue (commands, mission uploads)."""
+        return self.enqueue_for_backhaul(
+            device_id,
+            "ground_to_buoy",
+            payload,
+            bearer=bearer,
+            priority=priority,
+            queue_kind="mt",
+        )
+
+    def enqueue_mo_frame(
+        self,
+        device_id: str,
+        direction: str,
+        payload: Dict[str, Any],
+        *,
+        bearer: str = "lora",
+        priority: int = 3,
+    ) -> BridgeFrame:
+        """Buoy→ground mobile-originated queue (telemetry, contacts, acks)."""
+        return self.enqueue_for_backhaul(
+            device_id,
+            direction,
+            payload,
+            bearer=bearer,
+            priority=priority,
+            queue_kind="mo",
+        )
+
+    def flush_mt_queue(self, device_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """Drain ground→buoy MT queue on reconnect / satellite pass."""
+        queue = self._mt_queues.setdefault(device_id, deque(maxlen=1024))
+        drained: List[Dict[str, Any]] = []
+        count = 0
+        while queue and count < limit:
+            item = queue.popleft()
+            drained.append(self._frame_to_dict(item))
+            count += 1
+        return drained
+
+    def flush_mo_queue(self, device_id: str, limit: int = 50) -> List[Dict[str, Any]]:
+        """Drain buoy→ground MO queue during backhaul."""
+        queue = self._mo_queues.setdefault(device_id, deque(maxlen=1024))
+        drained: List[Dict[str, Any]] = []
+        count = 0
+        while queue and count < limit:
+            item = queue.popleft()
+            drained.append(self._frame_to_dict(item))
+            count += 1
+        return drained
+
+    @staticmethod
+    def pack_sbd_frame(payload: Dict[str, Any], *, max_bytes: int = 340) -> Dict[str, Any]:
+        """
+        Iridium SBD budget guard — compact JSON; returns oversize status when exceeded.
+        Full binary/CBOR codec is hardware-blocked until modem integration.
+        """
+        encoded = json.dumps(payload, separators=(",", ":"), default=str).encode("utf-8")
+        if len(encoded) <= max_bytes:
+            return {"status": "ok", "bytes": len(encoded), "payload": payload, "codec": "json_compact"}
+        return {
+            "status": "pending",
+            "reason": "SBD_OVERSIZE",
+            "bytes": len(encoded),
+            "max_bytes": max_bytes,
+            "detail": "frame exceeds SBD budget; fragmentation not yet wired",
+        }
+
+    @staticmethod
+    def _frame_to_dict(item: BridgeFrame) -> Dict[str, Any]:
+        return {
+            "frame_id": item.frame_id,
+            "device_id": item.device_id,
+            "direction": item.direction,
+            "payload": item.payload,
+            "bearer": item.bearer,
+            "priority": item.priority,
+            "received_at": item.received_at,
+        }
 
     async def publish_acoustic_event(self, device_id: str, event: Dict[str, Any]) -> None:
         queue = self._acoustic_stream_queues.get(device_id)

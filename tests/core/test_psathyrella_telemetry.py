@@ -13,6 +13,8 @@ REQUIRED_TOP_LEVEL = {
     "lastUpdateMsAgo",
     "source",
     "simulated",
+    "contactState",
+    "lastContactMsAgo",
     "pose",
     "bme",
     "propulsion",
@@ -23,6 +25,8 @@ REQUIRED_TOP_LEVEL = {
     "lidar",
     "radar",
     "bluesight",
+    "peers",
+    "mesh",
 }
 
 
@@ -45,6 +49,11 @@ async def test_buoy_telemetry_envelope_shape(monkeypatch: pytest.MonkeyPatch) ->
     assert "a" in envelope["bme"] and "b" in envelope["bme"]
     assert len(envelope["propulsion"]["thrusters"]) == 4
     assert envelope["autonomy"]["mode"] == "MANUAL"
+    assert envelope["autonomy"]["commsLossPolicy"] == "rtl"
+    assert envelope["autonomy"]["activeMissionId"] is None
+    assert envelope["contactState"] in {"live", "delayed", "dark"}
+    assert "satellite" in envelope["comms"]
+    assert envelope["comms"]["hydrophone"]["gainDb"] is None
     assert envelope["lidar"]["active"] is False
     assert envelope["radar"]["maxRangeM"] == 4000
     assert envelope["bluesight"]["wifi"] == []

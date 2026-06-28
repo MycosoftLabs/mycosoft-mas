@@ -1,5 +1,25 @@
 # Master Document Index
 
+## Psathyrella backend architecture (June 25, 2026)
+
+- `docs/PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md` — **P0–P6 master status**: Cursor lane software complete, phase table, demo vs pool wiring, verification curls, hardware-blocked items.
+- `docs/PSATHYRELLA_P0_BACKEND_COMPLETE_JUN27_2026.md` — **P0 completion record** (superseded by P0–P6 status for full picture).
+- `docs/PSATHYRELLA_BACKEND_ARCHITECTURE_JUN25_2026.md` — MAS API contract for buoy control UI, comms bridge architecture, Side A vs Side B recommendation, MINDEX/NLM wiring, Jetson/SINE/BlueSight checklist, and firmware command surface.
+- `CODE/docs/PSATHYRELLA_BUOY_BACKEND_BRIEFING_JUN26_2026.md` — **Phase 2 presentation prep**: exhaustive MAS/MycoBrain/MINDEX backend briefing for NUWC TAC-O (telemetry, SINE scope, gaps, Q&A).
+
+## Earth Simulator — full capabilities audit (June 25, 2026)
+
+- `WEBSITE/website/docs/EARTH_SIMULATOR_FULL_CAPABILITIES_AUDIT_JUN25_2026.md` — **Master audit**: V2/V3/V4 model, all layers/filters/UI, MYCA analysis & control, MINDEX pipeline, MycoBrain/MDP, Arraylake fields, BFF APIs, assets, plans & gaps. Indexed from `EARTH_SIMULATOR_DOCS_INDEX.md`.
+- `WEBSITE/website/docs/EARTH_SIMULATOR_ARRAYLAKE_FIELDS_COMPLETE_JUN27_2026.md` — **Complete**: all 16 Arraylake field layers baked (ERA5, HRRR, MRMS, Helios, ALIVE, biomass, canopy, Sentinel NDVI/truecolor, GEO wind); UI/BFF/baker fixes; verification steps.
+
+## Nature Learning Model (NLM) — status & narrative (June 25, 2026)
+
+- `docs/NLM_FULL_STATUS_AND_INDEX_JUN25_2026.md` — **Full inventory**: code, docs, URLs, capabilities, gaps.
+- `docs/NLM_UNIFIED_PUBLIC_NARRATIVE_JUN25_2026.md` — **Public story** for Perplexity merge, press, website alignment.
+- `docs/NLM_GAP_CLOSURE_PLAN_JUN25_2026.md` — **Execution plan**: owners, repos, P0–P3 priorities.
+- `docs/NLM_LEGACY_MYCology_LM_CLARIFICATION_JUN25_2026.md` — **MKLM vs NLM**: legacy `/api/nlm/*` text LM is not the Nature Learning Model.
+- `docs/NLM_DEPLOYMENT_AGENT_HANDOFF_JUN27_2026.md` — **Deployment agent handoff**: live vs not-live audit, blue/green runbook, P0 ops (systemd 8200, `NLM_API_URL`), do-not-deploy earth-sim.
+
 ## UniFi / NAS / CISA KEV (June 25, 2026)
 
 - `docs/MYCOSOFT_UNIFI_NETWORK_INFRASTRUCTURE_JUN25_2026.md` — **Canonical network consolidation**: UDM Pro Max `.1`, USW `.2`, NAS `.105`, API/mount matrix, verification commands.
@@ -891,10 +911,11 @@
 - `.github/workflows/myca-ci.yml` ? MYCA CI pipeline
 - `.github/workflows/myca-security.yml` ? MYCA security audit pipeline
 
-## TAC-O Maritime Integration ? Zeetachec Subcontract (Apr 8, 2026)
-- `docs/zeetachec_mycosoft_taco_plan.md` ? **Joint teaming plan**: Zeetachec (Prime) + Mycosoft (AI/Cyber Sub) for NUWC TAC-O CSO (N66604-26-9-A00X). Capability matrix, subcontracting structure, IP position, phase plan, 5-page solution brief outline, FUSARIUM Maritime architecture, 7 agent tasks, NLM acoustic adaptation.
+## TAC-O Maritime Integration — Mycosoft LLC 100% Prime (Apr 8, 2026; updated Jun 25, 2026)
+- `docs/PSATHYRELLA_AUTONOMOUS_OPS_PLAN_JUN25_2026.md` ? **Current TAC-O prime narrative**: Mycosoft LLC 100% prime on NUWC TAC-O CSO (N66604-26-9-A00X). Autonomous ocean sensor platform, field architecture, demo goals.
+- `docs/SUPERSEDED_TACO_PLAN_APR08_2026.md` — **SUPERSEDED (historical only)**: Old subcontractor teaming draft — do not use for proposals or customer-facing content.
 - `docs/TACO_CURSOR_IMPLEMENTATION_PLAN.md` ? **Full Cursor implementation plan**: 7 parallel lanes across 5 repos (NLM, MINDEX, MAS, MycoBrain, Website). 1,195 lines with code skeletons, file paths, execution schedule.
-- `docs/TACO_NIST_800_171_MAPPING_APR08_2026.md` ? **NIST 800-171 control mapping**: All 110 controls mapped to TAC-O system components (MycoBrain, MINDEX, MAS, FUSARIUM Maritime, network, Zeetachec interfaces).
+- `docs/TACO_NIST_800_171_MAPPING_APR08_2026.md` ? **NIST 800-171 control mapping**: All 110 controls mapped to TAC-O system components (MycoBrain, MINDEX, MAS, FUSARIUM Maritime, network, maritime sensor interfaces).
 - `docs/TACO_CUI_HANDLING_APR08_2026.md` ? **CUI handling procedures**: Marking, storage (AES-256-GCM), transmission (TLS 1.3), processing, destruction, incident response for underwater sensor data.
 
 ## Security Hardening (Feb 9, 2026)
