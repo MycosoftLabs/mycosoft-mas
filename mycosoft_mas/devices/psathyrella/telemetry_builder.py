@@ -18,7 +18,12 @@ from mycosoft_mas.devices.psathyrella.constants import (
     resolve_mdp_device_id,
     resolve_registry_device_id,
 )
-from mycosoft_mas.devices.psathyrella.runtime_state import get_runtime, waypoints_for_telemetry
+from mycosoft_mas.devices.psathyrella.runtime_state import (
+    derive_contact_state,
+    get_runtime,
+    last_contact_ms_ago,
+    waypoints_for_telemetry,
+)
 
 MYCOBRAIN_FALLBACK_URL = (os.getenv("MYCOBRAIN_SERVICE_URL") or "http://localhost:8003").rstrip("/")
 DEVICE_STALE_SECONDS = int(os.getenv("DEVICE_STALE_SECONDS", "60"))
@@ -421,6 +426,9 @@ def _extract_comms(
     payload: Dict[str, Any],
     comms_state: Dict[str, Any],
     last_update_ms: Optional[int],
+    *,
+    runtime_gain_db: Optional[float] = None,
+    satellite_state: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     comms = payload.get("comms") if isinstance(payload.get("comms"), dict) else {}
     links = comms.get("links") if isinstance(comms.get("links"), dict) else {}
@@ -450,6 +458,34 @@ def _extract_comms(
         if lo is not None and hi is not None:
             band_hz = {"lo": lo, "hi": hi}
 
+    gain_db = _num(hydro_block.get("gain_db") or hydro_block.get("gainDb"))
+    if gain_db is None and runtime_gain_db is not None:
+        gain_db = runtime_gain_db
+
+    spectrum_raw = hydro_block.get("spectrum")
+    spectrum: Optional[List[float]] = None
+    if isinstance(spectrum_raw, list) and spectrum_raw:
+        spectrum = [_num(v) or 0.0 for v in spectrum_raw]
+
+    sat_block = comms.get("satellite") if isinstance(comms.get("satellite"), dict) else {}
+    sat = satellite_state or {}
+    satellite = {
+        "bearer": sat_block.get("bearer") or sat.get("bearer"),
+        "connected": bool(sat_block.get("connected") or sat.get("connected", False)),
+        "rssiDbm": _num(sat_block.get("rssi_dbm") or sat_block.get("rssiDbm") or sat.get("rssiDbm")),
+        "credits": _num(sat_block.get("credits") or sat.get("credits")),
+        "mtQueued": int(sat_block.get("mt_queued") or sat_block.get("mtQueued") or sat.get("mtQueued") or 0),
+        "moQueued": int(sat_block.get("mo_queued") or sat_block.get("moQueued") or sat.get("moQueued") or 0),
+        "lastContactMsAgo": _num(
+            sat_block.get("last_contact_ms_ago")
+            or sat_block.get("lastContactMsAgo")
+            or sat.get("lastContactMsAgo")
+        ),
+        "nextPassEtaS": _num(
+            sat_block.get("next_pass_eta_s") or sat_block.get("nextPassEtaS") or sat.get("nextPassEtaS")
+        ),
+    }
+
     uplink_summary = comms.get("last_uplink_summary") or comms.get("lastUplinkSummary")
     return {
         "radios": radios,
@@ -467,7 +503,10 @@ def _extract_comms(
             "levelDb": _num(hydro_block.get("level_db") or hydro_block.get("levelDb")),
             "peakBearingDeg": _num(hydro_block.get("peak_bearing_deg") or hydro_block.get("peakBearingDeg")),
             "bandHz": band_hz,
+            "gainDb": gain_db,
+            "spectrum": spectrum,
         },
+        "satellite": satellite,
         "bridgeActive": bool(comms_state.get("bridge_enabled", False)),
         "lastUplink": {
             "atMsAgo": last_update_ms,
@@ -483,17 +522,23 @@ def _parse_contacts(raw: Any) -> List[Dict[str, Any]]:
     for idx, item in enumerate(raw):
         if not isinstance(item, dict):
             continue
-        contacts.append(
-            {
-                "id": str(item.get("id") or f"contact-{idx}"),
-                "bearingDeg": _num(item.get("bearing_deg") or item.get("bearingDeg")) or 0.0,
-                "rangeM": _num(item.get("range_m") or item.get("rangeM")) or 0.0,
-                "kind": str(item.get("kind") or "unknown"),
-                "strength": _num(item.get("strength")) or 0.0,
-                "label": item.get("label"),
-                "classifiedAs": item.get("classified_as") or item.get("classifiedAs"),
+        entry: Dict[str, Any] = {
+            "id": str(item.get("id") or f"contact-{idx}"),
+            "bearingDeg": _num(item.get("bearing_deg") or item.get("bearingDeg")) or 0.0,
+            "rangeM": _num(item.get("range_m") or item.get("rangeM")) or 0.0,
+            "kind": str(item.get("kind") or "unknown"),
+            "strength": _num(item.get("strength")) or 0.0,
+            "label": item.get("label"),
+            "classifiedAs": item.get("classified_as") or item.get("classifiedAs"),
+        }
+        coc = item.get("chain_of_custody") or item.get("chainOfCustody")
+        if isinstance(coc, dict) and coc.get("hash"):
+            entry["chainOfCustody"] = {
+                "hash": str(coc.get("hash")),
+                "merkleRoot": str(coc.get("merkle_root") or coc.get("merkleRoot") or ""),
+                "avaniVerified": bool(coc.get("avani_verified") or coc.get("avaniVerified", False)),
             }
-        )
+        contacts.append(entry)
     return contacts
 
 
@@ -697,6 +742,11 @@ async def build_buoy_telemetry(
     waypoints, active_wp = waypoints_for_telemetry(catalog_id)
     bridge = get_psathyrella_comms_bridge()
     comms_state = bridge.get_state(catalog_id)
+    satellite_state = bridge.get_satellite_state(catalog_id)
+    satellite_state["mtQueued"] = comms_state.get("mt_queued", satellite_state.get("mtQueued", 0))
+    satellite_state["moQueued"] = comms_state.get("mo_queued", satellite_state.get("moQueued", 0))
+    if runtime.preferred_bearer in {"iridium", "starlink"}:
+        satellite_state["bearer"] = runtime.preferred_bearer
 
     power = _merge_power_state(mycobrain_payload, raw_telemetry)
     camera_url = _vision_url(catalog_id, "camera")
@@ -718,7 +768,24 @@ async def build_buoy_telemetry(
     ]
 
     pose = _extract_pose(mycobrain_payload, device, lat, lon, gps_lock)
-    comms = _extract_comms(mycobrain_payload, comms_state, last_update_ms)
+    comms = _extract_comms(
+        mycobrain_payload,
+        comms_state,
+        last_update_ms,
+        runtime_gain_db=runtime.hydrophone_gain_db,
+        satellite_state=satellite_state,
+    )
+    rf_up = any(r.get("connected") for r in comms.get("radios", []) if r.get("kind") in {"ble", "cellular", "wifi", "lora"})
+    sat = comms.get("satellite") or {}
+    contact_state = derive_contact_state(
+        rf_connected=rf_up,
+        sat_connected=bool(sat.get("connected")),
+        sat_last_contact_ms_ago=_num(sat.get("lastContactMsAgo")),
+    )
+    contact_ms = last_contact_ms_ago(
+        last_update_ms if rf_up else None,
+        _num(sat.get("lastContactMsAgo")),
+    )
     lidar = _extract_scope(
         mycobrain_payload,
         "lidar",
@@ -743,6 +810,8 @@ async def build_buoy_telemetry(
         "lastUpdateMsAgo": last_update_ms,
         "source": "field" if sensors_ok else (device.get("connection_type") or "mas"),
         "simulated": False,
+        "contactState": contact_state,
+        "lastContactMsAgo": contact_ms,
         "pose": pose,
         "bme": {"a": bme_a, "b": bme_b},
         "propulsion": {
@@ -756,6 +825,8 @@ async def build_buoy_telemetry(
             "activeWaypointId": active_wp,
             "cameraHoldBearingDeg": runtime.camera_hold_bearing_deg,
             "fightCurrent": runtime.fight_current,
+            "commsLossPolicy": runtime.comms_loss_policy,
+            "activeMissionId": runtime.active_mission_id,
         },
         "power": power,
         "comms": comms,
@@ -774,4 +845,6 @@ async def build_buoy_telemetry(
             "wifi": _parse_contacts(bluesight_block.get("wifi")),
             "active": bool(bluesight_block.get("active")) or bool(_vision_url(catalog_id, "wifi")),
         },
+        "peers": [],
+        "mesh": {"selfId": catalog_id, "packets": [], "channel": "psathyrella"},
     }

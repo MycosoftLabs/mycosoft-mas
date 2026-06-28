@@ -298,6 +298,7 @@ async def psathyrella_mdp_command(device_id: str, request: Request) -> Dict[str,
 
     target = body.get("target") if isinstance(body, dict) else None
     cmd = body.get("cmd") if isinstance(body, dict) else None
+    client_command_id = body.get("clientCommandId") if isinstance(body, dict) else None
     if not target or not cmd:
         raise HTTPException(status_code=400, detail="missing_target_or_cmd")
 
@@ -307,6 +308,7 @@ async def psathyrella_mdp_command(device_id: str, request: Request) -> Dict[str,
             target=str(target),
             cmd=str(cmd),
             params=body.get("params") if isinstance(body.get("params"), dict) else {},
+            client_command_id=str(client_command_id) if client_command_id else None,
         )
         return result
     except ValueError as exc:

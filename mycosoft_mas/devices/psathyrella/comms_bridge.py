@@ -11,6 +11,9 @@ from datetime import datetime, timezone
 from typing import Any, Deque, Dict, List, Optional
 from uuid import uuid4
 
+VALID_BEARERS = frozenset({"ble", "cellular", "wifi", "lora", "iridium", "starlink", "acoustic"})
+RF_BEARERS = frozenset({"ble", "cellular", "wifi", "lora"})
+
 
 @dataclass
 class BridgeFrame:
@@ -20,6 +23,8 @@ class BridgeFrame:
     device_id: str
     direction: str
     payload: Dict[str, Any]
+    bearer: str = "lora"
+    priority: int = 3
     received_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
@@ -34,19 +39,54 @@ class PsathyrellaCommsBridge:
 
     def __init__(self) -> None:
         self._radio_mode_by_device: Dict[str, str] = {}
+        self._preferred_bearer_by_device: Dict[str, str] = {}
         self._bridge_enabled_by_device: Dict[str, bool] = {}
         self._store_forward: Dict[str, Deque[BridgeFrame]] = {}
+        self._mo_queues: Dict[str, Deque[BridgeFrame]] = {}
+        self._mt_queues: Dict[str, Deque[BridgeFrame]] = {}
+        self._satellite_state: Dict[str, Dict[str, Any]] = {}
         self._acoustic_stream_queues: Dict[str, asyncio.Queue[Dict[str, Any]]] = {}
+
+    def set_bearer(self, device_id: str, bearer: str) -> Dict[str, Any]:
+        """Set explicit bearer override for routing (comms.set_bearer)."""
+        normalized = (bearer or "").strip().lower()
+        if normalized not in VALID_BEARERS - {"acoustic"}:
+            raise ValueError(f"bad_bearer:{bearer}")
+        self._preferred_bearer_by_device[device_id] = normalized
+        if normalized in {"iridium", "starlink"}:
+            sat = self._satellite_state.setdefault(device_id, _empty_satellite())
+            sat["bearer"] = normalized
+        return self.get_state(device_id)
+
+    def select_bearer(self, device_id: str, frame: Optional[Dict[str, Any]] = None) -> str:
+        """Minimal bearer router — explicit override or auto preference."""
+        preferred = self._preferred_bearer_by_device.get(device_id)
+        if preferred:
+            return preferred
+        mode = self._radio_mode_by_device.get(device_id, "auto")
+        if mode != "auto" and mode in VALID_BEARERS:
+            return mode
+        return "lora"
 
     def get_state(self, device_id: str) -> Dict[str, Any]:
         queue = self._store_forward.get(device_id)
+        mo = self._mo_queues.get(device_id)
+        mt = self._mt_queues.get(device_id)
+        sat = self._satellite_state.get(device_id) or _empty_satellite()
         return {
             "device_id": device_id,
             "radio_mode": self._radio_mode_by_device.get(device_id, "auto"),
+            "preferred_bearer": self._preferred_bearer_by_device.get(device_id),
             "bridge_enabled": self._bridge_enabled_by_device.get(device_id, True),
             "store_forward_depth": len(queue) if queue else 0,
+            "mo_queued": len(mo) if mo else 0,
+            "mt_queued": len(mt) if mt else 0,
+            "satellite": sat,
             "recommendation": self.recommended_side_assignment(),
         }
+
+    def get_satellite_state(self, device_id: str) -> Dict[str, Any]:
+        return dict(self._satellite_state.get(device_id) or _empty_satellite())
 
     def update_mode(self, device_id: str, radio_mode: str, bridge_enabled: Optional[bool] = None) -> Dict[str, Any]:
         self._radio_mode_by_device[device_id] = radio_mode
@@ -72,13 +112,29 @@ class PsathyrellaCommsBridge:
         parsed = json.loads(decoded.decode("utf-8"))
         return {"status": "ok", "radio_frame": parsed}
 
-    def enqueue_for_backhaul(self, device_id: str, direction: str, payload: Dict[str, Any]) -> BridgeFrame:
-        queue = self._store_forward.setdefault(device_id, deque(maxlen=1024))
+    def enqueue_for_backhaul(
+        self,
+        device_id: str,
+        direction: str,
+        payload: Dict[str, Any],
+        *,
+        bearer: str = "lora",
+        priority: int = 3,
+        queue_kind: str = "legacy",
+    ) -> BridgeFrame:
+        if queue_kind == "mt":
+            queue = self._mt_queues.setdefault(device_id, deque(maxlen=1024))
+        elif queue_kind == "mo":
+            queue = self._mo_queues.setdefault(device_id, deque(maxlen=1024))
+        else:
+            queue = self._store_forward.setdefault(device_id, deque(maxlen=1024))
         frame = BridgeFrame(
             frame_id=str(uuid4()),
             device_id=device_id,
             direction=direction,
             payload=payload,
+            bearer=bearer,
+            priority=priority,
         )
         queue.append(frame)
         return frame
@@ -95,6 +151,8 @@ class PsathyrellaCommsBridge:
                     "device_id": item.device_id,
                     "direction": item.direction,
                     "payload": item.payload,
+                    "bearer": item.bearer,
+                    "priority": item.priority,
                     "received_at": item.received_at,
                 }
             )
@@ -132,6 +190,19 @@ class PsathyrellaCommsBridge:
             },
             "notes": "AOTX/OPTX from Jan 2026 docs are baseline TX paths; underwater transducer RX remains hardware-dependent.",
         }
+
+
+def _empty_satellite() -> Dict[str, Any]:
+    return {
+        "bearer": None,
+        "connected": False,
+        "rssiDbm": None,
+        "credits": None,
+        "mtQueued": 0,
+        "moQueued": 0,
+        "lastContactMsAgo": None,
+        "nextPassEtaS": None,
+    }
 
 
 _bridge_instance: Optional[PsathyrellaCommsBridge] = None
