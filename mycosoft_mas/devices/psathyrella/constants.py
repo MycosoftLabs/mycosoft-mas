@@ -11,6 +11,15 @@ PSATHYRELLA_SERIAL_PORT = os.getenv("MYCOBRAIN_SERIAL_PORT", "COM3")
 PSATHYRELLA_SERIAL_DEVICE_ID = f"mycobrain-{PSATHYRELLA_SERIAL_PORT.upper()}"
 PROJECT_OYSTER_ANCHOR = {"lat": 32.56289, "lon": -117.1357}
 
+# Bench: Morgan wires one propeller (thruster id 0) + 360° azimuth servo on Jetson today.
+PSATHYRELLA_BENCH_SINGLE_MOTOR = os.getenv("PSATHYRELLA_BENCH_SINGLE_MOTOR", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+PSATHYRELLA_BENCH_ACTIVE_THRUSTER_ID = int(os.getenv("PSATHYRELLA_BENCH_ACTIVE_THRUSTER_ID", "0") or "0")
+
 DEVICE_ID_ALIASES: dict[str, str] = {
     PSATHYRELLA_DEVICE_ID: PSATHYRELLA_REGISTRY_ID,
     PSATHYRELLA_REGISTRY_ID: PSATHYRELLA_REGISTRY_ID,

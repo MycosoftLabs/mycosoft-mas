@@ -4,7 +4,7 @@
 **Status:** Cursor lane software complete (pool test pending hardware)  
 **Related spec:** `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_P0_BACKEND_FIRMWARE_SPEC_JUN27_2026.md`  
 **Prior completion:** `docs/PSATHYRELLA_P0_BACKEND_COMPLETE_JUN27_2026.md`  
-**Scope:** MAS + MINDEX backend only (GCS/website = Claude lane)
+**Scope:** MAS + MINDEX backend (Cursor lane); GCS/website integration = Claude lane (P5 passthrough **closed** Jun 27)
 
 ---
 
@@ -17,7 +17,7 @@
 | **P2** | **~75%** | Bidirectional mo/mt queues + SBD budget guard; no live modem |
 | **P3** | **~70%** | Shadow mission executor + geofence/comms-loss ticks; edge mirror hardware |
 | **P4** | **~80%** | NLM + TAC-O + chain-of-custody hash on ingest; Merkle edge-blocked |
-| **P5** | **~60%** | MAS SSE `/stream` live; website WS passthrough = Claude lane |
+| **P5** | **~95%** | MAS SSE source live; website SSE passthrough **CLOSED** (Claude lane, Jun 27) |
 | **P6** | **Documented** | Jetson adapter contract only; no MAS Jetson client yet |
 
 **Cursor lane statement:** Software backend for Psathyrella is complete for pool test pending hardware wiring (thrusters, GPS module, hydrophone capture path, cameras, satellite modems).
@@ -44,8 +44,8 @@
 | P3 | Mission executor behavior tree | **PARTIAL** | MAS+Edge | `tick()` transit/loiter/survey/track/station_keep |
 | P3 | Geofence + comms-loss alerts | **PARTIAL** | MAS+Edge | Shadow on MAS; edge authoritative when dark |
 | P4 | Chain-of-custody on acoustic ingest | **PARTIAL** | MAS | SHA-256 hash when NLM ok; Merkle omitted |
-| P5 | MAS SSE `GET /api/psathyrella/{id}/stream` | **DONE** | MAS | Telemetry events @ 2.5s |
-| P5 | Website WS passthrough | **DEFERRED** | Claude/GCS | `app/api/psathyrella/ws/route.ts` |
+| P5 | MAS SSE `GET /api/psathyrella/{id}/stream` | **DONE** | MAS | Backend source of truth; telemetry events @ 2.5s |
+| P5 | Website SSE passthrough `/api/psathyrella/stream` → MAS `/stream` | **CLOSED** | Claude/GCS | Jun 27 — EventSource in `useBuoyTelemetry`; live verified (SSE, not WS) |
 | P6 | Jetson edge adapter | **DOCUMENTED** | Cursor/FW | See § Jetson contract below |
 | HW | MAVLink/ArduSub 4-thruster ESC PWM | **HARDWARE-BLOCKED** | Morgan/FW | Pool drive Tier B |
 | HW | Live GPS module | **HARDWARE-BLOCKED** | Morgan | GNSS not wired |
@@ -70,6 +70,23 @@
 - GPS `pose.gpsLock: "locked"`
 - One hydrophone clip → SINE register + analyze
 - Camera still or RTSP frame in GCS
+
+---
+
+## Cross-lane coordination (Jun 27, 2026)
+
+| Lane | Owner | Status doc |
+|------|-------|------------|
+| Backend / MAS / MINDEX | Cursor | This file |
+| GCS front-end + sim | Claude | `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_GCS_P0_P6_INTEGRATION_STATUS_JUN27_2026.md` |
+
+**Aligned this session:**
+
+- **P5 stream:** Claude shipped website SSE passthrough (`/api/psathyrella/stream` → MAS 188 `GET /api/psathyrella/{id}/stream`); GCS `useBuoyTelemetry` consumes via EventSource. Backend SSE endpoint remains the authoritative source.
+- **Bearer policy:** GCS demo defaults to **cellular** as primary C2 (pool Tier B); LoRa secondary; satellite STANDBY — matches Cursor pool-drive guidance (not LoRa-primary for pool test). CommsPanel set-bearer control issues `comms.set_bearer` to MAS.
+- **Map selectability:** AssetInteractions hover + click detail cards shipped on GCS map (Earth-Sim parity); GCS-only, no MAS change.
+
+**Pool test still waits on hardware:** GPS module, 4G backhaul wiring, thruster ESC + kill switch — software lanes synced; field demo blocked until Morgan bench/pool install.
 
 ---
 
@@ -148,14 +165,17 @@ See `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_PERPLEXITY_POOL_DRIV
 
 **Software follow-ups (non-hardware):**
 
-- Claude lane: `app/api/psathyrella/ws/route.ts` SSE passthrough to MAS `/stream`
+- ~~Claude lane: website SSE passthrough to MAS `/stream`~~ **CLOSED Jun 27** (see Cross-lane coordination)
 - Deploy MINDEX 189 with `sine/library/register` before first blob ingest
 - Edge Jetson mission executor mirror (authoritative when dark)
+- Claude lane open items: classification banner, device doc page, OEI/Jetson panels — see GCS integration status doc
 
 ---
 
 ## Deploy SHA (MAS 188)
 
-**Deployed:** 2026-06-28 UTC  
-**git_sha:** `1f8fbf508c364af729ed3b9799507d8f41642a57`  
-**Verify:** `Invoke-RestMethod http://192.168.0.188:8001/health | Select-Object status, git_sha`
+**Deployed:** 2026-06-28 UTC (hot-patch overlay on `f69fd3ea`)  
+**git_sha (health):** `f69fd3ea375c29d0066b29ee3842c30cd44ee99d`  
+**Overlay files (not yet on origin/main):** `jetson_forward.py`, updated `command_handler.py`, `device_registry_api.py`  
+**Verify:** `Invoke-RestMethod http://192.168.0.188:8001/health | Select-Object status, git_sha`  
+**Live test:** `nav.thruster {id:0, throttle:35, azimuth:90}` → `relay: device_registry`, telemetry `throttlePct:35`, `azimuthDeg:90`

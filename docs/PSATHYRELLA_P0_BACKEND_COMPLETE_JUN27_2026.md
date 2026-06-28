@@ -3,6 +3,7 @@
 **Date:** 2026-06-27  
 **Status:** Superseded by P0–P6 master status (P0 items remain valid)  
 **Master status:** [`PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md`](./PSATHYRELLA_BACKEND_P0_P6_STATUS_JUN27_2026.md)  
+**GCS lane (Claude, Jun 27):** [`PSATHYRELLA_GCS_P0_P6_INTEGRATION_STATUS_JUN27_2026.md`](../../docs/PSATHYRELLA_GCS_P0_P6_INTEGRATION_STATUS_JUN27_2026.md) — P5 SSE passthrough + map selectability closed; cellular bearer aligned.  
 **Related spec:** `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_P0_BACKEND_FIRMWARE_SPEC_JUN27_2026.md`  
 **Scope:** MAS repo only (website frozen)
 

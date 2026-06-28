@@ -142,3 +142,125 @@ def test_build_command_ack_shape() -> None:
     assert ack["state"] == "applied"
     assert ack["latencyMs"] == 333
     assert ack["bearer"] == "lora"
+
+
+@pytest.mark.asyncio
+async def test_nav_thruster_params_and_runtime_echo(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict = {}
+
+    async def _fake_forward(registry_id, *, target, cmd, params, timeout_s=8.0):
+        captured.update(
+            {"registry_id": registry_id, "target": target, "cmd": cmd, "params": params}
+        )
+        return {
+            "relay": "jetson_mdp",
+            "response": {
+                "propulsion": {
+                    "thrusters": [
+                        {
+                            "id": 0,
+                            "throttlePct": params["throttle"],
+                            "azimuthDeg": params["azimuth"],
+                            "currentA": 1.8,
+                            "rpm": 2400,
+                            "faulted": False,
+                        }
+                    ]
+                }
+            },
+        }
+
+    monkeypatch.setattr(
+        "mycosoft_mas.devices.psathyrella.command_handler.forward_mdp_command",
+        _fake_forward,
+    )
+
+    runtime = get_runtime(PSATHYRELLA_DEVICE_ID)
+    runtime.thrusters[0].throttle_pct = 0
+    runtime.thrusters[0].azimuth_deg = 0
+    runtime.thrusters[0].current_a = None
+    runtime.thrusters[0].rpm = None
+
+    result = await handle_mdp_command(
+        PSATHYRELLA_DEVICE_ID,
+        target="side_b",
+        cmd="nav.thruster",
+        params={"id": 0, "throttle": 35, "azimuth": 90},
+        client_command_id="cmd_jog_1",
+    )
+
+    assert result["ok"] is True
+    assert result["cmd"] == "nav.thruster"
+    assert captured["target"] == "side_b"
+    assert captured["params"] == {"id": 0, "throttle": 35, "azimuth": 90}
+    assert result["ack"]["state"] == "applied"
+    assert result["ack"]["commandId"] == "cmd_jog_1"
+    assert runtime.thrusters[0].throttle_pct == 35.0
+    assert runtime.thrusters[0].azimuth_deg == 90.0
+    assert runtime.thrusters[0].current_a == 1.8
+    assert runtime.thrusters[0].rpm == 2400.0
+
+
+@pytest.mark.asyncio
+async def test_nav_thruster_azimuth_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict = {}
+
+    async def _fake_forward(registry_id, *, target, cmd, params, timeout_s=8.0):
+        captured.update({"cmd": cmd, "params": params, "target": target})
+        return {"relay": "jetson_mdp", "response": {"ok": True}}
+
+    monkeypatch.setattr(
+        "mycosoft_mas.devices.psathyrella.command_handler.forward_mdp_command",
+        _fake_forward,
+    )
+
+    runtime = get_runtime(PSATHYRELLA_DEVICE_ID)
+    result = await handle_mdp_command(
+        PSATHYRELLA_DEVICE_ID,
+        target="side_b",
+        cmd="nav.thruster_azimuth",
+        params={"id": 0, "azimuthDeg": 270},
+    )
+
+    assert result["ok"] is True
+    assert captured["cmd"] == "nav.thruster_azimuth"
+    assert captured["params"] == {"id": 0, "azimuth": 270}
+    assert runtime.thrusters[0].azimuth_deg == 270.0
+
+
+@pytest.mark.asyncio
+async def test_nav_all_stop_and_arm_forward(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list = []
+
+    async def _fake_forward(registry_id, *, target, cmd, params, timeout_s=8.0):
+        calls.append({"cmd": cmd, "params": params, "target": target})
+        return {"relay": "jetson_mdp", "response": {"ok": True}}
+
+    monkeypatch.setattr(
+        "mycosoft_mas.devices.psathyrella.command_handler.forward_mdp_command",
+        _fake_forward,
+    )
+
+    runtime = get_runtime(PSATHYRELLA_DEVICE_ID)
+    runtime.thrusters[0].throttle_pct = 50
+    runtime.armed = False
+
+    stop = await handle_mdp_command(
+        PSATHYRELLA_DEVICE_ID,
+        target="side_b",
+        cmd="nav.all_stop",
+        params={},
+    )
+    assert stop["ok"] is True
+    assert runtime.thrusters[0].throttle_pct == 0.0
+    assert any(c["cmd"] == "nav.all_stop" for c in calls)
+
+    arm = await handle_mdp_command(
+        PSATHYRELLA_DEVICE_ID,
+        target="side_b",
+        cmd="nav.arm",
+        params={"armed": True},
+    )
+    assert arm["ok"] is True
+    assert runtime.armed is True
+    assert any(c["cmd"] == "nav.arm" and c["params"]["armed"] is True for c in calls)

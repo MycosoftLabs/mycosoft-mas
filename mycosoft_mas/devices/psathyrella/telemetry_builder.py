@@ -13,6 +13,8 @@ import httpx
 from mycosoft_mas.devices.psathyrella.comms_bridge import get_psathyrella_comms_bridge
 from mycosoft_mas.devices.psathyrella.constants import (
     PROJECT_OYSTER_ANCHOR,
+    PSATHYRELLA_BENCH_ACTIVE_THRUSTER_ID,
+    PSATHYRELLA_BENCH_SINGLE_MOTOR,
     PSATHYRELLA_DEVICE_ID,
     PSATHYRELLA_REGISTRY_ID,
     resolve_mdp_device_id,
@@ -768,8 +770,10 @@ async def build_buoy_telemetry(
         mycobrain_payload.get("camera") if isinstance(mycobrain_payload.get("camera"), dict) else {}
     )
 
-    thrusters = [
-        {
+    bench_active_id = PSATHYRELLA_BENCH_ACTIVE_THRUSTER_ID if PSATHYRELLA_BENCH_SINGLE_MOTOR else None
+    thrusters = []
+    for t in runtime.thrusters:
+        entry: Dict[str, Any] = {
             "id": t.id,
             "label": t.label,
             "throttlePct": t.throttle_pct,
@@ -778,8 +782,9 @@ async def build_buoy_telemetry(
             "rpm": t.rpm,
             "faulted": t.faulted,
         }
-        for t in runtime.thrusters
-    ]
+        if bench_active_id is not None:
+            entry["state"] = "ACTIVE" if t.id == bench_active_id else "STANDBY"
+        thrusters.append(entry)
 
     pose = _extract_pose(mycobrain_payload, device, lat, lon, gps_lock)
     comms = _extract_comms(
@@ -846,6 +851,14 @@ async def build_buoy_telemetry(
         "propulsion": {
             "thrusters": thrusters or _empty_thrusters(),
             "commandedVector": runtime.commanded_vector,
+            **(
+                {
+                    "benchMode": "single_motor_jetson",
+                    "benchActiveThrusterId": bench_active_id,
+                }
+                if bench_active_id is not None
+                else {}
+            ),
         },
         "autonomy": {
             "mode": runtime.mode,

@@ -32,6 +32,13 @@ REQUIRED_TOP_LEVEL = {
 
 @pytest.mark.asyncio
 async def test_buoy_telemetry_envelope_shape(monkeypatch: pytest.MonkeyPatch) -> None:
+    from mycosoft_mas.devices.psathyrella.runtime_state import get_runtime
+
+    runtime = get_runtime(PSATHYRELLA_DEVICE_ID)
+    runtime.mode = "MANUAL"
+    runtime.active_mission_id = None
+    runtime.hydrophone_gain_db = None
+
     async def _fake_fetch(*_args, **_kwargs):
         return None, None, None, False, {}
 

@@ -14,6 +14,10 @@ from mycosoft_mas.devices.psathyrella.constants import (
     resolve_mdp_device_id,
     resolve_registry_device_id,
 )
+from mycosoft_mas.devices.psathyrella.jetson_forward import (
+    apply_thruster_feedback,
+    forward_mdp_command,
+)
 from mycosoft_mas.devices.psathyrella.mission_executor import get_mission_executor, load_mission_plan
 from mycosoft_mas.devices.psathyrella.runtime_state import (
     VALID_BEARERS,
@@ -176,41 +180,69 @@ async def handle_mdp_command(
             "magnitudePct": magnitude,
             "yawRateDegS": yaw_rate,
         }
-        vx = magnitude / 100.0
-        response = await _forward_device_command(
-            "psa_thruster_vector_set",
-            {"vx": vx, "vy": 0.0, "yaw": yaw_rate / 45.0, "spin": 0.0},
+        response = await forward_mdp_command(
+            registry_id,
+            target=target,
+            cmd=cmd,
+            params={"heading": heading, "magnitude": magnitude, "yaw_rate": yaw_rate},
         )
+        apply_thruster_feedback(runtime, response)
         return _wrap({"ok": True, "cmd": cmd, "response": response}, response=response)
 
     if cmd == "nav.thruster":
         thr_id = int(params.get("id", 0))
         throttle = float(params.get("throttle", 0))
         azimuth = float(params.get("azimuth", 0))
+        throttle = max(-100.0, min(100.0, throttle))
+        azimuth = azimuth % 360.0
         if 0 <= thr_id < len(runtime.thrusters):
             runtime.thrusters[thr_id].throttle_pct = throttle
             runtime.thrusters[thr_id].azimuth_deg = azimuth
-        pwm = int(1500 + (throttle / 100.0) * 400)
-        motor_keys = [
-            "motor_front_left",
-            "motor_front_right",
-            "motor_rear_left",
-            "motor_rear_right",
-        ]
-        motors = {key: 1500 for key in motor_keys}
-        if 0 <= thr_id < len(motor_keys):
-            motors[motor_keys[thr_id]] = max(1100, min(1900, pwm))
-        response = await _forward_device_command("psa_thruster_pwm_set", motors)
+        mdp_params = {"id": thr_id, "throttle": int(throttle), "azimuth": int(azimuth)}
+        response = await forward_mdp_command(
+            registry_id,
+            target=target,
+            cmd=cmd,
+            params=mdp_params,
+        )
+        apply_thruster_feedback(runtime, response)
+        relay_err = response.get("error") if isinstance(response, dict) else None
+        if relay_err and relay_err not in (None, "agent_unreachable"):
+            return _wrap(
+                {"ok": False, "cmd": cmd, "response": response},
+                state="failed",
+                detail=str(relay_err),
+                response=response,
+            )
+        return _wrap({"ok": True, "cmd": cmd, "response": response}, response=response)
+
+    if cmd == "nav.thruster_azimuth":
+        thr_id = int(params.get("id", params.get("motorId", 0)))
+        azimuth = float(params.get("azimuth", params.get("azimuthDeg", 0))) % 360.0
+        if 0 <= thr_id < len(runtime.thrusters):
+            runtime.thrusters[thr_id].azimuth_deg = azimuth
+        mdp_params = {"id": thr_id, "azimuth": int(azimuth)}
+        response = await forward_mdp_command(
+            registry_id,
+            target=target,
+            cmd="nav.thruster_azimuth",
+            params=mdp_params,
+        )
+        apply_thruster_feedback(runtime, response)
         return _wrap({"ok": True, "cmd": cmd, "response": response}, response=response)
 
     if cmd == "nav.all_stop":
         runtime.commanded_vector = {"headingDeg": 0, "magnitudePct": 0, "yawRateDegS": 0}
         for t in runtime.thrusters:
             t.throttle_pct = 0.0
-        response = await _forward_device_command(
-            "psa_thruster_vector_set",
-            {"vx": 0.0, "vy": 0.0, "yaw": 0.0, "spin": 0.0},
+            t.azimuth_deg = 0.0
+        response = await forward_mdp_command(
+            registry_id,
+            target=target,
+            cmd=cmd,
+            params={},
         )
+        apply_thruster_feedback(runtime, response)
         return _wrap({"ok": True, "cmd": cmd, "response": response}, response=response)
 
     if cmd == "nav.set_mode":
@@ -218,8 +250,19 @@ async def handle_mdp_command(
         return _wrap({"ok": True, "cmd": cmd, "mode": runtime.mode, "detail": "mode_stored_pending_mavlink"})
 
     if cmd == "nav.arm":
-        runtime.armed = bool(params.get("armed", False))
-        return _wrap({"ok": True, "cmd": cmd, "armed": runtime.armed})
+        armed = bool(params.get("armed", False))
+        runtime.armed = armed
+        response = await forward_mdp_command(
+            registry_id,
+            target=target,
+            cmd=cmd,
+            params={"armed": armed},
+        )
+        return _wrap(
+            {"ok": True, "cmd": cmd, "armed": runtime.armed, "response": response},
+            response=response,
+            detail="arm_interlock_forwarded",
+        )
 
     if cmd == "nav.add_waypoint":
         wp_id = str(params.get("id") or params.get("waypoint_id") or "")
