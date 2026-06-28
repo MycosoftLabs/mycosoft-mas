@@ -156,8 +156,6 @@ See `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_PERPLEXITY_POOL_DRIV
 
 ## Deploy SHA (MAS 188)
 
-Recorded after deploy — see git log on VM:
-
-```bash
-ssh mycosoft@192.168.0.188 'cd /home/mycosoft/mycosoft/mas && git rev-parse HEAD'
-```
+**Deployed:** 2026-06-28 UTC  
+**git_sha:** `1f8fbf508c364af729ed3b9799507d8f41642a57`  
+**Verify:** `Invoke-RestMethod http://192.168.0.188:8001/health | Select-Object status, git_sha`
