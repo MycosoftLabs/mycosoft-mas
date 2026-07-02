@@ -1,5 +1,7 @@
 ## Mycosoft MAS (Multi-Agent System)
 
+
+> **Proprietary — Mycosoft, Inc.** Authorized use only. See [LICENSE](./LICENSE) and [NOTICE](./NOTICE). U.S. defense/government and export-control terms may apply.
 Mycosoft MAS is a **distributed multi-agent system** (Python/FastAPI) plus a **web UI (Next.js "MYCA")** and an optional **observability stack** (PostgreSQL, Redis, Qdrant, Prometheus, Grafana).
 
 This repository is the **top-level MAS repo**. The previous root README content describing "ENVINT Platform" belongs in subsystem-specific docs and **is not the MAS README**.
@@ -416,3 +418,26 @@ For detailed CREP documentation, see `docs/CREP_SYSTEM.md` in the Website reposi
 ## Version History
 
 See [CHANGELOG.md](./CHANGELOG.md) for detailed version history.
+
+---
+
+## License and export control
+
+**Proprietary — Mycosoft, Inc. All Rights Reserved.**
+
+This repository is proprietary software. No use, copy, modification, distribution,
+or disclosure is permitted without **prior written authorization** from Mycosoft, Inc.
+
+- See [LICENSE](./LICENSE) and [NOTICE](./NOTICE) in this repository.
+- Portions may relate to U.S. defense, government, marine, acoustic, or environmental
+  sensing use cases subject to applicable law, including **EAR** and potentially **ITAR**
+  export controls. This repository is **not** marked as ITAR-classified unless explicitly
+  labeled elsewhere.
+- Mycosoft aligns engineering and security practices with **NIST** cybersecurity
+  frameworks and **CMMC**-oriented controls at the organizational level; no certification
+  is claimed by presence of this notice alone.
+- U.S. Department of Defense and government use is subject to applicable federal law
+  and contract terms.
+
+**Contact:** legal@mycosoft.org
+

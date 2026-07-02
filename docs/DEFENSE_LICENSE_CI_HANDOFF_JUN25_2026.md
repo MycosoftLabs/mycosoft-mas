@@ -168,12 +168,32 @@ If Morgan later requests private visibility, revisit original handoff **Phase 3 
 
 ---
 
+## Cursor security-auditor sweep (2026-07-02)
+
+Morgan directive: LICENSE + NOTICE + README across local repos; ITAR inventory; **no visibility changes**.
+
+| Deliverable | Path |
+|-------------|------|
+| ITAR / export-control inventory | `docs/ITAR_EXPORT_CONTROL_INVENTORY_JUN25_2026.md` |
+| Per-repo sweep completion | `docs/REPO_LICENSE_README_SWEEP_COMPLETE_JUN25_2026.md` |
+| Apply script (re-run safe) | `scripts/apply_repo_license_notice_sweep.py` |
+
+**Done:** 11 local repo roots updated (LICENSE, NOTICE, README export-control sections). NLM/sdk MIT licenses replaced locally with proprietary text. `Devices/psathyrella-jetson` included.
+
+**Not done:** Private flip, fork NOTICE PRs, CI changes, application code changes.
+
+**Commits:** Local branches `chore/license-notice-readme-sweep-jun25-2026` per repo — not pushed pending Morgan review.
+
+---
+
 ## Remaining for Morgan (human decisions)
 
-1. **Private flip timing** — when/if to execute Phase 3 (not done).
-2. **Fork NOTICE PRs** — optional separate PRs for 6 forks (NOTICE only).
-3. **Deploy workflow failures** — NatureOS `Deploy to Production` may fail independently of build; review if deploy should run on every push.
-4. **Dependabot backlog** — separate from this handoff; MAS/NatureOS have open vulnerability alerts.
+1. **ITAR inventory review** — `docs/ITAR_EXPORT_CONTROL_INVENTORY_JUN25_2026.md` before any private flip.
+2. **Private flip timing** — when/if to execute Phase 3 of original handoff (not done).
+3. **Fork NOTICE PRs** — optional separate PRs for 6 forks (NOTICE only).
+4. **Push local sweep commits** — after README/LICENSE review.
+5. **Deploy workflow failures** — NatureOS `Deploy to Production` may fail independently of build; review if deploy should run on every push.
+6. **Dependabot backlog** — separate from this handoff; MAS/NatureOS have open vulnerability alerts.
 
 ---
 
