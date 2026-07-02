@@ -76,9 +76,21 @@ This sweep:
 
 ## Git commits (local)
 
-Commits created per repo on branch `chore/license-notice-readme-sweep-jun25-2026` (or `main` where no branch existed). **Not pushed** — Morgan review first.
+Commits on branch `chore/license-notice-readme-sweep-jun25-2026` (**not pushed**):
 
-See agent output / `git log` in each repo for commit SHAs.
+| Repo | Commit |
+|------|--------|
+| mycosoft-mas | `93d813c78` |
+| website | `3ac2fbd2` |
+| mindex | `e56daa9` |
+| mycobrain | `4867dd9` |
+| NatureOS | `71cf31f` |
+| Mycorrhizae (mycorrhizae-protocol) | `4062b21` |
+| NLM | `2cdce84` |
+| sdk | `3ce477d` |
+| MYCODAO | `c2e0d77` |
+| platform-infra | No git repo (files on disk only) |
+| Devices/psathyrella-jetson | No git repo (files on disk only) |
 
 ---
 
