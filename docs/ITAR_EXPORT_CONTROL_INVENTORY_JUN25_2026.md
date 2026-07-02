@@ -54,6 +54,10 @@
 | `mycosoft_mas/agents/clusters/taco/` | REVIEW | Ocean/acoustic TACO agent cluster (signal classification, anomaly) | Review → private |
 | `mycosoft_mas/earthlive/` | REVIEW | EarthLIVE packet assembly / collectors (operational sensor fusion) | Review |
 | `mycosoft_mas/earthlive/collectors/` | REVIEW | Live environmental/maritime data collectors | Review |
+| `mycosoft_mas/prediction/satellite_predictor.py` | REVIEW | Satellite track prediction | Review |
+| `mycosoft_mas/earthlive/collectors/satellite.py` | REVIEW | Live satellite data collector | Review |
+| `mycosoft_mas/integrations/maritime_sensor_client.py` | REVIEW | Maritime sensor integration client | Review |
+| `.cursor/agents/maritime-nlm.md` | LOW | Maritime NLM agent definition (docs) | Review with NLM data provenance |
 | `mycosoft_mas/agents/security/export_control_agent.py` | INFO | Export-control compliance agent | Keep; policy surface |
 | `mycosoft_mas/integrations/export_control_client.py` | INFO | Export-control client | Keep; policy surface |
 | `config/ethics_checklists/defense_sector.yaml` | INFO | Defense sector ethics checklist | Keep |
@@ -94,6 +98,9 @@
 | `mindex_etl/jobs/sync_osm_military_polygons.py` | REVIEW | Military polygon sync job | Review |
 | `docs/ACOUSTIC_CLASSIFIER_SCOPE_MAY27_2026.md` | REVIEW | Acoustic classifier scope | Review |
 | `tests/test_sine_classifier_visualisation_contract.py` | REVIEW | SINE classifier tests | Review with classifier |
+| `mindex_api/routers/maritime.py` | REVIEW | Maritime data API router | Review |
+| `mindex_api/routers/worldview/maritime.py` | REVIEW | WORLDVIEW maritime API (defense-market product surface) | Review |
+| `mindex_etl/jobs/sync_maritime_data.py` | REVIEW | Maritime data ETL sync | Review |
 
 ### MycoBrain — `mycobrain`
 
@@ -130,12 +137,17 @@
 | `CODE/FUSARIUM/` | REVIEW | FUSARIUM architecture plan artifacts (not production code) | Archive or move to private planning repo |
 | `CODE/.codex-artifacts/sine-repos/` | REVIEW | Cached SINE/audio classification repos | Do not publish; delete or private |
 | `CODE/.codex-temp/sine-audio-repo-audit/` | REVIEW | SINE audit temp artifacts | Delete after review |
+| `WEBSITE/website/lib/security/threat-intel.ts` | REVIEW | Threat-intel front-end lib (pairs with `services/security/threat_intel_service.py`) | Review |
+| `WEBSITE/.main-sync/`, `WEBSITE/.tmp-launch-inspect/`, `WEBSITE/hotfix-bg-env/`, `WEBSITE/website-*` | LOW | Local working-copy duplicates of website (contain same OEI/CREP/buoy/military paths) | Local-only; clean up stale copies |
+| `WEBSITE/security-app/` | REVIEW | Security app copy with threat-intel lib | Review with security services |
+| `MAS/mycosoft-mas-mainfix/` | LOW | Local duplicate of MAS working copy | Local-only; clean up if stale |
 
 ### MAS NLM / SDK
 
 | Path | Flag | Reason | Recommended action |
 |------|------|--------|-------------------|
 | `MAS/NLM/` (whole repo) | LOW | Nature learning models; review if trained on defense-tagged datasets | Review data provenance |
+| `MAS/NLM/tests/test_maritime.py` | REVIEW | Maritime NLM test surface — confirms maritime model scope | Review with maritime clients |
 | `MAS/sdk/` (whole repo) | LOW | NatureOS SDK; review if defense APIs exposed | Review API surface |
 
 ### Platform infra
