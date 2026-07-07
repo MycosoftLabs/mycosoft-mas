@@ -267,3 +267,27 @@ See `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_PERPLEXITY_POOL_DRIV
 | Port 8787 | Mushroom 1 **intentional** — coexist or split propulsion | "Evict operator from 8787" |
 
 **MAS code touch:** `mycosoft_mas/devices/psathyrella/constants.py` — `PSATHYRELLA_CANONICAL_DEVICE_ID=psathyrella-1`, `PSATHYRELLA_MUSHROOM1_AGENT_URL=http://192.168.0.123:8787`.
+
+---
+
+## Lag fix + azimuth home — Jul 07, 2026
+
+**Status: Complete (MAS `7536f553e` on 188, Jetson agent synced)**
+
+| Item | Result |
+|------|--------|
+| MAS keep-alive HTTP client (`jetson_forward.py`) | **Deployed** — repeated `nav.thrust_vector` ~13–15 ms after warm-up (was ~1080 ms cold TCP) |
+| `nav.az_zero` MAS allowlist + handler | **Deployed** — `POST /api/psathyrella/psathyrella-1/command` → `ack.state=applied`, not `unsupported_mdp_command` |
+| `nav.az_zero` in tracked `jetson_agent.py` | **Committed + synced** to Jetson `:8788` via `scripts/_sync_jetson_propulsion_agent.py` |
+| GCS bench calibration (Claude lane) | **Already live** — direct proxy + Bench "Azimuth · Home / Center" UI |
+
+**Verification (Jul 07):**
+
+- MAS health: `git_sha=7536f553e0c4fa85ff0777d9dfbccfe2cacac9df`
+- `nav.az_zero` → `detail: azimuth home set for [0, 1, 2, 3]`, all pods `azimuth_deg=0`
+- Latency sample (5× `nav.thrust_vector`): 3191 ms (cold), then 15 / 13 / 13 / 14 ms
+
+**Completion doc:** `docs/PSATHYRELLA_LAG_AZ_ZERO_COMPLETE_JUL07_2026.md`
+
+**Still P1 (unchanged):** AS5600 closed-loop azimuth, ESC range cal, per-ESC neutral trim, PCA re-probe, registry heartbeat, INA226/kill-switch telemetry.
+
