@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import time
 from typing import Any, Dict, Optional
 
@@ -10,13 +11,16 @@ from mycosoft_mas.core.routers import device_registry_api
 from mycosoft_mas.devices.psathyrella.autonomy import WaypointRecord
 from mycosoft_mas.devices.psathyrella.comms_bridge import get_psathyrella_comms_bridge
 from mycosoft_mas.devices.psathyrella.constants import (
+    PSATHYRELLA_DEFAULT_BEARER,
     PSATHYRELLA_DEVICE_ID,
+    resolve_public_device_id,
     resolve_mdp_device_id,
     resolve_registry_device_id,
 )
 from mycosoft_mas.devices.psathyrella.jetson_forward import (
     apply_thruster_feedback,
     forward_mdp_command,
+    propulsion_agent_reachable,
 )
 from mycosoft_mas.devices.psathyrella.mission_executor import get_mission_executor, load_mission_plan
 from mycosoft_mas.devices.psathyrella.runtime_state import (
@@ -38,6 +42,8 @@ FRONTEND_MODES = {
     "SIGNAL_FOLLOW",
     "RTL",
 }
+
+RF_CONTACT_BEARERS = frozenset({"ble", "cellular", "wifi", "lora"})
 
 _ack_seq = 0
 
@@ -83,6 +89,26 @@ def _map_nav_mode(mode: str) -> str:
     return upper if upper in FRONTEND_MODES else "MANUAL"
 
 
+def _ensure_psathyrella_comms_defaults(
+    catalog_id: str,
+    runtime: Any,
+    bridge: Any,
+) -> None:
+    """Persist bench bearer so contactState is not derived as dark after MAS restart."""
+    default_raw = os.getenv("PSATHYRELLA_DEFAULT_BEARER")
+    if default_raw is None:
+        default = PSATHYRELLA_DEFAULT_BEARER
+    else:
+        default = default_raw.strip().lower()
+    if not default or default not in VALID_BEARERS:
+        return
+    if runtime.preferred_bearer is None:
+        runtime.preferred_bearer = default
+    bridge_state = bridge.get_state(catalog_id)
+    if not bridge_state.get("preferred_bearer") and runtime.preferred_bearer:
+        bridge.set_bearer(catalog_id, runtime.preferred_bearer)
+
+
 async def handle_mdp_command(
     device_id: str,
     *,
@@ -93,17 +119,25 @@ async def handle_mdp_command(
 ) -> Dict[str, Any]:
     """Handle MDP envelope from the GCS (nav.*, cam.*, comms.*, acoustic.*, mission.*)."""
     params = params or {}
-    catalog_id = PSATHYRELLA_DEVICE_ID
-    registry_id = resolve_registry_device_id(device_id)
+    catalog_id = resolve_public_device_id(device_id) or PSATHYRELLA_DEVICE_ID
+    registry_id = resolve_registry_device_id(
+        device_id,
+        set(device_registry_api._device_registry.keys()),  # noqa: SLF001
+    )
     runtime = get_runtime(catalog_id)
     autonomy = get_autonomy_controller(catalog_id)
     accepted_ms = int(time.time() * 1000)
     bridge = get_psathyrella_comms_bridge()
+    _ensure_psathyrella_comms_defaults(catalog_id, runtime, bridge)
     bearer = bridge.select_bearer(catalog_id)
 
     device_registry_api._cleanup_expired_devices()  # noqa: SLF001
     device = device_registry_api._device_registry.get(registry_id, {})  # noqa: SLF001
     resolve_mdp_device_id(registry_id, device.get("extra") if isinstance(device.get("extra"), dict) else {})
+
+    def _effective_bearer() -> Optional[str]:
+        bridge_pref = bridge.get_state(catalog_id).get("preferred_bearer")
+        return runtime.preferred_bearer or bridge_pref or bridge.select_bearer(catalog_id)
 
     async def _forward_device_command(command: str, command_params: Dict[str, Any]) -> Dict[str, Any]:
         return await device_registry_api.send_device_command(
@@ -143,8 +177,12 @@ async def handle_mdp_command(
 
     def _contact_state_now() -> str:
         sat = bridge.get_satellite_state(catalog_id)
-        rf_connected = runtime.preferred_bearer in {"ble", "cellular", "wifi", "lora"} and bool(
-            device.get("status") == "online" or device
+        active_bearer = _effective_bearer()
+        bench_rf_via_jetson = os.getenv("PSATHYRELLA_BENCH_RF_VIA_JETSON", "1") == "1"
+        rf_connected = active_bearer in RF_CONTACT_BEARERS and (
+            device.get("status") == "online"
+            or bool(device)
+            or (bench_rf_via_jetson and active_bearer in {"wifi", "cellular"})
         )
         return derive_contact_state(
             rf_connected=rf_connected,
@@ -168,8 +206,21 @@ async def handle_mdp_command(
             ack_bearer=ack_bearer or bridge.select_bearer(catalog_id),
         )
 
+    def _relay_error(response: Optional[Dict[str, Any]]) -> Optional[str]:
+        if not isinstance(response, dict):
+            return None
+        error = response.get("error")
+        if isinstance(error, str) and error.strip():
+            return error.strip()
+        return None
+
     if cmd == "nav.thrust_vector":
-        queued = _maybe_queue_mt({"heading": params.get("heading"), "magnitude": params.get("magnitude")})
+        queued = None
+        if _contact_state_now() == "dark":
+            if not await propulsion_agent_reachable(device):
+                queued = _maybe_queue_mt(
+                    {"heading": params.get("heading"), "magnitude": params.get("magnitude")}
+                )
         if queued:
             return queued
         heading = float(params.get("heading", 0))
@@ -187,6 +238,14 @@ async def handle_mdp_command(
             params={"heading": heading, "magnitude": magnitude, "yaw_rate": yaw_rate},
         )
         apply_thruster_feedback(runtime, response)
+        relay_err = _relay_error(response)
+        if relay_err:
+            return _wrap(
+                {"ok": False, "cmd": cmd, "response": response},
+                state="failed",
+                detail=relay_err,
+                response=response,
+            )
         return _wrap({"ok": True, "cmd": cmd, "response": response}, response=response)
 
     if cmd == "nav.thruster":
@@ -206,22 +265,27 @@ async def handle_mdp_command(
             params=mdp_params,
         )
         apply_thruster_feedback(runtime, response)
-        relay_err = response.get("error") if isinstance(response, dict) else None
-        if relay_err and relay_err not in (None, "agent_unreachable"):
+        relay_err = _relay_error(response)
+        if relay_err:
             return _wrap(
                 {"ok": False, "cmd": cmd, "response": response},
                 state="failed",
-                detail=str(relay_err),
+                detail=relay_err,
                 response=response,
             )
         return _wrap({"ok": True, "cmd": cmd, "response": response}, response=response)
 
     if cmd == "nav.thruster_azimuth":
         thr_id = int(params.get("id", params.get("motorId", 0)))
-        azimuth = float(params.get("azimuth", params.get("azimuthDeg", 0))) % 360.0
-        if 0 <= thr_id < len(runtime.thrusters):
-            runtime.thrusters[thr_id].azimuth_deg = azimuth
-        mdp_params = {"id": thr_id, "azimuth": int(azimuth)}
+        rate = params.get("rate")
+        if rate is not None:
+            rate_pct = max(-100.0, min(100.0, float(rate)))
+            mdp_params = {"id": thr_id, "rate": rate_pct}
+        else:
+            azimuth = float(params.get("azimuth", params.get("azimuthDeg", 0))) % 360.0
+            if 0 <= thr_id < len(runtime.thrusters):
+                runtime.thrusters[thr_id].azimuth_deg = azimuth
+            mdp_params = {"id": thr_id, "azimuth": int(azimuth)}
         response = await forward_mdp_command(
             registry_id,
             target=target,
@@ -229,6 +293,14 @@ async def handle_mdp_command(
             params=mdp_params,
         )
         apply_thruster_feedback(runtime, response)
+        relay_err = _relay_error(response)
+        if relay_err:
+            return _wrap(
+                {"ok": False, "cmd": cmd, "response": response},
+                state="failed",
+                detail=relay_err,
+                response=response,
+            )
         return _wrap({"ok": True, "cmd": cmd, "response": response}, response=response)
 
     if cmd == "nav.all_stop":
@@ -243,7 +315,50 @@ async def handle_mdp_command(
             params={},
         )
         apply_thruster_feedback(runtime, response)
+        relay_err = _relay_error(response)
+        if relay_err:
+            return _wrap(
+                {"ok": False, "cmd": cmd, "response": response},
+                state="failed",
+                detail=relay_err,
+                response=response,
+            )
         return _wrap({"ok": True, "cmd": cmd, "response": response}, response=response)
+
+    if cmd == "nav.pwm_raw":
+        channel = int(params.get("channel", -1))
+        pulse_us = max(1000.0, min(2000.0, float(params.get("us", 1500))))
+        response = await forward_mdp_command(
+            registry_id,
+            target=target,
+            cmd=cmd,
+            params={"channel": channel, "us": pulse_us},
+        )
+        relay_err = _relay_error(response)
+        if relay_err:
+            return _wrap(
+                {
+                    "ok": False,
+                    "cmd": cmd,
+                    "channel": channel,
+                    "pulse_us": pulse_us,
+                    "response": response,
+                },
+                state="failed",
+                detail=relay_err,
+                response=response,
+            )
+        return _wrap(
+            {
+                "ok": True,
+                "cmd": cmd,
+                "channel": channel,
+                "pulse_us": pulse_us,
+                "response": response,
+            },
+            response=response,
+            detail=f"ch{channel}={int(pulse_us)}us",
+        )
 
     if cmd == "nav.set_mode":
         runtime.mode = _map_nav_mode(str(params.get("mode", "MANUAL")))
@@ -258,6 +373,14 @@ async def handle_mdp_command(
             cmd=cmd,
             params={"armed": armed},
         )
+        relay_err = _relay_error(response)
+        if relay_err:
+            return _wrap(
+                {"ok": False, "cmd": cmd, "armed": runtime.armed, "response": response},
+                state="failed",
+                detail=relay_err,
+                response=response,
+            )
         return _wrap(
             {"ok": True, "cmd": cmd, "armed": runtime.armed, "response": response},
             response=response,
@@ -387,7 +510,10 @@ async def handle_mdp_command(
 
 async def handle_legacy_operator_command(device_id: str, operator_cmd: str) -> Dict[str, Any]:
     """Forward legacy operator strings (led, buzzer, hydrophone, gps) to MycoBrain."""
-    registry_id = resolve_registry_device_id(device_id)
+    registry_id = resolve_registry_device_id(
+        device_id,
+        set(device_registry_api._device_registry.keys()),  # noqa: SLF001
+    )
     normalized = operator_cmd.strip().lower()
     if normalized.startswith("psa_gps_passthrough") or normalized.startswith("gps passthrough"):
         return await device_registry_api.send_device_command(

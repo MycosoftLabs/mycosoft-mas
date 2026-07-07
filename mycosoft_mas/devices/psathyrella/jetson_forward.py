@@ -1,9 +1,10 @@
-"""Forward Psathyrella MDP nav commands to Jetson field agent (:8787) or MycoBrain gateway."""
+"""Forward Psathyrella MDP nav commands to the Jetson propulsion agent (:8788)."""
 
 from __future__ import annotations
 
 import logging
 import os
+from json import JSONDecodeError
 from typing import Any, Dict, Optional, Tuple
 
 import httpx
@@ -19,6 +20,7 @@ NAV_MDP_COMMANDS = frozenset(
         "nav.thrust_vector",
         "nav.all_stop",
         "nav.arm",
+        "nav.pwm_raw",
         "nav.set_mode",
         "nav.station_keep",
         "nav.fight_current",
@@ -59,8 +61,49 @@ def _device_base_url(device: Dict[str, Any]) -> str:
     return f"http://{jetson_ip}:{jetson_port}"
 
 
+def _propulsion_base_url(device: Dict[str, Any]) -> str:
+    extra = device.get("extra") or {}
+    propulsion_url = extra.get("propulsion_agent_url") or extra.get("jetson_propulsion_url")
+    if isinstance(propulsion_url, str) and propulsion_url.strip():
+        return propulsion_url.rstrip("/")
+
+    override = (os.getenv("PSATHYRELLA_PROPULSION_AGENT_URL") or "").strip()
+    if override:
+        return override.rstrip("/")
+
+    jetson_ip = (os.getenv("JETSON_IP") or "192.168.0.123").strip()
+    propulsion_port = int(
+        os.getenv("PSATHYRELLA_PROPULSION_AGENT_PORT")
+        or os.getenv("PSATHYRELLA_JETSON_PROPULSION_PORT")
+        or "8788"
+    )
+    host = str(device.get("host") or "").strip()
+
+    if host.startswith("http://") or host.startswith("https://"):
+        scheme, remainder = host.split("://", 1)
+        hostname = remainder.split(":", 1)[0].rstrip("/")
+        return f"{scheme}://{hostname}:{propulsion_port}"
+    if host:
+        return f"http://{host}:{propulsion_port}"
+    return f"http://{jetson_ip}:{propulsion_port}"
+
+
 def _is_agent_device(device: Dict[str, Any]) -> bool:
     return device_registry_api._is_agent_api(device)  # noqa: SLF001
+
+
+def _decode_json_response(response: httpx.Response, path: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+    try:
+        payload = response.json()
+    except JSONDecodeError:
+        body = response.text[:2000]
+        logger.warning("Invalid JSON from propulsion agent %s: %s", path, body)
+        return {"ok": False, "raw": body}, f"agent_invalid_json:{path}"
+    if not isinstance(payload, dict):
+        return {"ok": False, "raw": response.text[:2000]}, f"agent_non_object_json:{path}"
+    if payload.get("ok") is False:
+        return payload, f"agent_rejected:{path}"
+    return payload, None
 
 
 async def _post_mdp_payload(
@@ -80,6 +123,7 @@ async def _post_mdp_payload(
         "timeout_ms": int(timeout_s * 1000),
     }
     headers = _mycobrain_forward_headers()
+    http_failures: list[tuple[str, int]] = []
     async with httpx.AsyncClient(timeout=timeout_s) as client:
         for path, body in (
             ("/command", mdp_body),
@@ -89,15 +133,37 @@ async def _post_mdp_payload(
             try:
                 response = await client.post(f"{base_url}{path}", json=body, headers=headers)
                 if response.status_code != 200:
+                    http_failures.append((path, response.status_code))
                     continue
-                payload = response.json()
-                if isinstance(payload, dict) and payload.get("ok") is False:
-                    return payload, f"agent_rejected:{path}"
-                return payload, None
+                payload, err = _decode_json_response(response, path)
+                return payload, err
             except Exception as exc:  # noqa: BLE001
                 logger.debug("MDP forward %s failed: %s", path, exc)
                 continue
+    if http_failures and all(status == 404 for _, status in http_failures):
+        return None, "agent_no_command_endpoint"
+    if http_failures:
+        path, status = http_failures[-1]
+        return None, f"agent_http_{status}:{path}"
     return None, "agent_unreachable"
+
+
+async def propulsion_agent_reachable(
+    device: Dict[str, Any],
+    *,
+    timeout_s: float = 1.5,
+) -> bool:
+    """True when the Jetson :8788 propulsion agent responds to /health."""
+    base_url = _propulsion_base_url(device)
+    try:
+        async with httpx.AsyncClient(timeout=timeout_s) as client:
+            response = await client.get(f"{base_url}/health")
+            if response.status_code != 200:
+                return False
+            payload = response.json()
+            return isinstance(payload, dict) and payload.get("status") == "ok"
+    except Exception:  # noqa: BLE001
+        return False
 
 
 async def forward_mdp_command(
@@ -117,9 +183,20 @@ async def forward_mdp_command(
     device_registry_api._cleanup_expired_devices()  # noqa: SLF001
     device = device_registry_api._device_registry.get(registry_id, {})  # noqa: SLF001
 
+    if cmd in NAV_MDP_COMMANDS:
+        base_url = _propulsion_base_url(device)
+        payload, err = await _post_mdp_payload(
+            base_url,
+            target=target,
+            cmd=cmd,
+            params=params,
+            timeout_s=timeout_s,
+        )
+        return {"relay": "jetson_mdp", "base_url": base_url, "response": payload, "error": err}
+
     if device:
         base_url = _device_base_url(device)
-        if _is_agent_device(device) or cmd in NAV_MDP_COMMANDS:
+        if _is_agent_device(device):
             payload, err = await _post_mdp_payload(
                 base_url,
                 target=target,

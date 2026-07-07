@@ -18,9 +18,31 @@
 | **P3** | **~70%** | Shadow mission executor + geofence/comms-loss ticks; edge mirror hardware |
 | **P4** | **~80%** | NLM + TAC-O + chain-of-custody hash on ingest; Merkle edge-blocked |
 | **P5** | **~95%** | MAS SSE source live; website SSE passthrough **CLOSED** (Claude lane, Jun 27) |
-| **P6** | **Documented** | Jetson adapter contract only; no MAS Jetson client yet |
+| **P6** | **~60%** | MAS `jetson_forward.py` live on 188; Jetson `:8787` MDP handler + wiring pending Morgan |
 
 **Cursor lane statement:** Software backend for Psathyrella is complete for pool test pending hardware wiring (thrusters, GPS module, hydrophone capture path, cameras, satellite modems).
+
+---
+
+## Jul 06, 2026 — propulsion live (Claude → Cursor handoff)
+
+- **Hardware:** PCA9685 @ **0x60** (bus 7), direct I2C, **no TXS**; ESC **CH8–11**, servos CH4–7; neutral/stop **1600µs** @ 5V VCC.
+- **Repo:** tracked `devices/psathyrella-jetson/jetson_agent.py` + systemd drop-ins mirror live Jetson patches.
+- **MAS P0:** `PSATHYRELLA_DEFAULT_BEARER=wifi` on command intake; `nav.thrust_vector` forwards when `:8788` health OK even if contactState is dark; bench wifi counts as RF when `PSATHYRELLA_BENCH_RF_VIA_JETSON=1`.
+- **Evidence:** GCS 42-step bench matrix + joystick applied post bearer fix (Claude session Jul 06 evening).
+- **Handoff doc:** `CODE/docs/PSATHYRELLA_CURSOR_BACKEND_HANDOFF_JUL06_2026_PROPULSION_LIVE.md`
+
+---
+
+## Jul 03, 2026 backend flip update
+
+- MAS now treats `psathyrella-1` as the canonical public device id for Psathyrella routes.
+- `psathyrella-buoy-com4` and `mycobrain-COM4` now resolve to the same MAS backend lane.
+- Live MAS verification on `192.168.0.188:8001` now shows `status`, `telemetry`, `stream`, and `openclaw/status` working for `psathyrella-1`.
+- `nav.*` forwarding is pinned to propulsion on `http://192.168.0.123:8788` and no longer falls back to Mushroom 1 on `:8787`.
+- Jetson propulsion on `:8788` is now live with working `POST /command`, `/state`, and `/selftest`; MAS `nav.pwm_raw` reaches the PCA9685 path end-to-end.
+- CH4 (continuous azimuth servo) was live-calibrated on Jul 03 and persisted as `SERVO_STOP_US_CH4=1700` in the Jetson user service so restart + `nav.all_stop` return that channel to neutral.
+- Jetson propulsion arm behavior was corrected on Jul 03 so `nav.arm {armed:true}` now comes up at ESC neutral `1500us` instead of replaying stale stored throttle during DD ESC arming.
 
 ---
 
@@ -46,8 +68,10 @@
 | P4 | Chain-of-custody on acoustic ingest | **PARTIAL** | MAS | SHA-256 hash when NLM ok; Merkle omitted |
 | P5 | MAS SSE `GET /api/psathyrella/{id}/stream` | **DONE** | MAS | Backend source of truth; telemetry events @ 2.5s |
 | P5 | Website SSE passthrough `/api/psathyrella/stream` → MAS `/stream` | **CLOSED** | Claude/GCS | Jun 27 — EventSource in `useBuoyTelemetry`; live verified (SSE, not WS) |
-| P6 | Jetson edge adapter | **DOCUMENTED** | Cursor/FW | See § Jetson contract below |
+| P6 | Jetson edge adapter | **PARTIAL** | Cursor/FW | `jetson_forward.py` on MAS 188; Jetson `:8787` HTTP handler pending |
 | HW | MAVLink/ArduSub 4-thruster ESC PWM | **HARDWARE-BLOCKED** | Morgan/FW | Pool drive Tier B |
+| HW | **Physical wiring plan (12 V, PCA9685, ESC, kill switch)** | **DOC READY** | Morgan/FW | `CODE/docs/PSATHYRELLA_HARDWARE_WIRE_PLAN_JUL01_2026.md` — Tier A bench + Tier B pool; **azimuth = FS90MR (360°)**; MG996R → Mushroom 1/Agaric |
+| HW | **CEO procurement briefing (buy now / do not buy)** | **DOC READY** | Morgan | `CODE/docs/PSATHYRELLA_PROCUREMENT_BRIEFING_JUL01_2026.md` — ASIN cart, power chain, Jul 1 movement NO-GO |
 | HW | Live GPS module | **HARDWARE-BLOCKED** | Morgan | GNSS not wired |
 | HW | Camera RTSP | **HARDWARE-BLOCKED** | Morgan | Env `PSATHYRELLA_*_STREAM_URL` |
 | HW | Iridium/Starlink modems | **HARDWARE-BLOCKED** | Morgan | Bearer software ready |
@@ -58,7 +82,7 @@
 ## What Morgan can demo today (Tier A bench)
 
 - MAS `GET /api/psathyrella/health` + `/telemetry` with honest nulls/STANDBY
-- BME688 A live when MycoBrain COM3 connected
+- BME688 A live when **Mushroom 1** on Jetson `:8787` / MQTT `psathyrella-1` is reachable
 - `comms.set_bearer iridium` → ledger **APPLIED** (ack envelope)
 - Mission upload/abort without 502
 - `GET /api/psathyrella/psathyrella-buoy-com4/stream` SSE telemetry snapshots
@@ -179,3 +203,67 @@ See `D:/Users/admin2/Desktop/MYCOSOFT/CODE/docs/PSATHYRELLA_PERPLEXITY_POOL_DRIV
 **Overlay files (not yet on origin/main):** `jetson_forward.py`, updated `command_handler.py`, `device_registry_api.py`  
 **Verify:** `Invoke-RestMethod http://192.168.0.188:8001/health | Select-Object status, git_sha`  
 **Live test:** `nav.thruster {id:0, throttle:35, azimuth:90}` → `relay: device_registry`, telemetry `throttlePct:35`, `azimuthDeg:90`
+
+---
+
+## NVIDIA terminology + comms architecture (Jun 28, 2026)
+
+**CEO correction:** Do not use **OpenCL** (GPU compute API) for the NVIDIA agent stack. Use **OpenClaw**, **NemoClaw**, **OpenShell**, **Nemotron**, **NIM** as defined in the new reference docs.
+
+| Doc | Purpose |
+|-----|---------|
+| `CODE/docs/PSATHYRELLA_JETSON_AGENT_COMMS_QUICKREF_JUN28_2026.md` | **Bench quick-ref (Claude lane):** `:8787` MDP vs `:18789` OpenClaw/NemoClaw, motor curl examples, hardware wiring table, uplink paths |
+| `CODE/docs/PSATHYRELLA_HARDWARE_WIRE_PLAN_JUL01_2026.md` | **Hardware wiring plan:** component matrix, Tier A/B wire tables, ESC arming, power budget, PCA9685 channel map, kill switch |
+| `CODE/docs/PSATHYRELLA_PROCUREMENT_BRIEFING_JUL01_2026.md` | **CEO procurement briefing:** buy-now ASINs, do-not-buy, power wiring order, tonight checklist, movement NO-GO |
+| `docs/NVIDIA_NEMOCLAW_NEMOTRON_NIM_LANDSCAPE_JUN28_2026.md` | Team glossary: NemoClaw (GTC 2026), Nemotron 3, NIM, Ollama vs Meta/Llama clarification |
+| `docs/PSATHYRELLA_JETSON_MYCOBRAIN_COMMS_ARCHITECTURE_JUN28_2026.md` | Canonical buoy downlink/uplink, Mushroom 1 `:8787` MQTT vs propulsion split, pool test wiring |
+| `CODE/docs/PSATHYRELLA_JETSON_PROP_TEST_JUN28_2026.md` | Jetson handler implementation options (Option A/B), env table, verification curls |
+
+**Cross-doc alignment (Jun 28):** Claude quickref reviewed against MAS architecture + NIM landscape + prop test doc — **no port/IP/command/wiring conflicts**. Shared contract: propulsion MDP on Jetson `192.168.0.123:8787` (extend or split); Mushroom 1 sensors/MQTT on same host `:8787`; MAS forward via `jetson_forward.py`; **not** dev-desk COM3.
+
+**Doc refresh note:** Executive summary P6 row (“no MAS Jetson client yet”) is stale — `jetson_forward.py` is deployed on MAS 188 overlay (see Deploy SHA below); remaining gap is **Jetson-side `:8787` HTTP handler** (Morgan firmware task).
+
+**Grep note:** No literal `OpenCL` typos found under MAS or `CODE/docs` Psathyrella/NemoClaw paths (Jun 28). Fixed `CODE/docs/PSATHYRELLA_JETSON_PROP_TEST_JUN28_2026.md` env table: Jetson `:8787` MDP agent was mislabeled as OpenClaw host.
+
+---
+
+## Movement readiness — Jul 1, 2026
+
+**Go/no-go for Tier A bench (1 ESC, props off): GO for propulsion software path on split-port Option B (`:8788`), with props-off bench precautions.**
+
+| Check | Jul 1 live result |
+|-------|-------------------|
+| MAS `GET /health` + `/api/psathyrella/health` | **OK** (188 reachable) |
+| Mushroom 1 Jetson `GET :8787/status` | **Expected** — MycoBrain agent, role `mushroom1`, MQTT connected; device id **`psathyrella-1`** |
+| Jetson propulsion `GET :8788/health` + `POST /command` | **OK** — split-port `psathyrella-agent` active on Jetson |
+| MAS `nav.thruster` / `nav.pwm_raw` forward | **OK** — shows `relay: jetson_mdp` to `http://192.168.0.123:8788` |
+| `jetson_agent.py` (PCA9685 PWM) | **LIVE** — coexists with Mushroom 1; `/state` confirms PCA9685 writes |
+| Mushroom 1 / firmware | **Sensors only** on `:8787` MQTT — does not execute `nav.thruster` |
+| Hardware wire plan | **DOC READY** — `PSATHYRELLA_HARDWARE_WIRE_PLAN_JUL01_2026.md` |
+| GCS command + SSE | **OK** — Claude lane closed P5; commands reach MAS |
+| CH4 neutral trim | **OK** — persisted as `SERVO_STOP_US_CH4=1700` after live bench calibration |
+| ESC arm neutral behavior | **OK** — `nav.arm` now holds `CH0=1500us` until throttle is explicitly commanded |
+
+**Current software state:** Propulsion MDP is coexisting cleanly with Mushroom 1 using split-port Option B. **Do not** remove Mushroom 1 from `:8787`; keep propulsion on **`:8788`** with `PSATHYRELLA_PROPULSION_AGENT_URL` pointed at that service.
+
+**Tonight minimum to spin one motor (software + hardware):**
+
+1. **Software:** Confirm Mushroom 1 on `:8787`; keep propulsion on split-port `:8788`; verify MAS `nav.thruster` / `nav.pwm_raw` → `relay: jetson_mdp`.
+2. **Hardware:** LiFePO4 + **12→5 V buck** + **UBEC** + fused 12 V to ESC; PCA9685 on Jetson I2C (`0x40`); ESC Yellow/White to CH0; props **off**; kill switch open.
+3. **Sequence:** neutral PWM → connect ESC signal → DD arming beeps → `nav.arm` → low `nav.thruster` jog → `nav.all_stop`.
+
+**Can Morgan spin TODAY if they wire bench tonight?** Yes for props-off bench validation, because propulsion MDP on Jetson is now live. Remaining risk is hardware-side only: power path, ESC wiring/arming, and safe bench procedure.
+
+---
+
+## Device lane correction — Jul 01, 2026
+
+**CEO correction (Morgan):** Psathyrella **does not** use dev-desk **MycoBrain on COM3** or local `:8003` service as primary sensor path. **Mushroom 1** on **Jetson `192.168.0.123:8787`** is the sensor/telemetry lane (HTTP + MQTT, device id **`psathyrella-1`**).
+
+| Lane | Correct | Wrong / deprecated |
+|------|---------|------------------|
+| Sensors | Mushroom 1 → Jetson `:8787` → MQTT `mycosoft/devices/psathyrella-1/...` | COM3 dev desk, `psathyrella-buoy-com4` as hardware id |
+| Propulsion | Jetson MDP via `jetson_forward.py` (extend `:8787` or split `:8788`) | Expecting COM3/local service to drive ESC |
+| Port 8787 | Mushroom 1 **intentional** — coexist or split propulsion | "Evict operator from 8787" |
+
+**MAS code touch:** `mycosoft_mas/devices/psathyrella/constants.py` — `PSATHYRELLA_CANONICAL_DEVICE_ID=psathyrella-1`, `PSATHYRELLA_MUSHROOM1_AGENT_URL=http://192.168.0.123:8787`.
