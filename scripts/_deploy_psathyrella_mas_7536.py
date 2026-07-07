@@ -9,7 +9,7 @@ from pathlib import Path
 
 import paramiko
 
-COMMIT = "7536f553e"
+COMMIT = "000412638"
 BRANCH = "chore/license-notice-readme-sweep-jun25-2026"
 HOST = "192.168.0.188"
 USER = "mycosoft"
